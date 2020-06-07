@@ -1,2 +1,2 @@
-include ':app', ':pushmessagingSDK'
+include ':app', ':messagingSDK'
 rootProject.name='AEPMessagingSDK'
