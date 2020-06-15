@@ -1,0 +1,1 @@
+[{"outputType":{"type":"MERGED_MANIFESTS"},"apkData":{"type":"MAIN","splits":[],"versionCode":1,"versionName":"1.0.0","enabled":true,"outputFile":"messaging-phone-debug.aar","fullName":"phoneDebug","baseName":"phone-debug"},"path":"../../library_manifest/phoneDebug/AndroidManifest.xml","properties":{"packageId":"com.adobe.messaging","split":""}}]

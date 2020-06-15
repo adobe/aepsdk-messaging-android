@@ -22,15 +22,13 @@ class MessagingApplication : Application(){
             MobileCore.configureWithAppID("staging/launch-ENb56a7e35a8bb4fb08dbac87e75d4c2f8-development")
         }
 
-
-
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful){
-                val token = task.result?.token ?: ""
-                print("MessagingApplication Firebase token :: $token")
-                MobileCore.setPushIdentifier(token)
-            }
-        }
+//        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
+//            if(task.isSuccessful){
+//                val token = task.result?.token ?: ""
+//                print("MessagingApplication Firebase token :: $token")
+//                MobileCore.setPushIdentifier(token)
+//            }
+//        }
     }
 
 }
