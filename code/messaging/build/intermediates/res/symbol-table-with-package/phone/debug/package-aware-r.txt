@@ -1,2 +1,0 @@
-com.adobe.messaging
-string app_name
