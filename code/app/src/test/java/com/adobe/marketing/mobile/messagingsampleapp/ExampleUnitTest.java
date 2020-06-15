@@ -1,4 +1,4 @@
-package com.adobe.marketing.mobile.aeppushmessagingsampleapp;
+package com.adobe.marketing.mobile.messagingsampleapp;
 
 import org.junit.Test;
 

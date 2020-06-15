@@ -1,2 +1,2 @@
 include ':app', ':messagingSDK'
-rootProject.name='AEPMessagingSDK'
+rootProject.name='MessagingSDK'

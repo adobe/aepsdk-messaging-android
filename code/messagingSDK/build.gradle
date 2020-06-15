@@ -15,6 +15,14 @@ android {
 //        consumerProguardFiles 'consumer-rules.pro'
     }
 
+    flavorDimensions "messaging"
+
+    productFlavors{
+        phone{
+
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -25,8 +33,6 @@ android {
 }
 
 dependencies {
-    implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+    compileOnly "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 }
