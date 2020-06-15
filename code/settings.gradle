@@ -1,0 +1,2 @@
+include ':app', ':messagingSDK'
+rootProject.name='MessagingSDK'
