@@ -6,8 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.support.v4.app.NotificationCompat
-import com.google.firebase.iid.FirebaseInstanceId
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -17,6 +15,7 @@ class NotificationService : FirebaseMessagingService() {
         @JvmField
         val NOTIFICATION_ID = 0x12E45
         const val channelId = "messaging_notification_channel"
+        const val NOTIFICATION_DELETED_ACTION = "NOTIFICATION_DELETED_ACTION"
     }
 
     override fun onMessageReceived(message: RemoteMessage?) {
@@ -38,6 +37,7 @@ class NotificationService : FirebaseMessagingService() {
             setContentText(message?.data?.get("body") ?: "")
             priority = NotificationCompat.PRIORITY_DEFAULT
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java), 0))
+            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(NOTIFICATION_DELETED_ACTION),0))
             setAutoCancel(true)
         }
 
