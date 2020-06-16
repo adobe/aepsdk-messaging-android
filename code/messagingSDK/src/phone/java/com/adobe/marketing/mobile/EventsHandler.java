@@ -16,7 +16,7 @@ import java.util.Map;
 
 public interface EventsHandler {
 
-    void handlePushToken(final Map<String, Object> eventData);
-    void handleTrackingInfo(final Map<String, Object> eventData);
-    void handlePrivacyPreferenceChange(final Map<String, Object> eventData);
+    void handlePushToken(final Event eventData);
+    void handleTrackingInfo(final Event eventData);
+    void handlePrivacyPreferenceChange(final Event eventData);
 }

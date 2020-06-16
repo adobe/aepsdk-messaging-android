@@ -22,10 +22,10 @@ public class IdentityRequestContentListener extends ModuleEventListener<com.adob
 
     @Override
     public void hear(Event event) {
-        if(event != null && event.getEventData() != null && eventsHandler != null){
+        if(event == null && event.getEventData() == null && eventsHandler == null){
             Log.debug(com.adobe.marketing.mobile.MessagingConstant.LOG_TAG, "Event or Event data is null.");
             return;
         }
-        eventsHandler.handlePushToken(event.getEventData());
+        eventsHandler.handlePushToken(event);
     }
 }

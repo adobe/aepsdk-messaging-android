@@ -12,11 +12,12 @@
 package com.adobe.marketing.mobile;
 
 
-import java.util.Map;
-
 public class MessagingModule extends Module implements EventsHandler {
 
     private static final String MODULE_NAME = "com.adobe.aepsdk.module.messaging";
+    private PlatformServices platformServices = new AndroidPlatformServices();
+    private PushTokenSyncer pushTokenSyncer = new PushTokenSyncer(platformServices.getNetworkService(), platformServices.getJsonUtilityService());
+    private String ecid;
 
     protected MessagingModule(EventHub hub) {
         super(MODULE_NAME, hub);
@@ -30,18 +31,30 @@ public class MessagingModule extends Module implements EventsHandler {
     }
 
     @Override
-    public void handlePushToken(final Map<String, Object> eventData) {
-        //TODO Cache and send new push token.
+    public void handlePushToken(final Event event) {
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to sync push token. Event data received is null");
+        }
+
+        pushTokenSyncer.syncPushToken((String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER), ecid);
     }
 
     @Override
-    public void handleTrackingInfo(Map<String, Object> eventData) {
+    public void handleTrackingInfo(final Event event) {
         //TODO Send tracking info.
     }
 
     @Override
-    public void handlePrivacyPreferenceChange(Map<String, Object> eventData) {
-        //TODO Handle privacy preference change.
+    public void handlePrivacyPreferenceChange(final Event event) {
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
+        }
+        final EventData eventData = getSharedEventState(MessagingConstant.SharedState.Identity.NAME, event);
+        try {
+            ecid = eventData.getString2("mid");
+        } catch (VariantException e) {
+            e.printStackTrace();
+        }
 
     }
 }

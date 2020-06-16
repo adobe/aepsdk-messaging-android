@@ -25,10 +25,10 @@ public class ConfigurationResponseContentListener extends ModuleEventListener<co
     @Override
     public void hear(Event event) {
 
-        if(event != null && event.getEventData() != null && eventsHandler != null){
+        if(event == null && event.getEventData() == null && eventsHandler == null){
             Log.debug(com.adobe.marketing.mobile.MessagingConstant.LOG_TAG, "Event or Event data is null.");
             return;
         }
-        eventsHandler.handlePrivacyPreferenceChange(event.getEventData());
+        eventsHandler.handlePrivacyPreferenceChange(event);
     }
 }
