@@ -1,17 +1,17 @@
 package com.adobe.marketing.mobile;
 
+import java.util.Collections;
+
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
-//This class will be deleted later once we have AEP Platform services SDK.
+//This class will be deleted later once we have AEP Platform SDK support for profile data.
 public class PushTokenSyncer {
 
     private final NetworkService networkService;
-    private final JsonUtilityService jsonUtilityService;
     private static final String DATA_INGESTION_URL = "https://dcs.adobedc.net/collection/a4a946939737c99b4d09d43c570266d42d2ef62546aa84fe894bac71d8bf98f1";
 
-    public PushTokenSyncer(final NetworkService networkService, final JsonUtilityService jsonUtilityService) {
+    public PushTokenSyncer(final NetworkService networkService) {
         this.networkService = networkService;
-        this.jsonUtilityService = jsonUtilityService;
     }
 
     void syncPushToken(final String token, final String ecid) {
@@ -38,7 +38,7 @@ public class PushTokenSyncer {
                 "    \"xdm:pushNotificationDetails\": [\n" +
                 "      \t{\n" +
                 "      \t\t\"xdm:appID\": \"com.adobe.marketing.mobile.messagingsampleapp\",\n" +
-                "   \t\t\t\"xdm:platform\": \"apns\",\n" +
+                "   \t\t\t\"xdm:platform\": \"fcm\",\n" +
                 "    \t\t\"xdm:token\": \"" + token + "\",\n" +
                 "    \t\t\"xdm:blacklisted\": false,\n" +
                 "    \t\t\"xdm:identiy\": {\n" +
@@ -57,7 +57,7 @@ public class PushTokenSyncer {
                 "  }\n" +
                 "}").getBytes();
 
-        NetworkService.HttpConnection connection = networkService.connectUrl(DATA_INGESTION_URL, NetworkService.HttpCommand.POST, payload, null, 10, 10);
+        NetworkService.HttpConnection connection = networkService.connectUrl(DATA_INGESTION_URL, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
         if (connection.getResponseCode() == 200) {
             Log.debug(LOG_TAG, "Successfully synced push token %s", token);
         } else {
