@@ -10,13 +10,15 @@
   governing permissions and limitations under the License.
 */
 package com.adobe.marketing.mobile;
+import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
-
-import java.util.Map;
 
 public class MessagingModule extends Module implements EventsHandler {
 
     private static final String MODULE_NAME = "com.adobe.aepsdk.module.messaging";
+    private PlatformServices platformServices = new AndroidPlatformServices();
+    private PushTokenSyncer pushTokenSyncer = new PushTokenSyncer(platformServices.getNetworkService());
+    private String ecid;
 
     protected MessagingModule(EventHub hub) {
         super(MODULE_NAME, hub);
@@ -29,19 +31,38 @@ public class MessagingModule extends Module implements EventsHandler {
         registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
     }
 
+
     @Override
-    public void handlePushToken(final Map<String, Object> eventData) {
-        //TODO Cache and send new push token.
+    public void handlePushToken(final Event event) {
+        if (event == null) {
+            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
+        }
+
+        if (ecid == null) {
+            final EventData eventData = getSharedEventState(MessagingConstant.SharedState.Identity.NAME, event);
+            try {
+                ecid = eventData.getString2("mid");
+            } catch (VariantException e) {
+                Log.debug(LOG_TAG, "handlePushToken :: Error in getting identity shared state. Can not sync push token.");
+            }
+        }
+
+        pushTokenSyncer.syncPushToken((String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER), ecid);
     }
 
     @Override
-    public void handleTrackingInfo(Map<String, Object> eventData) {
+    public void handleTrackingInfo(final Event event) {
         //TODO Send tracking info.
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle handleTrackingInfo. Event received is null.");
+        }
     }
 
     @Override
-    public void handlePrivacyPreferenceChange(Map<String, Object> eventData) {
-        //TODO Handle privacy preference change.
-
+    public void handlePrivacyPreferenceChange(final Event event) {
+        //TODO Handle privacy preference changes.
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
+        }
     }
 }
