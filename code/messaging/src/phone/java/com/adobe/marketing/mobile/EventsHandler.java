@@ -12,11 +12,9 @@
 
 package com.adobe.marketing.mobile;
 
-import java.util.Map;
-
 public interface EventsHandler {
 
-    void handlePushToken(final Event eventData);
-    void handleTrackingInfo(final Event eventData);
-    void handlePrivacyPreferenceChange(final Event eventData);
+    void handlePushToken(final Event event);
+    void handleTrackingInfo(final Event event);
+    void handlePrivacyPreferenceChange(final Event event);
 }

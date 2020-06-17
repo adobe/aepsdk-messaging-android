@@ -52,10 +52,14 @@ public class MessagingModule extends Module implements EventsHandler {
     @Override
     public void handleTrackingInfo(final Event event) {
         //TODO Send tracking info.
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle handleTrackingInfo. Event received is null.");
+        }
     }
 
     @Override
     public void handlePrivacyPreferenceChange(final Event event) {
+        //TODO Handle privacy preference changes.
         if (event == null) {
             Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
         }
