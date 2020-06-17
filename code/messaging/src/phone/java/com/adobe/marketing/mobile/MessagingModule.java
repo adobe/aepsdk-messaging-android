@@ -10,6 +10,7 @@
   governing permissions and limitations under the License.
 */
 package com.adobe.marketing.mobile;
+import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 
 public class MessagingModule extends Module implements EventsHandler {
@@ -34,7 +35,7 @@ public class MessagingModule extends Module implements EventsHandler {
     @Override
     public void handlePushToken(final Event event) {
         if (event == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Unable to sync push token. Event data received is null");
+            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
         }
 
         if (ecid == null) {
@@ -42,7 +43,7 @@ public class MessagingModule extends Module implements EventsHandler {
             try {
                 ecid = eventData.getString2("mid");
             } catch (VariantException e) {
-                e.printStackTrace();
+                Log.debug(LOG_TAG, "handlePushToken :: Error in getting identity shared state. Can not sync push token.");
             }
         }
 
