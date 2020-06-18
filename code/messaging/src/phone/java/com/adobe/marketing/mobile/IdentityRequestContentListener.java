@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile;
 public class IdentityRequestContentListener extends ModuleEventListener<com.adobe.marketing.mobile.MessagingModule> {
 
     private final EventsHandler eventsHandler;
-    IdentityRequestContentListener(com.adobe.marketing.mobile.MessagingModule module, EventType type, EventSource source) {
+    IdentityRequestContentListener(MessagingModule module, EventType type, EventSource source) {
         super(module, type, source);
         eventsHandler = module;
     }

@@ -16,5 +16,5 @@ public interface EventsHandler {
 
     void handlePushToken(final Event event);
     void handleTrackingInfo(final Event event);
-    void handlePrivacyPreferenceChange(final Event event);
+    void processConfigurationResponse(final Event event);
 }

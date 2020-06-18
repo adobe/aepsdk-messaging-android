@@ -10,6 +10,9 @@
   governing permissions and limitations under the License.
 */
 package com.adobe.marketing.mobile;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 import com.adobe.marketing.mobile.xdm.*;
@@ -18,9 +21,9 @@ import java.util.Map;
 
 public class MessagingModule extends Module implements EventsHandler {
 
+    private ConcurrentLinkedQueue<Event> waitingEvents = new ConcurrentLinkedQueue<>();
     private static final String MODULE_NAME = "com.adobe.aepsdk.module.messaging";
     private PlatformServices platformServices = new AndroidPlatformServices();
-    private PushTokenSyncer pushTokenSyncer = new PushTokenSyncer(platformServices.getNetworkService());
     private String ecid;
 
     protected MessagingModule(EventHub hub) {
@@ -41,16 +44,13 @@ public class MessagingModule extends Module implements EventsHandler {
             Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
         }
 
-        if (ecid == null) {
-            final EventData eventData = getSharedEventState(MessagingConstant.SharedState.Identity.NAME, event);
-            try {
-                ecid = eventData.getString2("mid");
-            } catch (VariantException e) {
-                Log.debug(LOG_TAG, "handlePushToken :: Error in getting identity shared state. Can not sync push token.");
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                waitingEvents.add(event);
+                processQueuedEvents();
             }
-        }
-
-        pushTokenSyncer.syncPushToken((String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER), ecid);
+        });
     }
 
     @Override
@@ -88,10 +88,59 @@ public class MessagingModule extends Module implements EventsHandler {
     }
 
     @Override
-    public void handlePrivacyPreferenceChange(final Event event) {
+    public void processConfigurationResponse(final Event event) {
         //TODO Handle privacy preference changes.
         if (event == null) {
             Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
+        }
+
+        final EventData configData = event.getData();
+        final EventData identityData = getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
+
+        final MessagingState messagingState = new MessagingState();
+        messagingState.setState(configData, identityData);
+
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (MobilePrivacyStatus.OPT_OUT == messagingState.getPrivacyStatus()) {
+                    //Handle opt out.
+                    return;
+                }
+
+                processQueuedEvents();
+            }
+        });
+    }
+
+    void processQueuedEvents() {
+
+        while (!waitingEvents.isEmpty()) {
+            final Event currentEvent = waitingEvents.peek();
+
+            if (currentEvent == null) {
+                Log.debug(LOG_TAG, "processQueuedEvents -  Event queue is empty.");
+                break;
+            }
+
+            final EventData configState = getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
+                    currentEvent);
+
+            final EventData identityState = getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
+                    currentEvent);
+
+            // Check if configuration or identity is pending. We want to keep the event in the queue if we expect an update here.
+            if (configState == EventHub.SHARED_STATE_PENDING || identityState == EventHub.SHARED_STATE_PENDING) {
+                Log.debug(LOG_TAG,
+                        "processQueuedEvents -  Pending Configuration or Identity update, so not processing queued event.");
+                break;
+            }
+
+            if (currentEvent.getEventType() == EventType.GENERIC_IDENTITY) {
+                final String pushToken = (String) currentEvent.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
+                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
+                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, ecid);
+            }
         }
     }
 
