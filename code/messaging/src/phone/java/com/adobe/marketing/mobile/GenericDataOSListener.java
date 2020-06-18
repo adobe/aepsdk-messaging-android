@@ -13,7 +13,7 @@
 package com.adobe.marketing.mobile;
 
 
-public class GenericDataOSListener extends ModuleEventListener<com.adobe.marketing.mobile.MessagingModule> {
+public class GenericDataOSListener extends ModuleEventListener<MessagingModule> {
 
     private final EventsHandler eventsHandler;
 

@@ -29,6 +29,6 @@ public class ConfigurationResponseContentListener extends ModuleEventListener<co
             Log.debug(com.adobe.marketing.mobile.MessagingConstant.LOG_TAG, "Event or Event data is null.");
             return;
         }
-        eventsHandler.handlePrivacyPreferenceChange(event);
+        eventsHandler.processConfigurationResponse(event);
     }
 }

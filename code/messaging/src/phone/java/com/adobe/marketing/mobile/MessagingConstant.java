@@ -22,8 +22,16 @@ final class MessagingConstant {
 
         static final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
+            static final String VISITOR_ID_MID = "mid";
 
             private Identity() {
+            }
+        }
+
+        static final class Configuration{
+
+            static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
+            private Configuration() {
             }
         }
     }
@@ -55,7 +63,7 @@ final class MessagingConstant {
         }
 
         static final class Configuration {
-            static final String NAME = "com.adobe.module.configuration";
+            static final String EXTENSION_NAME = "com.adobe.module.configuration";
             static final String PRIVACY_STATUS = "global.privacy";
 
             private Configuration() {
@@ -63,7 +71,7 @@ final class MessagingConstant {
         }
 
         static final class Identity {
-            static final String NAME = "com.adobe.module.identity";
+            static final String EXTENSION_NAME = "com.adobe.module.identity";
 
             private Identity() {
             }
