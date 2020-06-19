@@ -74,14 +74,20 @@ public class MessagingModule extends Module implements EventsHandler {
         getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                if (MobilePrivacyStatus.OPT_OUT == messagingState.getPrivacyStatus()) {
-                    //Handle opt out.
+                if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+                    optOut();
                     return;
                 }
 
                 processQueuedEvents();
             }
         });
+    }
+
+    private void optOut() {
+
+        waitingEvents.clear();
+        new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
     void processQueuedEvents() {
