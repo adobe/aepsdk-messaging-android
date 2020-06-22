@@ -26,12 +26,22 @@ final class MessagingConstant {
             private Identity() {
             }
         }
+
+        public static final class Messaging {
+            static final String TRACK_INFO_KEY_EVENT_TYPE  = "eventType";
+            static final String TRACK_INFO_KEY_MESSAGE_ID  = "id";
+            static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
+            static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
+
+            private Messaging() {}
+        }
     }
 
-    static final class EventType {
-        static final String HUB = "com.adobe.eventType.hub";
-        static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
-        static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
+
+    public static final class EventType {
+        public static final String HUB = "com.adobe.eventType.hub";
+        public static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
+        public static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
 
         private EventType() {
         }

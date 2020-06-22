@@ -17,9 +17,11 @@ class MessagingApplication : Application(){
         UserProfile.registerExtension()
         Lifecycle.registerExtension()
         Signal.registerExtension()
+        ExperiencePlatform.registerExtension();
 
         MobileCore.start {
-            MobileCore.configureWithAppID("staging/launch-ENb56a7e35a8bb4fb08dbac87e75d4c2f8-development")
+            MobileCore.configureWithAppID("")
+            MobileCore.lifecycleStart(null);
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
