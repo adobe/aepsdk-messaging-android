@@ -3,6 +3,7 @@ package com.adobe.marketing.mobile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+//This class will be deleted and all the code will be moved to platform service SDK.
 public class PushTokenStorage {
 
     private static final String PREFERENCE_NAME = "AdobeMobile_ExperienceMessage";
