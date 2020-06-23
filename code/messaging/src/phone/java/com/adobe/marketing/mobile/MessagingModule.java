@@ -22,6 +22,7 @@ public class MessagingModule extends Module implements EventsHandler {
     private static final String MODULE_NAME = "com.adobe.aepsdk.module.messaging";
     private PlatformServices platformServices = new AndroidPlatformServices();
     private String ecid;
+    private MessagingState messagingState;
 
     protected MessagingModule(EventHub hub) {
         super(MODULE_NAME, hub);
@@ -68,7 +69,7 @@ public class MessagingModule extends Module implements EventsHandler {
         final EventData configData = event.getData();
         final EventData identityData = getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
 
-        final MessagingState messagingState = new MessagingState();
+        messagingState = new MessagingState();
         messagingState.setState(configData, identityData);
 
         getExecutor().execute(new Runnable() {
@@ -115,8 +116,13 @@ public class MessagingModule extends Module implements EventsHandler {
 
             if (currentEvent.getEventType() == EventType.GENERIC_IDENTITY) {
                 final String pushToken = (String) currentEvent.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
-                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
-                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, ecid);
+                if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+                    new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
+                }
+                if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
+                    new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, ecid);
+
+                }
             }
         }
     }
