@@ -31,7 +31,7 @@ public final class Messaging {
         }
 
         try {
-            MobileCore.getCore().eventHub.registerModule(com.adobe.marketing.mobile.MessagingModule.class);
+            MobileCore.getCore().eventHub.registerModule(MessagingModule.class);
         } catch (InvalidModuleException e) {
             Log.error(LOG_TAG, "Unable to register Messaging SDK.");
         }

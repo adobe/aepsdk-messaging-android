@@ -16,7 +16,7 @@ public class PushTokenStorage {
 
     void storeToken(final String pushToken){
 
-        LocalStorageService.DataStore dataStore = localStorageService.getDataStore(PREFERENCE_NAME);
+        final LocalStorageService.DataStore dataStore = localStorageService.getDataStore(PREFERENCE_NAME);
         dataStore.setString(KEY, getShaHash(pushToken));
     }
 
@@ -27,12 +27,14 @@ public class PushTokenStorage {
     }
 
     private static String getShaHash(final String pushToken){
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("sha-256");
-            byte[] hashedBytes = messageDigest.digest(pushToken.getBytes());
-            return new String(hashedBytes);
-        } catch (NoSuchAlgorithmException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "Error in creating sha hash for push token.");
+        if(pushToken != null) {
+            try {
+                final MessageDigest messageDigest = MessageDigest.getInstance("sha-256");
+                final byte[] hashedBytes = messageDigest.digest(pushToken.getBytes());
+                return new String(hashedBytes);
+            } catch (NoSuchAlgorithmException e) {
+                Log.error(MessagingConstant.LOG_TAG, "Error in creating sha hash for push token.");
+            }
         }
         return pushToken;
     }
