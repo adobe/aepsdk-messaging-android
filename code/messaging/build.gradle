@@ -36,3 +36,7 @@ dependencies {
     compileOnly "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
     testImplementation 'junit:junit:4.12'
 }
+
+afterEvaluate {
+    generatePhoneReleaseBuildConfig.enabled = false
+}
