@@ -124,6 +124,7 @@ public class MessagingModule extends Module implements EventsHandler {
 
                 }
             }
+            waitingEvents.poll();
         }
     }
 }
