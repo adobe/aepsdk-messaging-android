@@ -8,7 +8,7 @@ import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 public class PushTokenSyncer {
 
     private final NetworkService networkService;
-    private static final String DATA_INGESTION_URL = "https://dcs.adobedc.net/collection/a4a946939737c99b4d09d43c570266d42d2ef62546aa84fe894bac71d8bf98f1";
+    private static final String DATA_INGESTION_URL = "https://dcs.adobedc.net/collection/fbcb86a87bbee3d5ae69bd8789dbd12c9674c9f3a8efcb7c7b30bab9a2966dcf";
 
     public PushTokenSyncer(final NetworkService networkService) {
         this.networkService = networkService;
@@ -19,25 +19,25 @@ public class PushTokenSyncer {
         byte[] payload = ("{\n" +
                 "\t\"header\": {\n" +
                 "\t\t\"schemaRef\": {\n" +
-                "\t\t  \"id\": \"https://ns.adobe.com/acopprod1/schemas/28b3d7114b095f6aff015a71a6d6667a5f466fc7c9826000\",\n" +
+                "\t\t  \"id\": \"https://ns.adobe.com/acopprod3/schemas/60ed18f0f3e30bbb9b7c77bbfb5a4f75a45986e0cdddc033\",\n" +
                 "\t\t  \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
                 "\t\t},\n" +
-                "\t\t\"imsOrgId\": \"3E2A28175B8ED3720A495E23@AdobeOrg\",\n" +
+                "\t\t\"imsOrgId\": \"FAF554945B90342F0A495E2C@AdobeOrg\",\n" +
                 "\t\t\"source\": {\n" +
                 "\t\t  \"name\": \"mobile\"\n" +
                 "\t\t},\n" +
-                "\t\t\"datasetId\": \"5ee2aa2f239d341915e991ea\"\n" +
+                "\t\t\"datasetId\": \"5ef3d544791c4a1915e6aa4b\"\n" +
                 "\t\t},\n" +
                 "\t\t\"body\": {\n" +
                 "\t\t\"xdmMeta\": {\n" +
                 "\t\t  \"schemaRef\": {\n" +
-                "\t\t    \"id\": \"https://ns.adobe.com/acopprod1/schemas/28b3d7114b095f6aff015a71a6d6667a5f466fc7c9826000\",\n" +
+                "\t\t    \"id\": \"https://ns.adobe.com/acopprod3/schemas/60ed18f0f3e30bbb9b7c77bbfb5a4f75a45986e0cdddc033\",\n" +
                 "\t\t    \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
                 "\t\t  }\n" +
                 "\t\t},\n" +
                 "\t\t\"xdmEntity\": {\n" +
-                "\t\t\t\"_acopprod1\": {\n" +
-                "\t\t  \t\t\"primaryid\": \"" + ecid + "\"\n" +
+                "\t\t\t\"_acopprod3\": {\n" +
+                "\t\t  \t\t\"ecid\": \"" + ecid + "\"\n" +
                 "\t\t\t},\n" +
                 "\t\t\t\"pushNotificationDetails\": [\n" +
                 "\t\t      \t{\n" +
@@ -45,6 +45,7 @@ public class PushTokenSyncer {
                 "\t\t   \t\t\t\"platform\": \"fcm\",\n" +
                 "\t\t    \t\t\"token\": \"" + token + "\",\n" +
                 "\t\t    \t\t\"blacklisted\": false,\n" +
+                "\t\t    \t\t\"blocklisted\": false,\n" +
                 "\t\t    \t\t\"identiy\": {\n" +
                 "\t\t    \t\t\t\"namespace\": {\n" +
                 "\t\t    \t\t\t\t\"code\": \"ECID\"\n" +
