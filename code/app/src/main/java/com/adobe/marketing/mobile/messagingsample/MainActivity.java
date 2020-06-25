@@ -1,4 +1,4 @@
-package com.adobe.marketing.mobile.messagingsampleapp;
+package com.adobe.marketing.mobile.messagingsample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;

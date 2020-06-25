@@ -1,4 +1,4 @@
-package com.adobe.marketing.mobile.messagingsampleapp
+package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*

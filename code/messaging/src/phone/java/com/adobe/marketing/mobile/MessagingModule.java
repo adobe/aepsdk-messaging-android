@@ -120,7 +120,7 @@ public class MessagingModule extends Module implements EventsHandler {
                     new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
                 }
                 if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                    new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, ecid);
+                    new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid());
 
                 }
             }
