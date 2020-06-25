@@ -14,7 +14,6 @@ import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 import com.adobe.marketing.mobile.xdm.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class MessagingModule extends Module implements EventsHandler {
@@ -82,6 +81,7 @@ public class MessagingModule extends Module implements EventsHandler {
         ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
             @Override
             public void onResponse(Map<String, Object> map) {
+
                 //todo
             }
         });
@@ -97,7 +97,7 @@ public class MessagingModule extends Module implements EventsHandler {
 
     private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, int actionId) {
         final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
-        final Acopprod1 acopprod1 = new Acopprod1();
+        final Acopprod3 acopprod3 = new Acopprod3();
         final Track track = new Track();
         final CustomAction customAction = new CustomAction();
 
@@ -110,8 +110,8 @@ public class MessagingModule extends Module implements EventsHandler {
 
         schema.setEventType(eventType);
         track.setId(messageId);
-        acopprod1.setTrack(track);
-        schema.setAcopprod1(acopprod1);
+        acopprod3.setTrack(track);
+        schema.setAcopprod3(acopprod3);
         return schema;
     }
 }

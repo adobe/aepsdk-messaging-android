@@ -27,7 +27,7 @@ final class MessagingConstant {
             }
         }
 
-        public static final class Messaging {
+        static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE  = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID  = "id";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";

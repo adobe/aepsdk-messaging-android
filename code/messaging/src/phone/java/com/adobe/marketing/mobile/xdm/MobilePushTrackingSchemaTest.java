@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile.xdm;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Class {@code MobilePushTrackingSchemaTest}
@@ -23,14 +22,14 @@ import java.util.List;
  *
  * Title		:	Mobile Push Tracking Schema Test
  * Version		:	1.1
- * ID			:	https://ns.adobe.com/acopprod1/schemas/29ff4646f70ceb167d6dce058a89e04689cd4ed4762de9a9
- * Alt ID		:	_acopprod1.schemas.29ff4646f70ceb167d6dce058a89e04689cd4ed4762de9a9
+ * ID			:	https://ns.adobe.com/acopprod3/schemas/85b5dd380a615a51d4636b23c9b5bfeea0b1ae5514b0869d
+ * Alt ID		:	_acopprod3.schemas.85b5dd380a615a51d4636b23c9b5bfeea0b1ae5514b0869d
  * Type			:	schemas
- * IMS Org		:	3E2A28175B8ED3720A495E23@AdobeOrg
+ * IMS Org		:	FAF554945B90342F0A495E2C@AdobeOrg
  */
 @SuppressWarnings("unused")
 public class MobilePushTrackingSchemaTest implements Schema {
-	private Acopprod1 Acopprod1;
+	private Acopprod3 Acopprod3;
 	private String eventMergeId;
 	private String eventType;
 	private IdentityMap identityMap;
@@ -55,7 +54,7 @@ public class MobilePushTrackingSchemaTest implements Schema {
 	 */
 	@Override
 	public String getSchemaIdentifier() {
-		return "https://ns.adobe.com/acopprod1/schemas/29ff4646f70ceb167d6dce058a89e04689cd4ed4762de9a9";
+		return "https://ns.adobe.com/acopprod3/schemas/85b5dd380a615a51d4636b23c9b5bfeea0b1ae5514b0869d";
 	}
 
 	/**
@@ -65,13 +64,13 @@ public class MobilePushTrackingSchemaTest implements Schema {
 	 */
 	 //@Override
 	 public String getDatasetIdentifier() {
-		 return "5eeaab530b5abf191521377b";
+		 return "5ef4e17127870a1915d1cb95";
 	 }
 
 	@Override
 	public Map<String, Object> serializeToXdm() {
 		Map<String, Object> map = new HashMap<>();
-		if (this.Acopprod1 != null) { map.put("_acopprod1", this.Acopprod1.serializeToXdm()); }
+		if (this.Acopprod3 != null) { map.put("_acopprod3", this.Acopprod3.serializeToXdm()); }
 		if (this.eventMergeId != null) { map.put("eventMergeId", this.eventMergeId); }
 		if (this.eventType != null) { map.put("eventType", this.eventType); }
 		if (this.identityMap != null) { map.put("identityMap", this.identityMap.serializeToXdm()); }
@@ -82,21 +81,21 @@ public class MobilePushTrackingSchemaTest implements Schema {
 
 	
 	/**
-	 * Returns the Acopprod1 property
+	 * Returns the Acopprod3 property
 	 * 
-	 * @return {@link Acopprod1} value or null if the property is not set
+	 * @return {@link Acopprod3} value or null if the property is not set
 	 */
-	public Acopprod1 getAcopprod1() {
-		return this.Acopprod1;
+	public Acopprod3 getAcopprod3() {
+		return this.Acopprod3;
 	}
 
 	/**
-	 * Sets the Acopprod1 property
+	 * Sets the Acopprod3 property
 	 * 
-	 * @param newValue the new Acopprod1 value
+	 * @param newValue the new Acopprod3 value
 	 */
-	public void setAcopprod1(final Acopprod1 newValue) {
-		this.Acopprod1 = newValue;
+	public void setAcopprod3(final Acopprod3 newValue) {
+		this.Acopprod3 = newValue;
 	} 
 	/**
 	 * Returns the ExperienceEvent merge ID property

@@ -16,16 +16,16 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Class {@code Acopprod1}
+ * Class {@code Acopprod3}
  * 
  *
  * XDM Property Java Object Generated 2020-06-17 16:58:12.488293 -0700 PDT m=+9.740346842 by XDMTool
  */
 @SuppressWarnings("unused")
-public class Acopprod1 implements Property {
+public class Acopprod3 implements Property {
 	private Track track;
 
-	public Acopprod1() {}
+	public Acopprod3() {}
 
 	@Override
 	public Map<String, Object> serializeToXdm() {
