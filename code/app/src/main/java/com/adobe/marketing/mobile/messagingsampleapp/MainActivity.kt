@@ -17,21 +17,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        return if (id == R.id.action_settings) {
-            true
-        } else super.onOptionsItemSelected(item)
-    }
-
     private val collectMessageInfoMap: Map<String, Any>
         private get() {
-            val map: MutableMap<String, Any> = HashMap()
+            val map = mutableMapOf<String, Any>()
             map["eventType"] = "track.applicationOpened"
             map["id"] = "31369"
             map["applicationOpened"] = true

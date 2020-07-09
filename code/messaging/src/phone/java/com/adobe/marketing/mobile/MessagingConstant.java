@@ -38,7 +38,7 @@ final class MessagingConstant {
     }
 
 
-    public static final class EventType {
+    static final class EventType {
         public static final String HUB = "com.adobe.eventType.hub";
         public static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
         public static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
