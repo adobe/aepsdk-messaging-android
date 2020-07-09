@@ -36,4 +36,9 @@ public final class Messaging {
             Log.error(LOG_TAG, "Unable to register Messaging SDK.");
         }
     }
+
+    public class MessagingEventType {
+        public static final String MESSAGING_TRACKING_EVENT_TYPE_APPLICATION_OPENED = "track.applicationOpened";
+        public static final String MESSAGING_TRACKING_EVENT_TYPE_CUSTOM_ACTION = "track.customAction";
+    }
 }

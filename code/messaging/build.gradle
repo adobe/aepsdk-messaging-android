@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.aar'])
     compileOnly "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
     testImplementation 'junit:junit:4.12'
 }

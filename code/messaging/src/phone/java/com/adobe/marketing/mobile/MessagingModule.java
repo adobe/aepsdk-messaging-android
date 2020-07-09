@@ -12,6 +12,9 @@
 package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
+import com.adobe.marketing.mobile.xdm.*;
+
+import java.util.Map;
 
 public class MessagingModule extends Module implements EventsHandler {
 
@@ -51,11 +54,37 @@ public class MessagingModule extends Module implements EventsHandler {
     }
 
     @Override
-    public void handleTrackingInfo(final Event event) {
-        //TODO Send tracking info.
-        if (event == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle handleTrackingInfo. Event received is null.");
+    public void handleTrackingInfo(Event event) {
+        final EventData eventData = event.getData();
+        if (eventData == null) {
+            Log.debug(MessagingConstant.LOG_TAG,
+                    "handleTrackingInfo - Cannot track information, eventData is null.");
+            return;
         }
+        final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        final String messageId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+        final Boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
+        final int actionId = eventData.optInteger(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, -1);
+
+        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(MessagingConstant.LOG_TAG,
+                    "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
+            return;
+        }
+
+        // Create XDM data with tracking data
+        MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
+        ExperiencePlatformEvent experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+                .setXdmSchema(schema)
+                .build();
+
+        ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
+            @Override
+            public void onResponse(Map<String, Object> map) {
+
+                //todo
+            }
+        });
     }
 
     @Override
@@ -64,5 +93,25 @@ public class MessagingModule extends Module implements EventsHandler {
         if (event == null) {
             Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
         }
+    }
+
+    private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, int actionId) {
+        final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
+        final Acopprod3 acopprod3 = new Acopprod3();
+        final Track track = new Track();
+        final CustomAction customAction = new CustomAction();
+
+        if (isApplicationOpened) {
+            track.setApplicationOpened(true);
+        } else {
+            customAction.setValue(actionId);
+            track.setCustomAction(customAction);
+        }
+
+        schema.setEventType(eventType);
+        track.setId(messageId);
+        acopprod3.setTrack(track);
+        schema.setAcopprod3(acopprod3);
+        return schema;
     }
 }
