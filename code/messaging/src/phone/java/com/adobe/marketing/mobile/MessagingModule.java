@@ -64,7 +64,7 @@ public class MessagingModule extends Module implements EventsHandler {
         final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
         final String messageId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
         final Boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
-        final int actionId = eventData.optInteger(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, -1);
+        final String actionId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(MessagingConstant.LOG_TAG,
@@ -95,7 +95,7 @@ public class MessagingModule extends Module implements EventsHandler {
         }
     }
 
-    private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, int actionId) {
+    private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, String actionId) {
         final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
         final Acopprod3 acopprod3 = new Acopprod3();
         final Track track = new Track();
@@ -104,7 +104,7 @@ public class MessagingModule extends Module implements EventsHandler {
         if (isApplicationOpened) {
             track.setApplicationOpened(true);
         } else {
-            customAction.setValue(actionId);
+            customAction.setActionId(actionId);
             track.setCustomAction(customAction);
         }
 
