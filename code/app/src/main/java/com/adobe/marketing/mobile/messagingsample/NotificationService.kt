@@ -34,8 +34,8 @@ class NotificationService : FirebaseMessagingService() {
         val builder = NotificationCompat.Builder(this, channelId).apply {
             setSmallIcon(R.drawable.ic_launcher_background)
             if (message?.data?.isNotEmpty() == true) {
-                setContentTitle(message?.data?.get("title") ?: "")
-                setContentText(message?.data?.get("body") ?: "")
+                setContentTitle(message.data?.get("title") ?: "")
+                setContentText(message.data?.get("body") ?: "")
             } else {
                 setContentTitle(message?.notification?.title ?: "")
                 setContentText(message?.notification?.body ?: "")

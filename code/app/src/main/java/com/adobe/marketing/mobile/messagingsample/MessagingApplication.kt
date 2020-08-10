@@ -4,7 +4,7 @@ import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.google.firebase.iid.FirebaseInstanceId
 
-class MessagingApplication : Application(){
+class MessagingApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()

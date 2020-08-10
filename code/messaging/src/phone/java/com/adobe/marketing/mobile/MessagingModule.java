@@ -81,10 +81,7 @@ public class MessagingModule extends Module implements EventsHandler {
 
         ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
             @Override
-            public void onResponse(Map<String, Object> map) {
-
-                //todo
-            }
+            public void onResponse(Map<String, Object> map) { }
         });
     }
 
@@ -96,7 +93,7 @@ public class MessagingModule extends Module implements EventsHandler {
         }
 
         final EventData configData = event.getData();
-        final EventData identityData = getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
+        final EventData identityData = getSharedEventState(MessagingConstant.EventDataKeys.SharedState.Identity.EXTENSION_NAME, event);
 
         messagingState = new MessagingState();
         messagingState.setState(configData, identityData);
@@ -130,10 +127,10 @@ public class MessagingModule extends Module implements EventsHandler {
                 break;
             }
 
-            final EventData configState = getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
+            final EventData configState = getSharedEventState(MessagingConstant.EventDataKeys.SharedState.Configuration.EXTENSION_NAME,
                     currentEvent);
 
-            final EventData identityState = getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
+            final EventData identityState = getSharedEventState(MessagingConstant.EventDataKeys.SharedState.Identity.EXTENSION_NAME,
                     currentEvent);
 
             // Check if configuration or identity is pending. We want to keep the event in the queue if we expect an update here.

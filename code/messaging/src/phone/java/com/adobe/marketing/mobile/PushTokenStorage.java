@@ -16,18 +16,16 @@ public class PushTokenStorage {
     }
 
     void storeToken(final String pushToken){
-
         final LocalStorageService.DataStore dataStore = localStorageService.getDataStore(PREFERENCE_NAME);
         dataStore.setString(KEY, getShaHash(pushToken));
     }
 
     void removeToken() {
-
         LocalStorageService.DataStore dataStore = localStorageService.getDataStore(PREFERENCE_NAME);
         dataStore.remove(KEY);
     }
 
-    private static String getShaHash(final String pushToken){
+    private static String getShaHash(final String pushToken) {
         if(pushToken != null) {
             try {
                 final MessageDigest messageDigest = MessageDigest.getInstance("sha-256");

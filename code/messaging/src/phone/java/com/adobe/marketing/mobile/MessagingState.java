@@ -8,6 +8,9 @@ final class MessagingState {
     //Identity properties.
     private String ecid;
 
+    // Dataset Id
+    private String dataSetId;
+
 
     void setState(final EventData configState, final EventData identityState) {
         setConfigState(configState);

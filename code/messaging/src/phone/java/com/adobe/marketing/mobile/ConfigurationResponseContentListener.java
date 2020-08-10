@@ -19,7 +19,6 @@ public class ConfigurationResponseContentListener extends ModuleEventListener<co
     ConfigurationResponseContentListener(com.adobe.marketing.mobile.MessagingModule module, EventType type, EventSource source) {
         super(module, type, source);
         eventsHandler = module;
-
     }
 
     @Override

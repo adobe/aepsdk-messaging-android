@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val collectMessageInfoMap: Map<String, Any>
-        private get() {
+        get() {
             val map = mutableMapOf<String, Any>()
             map["eventType"] = "track.applicationOpened"
             map["id"] = "31369"
