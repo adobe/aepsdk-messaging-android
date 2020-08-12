@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile;
 final class MessagingConstant {
 
     static final String LOG_TAG = "Messaging";
+    static final String EXTENSION_VERSION = "1.0.0";
+    static final String EXTENSION_NAME = "com.adobe.messaging";
 
     private MessagingConstant() {
     }
@@ -36,57 +38,53 @@ final class MessagingConstant {
 
             private Messaging() {
             }
-
         }
 
         static final class Configuration {
-
             static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
+            private Configuration() {
+            }
+        }
+    }
+
+    static final class EventType {
+        public static final String HUB = "com.adobe.eventType.hub";
+        public static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
+        public static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
+
+        private EventType() {
+        }
+    }
+
+    static final class EventSource {
+        static final String SHARED_STATE = "com.adobe.eventSource.sharedState";
+        static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
+        static final String OS = "com.adobe.eventSource.os";
+
+        private EventSource() {
+        }
+    }
+
+    static final class SharedState {
+
+        static final String STATE_OWNER = "stateowner";
+
+        private SharedState() {
+        }
+
+        static final class Configuration {
+            static final String EXTENSION_NAME = "com.adobe.module.configuration";
+            static final String PRIVACY_STATUS = "global.privacy";
 
             private Configuration() {
             }
         }
 
+        static final class Identity {
+            static final String EXTENSION_NAME = "com.adobe.module.identity";
 
-        static final class EventType {
-            public static final String HUB = "com.adobe.eventType.hub";
-            public static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
-            public static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
-
-            private EventType() {
-            }
-        }
-
-        static final class EventSource {
-            static final String SHARED_STATE = "com.adobe.eventSource.sharedState";
-            static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
-            static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
-            static final String OS = "com.adobe.eventSource.os";
-
-            private EventSource() {
-            }
-        }
-
-        static final class SharedState {
-
-            static final String STATE_OWNER = "stateowner";
-
-            private SharedState() {
-            }
-
-            static final class Configuration {
-                static final String EXTENSION_NAME = "com.adobe.module.configuration";
-                static final String PRIVACY_STATUS = "global.privacy";
-
-                private Configuration() {
-                }
-            }
-
-            static final class Identity {
-                static final String EXTENSION_NAME = "com.adobe.module.identity";
-
-                private Identity() {
-                }
+            private Identity() {
             }
         }
     }

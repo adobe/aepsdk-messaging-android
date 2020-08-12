@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 
@@ -19,22 +20,21 @@ public final class Messaging {
 
     private Messaging() {}
 
-    private static final String EXTENSION_VERSION = "1.0.0";
-
-    public static final String extensionVersion(){
+    public static String extensionVersion() {
         return EXTENSION_VERSION;
     }
 
-    public static final void registerExtension(){
-        if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null){
+    public static void registerExtension() {
+        if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
             Log.error(LOG_TAG, "Unable to register Messaging SDK since MobileCore is not initialized properly. For more details refer to https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core");
         }
 
-        try {
-            MobileCore.getCore().eventHub.registerModule(MessagingModule.class);
-        } catch (InvalidModuleException e) {
-            Log.error(LOG_TAG, "Unable to register Messaging SDK.");
-        }
+        MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.debug("There was an error registering Places Monitoring Extension: %s", extensionError.getErrorName());
+            }
+        });
     }
 
     public class MessagingEventType {

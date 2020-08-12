@@ -12,22 +12,36 @@
 
 package com.adobe.marketing.mobile;
 
+/**
+ * Listens for {@link EventType#GENERIC_DATA}, {@link EventSource#OS} events.
+ * <p><Monitor OS events for sending push notification tracking information.<p/>
+ * @see MessagingInternal
+ */
+public class GenericDataOSListener extends ExtensionListener {
 
-public class GenericDataOSListener extends ModuleEventListener<MessagingModule> {
-
-    private final EventsHandler eventsHandler;
-
-    GenericDataOSListener(com.adobe.marketing.mobile.MessagingModule module, EventType type, EventSource source) {
-        super(module, type, source);
-        eventsHandler = module;
+    GenericDataOSListener(final ExtensionApi extensionApi, final String type, final String source) {
+        super(extensionApi, type, source);
     }
 
     @Override
-    public void hear(Event event) {
-        if(event == null && event.getEventData() == null && eventsHandler == null){
+    public void hear(final Event event) {
+
+        if (event == null || event.getEventData() == null) {
             Log.debug(com.adobe.marketing.mobile.MessagingConstant.LOG_TAG, "Event or Event data is null.");
             return;
         }
-        eventsHandler.handleTrackingInfo(event);
+
+        final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
+
+        if (parentExtension == null) {
+            return;
+        }
+
+        parentExtension.getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                parentExtension.queueEvent(event);
+            }
+        });
     }
 }
