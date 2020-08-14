@@ -88,7 +88,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         getApi().clearSharedEventStates(null);
     }
 
-    private void registerEventListeners(ExtensionApi extensionApi) {
+    private void registerEventListeners(final ExtensionApi extensionApi) {
         // todo might want to registerEventListener instead registerListener
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
         extensionApi.registerListener(EventType.GENERIC_DATA, EventSource.OS, GenericDataOSListener.class);
@@ -174,7 +174,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 return;
             }
 
-            else if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
+            if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
                 // Temp
