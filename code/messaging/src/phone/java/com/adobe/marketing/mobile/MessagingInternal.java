@@ -33,6 +33,23 @@ public class MessagingInternal extends Extension implements EventsHandler {
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
 
+    /**
+     * Constructor.
+     *
+     * <p>
+     * Called during messaging extension's registration.
+     * The following listeners are registered during this extension's registration.
+     * <ul>
+     *     <li> {@link ConfigurationResponseContentListener} listening to event with eventType {@link EventType#CONFIGURATION}
+     *     and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
+     *     <li> {@link GenericDataOSListener} listening to event with eventType {@link EventType#GENERIC_DATA}
+     *     and EventSource {@link EventSource#OS}</li>
+     *      <li> {@link IdentityRequestContentListener} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
+     * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
+     * </ul>
+     *
+     * @param extensionApi 	{@link ExtensionApi} instance
+     */
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
         registerEventListeners(extensionApi);
@@ -75,6 +92,9 @@ public class MessagingInternal extends Extension implements EventsHandler {
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
         extensionApi.registerListener(EventType.GENERIC_DATA, EventSource.OS, GenericDataOSListener.class);
         extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
+
+        Log.debug(MessagingConstant.LOG_TAG, "Registering Messaging extension - version %s",
+                MessagingConstant.EXTENSION_VERSION);
     }
 
     /**
@@ -107,10 +127,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
             Event eventToProcess = eventQueue.peek();
 
             if (eventToProcess == null) {
+                Log.debug(MessagingConstant.LOG_TAG, "Unable to process event, Event received is null.");
                 return;
             }
 
-            ExtensionErrorCallback<ExtensionError> extensionErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            ExtensionErrorCallback<ExtensionError> configurationErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
@@ -120,8 +141,23 @@ public class MessagingInternal extends Extension implements EventsHandler {
                     }
                 }
             };
+
+            ExtensionErrorCallback<ExtensionError> identityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+                @Override
+                public void error(final ExtensionError extensionError) {
+                    if (extensionError != null) {
+                        Log.warning(MessagingConstant.LOG_TAG,
+                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
+                                        extensionError.getErrorName()));
+                    }
+                }
+            };
+
             Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
-                    eventToProcess, extensionErrorCallback);
+                    eventToProcess, configurationErrorCallback);
+
+            Map<String, Object> identitySharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
+                    eventToProcess, identityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
@@ -130,22 +166,29 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 return;
             }
 
-            if (EventType.CONFIGURATION.getName().equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // handle the places monitor request event
-                processConfigurationResponse(eventToProcess);
+            // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
+            if (identitySharedState == null) {
+                Log.warning(MessagingConstant.LOG_TAG,
+                        "MessagingInternal : Could not process event, identity shared state is pending");
+                return;
             }
 
-            else if (EventType.GENERIC_DATA.getName().equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.OS.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // handle the places monitor request event
-                handleTrackingInfo(eventToProcess);
+            if (EventType.CONFIGURATION.getName().equalsIgnoreCase(eventToProcess.getType()) &&
+                    EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
+                // handle the configuration response event
+                processConfigurationResponse(eventToProcess);
             }
 
             else if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // handle the places monitor request event
+                // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
+            }
+
+            else if (EventType.GENERIC_DATA.getName().equalsIgnoreCase(eventToProcess.getType()) &&
+                    EventSource.OS.getName().equalsIgnoreCase(eventToProcess.getSource())) {
+                // handle the push tracking information from generic data os event
+                handleTrackingInfo(eventToProcess);
             }
 
             // event processed, remove it from the queue
@@ -154,25 +197,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     @Override
-    public void handlePushToken(final Event event) {
-        if (event == null) {
-            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
-        }
-
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                eventQueue.add(event);
-                processQueuedEvents();
-            }
-        });
-    }
-
-    @Override
     public void processConfigurationResponse(final Event event) {
         //TODO Handle privacy preference changes.
         if (event == null) {
             Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
+            return;
         }
 
         final EventData configData = event.getData();
@@ -181,58 +210,31 @@ public class MessagingInternal extends Extension implements EventsHandler {
         messagingState = new MessagingState();
         messagingState.setState(configData, identityData);
 
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-                    optOut();
-                    return;
-                }
+        if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+            optOut();
+            return;
+        }
 
-                processQueuedEvents();
-            }
-        });
+        processEvents();
     }
 
-    private void optOut() {
-        eventQueue.clear();
-        new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
-    }
 
-    void processQueuedEvents() {
+    @Override
+    public void handlePushToken(final Event event) {
+        if (event == null) {
+            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
+            return;
+        }
 
-        while (!eventQueue.isEmpty()) {
-            final Event currentEvent = eventQueue.peek();
-
-            if (currentEvent == null) {
-                Log.debug(LOG_TAG, "processQueuedEvents -  Event queue is empty.");
-                break;
+        if (event.getEventType() == EventType.GENERIC_IDENTITY) {
+            final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
+            if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
             }
+            if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
+                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid());
 
-            final EventData configState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
-                    currentEvent);
-
-            final EventData identityState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
-                    currentEvent);
-
-            // Check if configuration or identity is pending. We want to keep the event in the queue if we expect an update here.
-            if (configState == EventHub.SHARED_STATE_PENDING || identityState == EventHub.SHARED_STATE_PENDING) {
-                Log.debug(LOG_TAG,
-                        "processQueuedEvents -  Pending Configuration or Identity update, so not processing queued event.");
-                break;
             }
-
-            if (currentEvent.getEventType() == EventType.GENERIC_IDENTITY) {
-                final String pushToken = (String) currentEvent.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
-                if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-                    new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
-                }
-                if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                    new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid());
-
-                }
-            }
-            eventQueue.poll();
         }
     }
 
@@ -266,6 +268,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
             public void onResponse(Map<String, Object> map) {
             }
         });
+    }
+
+    private void optOut() {
+        eventQueue.clear();
+        new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
     private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, String actionId) {

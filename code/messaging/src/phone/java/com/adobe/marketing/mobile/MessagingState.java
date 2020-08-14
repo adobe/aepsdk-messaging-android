@@ -1,5 +1,8 @@
 package com.adobe.marketing.mobile;
 
+/**
+ * MessagingState is used to store configuration and identity information
+ */
 final class MessagingState {
 
     //Configuration properties
@@ -7,10 +10,6 @@ final class MessagingState {
 
     //Identity properties.
     private String ecid;
-
-    // Dataset Id
-    private String dataSetId;
-
 
     void setState(final EventData configState, final EventData identityState) {
         setConfigState(configState);
@@ -29,11 +28,11 @@ final class MessagingState {
         }
     }
 
-    public MobilePrivacyStatus getPrivacyStatus() {
+    MobilePrivacyStatus getPrivacyStatus() {
         return privacyStatus;
     }
 
-    public String getEcid() {
+    String getEcid() {
         return ecid;
     }
 }

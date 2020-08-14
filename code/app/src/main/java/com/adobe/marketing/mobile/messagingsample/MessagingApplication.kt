@@ -25,7 +25,7 @@ class MessagingApplication : Application() {
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful){
+            if(task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
                 MobileCore.setPushIdentifier(token)

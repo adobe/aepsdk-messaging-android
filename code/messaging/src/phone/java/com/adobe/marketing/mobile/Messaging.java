@@ -20,10 +20,20 @@ public final class Messaging {
 
     private Messaging() {}
 
+    /**
+     * Returns the current version of the Messaging extension.
+     *
+     * @return A {@link String} representing the Messaging extension version
+     */
     public static String extensionVersion() {
         return EXTENSION_VERSION;
     }
 
+    /**
+     * Registers the Messaging extension with the {@code MobileCore}.
+     * <p>
+     * This will allow the extension to send and receive events to and from the SDK.
+     */
     public static void registerExtension() {
         if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
             Log.error(LOG_TAG, "Unable to register Messaging SDK since MobileCore is not initialized properly. For more details refer to https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core");
@@ -32,13 +42,8 @@ public final class Messaging {
         MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.debug("There was an error registering Places Monitoring Extension: %s", extensionError.getErrorName());
+                Log.debug("There was an error registering Messaging Extension: %s", extensionError.getErrorName());
             }
         });
-    }
-
-    public class MessagingEventType {
-        public static final String MESSAGING_TRACKING_EVENT_TYPE_APPLICATION_OPENED = "track.applicationOpened";
-        public static final String MESSAGING_TRACKING_EVENT_TYPE_CUSTOM_ACTION = "track.customAction";
     }
 }
