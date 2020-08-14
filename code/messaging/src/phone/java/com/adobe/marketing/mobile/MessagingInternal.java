@@ -234,10 +234,8 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
         if (event.getEventType() == EventType.GENERIC_IDENTITY) {
             final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
-            if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
-            }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
+                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
                 new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid(), messagingState.getDccsURL());
             }
         }
@@ -253,7 +251,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
         final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
         final String messageId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
-        final Boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
+        final boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
         final String actionId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
@@ -263,7 +261,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Create XDM data with tracking data
-        MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
+        final MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
         ExperiencePlatformEvent experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
                 .setXdmSchema(schema)
                 .build();
@@ -280,7 +278,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
-    private MobilePushTrackingSchemaTest getXdmSchema(String eventType, String messageId, Boolean isApplicationOpened, String actionId) {
+    private static MobilePushTrackingSchemaTest getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
         final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
         final Acopprod3 acopprod3 = new Acopprod3();
         final Track track = new Track();

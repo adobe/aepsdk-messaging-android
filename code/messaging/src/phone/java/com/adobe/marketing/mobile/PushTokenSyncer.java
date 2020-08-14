@@ -6,11 +6,11 @@ import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 // Temp
 // This class will be deleted later once we have AEP Platform SDK support for profile data.
-public class PushTokenSyncer {
+class PushTokenSyncer {
 
     private final NetworkService networkService;
 
-    public PushTokenSyncer(final NetworkService networkService) {
+    PushTokenSyncer(final NetworkService networkService) {
         this.networkService = networkService;
     }
 
@@ -58,7 +58,7 @@ public class PushTokenSyncer {
                 "\t}\n" +
                 "}").getBytes();
 
-        NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
+        final NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
         if (connection.getResponseCode() == 200) {
             Log.debug(LOG_TAG, "Successfully synced push token %s", token);
         } else {

@@ -5,18 +5,18 @@ import java.security.NoSuchAlgorithmException;
 
 // Temp
 //This class will be deleted and all the code will be moved to platform service SDK.
-public class PushTokenStorage {
+class PushTokenStorage {
 
     private static final String PREFERENCE_NAME = "AdobeMobile_ExperienceMessage";
     private static final String KEY = "pushIdentifier";
 
     private LocalStorageService localStorageService;
 
-    public PushTokenStorage(final LocalStorageService localStorageService) {
+    PushTokenStorage(final LocalStorageService localStorageService) {
         this.localStorageService = localStorageService;
     }
 
-    void storeToken(final String pushToken){
+    void storeToken(final String pushToken) {
         final LocalStorageService.DataStore dataStore = localStorageService.getDataStore(PREFERENCE_NAME);
         dataStore.setString(KEY, getShaHash(pushToken));
     }
@@ -27,7 +27,7 @@ public class PushTokenStorage {
     }
 
     private static String getShaHash(final String pushToken) {
-        if(pushToken != null) {
+        if (pushToken != null) {
             try {
                 final MessageDigest messageDigest = MessageDigest.getInstance("sha-256");
                 final byte[] hashedBytes = messageDigest.digest(pushToken.getBytes());
