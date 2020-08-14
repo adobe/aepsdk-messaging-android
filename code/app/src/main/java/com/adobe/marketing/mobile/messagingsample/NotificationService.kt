@@ -34,8 +34,8 @@ class NotificationService : FirebaseMessagingService() {
         val builder = NotificationCompat.Builder(this, channelId).apply {
             setSmallIcon(R.drawable.ic_launcher_background)
             if (message?.data?.isNotEmpty() == true) {
-                setContentTitle(message.data?.get("title") ?: "")
-                setContentText(message.data?.get("body") ?: "")
+                setContentTitle(message.data["title"])
+                setContentText(message.data["body"])
             } else {
                 setContentTitle(message?.notification?.title ?: "")
                 setContentText(message?.notification?.body ?: "")
@@ -43,7 +43,7 @@ class NotificationService : FirebaseMessagingService() {
 
             priority = NotificationCompat.PRIORITY_DEFAULT
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java), 0))
-            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(NOTIFICATION_DELETED_ACTION), 0))
+            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java), 0))
             setAutoCancel(true)
         }
 
