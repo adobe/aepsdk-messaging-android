@@ -8,8 +8,13 @@ final class MessagingState {
     //Configuration properties
     private MobilePrivacyStatus privacyStatus = MobilePrivacyStatus.OPT_IN;
 
+    // Temp
+    // Temporary implementation for dccs hack for collecting push tokens
+    private String dccsURL;
+
     //Identity properties.
     private String ecid;
+
 
     void setState(final EventData configState, final EventData identityState) {
         setConfigState(configState);
@@ -19,6 +24,8 @@ final class MessagingState {
     void setConfigState(final EventData configState) {
         if (configState != null) {
             this.privacyStatus = MobilePrivacyStatus.fromString(configState.optString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, ""));
+            // Temp
+            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, "");
         }
     }
 
@@ -30,6 +37,11 @@ final class MessagingState {
 
     MobilePrivacyStatus getPrivacyStatus() {
         return privacyStatus;
+    }
+
+    // Temp
+    String getDccsURL() {
+        return dccsURL;
     }
 
     String getEcid() {

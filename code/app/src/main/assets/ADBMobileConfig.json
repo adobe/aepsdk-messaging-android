@@ -1,5 +1,6 @@
 {
   "global.privacy": "optedin",
   "experienceCloud.org": "FAF554945B90342F0A495E2C@AdobeOrg",
-  "experiencePlatform.configId": "33048146-2e96-499e-acc4-e1d6d733d8b2"
+  "experiencePlatform.configId": "33048146-2e96-499e-acc4-e1d6d733d8b2",
+  "messaging.dccsHack": "https://dcs.adobedc.net/collection/7b0a69f4d9563b792f41c8c7433d37ad5fa58f47ea1719c963c8501bf779e827"
 }

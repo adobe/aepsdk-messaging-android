@@ -11,6 +11,7 @@
 */
 package com.adobe.marketing.mobile;
 
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -175,6 +176,13 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
             else if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
+
+                // Temp
+                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
+                    Log.error(LOG_TAG, "Dccs url is needed");
+                    return;
+                }
+
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
             }
@@ -217,7 +225,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
-
     @Override
     public void handlePushToken(final Event event) {
         if (event == null) {
@@ -231,7 +238,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
             }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid());
+                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid(), messagingState.getDccsURL());
             }
         }
     }

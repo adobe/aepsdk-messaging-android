@@ -4,17 +4,17 @@ import java.util.Collections;
 
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
-//This class will be deleted later once we have AEP Platform SDK support for profile data.
+// Temp
+// This class will be deleted later once we have AEP Platform SDK support for profile data.
 public class PushTokenSyncer {
 
     private final NetworkService networkService;
-    private static final String DATA_INGESTION_URL = "https://dcs.adobedc.net/collection/7b0a69f4d9563b792f41c8c7433d37ad5fa58f47ea1719c963c8501bf779e827";
 
     public PushTokenSyncer(final NetworkService networkService) {
         this.networkService = networkService;
     }
 
-    void syncPushToken(final String token, final String ecid) {
+    void syncPushToken(final String token, final String ecid, final String dccsUrl) {
 
         byte[] payload = ("{\n" +
                 "\t\"header\": {\n" +
@@ -58,7 +58,7 @@ public class PushTokenSyncer {
                 "\t}\n" +
                 "}").getBytes();
 
-        NetworkService.HttpConnection connection = networkService.connectUrl(DATA_INGESTION_URL, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
+        NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
         if (connection.getResponseCode() == 200) {
             Log.debug(LOG_TAG, "Successfully synced push token %s", token);
         } else {

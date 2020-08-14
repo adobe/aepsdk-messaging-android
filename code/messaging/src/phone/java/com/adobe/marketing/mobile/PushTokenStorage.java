@@ -3,6 +3,7 @@ package com.adobe.marketing.mobile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+// Temp
 //This class will be deleted and all the code will be moved to platform service SDK.
 public class PushTokenStorage {
 
