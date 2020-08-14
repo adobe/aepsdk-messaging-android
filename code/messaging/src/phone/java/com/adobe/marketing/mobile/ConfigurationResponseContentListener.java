@@ -42,7 +42,7 @@ public class ConfigurationResponseContentListener extends ExtensionListener {
     @Override
     public void hear(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(com.adobe.marketing.mobile.MessagingConstant.LOG_TAG, "Event or Event data is null.");
+            Log.debug(MessagingConstant.LOG_TAG, "Event or Event data is null.");
             return;
         }
 
