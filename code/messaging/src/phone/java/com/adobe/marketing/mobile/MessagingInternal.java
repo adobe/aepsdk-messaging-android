@@ -212,10 +212,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
         if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
             optOut();
-            return;
         }
-
-        processEvents();
     }
 
 
@@ -233,7 +230,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
             }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
                 new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid());
-
             }
         }
     }
