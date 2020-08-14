@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile;
 final class MessagingConstant {
 
     static final String LOG_TAG = "Messaging";
+    static final String EXTENSION_VERSION = "1.0.0";
+    static final String EXTENSION_NAME = "com.adobe.messaging";
 
     private MessagingConstant() {
     }
@@ -22,21 +24,30 @@ final class MessagingConstant {
 
         static final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
+            static final String VISITOR_ID_MID = "mid";
 
             private Identity() {
             }
         }
 
         static final class Messaging {
-            static final String TRACK_INFO_KEY_EVENT_TYPE  = "eventType";
-            static final String TRACK_INFO_KEY_MESSAGE_ID  = "id";
+            static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
+            static final String TRACK_INFO_KEY_MESSAGE_ID = "id";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
 
-            private Messaging() {}
+            private Messaging() {
+            }
+        }
+
+        static final class Configuration {
+            static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
+            // Temp
+            static final String DCCS_URL = "messaging.dccsHack";
+            private Configuration() {
+            }
         }
     }
-
 
     static final class EventType {
         public static final String HUB = "com.adobe.eventType.hub";
@@ -65,15 +76,17 @@ final class MessagingConstant {
         }
 
         static final class Configuration {
-            static final String NAME = "com.adobe.module.configuration";
+            static final String EXTENSION_NAME = "com.adobe.module.configuration";
             static final String PRIVACY_STATUS = "global.privacy";
+            // Temp
+            static final String DCCS_URL = "messaging.dccsHack";
 
             private Configuration() {
             }
         }
 
         static final class Identity {
-            static final String NAME = "com.adobe.module.identity";
+            static final String EXTENSION_NAME = "com.adobe.module.identity";
 
             private Identity() {
             }

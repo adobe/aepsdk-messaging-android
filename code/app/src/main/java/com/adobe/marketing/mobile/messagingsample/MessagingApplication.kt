@@ -1,10 +1,10 @@
-package com.adobe.marketing.mobile.messagingsampleapp
+package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.google.firebase.iid.FirebaseInstanceId
 
-class MessagingApplication : Application(){
+class MessagingApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
@@ -25,7 +25,7 @@ class MessagingApplication : Application(){
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful){
+            if(task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
                 MobileCore.setPushIdentifier(token)

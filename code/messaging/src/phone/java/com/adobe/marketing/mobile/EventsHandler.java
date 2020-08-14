@@ -14,7 +14,21 @@ package com.adobe.marketing.mobile;
 
 public interface EventsHandler {
 
+    /**
+     * Handles sending push token
+     * @param event Identity Request content event which contains the push token.
+     */
     void handlePushToken(final Event event);
+
+    /**
+     * Handles sending push notification tracking information
+     * @param event Generic Data OS event which contains the tracking push notification tracking information
+     */
     void handleTrackingInfo(final Event event);
-    void handlePrivacyPreferenceChange(final Event event);
+
+    /**
+     * Processes the ConfigurationResponse for collecting privacy status information
+     * @param event Configuration response event which contains the privacy status information
+     */
+    void processConfigurationResponse(final Event event);
 }
