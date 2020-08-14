@@ -58,7 +58,7 @@ public class ConfigurationResponseContentListener extends ExtensionListener {
             @Override
             public void run() {
                 // Handle the configuration response event
-                parentExtension.queueEvent(event);
+                parentExtension.processConfigurationResponse(event);
             }
         });
     }

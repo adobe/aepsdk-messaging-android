@@ -173,12 +173,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 return;
             }
 
-            if (EventType.CONFIGURATION.getName().equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // handle the configuration response event
-                processConfigurationResponse(eventToProcess);
-            }
-
             else if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
                 // handle the push token from generic identity request content event
@@ -210,9 +204,17 @@ public class MessagingInternal extends Extension implements EventsHandler {
         messagingState = new MessagingState();
         messagingState.setState(configData, identityData);
 
-        if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-            optOut();
-        }
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+                    optOut();
+                    return;
+                }
+
+                processEvents();
+            }
+        });
     }
 
 
