@@ -178,10 +178,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
                 // Temp
-                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-                    Log.error(LOG_TAG, "Dccs url is needed");
-                    return;
-                }
+                // For now leaving this check out.
+//                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
+//                    Log.error(LOG_TAG, "Dccs url is needed");
+//                    return;
+//                }
 
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
