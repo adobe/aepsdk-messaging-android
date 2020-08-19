@@ -20,7 +20,8 @@ class MessagingApplication : Application() {
         ExperiencePlatform.registerExtension();
 
         MobileCore.start {
-            MobileCore.configureWithAppID("")
+            // Necessary property id for MessagingSDKTest which has the edge configuration id needed by aep sdk
+            MobileCore.configureWithAppID("3805cb8645dd/b8dec0fe156d/launch-7dfbe727ca00-development")
             MobileCore.lifecycleStart(null);
         }
 
@@ -32,5 +33,4 @@ class MessagingApplication : Application() {
             }
         }
     }
-
 }
