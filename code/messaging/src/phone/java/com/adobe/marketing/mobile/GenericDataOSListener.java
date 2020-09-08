@@ -43,6 +43,7 @@ public class GenericDataOSListener extends ExtensionListener {
             @Override
             public void run() {
                 parentExtension.queueEvent(event);
+                parentExtension.processEvents();
             }
         });
     }
