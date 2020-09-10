@@ -43,7 +43,7 @@ final class MessagingConstant {
         static final class Configuration {
             static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
             // Temp
-            static final String DCCS_URL = "messaging.dccsHack";
+            static final String DCCS_URL = "messaging.dccs";
             private Configuration() {
             }
         }
@@ -79,7 +79,7 @@ final class MessagingConstant {
             static final String EXTENSION_NAME = "com.adobe.module.configuration";
             static final String PRIVACY_STATUS = "global.privacy";
             // Temp
-            static final String DCCS_URL = "messaging.dccsHack";
+            static final String DCCS_URL = "messaging.dccs";
 
             private Configuration() {
             }

@@ -16,27 +16,32 @@ class PushTokenSyncer {
 
     void syncPushToken(final String token, final String ecid, final String dccsUrl) {
 
+        if (dccsUrl == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, dccs url is null.");
+            return;
+        }
+
+        if (token == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
+            return;
+        }
+
+        if (ecid == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
+            return;
+        }
+
         byte[] payload = ("{\n" +
                 "\t\"header\": {\n" +
-                "\t\t\"schemaRef\": {\n" +
-                "\t\t  \"id\": \"https://ns.adobe.com/acopprod3/schemas/393fe4b3364b0856c909a6476260d45f10b360b058e93caa\",\n" + // Messaging SDK Schema in Stage Sandbox for E2E testing
-                "\t\t  \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
-                "\t\t},\n" +
-                "\t\t\"imsOrgId\": \"FAF554945B90342F0A495E2C@AdobeOrg\",\n" +
+                "\t\t\"imsOrgId\": \"745F37C35E4B776E0A49421B@AdobeOrg\",\n" +
                 "\t\t\"source\": {\n" +
                 "\t\t  \"name\": \"mobile\"\n" +
                 "\t\t},\n" +
-                "\t\t\"datasetId\": \"5ef3e83e6919231915e11ca1\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
+                "\t\t\"datasetId\": \"5f59ca7e8ee36419508cc225\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
                 "\t\t},\n" +
                 "\t\t\"body\": {\n" +
-                "\t\t\"xdmMeta\": {\n" +
-                "\t\t  \"schemaRef\": {\n" +
-                "\t\t    \"id\": \"https://ns.adobe.com/acopprod3/schemas/393fe4b3364b0856c909a6476260d45f10b360b058e93caa\",\n" +
-                "\t\t    \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
-                "\t\t  }\n" +
-                "\t\t},\n" +
                 "\t\t\"xdmEntity\": {\n" +
-                "\t\t\t\"_acopprod3\": {\n" +
+                "\t\t\t\"_cjmstage\": {\n" +
                 "\t\t  \t\t\"ECID\": \"" + ecid + "\"\n" +
                 "\t\t\t},\n" +
                 "\t\t\t\"pushNotificationDetails\": [\n" +

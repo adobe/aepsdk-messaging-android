@@ -25,7 +25,7 @@ final class MessagingState {
         if (configState != null) {
             this.privacyStatus = MobilePrivacyStatus.fromString(configState.optString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, ""));
             // Temp
-            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, "https://dcs.adobedc.net/collection/7b0a69f4d9563b792f41c8c7433d37ad5fa58f47ea1719c963c8501bf779e827");
+            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, null);
         }
     }
 
