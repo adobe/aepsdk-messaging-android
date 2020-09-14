@@ -37,7 +37,7 @@ class PushTokenSyncer {
                 "\t\t\"source\": {\n" +
                 "\t\t  \"name\": \"mobile\"\n" +
                 "\t\t},\n" +
-                "\t\t\"datasetId\": \"5f59ca7e8ee36419508cc225\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
+                "\t\t\"datasetId\": \"5f5fb49f6b169219511e3988\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
                 "\t\t},\n" +
                 "\t\t\"body\": {\n" +
                 "\t\t\"xdmEntity\": {\n" +
