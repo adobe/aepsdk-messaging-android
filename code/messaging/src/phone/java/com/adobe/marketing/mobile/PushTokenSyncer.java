@@ -31,6 +31,16 @@ class PushTokenSyncer {
             return;
         }
 
+        if (experienceCloudOrg == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, experience cloud org is null.");
+            return;
+        }
+
+        if (profileDatasetId == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, profile dataset id is null.");
+            return;
+        }
+
         byte[] payload = ("{\n" +
                 "    \"header\" : {\n" +
                 "        \"imsOrgId\": \"" + experienceCloudOrg + "\",\n" +
