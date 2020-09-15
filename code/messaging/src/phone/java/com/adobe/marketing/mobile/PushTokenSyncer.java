@@ -32,35 +32,39 @@ class PushTokenSyncer {
         }
 
         byte[] payload = ("{\n" +
-                "\t\"header\": {\n" +
-                "\t\t\"imsOrgId\": \"745F37C35E4B776E0A49421B@AdobeOrg\",\n" +
-                "\t\t\"source\": {\n" +
-                "\t\t  \"name\": \"mobile\"\n" +
-                "\t\t},\n" +
-                "\t\t\"datasetId\": \"5f5fb49f6b169219511e3988\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
-                "\t\t},\n" +
-                "\t\t\"body\": {\n" +
-                "\t\t\"xdmEntity\": {\n" +
-                "\t\t\t\"_cjmstage\": {\n" +
-                "\t\t  \t\t\"ECID\": \"" + ecid + "\"\n" +
-                "\t\t\t},\n" +
-                "\t\t\t\"pushNotificationDetails\": [\n" +
-                "\t\t      \t{\n" +
-                "\t\t      \t\t\"appID\": \"" + App.getApplication().getPackageName() + "\",\n" +
-                "\t\t   \t\t\t\"platform\": \"fcm\",\n" +
-                "\t\t    \t\t\"token\": \"" + token + "\",\n" +
-                "\t\t    \t\t\"blacklisted\": false,\n" +
-                "\t\t    \t\t\"blocklisted\": false,\n" +
-                "\t\t    \t\t\"identiy\": {\n" +
-                "\t\t    \t\t\t\"namespace\": {\n" +
-                "\t\t    \t\t\t\t\"code\": \"ECID\"\n" +
-                "\t\t      \t\t\t},\n" +
-                "\t\t      \t\t\t\"xid\": \"" + ecid + "\"\n" +
-                "\t\t      \t\t}\n" +
-                "\t\t      \t}\n" +
-                "\t\t    ]\n" +
-                "\t\t}\n" +
-                "\t}\n" +
+                "    \"header\" : {\n" +
+                "        \"imsOrgId\": \"745F37C35E4B776E0A49421B@AdobeOrg\",\n" +
+                "        \"source\": {\n" +
+                "            \"name\": \"mobile\"\n" +
+                "        },\n" +
+                "        \"datasetId\": \"5f600d4e3d6097194f070a05\"\n" +
+                "    },\n" +
+                "    \"body\": {\n" +
+                "        \"xdmEntity\": {\n" +
+                "            \"identityMap\": {\n" +
+                "                \"ECID\": [\n" +
+                "                    {\n" +
+                "                        \"id\" : \"" + ecid +"\"\n" +
+                "                    }\n" +
+                "                ]\n" +
+                "            },\n" +
+                "            \"pushNotificationDetails\": [\n" +
+                "                {\n" +
+                "                    \"appID\": \"" + App.getApplication().getPackageName() +"\",\n" +
+                "                    \"platform\": \"fcm\",\n" +
+                "                    \"token\": \"" + token + "\",\n" +
+                "                    \"blacklisted\": false,\n" +
+                "                    \"blocklisted\": false,\n" +
+                "                    \"identiy\": {\n" +
+                "                        \"namespace\": {\n" +
+                "                            \"code\": \"ECID\"\n" +
+                "                        },\n" +
+                "                        \"xid\": \"" + ecid + "\"\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    }\n" +
                 "}").getBytes();
 
         final NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
