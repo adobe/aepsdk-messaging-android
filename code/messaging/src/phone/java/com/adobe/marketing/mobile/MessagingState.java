@@ -11,9 +11,14 @@ final class MessagingState {
     // Temp
     // Temporary implementation for dccs hack for collecting push tokens
     private String dccsURL;
+    private String experienceCloudOrg;
 
     //Identity properties.
     private String ecid;
+
+    // Messaging properties
+    private String profileDatasetId;
+    private String experienceEventDatasetId;
 
 
     void setState(final EventData configState, final EventData identityState) {
@@ -21,15 +26,19 @@ final class MessagingState {
         setIdentityState(identityState);
     }
 
-    void setConfigState(final EventData configState) {
+    private void setConfigState(final EventData configState) {
         if (configState != null) {
             this.privacyStatus = MobilePrivacyStatus.fromString(configState.optString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, ""));
+            this.profileDatasetId = configState.optString(MessagingConstant.EventDataKeys.Configuration.PROFILE_DATASET_ID, "");
+            this.experienceEventDatasetId = configState.optString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
+
             // Temp
-            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, "https://dcs.adobedc.net/collection/7b0a69f4d9563b792f41c8c7433d37ad5fa58f47ea1719c963c8501bf779e827");
+            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, null);
+            this.experienceCloudOrg = configState.optString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_CLOUD_ORG, null);
         }
     }
 
-    void setIdentityState(final EventData identityState) {
+    private void setIdentityState(final EventData identityState) {
         if (identityState != null) {
             this.ecid = identityState.optString(MessagingConstant.EventDataKeys.Identity.VISITOR_ID_MID, "");
         }
@@ -43,8 +52,19 @@ final class MessagingState {
     String getDccsURL() {
         return dccsURL;
     }
+    String getExperienceCloudOrg() {
+        return experienceCloudOrg;
+    }
 
     String getEcid() {
         return ecid;
+    }
+
+    String getProfileDatasetId() {
+        return profileDatasetId;
+    }
+
+    String getExperienceEventDatasetId() {
+        return experienceEventDatasetId;
     }
 }

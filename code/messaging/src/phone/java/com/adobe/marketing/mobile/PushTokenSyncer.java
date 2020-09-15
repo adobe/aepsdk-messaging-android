@@ -14,48 +14,57 @@ class PushTokenSyncer {
         this.networkService = networkService;
     }
 
-    void syncPushToken(final String token, final String ecid, final String dccsUrl) {
+    void syncPushToken(final String token, final String ecid, final String dccsUrl, final String experienceCloudOrg, final String profileDatasetId) {
+
+        if (dccsUrl == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, dccs url is null.");
+            return;
+        }
+
+        if (token == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
+            return;
+        }
+
+        if (ecid == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
+            return;
+        }
 
         byte[] payload = ("{\n" +
-                "\t\"header\": {\n" +
-                "\t\t\"schemaRef\": {\n" +
-                "\t\t  \"id\": \"https://ns.adobe.com/acopprod3/schemas/393fe4b3364b0856c909a6476260d45f10b360b058e93caa\",\n" + // Messaging SDK Schema in Stage Sandbox for E2E testing
-                "\t\t  \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
-                "\t\t},\n" +
-                "\t\t\"imsOrgId\": \"FAF554945B90342F0A495E2C@AdobeOrg\",\n" +
-                "\t\t\"source\": {\n" +
-                "\t\t  \"name\": \"mobile\"\n" +
-                "\t\t},\n" +
-                "\t\t\"datasetId\": \"5ef3e83e6919231915e11ca1\"\n" + // Messaging SDK dataset in Stage Sandbox for E2E testing
-                "\t\t},\n" +
-                "\t\t\"body\": {\n" +
-                "\t\t\"xdmMeta\": {\n" +
-                "\t\t  \"schemaRef\": {\n" +
-                "\t\t    \"id\": \"https://ns.adobe.com/acopprod3/schemas/393fe4b3364b0856c909a6476260d45f10b360b058e93caa\",\n" +
-                "\t\t    \"contentType\": \"application/vnd.adobe.xed-full+json;version=1.28\"\n" +
-                "\t\t  }\n" +
-                "\t\t},\n" +
-                "\t\t\"xdmEntity\": {\n" +
-                "\t\t\t\"_acopprod3\": {\n" +
-                "\t\t  \t\t\"ECID\": \"" + ecid + "\"\n" +
-                "\t\t\t},\n" +
-                "\t\t\t\"pushNotificationDetails\": [\n" +
-                "\t\t      \t{\n" +
-                "\t\t      \t\t\"appID\": \"" + App.getApplication().getPackageName() + "\",\n" +
-                "\t\t   \t\t\t\"platform\": \"fcm\",\n" +
-                "\t\t    \t\t\"token\": \"" + token + "\",\n" +
-                "\t\t    \t\t\"blacklisted\": false,\n" +
-                "\t\t    \t\t\"blocklisted\": false,\n" +
-                "\t\t    \t\t\"identiy\": {\n" +
-                "\t\t    \t\t\t\"namespace\": {\n" +
-                "\t\t    \t\t\t\t\"code\": \"ECID\"\n" +
-                "\t\t      \t\t\t},\n" +
-                "\t\t      \t\t\t\"xid\": \"" + ecid + "\"\n" +
-                "\t\t      \t\t}\n" +
-                "\t\t      \t}\n" +
-                "\t\t    ]\n" +
-                "\t\t}\n" +
-                "\t}\n" +
+                "    \"header\" : {\n" +
+                "        \"imsOrgId\": \"" + experienceCloudOrg + "\",\n" +
+                "        \"source\": {\n" +
+                "            \"name\": \"mobile\"\n" +
+                "        },\n" +
+                "        \"datasetId\": \"" + profileDatasetId +"\"\n" +
+                "    },\n" +
+                "    \"body\": {\n" +
+                "        \"xdmEntity\": {\n" +
+                "            \"identityMap\": {\n" +
+                "                \"ECID\": [\n" +
+                "                    {\n" +
+                "                        \"id\" : \"" + ecid +"\"\n" +
+                "                    }\n" +
+                "                ]\n" +
+                "            },\n" +
+                "            \"pushNotificationDetails\": [\n" +
+                "                {\n" +
+                "                    \"appID\": \"" + App.getApplication().getPackageName() +"\",\n" +
+                "                    \"platform\": \"fcm\",\n" +
+                "                    \"token\": \"" + token + "\",\n" +
+                "                    \"blacklisted\": false,\n" +
+                "                    \"blocklisted\": false,\n" +
+                "                    \"identiy\": {\n" +
+                "                        \"namespace\": {\n" +
+                "                            \"code\": \"ECID\"\n" +
+                "                        },\n" +
+                "                        \"xid\": \"" + ecid + "\"\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    }\n" +
                 "}").getBytes();
 
         final NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
