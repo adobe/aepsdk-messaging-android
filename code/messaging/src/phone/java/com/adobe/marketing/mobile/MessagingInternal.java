@@ -291,6 +291,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
+    /**
+     * Checks whether all the configuration parameters which are required by push notification exists.
+     * @param configSharedState Configuration state in a map format.
+     * @return boolean value explaining whether the config is valid or not.
+     */
     private boolean isConfigValid(Map<String, Object> configSharedState) {
         // Need profile dataset id for sending the push token
         if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
