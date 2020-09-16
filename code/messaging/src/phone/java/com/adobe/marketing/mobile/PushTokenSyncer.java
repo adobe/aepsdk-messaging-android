@@ -63,9 +63,8 @@ class PushTokenSyncer {
                 "                    \"appID\": \"" + App.getApplication().getPackageName() +"\",\n" +
                 "                    \"platform\": \"fcm\",\n" +
                 "                    \"token\": \"" + token + "\",\n" +
-                "                    \"blacklisted\": false,\n" +
                 "                    \"blocklisted\": false,\n" +
-                "                    \"identiy\": {\n" +
+                "                    \"identity\": {\n" +
                 "                        \"namespace\": {\n" +
                 "                            \"code\": \"ECID\"\n" +
                 "                        },\n" +
