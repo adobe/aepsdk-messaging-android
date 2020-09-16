@@ -177,21 +177,8 @@ public class MessagingInternal extends Extension implements EventsHandler {
             if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
-                // Need profile dataset id for sending the push token
-                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
-                    Log.error(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
-                    return;
-                }
-
-                // Temp : Need the dccs url from the customer through the updateConfiguration API
-                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-                    Log.error(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
-                    return;
-                }
-
-                // Temp : Need the experience cloud org.
-                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
-                    Log.error(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
+                // Temp : Check if the config is valid.
+                if (!isConfigValid(configSharedState)) {
                     return;
                 }
 
@@ -302,6 +289,28 @@ public class MessagingInternal extends Extension implements EventsHandler {
             public void onResponse(Map<String, Object> map) {
             }
         });
+    }
+
+    private boolean isConfigValid(Map<String, Object> configSharedState) {
+        // Need profile dataset id for sending the push token
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
+            Log.error(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
+            return false;
+        }
+
+        // Temp : Need the dccs url from the customer through the updateConfiguration API
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
+            Log.error(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
+            return false;
+        }
+
+        // Temp : Need the experience cloud org.
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
+            Log.error(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
+            return false;
+        }
+
+        return true;
     }
 
     private void optOut() {
