@@ -154,10 +154,10 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 }
             };
 
-            Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
+            final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, configurationErrorCallback);
 
-            Map<String, Object> identitySharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
+            final Map<String, Object> identitySharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
                     eventToProcess, identityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
@@ -177,12 +177,10 @@ public class MessagingInternal extends Extension implements EventsHandler {
             if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
-                // Temp
-                // For now leaving this check out.
-//                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-//                    Log.error(LOG_TAG, "Dccs url is needed");
-//                    return;
-//                }
+                // Temp : Check if the config is valid.
+                if (!isConfigValid(configSharedState)) {
+                    return;
+                }
 
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
@@ -190,6 +188,13 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
             else if (EventType.GENERIC_DATA.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.OS.getName().equalsIgnoreCase(eventToProcess.getSource())) {
+
+                // Need experience event dataset id for sending the push token
+                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
+                    Log.error(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
+                    return;
+                }
+
                 // handle the push tracking information from generic data os event
                 handleTrackingInfo(eventToProcess);
             }
@@ -240,7 +245,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
             }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid(), messagingState.getDccsURL());
+                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid(), messagingState.getDccsURL(), messagingState.getExperienceCloudOrg(), messagingState.getProfileDatasetId());
             }
         }
     }
@@ -266,15 +271,51 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
         // Create XDM data with tracking data
         final MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
-        ExperiencePlatformEvent experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
-                .setXdmSchema(schema)
-                .build();
+        Map<String, Object> schemaXml = schema.serializeToXdm();
+        String datasetId = messagingState.getExperienceEventDatasetId();
+        ExperiencePlatformEvent experiencePlatformEvent;
+        if (datasetId != null) {
+            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+                    .setXdmSchema(schemaXml, datasetId)
+                    .build();
+        } else {
+            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+                    .setXdmSchema(schemaXml)
+                    .build();
+        }
 
         ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
             @Override
             public void onResponse(Map<String, Object> map) {
             }
         });
+    }
+
+    /**
+     * Checks whether all the configuration parameters which are required by push notification exists.
+     * @param configSharedState Configuration state in a map format.
+     * @return boolean value explaining whether the config is valid or not.
+     */
+    private boolean isConfigValid(Map<String, Object> configSharedState) {
+        // Need profile dataset id for sending the push token
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
+            Log.error(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
+            return false;
+        }
+
+        // Temp : Need the dccs url from the customer through the updateConfiguration API
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
+            Log.error(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
+            return false;
+        }
+
+        // Temp : Need the experience cloud org.
+        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
+            Log.error(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
+            return false;
+        }
+
+        return true;
     }
 
     private void optOut() {

@@ -43,7 +43,11 @@ final class MessagingConstant {
         static final class Configuration {
             static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
             // Temp
-            static final String DCCS_URL = "messaging.dccsHack";
+            static final String DCCS_URL = "messaging.dccs";
+            static final String EXPERIENCE_CLOUD_ORG = "experienceCloud.org";
+
+            static final String PROFILE_DATASET_ID = "messaging.profileDataset";
+            static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
             private Configuration() {
             }
         }
@@ -78,8 +82,14 @@ final class MessagingConstant {
         static final class Configuration {
             static final String EXTENSION_NAME = "com.adobe.module.configuration";
             static final String PRIVACY_STATUS = "global.privacy";
+
+            // Messaging
+            static final String PROFILE_DATASET_ID = "messaging.profileDataset";
+            static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
+
             // Temp
-            static final String DCCS_URL = "messaging.dccsHack";
+            static final String DCCS_URL = "messaging.dccs";
+            static final String EXPERIENCE_CLOUD_ORG = "experienceCloud.org";
 
             private Configuration() {
             }
