@@ -4,7 +4,7 @@
 Adobe Experience Platform Messaging extension allows you to send push notification token and push notification click through feedback to the Adobe Experience Platform.
 
 ## Current version
-The Experience Platform Mobile extension for Android is currently in Alpha development.
+The Experience Platform Messaging extension for Android is currently in Alpha development.
 
 ## Installation
 Integrate the Messaging into your app by including the following in your gradle file's `dependencies`:
