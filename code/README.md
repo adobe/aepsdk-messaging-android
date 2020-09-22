@@ -7,7 +7,7 @@ Adobe Experience Platform Messaging extension allows you to send push notificati
 The Experience Platform Mobile extension for Android is currently in Alpha development.
 
 ## Installation
-Integrate the Places Monitor into your app by including the following in your gradle file's `dependencies`:
+Integrate the Messaging into your app by including the following in your gradle file's `dependencies`:
 
 ```implementation 'com.adobe.marketing.mobile:messaging:0.0.1'```
 
