@@ -41,7 +41,7 @@ class PushTokenSyncer {
             return;
         }
 
-        byte[] payload = ("{\n" +
+        String payloadString = "{\n" +
                 "    \"header\" : {\n" +
                 "        \"imsOrgId\": \"" + experienceCloudOrg + "\",\n" +
                 "        \"source\": {\n" +
@@ -74,9 +74,15 @@ class PushTokenSyncer {
                 "            ]\n" +
                 "        }\n" +
                 "    }\n" +
-                "}").getBytes();
+                "}";
+
+        byte[] payload = payloadString.getBytes();
 
         final NetworkService.HttpConnection connection = networkService.connectUrl(dccsUrl, NetworkService.HttpCommand.POST, payload, Collections.singletonMap("Content-Type", "application/json"), 10, 10);
+        if (connection == null) {
+            Log.debug(LOG_TAG, "Connection is null with %s, %s", dccsUrl, profileDatasetId);
+            return;
+        }
         if (connection.getResponseCode() == 200) {
             Log.debug(LOG_TAG, "Successfully synced push token %s", token);
         } else {
