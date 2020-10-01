@@ -68,7 +68,7 @@ class PushTokenSyncer {
                 "                        \"namespace\": {\n" +
                 "                            \"code\": \"ECID\"\n" +
                 "                        },\n" +
-                "                        \"xid\": \"" + ecid + "\"\n" +
+                "                        \"id\": \"" + ecid + "\"\n" +
                 "                    }\n" +
                 "                }\n" +
                 "            ]\n" +
