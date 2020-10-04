@@ -75,9 +75,6 @@ android.libraryVariants.all { variant ->
 
         exclude "**/BuildConfig.java"
         exclude "**/R.java"
-        options {
-            links "https://developer.android.com/reference"
-        }
     }
 
 }
