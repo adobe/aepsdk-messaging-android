@@ -17,7 +17,7 @@ import java.util.HashMap;
 /**
  * Class {@code MobilePushTrackingSchemaTest}
  * 
- * <p/>
+ * <p>
  * XDM Schema Java Object Generated 2020-06-17 16:58:12.487261 -0700 PDT m=+9.739315253 by XDMTool
  *
  * Title		:	Mobile Push Tracking Schema Test

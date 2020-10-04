@@ -13,7 +13,7 @@ jobs:
           command: code/gradlew -q -p code/messaging javadocPublic
       - run:
           name: Build
-          command: code/gradlew -p code/messaging assemblePhoneCoreBundleDebug
+          command: code/gradlew -p code/messaging assemblePhoneDebug
   test:
     working_directory: ~/code
     docker:
@@ -52,6 +52,6 @@ workflows:
           type: approval
           requires:
            - test
-      - publish:
-          requires:
-            - hold
+#      - publish:
+#          requires:
+#            - hold

@@ -14,7 +14,9 @@ package com.adobe.marketing.mobile;
 
 /**
  * Listens for {@link EventType#GENERIC_DATA}, {@link EventSource#OS} events.
- * <p><Monitor OS events for sending push notification tracking information.<p/>
+ *
+ * <p>
+ * Monitor OS events for sending push notification tracking information.
  * @see MessagingInternal
  */
 public class GenericDataOSListener extends ExtensionListener {

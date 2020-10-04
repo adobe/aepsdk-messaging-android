@@ -1,4 +1,12 @@
 apply plugin: 'com.android.library'
+apply plugin: "jacoco"
+apply plugin: "com.jfrog.bintray"
+
+ext {
+    srcFolders = file("./").listFiles().findAll {
+        !it.isFile() && !it.name.startsWith("gradle") && !it.name.startsWith("test")
+    }.collect { "./" + it.name + "/src/main/java" }
+}
 
 android {
     compileSdkVersion 29
@@ -11,26 +19,79 @@ android {
         versionCode 1
         versionName "1.0.0"
 
-//        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        consumerProguardFiles 'consumer-rules.pro'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
     }
 
     flavorDimensions "messaging"
-
     productFlavors{
-        phone{
-
-        }
+        phone {}
     }
 
     buildTypes {
+        debug {
+            testCoverageEnabled true
+            debuggable true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
+
+task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
+    sourceDirectories = files(android.sourceSets.main.java.sourceFiles)
+    sourceDirectories += files(android.sourceSets.phone.java.sourceFiles)
+    executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
+    classDirectories = fileTree(dir: "$buildDir/intermediates/classes/phone/debug/com/adobe/marketing/mobile")
+}
+
+tasks.withType(Test) {
+    jacoco {
+        append = true
+        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
+        includeNoLocationClasses = false
+        includes = ['*/phone/java/com/adobe/marketing/mobile/*.java']
+    }
+}
+
+android.libraryVariants.all { variant ->
+    tasks.withType(Javadoc) {
+        source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
+        ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+
+        doFirst{classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)}
+
+
+        exclude "**/BuildConfig.java"
+        exclude "**/R.java"
+        options {
+            links "https://developer.android.com/reference"
+        }
+    }
+
+}
+
+task javadocInternal(type: Javadoc) {
+    destinationDir = reporting.file("javadocInternal")
+    options.memberLevel = JavadocMemberLevel.PRIVATE
+}
+
+task javadocPublic(type: Javadoc) {
+    destinationDir = reporting.file("javadocPublic")
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+}
+
+task javadocPublish(type: Jar) {
+    from javadocPublic
+    classifier = 'javadoc'
+}
+
 
 dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.aar'])
