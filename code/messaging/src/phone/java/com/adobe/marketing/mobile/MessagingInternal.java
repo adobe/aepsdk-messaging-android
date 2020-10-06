@@ -12,13 +12,20 @@
 package com.adobe.marketing.mobile;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
 
 import com.adobe.marketing.mobile.xdm.*;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -284,6 +291,10 @@ public class MessagingInternal extends Extension implements EventsHandler {
         // Create XDM data with tracking data
         final MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
         Map<String, Object> schemaXml = schema.serializeToXdm();
+
+        // Adding adobe cjm data
+        addAdobeData(eventData, schemaXml);
+
         String datasetId = messagingState.getExperienceEventDatasetId();
         ExperiencePlatformEvent experiencePlatformEvent;
         if (datasetId != null && !datasetId.isEmpty()) {
@@ -298,8 +309,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
         ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
             @Override
-            public void onResponse(Map<String, Object> map) {
-            }
+            public void onResponse(Map<String, Object> map) { /* no-op */ }
         });
     }
 
@@ -335,6 +345,54 @@ public class MessagingInternal extends Extension implements EventsHandler {
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
+    // Adding CJM specific data to tracking information
+    @SuppressWarnings("unchecked")
+    private static void addAdobeData(final EventData eventData, final Map<String, Object> schemaXml) {
+        // Temp
+        // Convert the adobe string to object
+        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, null);
+        if (adobe == null) {
+            Log.error(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
+            return;
+        }
+        JSONObject adobeJson;
+        try {
+            adobeJson = new JSONObject(adobe);
+        } catch (JSONException e) {
+            Log.error(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+            adobeJson = null;
+        }
+
+        // Check if the required key is available
+        if (adobeJson != null && adobeJson.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
+            try {
+                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
+                Iterator<String> keys  = customerJourneyManagement.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    schemaXml.put(key, jsonStringToMap(customerJourneyManagement.get(key).toString()));
+                }
+            } catch (JSONException e) {
+                Log.error(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
+                return;
+            }
+
+            // Adding the messageProfile adobe data
+            if (schemaXml.containsKey(EXPERIENCE)) {
+                HashMap<String, Object> _experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
+                try {
+                    if (_experience != null) {
+                        _experience.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                    }
+                } catch (JSONException e) {
+                    Log.error(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
+                }
+            }
+        } else {
+            Log.debug(LOG_TAG, "Ignoring adobe data with the tracking data, missing cjm keys");
+        }
+    }
+
     private static MobilePushTrackingSchemaTest getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
         final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
         final Acopprod3 acopprod3 = new Acopprod3();
@@ -353,6 +411,20 @@ public class MessagingInternal extends Extension implements EventsHandler {
         acopprod3.setTrack(track);
         schema.setAcopprod3(acopprod3);
         return schema;
+    }
+
+    private static Map<String, Object> jsonStringToMap(final String jsonString) throws JSONException {
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        JSONObject jObject = new JSONObject(jsonString);
+        Iterator<String> keys = jObject.keys();
+
+        while( keys.hasNext() ) {
+            String key = keys.next();
+            Object value = jObject.get(key);
+            map.put(key, value);
+        }
+
+        return map;
     }
 
     // ========================================================================================
