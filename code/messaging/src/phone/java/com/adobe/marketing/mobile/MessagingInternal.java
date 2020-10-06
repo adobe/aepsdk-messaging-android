@@ -54,6 +54,9 @@ public class MessagingInternal extends Extension implements EventsHandler {
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
         registerEventListeners(extensionApi);
+
+        // Init the messaging state
+        messagingState = new MessagingState();
     }
 
     /**
@@ -88,6 +91,17 @@ public class MessagingInternal extends Extension implements EventsHandler {
         getApi().clearSharedEventStates(null);
     }
 
+    /**
+     * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
+     *
+     * @param extensionUnexpectedError 	{@link ExtensionUnexpectedError} occurred exception
+     */
+    @Override
+    protected void onUnexpectedError(ExtensionUnexpectedError extensionUnexpectedError) {
+        super.onUnexpectedError(extensionUnexpectedError);
+        this.onUnregistered();
+    }
+
     private void registerEventListeners(final ExtensionApi extensionApi) {
         // todo might want to registerEventListener instead registerListener
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
@@ -113,7 +127,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         eventQueue.add(event);
-        processEvents();
     }
 
     /**
@@ -215,7 +228,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
         final EventData configData = event.getData();
         final EventData identityData = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
 
-        messagingState = new MessagingState();
         messagingState.setState(configData, identityData);
 
         getExecutor().execute(new Runnable() {
@@ -274,7 +286,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         Map<String, Object> schemaXml = schema.serializeToXdm();
         String datasetId = messagingState.getExperienceEventDatasetId();
         ExperiencePlatformEvent experiencePlatformEvent;
-        if (datasetId != null) {
+        if (datasetId != null && !datasetId.isEmpty()) {
             experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
                     .setXdmSchema(schemaXml, datasetId)
                     .build();

@@ -11,6 +11,13 @@
  */
 package com.adobe.marketing.mobile;
 
+/**
+ * Listens for {@link EventType#GENERIC_IDENTITY}, {@link EventSource#REQUEST_CONTENT} events.
+ *
+ * <p>
+ * Monitor REQUEST_CONTENT events for sending push notification token information.
+ * @see MessagingInternal
+ */
 public class IdentityRequestContentListener extends ExtensionListener {
 
     IdentityRequestContentListener(final ExtensionApi extensionApi, final String type, final String source) {
@@ -35,6 +42,7 @@ public class IdentityRequestContentListener extends ExtensionListener {
             @Override
             public void run() {
                 parentExtension.queueEvent(event);
+                parentExtension.processEvents();
             }
         });
     }
