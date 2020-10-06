@@ -286,7 +286,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         Map<String, Object> schemaXml = schema.serializeToXdm();
         String datasetId = messagingState.getExperienceEventDatasetId();
         ExperiencePlatformEvent experiencePlatformEvent;
-        if (datasetId != null) {
+        if (datasetId != null && !datasetId.isEmpty()) {
             experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
                     .setXdmSchema(schemaXml, datasetId)
                     .build();

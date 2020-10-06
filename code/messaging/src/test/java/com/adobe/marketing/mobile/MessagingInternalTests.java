@@ -1,41 +1,65 @@
+/*
+  Copyright 2020 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
 package com.adobe.marketing.mobile;
 
 import android.app.Application;
+import android.content.Context;
+
+import com.adobe.marketing.mobile.xdm.Schema;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Example local unit test, which will execute on the development machine (host).
- *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
- */
-
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, ExperiencePlatform.class, ExperiencePlatformEvent.class, App.class})
-public class MessagingInternalTest {
+@PrepareForTest({ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, ExperiencePlatform.class, ExperiencePlatformEvent.class, App.class, Context.class})
+public class MessagingInternalTests {
 
+    private int EXECUTOR_TIMEOUT = 5;
     private MessagingInternal messagingInternal;
 
     // Mocks
@@ -57,12 +81,15 @@ public class MessagingInternalTest {
     ConcurrentLinkedQueue<Event> mockEventQueue;
     @Mock
     Application mockApplication;
+    @Mock
+    Context context;
 
     @Before
     public void setup() {
         PowerMockito.mockStatic(ExperiencePlatform.class);
         PowerMockito.mockStatic(ExperiencePlatformEvent.class);
         PowerMockito.mockStatic(App.class);
+        Mockito.when(App.getAppContext()).thenReturn(context);
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
@@ -241,11 +268,14 @@ public class MessagingInternalTest {
 
     @Test
     public void test_processConfigurationResponse_when_privacyOptOut() {
+        // dummy executor
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
         Whitebox.setInternalState(messagingInternal, "eventQueue", mockEventQueue);
-
+        Whitebox.setInternalState(messagingInternal, "executorService", executor);
 
         // Mocks
         Event mockEvent = new Event.Builder("event1", EventType.CONFIGURATION.getName(), EventSource.RESPONSE_CONTENT.getName()).setEventData(mockConfigData).build();
@@ -261,10 +291,10 @@ public class MessagingInternalTest {
 
         //test
         messagingInternal.processConfigurationResponse(mockEvent);
+        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(messagingState, times(1)).setState(mockEvent.getData(), mockEvent.getData());
-        verify(messagingState, times(1)).getPrivacyStatus();
         verify(mockPlatformServices, times(1)).getLocalStorageService();
         verify(mockLocalStorageService, times(1)).getDataStore("AdobeMobile_ExperienceMessage");
         verify(mockDataStore, times(1)).remove("pushIdentifier");
@@ -302,7 +332,6 @@ public class MessagingInternalTest {
 
         // verify
         verify(messagingState, times(1)).setState(mockEvent.getData(), mockEvent.getData());
-        verify(messagingState, times(1)).getPrivacyStatus();
         verify(mockPlatformServices, times(0)).getLocalStorageService();
         verify(mockEventQueue, times(0)).clear();
         verify(mockExtensionApi, times(0)).getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, mockEvent, mockCallback);
@@ -395,5 +424,103 @@ public class MessagingInternalTest {
         verify(mockPlatformServices, times(1)).getLocalStorageService();
         verify(mockPlatformServices, times(1)).getNetworkService();
         verify(mockNetworkService, times(1)).connectUrl(anyString(), any(NetworkService.HttpCommand.class), any(byte[].class), ArgumentMatchers.<String, String>anyMap(), anyInt(), anyInt());
+    }
+
+    // ========================================================================================
+    // handleTrackingInfo
+    // ========================================================================================
+    @Test
+    public void test_handleTrackingInfo_when_EventDataNull() {
+        // Mocks
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(null).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        verify(messagingState, times(0)).getExperienceEventDatasetId();
+    }
+
+    @Test
+    public void test_handleTrackingInfo_when_eventTypeIsNull() {
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        // verify
+        verify(messagingState, times(0)).getExperienceEventDatasetId();
+    }
+
+    @Test
+    public void test_handleTrackingInfo_when_MessageIdIsNull() {
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        // verify
+        verify(messagingState, times(0)).getExperienceEventDatasetId();
+    }
+
+    @Test
+    public void test_handleTrackingInfo() {
+        final ArgumentCaptor<ExperiencePlatformEvent> eventCaptor = ArgumentCaptor.forClass(ExperiencePlatformEvent.class);
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        PowerMockito.verifyStatic(ExperiencePlatform.class);
+        ExperiencePlatform.sendEvent(eventCaptor.capture(), any(ExperiencePlatformCallback.class));
+
+        // verify event
+        ExperiencePlatformEvent event = eventCaptor.getValue();
+        assertNotNull(event.getXdmSchema());
+        assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+    }
+
+    // ========================================================================================
+    // getExecutor
+    // ========================================================================================
+    @Test
+    public void test_getExecutor_NeverReturnsNull() {
+        // test
+        ExecutorService executorService = messagingInternal.getExecutor();
+        assertNotNull("The executor should not return null", executorService);
+
+        // verify
+        assertEquals("Gets the same executor instance on the next get", executorService, messagingInternal.getExecutor());
     }
 }
