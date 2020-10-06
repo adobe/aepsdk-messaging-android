@@ -51,7 +51,7 @@ public class IdentityRequestContentListenerTests {
     }
 
     @Test
-    public void testHear_WhenGenericDataOsEvent() {
+    public void testHear_WhenIdentityRequestContentEvent() {
         // setup
         EventData eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
