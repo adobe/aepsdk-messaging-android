@@ -240,7 +240,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
         getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                if (MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+                if (!MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
                     optOut();
                     return;
                 }
