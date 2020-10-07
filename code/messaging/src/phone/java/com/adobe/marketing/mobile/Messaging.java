@@ -36,7 +36,7 @@ public final class Messaging {
      */
     public static void registerExtension() {
         if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
-            Log.error(LOG_TAG, "Unable to register Messaging SDK since MobileCore is not initialized properly. For more details refer to https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core");
+             Log.warning(LOG_TAG, "Unable to register Messaging SDK since MobileCore is not initialized properly. For more details refer to https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core");
         }
 
         MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {

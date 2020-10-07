@@ -15,41 +15,29 @@ package com.adobe.marketing.mobile;
 import android.app.Application;
 import android.content.Context;
 
-import com.adobe.marketing.mobile.xdm.Schema;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -509,6 +497,53 @@ public class MessagingInternalTests {
         ExperiencePlatformEvent event = eventCaptor.getValue();
         assertNotNull(event.getXdmSchema());
         assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+    }
+
+    @Test
+    public void test_handleTrackingInfo_when_cjmData() {
+        final ArgumentCaptor<ExperiencePlatformEvent> eventCaptor = ArgumentCaptor.forClass(ExperiencePlatformEvent.class);
+        final String mockCJMData = "{\n" +
+                "        \"cjm\" :{\n" +
+                "          \"_experience\": {\n" +
+                "            \"customerJourneyManagement\": {\n" +
+                "              \"messageExecution\": {\n" +
+                "                \"messageExecutionID\": \"16-Sept-postman\",\n" +
+                "                \"messageID\": \"567\",\n" +
+                "                \"journeyVersionID\": \"some-journeyVersionId\",\n" +
+                "                \"journeyVersionInstanceId\": \"someJourneyVersionInstanceId\"\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }";
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        PowerMockito.verifyStatic(ExperiencePlatform.class);
+        ExperiencePlatform.sendEvent(eventCaptor.capture(), any(ExperiencePlatformCallback.class));
+
+        // verify event
+        ExperiencePlatformEvent event = eventCaptor.getValue();
+        assertNotNull(event.getXdmSchema());
+        assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+        // Verify _experience exist
+        assertTrue(event.getXdmSchema().containsKey(MessagingConstant.TrackingKeys.EXPERIENCE));
     }
 
     // ========================================================================================

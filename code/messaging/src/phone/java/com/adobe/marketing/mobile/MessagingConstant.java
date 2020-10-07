@@ -17,7 +17,21 @@ final class MessagingConstant {
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
-    private MessagingConstant() {
+    private MessagingConstant() {}
+
+    static final class TrackingKeys {
+        static final String CUSTOMER_JOURNEY_MANAGEMENT = "cjm";
+        static final String EXPERIENCE = "_experience";
+        static final String MESSAGE_PROFILE_JSON = "{\n" +
+                "   \"messageProfile\":{\n" +
+                "      \"channel\":{\n" +
+                "         \"_type\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
+                "      }\n" +
+                "   },\n" +
+                "   \"pushChannelContext\":{\n" +
+                "      \"platform\":\"fcm\"\n" +
+                "   }\n" +
+                "}";
     }
 
     static final class EventDataKeys {
@@ -35,6 +49,9 @@ final class MessagingConstant {
             static final String TRACK_INFO_KEY_MESSAGE_ID = "id";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
+
+            // TEMP todo we need to define if this is the right key or do we need an extra api for this
+            static final String TRACK_INFO_KEY_ADOBE = "adobe";
 
             private Messaging() {
             }
