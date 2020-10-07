@@ -503,7 +503,7 @@ public class MessagingInternalTests {
     public void test_handleTrackingInfo_when_cjmData() {
         final ArgumentCaptor<ExperiencePlatformEvent> eventCaptor = ArgumentCaptor.forClass(ExperiencePlatformEvent.class);
         final String mockCJMData = "{\n" +
-                "        \"customerJourneyManagement\" :{\n" +
+                "        \"cjm\" :{\n" +
                 "          \"_experience\": {\n" +
                 "            \"customerJourneyManagement\": {\n" +
                 "              \"messageExecution\": {\n" +
