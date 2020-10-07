@@ -20,7 +20,7 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
-        static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
+        static final String CUSTOMER_JOURNEY_MANAGEMENT = "cjm";
         static final String EXPERIENCE = "_experience";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +

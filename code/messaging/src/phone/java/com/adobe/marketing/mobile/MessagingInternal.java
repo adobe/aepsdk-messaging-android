@@ -345,7 +345,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
-    // Adding CJM specific data to tracking information
+    /**
+     * Adding CJM specific data to tracking information schema map.
+     * @param eventData eventData which contains the cjm data forwarded by the customer.
+     * @param schemaXml schemaXml map which is updated with the cjm data.
+     */
     @SuppressWarnings("unchecked")
     private static void addAdobeData(final EventData eventData, final Map<String, Object> schemaXml) {
         // Temp
@@ -393,6 +397,14 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
     }
 
+    /**
+     * Builds the xdmSchema with the tracking information provided by the customer in eventData.
+     * @param eventType
+     * @param messageId
+     * @param isApplicationOpened
+     * @param actionId
+     * @return Schema object which is added the the experience event
+     */
     private static MobilePushTrackingSchemaTest getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
         final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
         final Acopprod3 acopprod3 = new Acopprod3();
