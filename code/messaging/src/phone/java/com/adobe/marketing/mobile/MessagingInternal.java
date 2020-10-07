@@ -211,7 +211,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
                 // Need experience event dataset id for sending the push token
                 if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
-                    Log.error(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
+                     Log.warning(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                     return;
                 }
 
@@ -321,19 +321,19 @@ public class MessagingInternal extends Extension implements EventsHandler {
     private boolean isConfigValid(Map<String, Object> configSharedState) {
         // Need profile dataset id for sending the push token
         if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
-            Log.error(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
+             Log.warning(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
             return false;
         }
 
         // Temp : Need the dccs url from the customer through the updateConfiguration API
         if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-            Log.error(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
+             Log.warning(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
             return false;
         }
 
         // Temp : Need the experience cloud org.
         if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
-            Log.error(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
+             Log.warning(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
             return false;
         }
 
@@ -356,14 +356,14 @@ public class MessagingInternal extends Extension implements EventsHandler {
         // Convert the adobe string to object
         final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, null);
         if (adobe == null) {
-            Log.error(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
+             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
             return;
         }
         JSONObject adobeJson;
         try {
             adobeJson = new JSONObject(adobe);
         } catch (JSONException e) {
-            Log.error(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
             adobeJson = null;
         }
 
@@ -377,19 +377,19 @@ public class MessagingInternal extends Extension implements EventsHandler {
                     schemaXml.put(key, jsonStringToMap(customerJourneyManagement.get(key).toString()));
                 }
             } catch (JSONException e) {
-                Log.error(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
+                 Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
                 return;
             }
 
             // Adding the messageProfile adobe data
             if (schemaXml.containsKey(EXPERIENCE)) {
-                HashMap<String, Object> _experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
+                HashMap<String, Object> experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
                 try {
-                    if (_experience != null) {
-                        _experience.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                    if (experience != null) {
+                        experience.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
                     }
                 } catch (JSONException e) {
-                    Log.error(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
+                     Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
                 }
             }
         } else {
@@ -426,13 +426,13 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private static Map<String, Object> jsonStringToMap(final String jsonString) throws JSONException {
-        HashMap<String, Object> map = new HashMap<String, Object>();
-        JSONObject jObject = new JSONObject(jsonString);
-        Iterator<String> keys = jObject.keys();
+        final HashMap<String, Object> map = new HashMap<String, Object>();
+        final JSONObject jObject = new JSONObject(jsonString);
+        final Iterator<String> keys = jObject.keys();
 
         while( keys.hasNext() ) {
-            String key = keys.next();
-            Object value = jObject.get(key);
+            final String key = keys.next();
+            final Object value = jObject.get(key);
             map.put(key, value);
         }
 
