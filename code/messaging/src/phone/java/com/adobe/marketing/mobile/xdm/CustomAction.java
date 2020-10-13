@@ -31,7 +31,7 @@ public class CustomAction implements Property {
 	@Override
 	public Map<String, Object> serializeToXdm() {
 		Map<String, Object> map = new HashMap<>();
-		if (this.actionId != null) { map.put("actionId", this.actionId); }
+		if (this.actionId != null) { map.put("actionID", this.actionId); }
 		map.put("value", this.value);
 
 		return map;

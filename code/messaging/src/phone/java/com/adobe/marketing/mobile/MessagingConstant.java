@@ -32,6 +32,10 @@ final class MessagingConstant {
                 "      \"platform\":\"fcm\"\n" +
                 "   }\n" +
                 "}";
+        static final String APPLICATION = "application";
+        static final String LAUNCHES = "launches";
+        static final String LAUNCHES_VALUE = "value";
+
     }
 
     static final class EventDataKeys {

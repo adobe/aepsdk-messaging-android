@@ -110,7 +110,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
-        // todo might want to registerEventListener instead registerListener
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
         extensionApi.registerListener(EventType.GENERIC_DATA, EventSource.OS, GenericDataOSListener.class);
         extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
@@ -289,8 +288,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Create XDM data with tracking data
-        final MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
+        final MessagingPushTrackingSchema schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
         Map<String, Object> schemaXml = schema.serializeToXdm();
+
+        // Adding application data
+        addApplicationData(isApplicationOpened, schemaXml);
 
         // Adding adobe cjm data
         addAdobeData(eventData, schemaXml);
@@ -343,6 +345,14 @@ public class MessagingInternal extends Extension implements EventsHandler {
     private void optOut() {
         eventQueue.clear();
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
+    }
+
+    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> schemaXml) {
+        Map<String, Object> applicationMap = new HashMap<>();
+        Map<String, Object> launchesMap = new HashMap<>();
+        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
+        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
+        schemaXml.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
     }
 
     /**
@@ -405,23 +415,20 @@ public class MessagingInternal extends Extension implements EventsHandler {
      * @param actionId
      * @return Schema object which is added the the experience event
      */
-    private static MobilePushTrackingSchemaTest getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
-        final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
-        final Acopprod3 acopprod3 = new Acopprod3();
-        final Track track = new Track();
+    private static MessagingPushTrackingSchema getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
+        final MessagingPushTrackingSchema schema = new MessagingPushTrackingSchema();
+        final PushNotificationTracking pushNotificationTracking = new PushNotificationTracking();
         final CustomAction customAction = new CustomAction();
 
-        if (isApplicationOpened) {
-            track.setApplicationOpened(true);
-        } else {
+        if (!isApplicationOpened) {
             customAction.setActionId(actionId);
-            track.setCustomAction(customAction);
+            pushNotificationTracking.setCustomAction(customAction);
         }
 
         schema.setEventType(eventType);
-        track.setId(messageId);
-        acopprod3.setTrack(track);
-        schema.setAcopprod3(acopprod3);
+        pushNotificationTracking.setPushProviderMessageID(messageId);
+        pushNotificationTracking.setPushProvider("fcm");
+        schema.setPushNotificationTracking(pushNotificationTracking);
         return schema;
     }
 
