@@ -478,7 +478,7 @@ public class MessagingInternalTests {
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
 
         // private mocks
@@ -497,6 +497,10 @@ public class MessagingInternalTests {
         ExperiencePlatformEvent event = eventCaptor.getValue();
         assertNotNull(event.getXdmSchema());
         assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+
+        // verify the applicationOpened is added to adobe standard mixin for application
+        int value = (int)((Map<String, Object>)(((Map<String, Object>)event.getXdmSchema().get(MessagingConstant.TrackingKeys.APPLICATION)).get(MessagingConstant.TrackingKeys.LAUNCHES))).get(MessagingConstant.TrackingKeys.LAUNCHES_VALUE);
+        assertEquals(1, value);
     }
 
     @Test
