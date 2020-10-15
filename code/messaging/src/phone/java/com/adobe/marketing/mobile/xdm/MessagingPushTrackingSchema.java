@@ -61,7 +61,7 @@ public class MessagingPushTrackingSchema implements Schema {
 		if (this.eventMergeId != null) { map.put("eventMergeId", this.eventMergeId); }
 		if (this.eventType != null) { map.put("eventType", this.eventType); }
 		if (this.identityMap != null) { map.put("identityMap", this.identityMap.serializeToXdm()); }
-		if (this.timestamp != null) { map.put("timestamp", Serializer.serializeToISO8601String(this.timestamp)); }
+		if (this.timestamp != null) { map.put("timestamp", Formatters.dateToISO8601String(this.timestamp)); }
 
 		return map;
 	}

@@ -20,12 +20,13 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
-        static final String CUSTOMER_JOURNEY_MANAGEMENT = "cjm";
+        static final String CJM = "cjm";
         static final String EXPERIENCE = "_experience";
+        static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +
                 "      \"channel\":{\n" +
-                "         \"_type\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
+                "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
                 "      }\n" +
                 "   },\n" +
                 "   \"pushChannelContext\":{\n" +

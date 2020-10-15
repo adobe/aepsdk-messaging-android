@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
@@ -378,9 +379,9 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Check if the required key is available
-        if (adobeJson != null && adobeJson.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
+        if (adobeJson != null && adobeJson.has(CJM)) {
             try {
-                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
+                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CJM);
                 Iterator<String> keys  = customerJourneyManagement.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
@@ -394,12 +395,21 @@ public class MessagingInternal extends Extension implements EventsHandler {
             // Adding the messageProfile adobe data
             if (schemaXml.containsKey(EXPERIENCE)) {
                 HashMap<String, Object> experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
-                try {
-                    if (experience != null) {
-                        experience.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                if (experience != null && experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT)) {
+                    try {
+                        Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                        if (cjm instanceof JSONObject) {
+                            Map<String, Object> cjmMap = jsonStringToMap(cjm.toString());
+                            if (!cjmMap.isEmpty()) {
+                                cjmMap.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                                experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjmMap);
+                            }
+                        } else {
+                            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, customerJourneyManagement key is missing");
+                        }
+                    } catch (JSONException e) {
+                        Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
                     }
-                } catch (JSONException e) {
-                     Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
                 }
             }
         } else {
