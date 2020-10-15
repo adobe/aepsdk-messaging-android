@@ -68,7 +68,7 @@ public class MessagingPushTrackingSchema implements Schema {
 
 	
 	/**
-	 * Returns the Acopprod3 property
+	 * Returns the PushNotificationTracking property
 	 * 
 	 * @return {@link PushNotificationTracking} value or null if the property is not set
 	 */
@@ -77,9 +77,9 @@ public class MessagingPushTrackingSchema implements Schema {
 	}
 
 	/**
-	 * Sets the Acopprod3 property
+	 * Sets the PushNotificationTracking property
 	 * 
-	 * @param newValue the new Acopprod3 value
+	 * @param newValue the new PushNotificationTracking value
 	 */
 	public void setPushNotificationTracking(final PushNotificationTracking newValue) {
 		this.pushNotificationTracking = newValue;

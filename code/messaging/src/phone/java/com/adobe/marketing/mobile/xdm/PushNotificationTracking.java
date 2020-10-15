@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Class {@code Acopprod3}
+ * Class {@code PushNotificationTracking}
  * 
  *
  * XDM Property Java Object Generated 2020-06-17 16:58:12.488293 -0700 PDT m=+9.740346842 by XDMTool
