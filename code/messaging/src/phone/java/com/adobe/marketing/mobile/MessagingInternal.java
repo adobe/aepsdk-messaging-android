@@ -299,18 +299,18 @@ public class MessagingInternal extends Extension implements EventsHandler {
         addAdobeData(eventData, schemaXml);
 
         String datasetId = messagingState.getExperienceEventDatasetId();
-        ExperiencePlatformEvent experiencePlatformEvent;
+        ExperienceEvent experienceEvent;
         if (datasetId != null && !datasetId.isEmpty()) {
-            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+            experienceEvent = new ExperienceEvent.Builder()
                     .setXdmSchema(schemaXml, datasetId)
                     .build();
         } else {
-            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+            experienceEvent = new ExperienceEvent.Builder()
                     .setXdmSchema(schemaXml)
                     .build();
         }
 
-        ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
+        Edge.sendEvent(experienceEvent, new EdgeCallback() {
             @Override
             public void onResponse(Map<String, Object> map) { /* no-op */ }
         });
