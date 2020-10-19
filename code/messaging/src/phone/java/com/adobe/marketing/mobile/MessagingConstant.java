@@ -20,18 +20,26 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
-        static final String CUSTOMER_JOURNEY_MANAGEMENT = "cjm";
+        static final String CJM = "cjm";
         static final String EXPERIENCE = "_experience";
+        static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +
                 "      \"channel\":{\n" +
-                "         \"_type\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
+                "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
                 "      }\n" +
                 "   },\n" +
                 "   \"pushChannelContext\":{\n" +
                 "      \"platform\":\"fcm\"\n" +
                 "   }\n" +
                 "}";
+        static final String APPLICATION = "application";
+        static final String LAUNCHES = "launches";
+        static final String LAUNCHES_VALUE = "value";
+    }
+
+    static final class JSON_VALUES {
+        static final String FCM = "fcm";
     }
 
     static final class EventDataKeys {
@@ -70,28 +78,7 @@ final class MessagingConstant {
         }
     }
 
-    static final class EventType {
-        public static final String HUB = "com.adobe.eventType.hub";
-        public static final String GENERIC_IDENTITY = "com.adobe.eventType.generic.identity";
-        public static final String GENERIC_DATA = "com.adobe.eventType.generic.data";
-
-        private EventType() {
-        }
-    }
-
-    static final class EventSource {
-        static final String SHARED_STATE = "com.adobe.eventSource.sharedState";
-        static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
-        static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
-        static final String OS = "com.adobe.eventSource.os";
-
-        private EventSource() {
-        }
-    }
-
     static final class SharedState {
-
-        static final String STATE_OWNER = "stateowner";
 
         private SharedState() {
         }
@@ -108,15 +95,13 @@ final class MessagingConstant {
             static final String DCCS_URL = "messaging.dccs";
             static final String EXPERIENCE_CLOUD_ORG = "experienceCloud.org";
 
-            private Configuration() {
-            }
+            private Configuration() {/* no-op */}
         }
 
         static final class Identity {
             static final String EXTENSION_NAME = "com.adobe.module.identity";
 
-            private Identity() {
-            }
+            private Identity() {/* no-op */}
         }
     }
 }

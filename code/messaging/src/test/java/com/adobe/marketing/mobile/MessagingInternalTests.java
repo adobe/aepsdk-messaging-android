@@ -44,7 +44,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, ExperiencePlatform.class, ExperiencePlatformEvent.class, App.class, Context.class})
+@PrepareForTest({ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, Edge.class, ExperienceEvent.class, App.class, Context.class})
 public class MessagingInternalTests {
 
     private int EXECUTOR_TIMEOUT = 5;
@@ -74,8 +74,8 @@ public class MessagingInternalTests {
 
     @Before
     public void setup() {
-        PowerMockito.mockStatic(ExperiencePlatform.class);
-        PowerMockito.mockStatic(ExperiencePlatformEvent.class);
+        PowerMockito.mockStatic(Edge.class);
+        PowerMockito.mockStatic(ExperienceEvent.class);
         PowerMockito.mockStatic(App.class);
         Mockito.when(App.getAppContext()).thenReturn(context);
         messagingInternal = new MessagingInternal(mockExtensionApi);
@@ -238,8 +238,8 @@ public class MessagingInternalTests {
         messagingInternal.processEvents();
 
         // verify
-        PowerMockito.verifyStatic(ExperiencePlatform.class, times(1));
-        ExperiencePlatform.sendEvent(any(ExperiencePlatformEvent.class), any(ExperiencePlatformCallback.class));
+        PowerMockito.verifyStatic(Edge.class, times(1));
+        Edge.sendEvent(any(ExperienceEvent.class), any(EdgeCallback.class));
     }
 
     // ========================================================================================
@@ -471,14 +471,14 @@ public class MessagingInternalTests {
 
     @Test
     public void test_handleTrackingInfo() {
-        final ArgumentCaptor<ExperiencePlatformEvent> eventCaptor = ArgumentCaptor.forClass(ExperiencePlatformEvent.class);
+        final ArgumentCaptor<ExperienceEvent> eventCaptor = ArgumentCaptor.forClass(ExperienceEvent.class);
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
 
         // private mocks
@@ -490,18 +490,22 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(ExperiencePlatform.class);
-        ExperiencePlatform.sendEvent(eventCaptor.capture(), any(ExperiencePlatformCallback.class));
+        PowerMockito.verifyStatic(Edge.class);
+        Edge.sendEvent(eventCaptor.capture(), any(EdgeCallback.class));
 
         // verify event
-        ExperiencePlatformEvent event = eventCaptor.getValue();
+        ExperienceEvent event = eventCaptor.getValue();
         assertNotNull(event.getXdmSchema());
         assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+
+        // verify the applicationOpened is added to adobe standard mixin for application
+        int value = (int)((Map<String, Object>)(((Map<String, Object>)event.getXdmSchema().get(MessagingConstant.TrackingKeys.APPLICATION)).get(MessagingConstant.TrackingKeys.LAUNCHES))).get(MessagingConstant.TrackingKeys.LAUNCHES_VALUE);
+        assertEquals(1, value);
     }
 
     @Test
     public void test_handleTrackingInfo_when_cjmData() {
-        final ArgumentCaptor<ExperiencePlatformEvent> eventCaptor = ArgumentCaptor.forClass(ExperiencePlatformEvent.class);
+        final ArgumentCaptor<ExperienceEvent> eventCaptor = ArgumentCaptor.forClass(ExperienceEvent.class);
         final String mockCJMData = "{\n" +
                 "        \"cjm\" :{\n" +
                 "          \"_experience\": {\n" +
@@ -535,11 +539,11 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(ExperiencePlatform.class);
-        ExperiencePlatform.sendEvent(eventCaptor.capture(), any(ExperiencePlatformCallback.class));
+        PowerMockito.verifyStatic(Edge.class);
+        Edge.sendEvent(eventCaptor.capture(), any(EdgeCallback.class));
 
         // verify event
-        ExperiencePlatformEvent event = eventCaptor.getValue();
+        ExperienceEvent event = eventCaptor.getValue();
         assertNotNull(event.getXdmSchema());
         assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
         // Verify _experience exist

@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
@@ -110,7 +111,6 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
-        // todo might want to registerEventListener instead registerListener
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
         extensionApi.registerListener(EventType.GENERIC_DATA, EventSource.OS, GenericDataOSListener.class);
         extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
@@ -289,25 +289,28 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Create XDM data with tracking data
-        final MobilePushTrackingSchemaTest schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
+        final MessagingPushTrackingSchema schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
         Map<String, Object> schemaXml = schema.serializeToXdm();
+
+        // Adding application data
+        addApplicationData(isApplicationOpened, schemaXml);
 
         // Adding adobe cjm data
         addAdobeData(eventData, schemaXml);
 
         String datasetId = messagingState.getExperienceEventDatasetId();
-        ExperiencePlatformEvent experiencePlatformEvent;
+        ExperienceEvent experienceEvent;
         if (datasetId != null && !datasetId.isEmpty()) {
-            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+            experienceEvent = new ExperienceEvent.Builder()
                     .setXdmSchema(schemaXml, datasetId)
                     .build();
         } else {
-            experiencePlatformEvent = new ExperiencePlatformEvent.Builder()
+            experienceEvent = new ExperienceEvent.Builder()
                     .setXdmSchema(schemaXml)
                     .build();
         }
 
-        ExperiencePlatform.sendEvent(experiencePlatformEvent, new ExperiencePlatformCallback() {
+        Edge.sendEvent(experienceEvent, new EdgeCallback() {
             @Override
             public void onResponse(Map<String, Object> map) { /* no-op */ }
         });
@@ -345,6 +348,14 @@ public class MessagingInternal extends Extension implements EventsHandler {
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
+    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> schemaXml) {
+        final Map<String, Object> applicationMap = new HashMap<>();
+        final Map<String, Object> launchesMap = new HashMap<>();
+        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
+        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
+        schemaXml.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
+    }
+
     /**
      * Adding CJM specific data to tracking information schema map.
      * @param eventData eventData which contains the cjm data forwarded by the customer.
@@ -368,9 +379,9 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Check if the required key is available
-        if (adobeJson != null && adobeJson.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
+        if (adobeJson != null && adobeJson.has(CJM)) {
             try {
-                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
+                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CJM);
                 Iterator<String> keys  = customerJourneyManagement.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
@@ -384,12 +395,21 @@ public class MessagingInternal extends Extension implements EventsHandler {
             // Adding the messageProfile adobe data
             if (schemaXml.containsKey(EXPERIENCE)) {
                 HashMap<String, Object> experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
-                try {
-                    if (experience != null) {
-                        experience.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                if (experience != null && experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT)) {
+                    try {
+                        final Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                        if (cjm instanceof JSONObject) {
+                            Map<String, Object> cjmMap = jsonStringToMap(cjm.toString());
+                            if (!cjmMap.isEmpty()) {
+                                cjmMap.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
+                                experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjmMap);
+                            }
+                        } else {
+                            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, customerJourneyManagement key is missing");
+                        }
+                    } catch (JSONException e) {
+                        Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
                     }
-                } catch (JSONException e) {
-                     Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
                 }
             }
         } else {
@@ -405,23 +425,20 @@ public class MessagingInternal extends Extension implements EventsHandler {
      * @param actionId
      * @return Schema object which is added the the experience event
      */
-    private static MobilePushTrackingSchemaTest getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
-        final MobilePushTrackingSchemaTest schema = new MobilePushTrackingSchemaTest();
-        final Acopprod3 acopprod3 = new Acopprod3();
-        final Track track = new Track();
+    private static MessagingPushTrackingSchema getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
+        final MessagingPushTrackingSchema schema = new MessagingPushTrackingSchema();
+        final PushNotificationTracking pushNotificationTracking = new PushNotificationTracking();
         final CustomAction customAction = new CustomAction();
 
-        if (isApplicationOpened) {
-            track.setApplicationOpened(true);
-        } else {
+        if (!isApplicationOpened) {
             customAction.setActionId(actionId);
-            track.setCustomAction(customAction);
+            pushNotificationTracking.setCustomAction(customAction);
         }
 
         schema.setEventType(eventType);
-        track.setId(messageId);
-        acopprod3.setTrack(track);
-        schema.setAcopprod3(acopprod3);
+        pushNotificationTracking.setPushProviderMessageID(messageId);
+        pushNotificationTracking.setPushProvider(MessagingConstant.JSON_VALUES.FCM);
+        schema.setPushNotificationTracking(pushNotificationTracking);
         return schema;
     }
 
