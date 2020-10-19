@@ -349,8 +349,8 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> schemaXml) {
-        Map<String, Object> applicationMap = new HashMap<>();
-        Map<String, Object> launchesMap = new HashMap<>();
+        final Map<String, Object> applicationMap = new HashMap<>();
+        final Map<String, Object> launchesMap = new HashMap<>();
         launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
         applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
         schemaXml.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
@@ -397,7 +397,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
                 HashMap<String, Object> experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
                 if (experience != null && experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT)) {
                     try {
-                        Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                        final Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
                         if (cjm instanceof JSONObject) {
                             Map<String, Object> cjmMap = jsonStringToMap(cjm.toString());
                             if (!cjmMap.isEmpty()) {
@@ -437,7 +437,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
         schema.setEventType(eventType);
         pushNotificationTracking.setPushProviderMessageID(messageId);
-        pushNotificationTracking.setPushProvider("fcm");
+        pushNotificationTracking.setPushProvider(MessagingConstant.JSON_VALUES.FCM);
         schema.setPushNotificationTracking(pushNotificationTracking);
         return schema;
     }

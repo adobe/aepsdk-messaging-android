@@ -75,7 +75,7 @@ public class PushNotificationTracking implements Property {
 	}
 
 	/**
-	 * Returns the push provideer property
+	 * Returns the push provider property
 	 *
 	 * @return {@link String} value or null if the property is not set
 	 */
