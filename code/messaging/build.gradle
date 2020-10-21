@@ -17,7 +17,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0.0-alpha-1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -96,14 +96,14 @@ task javadocPublish(type: Jar) {
 
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
     testImplementation 'junit:junit:4.13'
     testImplementation "org.mockito:mockito-core:2.28.2"
     testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
     testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
     testImplementation 'org.json:json:20180130'
-    testImplementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation 'com.adobe.marketing.mobile:edge:1.0.0-beta-1'
 }
 
 afterEvaluate {
