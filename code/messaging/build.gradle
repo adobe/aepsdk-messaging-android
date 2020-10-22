@@ -2,6 +2,10 @@ apply plugin: 'com.android.library'
 apply plugin: "jacoco"
 apply plugin: "com.jfrog.bintray"
 
+jacoco {
+    toolVersion = rootProject.ext.jacocoVersion
+}
+
 ext {
     srcFolders = file("./").listFiles().findAll {
         !it.isFile() && !it.name.startsWith("gradle") && !it.name.startsWith("test")
@@ -9,13 +13,13 @@ ext {
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0-alpha-1"
 
@@ -23,7 +27,7 @@ android {
         consumerProguardFiles 'consumer-rules.pro'
     }
 
-    flavorDimensions "messaging"
+    flavorDimensions "target"
     productFlavors{
         phone {}
     }
