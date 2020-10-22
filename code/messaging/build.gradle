@@ -8,14 +8,18 @@ ext {
     }.collect { "./" + it.name + "/src/main/java" }
 }
 
+jacoco {
+    toolVersion = rootProject.ext.jacocoVersion
+}
+
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 29
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0-alpha-1"
 
@@ -23,9 +27,11 @@ android {
         consumerProguardFiles 'consumer-rules.pro'
     }
 
-    flavorDimensions "messaging"
+    flavorDimensions "target"
     productFlavors{
-        phone {}
+        phone {
+            dimension "target"
+        }
     }
 
     buildTypes {
@@ -49,22 +55,6 @@ android {
     }
 }
 
-task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
-    sourceDirectories = files(android.sourceSets.main.java.sourceFiles)
-    sourceDirectories += files(android.sourceSets.phone.java.sourceFiles)
-    executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
-    classDirectories = fileTree(dir: "$buildDir/intermediates/classes/phone/debug/com/adobe/marketing/mobile")
-}
-
-tasks.withType(Test) {
-    jacoco {
-        append = true
-        destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
-        includeNoLocationClasses = false
-        includes = ['*/phone/java/com/adobe/marketing/mobile/*.java']
-    }
-}
-
 android.libraryVariants.all { variant ->
     tasks.withType(Javadoc) {
         source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
@@ -72,11 +62,13 @@ android.libraryVariants.all { variant ->
 
         doFirst{classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)}
 
-
         exclude "**/BuildConfig.java"
         exclude "**/R.java"
+        options {
+            links "https://developer.android.com/reference"
+            linksOffline "https://developer.android.com/reference", "file:///${android.sdkDirectory}/docs/reference"
+        }
     }
-
 }
 
 task javadocInternal(type: Javadoc) {
@@ -91,9 +83,131 @@ task javadocPublic(type: Javadoc) {
 
 task javadocPublish(type: Jar) {
     from javadocPublic
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
 }
 
+artifactoryPublish.dependsOn('assemblePhone')
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId = 'com.adobe.marketing.mobile'
+            artifactId = rootProject.moduleName
+            version = rootProject.moduleVersion
+            artifact("$buildDir/outputs/aar/${moduleAARName}")
+            artifact javadocPublish
+            pom.withXml {
+                asNode().appendNode('name', mavenRepoName)
+                asNode().appendNode('description', mavenRepoDescription)
+                asNode().appendNode('url', 'https://aep-sdks.gitbook.io/docs/')
+                def scmNode = asNode().appendNode('scm')
+                scmNode.appendNode('url', 'https://github.com/Adobe-Marketing-Cloud/acp-sdks/')
+
+
+                def developersNode = asNode().appendNode('developers')
+                def developerNode = developersNode.appendNode('developer')
+                developerNode.appendNode('id', 'adobe')
+                developerNode.appendNode('name', 'adobe')
+
+                def licensesNode = asNode().appendNode('licenses')
+                def licenseNode = licensesNode.appendNode('license')
+                licenseNode.appendNode('name', 'Adobe Proprietary')
+
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+
+                def coreDependencyNode = dependenciesNode.appendNode('dependency')
+                coreDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
+                coreDependencyNode.appendNode('artifactId', 'core')
+                coreDependencyNode.appendNode('version', mavenCoreVersion)
+
+                def edgeDependencyNode = dependenciesNode.appendNode('dependency')
+                edgeDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
+                edgeDependencyNode.appendNode('artifactId', 'edge')
+                edgeDependencyNode.appendNode('version', mavenEdgeVersion)
+            }
+        }
+        aarSnapshot(MavenPublication) {
+            groupId = 'com.adobe.marketing.mobile'
+            artifactId = rootProject.moduleName
+            if (project.hasProperty("isMaster")) {
+                version = rootProject.moduleVersion + '-internal'
+            } else {
+                version = rootProject.moduleVersion + '-SNAPSHOT'
+            }
+            artifact("$buildDir/outputs/aar/${moduleAARName}")
+            artifact javadocPublish
+            pom.withXml {
+                asNode().appendNode('name', mavenRepoName)
+                asNode().appendNode('description', mavenRepoDescription)
+                asNode().appendNode('url', 'https://aep-sdks.gitbook.io/docs/')
+                def scmNode = asNode().appendNode('scm')
+                scmNode.appendNode('url', 'https://github.com/Adobe-Marketing-Cloud/acp-sdks/')
+
+
+                def developersNode = asNode().appendNode('developers')
+                def developerNode = developersNode.appendNode('developer')
+                developerNode.appendNode('id', 'adobe')
+                developerNode.appendNode('name', 'adobe')
+
+                def licensesNode = asNode().appendNode('licenses')
+                def licenseNode = licensesNode.appendNode('license')
+                licenseNode.appendNode('name', 'Adobe Proprietary')
+
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+
+                def coreDependencyNode = dependenciesNode.appendNode('dependency')
+                coreDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
+                coreDependencyNode.appendNode('artifactId', 'core')
+                coreDependencyNode.appendNode('version', mavenCoreVersion + '-SNAPSHOT')
+
+                def edgeDependencyNode = dependenciesNode.appendNode('dependency')
+                edgeDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
+                edgeDependencyNode.appendNode('artifactId', 'edge')
+                edgeDependencyNode.appendNode('version', mavenEdgeVersion + '-SNAPSHOT')
+            }
+        }
+    }
+}
+artifactoryPublish {
+    publications(publishing.publications.aarSnapshot)
+}
+
+bintray {
+    user = 'sdkci'
+    //This apiKey is passed as a gradle parameter to the task
+    //from the Jenkins Pipeline.
+    if (project.hasProperty("apiKey")) {
+        key = "$apiKey"
+    } else {
+        key = "xxxxxxxxxxxxxxx"
+    }
+
+    String gpgpass = "xxxxxxxxxxxxxxx"
+    if (project.hasProperty("gpgPassphrase")) {
+        gpgpass = "$gpgPassphrase"
+    }
+    dryRun = false
+    pkg {
+        repo = "mobileservicesdk"
+        name = mavenRepoName
+        userOrg = "eaps"
+        version {
+            name = rootProject.moduleVersion
+            desc = mavenRepoDescription
+            gpg {
+                sign = true
+                passphrase = gpgpass
+            }
+        }
+    }
+
+    publications = ['aar']
+}
+
+bintrayUpload.dependsOn('assemblePhone')
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -108,4 +222,26 @@ dependencies {
 
 afterEvaluate {
     generatePhoneReleaseBuildConfig.enabled = false
+}
+
+tasks.withType(Test) {
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
+    def excludeRegex = ['**/ADB*.class']
+    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
+
+    additionalClassDirs.setFrom files([debugTree])
+    additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
+    sourceDirectories.setFrom files(android.sourceSets.phone.java.sourceFiles)
+    executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
+
+    reports {
+        xml.enabled false
+        csv.enabled false
+        html.enabled true
+    }
 }
