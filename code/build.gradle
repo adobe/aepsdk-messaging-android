@@ -29,17 +29,17 @@ allprojects {
         google()
         jcenter()
         maven {
-            url 'https://artifactory.corp.adobe.com:443/artifactory/plugins-release'
+            url artifactoryUrl
             credentials {
-                username = "amsdkci"
-                password = "AKCp5bBXaCvFa5CH63nvSmmrWGP4sdXVKorUHLGoPYPAQNzhs3zYmVGGwoTyMGE1JmX9Z7Crm"
+                username = artifactoryUserName
+                password = artifactoryPassword
             }
         }
         maven {
-            url 'https://artifactory.corp.adobe.com:443/artifactory/gradle-amsdk-snapshot'
+            url artifactorySnapshotUrl
             credentials {
-                username = "amsdkci"
-                password = "AKCp5bBXaCvFa5CH63nvSmmrWGP4sdXVKorUHLGoPYPAQNzhs3zYmVGGwoTyMGE1JmX9Z7Crm"
+                username = artifactoryUserName
+                password = artifactoryPassword
             }
         }
     }
@@ -49,25 +49,17 @@ allprojects {
 }
 
 artifactory {
-    contextUrl = "https://artifactory.corp.adobe.com/artifactory"
+    contextUrl = artifactoryContextUrl
     publish {
         repository {
-            repoKey = 'gradle-amsdk-snapshot'
-            username = 'amsdkci'
-            password = 'AKCp5bBXaCvFa5CH63nvSmmrWGP4sdXVKorUHLGoPYPAQNzhs3zYmVGGwoTyMGE1JmX9Z7Crm'
+            repoKey = artifactoryRepoKey
+            username = artifactoryUserName
+            password = artifactoryPassword
             maven = true
         }
         defaults {
             publishArtifacts = true
             publishPom = true
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'gradle-amsdk-snapshot'
-            username = 'amsdkci'
-            password = 'AKCp5bBXaCvFa5CH63nvSmmrWGP4sdXVKorUHLGoPYPAQNzhs3zYmVGGwoTyMGE1JmX9Z7Crm'
-            maven = true
         }
     }
 }

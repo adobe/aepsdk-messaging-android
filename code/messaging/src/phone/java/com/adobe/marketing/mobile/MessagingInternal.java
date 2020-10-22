@@ -419,11 +419,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
     /**
      * Builds the xdmSchema with the tracking information provided by the customer in eventData.
-     * @param eventType
-     * @param messageId
-     * @param isApplicationOpened
-     * @param actionId
-     * @return Schema object which is added the the experience event
+     * @param eventType String eventType can be either applicationOpened or customAction
+     * @param messageId String messageId for the push notification provided by the customer
+     * @param isApplicationOpened Boolean value indicating whether the application was opened
+     * @param actionId String indicating the actionId of the action taken by the user on the push notification
+     * @return {@link Schema} object which is added the the experience event
      */
     private static MessagingPushTrackingSchema getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
         final MessagingPushTrackingSchema schema = new MessagingPushTrackingSchema();

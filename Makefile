@@ -18,12 +18,6 @@ clean:
 	(rm -rf $(AAR_FILE_DIR))
 	(./code/gradlew -p code clean)
 
-code-format:
-	(./tools/astyle/android/format.sh)
-
-ci-check-format:$(SOURCE_FILE_DIR)
-	(./tools/astyle/android/checkformat.sh)
-
 ci-build: create-ci
 	(mkdir -p ci/assemble)
 
