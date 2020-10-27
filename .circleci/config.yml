@@ -48,10 +48,10 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
           type: approval
           requires:
            - test
-#      - publish:
-#          requires:
-#            - hold
+      - publish:
+          requires:
+            - hold
