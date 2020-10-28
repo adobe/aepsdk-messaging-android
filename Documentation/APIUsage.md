@@ -50,19 +50,6 @@ intent?.extras?.let {
 }
 ```
 
-```kotlin
-intent?.extras?.let {
-    val messageId = it.getString("messageId", "")
-    val adobeData = it.getString("_xdm", "")
-    val map = mutableMapOf<String, Any>()
-    map["eventType"] = "pushTracking.applicationOpened"
-    map["id"] = messageId
-    map["applicationOpened"] = true
-    map["adobe"] = adobeData
-    MobileCore.collectMessageInfo(map)
-}
-```
-
 ```java
 Intent intent = getIntent();
 Bundle bundle = intent.getExtras();
