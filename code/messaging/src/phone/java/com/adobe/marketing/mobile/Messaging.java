@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile;
 
 import android.content.Intent;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
@@ -84,7 +83,7 @@ public final class Messaging {
         intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
-        String xdmData = data.get(MessagingConstant.TrackingKeys.XDM);
+        String xdmData = data.get(MessagingConstant.TrackingKeys._XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
             intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, xdmData);
         } else {

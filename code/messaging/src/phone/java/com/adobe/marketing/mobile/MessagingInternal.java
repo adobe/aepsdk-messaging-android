@@ -22,6 +22,10 @@ import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.META;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MIXINS;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys._XDM;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -306,14 +310,14 @@ public class MessagingInternal extends Extension implements EventsHandler {
         // Adding application data
         addApplicationData(isApplicationOpened, xdmMap);
 
-        // Adding adobe cjm data
-        addAdobeData(eventData, xdmMap);
+        // Adding xdm data
+        addXDMData(eventData, xdmMap);
 
         EventData xdmData = new EventData();
-        xdmData.putTypedMap("xdm", xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
-        xdmData.putTypedMap("meta", metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+        xdmData.putTypedMap(XDM, xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+        xdmData.putTypedMap(META, metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
 
-        Event trackEvent = new Event.Builder("Push Tracking event", "com.adobe.eventType.edge", EventSource.REQUEST_CONTENT.getName())
+        Event trackEvent = new Event.Builder("Push Tracking event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setData(xdmData)
                 .build();
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
@@ -391,78 +395,59 @@ public class MessagingInternal extends Extension implements EventsHandler {
     }
 
     /**
-     * Adding CJM specific data to tracking information schema map.
+     * Adding XDM specific data to tracking information.
      *
-     * @param eventData eventData which contains the cjm data forwarded by the customer.
-     * @param xdmMap    xdmMap map which is updated with the cjm data.
+     * @param eventData eventData which contains the xdm data forwarded by the customer.
+     * @param xdmMap    xdmMap map which is updated.
      */
-    @SuppressWarnings("unchecked")
-    private static void addAdobeData(final EventData eventData, final Map<String, Object> xdmMap) {
-        // Convert the adobe string to object
+    private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
+        // Extract the xdm adobe data string from the event data.
         final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, null);
         if (adobe == null) {
-            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
-            return;
-        }
-        JSONObject adobeJson;
-        try {
-            adobeJson = new JSONObject(adobe);
-        } catch (JSONException e) {
-            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;
         }
 
-        // Check if the required key is available
-        if (adobeJson.has(CJM)) {
-            try {
-                final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CJM);
-                Iterator<String> keys = customerJourneyManagement.keys();
+        try {
+            // Convert the adobe string to json object
+            JSONObject xdmJson = new JSONObject(adobe);
+
+            // Check for if the json has the required keys
+            if (xdmJson.has(CJM) || xdmJson.has(MIXINS)) {
+                final JSONObject mixins = xdmJson.has(MIXINS) ? xdmJson.getJSONObject(MIXINS) : xdmJson.getJSONObject(CJM);
+                Iterator<String> keys = mixins.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    xdmMap.put(key, jsonStringToMap(customerJourneyManagement.get(key).toString()));
+                    xdmMap.put(key, mixins.get(key));
                 }
-            } catch (JSONException e) {
-                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
-                return;
-            }
 
-            // Adding the messageProfile adobe data
-            if (xdmMap.containsKey(EXPERIENCE)) {
-                HashMap<String, Object> experience = (HashMap<String, Object>) xdmMap.get(EXPERIENCE);
-                if (experience != null && experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT)) {
-                    try {
-                        final Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
-                        if (cjm instanceof JSONObject) {
-                            Map<String, Object> cjmMap = jsonStringToMap(cjm.toString());
-                            if (!cjmMap.isEmpty()) {
-                                cjmMap.putAll(jsonStringToMap(MESSAGE_PROFILE_JSON));
-                                experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjmMap);
-                            }
-                        } else {
-                            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, customerJourneyManagement key is missing");
+                // Check if the xdm data provided by the customer is using cjm for tracking
+                // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
+                if (mixins.has(EXPERIENCE)) {
+                    JSONObject experience = mixins.getJSONObject(EXPERIENCE);
+                    if (experience.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
+                        JSONObject cjm = experience.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
+                        // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
+                        final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
+                        final Iterator<String> jObjectKeys = jObject.keys();
+
+                        while (jObjectKeys.hasNext()) {
+                            final String key = jObjectKeys.next();
+                            final Object value = jObject.get(key);
+                            cjm.put(key, value);
                         }
-                    } catch (JSONException e) {
-                        Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, messaging profile json issue : %s", e.getMessage());
+                        experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
+                        xdmMap.put(EXPERIENCE, experience);
                     }
+                } else {
+                    Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
                 }
+            } else {
+                Log.warning(LOG_TAG, "Failed to send xdm data with the tracking, required keys are missing.");
             }
-        } else {
-            Log.debug(LOG_TAG, "Ignoring adobe data with the tracking data, missing cjm keys");
+        } catch (JSONException e) {
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
-    }
-
-    private static Map<String, Object> jsonStringToMap(final String jsonString) throws JSONException {
-        final HashMap<String, Object> map = new HashMap<String, Object>();
-        final JSONObject jObject = new JSONObject(jsonString);
-        final Iterator<String> keys = jObject.keys();
-
-        while (keys.hasNext()) {
-            final String key = keys.next();
-            final Object value = jObject.get(key);
-            map.put(key, value);
-        }
-
-        return map;
     }
 
     // ========================================================================================

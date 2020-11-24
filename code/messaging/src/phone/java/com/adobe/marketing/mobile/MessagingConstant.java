@@ -20,9 +20,11 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
-        static final String XDM = "_xdm";
+        static final String _XDM = "_xdm";
+        static final String XDM = "xdm";
+        static final String META = "meta";
         static final String CJM = "cjm";
-        static final String MIXIN = "mixin";
+        static final String MIXINS = "mixins";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
@@ -85,6 +87,7 @@ final class MessagingConstant {
 
     static final class EventType {
         static final String MESSAGING = "com.adobe.eventType.messaging";
+        static final String EDGE = "com.adobe.eventType.edge";
     }
 
     static final class EventDataValues {
