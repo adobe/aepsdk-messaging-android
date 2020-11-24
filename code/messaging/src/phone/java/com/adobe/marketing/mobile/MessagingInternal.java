@@ -23,8 +23,6 @@ import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
 
-import com.adobe.marketing.mobile.xdm.*;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,9 +33,7 @@ import java.util.concurrent.Executors;
 public class MessagingInternal extends Extension implements EventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private static final String MODULE_NAME = "com.adobe.aepsdk.module.messaging";
     private PlatformServices platformServices = new AndroidPlatformServices();
-    private String ecid;
     private MessagingState messagingState;
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
@@ -51,13 +47,13 @@ public class MessagingInternal extends Extension implements EventsHandler {
      * <ul>
      *     <li> {@link ConfigurationResponseContentListener} listening to event with eventType {@link EventType#CONFIGURATION}
      *     and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
-     *     <li> {@link GenericDataOSListener} listening to event with eventType {@link EventType#GENERIC_DATA}
-     *     and EventSource {@link EventSource#OS}</li>
+     *     <li> {@link MessagingRequestContentListener} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
+     *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link IdentityRequestContentListener} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      * </ul>
      *
-     * @param extensionApi 	{@link ExtensionApi} instance
+     * @param extensionApi {@link ExtensionApi} instance
      */
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
@@ -102,7 +98,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
     /**
      * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
      *
-     * @param extensionUnexpectedError 	{@link ExtensionUnexpectedError} occurred exception
+     * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
      */
     @Override
     protected void onUnexpectedError(ExtensionUnexpectedError extensionUnexpectedError) {
@@ -112,7 +108,13 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
         extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
-        extensionApi.registerListener(EventType.GENERIC_DATA, EventSource.OS, GenericDataOSListener.class);
+        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), MessagingRequestContentListener.class, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.debug(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
+                        MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
+            }
+        });
         extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
 
         Log.debug(MessagingConstant.LOG_TAG, "Registering Messaging extension - version %s",
@@ -126,7 +128,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
      * The queued events are then processed in an orderly fashion.
      * No action is taken if the provided event's value is null.
      *
-     * @param event 	The {@link Event} thats needs to be queued
+     * @param event The {@link Event} thats needs to be queued
      */
     void queueEvent(final Event event) {
         if (event == null) {
@@ -204,18 +206,16 @@ public class MessagingInternal extends Extension implements EventsHandler {
 
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
-            }
-
-            else if (EventType.GENERIC_DATA.getName().equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.OS.getName().equalsIgnoreCase(eventToProcess.getSource())) {
+            } else if (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
+                    EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
                 // Need experience event dataset id for sending the push token
-                if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
-                     Log.warning(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
+                if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
+                    Log.warning(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                     return;
                 }
 
-                // handle the push tracking information from generic data os event
+                // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
             }
 
@@ -288,55 +288,64 @@ public class MessagingInternal extends Extension implements EventsHandler {
             return;
         }
 
-        // Create XDM data with tracking data
-        final MessagingPushTrackingSchema schema = getXdmSchema(eventType, messageId, isApplicationOpened, actionId);
-        Map<String, Object> schemaXml = schema.serializeToXdm();
-
-        // Adding application data
-        addApplicationData(isApplicationOpened, schemaXml);
-
-        // Adding adobe cjm data
-        addAdobeData(eventData, schemaXml);
-
         String datasetId = messagingState.getExperienceEventDatasetId();
-        ExperienceEvent experienceEvent;
-        if (datasetId != null && !datasetId.isEmpty()) {
-            experienceEvent = new ExperienceEvent.Builder()
-                    .setXdmSchema(schemaXml, datasetId)
-                    .build();
-        } else {
-            experienceEvent = new ExperienceEvent.Builder()
-                    .setXdmSchema(schemaXml)
-                    .build();
+        if (datasetId == null) {
+            Log.warning(LOG_TAG, "Failed to track push notification interaction, experience event datasetId is null");
+            return;
         }
 
-        Edge.sendEvent(experienceEvent, new EdgeCallback() {
+        // Creating the Meta Map
+        Map<String, Object> metaMap = new HashMap<>();
+        Map<String, Object> collectMap = new HashMap<>();
+        collectMap.put("datasetId", datasetId);
+        metaMap.put("collect", collectMap);
+
+        // Create XDM data with tracking data
+        final Map<String, Object> xdmMap = getXdmSchema(eventType, messageId, actionId);
+
+        // Adding application data
+        addApplicationData(isApplicationOpened, xdmMap);
+
+        // Adding adobe cjm data
+        addAdobeData(eventData, xdmMap);
+
+        EventData xdmData = new EventData();
+        xdmData.putTypedMap("xdm", xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+        xdmData.putTypedMap("meta", metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+
+        Event trackEvent = new Event.Builder("Push Tracking event", "com.adobe.eventType.edge", EventSource.REQUEST_CONTENT.getName())
+                .setData(xdmData)
+                .build();
+        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void onResponse(Map<String, Object> map) { /* no-op */ }
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "Error in dispatching event for tracking");
+            }
         });
     }
 
     /**
      * Checks whether all the configuration parameters which are required by push notification exists.
+     *
      * @param configSharedState Configuration state in a map format.
      * @return boolean value explaining whether the config is valid or not.
      */
     private boolean isConfigValid(Map<String, Object> configSharedState) {
         // Need profile dataset id for sending the push token
-        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
-             Log.warning(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
+        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
+            Log.warning(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
             return false;
         }
 
         // Temp : Need the dccs url from the customer through the updateConfiguration API
-        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-             Log.warning(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
+        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
+            Log.warning(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
             return false;
         }
 
         // Temp : Need the experience cloud org.
-        if(!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
-             Log.warning(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
+        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
+            Log.warning(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
             return false;
         }
 
@@ -348,53 +357,78 @@ public class MessagingInternal extends Extension implements EventsHandler {
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
     }
 
-    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> schemaXml) {
+    /**
+     * Builds the xdmMap with the tracking information provided by the customer in eventData.
+     *
+     * @param eventType String eventType can be either applicationOpened or customAction
+     * @param messageId String messageId for the push notification provided by the customer
+     * @param actionId  String indicating the actionId of the action taken by the user on the push notification
+     * @return {@link Map} object containing the xdm formatted data
+     */
+    private static Map<String, Object> getXdmSchema(final String eventType, final String messageId, final String actionId) {
+        final Map<String, Object> xdmMap = new HashMap<>();
+        final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
+        final Map<String, Object> customActionMap = new HashMap<>();
+
+        if (actionId != null) {
+            customActionMap.put("actionID", actionId);
+            pushNotificationTrackingMap.put("customAction", customActionMap);
+        }
+        xdmMap.put("eventType", eventType);
+        xdmMap.put("pushProviderMessageID", messageId);
+        xdmMap.put("pushProvider", MessagingConstant.JSON_VALUES.FCM);
+        xdmMap.put("pushNotificationTracking", pushNotificationTrackingMap);
+
+        return xdmMap;
+    }
+
+    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> xdmMap) {
         final Map<String, Object> applicationMap = new HashMap<>();
         final Map<String, Object> launchesMap = new HashMap<>();
         launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
         applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
-        schemaXml.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
+        xdmMap.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
     }
 
     /**
      * Adding CJM specific data to tracking information schema map.
+     *
      * @param eventData eventData which contains the cjm data forwarded by the customer.
-     * @param schemaXml schemaXml map which is updated with the cjm data.
+     * @param xdmMap    xdmMap map which is updated with the cjm data.
      */
     @SuppressWarnings("unchecked")
-    private static void addAdobeData(final EventData eventData, final Map<String, Object> schemaXml) {
-        // Temp
+    private static void addAdobeData(final EventData eventData, final Map<String, Object> xdmMap) {
         // Convert the adobe string to object
         final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, null);
         if (adobe == null) {
-             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is null");
             return;
         }
         JSONObject adobeJson;
         try {
             adobeJson = new JSONObject(adobe);
         } catch (JSONException e) {
-             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
-            adobeJson = null;
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+            return;
         }
 
         // Check if the required key is available
-        if (adobeJson != null && adobeJson.has(CJM)) {
+        if (adobeJson.has(CJM)) {
             try {
                 final JSONObject customerJourneyManagement = adobeJson.getJSONObject(CJM);
-                Iterator<String> keys  = customerJourneyManagement.keys();
+                Iterator<String> keys = customerJourneyManagement.keys();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    schemaXml.put(key, jsonStringToMap(customerJourneyManagement.get(key).toString()));
+                    xdmMap.put(key, jsonStringToMap(customerJourneyManagement.get(key).toString()));
                 }
             } catch (JSONException e) {
-                 Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
+                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking, cjm json malformed : %s", e.getMessage());
                 return;
             }
 
             // Adding the messageProfile adobe data
-            if (schemaXml.containsKey(EXPERIENCE)) {
-                HashMap<String, Object> experience = (HashMap<String, Object>) schemaXml.get(EXPERIENCE);
+            if (xdmMap.containsKey(EXPERIENCE)) {
+                HashMap<String, Object> experience = (HashMap<String, Object>) xdmMap.get(EXPERIENCE);
                 if (experience != null && experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT)) {
                     try {
                         final Object cjm = experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
@@ -417,37 +451,12 @@ public class MessagingInternal extends Extension implements EventsHandler {
         }
     }
 
-    /**
-     * Builds the xdmSchema with the tracking information provided by the customer in eventData.
-     * @param eventType String eventType can be either applicationOpened or customAction
-     * @param messageId String messageId for the push notification provided by the customer
-     * @param isApplicationOpened Boolean value indicating whether the application was opened
-     * @param actionId String indicating the actionId of the action taken by the user on the push notification
-     * @return {@link Schema} object which is added the the experience event
-     */
-    private static MessagingPushTrackingSchema getXdmSchema(final String eventType, final String messageId, boolean isApplicationOpened, final String actionId) {
-        final MessagingPushTrackingSchema schema = new MessagingPushTrackingSchema();
-        final PushNotificationTracking pushNotificationTracking = new PushNotificationTracking();
-        final CustomAction customAction = new CustomAction();
-
-        if (!isApplicationOpened) {
-            customAction.setActionId(actionId);
-            pushNotificationTracking.setCustomAction(customAction);
-        }
-
-        schema.setEventType(eventType);
-        pushNotificationTracking.setPushProviderMessageID(messageId);
-        pushNotificationTracking.setPushProvider(MessagingConstant.JSON_VALUES.FCM);
-        schema.setPushNotificationTracking(pushNotificationTracking);
-        return schema;
-    }
-
     private static Map<String, Object> jsonStringToMap(final String jsonString) throws JSONException {
         final HashMap<String, Object> map = new HashMap<String, Object>();
         final JSONObject jObject = new JSONObject(jsonString);
         final Iterator<String> keys = jObject.keys();
 
-        while( keys.hasNext() ) {
+        while (keys.hasNext()) {
             final String key = keys.next();
             final Object value = jObject.get(key);
             map.put(key, value);

@@ -22,7 +22,7 @@ public interface EventsHandler {
 
     /**
      * Handles sending push notification tracking information
-     * @param event Generic Data OS event which contains the tracking push notification tracking information
+     * @param event Messaging Request Content event which contains the push notification tracking information
      */
     void handleTrackingInfo(final Event event);
 

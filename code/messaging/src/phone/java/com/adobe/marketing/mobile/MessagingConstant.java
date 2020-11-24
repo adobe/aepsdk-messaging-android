@@ -20,7 +20,9 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
+        static final String XDM = "_xdm";
         static final String CJM = "cjm";
+        static final String MIXIN = "mixin";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
@@ -54,9 +56,12 @@ final class MessagingConstant {
 
         static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
-            static final String TRACK_INFO_KEY_MESSAGE_ID = "id";
+            static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
+
+            // Google messaging id key
+            static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
 
             // TEMP todo we need to define if this is the right key or do we need an extra api for this
             static final String TRACK_INFO_KEY_ADOBE = "adobe";
@@ -76,6 +81,15 @@ final class MessagingConstant {
             private Configuration() {
             }
         }
+    }
+
+    static final class EventType {
+        static final String MESSAGING = "com.adobe.eventType.messaging";
+    }
+
+    static final class EventDataValues {
+        static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
+        static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     }
 
     static final class SharedState {

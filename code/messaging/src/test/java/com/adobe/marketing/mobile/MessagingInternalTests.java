@@ -90,7 +90,7 @@ public class MessagingInternalTests {
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.CONFIGURATION),
                 eq(EventSource.RESPONSE_CONTENT), eq(ConfigurationResponseContentListener.class));
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_DATA),
-                eq(EventSource.OS), eq(GenericDataOSListener.class));
+                eq(EventSource.OS), eq(MessagingRequestContentListener.class));
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
                 eq(EventSource.REQUEST_CONTENT), eq(IdentityRequestContentListener.class));
     }

@@ -12,7 +12,19 @@
 
 package com.adobe.marketing.mobile;
 
+import android.content.Intent;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 
@@ -43,6 +55,92 @@ public final class Messaging {
             @Override
             public void error(ExtensionError extensionError) {
                 Log.debug("There was an error registering Messaging Extension: %s", extensionError.getErrorName());
+            }
+        });
+    }
+
+    /**
+     * Extracts and update the intent with xdm data and message id from data payload.
+     * @param intent Intent which needs to be updated with xdm data and messageId
+     * @param messageId String : message id from RemoteMessage which is received in FirebaseMessagingService#onMessageReceived
+     * @param data Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
+     * @return boolean value indicating whether the intent was update with push tracking details (messageId and xdm data).
+     */
+    public static boolean addPushTrackingDetails(Intent intent, String messageId, Map<String, String> data) {
+        if (intent == null) {
+            Log.warning(LOG_TAG, "Failed to update the tracking information as intent is null");
+            return false;
+        }
+        if (messageId == null) {
+            Log.warning(LOG_TAG, "Failed to update the tracking information as MessageId is null");
+            return false;
+        }
+        if (data == null || data.isEmpty()) {
+            Log.warning(LOG_TAG, "Failed to update the tracking information as data is null or empty");
+            return false;
+        }
+
+        // Adding message id as extras in intent
+        intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
+
+        // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
+        String xdmData = data.get(MessagingConstant.TrackingKeys.XDM);
+        if (xdmData != null && !xdmData.isEmpty()) {
+            intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, xdmData);
+        } else {
+            Log.warning(LOG_TAG, "Xdm data is null or empty");
+        }
+
+        return true;
+    }
+
+    /**
+     * Sends the push notification interactions as an experience event to Adobe Experience Edge.
+     *
+     * @param intent object which contains the tracking and xdm information.
+     * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
+     * @param customActionId String value of the custom action (e.g button id on the notification) which was clicked.
+     */
+    public static void handleNotificationResponse(Intent intent, boolean applicationOpened, String customActionId) {
+        if (intent == null) {
+            Log.warning(LOG_TAG, "Failed to track notification interactions, intent provided is null");
+            return;
+        }
+        String messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        if (messageId == null) {
+            // Check if the message Id is in the intent with the key TRACK_INFO_KEY_GOOGLE_MESSAGE_ID which comes through google directly
+            // This happens when FirebaseMessagingService#onMessageReceived is not called.
+            messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
+            if (messageId == null) {
+                Log.warning(LOG_TAG, "Failed to track notification interactions, message id provided is null");
+                return;
+            }
+        }
+
+        final String xdmData = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE);
+        if (xdmData == null) {
+            Log.warning(LOG_TAG, "XDM data provided is null");
+        }
+
+        final EventData eventData = new EventData();
+        eventData.putString(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.putBoolean(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
+        eventData.putString(TRACK_INFO_KEY_ADOBE, xdmData);
+
+        if (customActionId == null) {
+            eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED);
+        } else {
+            eventData.putString(TRACK_INFO_KEY_ACTION_ID, customActionId);
+            eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
+        }
+
+        Event messagingEvent = new Event.Builder("Messaging Request Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+                .setData(eventData)
+                .build();
+        MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "Failed to track notification interactions: Error %s", extensionError.toString());
             }
         });
     }

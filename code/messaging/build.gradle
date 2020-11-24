@@ -216,7 +216,6 @@ dependencies {
     testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
     testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
     testImplementation 'org.json:json:20180130'
-    implementation 'com.adobe.marketing.mobile:edge:1.0.0-beta-1'
 }
 
 afterEvaluate {

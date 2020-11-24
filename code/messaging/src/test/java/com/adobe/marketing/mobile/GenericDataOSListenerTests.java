@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,8 +21,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,13 +35,13 @@ public class GenericDataOSListenerTests {
     @Mock
     ExtensionApi mockExtensionApi;
 
-    private GenericDataOSListener genericDataOSListener;
+    private MessagingRequestContentListener genericDataOSListener;
     private int EXECUTOR_TIMEOUT = 5;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
-        genericDataOSListener = new GenericDataOSListener(mockExtensionApi,
+        genericDataOSListener = new MessagingRequestContentListener(mockExtensionApi,
                 EventType.GENERIC_DATA.getName(), EventSource.OS.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
