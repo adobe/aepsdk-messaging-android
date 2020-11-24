@@ -377,12 +377,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
         if (actionId != null) {
             customActionMap.put("actionID", actionId);
             pushNotificationTrackingMap.put("customAction", customActionMap);
+            pushNotificationTrackingMap.put("pushProviderMessageID", messageId);
+            pushNotificationTrackingMap.put("pushProvider", MessagingConstant.JSON_VALUES.FCM);
         }
         xdmMap.put("eventType", eventType);
-        xdmMap.put("pushProviderMessageID", messageId);
-        xdmMap.put("pushProvider", MessagingConstant.JSON_VALUES.FCM);
         xdmMap.put("pushNotificationTracking", pushNotificationTrackingMap);
-
         return xdmMap;
     }
 
