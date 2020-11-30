@@ -44,7 +44,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, Edge.class, ExperienceEvent.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, PlatformServices.class, LocalStorageService.class, App.class, Context.class})
 public class MessagingInternalTests {
 
     private int EXECUTOR_TIMEOUT = 5;
@@ -74,8 +74,8 @@ public class MessagingInternalTests {
 
     @Before
     public void setup() {
-        PowerMockito.mockStatic(Edge.class);
-        PowerMockito.mockStatic(ExperienceEvent.class);
+        PowerMockito.mockStatic(MobileCore.class);
+        PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         Mockito.when(App.getAppContext()).thenReturn(context);
         messagingInternal = new MessagingInternal(mockExtensionApi);
@@ -89,8 +89,8 @@ public class MessagingInternalTests {
         // verify 3 listeners are registered
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.CONFIGURATION),
                 eq(EventSource.RESPONSE_CONTENT), eq(ConfigurationResponseContentListener.class));
-        verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_DATA),
-                eq(EventSource.OS), eq(MessagingRequestContentListener.class));
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(MessagingRequestContentListener.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
                 eq(EventSource.REQUEST_CONTENT), eq(IdentityRequestContentListener.class));
     }
@@ -219,11 +219,13 @@ public class MessagingInternalTests {
 
     @Test
     public void test_processEvents_when_handlingTrackingInfo() {
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_event_type");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_message_id");
-        Event mockEvent = new Event.Builder("handleTrackingInfo", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
+        Event mockEvent = new Event.Builder("handleTrackingInfo", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // when configState containsKey return true
         when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
@@ -238,8 +240,8 @@ public class MessagingInternalTests {
         messagingInternal.processEvents();
 
         // verify
-        PowerMockito.verifyStatic(Edge.class, times(1));
-        Edge.sendEvent(any(ExperienceEvent.class), any(EdgeCallback.class));
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -471,7 +473,10 @@ public class MessagingInternalTests {
 
     @Test
     public void test_handleTrackingInfo() {
-        final ArgumentCaptor<ExperienceEvent> eventCaptor = ArgumentCaptor.forClass(ExperienceEvent.class);
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
@@ -479,10 +484,9 @@ public class MessagingInternalTests {
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
+        Event mockEvent = new Event.Builder("event1", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
-        // private mocks
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
         messagingInternal.handleTrackingInfo(mockEvent);
@@ -490,22 +494,22 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(Edge.class);
-        Edge.sendEvent(eventCaptor.capture(), any(EdgeCallback.class));
+        PowerMockito.verifyStatic(MobileCore.class);
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
-        ExperienceEvent event = eventCaptor.getValue();
-        assertNotNull(event.getXdmSchema());
-        assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals("mock_eventType", ((Map<String, Object>)event.getEventData().get(MessagingConstant.TrackingKeys.XDM)).get(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE));
 
         // verify the applicationOpened is added to adobe standard mixin for application
-        int value = (int)((Map<String, Object>)(((Map<String, Object>)event.getXdmSchema().get(MessagingConstant.TrackingKeys.APPLICATION)).get(MessagingConstant.TrackingKeys.LAUNCHES))).get(MessagingConstant.TrackingKeys.LAUNCHES_VALUE);
+        int value = (int)((Map<String, Object>)(((Map<String, Object>)((Map<String, Object>)event.getEventData().get(MessagingConstant.TrackingKeys.XDM)).get(MessagingConstant.TrackingKeys.APPLICATION)).get(MessagingConstant.TrackingKeys.LAUNCHES))).get(MessagingConstant.TrackingKeys.LAUNCHES_VALUE);
         assertEquals(1, value);
     }
 
     @Test
     public void test_handleTrackingInfo_when_cjmData() {
-        final ArgumentCaptor<ExperienceEvent> eventCaptor = ArgumentCaptor.forClass(ExperienceEvent.class);
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         final String mockCJMData = "{\n" +
                 "        \"cjm\" :{\n" +
                 "          \"_experience\": {\n" +
@@ -527,11 +531,13 @@ public class MessagingInternalTests {
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, mockCJMData);
+        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
         messagingInternal.handleTrackingInfo(mockEvent);
@@ -539,15 +545,15 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(Edge.class);
-        Edge.sendEvent(eventCaptor.capture(), any(EdgeCallback.class));
+        PowerMockito.verifyStatic(MobileCore.class);
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
-        ExperienceEvent event = eventCaptor.getValue();
-        assertNotNull(event.getXdmSchema());
-        assertEquals("mock_eventType", event.getXdmSchema().get("eventType"));
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         // Verify _experience exist
-        assertTrue(event.getXdmSchema().containsKey(MessagingConstant.TrackingKeys.EXPERIENCE));
+        assertTrue(((Map<String, Object>)event.getEventData().get(MessagingConstant.TrackingKeys.XDM)).containsKey(MessagingConstant.TrackingKeys.EXPERIENCE));
     }
 
     // ========================================================================================

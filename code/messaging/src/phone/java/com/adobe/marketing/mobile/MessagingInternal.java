@@ -19,13 +19,14 @@ import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.COLLECT;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
+import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.DATASET_ID;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys._XDM;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MessagingInternal extends Extension implements EventsHandler {
+class MessagingInternal extends Extension implements EventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private PlatformServices platformServices = new AndroidPlatformServices();
@@ -301,11 +302,11 @@ public class MessagingInternal extends Extension implements EventsHandler {
         // Creating the Meta Map
         Map<String, Object> metaMap = new HashMap<>();
         Map<String, Object> collectMap = new HashMap<>();
-        collectMap.put("datasetId", datasetId);
-        metaMap.put("collect", collectMap);
+        collectMap.put(DATASET_ID, datasetId);
+        metaMap.put(COLLECT, collectMap);
 
         // Create XDM data with tracking data
-        final Map<String, Object> xdmMap = getXdmSchema(eventType, messageId, actionId);
+        final Map<String, Object> xdmMap = getXdmData(eventType, messageId, actionId);
 
         // Adding application data
         addApplicationData(isApplicationOpened, xdmMap);
@@ -369,7 +370,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
      * @param actionId  String indicating the actionId of the action taken by the user on the push notification
      * @return {@link Map} object containing the xdm formatted data
      */
-    private static Map<String, Object> getXdmSchema(final String eventType, final String messageId, final String actionId) {
+    private static Map<String, Object> getXdmData(final String eventType, final String messageId, final String actionId) {
         final Map<String, Object> xdmMap = new HashMap<>();
         final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
         final Map<String, Object> customActionMap = new HashMap<>();
@@ -401,7 +402,7 @@ public class MessagingInternal extends Extension implements EventsHandler {
      */
     private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
-        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, null);
+        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
         if (adobe == null) {
             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;

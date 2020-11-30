@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
@@ -85,7 +85,7 @@ public final class Messaging {
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
         String xdmData = data.get(MessagingConstant.TrackingKeys._XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
-            intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE, xdmData);
+            intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
             Log.warning(LOG_TAG, "Xdm data is null or empty");
         }
@@ -116,7 +116,7 @@ public final class Messaging {
             }
         }
 
-        final String xdmData = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE);
+        final String xdmData = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         if (xdmData == null) {
             Log.warning(LOG_TAG, "XDM data provided is null");
         }
@@ -124,7 +124,7 @@ public final class Messaging {
         final EventData eventData = new EventData();
         eventData.putString(TRACK_INFO_KEY_MESSAGE_ID, messageId);
         eventData.putBoolean(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
-        eventData.putString(TRACK_INFO_KEY_ADOBE, xdmData);
+        eventData.putString(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
 
         if (customActionId == null) {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED);

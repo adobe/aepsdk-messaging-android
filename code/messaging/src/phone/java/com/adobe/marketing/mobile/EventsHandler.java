@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-public interface EventsHandler {
+interface EventsHandler {
 
     /**
      * Handles sending push token

@@ -40,6 +40,8 @@ final class MessagingConstant {
         static final String APPLICATION = "application";
         static final String LAUNCHES = "launches";
         static final String LAUNCHES_VALUE = "value";
+        static final String DATASET_ID = "datasetId";
+        static final String COLLECT = "collect";
     }
 
     static final class JSON_VALUES {
@@ -66,7 +68,7 @@ final class MessagingConstant {
             static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
 
             // TEMP todo we need to define if this is the right key or do we need an extra api for this
-            static final String TRACK_INFO_KEY_ADOBE = "adobe";
+            static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
             private Messaging() {
             }
