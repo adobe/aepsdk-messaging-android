@@ -25,102 +25,60 @@ To do this, add the following code to Application classes's `onCreate()` method:
         });
 ```
 
-## Sending feedback about push notification interactions. 
+## Sending push notification interactions feedback. 
 
-### Fields for push notification tracking.
-| Key               | dataType   | Description                                                                                                                    |
-|-------------------|------------|--------------------------------------------------------------------------------------------------------------------------------|
-| eventType         | String     | Type of event when push notification  interaction happens Values: - pushTracking.applicationOpened - pushTracking.customAction |
-| id                | String     | MessageId for the push notification                                                                                            |
-| applicationOpened | boolean    | Whether application was opened or not                                                                                          |
-| actionId          | String     | actionId of the element which performed  the custom action.                                                                    |
-| adobe             | Dictionary | Adobe related information.                                                                                                     |
+### Updating the intent with necessary Adobe informations.
+The intent which is passed while building the notification needs to be updated with necessary adobe informations this is needed so that the information can be passed back while tracking the push notification interactions. 
+To do this add the following code to `FirebaseMessagingService#onMessageReceived(message: RemoteMessage?)` method.
 
-##### Sending feedback when application is opened without any custom action. To do this, add the following code where you have access to `intent` after the user interact with the push notification:
-```kotlin
-intent?.extras?.let {
-    val messageId = it.getString("messageId", "")
-    val adobeData = it.getString("_xdm", "")
-    val map = mutableMapOf<String, Any>()
-    map["eventType"] = "pushTracking.applicationOpened"
-    map["id"] = messageId
-    map["applicationOpened"] = true
-    map["adobe"] = adobeData
-    MobileCore.collectMessageInfo(map)
-}
+``` kotlin
+/**
+ * intent which will be received by the app when user interacts with the notification.
+ * message.messageId is the id of the notification in the remoteMessage
+ * message.data which represents the data part of the remoteMessage. 
+ */
+Messaging.addPushTrackingDetails(intent, message.messageId, message.data)
 ```
 
 ```java
-Intent intent = getIntent();
-Bundle bundle = intent.getExtras();
-if (bundle != null) {
-    String messageId = bundle.getString("messageId", "");
-    String adobeData = bundle.getString("_xdm", "");
-    HashMap<String, Object> info = new HashMap<>();
-    info.put("eventType", "pushTracking.applicationOpened");
-    info.put("id", messageId);
-    info.put("applicationOpened", true);
-    info.put("adobe", adobeData);
-    MobileCore.collectMessageInfo(info);
- }
+/**
+ * intent which will be received by the app when user interacts with the notification.
+ * message.messageId is the id of the notification in the remoteMessage
+ * message.data which represents the data part of the remoteMessage. 
+ */
+Messaging.addPushTrackingDetails(intent, message.getMessageId(), message.getData())
+```
+
+### Sending push notification interactions details 
+| Key               | dataType   | Description                                                                                                                    |
+|-------------------|------------|--------------------------------------------------------------------------------------------------------------------------------|
+| intent            | Intent     | Intent which contains information related to messageId and data.                                                                                      |
+| applicationOpened | boolean    | Whether application was opened or not                                                                                          |
+| actionId          | String     | actionId of the element which performed  the custom action.                                                                    |
+
+##### Sending feedback when application is opened without any custom action. To do this, add the following code where you have access to `intent` after the user has interacted with the push notification:
+```kotlin
+Messaging.handleNotificationResponse(intent, true, null)
+```
+
+```java
+Messaging.handleNotificationResponse(intent, true, null);
 ```
 
 ##### Sending feedback when application is opened with custom action. To do this, add the following code where you have access to `intent` after the user interact with the push notification:
 ```kotlin
-intent?.extras?.let {
-    val messageId = it.getString("messageId", "")
-    val adobeData = it.getString("_xdm", "")
-    val map = mutableMapOf<String, Any>()
-    map["eventType"] = "pushTracking.customAction"
-    map["id"] = messageId
-    map["actionId"] = "<actionId>"
-    map["applicationOpened"] = true
-    map["adobe"] = adobeData
-    MobileCore.collectMessageInfo(map)
-}
+Messaging.handleNotificationResponse(intent, true, <actionId>)
 ```
 
 ```java
-Intent intent = getIntent();
-Bundle bundle = intent.getExtras();
-if (bundle != null) {
-    String messageId = bundle.getString("messageId", "");
-    String adobeData = bundle.getString("_xdm", "");
-    HashMap<String, Object> info = new HashMap<>();
-    info.put("eventType", "pushTracking.customAction");
-    info.put("id", messageId);
-    info.put("actionId", "<actionId>");
-    info.put("applicationOpened", true);
-    info.put("adobe", adobeData);
-    MobileCore.collectMessageInfo(info);
- }
+Messaging.handleNotificationResponse(intent, true, <actionId>);
 ```
 
 ##### Sending feedback when application is not opened but a custom action is performed by the user. To do this, add the following code where you have access to `intent` after the user interact with the push notification:
 ```kotlin
-intent?.extras?.let {
-    val messageId = it.getString("messageId", "")
-    val adobeData = it.getString("_xdm", "")
-    val map = mutableMapOf<String, Any>()
-    map["eventType"] = "pushTracking.customAction"
-    map["id"] = messageId
-    map["actionId"] = "<actionId>"
-    map["adobe"] = adobeData
-    MobileCore.collectMessageInfo(map)
-}
+Messaging.handleNotificationResponse(intent, false, <actionId>)
 ```
 
 ```java
-Intent intent = getIntent();
-Bundle bundle = intent.getExtras();
-if (bundle != null) {
-    String messageId = bundle.getString("messageId", "");
-    String adobeData = bundle.getString("_xdm", "");
-    HashMap<String, Object> info = new HashMap<>();
-    info.put("eventType", "pushTracking.customAction");
-    info.put("id", messageId);
-    info.put("actionId", "<actionId>");
-    info.put("adobe", adobeData);
-    MobileCore.collectMessageInfo(info);
- }
+Messaging.handleNotificationResponse(intent, false, <actionId>);
 ```
