@@ -58,6 +58,15 @@ final class MessagingConstant {
             }
         }
 
+        static final class XDMDataKeys {
+            static final String XDM_DATA_ACTION_ID = "actionID";
+            static final String XDM_DATA_CUSTOM_ACTION = "customAction";
+            static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
+            static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
+            static final String XDM_DATA_EVENT_TYPE = "eventType";
+            static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
+        }
+
         static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";

@@ -17,6 +17,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_ACTION_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_CUSTOM_ACTION;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_PROVIDER;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.COLLECT;
@@ -376,13 +382,13 @@ class MessagingInternal extends Extension implements EventsHandler {
         final Map<String, Object> customActionMap = new HashMap<>();
 
         if (actionId != null) {
-            customActionMap.put("actionID", actionId);
-            pushNotificationTrackingMap.put("customAction", customActionMap);
-            pushNotificationTrackingMap.put("pushProviderMessageID", messageId);
-            pushNotificationTrackingMap.put("pushProvider", MessagingConstant.JSON_VALUES.FCM);
+            customActionMap.put(XDM_DATA_ACTION_ID, actionId);
+            pushNotificationTrackingMap.put(XDM_DATA_CUSTOM_ACTION, customActionMap);
+            pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+            pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER, MessagingConstant.JSON_VALUES.FCM);
         }
-        xdmMap.put("eventType", eventType);
-        xdmMap.put("pushNotificationTracking", pushNotificationTrackingMap);
+        xdmMap.put(XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
         return xdmMap;
     }
 
