@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,8 +21,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,33 +28,33 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
-public class GenericDataOSListenerTests {
+public class MessagingRequestContentListenerTests {
     @Mock
     MessagingInternal mockMessagingInternal;
 
     @Mock
     ExtensionApi mockExtensionApi;
 
-    private GenericDataOSListener genericDataOSListener;
+    private MessagingRequestContentListener messagingRequestContentListener;
     private int EXECUTOR_TIMEOUT = 5;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
-        genericDataOSListener = new GenericDataOSListener(mockExtensionApi,
-                EventType.GENERIC_DATA.getName(), EventSource.OS.getName());
+        messagingRequestContentListener = new MessagingRequestContentListener(mockExtensionApi,
+                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
     }
 
     @Test
-    public void testHear_WhenGenericDataOsEvent() {
+    public void testHear_WhenMessagingRequestContentEvent() {
         // setup
         EventData eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
-        genericDataOSListener.hear(mockEvent);
+        messagingRequestContentListener.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
@@ -68,11 +65,11 @@ public class GenericDataOSListenerTests {
     @Test
     public void testHear_WithNullEventData() {
         // setup
-        Event mockEvent = new Event.Builder("testEvent", EventType.GENERIC_DATA,
-                EventSource.OS).setData(null).build();
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+                EventSource.REQUEST_CONTENT.getName()).setData(null).build();
 
         // test
-        genericDataOSListener.hear(mockEvent);
+        messagingRequestContentListener.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
@@ -84,12 +81,12 @@ public class GenericDataOSListenerTests {
     public void testHear_WithNullParentExtension() {
         // setup
         EventData eventData = new EventData();
-        Event mockEvent = new Event.Builder("testEvent", EventType.GENERIC_DATA,
-                EventSource.OS).setData(eventData).build();
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+                EventSource.REQUEST_CONTENT.getName()).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);
 
         // test
-        genericDataOSListener.hear(mockEvent);
+        messagingRequestContentListener.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify

@@ -10,12 +10,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Messaging Sample App"></TextView>
+        android:text="Messaging Sample App" />
 
     <Button
-        android:id="@+id/btn_collectMsgInfo"
+        android:id="@+id/btn_getLocalNotification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CollectMessageInfo" />
+        android:text="Get Local Notification" />
 
 </LinearLayout>

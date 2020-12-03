@@ -20,7 +20,11 @@ final class MessagingConstant {
     private MessagingConstant() {}
 
     static final class TrackingKeys {
+        static final String _XDM = "_xdm";
+        static final String XDM = "xdm";
+        static final String META = "meta";
         static final String CJM = "cjm";
+        static final String MIXINS = "mixins";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
@@ -36,6 +40,8 @@ final class MessagingConstant {
         static final String APPLICATION = "application";
         static final String LAUNCHES = "launches";
         static final String LAUNCHES_VALUE = "value";
+        static final String DATASET_ID = "datasetId";
+        static final String COLLECT = "collect";
     }
 
     static final class JSON_VALUES {
@@ -52,14 +58,26 @@ final class MessagingConstant {
             }
         }
 
+        static final class XDMDataKeys {
+            static final String XDM_DATA_ACTION_ID = "actionID";
+            static final String XDM_DATA_CUSTOM_ACTION = "customAction";
+            static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
+            static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
+            static final String XDM_DATA_EVENT_TYPE = "eventType";
+            static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
+        }
+
         static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
-            static final String TRACK_INFO_KEY_MESSAGE_ID = "id";
+            static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
 
+            // Google messaging id key
+            static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
+
             // TEMP todo we need to define if this is the right key or do we need an extra api for this
-            static final String TRACK_INFO_KEY_ADOBE = "adobe";
+            static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
             private Messaging() {
             }
@@ -76,6 +94,16 @@ final class MessagingConstant {
             private Configuration() {
             }
         }
+    }
+
+    static final class EventType {
+        static final String MESSAGING = "com.adobe.eventType.messaging";
+        static final String EDGE = "com.adobe.eventType.edge";
+    }
+
+    static final class EventDataValues {
+        static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
+        static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     }
 
     static final class SharedState {

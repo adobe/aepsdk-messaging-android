@@ -13,15 +13,15 @@
 package com.adobe.marketing.mobile;
 
 /**
- * Listens for {@link EventType#GENERIC_DATA}, {@link EventSource#OS} events.
+ * Listens for {@link MessagingConstant.EventType#MESSAGING}, {@link EventSource#REQUEST_CONTENT} events.
  *
  * <p>
- * Monitor OS events for sending push notification tracking information.
+ * Monitor Messaging Request content events for sending push notification tracking information.
  * @see MessagingInternal
  */
-public class GenericDataOSListener extends ExtensionListener {
+public class MessagingRequestContentListener extends ExtensionListener {
 
-    GenericDataOSListener(final ExtensionApi extensionApi, final String type, final String source) {
+    MessagingRequestContentListener(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
 
