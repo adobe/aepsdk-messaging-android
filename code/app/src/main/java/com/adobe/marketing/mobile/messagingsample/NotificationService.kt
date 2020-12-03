@@ -17,6 +17,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.support.v4.app.NotificationCompat
+import com.adobe.marketing.mobile.Messaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -53,8 +54,12 @@ class NotificationService : FirebaseMessagingService() {
             }
 
             priority = NotificationCompat.PRIORITY_DEFAULT
-            setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java), 0))
-            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java), 0))
+            setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
+                Messaging.addPushTrackingDetails(this, message?.messageId, message?.data)
+            }, 0))
+            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
+                Messaging.addPushTrackingDetails(this, message?.messageId, message?.data)
+            }, 0))
             setAutoCancel(true)
         }
 

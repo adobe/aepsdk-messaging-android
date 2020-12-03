@@ -532,7 +532,7 @@ public class MessagingInternalTests {
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
         eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.OS.getName()).setEventData(eventData).build();
+        Event mockEvent = new Event.Builder("event1", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);

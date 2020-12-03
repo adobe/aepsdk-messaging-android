@@ -28,7 +28,7 @@ class MessagingApplication : Application() {
         UserProfile.registerExtension()
         Lifecycle.registerExtension()
         Signal.registerExtension()
-        ExperiencePlatform.registerExtension();
+        Edge.registerExtension();
 
         MobileCore.start {
             // Necessary property id for MessagingSDKTest which has the edge configuration id needed by aep sdk

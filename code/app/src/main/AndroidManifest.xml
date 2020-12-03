@@ -33,6 +33,9 @@
             </intent-filter>
         </service>
 
+        <receiver android:name=".NotificationBroadcastReceiver" />
+        <receiver android:name=".NotificationDeleteReceiver" />
+
     </application>
 
 </manifest>
