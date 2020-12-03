@@ -28,7 +28,7 @@ To do this, add the following code to Application classes's `onCreate()` method:
 ## Sending push notification interactions feedback. 
 
 ### Updating the intent with necessary Adobe informations.
-The intent which is passed while building the notification needs to be updated with necessary adobe informations this is needed so that the information can be passed back while tracking the push notification interactions. 
+The intent which is passed while building the notification needs to be updated with necessary Adobe information to track push notification interactions. 
 To do this add the following code to `FirebaseMessagingService#onMessageReceived(message: RemoteMessage?)` method.
 
 ``` kotlin

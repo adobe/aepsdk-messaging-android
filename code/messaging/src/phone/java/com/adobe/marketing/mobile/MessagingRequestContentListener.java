@@ -16,7 +16,7 @@ package com.adobe.marketing.mobile;
  * Listens for {@link MessagingConstant.EventType#MESSAGING}, {@link EventSource#REQUEST_CONTENT} events.
  *
  * <p>
- * Monitor Request content events for sending push notification tracking information.
+ * Monitor Messaging Request content events for sending push notification tracking information.
  * @see MessagingInternal
  */
 public class MessagingRequestContentListener extends ExtensionListener {

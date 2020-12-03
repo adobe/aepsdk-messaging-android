@@ -112,7 +112,7 @@ class MessagingInternal extends Extension implements EventsHandler {
      * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
      */
     @Override
-    protected void onUnexpectedError(ExtensionUnexpectedError extensionUnexpectedError) {
+    protected void onUnexpectedError(final ExtensionUnexpectedError extensionUnexpectedError) {
         super.onUnexpectedError(extensionUnexpectedError);
         this.onUnregistered();
     }
@@ -122,7 +122,7 @@ class MessagingInternal extends Extension implements EventsHandler {
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), MessagingRequestContentListener.class, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.debug(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
+                Log.error(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
                         MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
             }
         });
@@ -281,7 +281,7 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     @Override
-    public void handleTrackingInfo(Event event) {
+    public void handleTrackingInfo(final Event event) {
         final EventData eventData = event.getData();
         if (eventData == null) {
             Log.debug(MessagingConstant.LOG_TAG,
@@ -306,25 +306,25 @@ class MessagingInternal extends Extension implements EventsHandler {
         }
 
         // Creating the Meta Map
-        Map<String, Object> metaMap = new HashMap<>();
-        Map<String, Object> collectMap = new HashMap<>();
+        final Map<String, Object> metaMap = new HashMap<>();
+        final Map<String, Object> collectMap = new HashMap<>();
         collectMap.put(DATASET_ID, datasetId);
         metaMap.put(COLLECT, collectMap);
 
         // Create XDM data with tracking data
         final Map<String, Object> xdmMap = getXdmData(eventType, messageId, actionId);
 
-        // Adding application data
+        // Adding application data to xdmMap
         addApplicationData(isApplicationOpened, xdmMap);
 
-        // Adding xdm data
+        // Adding xdm data to xdmMap
         addXDMData(eventData, xdmMap);
 
-        EventData xdmData = new EventData();
+        final EventData xdmData = new EventData();
         xdmData.putTypedMap(XDM, xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
         xdmData.putTypedMap(META, metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
 
-        Event trackEvent = new Event.Builder("Push Tracking event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        final Event trackEvent = new Event.Builder("Push Tracking event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setData(xdmData)
                 .build();
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
@@ -384,9 +384,9 @@ class MessagingInternal extends Extension implements EventsHandler {
         if (actionId != null) {
             customActionMap.put(XDM_DATA_ACTION_ID, actionId);
             pushNotificationTrackingMap.put(XDM_DATA_CUSTOM_ACTION, customActionMap);
-            pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-            pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER, MessagingConstant.JSON_VALUES.FCM);
         }
+        pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+        pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER, MessagingConstant.JSON_VALUES.FCM);
         xdmMap.put(XDM_DATA_EVENT_TYPE, eventType);
         xdmMap.put(XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
         return xdmMap;
@@ -416,7 +416,7 @@ class MessagingInternal extends Extension implements EventsHandler {
 
         try {
             // Convert the adobe string to json object
-            JSONObject xdmJson = new JSONObject(adobe);
+            final JSONObject xdmJson = new JSONObject(adobe);
 
             // Check for if the json has the required keys
             if (xdmJson.has(CJM) || xdmJson.has(MIXINS)) {

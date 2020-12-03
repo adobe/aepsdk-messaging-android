@@ -65,17 +65,17 @@ public final class Messaging {
      * @param data Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
      * @return boolean value indicating whether the intent was update with push tracking details (messageId and xdm data).
      */
-    public static boolean addPushTrackingDetails(Intent intent, String messageId, Map<String, String> data) {
+    public static boolean addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data) {
         if (intent == null) {
-            Log.warning(LOG_TAG, "Failed to update the tracking information as intent is null");
+            Log.warning(LOG_TAG, "Failed to add push tracking details as intent is null.");
             return false;
         }
-        if (messageId == null) {
-            Log.warning(LOG_TAG, "Failed to update the tracking information as MessageId is null");
+        if (messageId == null || messageId.isEmpty()) {
+            Log.warning(LOG_TAG, "Failed to add push tracking details as MessageId is null.");
             return false;
         }
         if (data == null || data.isEmpty()) {
-            Log.warning(LOG_TAG, "Failed to update the tracking information as data is null or empty");
+            Log.warning(LOG_TAG, "Failed to add push tracking details as data is null or empty.");
             return false;
         }
 
@@ -83,11 +83,11 @@ public final class Messaging {
         intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
-        String xdmData = data.get(MessagingConstant.TrackingKeys._XDM);
+        final String xdmData = data.get(MessagingConstant.TrackingKeys._XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
             intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
-            Log.warning(LOG_TAG, "Xdm data is null or empty");
+            Log.warning(LOG_TAG, "Xdm data is not added as push tracking details to the intent, Xdm data is null or empty");
         }
 
         return true;
@@ -100,7 +100,7 @@ public final class Messaging {
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId String value of the custom action (e.g button id on the notification) which was clicked.
      */
-    public static void handleNotificationResponse(Intent intent, boolean applicationOpened, String customActionId) {
+    public static void handleNotificationResponse(final Intent intent, final boolean applicationOpened, final String customActionId) {
         if (intent == null) {
             Log.warning(LOG_TAG, "Failed to track notification interactions, intent provided is null");
             return;
@@ -133,7 +133,7 @@ public final class Messaging {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        Event messagingEvent = new Event.Builder("Messaging Request Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+        final Event messagingEvent = new Event.Builder("Messaging Request Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
                 .setData(eventData)
                 .build();
         MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
