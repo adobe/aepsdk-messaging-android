@@ -37,6 +37,7 @@ ci-javadoc: create-ci
 
 ci-generate-library-debug:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME}  assemblePhoneDebug)
+		cp code/messaging/build/outputs/aar/messaging-phone-debug.aar build
 
 ci-generate-library-release:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME}  assemblePhoneRelease)
