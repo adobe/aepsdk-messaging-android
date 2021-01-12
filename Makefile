@@ -37,10 +37,10 @@ ci-javadoc: create-ci
 
 ci-generate-library-debug:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME}  assemblePhoneDebug)
-		cp code/messaging/build/outputs/aar/messaging-phone-debug.aar sdk-build
 
 ci-generate-library-release:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME}  assemblePhoneRelease)
+		cp code/messaging/build/outputs/aar/messaging-phone-release.aar sdk-build
 
 ci-publish-staging-all:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} clean artifactoryPublish)
