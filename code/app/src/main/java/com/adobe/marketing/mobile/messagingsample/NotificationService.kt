@@ -17,6 +17,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.support.v4.app.NotificationCompat
+import com.adobe.marketing.mobile.AEPMessagingPushNotificationPayload
 import com.adobe.marketing.mobile.Messaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -26,18 +27,21 @@ class NotificationService : FirebaseMessagingService() {
     companion object {
         @JvmField
         val NOTIFICATION_ID = 0x12E45
-        const val channelId = "messaging_notification_channel"
+        var channelId = "messaging_notification_channel"
         const val NOTIFICATION_DELETED_ACTION = "NOTIFICATION_DELETED_ACTION"
     }
 
     override fun onMessageReceived(message: RemoteMessage?) {
         super.onMessageReceived(message)
 
+        val payload = AEPMessagingPushNotificationPayload(message)
+
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 
-            val channelName = "Messaging Notifications Channel"
-            val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT).apply {
+            val channelName = "some channel name"
+            channelId = if (payload.channelId != null) payload.channelId else channelId
+            val channel = NotificationChannel(channelId, channelName, payload.importance).apply {
                 description = "Settings for push notification"
             }
             notificationManager.createNotificationChannel(channel)
@@ -45,15 +49,10 @@ class NotificationService : FirebaseMessagingService() {
 
         val builder = NotificationCompat.Builder(this, channelId).apply {
             setSmallIcon(R.drawable.ic_launcher_background)
-            if (message?.data?.isNotEmpty() == true) {
-                setContentTitle(message.data["title"])
-                setContentText(message.data["body"])
-            } else {
-                setContentTitle(message?.notification?.title ?: "")
-                setContentText(message?.notification?.body ?: "")
-            }
+            setContentTitle(payload.title)
+            setContentTitle(payload.body)
 
-            priority = NotificationCompat.PRIORITY_DEFAULT
+            priority = payload.notificationPriority
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
                 Messaging.addPushTrackingDetails(this, message?.messageId, message?.data)
             }, 0))
