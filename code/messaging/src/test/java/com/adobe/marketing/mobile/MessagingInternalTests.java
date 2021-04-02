@@ -379,9 +379,7 @@ public class MessagingInternalTests {
         eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_push_token");
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
         String mockECID = "mock_ecid";
-        String mockDccsUrl = "mock_dccs_url";
         String mockExperienceCloudOrg = "mock_exp_org";
-        String mockProfileDatasetId = "mock_profileDatasetId";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -390,9 +388,6 @@ public class MessagingInternalTests {
         // when
         when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
         when(messagingState.getEcid()).thenReturn(mockECID);
-        when(messagingState.getDccsURL()).thenReturn(mockDccsUrl);
-        when(messagingState.getProfileDatasetId()).thenReturn(mockProfileDatasetId);
-        when(messagingState.getExperienceCloudOrg()).thenReturn(mockExperienceCloudOrg);
 
         // when getLocalStorageService() return mockLocalStorageService
         LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);

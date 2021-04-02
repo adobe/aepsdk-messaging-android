@@ -21,7 +21,7 @@ class PushTokenStorage {
     private static final String PREFERENCE_NAME = "AdobeMobile_ExperienceMessage";
     private static final String KEY = "pushIdentifier";
 
-    private LocalStorageService localStorageService;
+    private final LocalStorageService localStorageService;
 
     PushTokenStorage(final LocalStorageService localStorageService) {
         this.localStorageService = localStorageService;

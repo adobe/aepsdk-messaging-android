@@ -11,18 +11,26 @@
 */
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_ACTION_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_CUSTOM_ACTION;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_PROVIDER;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.ECID;
+import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.FCM;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.COLLECT;
@@ -210,11 +218,6 @@ class MessagingInternal extends Extension implements EventsHandler {
             if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
-                // Temp : Check if the config is valid.
-                if (!isConfigValid(configSharedState)) {
-                    return;
-                }
-
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
             } else if (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
@@ -275,7 +278,22 @@ class MessagingInternal extends Extension implements EventsHandler {
                 new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
             }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                new PushTokenSyncer(platformServices.getNetworkService()).syncPushToken(pushToken, messagingState.getEcid(), messagingState.getDccsURL(), messagingState.getExperienceCloudOrg(), messagingState.getProfileDatasetId());
+                Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+                if (eventData == null) {
+                    return;
+                }
+                // Send an edge event with profile data as event data
+                final EventData xdmData = new EventData();
+                xdmData.putTypedMap(DATA, eventData, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+                final Event profileEvent = new Event.Builder("Profile event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+                        .setData(xdmData)
+                        .build();
+                MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
+                    @Override
+                    public void error(ExtensionError extensionError) {
+                        Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
+                    }
+                });
             }
         }
     }
@@ -335,37 +353,40 @@ class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
-    /**
-     * Checks whether all the configuration parameters which are required by push notification exists.
-     *
-     * @param configSharedState Configuration state in a map format.
-     * @return boolean value explaining whether the config is valid or not.
-     */
-    private boolean isConfigValid(Map<String, Object> configSharedState) {
-        // Need profile dataset id for sending the push token
-        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.PROFILE_DATASET_ID)) {
-            Log.warning(LOG_TAG, "Unable to sync push token, profile dataset id is empty. Check the messaging launch extension to add the profile dataset.");
-            return false;
-        }
-
-        // Temp : Need the dccs url from the customer through the updateConfiguration API
-        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.DCCS_URL)) {
-            Log.warning(LOG_TAG, "Unable to sync push token, DCCS url is empty. Check the updateConfiguration API to send the DCCS url.");
-            return false;
-        }
-
-        // Temp : Need the experience cloud org.
-        if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_CLOUD_ORG)) {
-            Log.warning(LOG_TAG, "Unable to sync push token, Experience cloud org is empty.");
-            return false;
-        }
-
-        return true;
-    }
-
     private void optOut() {
         eventQueue.clear();
         new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
+    }
+
+    private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
+        if (token == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
+            return null;
+        }
+
+        if (ecid == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
+            return null;
+        }
+
+        final Map<String, String> namespace = new HashMap<>();
+        namespace.put(CODE, ECID);
+        namespace.put(ID, ecid);
+
+        final Map<String, Object> identity = new HashMap<>();
+        identity.put(NAMESPACE, namespace);
+
+        final Map<String, Object> pushNotificationDetailsData = new HashMap<>();
+        pushNotificationDetailsData.put(IDENTITY, identity);
+        pushNotificationDetailsData.put(APP_ID, App.getApplication().getPackageName());
+        pushNotificationDetailsData.put(TOKEN, token);
+        pushNotificationDetailsData.put(PLATFORM, FCM);
+        pushNotificationDetailsData.put(DENY_LISTED, false);
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsData);
+
+        return eventData;
     }
 
     /**
@@ -382,13 +403,13 @@ class MessagingInternal extends Extension implements EventsHandler {
         final Map<String, Object> customActionMap = new HashMap<>();
 
         if (actionId != null) {
-            customActionMap.put(XDM_DATA_ACTION_ID, actionId);
-            pushNotificationTrackingMap.put(XDM_DATA_CUSTOM_ACTION, customActionMap);
+            customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
+            pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
         }
-        pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-        pushNotificationTrackingMap.put(XDM_DATA_PUSH_PROVIDER, MessagingConstant.JSON_VALUES.FCM);
-        xdmMap.put(XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
+        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
+        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
         return xdmMap;
     }
 
