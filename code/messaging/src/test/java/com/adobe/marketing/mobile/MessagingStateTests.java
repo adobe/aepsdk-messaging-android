@@ -34,7 +34,6 @@ public class MessagingStateTests {
     // mocks
     private final String MOCK_PRIVACY_STATUS = "optedin";
     private final String MOCK_EXP_EVENT_DATASET = "mock_exp_event_dataset";
-    private final String MOCK_EXP_ORG = "mock_exp_org";
     private final String MOCK_VID = "mock_vid";
 
     @Before
@@ -80,9 +79,8 @@ public class MessagingStateTests {
 
     private EventData getMockConfigEventData() {
         EventData configEventData = new EventData();
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, MOCK_PRIVACY_STATUS);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_CLOUD_ORG, MOCK_EXP_ORG);
+        configEventData.putString(MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS, MOCK_PRIVACY_STATUS);
+        configEventData.putString(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
         return configEventData;
     }
 
