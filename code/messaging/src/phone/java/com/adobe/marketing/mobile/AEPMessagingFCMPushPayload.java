@@ -1,5 +1,5 @@
 /*
-  Copyright 2020 Adobe. All rights reserved.
+  Copyright 2021 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -28,7 +28,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class AEPMessagingPushNotificationPayload {
+/**
+ * This class is used to create push notification payload object from remote message.
+ * It provides with functions for getting attributes of push payload (title, body ...)
+ */
+public class AEPMessagingFCMPushPayload {
     private String title;
     private String body;
     private String sound;
@@ -40,25 +44,40 @@ public class AEPMessagingPushNotificationPayload {
     private ActionType actionType;
     private String actionUri;
     private List<ActionButton> actionButtons = new ArrayList<>(3);
-
     private Map<String, String> data;
 
-    public AEPMessagingPushNotificationPayload(RemoteMessage message) {
+    /**
+     * Constructor
+     *
+     * Provides the AEPMessagingFCMPushPayload object
+     * @param message {@link RemoteMessage} object received from {@link com.google.firebase.messaging.FirebaseMessagingService}
+     */
+    public AEPMessagingFCMPushPayload(RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingPushNotificationPayload, remote message is null");
+            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingFCMPushPayload, remote message is null");
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingPushNotificationPayload, remote message data payload is null");
+            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingFCMPushPayload, remote message data payload is null");
             return;
         }
         init(message.getData());
     }
 
-    public AEPMessagingPushNotificationPayload(Map<String, String> data) {
+    /**
+     * Constructor
+     *
+     * Provides the AEPMessagingFCMPushPayload object
+     * @param data {@link Map} map which indicates the data part of {@link RemoteMessage}
+     */
+    public AEPMessagingFCMPushPayload(Map<String, String> data) {
         init(data);
     }
 
+    /**
+     *
+     * @return
+     */
     public String getTitle() {
         return title;
     }
