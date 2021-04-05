@@ -275,7 +275,10 @@ class MessagingInternal extends Extension implements EventsHandler {
             final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
 
             if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-                new PushTokenStorage(platformServices.getLocalStorageService()).storeToken(pushToken);
+                LocalStorageService localStorageService = platformServices.getLocalStorageService();
+                if (localStorageService != null) {
+                    new PushTokenStorage(localStorageService).storeToken(pushToken);
+                }
             }
             if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
                 Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());

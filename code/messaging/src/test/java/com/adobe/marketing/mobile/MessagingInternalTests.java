@@ -62,8 +62,6 @@ public class MessagingInternalTests {
     @Mock
     LocalStorageService mockLocalStorageService;
     @Mock
-    NetworkService mockNetworkService;
-    @Mock
     Map<String, Object> mockConfigData;
     @Mock
     ConcurrentLinkedQueue<Event> mockEventQueue;
@@ -168,9 +166,7 @@ public class MessagingInternalTests {
         // Mocks
         ExtensionErrorCallback<ExtensionError> mockCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) {
-
-            }
+            public void error(ExtensionError extensionError) { }
         };
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
 
@@ -183,7 +179,32 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_processEvents_when_handlingPushToken_withPrivacyOptIn() {
+    public void test_processEvents_whenSharedStates_present() {
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
+        Event mockEvent = mock(Event.class);
+        messagingInternal.queueEvent(mockEvent);
+
+        // when getSharedEventState return mock config
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockConfigData);
+
+        // test
+        messagingInternal.processEvents();
+
+        // verify
+        verify(mockEvent, times(2)).getType();
+        assertEquals(messagingInternal.getEventQueue().size(), 0);
+    }
+
+    @Test
+    public void test_processEvents_with_genericIdentityEvent_withPrivacyOptIn() {
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
@@ -203,7 +224,7 @@ public class MessagingInternalTests {
         when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
         when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
 
-        // when get privacy status retirn opt in
+        // when get privacy status return opt in
         when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
 
         // test
@@ -212,13 +233,12 @@ public class MessagingInternalTests {
 
         // verify
         verify(mockPlatformServices, times(1)).getLocalStorageService();
-        verify(mockPlatformServices, times(1)).getNetworkService();
         verify(mockLocalStorageService, times(1)).getDataStore("AdobeMobile_ExperienceMessage");
         verify(mockDataStore, times(1)).setString(anyString(), anyString());
     }
 
     @Test
-    public void test_processEvents_when_handlingTrackingInfo() {
+    public void test_processEvents_with_messagingEventType() {
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
         // Mocks
@@ -369,7 +389,6 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(2)).getPrivacyStatus();
         verify(mockPlatformServices, times(0)).getLocalStorageService();
-        verify(mockPlatformServices, times(0)).getNetworkService();
     }
 
     @Test
@@ -394,9 +413,6 @@ public class MessagingInternalTests {
         when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
         when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
 
-        // when getNetworkService() return mockNetworkService
-        when(mockPlatformServices.getNetworkService()).thenReturn(mockNetworkService);
-
         // when App.getApplication().getPackageName() return mock packageName
         when(App.getApplication()).thenReturn(mockApplication);
         when(mockApplication.getPackageName()).thenReturn("mock_package");
@@ -407,8 +423,6 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(2)).getPrivacyStatus();
         verify(mockPlatformServices, times(1)).getLocalStorageService();
-        verify(mockPlatformServices, times(1)).getNetworkService();
-        verify(mockNetworkService, times(1)).connectUrl(anyString(), any(NetworkService.HttpCommand.class), any(byte[].class), ArgumentMatchers.<String, String>anyMap(), anyInt(), anyInt());
     }
 
     // ========================================================================================
