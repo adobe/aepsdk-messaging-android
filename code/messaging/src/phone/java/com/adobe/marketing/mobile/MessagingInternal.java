@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -379,6 +380,7 @@ class MessagingInternal extends Extension implements EventsHandler {
         final Map<String, Object> identity = new HashMap<>();
         identity.put(NAMESPACE, namespace);
 
+        final ArrayList<Map<String, Object>> pushNotificationDetailsArray = new ArrayList<>();
         final Map<String, Object> pushNotificationDetailsData = new HashMap<>();
         pushNotificationDetailsData.put(IDENTITY, identity);
         pushNotificationDetailsData.put(APP_ID, App.getApplication().getPackageName());
@@ -386,8 +388,10 @@ class MessagingInternal extends Extension implements EventsHandler {
         pushNotificationDetailsData.put(PLATFORM, FCM);
         pushNotificationDetailsData.put(DENY_LISTED, false);
 
+        pushNotificationDetailsArray.add(pushNotificationDetailsData);
+
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsData);
+        eventData.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
 
         return eventData;
     }
