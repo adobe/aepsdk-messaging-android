@@ -16,8 +16,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.os.Build;
 
-import androidx.annotation.RequiresApi;
-
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
@@ -74,10 +72,6 @@ public class AEPMessagingFCMPushPayload {
         init(data);
     }
 
-    /**
-     *
-     * @return
-     */
     public String getTitle() {
         return title;
     }
@@ -126,7 +120,6 @@ public class AEPMessagingFCMPushPayload {
         return data;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public int getImportance() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             switch (notificationPriority) {
