@@ -51,30 +51,3 @@ public void onCreate() {
     });
 }
 ```
-
-#### Updating the configuration 
-To update the configuration with the required DCCS url, add the following code to the Application class's `onCreate()` method:
-
-```kotlin
-override fun onCreate() {
-    MobileCore.start {
-        MobileCore.configureWithAppID("<appId>")
-        MobileCore.updateConfiguration(mutableMapOf("messaging.dccs" to "<DCCS_URL>") as Map<String, Any>?)
-    }
-}
-```
-
-```java
-@Override
-public void onCreate() {
-    MobileCore.start(new AdobeCallback() {
-        @Override
-        public void call(Object value) {
-           MobileCore.configureWithAppID("<appId>");
-           HashMap<String, Object> configuration = new HashMap<>();
-           configuration.put("messaging.dccs", "<DCCS_URL>");
-           MobileCore.updateConfiguration(configuration);
-        }
-    });
-}
-```

@@ -241,7 +241,6 @@ class MessagingInternal extends Extension implements EventsHandler {
 
     @Override
     public void processConfigurationResponse(final Event event) {
-        //TODO Handle privacy preference changes.
         if (event == null) {
             Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
             return;
@@ -267,38 +266,41 @@ class MessagingInternal extends Extension implements EventsHandler {
 
     @Override
     public void handlePushToken(final Event event) {
-        if (event == null) {
-            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null");
+        if (event == null || event.getEventData() == null) {
+            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null.");
             return;
         }
 
-        if (event.getEventType() == EventType.GENERIC_IDENTITY) {
-            final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
+        final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
 
-            if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-                LocalStorageService localStorageService = platformServices.getLocalStorageService();
-                if (localStorageService != null) {
-                    new PushTokenStorage(localStorageService).storeToken(pushToken);
-                }
+        if (pushToken == null || pushToken.isEmpty()) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
+            return;
+        }
+
+        if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
+            LocalStorageService localStorageService = platformServices.getLocalStorageService();
+            if (localStorageService != null) {
+                new PushTokenStorage(localStorageService).storeToken(pushToken);
             }
-            if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
-                if (eventData == null) {
-                    return;
-                }
-                // Send an edge event with profile data as event data
-                final EventData xdmData = new EventData();
-                xdmData.putTypedMap(DATA, eventData, PermissiveVariantSerializer.DEFAULT_INSTANCE);
-                final Event profileEvent = new Event.Builder("Profile event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                        .setData(xdmData)
-                        .build();
-                MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-                    @Override
-                    public void error(ExtensionError extensionError) {
-                        Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
-                    }
-                });
+        }
+        if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
+            Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+            if (eventData == null) {
+                return;
             }
+            // Send an edge event with profile data as event data
+            final EventData xdmData = new EventData();
+            xdmData.putTypedMap(DATA, eventData, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+            final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+                    .setData(xdmData)
+                    .build();
+            MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
+                @Override
+                public void error(ExtensionError extensionError) {
+                    Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
+                }
+            });
         }
     }
 
@@ -346,7 +348,7 @@ class MessagingInternal extends Extension implements EventsHandler {
         xdmData.putTypedMap(XDM, xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
         xdmData.putTypedMap(META, metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
 
-        final Event trackEvent = new Event.Builder("Push Tracking event", MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        final Event trackEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setData(xdmData)
                 .build();
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
@@ -363,7 +365,7 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
-        if (token == null) {
+        if (token == null || token.isEmpty()) {
             MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
             return null;
         }

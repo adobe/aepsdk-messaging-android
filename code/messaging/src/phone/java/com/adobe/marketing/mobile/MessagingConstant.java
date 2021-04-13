@@ -68,7 +68,6 @@ final class MessagingConstant {
             // Google messaging id key
             static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
 
-            // TEMP todo we need to define if this is the right key or do we need an extra api for this
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
             private Messaging() {
@@ -105,6 +104,12 @@ final class MessagingConstant {
     static final class EventType {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
+    }
+
+    static final class EventName {
+        static final String MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+        static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
     }
 
     static final class EventDataValues {
