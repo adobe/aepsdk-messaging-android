@@ -267,14 +267,14 @@ class MessagingInternal extends Extension implements EventsHandler {
     @Override
     public void handlePushToken(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(LOG_TAG, "Unable to sync push token. Event data received is null.");
+            Log.debug(LOG_TAG, "Unable to sync push token. Event or event data received is null.");
             return;
         }
 
         final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
 
         if (pushToken == null || pushToken.isEmpty()) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null or empty.");
             return;
         }
 
@@ -290,10 +290,8 @@ class MessagingInternal extends Extension implements EventsHandler {
                 return;
             }
             // Send an edge event with profile data as event data
-            final EventData xdmData = new EventData();
-            xdmData.putTypedMap(DATA, eventData, PermissiveVariantSerializer.DEFAULT_INSTANCE);
             final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                    .setData(xdmData)
+                    .setEventData(eventData)
                     .build();
             MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
                 @Override
@@ -361,15 +359,13 @@ class MessagingInternal extends Extension implements EventsHandler {
 
     private void optOut() {
         eventQueue.clear();
-        new PushTokenStorage(platformServices.getLocalStorageService()).removeToken();
+        LocalStorageService localStorageService = platformServices.getLocalStorageService();
+        if (localStorageService != null) {
+            new PushTokenStorage(localStorageService).removeToken();
+        }
     }
 
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
-        if (token == null || token.isEmpty()) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null.");
-            return null;
-        }
-
         if (ecid == null) {
             MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
             return null;
@@ -392,8 +388,11 @@ class MessagingInternal extends Extension implements EventsHandler {
 
         pushNotificationDetailsArray.add(pushNotificationDetailsData);
 
+        final Map<String, Object> data = new HashMap<>();
+        data.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
+
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
+        eventData.put(DATA, data);
 
         return eventData;
     }

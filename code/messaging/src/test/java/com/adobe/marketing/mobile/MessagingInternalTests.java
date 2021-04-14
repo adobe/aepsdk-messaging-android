@@ -394,7 +394,7 @@ public class MessagingInternalTests {
         assertEquals(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, event.getName());
         assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
-        assertEquals("{\"data\":{\"pushNotificationDetails\":[{\"identiy\":{\"namespace\":{\"code\":\"ECID\",\"id\":\"mock_ecid\"}},\"denylisted\":false,\"appId\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}", event.getData().toString());
+        assertEquals("{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\",\"id\":\"mock_ecid\"}},\"appId\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}", event.getData().toString());
     }
 
     @Test

@@ -87,7 +87,7 @@ final class MessagingConstant {
             static final class PushNotificationDetailsDataKeys {
                 static final String DATA = "data";
                 static final String PUSH_NOTIFICATION_DETAILS = "pushNotificationDetails";
-                static final String IDENTITY = "identiy";
+                static final String IDENTITY = "identity";
                 static final String NAMESPACE = "namespace";
                 static final String CODE = "code";
                 static final String ID = "id";
