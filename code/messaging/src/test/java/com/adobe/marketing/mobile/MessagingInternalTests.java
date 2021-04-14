@@ -62,8 +62,6 @@ public class MessagingInternalTests {
     @Mock
     LocalStorageService mockLocalStorageService;
     @Mock
-    NetworkService mockNetworkService;
-    @Mock
     Map<String, Object> mockConfigData;
     @Mock
     ConcurrentLinkedQueue<Event> mockEventQueue;
@@ -168,9 +166,7 @@ public class MessagingInternalTests {
         // Mocks
         ExtensionErrorCallback<ExtensionError> mockCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) {
-
-            }
+            public void error(ExtensionError extensionError) { }
         };
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
 
@@ -183,7 +179,32 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_processEvents_when_handlingPushToken_withPrivacyOptIn() {
+    public void test_processEvents_whenSharedStates_present() {
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
+        Event mockEvent = mock(Event.class);
+        messagingInternal.queueEvent(mockEvent);
+
+        // when getSharedEventState return mock config
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockConfigData);
+
+        // test
+        messagingInternal.processEvents();
+
+        // verify
+        verify(mockEvent, times(2)).getType();
+        assertEquals(messagingInternal.getEventQueue().size(), 0);
+    }
+
+    @Test
+    public void test_processEvents_with_genericIdentityEvent_withPrivacyOptIn() {
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
@@ -203,7 +224,7 @@ public class MessagingInternalTests {
         when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
         when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
 
-        // when get privacy status retirn opt in
+        // when get privacy status return opt in
         when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
 
         // test
@@ -212,13 +233,12 @@ public class MessagingInternalTests {
 
         // verify
         verify(mockPlatformServices, times(1)).getLocalStorageService();
-        verify(mockPlatformServices, times(1)).getNetworkService();
         verify(mockLocalStorageService, times(1)).getDataStore("AdobeMobile_ExperienceMessage");
         verify(mockDataStore, times(1)).setString(anyString(), anyString());
     }
 
     @Test
-    public void test_processEvents_when_handlingTrackingInfo() {
+    public void test_processEvents_with_messagingEventType() {
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
         // Mocks
@@ -332,21 +352,49 @@ public class MessagingInternalTests {
     // handlePushToken
     // ========================================================================================
     @Test
-    public void test_handlePushToken_when_WrongEventType() {
+    public void test_handlePushToken_when_privacyOptIn() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_push_token");
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        String mockECID = "mock_ecid";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
 
+        // when getLocalStorageService() return mockLocalStorageService
+        LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);
+        when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
+        when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
+
+        // when - then return mock
+        when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
+        when(messagingState.getEcid()).thenReturn(mockECID);
+
+        // when App.getApplication().getPackageName() return mock packageName
+        when(App.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getPackageName()).thenReturn("mock_package");
+
         //test
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        verify(messagingState, times(0)).getPrivacyStatus();
+        verify(messagingState, times(2)).getPrivacyStatus();
+        verify(mockPlatformServices, times(1)).getLocalStorageService();
+
+        PowerMockito.verifyStatic(MobileCore.class);
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, event.getName());
+        assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
+        assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
+        assertEquals("{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\",\"id\":\"mock_ecid\"}},\"appId\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}", event.getData().toString());
     }
 
     @Test
@@ -369,42 +417,60 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(2)).getPrivacyStatus();
         verify(mockPlatformServices, times(0)).getLocalStorageService();
-        verify(mockPlatformServices, times(0)).getNetworkService();
     }
 
     @Test
-    public void test_handlePushToken_when_privacyOptIn() {
+    public void test_handlePushToken_when_tokenIsEmpty() {
         // Mocks
-        Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_push_token");
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
         String mockECID = "mock_ecid";
-        String mockDccsUrl = "mock_dccs_url";
-        String mockExperienceCloudOrg = "mock_exp_org";
-        String mockProfileDatasetId = "mock_profileDatasetId";
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "");
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
-
-        // when
-        when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
-        when(messagingState.getEcid()).thenReturn(mockECID);
-        when(messagingState.getDccsURL()).thenReturn(mockDccsUrl);
-        when(messagingState.getProfileDatasetId()).thenReturn(mockProfileDatasetId);
-        when(messagingState.getExperienceCloudOrg()).thenReturn(mockExperienceCloudOrg);
 
         // when getLocalStorageService() return mockLocalStorageService
         LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);
         when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
         when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
 
-        // when getNetworkService() return mockNetworkService
-        when(mockPlatformServices.getNetworkService()).thenReturn(mockNetworkService);
+        // when - then return mock
+        when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
+        when(messagingState.getEcid()).thenReturn(mockECID);
 
-        // when App.getApplication().getPackageName() return mock packageName
-        when(App.getApplication()).thenReturn(mockApplication);
-        when(mockApplication.getPackageName()).thenReturn("mock_package");
+        //test
+        messagingInternal.handlePushToken(mockEvent);
+
+        // verify
+        verify(messagingState, times(0)).getPrivacyStatus();
+        verify(mockPlatformServices, times(0)).getLocalStorageService();
+    }
+
+    @Test
+    public void test_handlePushToken_when_ecidIsNull() {
+        // Mocks
+        String mockECID = null;
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_token");
+        Event mockEvent = mock(Event.class);
+
+        // when
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
+
+        // when getLocalStorageService() return mockLocalStorageService
+        LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);
+        when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
+        when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
+
+        // when - then return mock
+        when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
+        when(messagingState.getEcid()).thenReturn(mockECID);
 
         //test
         messagingInternal.handlePushToken(mockEvent);
@@ -412,8 +478,36 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(2)).getPrivacyStatus();
         verify(mockPlatformServices, times(1)).getLocalStorageService();
-        verify(mockPlatformServices, times(1)).getNetworkService();
-        verify(mockNetworkService, times(1)).connectUrl(anyString(), any(NetworkService.HttpCommand.class), any(byte[].class), ArgumentMatchers.<String, String>anyMap(), anyInt(), anyInt());
+
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+    }
+
+    @Test
+    public void test_handlePushToken_when_eventDataIsNull() {
+        // Mocks
+        String mockECID = "mock_ecid";
+        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(null).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Whitebox.setInternalState(messagingInternal, "platformServices", mockPlatformServices);
+
+        // when getLocalStorageService() return mockLocalStorageService
+        LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);
+        when(mockPlatformServices.getLocalStorageService()).thenReturn(mockLocalStorageService);
+        when(mockLocalStorageService.getDataStore(anyString())).thenReturn(mockDataStore);
+
+        // when - then return mock
+        when(messagingState.getPrivacyStatus()).thenReturn(MobilePrivacyStatus.OPT_IN);
+        when(messagingState.getEcid()).thenReturn(mockECID);
+
+        //test
+        messagingInternal.handlePushToken(mockEvent);
+
+        // verify
+        verify(messagingState, times(0)).getPrivacyStatus();
+        verify(mockPlatformServices, times(0)).getLocalStorageService();
     }
 
     // ========================================================================================
@@ -466,7 +560,6 @@ public class MessagingInternalTests {
         //test
         messagingInternal.handleTrackingInfo(mockEvent);
 
-        // verify
         // verify
         verify(messagingState, times(0)).getExperienceEventDatasetId();
     }

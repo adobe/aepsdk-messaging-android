@@ -119,11 +119,6 @@ publishing {
                 coreDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
                 coreDependencyNode.appendNode('artifactId', 'core')
                 coreDependencyNode.appendNode('version', mavenCoreVersion)
-
-                def edgeDependencyNode = dependenciesNode.appendNode('dependency')
-                edgeDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
-                edgeDependencyNode.appendNode('artifactId', 'edge')
-                edgeDependencyNode.appendNode('version', mavenEdgeVersion)
             }
         }
         aarSnapshot(MavenPublication) {
@@ -161,11 +156,6 @@ publishing {
                 coreDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
                 coreDependencyNode.appendNode('artifactId', 'core')
                 coreDependencyNode.appendNode('version', mavenCoreVersion + '-SNAPSHOT')
-
-                def edgeDependencyNode = dependenciesNode.appendNode('dependency')
-                edgeDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
-                edgeDependencyNode.appendNode('artifactId', 'edge')
-                edgeDependencyNode.appendNode('version', mavenEdgeVersion + '-SNAPSHOT')
             }
         }
     }

@@ -32,11 +32,8 @@ public class MessagingStateTests {
     private MessagingState messagingState;
 
     // mocks
-    private final String MOCK_DCCS_URL = "mock_dccs_url";
     private final String MOCK_PRIVACY_STATUS = "optedin";
-    private final String MOCK_PROFILE_DATASET = "mock_profile_dataset";
     private final String MOCK_EXP_EVENT_DATASET = "mock_exp_event_dataset";
-    private final String MOCK_EXP_ORG = "mock_exp_org";
     private final String MOCK_VID = "mock_vid";
 
     @Before
@@ -74,22 +71,16 @@ public class MessagingStateTests {
         PowerMockito.verifyStatic(MobilePrivacyStatus.class, Mockito.times(1));
         MobilePrivacyStatus.fromString(ArgumentMatchers.anyString());
 
-        Assert.assertEquals(messagingState.getDccsURL(), MOCK_DCCS_URL);
         Assert.assertEquals(messagingState.getEcid(), MOCK_VID);
-        Assert.assertEquals(messagingState.getExperienceCloudOrg(), MOCK_EXP_ORG);
         Assert.assertEquals(messagingState.getExperienceEventDatasetId(), MOCK_EXP_EVENT_DATASET);
-        Assert.assertEquals(messagingState.getProfileDatasetId(), MOCK_PROFILE_DATASET);
 
         Assert.assertEquals(messagingState.getPrivacyStatus(), MobilePrivacyStatus.OPT_IN);
     }
 
     private EventData getMockConfigEventData() {
         EventData configEventData = new EventData();
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, MOCK_PRIVACY_STATUS);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.PROFILE_DATASET_ID, MOCK_PROFILE_DATASET);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, MOCK_DCCS_URL);
-        configEventData.putString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_CLOUD_ORG, MOCK_EXP_ORG);
+        configEventData.putString(MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS, MOCK_PRIVACY_STATUS);
+        configEventData.putString(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
         return configEventData;
     }
 

@@ -133,7 +133,8 @@ public final class Messaging {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        final Event messagingEvent = new Event.Builder("Messaging Request Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+        final Event messagingEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT,
+                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
                 .setData(eventData)
                 .build();
         MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
