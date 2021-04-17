@@ -23,7 +23,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.utils.Asserts;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
@@ -73,8 +76,6 @@ public class MessagingStateTests {
 
         Assert.assertEquals(messagingState.getEcid(), MOCK_VID);
         Assert.assertEquals(messagingState.getExperienceEventDatasetId(), MOCK_EXP_EVENT_DATASET);
-
-        Assert.assertEquals(messagingState.getPrivacyStatus(), MobilePrivacyStatus.OPT_IN);
     }
 
     private EventData getMockConfigEventData() {
@@ -86,7 +87,11 @@ public class MessagingStateTests {
 
     private EventData getMockIdentityEventData() {
         EventData identityEventData = new EventData();
-        identityEventData.putString(MessagingConstant.EventDataKeys.Identity.VISITOR_ID_MID, MOCK_VID);
+        Map<String, Variant> identityMap = new HashMap<>();
+        List<Variant> ecids = new ArrayList<>();
+        ecids.add(Variant.fromStringMap(Collections.singletonMap(MessagingConstant.SharedState.EdgeIdentity.ID, MOCK_VID)));
+        identityMap.put(MessagingConstant.SharedState.EdgeIdentity.ECID, Variant.fromVariantList(ecids));
+        identityEventData.putVariantMap(MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
         return identityEventData;
     }
 }

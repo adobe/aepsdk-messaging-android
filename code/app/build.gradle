@@ -8,7 +8,7 @@ android {
     buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.adobe.marketing.mobile.messagingsample"
-        minSdkVersion 14
+        minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
         versionName "1.0.0-alpha-3"
@@ -37,22 +37,20 @@ buildscript {
 def adobeDependencies = [
         core       : "com.adobe.marketing.mobile:core:+",
         userProfile: "com.adobe.marketing.mobile:userprofile:+",
-        identity   : "com.adobe.marketing.mobile:identity:+",
+        edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
         lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",
-        signal     : "com.adobe.marketing.mobile:signal:+"
+        signal     : "com.adobe.marketing.mobile:signal:+",
+        edge       : "com.adobe.marketing.mobile:edge:1.1.0"
 ]
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.google.firebase:firebase-messaging:17.4.0'
-    implementation project(':messaging')
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation 'com.adobe.marketing.mobile:edge:1.0.0-beta-1'
-
-
     implementation adobeDependencies.values()
+    implementation project(':messaging')
 }

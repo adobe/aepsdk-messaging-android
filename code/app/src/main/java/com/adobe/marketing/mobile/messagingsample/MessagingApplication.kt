@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.iid.FirebaseInstanceId
 
 class MessagingApplication : Application() {
@@ -32,10 +33,10 @@ class MessagingApplication : Application() {
 
         MobileCore.start {
             // Necessary property id for MessagingSDKTest which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("<appId>")
+            MobileCore.configureWithAppID("3149c49c3910/6a68c2e19c81/launch-4b2394565377-development")
             MobileCore.lifecycleStart(null);
 
-            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<eventDatasetId>") as Map<String, Any>?)
+            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "5f8623492312f418dcc6b3d9") as Map<String, Any>?)
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->

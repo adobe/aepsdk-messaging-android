@@ -53,7 +53,6 @@ import java.util.concurrent.Executors;
 class MessagingInternal extends Extension implements EventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private PlatformServices platformServices = new AndroidPlatformServices();
     private MessagingState messagingState;
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
@@ -104,23 +103,10 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     /**
-     * Overridden method of {@link Extension} class called when extension is unregistered by the core.
-     *
-     * <p>
-     * On unregister of messaging extension, the shared states are cleared.
-     */
-    @Override
-    protected void onUnregistered() {
-        super.onUnregistered();
-        getApi().clearSharedEventStates(null);
-    }
-
-    /**
      * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
      *
      * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
      */
-    @Override
     protected void onUnexpectedError(final ExtensionUnexpectedError extensionUnexpectedError) {
         super.onUnexpectedError(extensionUnexpectedError);
         this.onUnregistered();
@@ -185,12 +171,12 @@ class MessagingInternal extends Extension implements EventsHandler {
                 }
             };
 
-            ExtensionErrorCallback<ExtensionError> identityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            ExtensionErrorCallback<ExtensionError> edgeIdentityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
                         Log.warning(MessagingConstant.LOG_TAG,
-                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
+                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
                                         extensionError.getErrorName()));
                     }
                 }
@@ -199,8 +185,8 @@ class MessagingInternal extends Extension implements EventsHandler {
             final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, configurationErrorCallback);
 
-            final Map<String, Object> identitySharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
-                    eventToProcess, identityErrorCallback);
+            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME,
+                    eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
@@ -210,7 +196,7 @@ class MessagingInternal extends Extension implements EventsHandler {
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (identitySharedState == null) {
+            if (edgeIdentitySharedState == null) {
                 Log.warning(MessagingConstant.LOG_TAG,
                         "MessagingInternal : Could not process event, identity shared state is pending");
                 return;
@@ -247,18 +233,13 @@ class MessagingInternal extends Extension implements EventsHandler {
         }
 
         final EventData configData = event.getData();
-        final EventData identityData = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
+        final EventData edgeIdentityData = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event);
 
-        messagingState.setState(configData, identityData);
+        messagingState.setState(configData, edgeIdentityData);
 
         getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                if (!MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                    optOut();
-                    return;
-                }
-
                 processEvents();
             }
         });
@@ -278,28 +259,20 @@ class MessagingInternal extends Extension implements EventsHandler {
             return;
         }
 
-        if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-            LocalStorageService localStorageService = platformServices.getLocalStorageService();
-            if (localStorageService != null) {
-                new PushTokenStorage(localStorageService).storeToken(pushToken);
-            }
+        Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+        if (eventData == null) {
+            return;
         }
-        if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-            Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
-            if (eventData == null) {
-                return;
+        // Send an edge event with profile data as event data
+        final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+                .setEventData(eventData)
+                .build();
+        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
             }
-            // Send an edge event with profile data as event data
-            final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                    .setEventData(eventData)
-                    .build();
-            MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-                @Override
-                public void error(ExtensionError extensionError) {
-                    Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
-                }
-            });
-        }
+        });
     }
 
     @Override
@@ -342,27 +315,22 @@ class MessagingInternal extends Extension implements EventsHandler {
         // Adding xdm data to xdmMap
         addXDMData(eventData, xdmMap);
 
-        final EventData xdmData = new EventData();
-        xdmData.putTypedMap(XDM, xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
-        xdmData.putTypedMap(META, metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+        final Map<String, Object> xdmData = new HashMap<>();
+        xdmData.put(XDM, xdmMap);
+        xdmData.put(META, metaMap);
 
         final Event trackEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setData(xdmData)
+                .setEventData(xdmData)
                 .build();
+
+        trackEvent.getData().toString();
+
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
                 Log.error(LOG_TAG, "Error in dispatching event for tracking");
             }
         });
-    }
-
-    private void optOut() {
-        eventQueue.clear();
-        LocalStorageService localStorageService = platformServices.getLocalStorageService();
-        if (localStorageService != null) {
-            new PushTokenStorage(localStorageService).removeToken();
-        }
     }
 
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
