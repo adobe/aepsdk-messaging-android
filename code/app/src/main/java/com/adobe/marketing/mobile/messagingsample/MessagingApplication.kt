@@ -33,10 +33,10 @@ class MessagingApplication : Application() {
 
         MobileCore.start {
             // Necessary property id for MessagingSDKTest which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/6a68c2e19c81/launch-4b2394565377-development")
+            MobileCore.configureWithAppID("<appId>")
             MobileCore.lifecycleStart(null);
 
-            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "5f8623492312f418dcc6b3d9") as Map<String, Any>?)
+            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<expEventDatasetId>") as Map<String, Any>?)
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
