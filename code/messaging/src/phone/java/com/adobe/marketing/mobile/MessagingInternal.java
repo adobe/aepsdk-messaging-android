@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMD
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -323,8 +324,6 @@ class MessagingInternal extends Extension implements EventsHandler {
                 .setEventData(xdmData)
                 .build();
 
-        trackEvent.getData().toString();
-
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
@@ -333,6 +332,12 @@ class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
+    /**
+     * Get profile data with token
+     * @param token push token which needs to be synced
+     * @param ecid experience cloud id of the device
+     * @return {@link Map} of profile data in the correct format with token
+     */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
             MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
@@ -414,41 +419,50 @@ class MessagingInternal extends Extension implements EventsHandler {
         try {
             // Convert the adobe string to json object
             final JSONObject xdmJson = new JSONObject(adobe);
+            final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
+
+            Map<String, Object> mixins = null;
 
             // Check for if the json has the required keys
-            if (xdmJson.has(CJM) || xdmJson.has(MIXINS)) {
-                final JSONObject mixins = xdmJson.has(MIXINS) ? xdmJson.getJSONObject(MIXINS) : xdmJson.getJSONObject(CJM);
-                Iterator<String> keys = mixins.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    xdmMap.put(key, mixins.get(key));
-                }
+            if (xdmMapObject.containsKey(CJM) && xdmMapObject.get(CJM) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(CJM);
+            }
 
-                // Check if the xdm data provided by the customer is using cjm for tracking
-                // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
-                if (mixins.has(EXPERIENCE)) {
-                    JSONObject experience = mixins.getJSONObject(EXPERIENCE);
-                    if (experience.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
-                        JSONObject cjm = experience.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
-                        // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
-                        final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
-                        final Iterator<String> jObjectKeys = jObject.keys();
+            if (xdmMapObject.containsKey(MIXINS) && xdmMapObject.get(MIXINS) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(MIXINS);
+            }
 
-                        while (jObjectKeys.hasNext()) {
-                            final String key = jObjectKeys.next();
-                            final Object value = jObject.get(key);
-                            cjm.put(key, value);
-                        }
-                        experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
-                        xdmMap.put(EXPERIENCE, experience);
+            if (mixins == null) {
+                return;
+            }
+
+            for (String key : mixins.keySet()) {
+                xdmMap.put(key, mixins.get(key));
+            }
+
+            // Check if the xdm data provided by the customer is using cjm for tracking
+            // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
+            if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
+                Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
+                if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
+                    Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                    // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
+                    final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
+                    Map<String, Object> jObjectMap = MessagingUtils.toMap(jObject);
+
+                    for (String key: jObjectMap.keySet()) {
+                        cjm.put(key, jObjectMap.get(key));
                     }
-                } else {
-                    Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
+
+                    experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
+                    xdmMap.put(EXPERIENCE, experience);
                 }
             } else {
-                Log.warning(LOG_TAG, "Failed to send xdm data with the tracking, required keys are missing.");
+                Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
             }
         } catch (JSONException e) {
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+        } catch (ClassCastException e) {
             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
     }

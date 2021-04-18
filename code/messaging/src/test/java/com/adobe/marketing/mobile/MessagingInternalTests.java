@@ -115,16 +115,6 @@ public class MessagingInternalTests {
     }
 
     // ========================================================================================
-    // onUnexpectedError
-    // ========================================================================================
-    @Test
-    public void test_onUnexpectedError() {
-        // test
-        messagingInternal.onUnexpectedError(mockExtensionUnexpectedError);
-        verify(mockExtensionApi, times(1)).clearSharedEventStates(null);
-    }
-
-    // ========================================================================================
     // queueEvent
     // ========================================================================================
     @Test
@@ -491,7 +481,7 @@ public class MessagingInternalTests {
     @Test
     public void test_handleTrackingInfo_when_mixinsData() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        final String expectedEventData = "{xdm={pushNotificationTracking={customAction={actionID=mock_actionId}, pushProviderMessageID=mock_messageId, pushProvider=fcm}, application={launches={value=0}}, eventType=mock_eventType, _experience={\"customerJourneyManagement\":{\"pushChannelContext\":{\"platform\":\"fcm\"},\"messageExecution\":{\"messageExecutionID\":\"16-Sept-postman\",\"journeyVersionInstanceId\":\"someJourneyVersionInstanceId\",\"messageID\":\"567\",\"journeyVersionID\":\"some-journeyVersionId\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/push\"}}}}}, meta={collect={datasetId=mock_datasetId}}}";
+        final String expectedEventData = "{\"xdm\":{\"pushNotificationTracking\":{\"customAction\":{\"actionID\":\"mock_actionId\"},\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":0}},\"eventType\":\"mock_eventType\",\"_experience\":{\"customerJourneyManagement\":{\"pushChannelContext\":{\"platform\":\"fcm\"},\"messageExecution\":{\"messageExecutionID\":\"16-Sept-postman\",\"journeyVersionInstanceId\":\"someJourneyVersionInstanceId\",\"messageID\":\"567\",\"journeyVersionID\":\"some-journeyVersionId\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/push\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
         final String mockCJMData = "{\n" +
                 "        \"mixins\" :{\n" +
                 "          \"_experience\": {\n" +
@@ -535,7 +525,7 @@ public class MessagingInternalTests {
         assertNotNull(event.getData());
         assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         // Verify _experience exist
-        //assertTrue(((Map<String, Object>)event.getEventData().get(MessagingConstant.TrackingKeys.XDM)).containsKey(MessagingConstant.TrackingKeys.EXPERIENCE));
+        assertEquals(expectedEventData, event.getData().toString());
     }
 
     @Test
