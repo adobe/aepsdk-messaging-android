@@ -123,7 +123,6 @@ final class MessagingConstant {
 
         static final class Configuration {
             static final String EXTENSION_NAME = "com.adobe.module.configuration";
-            static final String GLOBAL_PRIVACY_STATUS = "global.privacy";
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";

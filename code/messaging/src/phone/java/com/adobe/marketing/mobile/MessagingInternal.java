@@ -146,7 +146,7 @@ class MessagingInternal extends Extension implements EventsHandler {
      * Processes the queued event one by one until queue is empty.
      *
      * <p>
-     * Suspends processing of the events in the queue if the configuration shared state is not ready.
+     * Suspends processing of the events in the queue if the configuration or identity shared state is not ready.
      * Processed events are polled out of the {@link #eventQueue}.
      */
     void processEvents() {
