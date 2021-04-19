@@ -84,9 +84,7 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
-        // verify 3 listeners are registered
-        verify(mockExtensionApi, times(1)).registerListener(eq(EventType.CONFIGURATION),
-                eq(EventSource.RESPONSE_CONTENT), eq(ConfigurationResponseContentListener.class));
+        // verify 2 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(MessagingRequestContentListener.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
@@ -251,44 +249,6 @@ public class MessagingInternalTests {
         verify(mockEvent, times(1)).getSource();
         verify(mockEvent, times(1)).getData();
         assertEquals(messagingInternal.getEventQueue().size(), 0);
-    }
-
-    // ========================================================================================
-    // processConfigurationResponse
-    // ========================================================================================
-    @Test
-    public void test_processConfigurationResponse_when_NullEvent() {
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        // test
-        messagingInternal.processConfigurationResponse(null);
-
-        // verify
-        verify(messagingState, times(0)).setState(any(EventData.class), any(EventData.class));
-    }
-
-    @Test
-    public void test_processConfigurationResponse() {
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-
-        // dummy executor
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
-        // private mocks
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Whitebox.setInternalState(messagingInternal, "executorService", executor);
-
-        // Mocks
-        Event mockEvent = new Event.Builder("event1", EventType.CONFIGURATION.getName(), EventSource.RESPONSE_CONTENT.getName()).setEventData(mockConfigData).build();
-
-        when(mockExtensionApi.getXDMSharedEventState(anyString(), any(Event.class))).thenReturn(mockEdgeIdentityEventData);
-
-        //test
-        messagingInternal.processConfigurationResponse(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
-
-        // verify
-        verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class));
-        verify(messagingState, times(1)).setState(mockEvent.getData(), mockEdgeIdentityEventData);
     }
 
     // ========================================================================================

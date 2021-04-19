@@ -57,7 +57,10 @@ final class MessagingState {
                             Object ecidObject = ecids.get(0);
                             if (ecidObject instanceof Map) {
                                 Map<String, Object> ecid = (Map<String, Object>) ecids.get(0);
-                                Object id =
+                                Object idObj = ecid.get(ID);
+                                if (idObj instanceof String) {
+                                    this.ecid = (String) idObj;
+                                }
                             }
                         }
                     }

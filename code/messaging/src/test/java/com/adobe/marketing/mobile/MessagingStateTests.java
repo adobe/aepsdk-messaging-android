@@ -67,7 +67,7 @@ public class MessagingStateTests {
         Mockito.when(MobilePrivacyStatus.fromString(ArgumentMatchers.anyString())).thenReturn(MobilePrivacyStatus.OPT_IN);
 
         // test
-        messagingState.setState(mockConfigEventData, mockIdentityEventData);
+        messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
 
         Assert.assertEquals(messagingState.getEcid(), MOCK_VID);
         Assert.assertEquals(messagingState.getExperienceEventDatasetId(), MOCK_EXP_EVENT_DATASET);
