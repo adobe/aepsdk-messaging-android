@@ -54,7 +54,7 @@ import java.util.concurrent.Executors;
 class MessagingInternal extends Extension implements EventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private MessagingState messagingState;
+    private final MessagingState messagingState;
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
 
@@ -65,8 +65,6 @@ class MessagingInternal extends Extension implements EventsHandler {
      * Called during messaging extension's registration.
      * The following listeners are registered during this extension's registration.
      * <ul>
-     *     <li> {@link ConfigurationResponseContentListener} listening to event with eventType {@link EventType#CONFIGURATION}
-     *     and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      *     <li> {@link MessagingRequestContentListener} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
      *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link IdentityRequestContentListener} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
@@ -114,7 +112,6 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
-        extensionApi.registerListener(EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT, ConfigurationResponseContentListener.class);
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), MessagingRequestContentListener.class, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
@@ -203,6 +200,9 @@ class MessagingInternal extends Extension implements EventsHandler {
                 return;
             }
 
+            // Set the messaging state
+            messagingState.setState(configSharedState, edgeIdentitySharedState);
+
             if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
@@ -224,26 +224,6 @@ class MessagingInternal extends Extension implements EventsHandler {
             // event processed, remove it from the queue
             eventQueue.poll();
         }
-    }
-
-    @Override
-    public void processConfigurationResponse(final Event event) {
-        if (event == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
-            return;
-        }
-
-        final EventData configData = event.getData();
-        final EventData edgeIdentityData = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event);
-
-        messagingState.setState(configData, edgeIdentityData);
-
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                processEvents();
-            }
-        });
     }
 
     @Override

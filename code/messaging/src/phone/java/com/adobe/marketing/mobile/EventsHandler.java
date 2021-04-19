@@ -25,10 +25,4 @@ interface EventsHandler {
      * @param event Messaging Request Content event which contains the push notification tracking information
      */
     void handleTrackingInfo(final Event event);
-
-    /**
-     * Processes the ConfigurationResponse for collecting privacy status information
-     * @param event Configuration response event which contains the privacy status information
-     */
-    void processConfigurationResponse(final Event event);
 }
