@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({MobilePrivacyStatus.class})
 public class MessagingStateTests {
     private MessagingState messagingState;
 
@@ -40,7 +39,6 @@ public class MessagingStateTests {
 
     @Before
     public void before() {
-        PowerMockito.mockStatic(MobilePrivacyStatus.class);
         messagingState = new MessagingState();
     }
 
@@ -53,8 +51,8 @@ public class MessagingStateTests {
         messagingState.setState(null, null);
 
         // verify
-        PowerMockito.verifyStatic(MobilePrivacyStatus.class, Mockito.times(0));
-        MobilePrivacyStatus.fromString(ArgumentMatchers.anyString());
+        Assert.assertNull(messagingState.getEcid());
+        Assert.assertNull(messagingState.getExperienceEventDatasetId());
     }
 
     @Test
@@ -62,10 +60,7 @@ public class MessagingStateTests {
         //mocks
         EventData mockConfigEventData = getMockConfigEventData();
         EventData mockIdentityEventData = getMockEdgeIdentityEventData();
-
-        // when
-        Mockito.when(MobilePrivacyStatus.fromString(ArgumentMatchers.anyString())).thenReturn(MobilePrivacyStatus.OPT_IN);
-
+        
         // test
         messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
 
