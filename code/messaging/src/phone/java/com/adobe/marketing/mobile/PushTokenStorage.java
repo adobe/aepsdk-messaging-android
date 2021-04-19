@@ -44,7 +44,7 @@ class PushTokenStorage {
                 final byte[] hashedBytes = messageDigest.digest(pushToken.getBytes());
                 return new String(hashedBytes);
             } catch (NoSuchAlgorithmException e) {
-                Log.warning(MessagingConstant.LOG_TAG, "Error in creating sha hash for push token.");
+                Log.warning(MessagingConstant.LOG_TAG, "%s - Error in creating sha hash for push token.");
             }
         }
         return pushToken;

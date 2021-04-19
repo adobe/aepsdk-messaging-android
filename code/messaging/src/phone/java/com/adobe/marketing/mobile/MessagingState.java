@@ -23,6 +23,7 @@ import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdent
  * MessagingState is used to store configuration and identity information
  */
 final class MessagingState {
+    private final String SELF_TAG = "MessagingState";
     //Identity properties.
     private String ecid;
 
@@ -66,7 +67,7 @@ final class MessagingState {
                     }
                 }
             } catch (ClassCastException e) {
-                Log.debug(MessagingConstant.LOG_TAG, "Exception while trying to get the ecid. Error -> %s", e.getMessage());
+                Log.debug(MessagingConstant.LOG_TAG, "%s - Exception while trying to get the ecid. Error -> %s", SELF_TAG, e.getMessage());
             }
         }
     }

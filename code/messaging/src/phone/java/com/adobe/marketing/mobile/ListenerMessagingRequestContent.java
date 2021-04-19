@@ -20,7 +20,7 @@ package com.adobe.marketing.mobile;
  * @see MessagingInternal
  */
 public class ListenerMessagingRequestContent extends ExtensionListener {
-
+    private final String  SELF_TAG = "ListenerMessagingRequestContent";
     ListenerMessagingRequestContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
@@ -29,7 +29,7 @@ public class ListenerMessagingRequestContent extends ExtensionListener {
     public void hear(final Event event) {
 
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Event or Event data is null.");
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
             return;
         }
 

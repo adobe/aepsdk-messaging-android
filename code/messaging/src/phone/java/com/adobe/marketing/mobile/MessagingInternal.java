@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class MessagingInternal extends Extension implements MessagingEventsHandler {
-
+    private final String SELF_TAG = "MessagingInternal";
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final MessagingState messagingState;
     private ExecutorService executorService;
@@ -115,8 +115,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
-                Log.error(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
-                        MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
+                Log.error(MessagingConstant.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
+                        SELF_TAG, MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
             }
         };
 
@@ -124,8 +124,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
 
-        Log.debug(MessagingConstant.LOG_TAG, "Registering Messaging extension - version %s",
-                MessagingConstant.EXTENSION_VERSION);
+        Log.debug(MessagingConstant.LOG_TAG, "%s - Registering Messaging extension - version %s",
+                SELF_TAG, MessagingConstant.EXTENSION_VERSION);
     }
 
     /**
@@ -157,7 +157,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             Event eventToProcess = eventQueue.peek();
 
             if (eventToProcess == null) {
-                Log.debug(MessagingConstant.LOG_TAG, "Unable to process event, Event received is null.");
+                Log.debug(MessagingConstant.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
                 return;
             }
 
@@ -192,14 +192,14 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
                 Log.warning(MessagingConstant.LOG_TAG,
-                        "MessagingInternal : Could not process event, configuration shared state is pending");
+                        "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (edgeIdentitySharedState == null) {
                 Log.warning(MessagingConstant.LOG_TAG,
-                        "MessagingInternal : Could not process event, identity shared state is pending");
+                        "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
             }
 
@@ -216,7 +216,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
                 // Need experience event dataset id for sending the push token
                 if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
-                    Log.warning(LOG_TAG, "Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
+                    Log.warning(LOG_TAG, "%s - Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
                     return;
                 }
 
@@ -232,7 +232,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     @Override
     public void handlePushToken(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(LOG_TAG, "Unable to sync push token. Event or event data received is null.");
+            Log.debug(LOG_TAG, "%s - Unable to sync push token. Event or event data received is null.", SELF_TAG);
             return;
         }
 
@@ -254,7 +254,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
+                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
             }
         });
     }
@@ -264,7 +264,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         final EventData eventData = event.getData();
         if (eventData == null) {
             Log.debug(MessagingConstant.LOG_TAG,
-                    "handleTrackingInfo - Cannot track information, eventData is null.");
+                    "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
             return;
         }
         final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
@@ -274,13 +274,13 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(MessagingConstant.LOG_TAG,
-                    "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
+                    "%s - handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.", SELF_TAG);
             return;
         }
 
         String datasetId = messagingState.getExperienceEventDatasetId();
         if (datasetId == null) {
-            Log.warning(LOG_TAG, "Failed to track push notification interaction, experience event datasetId is null");
+            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null", SELF_TAG);
             return;
         }
 
@@ -310,7 +310,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "Error in dispatching event for tracking");
+                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
             }
         });
     }
@@ -331,7 +331,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null.");
             return null;
         }
 
@@ -403,7 +403,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         // Extract the xdm adobe data string from the event data.
         final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
         if (adobe == null) {
-            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data is null.");
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;
         }
 
@@ -429,7 +429,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             }
 
             if (mixins == null) {
-                Log.debug(LOG_TAG, "Failed to send cjm xdm data with the tracking, Missing xdm data.");
+                Log.debug(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, Missing xdm data.");
                 return;
             }
 
@@ -449,12 +449,12 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                     xdmMap.put(EXPERIENCE, experience);
                 }
             } else {
-                Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
+                Log.warning(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, required keys are missing.");
             }
         } catch (JSONException e) {
-            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         } catch (ClassCastException e) {
-            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
     }
 

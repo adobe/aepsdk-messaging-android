@@ -28,6 +28,7 @@ import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
 
 public final class Messaging {
+    private static final String SELF_TAG = "Messaging";
 
     private Messaging() {}
 
@@ -47,13 +48,13 @@ public final class Messaging {
      */
     public static void registerExtension() {
         if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
-             Log.warning(LOG_TAG, "Unable to register Messaging SDK since MobileCore is not initialized properly. For more details refer to https://aep-sdks.gitbook.io/docs/using-mobile-extensions/mobile-core");
+             Log.warning(LOG_TAG, "%s - Unable to register Messaging SDK since MobileCore is not initialized properly.", SELF_TAG);
         }
 
         MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.debug("There was an error registering Messaging Extension: %s", extensionError.getErrorName());
+                Log.debug(LOG_TAG, "%s - There was an error registering Messaging Extension: %s", SELF_TAG, extensionError.getErrorName());
             }
         });
     }
@@ -67,15 +68,15 @@ public final class Messaging {
      */
     public static boolean addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data) {
         if (intent == null) {
-            Log.warning(LOG_TAG, "Failed to add push tracking details as intent is null.");
+            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as intent is null.", SELF_TAG);
             return false;
         }
         if (messageId == null || messageId.isEmpty()) {
-            Log.warning(LOG_TAG, "Failed to add push tracking details as MessageId is null.");
+            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as MessageId is null.", SELF_TAG);
             return false;
         }
         if (data == null || data.isEmpty()) {
-            Log.warning(LOG_TAG, "Failed to add push tracking details as data is null or empty.");
+            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as data is null or empty.", SELF_TAG);
             return false;
         }
 
@@ -87,7 +88,7 @@ public final class Messaging {
         if (xdmData != null && !xdmData.isEmpty()) {
             intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
-            Log.warning(LOG_TAG, "Xdm data is not added as push tracking details to the intent, Xdm data is null or empty");
+            Log.warning(LOG_TAG, "%s - Xdm data is not added as push tracking details to the intent, Xdm data is null or empty", SELF_TAG);
         }
 
         return true;
@@ -102,7 +103,7 @@ public final class Messaging {
      */
     public static void handleNotificationResponse(final Intent intent, final boolean applicationOpened, final String customActionId) {
         if (intent == null) {
-            Log.warning(LOG_TAG, "Failed to track notification interactions, intent provided is null");
+            Log.warning(LOG_TAG, "%s - Failed to track notification interactions, intent provided is null", SELF_TAG);
             return;
         }
         String messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
@@ -111,14 +112,14 @@ public final class Messaging {
             // This happens when FirebaseMessagingService#onMessageReceived is not called.
             messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (messageId == null) {
-                Log.warning(LOG_TAG, "Failed to track notification interactions, message id provided is null");
+                Log.warning(LOG_TAG, "%s - Failed to track notification interactions, message id provided is null", SELF_TAG);
                 return;
             }
         }
 
         final String xdmData = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         if (xdmData == null) {
-            Log.warning(LOG_TAG, "XDM data provided is null");
+            Log.warning(LOG_TAG, "%s - XDM data provided is null", SELF_TAG);
         }
 
         final EventData eventData = new EventData();
@@ -140,7 +141,7 @@ public final class Messaging {
         MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "Failed to track notification interactions: Error %s", extensionError.toString());
+                Log.error(LOG_TAG, "%s - Failed to track notification interactions: Error %s", SELF_TAG, extensionError.toString());
             }
         });
     }

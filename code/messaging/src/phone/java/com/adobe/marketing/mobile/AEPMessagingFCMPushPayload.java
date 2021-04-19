@@ -13,8 +13,6 @@
 package com.adobe.marketing.mobile;
 
 import android.app.Notification;
-import android.app.NotificationManager;
-import android.os.Build;
 
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -31,6 +29,8 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class AEPMessagingFCMPushPayload {
+    private final String  SELF_TAG = "AEPMessagingFCMPushPayload";
+
     private String title;
     private String body;
     private String sound;
@@ -52,11 +52,11 @@ public class AEPMessagingFCMPushPayload {
      */
     public AEPMessagingFCMPushPayload(RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingFCMPushPayload, remote message is null");
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create AEPMessagingFCMPushPayload, remote message is null", SELF_TAG);
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "Failed to create AEPMessagingFCMPushPayload, remote message data payload is null");
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create AEPMessagingFCMPushPayload, remote message data payload is null", SELF_TAG);
             return;
         }
         init(message.getData());
@@ -104,6 +104,9 @@ public class AEPMessagingFCMPushPayload {
         return imageUrl;
     }
 
+    /**
+     * @return an {@link ActionType}
+     */
     public ActionType getActionType() {
         return actionType;
     }
@@ -112,6 +115,10 @@ public class AEPMessagingFCMPushPayload {
         return actionUri;
     }
 
+    /**
+     * Returns list of action buttons which provides label, action type and action link
+     * @return List of {@link ActionButton}
+     */
     public List<ActionButton> getActionButtons() {
         return actionButtons;
     }
@@ -134,7 +141,7 @@ public class AEPMessagingFCMPushPayload {
             String count = data.get(MessagingConstant.PushNotificationPayload.NOTIFICATION_COUNT);
             this.badgeCount = Integer.parseInt(count);
         } catch (NumberFormatException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "Exception in converting string %s to int");
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
         }
 
         this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstant.PushNotificationPayload.NOTIFICATION_PRIORITY));
@@ -143,6 +150,7 @@ public class AEPMessagingFCMPushPayload {
     }
 
     private int getNotificationPriorityFromString(String priority) {
+        if (priority == null) return Notification.PRIORITY_DEFAULT;
         switch (priority) {
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_MIN: return Notification.PRIORITY_MIN;
@@ -174,7 +182,7 @@ public class AEPMessagingFCMPushPayload {
 
     private List<ActionButton> getActionButtonsFromString(final String actionButtons) {
         if (actionButtons == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : actionButtons is null", SELF_TAG);
             return null;
         }
         List<ActionButton> actionButtonList = new ArrayList<>(3);
@@ -186,9 +194,8 @@ public class AEPMessagingFCMPushPayload {
                 if (button == null) continue;
                 actionButtonList.add(button);
             }
-
         } catch (JSONException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "Exception in converting actionButtons json string to json object, Error : ", e.getMessage());
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
         return actionButtonList;
@@ -198,7 +205,7 @@ public class AEPMessagingFCMPushPayload {
         try {
             String label = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {
-                Log.debug(MessagingConstant.LOG_TAG, "Label is empty");
+                Log.debug(MessagingConstant.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
             String uri = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
@@ -206,23 +213,29 @@ public class AEPMessagingFCMPushPayload {
 
             return new ActionButton(label, uri, type);
         } catch (JSONException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "Exception in converting actionButtons json string to json object, Error : ", e.getMessage());
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
     }
 
+    /**
+     * Enum to denote the type of action
+     */
     enum ActionType {
         DEEPLINK, WEBURL, DISMISS, NONE
     }
 
+    /**
+     * Class representing the action button with label, link and type
+     */
     class ActionButton {
         private final String label;
-        private final String uri;
+        private final String link;
         private final ActionType type;
 
-        public ActionButton(final String label, final String uri, final String type) {
+        public ActionButton(final String label, final String link, final String type) {
             this.label = label;
-            this.uri = uri;
+            this.link = link;
             this.type = getActionTypeFromString(type);
         }
 
@@ -230,8 +243,8 @@ public class AEPMessagingFCMPushPayload {
             return label;
         }
 
-        public String getUri() {
-            return uri;
+        public String getLink() {
+            return link;
         }
 
         public ActionType getType() {

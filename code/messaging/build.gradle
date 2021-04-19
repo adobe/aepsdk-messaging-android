@@ -207,7 +207,8 @@ dependencies {
     testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
     testImplementation 'org.json:json:20180130'
 
-    compileOnly "com.google.firebase:firebase-messaging:21.0.1"
+    compileOnly "com.google.firebase:firebase-messaging:21.1.0"
+    testCompileOnly "com.google.firebase:firebase-messaging:21.1.0"
 }
 
 afterEvaluate {
