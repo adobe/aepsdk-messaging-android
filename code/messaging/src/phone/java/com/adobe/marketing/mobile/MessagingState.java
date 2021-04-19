@@ -11,12 +11,10 @@
 
 package com.adobe.marketing.mobile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -32,28 +30,43 @@ final class MessagingState {
     private String experienceEventDatasetId;
 
 
-    void setState(final EventData configState, final EventData edgeIdentityState) {
+    void setState(final Map<String, Object> configState, final Map<String, Object> edgeIdentityState) {
         setConfigState(configState);
         setEdgeIdentityState(edgeIdentityState);
     }
 
-    private void setConfigState(final EventData configState) {
+    private void setConfigState(final Map<String, Object> configState) {
         if (configState != null) {
-            this.experienceEventDatasetId = configState.optString(EXPERIENCE_EVENT_DATASET_ID, "");
+            Object expEventDatasetId = configState.get(EXPERIENCE_EVENT_DATASET_ID);
+            if (expEventDatasetId instanceof String) {
+                this.experienceEventDatasetId = (String) expEventDatasetId;
+            }
         }
     }
 
-    private void setEdgeIdentityState(final EventData edgeIdentityState) {
+    private void setEdgeIdentityState(final Map<String, Object> edgeIdentityState) {
         if (edgeIdentityState != null) {
-            Map<String, Variant> variantMap = edgeIdentityState.optVariantMap(IDENTITY_MAP, null);
-            if (variantMap != null && variantMap.get(ECID) != null) {
-                List<Variant> ecids = variantMap.get(ECID).optVariantList(null);
-                if (ecids != null && !ecids.isEmpty()) {
-                    Map<String, Variant> ecidObject = ecids.get(0).optVariantMap(null);
-                    if (ecidObject != null && ecidObject.containsKey(ID)) {
-                        ecid = ecidObject.get(ID).optString(null);
+            try {
+                Object identityMapObj = edgeIdentityState.get(IDENTITY_MAP);
+                if (identityMapObj instanceof Map) {
+                    Map<String, Object> identityMap = (Map<String, Object>) identityMapObj;
+                    Object ecidsObj = identityMap.get(ECID);
+                    if (ecidsObj instanceof List) {
+                        List<Object> ecids = (List<Object>) identityMap.get(ECID);
+                        if (!ecids.isEmpty()) {
+                            Object ecidObject = ecids.get(0);
+                            if (ecidObject instanceof Map) {
+                                Map<String, Object> ecid = (Map<String, Object>) ecids.get(0);
+                                Object idObj = ecid.get(ID);
+                                if (idObj instanceof String) {
+                                    this.ecid = (String) idObj;
+                                }
+                            }
+                        }
                     }
                 }
+            } catch (ClassCastException e) {
+                Log.debug(MessagingConstant.LOG_TAG, "Exception while trying to get the ecid. Error -> %s", e.getMessage());
             }
         }
     }
