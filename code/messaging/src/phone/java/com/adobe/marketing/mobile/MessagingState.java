@@ -11,14 +11,20 @@
 
 package com.adobe.marketing.mobile;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ECID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP;
+
 /**
  * MessagingState is used to store configuration and identity information
  */
 final class MessagingState {
-
-    //Configuration properties
-    private MobilePrivacyStatus privacyStatus = MobilePrivacyStatus.OPT_IN;
-
     //Identity properties.
     private String ecid;
 
@@ -26,26 +32,30 @@ final class MessagingState {
     private String experienceEventDatasetId;
 
 
-    void setState(final EventData configState, final EventData identityState) {
+    void setState(final EventData configState, final EventData edgeIdentityState) {
         setConfigState(configState);
-        setIdentityState(identityState);
+        setEdgeIdentityState(edgeIdentityState);
     }
 
     private void setConfigState(final EventData configState) {
         if (configState != null) {
-            this.privacyStatus = MobilePrivacyStatus.fromString(configState.optString(MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS, ""));
-            this.experienceEventDatasetId = configState.optString(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
+            this.experienceEventDatasetId = configState.optString(EXPERIENCE_EVENT_DATASET_ID, "");
         }
     }
 
-    private void setIdentityState(final EventData identityState) {
-        if (identityState != null) {
-            this.ecid = identityState.optString(MessagingConstant.EventDataKeys.Identity.VISITOR_ID_MID, "");
+    private void setEdgeIdentityState(final EventData edgeIdentityState) {
+        if (edgeIdentityState != null) {
+            Map<String, Variant> variantMap = edgeIdentityState.optVariantMap(IDENTITY_MAP, null);
+            if (variantMap != null && variantMap.get(ECID) != null) {
+                List<Variant> ecids = variantMap.get(ECID).optVariantList(null);
+                if (ecids != null && !ecids.isEmpty()) {
+                    Map<String, Variant> ecidObject = ecids.get(0).optVariantMap(null);
+                    if (ecidObject != null && ecidObject.containsKey(ID)) {
+                        ecid = ecidObject.get(ID).optString(null);
+                    }
+                }
+            }
         }
-    }
-
-    MobilePrivacyStatus getPrivacyStatus() {
-        return privacyStatus;
     }
 
     String getEcid() {

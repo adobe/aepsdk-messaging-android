@@ -23,7 +23,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.utils.Asserts;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
@@ -32,7 +35,6 @@ public class MessagingStateTests {
     private MessagingState messagingState;
 
     // mocks
-    private final String MOCK_PRIVACY_STATUS = "optedin";
     private final String MOCK_EXP_EVENT_DATASET = "mock_exp_event_dataset";
     private final String MOCK_VID = "mock_vid";
 
@@ -59,7 +61,7 @@ public class MessagingStateTests {
     public void test_setState_when_paramsArePresent() {
         //mocks
         EventData mockConfigEventData = getMockConfigEventData();
-        EventData mockIdentityEventData = getMockIdentityEventData();
+        EventData mockIdentityEventData = getMockEdgeIdentityEventData();
 
         // when
         Mockito.when(MobilePrivacyStatus.fromString(ArgumentMatchers.anyString())).thenReturn(MobilePrivacyStatus.OPT_IN);
@@ -67,26 +69,23 @@ public class MessagingStateTests {
         // test
         messagingState.setState(mockConfigEventData, mockIdentityEventData);
 
-        // verify
-        PowerMockito.verifyStatic(MobilePrivacyStatus.class, Mockito.times(1));
-        MobilePrivacyStatus.fromString(ArgumentMatchers.anyString());
-
         Assert.assertEquals(messagingState.getEcid(), MOCK_VID);
         Assert.assertEquals(messagingState.getExperienceEventDatasetId(), MOCK_EXP_EVENT_DATASET);
-
-        Assert.assertEquals(messagingState.getPrivacyStatus(), MobilePrivacyStatus.OPT_IN);
     }
 
     private EventData getMockConfigEventData() {
         EventData configEventData = new EventData();
-        configEventData.putString(MessagingConstant.SharedState.Configuration.GLOBAL_PRIVACY_STATUS, MOCK_PRIVACY_STATUS);
         configEventData.putString(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
         return configEventData;
     }
 
-    private EventData getMockIdentityEventData() {
+    private EventData getMockEdgeIdentityEventData() {
         EventData identityEventData = new EventData();
-        identityEventData.putString(MessagingConstant.EventDataKeys.Identity.VISITOR_ID_MID, MOCK_VID);
+        Map<String, Variant> identityMap = new HashMap<>();
+        List<Variant> ecids = new ArrayList<>();
+        ecids.add(Variant.fromStringMap(Collections.singletonMap(MessagingConstant.SharedState.EdgeIdentity.ID, MOCK_VID)));
+        identityMap.put(MessagingConstant.SharedState.EdgeIdentity.ECID, Variant.fromVariantList(ecids));
+        identityEventData.putVariantMap(MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
         return identityEventData;
     }
 }

@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMD
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -53,7 +54,6 @@ import java.util.concurrent.Executors;
 class MessagingInternal extends Extension implements EventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private PlatformServices platformServices = new AndroidPlatformServices();
     private MessagingState messagingState;
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
@@ -104,23 +104,10 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     /**
-     * Overridden method of {@link Extension} class called when extension is unregistered by the core.
-     *
-     * <p>
-     * On unregister of messaging extension, the shared states are cleared.
-     */
-    @Override
-    protected void onUnregistered() {
-        super.onUnregistered();
-        getApi().clearSharedEventStates(null);
-    }
-
-    /**
      * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
      *
      * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
      */
-    @Override
     protected void onUnexpectedError(final ExtensionUnexpectedError extensionUnexpectedError) {
         super.onUnexpectedError(extensionUnexpectedError);
         this.onUnregistered();
@@ -185,12 +172,12 @@ class MessagingInternal extends Extension implements EventsHandler {
                 }
             };
 
-            ExtensionErrorCallback<ExtensionError> identityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            ExtensionErrorCallback<ExtensionError> edgeIdentityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
                         Log.warning(MessagingConstant.LOG_TAG,
-                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
+                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
                                         extensionError.getErrorName()));
                     }
                 }
@@ -199,8 +186,8 @@ class MessagingInternal extends Extension implements EventsHandler {
             final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, configurationErrorCallback);
 
-            final Map<String, Object> identitySharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME,
-                    eventToProcess, identityErrorCallback);
+            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME,
+                    eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
@@ -210,7 +197,7 @@ class MessagingInternal extends Extension implements EventsHandler {
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (identitySharedState == null) {
+            if (edgeIdentitySharedState == null) {
                 Log.warning(MessagingConstant.LOG_TAG,
                         "MessagingInternal : Could not process event, identity shared state is pending");
                 return;
@@ -247,18 +234,13 @@ class MessagingInternal extends Extension implements EventsHandler {
         }
 
         final EventData configData = event.getData();
-        final EventData identityData = getApi().getSharedEventState(MessagingConstant.SharedState.Identity.EXTENSION_NAME, event);
+        final EventData edgeIdentityData = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event);
 
-        messagingState.setState(configData, identityData);
+        messagingState.setState(configData, edgeIdentityData);
 
         getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                if (!MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-                    optOut();
-                    return;
-                }
-
                 processEvents();
             }
         });
@@ -278,28 +260,20 @@ class MessagingInternal extends Extension implements EventsHandler {
             return;
         }
 
-        if (!MobilePrivacyStatus.OPT_OUT.equals(messagingState.getPrivacyStatus())) {
-            LocalStorageService localStorageService = platformServices.getLocalStorageService();
-            if (localStorageService != null) {
-                new PushTokenStorage(localStorageService).storeToken(pushToken);
-            }
+        Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+        if (eventData == null) {
+            return;
         }
-        if (MobilePrivacyStatus.OPT_IN.equals(messagingState.getPrivacyStatus())) {
-            Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
-            if (eventData == null) {
-                return;
+        // Send an edge event with profile data as event data
+        final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+                .setEventData(eventData)
+                .build();
+        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
             }
-            // Send an edge event with profile data as event data
-            final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                    .setEventData(eventData)
-                    .build();
-            MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-                @Override
-                public void error(ExtensionError extensionError) {
-                    Log.error(LOG_TAG, "Error in dispatching event for updating the push profile details");
-                }
-            });
-        }
+        });
     }
 
     @Override
@@ -342,13 +316,14 @@ class MessagingInternal extends Extension implements EventsHandler {
         // Adding xdm data to xdmMap
         addXDMData(eventData, xdmMap);
 
-        final EventData xdmData = new EventData();
-        xdmData.putTypedMap(XDM, xdmMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
-        xdmData.putTypedMap(META, metaMap, PermissiveVariantSerializer.DEFAULT_INSTANCE);
+        final Map<String, Object> xdmData = new HashMap<>();
+        xdmData.put(XDM, xdmMap);
+        xdmData.put(META, metaMap);
 
         final Event trackEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setData(xdmData)
+                .setEventData(xdmData)
                 .build();
+
         MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
@@ -357,14 +332,12 @@ class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
-    private void optOut() {
-        eventQueue.clear();
-        LocalStorageService localStorageService = platformServices.getLocalStorageService();
-        if (localStorageService != null) {
-            new PushTokenStorage(localStorageService).removeToken();
-        }
-    }
-
+    /**
+     * Get profile data with token
+     * @param token push token which needs to be synced
+     * @param ecid experience cloud id of the device
+     * @return {@link Map} of profile data in the correct format with token
+     */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
             MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, ecid is null.");
@@ -446,41 +419,45 @@ class MessagingInternal extends Extension implements EventsHandler {
         try {
             // Convert the adobe string to json object
             final JSONObject xdmJson = new JSONObject(adobe);
+            final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
+
+            Map<String, Object> mixins = null;
 
             // Check for if the json has the required keys
-            if (xdmJson.has(CJM) || xdmJson.has(MIXINS)) {
-                final JSONObject mixins = xdmJson.has(MIXINS) ? xdmJson.getJSONObject(MIXINS) : xdmJson.getJSONObject(CJM);
-                Iterator<String> keys = mixins.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    xdmMap.put(key, mixins.get(key));
-                }
+            if (xdmMapObject.containsKey(CJM) && xdmMapObject.get(CJM) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(CJM);
+            }
 
-                // Check if the xdm data provided by the customer is using cjm for tracking
-                // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
-                if (mixins.has(EXPERIENCE)) {
-                    JSONObject experience = mixins.getJSONObject(EXPERIENCE);
-                    if (experience.has(CUSTOMER_JOURNEY_MANAGEMENT)) {
-                        JSONObject cjm = experience.getJSONObject(CUSTOMER_JOURNEY_MANAGEMENT);
-                        // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
-                        final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
-                        final Iterator<String> jObjectKeys = jObject.keys();
+            if (xdmMapObject.containsKey(MIXINS) && xdmMapObject.get(MIXINS) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(MIXINS);
+            }
 
-                        while (jObjectKeys.hasNext()) {
-                            final String key = jObjectKeys.next();
-                            final Object value = jObject.get(key);
-                            cjm.put(key, value);
-                        }
-                        experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
-                        xdmMap.put(EXPERIENCE, experience);
-                    }
-                } else {
-                    Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
+            if (mixins == null) {
+                Log.debug(LOG_TAG, "Missing xdm data.");
+                return;
+            }
+
+            xdmMap.putAll(mixins);
+
+            // Check if the xdm data provided by the customer is using cjm for tracking
+            // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
+            if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
+                Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
+                if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
+                    Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                    // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
+                    final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
+                    cjm.putAll(MessagingUtils.toMap(jObject));
+
+                    experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
+                    xdmMap.put(EXPERIENCE, experience);
                 }
             } else {
-                Log.warning(LOG_TAG, "Failed to send xdm data with the tracking, required keys are missing.");
+                Log.warning(LOG_TAG, "Failed to send cjm xdm data with the tracking, required keys are missing.");
             }
         } catch (JSONException e) {
+            Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+        } catch (ClassCastException e) {
             Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
     }

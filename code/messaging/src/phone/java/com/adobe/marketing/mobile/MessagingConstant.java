@@ -53,7 +53,6 @@ final class MessagingConstant {
 
         static final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
-            static final String VISITOR_ID_MID = "mid";
 
             private Identity() {
             }
@@ -132,10 +131,13 @@ final class MessagingConstant {
             private Configuration() {/* no-op */}
         }
 
-        static final class Identity {
-            static final String EXTENSION_NAME = "com.adobe.module.identity";
+        static final class EdgeIdentity {
+            static final String EXTENSION_NAME = "com.adobe.edge.identity";
+            static final String IDENTITY_MAP = "identityMap";
+            static final String ECID = "ECID";
+            static final String ID = "id";
 
-            private Identity() {/* no-op */}
+            private EdgeIdentity() {/* no-op */}
         }
     }
 }

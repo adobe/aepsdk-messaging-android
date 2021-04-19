@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.iid.FirebaseInstanceId
 
 class MessagingApplication : Application() {
@@ -35,7 +36,7 @@ class MessagingApplication : Application() {
             MobileCore.configureWithAppID("<appId>")
             MobileCore.lifecycleStart(null);
 
-            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<eventDatasetId>") as Map<String, Any>?)
+            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<expEventDatasetId>") as Map<String, Any>?)
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
