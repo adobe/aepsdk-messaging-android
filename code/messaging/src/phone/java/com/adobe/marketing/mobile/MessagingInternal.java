@@ -433,12 +433,11 @@ class MessagingInternal extends Extension implements EventsHandler {
             }
 
             if (mixins == null) {
+                Log.debug(LOG_TAG, "Missing xdm data.");
                 return;
             }
 
-            for (String key : mixins.keySet()) {
-                xdmMap.put(key, mixins.get(key));
-            }
+            xdmMap.putAll(mixins);
 
             // Check if the xdm data provided by the customer is using cjm for tracking
             // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
@@ -448,11 +447,7 @@ class MessagingInternal extends Extension implements EventsHandler {
                     Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
                     // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
                     final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
-                    Map<String, Object> jObjectMap = MessagingUtils.toMap(jObject);
-
-                    for (String key: jObjectMap.keySet()) {
-                        cjm.put(key, jObjectMap.get(key));
-                    }
+                    cjm.putAll(MessagingUtils.toMap(jObject));
 
                     experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
                     xdmMap.put(EXPERIENCE, experience);
