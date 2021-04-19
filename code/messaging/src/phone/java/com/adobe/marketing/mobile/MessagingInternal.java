@@ -413,7 +413,7 @@ class MessagingInternal extends Extension implements EventsHandler {
             }
 
             if (mixins == null) {
-                Log.debug(LOG_TAG, "Missing xdm data.");
+                Log.debug(LOG_TAG, "Failed to send cjm xdm data with the tracking, Missing xdm data.");
                 return;
             }
 
