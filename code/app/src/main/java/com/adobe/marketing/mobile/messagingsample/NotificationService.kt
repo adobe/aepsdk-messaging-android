@@ -11,24 +11,25 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.support.v4.app.NotificationCompat
 import com.adobe.marketing.mobile.AEPMessagingFCMPushPayload
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class NotificationService : FirebaseMessagingService() {
-
-    companion object {
-        @JvmField
-        val NOTIFICATION_ID = 0x12E45
-        var channelId = "messaging_notification_channel"
-        const val NOTIFICATION_DELETED_ACTION = "NOTIFICATION_DELETED_ACTION"
+    override fun onNewToken(token: String?) {
+        super.onNewToken(token)
+        print("MessagingApplication Firebase token :: $token")
+        MobileCore.setPushIdentifier(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage?) {
@@ -41,7 +42,7 @@ class NotificationService : FirebaseMessagingService() {
 
             val channelName = "some channel name"
             channelId = if (payload.channelId != null) payload.channelId else channelId
-            val channel = NotificationChannel(channelId, channelName, payload.importance).apply {
+            val channel = NotificationChannel(channelId, channelName, getImportance(payload.notificationPriority)).apply {
                 description = "Settings for push notification"
             }
             notificationManager.createNotificationChannel(channel)
@@ -63,5 +64,26 @@ class NotificationService : FirebaseMessagingService() {
         }
 
         notificationManager.notify(NOTIFICATION_ID, builder.build())
+    }
+
+    fun getImportance(priority: Int): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            when (priority) {
+                Notification.PRIORITY_MIN -> NotificationManager.IMPORTANCE_MIN
+                Notification.PRIORITY_LOW -> NotificationManager.IMPORTANCE_LOW
+                Notification.PRIORITY_HIGH -> NotificationManager.IMPORTANCE_HIGH
+                Notification.PRIORITY_MAX -> NotificationManager.IMPORTANCE_MAX
+                Notification.PRIORITY_DEFAULT -> NotificationManager.IMPORTANCE_DEFAULT
+                else -> NotificationManager.IMPORTANCE_NONE
+            }
+        } else NotificationManager.IMPORTANCE_DEFAULT
+    }
+
+
+    companion object {
+        @JvmField
+        val NOTIFICATION_ID = 0x12E45
+        var channelId = "messaging_notification_channel"
+        const val NOTIFICATION_DELETED_ACTION = "NOTIFICATION_DELETED_ACTION"
     }
 }

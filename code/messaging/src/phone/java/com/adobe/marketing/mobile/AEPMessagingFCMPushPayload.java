@@ -28,7 +28,7 @@ import java.util.Map;
 
 /**
  * This class is used to create push notification payload object from remote message.
- * It provides with functions for getting attributes of push payload (title, body ...)
+ * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class AEPMessagingFCMPushPayload {
     private String title;
@@ -118,20 +118,6 @@ public class AEPMessagingFCMPushPayload {
 
     public Map<String, String> getData() {
         return data;
-    }
-
-    public int getImportance() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            switch (notificationPriority) {
-                case Notification.PRIORITY_MIN: return NotificationManager.IMPORTANCE_MIN;
-                case Notification.PRIORITY_LOW: return NotificationManager.IMPORTANCE_LOW;
-                case Notification.PRIORITY_HIGH: return NotificationManager.IMPORTANCE_HIGH;
-                case Notification.PRIORITY_MAX: return NotificationManager.IMPORTANCE_MAX;
-                case Notification.PRIORITY_DEFAULT: return NotificationManager.IMPORTANCE_DEFAULT;
-                default: return NotificationManager.IMPORTANCE_NONE;
-            }
-        }
-        return NotificationManager.IMPORTANCE_DEFAULT;
     }
 
     private void init(Map<String, String> data) {
