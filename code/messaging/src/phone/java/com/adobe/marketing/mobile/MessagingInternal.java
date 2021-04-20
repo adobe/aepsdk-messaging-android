@@ -15,8 +15,6 @@ import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMD
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -65,9 +63,13 @@ class MessagingInternal extends Extension implements EventsHandler {
      * Called during messaging extension's registration.
      * The following listeners are registered during this extension's registration.
      * <ul>
-     *     <li> {@link MessagingRequestContentListener} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
+     *     <li> {@link ListenerConfigurationResponseContent} listening to event with eventType {@link EventType#CONFIGURATION}
+     *     and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
+     *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
+     *      *     and EventSource {@link EventSource#SHARED_STATE}</li>
+     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
      *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
-     *      <li> {@link IdentityRequestContentListener} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
+     *      <li> {@link ListenerIdentityRequestContent} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      * </ul>
      *
@@ -112,14 +114,18 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
-        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), MessagingRequestContentListener.class, new ExtensionErrorCallback<ExtensionError>() {
+        ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) {
+            public void error(final ExtensionError extensionError) {
                 Log.error(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
                         MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
             }
-        });
-        extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
+        };
+
+        extensionApi.registerEventListener(EventType.CONFIGURATION.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerConfigurationResponseContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
 
         Log.debug(MessagingConstant.LOG_TAG, "Registering Messaging extension - version %s",
                 MessagingConstant.EXTENSION_VERSION);
@@ -224,6 +230,35 @@ class MessagingInternal extends Extension implements EventsHandler {
             // event processed, remove it from the queue
             eventQueue.poll();
         }
+    }
+
+    @Override
+    public void processConfigurationResponse(final Event event) {
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
+            return;
+        }
+        
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                processEvents();
+            }
+        });
+    }
+
+    @Override
+    public void processHubSharedState(Event event) {
+        if (event == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle hub shared state. Event received is null.");
+            return;
+        }
+        getExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                processEvents();
+            }
+        });
     }
 
     @Override

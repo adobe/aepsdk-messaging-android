@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -28,69 +27,66 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
-public class MessagingRequestContentListenerTests {
+public class ListenerConfigurationResponseContentTests {
     @Mock
     MessagingInternal mockMessagingInternal;
 
     @Mock
     ExtensionApi mockExtensionApi;
 
-    private MessagingRequestContentListener messagingRequestContentListener;
+    private ListenerConfigurationResponseContent listenerConfigurationResponseContent;
     private int EXECUTOR_TIMEOUT = 5;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
-        messagingRequestContentListener = new MessagingRequestContentListener(mockExtensionApi,
-                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
+        listenerConfigurationResponseContent = new ListenerConfigurationResponseContent(mockExtensionApi,
+                EventType.CONFIGURATION.getName(), EventSource.RESPONSE_CONTENT.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
     }
 
     @Test
-    public void testHear_WhenMessagingRequestContentEvent() {
+    public void testHear_WhenConfigurationResponseEvent() {
         // setup
         EventData eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerConfigurationResponseContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(1)).queueEvent(mockEvent);
-        verify(mockMessagingInternal, times(1)).processEvents();
+        verify(mockMessagingInternal, times(1)).processConfigurationResponse(mockEvent);
     }
 
     @Test
     public void testHear_WithNullEventData() {
         // setup
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
-                EventSource.REQUEST_CONTENT.getName()).setData(null).build();
+        Event mockEvent = new Event.Builder("testEvent", EventType.CONFIGURATION,
+                EventSource.RESPONSE_CONTENT).setData(null).build();
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerConfigurationResponseContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);
-        verify(mockMessagingInternal, times(0)).processEvents();
+        verify(mockMessagingInternal, times(0)).processConfigurationResponse(mockEvent);
     }
 
     @Test
     public void testHear_WithNullParentExtension() {
         // setup
         EventData eventData = new EventData();
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
-                EventSource.REQUEST_CONTENT.getName()).setData(eventData).build();
+        Event mockEvent = new Event.Builder("testEvent", EventType.CONFIGURATION,
+                EventSource.RESPONSE_CONTENT).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerConfigurationResponseContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);
-        verify(mockMessagingInternal, times(0)).processEvents();
+        verify(mockMessagingInternal, times(0)).processConfigurationResponse(mockEvent);
     }
 }

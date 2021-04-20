@@ -19,7 +19,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -31,11 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -86,9 +83,9 @@ public class MessagingInternalTests {
     public void test_Constructor() {
         // verify 2 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
-                eq(EventSource.REQUEST_CONTENT.getName()), eq(MessagingRequestContentListener.class), any(ExtensionErrorCallback.class));
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
-                eq(EventSource.REQUEST_CONTENT), eq(IdentityRequestContentListener.class));
+                eq(EventSource.REQUEST_CONTENT), eq(ListenerIdentityRequestContent.class));
     }
 
     // ========================================================================================
