@@ -81,11 +81,18 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
-        // verify 2 listeners are registered
+        // verify 4 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
-        verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
-                eq(EventSource.REQUEST_CONTENT), eq(ListenerIdentityRequestContent.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerIdentityRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.CONFIGURATION.getName()),
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerConfigurationResponseContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.HUB.getName()),
+                eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================

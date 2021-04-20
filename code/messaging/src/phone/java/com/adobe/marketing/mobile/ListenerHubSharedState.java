@@ -49,7 +49,6 @@ class ListenerHubSharedState extends ExtensionListener {
         parentExtension.getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                parentExtension.queueEvent(event);
                 parentExtension.processEvents();
             }
         });

@@ -233,35 +233,6 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     @Override
-    public void processConfigurationResponse(final Event event) {
-        if (event == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle configuration response. Event received is null.");
-            return;
-        }
-        
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                processEvents();
-            }
-        });
-    }
-
-    @Override
-    public void processHubSharedState(Event event) {
-        if (event == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Unable to handle hub shared state. Event received is null.");
-            return;
-        }
-        getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                processEvents();
-            }
-        });
-    }
-
-    @Override
     public void handlePushToken(final Event event) {
         if (event == null || event.getEventData() == null) {
             Log.debug(LOG_TAG, "Unable to sync push token. Event or event data received is null.");

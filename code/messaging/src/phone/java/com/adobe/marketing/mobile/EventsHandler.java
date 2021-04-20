@@ -25,16 +25,4 @@ interface EventsHandler {
      * @param event Messaging Request Content event which contains the push notification tracking information
      */
     void handleTrackingInfo(final Event event);
-
-    /**
-     * Processes the ConfigurationResponse for starting the processing of events
-     * @param event Configuration response event
-     */
-    void processConfigurationResponse(final Event event);
-
-    /**
-     * Processes the Shared State for starting the processing of events
-     * @param event Hub Shared State event
-     */
-    void processHubSharedState(final Event event);
 }
