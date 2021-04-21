@@ -40,6 +40,8 @@ class MessagingUtils {
         Map<String, Object> jsonAsMap = new HashMap<>();
         Iterator<String> keysIterator = jsonObject.keys();
 
+        if (keysIterator == null) return null;
+
         while (keysIterator.hasNext()) {
             String nextKey  = keysIterator.next();
             jsonAsMap.put(nextKey, fromJson(jsonObject.get(nextKey)));

@@ -49,7 +49,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class MessagingInternal extends Extension implements EventsHandler {
+class MessagingInternal extends Extension implements MessagingEventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final MessagingState messagingState;
@@ -411,6 +411,11 @@ class MessagingInternal extends Extension implements EventsHandler {
             // Convert the adobe string to json object
             final JSONObject xdmJson = new JSONObject(adobe);
             final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
+            
+            if (xdmMapObject == null) {
+                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
+                return;
+            }
 
             Map<String, Object> mixins = null;
 

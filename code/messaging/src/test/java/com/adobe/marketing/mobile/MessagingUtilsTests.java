@@ -37,12 +37,12 @@ public class MessagingUtilsTests {
             "}";
     private final String mockJsonArr =  "[\n" +
             "   {\n" +
-            "      \"channel\":{\n" +
-            "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
+            "      \"channel\": {\n" +
+            "         \"_id\": \"https://ns.adobe.com/xdm/channels/push\"\n" +
             "      }\n" +
             "   },\n" +
             "   {\n" +
-            "      \"platform\":\"fcm\"\n" +
+            "      \"platform\": \"fcm\"\n" +
             "   }\n" +
             "]";
     // ========================================================================================
@@ -56,6 +56,10 @@ public class MessagingUtilsTests {
 
             // test
             Map<String, Object> result = MessagingUtils.toMap(json);
+
+            if (result == null) {
+                Assert.fail();
+            }
 
             // verify
             Assert.assertTrue(result.containsKey("messageProfile"));
