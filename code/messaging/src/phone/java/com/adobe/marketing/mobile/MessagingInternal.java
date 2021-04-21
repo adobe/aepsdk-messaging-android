@@ -63,8 +63,6 @@ class MessagingInternal extends Extension implements EventsHandler {
      * Called during messaging extension's registration.
      * The following listeners are registered during this extension's registration.
      * <ul>
-     *     <li> {@link ListenerConfigurationResponseContent} listening to event with eventType {@link EventType#CONFIGURATION}
-     *     and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
      *      *     and EventSource {@link EventSource#SHARED_STATE}</li>
      *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
@@ -122,7 +120,6 @@ class MessagingInternal extends Extension implements EventsHandler {
             }
         };
 
-        extensionApi.registerEventListener(EventType.CONFIGURATION.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerConfigurationResponseContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
@@ -318,6 +315,14 @@ class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
+    @Override
+    public void processHubSharedState(Event event) {
+        if (isSharedStateUpdateFor(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, event) ||
+                isSharedStateUpdateFor(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
+            processEvents();
+        }
+    }
+
     /**
      * Get profile data with token
      * @param token push token which needs to be synced
@@ -474,5 +479,28 @@ class MessagingInternal extends Extension implements EventsHandler {
      */
     ConcurrentLinkedQueue<Event> getEventQueue() {
         return eventQueue;
+    }
+
+    /**
+     * Checks if the provided {@code event} is a shared state update event for {@code stateOwnerName}
+     *
+     * @param stateOwnerName the shared state owner name; should not be null
+     * @param event current event to check; should not be null
+     * @return {@code boolean} indicating if it is the shared state update for the provided {@code stateOwnerName}
+     */
+    private boolean isSharedStateUpdateFor(final String stateOwnerName, final Event event) {
+        if (stateOwnerName == null || stateOwnerName.isEmpty() || event == null) {
+            return false;
+        }
+
+        String stateOwner;
+
+        try {
+            stateOwner = (String) event.getEventData().get(MessagingConstant.EventDataKeys.STATE_OWNER);
+        } catch (ClassCastException e) {
+            return false;
+        }
+
+        return stateOwnerName.equals(stateOwner);
     }
 }

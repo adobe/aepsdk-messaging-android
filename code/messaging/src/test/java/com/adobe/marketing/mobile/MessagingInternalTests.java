@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile;
 import android.app.Application;
 import android.content.Context;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,8 +52,6 @@ public class MessagingInternalTests {
     @Mock
     ExtensionApi mockExtensionApi;
     @Mock
-    ExtensionUnexpectedError mockExtensionUnexpectedError;
-    @Mock
     MessagingState messagingState;
     @Mock
     Map<String, Object> mockConfigData;
@@ -87,9 +86,6 @@ public class MessagingInternalTests {
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerIdentityRequestContent.class), any(ExtensionErrorCallback.class));
-
-        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.CONFIGURATION.getName()),
-                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerConfigurationResponseContent.class), any(ExtensionErrorCallback.class));
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.HUB.getName()),
                 eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
@@ -137,6 +133,43 @@ public class MessagingInternalTests {
         Event anotherEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
         messagingInternal.queueEvent(anotherEvent);
         assertEquals("The size of the eventQueue should be correct", 2, messagingInternal.getEventQueue().size());
+    }
+
+    // ========================================================================================
+    // processHubSharedState
+    // ========================================================================================
+    @Test
+    public void test_processHubSharedState() {
+        //Mocks
+        EventData data = new EventData();
+        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME);
+        Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "eventQueue", mockEventQueue);
+
+        // Test
+        messagingInternal.processHubSharedState(mockEvent);
+        
+        // Verify
+        verify(mockEventQueue, times(1)).isEmpty();
+    }
+    
+    @Test
+    public void test_processHubSharedState_NoMatchingStateOwner() {
+        //Mocks
+        EventData data = new EventData();
+        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, "somerandomstateowner");
+        Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "eventQueue", mockEventQueue);
+
+        // Test
+        messagingInternal.processHubSharedState(mockEvent);
+
+        // Verify
+        verify(mockEventQueue, times(0)).isEmpty();
     }
 
     // ========================================================================================
