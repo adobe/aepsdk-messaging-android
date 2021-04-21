@@ -17,7 +17,7 @@ Integrate the Messaging into your app by including the following in your gradle 
 ```
 implementation 'com.adobe.marketing.mobile:messaging:1.0.0-alpha-3'
 implementation 'com.adobe.marketing.mobile:edge:1.1.0'
-implementation 'com.adobe.marketing.mobile:edgeIdentity:1.0.0'
+implementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
 implementation 'com.adobe.marketing.mobile:sdk-core:+'
 ```
 
