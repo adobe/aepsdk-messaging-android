@@ -57,7 +57,7 @@ public class ListenerHubSharedStateTests {
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(1)).processEvents();
+        verify(mockMessagingInternal, times(1)).processHubSharedState(mockEvent);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ListenerHubSharedStateTests {
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(0)).processEvents();
+        verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);
     }
 
     @Test
@@ -87,6 +87,6 @@ public class ListenerHubSharedStateTests {
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
-        verify(mockMessagingInternal, times(0)).processEvents();
+        verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);
     }
 }
