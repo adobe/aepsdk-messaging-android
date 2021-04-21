@@ -19,9 +19,9 @@ package com.adobe.marketing.mobile;
  * Monitor Messaging Request content events for sending push notification tracking information.
  * @see MessagingInternal
  */
-public class MessagingRequestContentListener extends ExtensionListener {
+public class ListenerMessagingRequestContent extends ExtensionListener {
 
-    MessagingRequestContentListener(final ExtensionApi extensionApi, final String type, final String source) {
+    ListenerMessagingRequestContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
 

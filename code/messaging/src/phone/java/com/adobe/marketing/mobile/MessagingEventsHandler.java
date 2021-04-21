@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-interface EventsHandler {
+interface MessagingEventsHandler {
 
     /**
      * Handles sending push token
@@ -25,4 +25,10 @@ interface EventsHandler {
      * @param event Messaging Request Content event which contains the push notification tracking information
      */
     void handleTrackingInfo(final Event event);
+
+    /**
+     * Processes the Hub Shared State to check if configuration and edge identity states are updated. 
+     * @param event Hub Shared State event
+     */
+    void processHubSharedState(final Event event);
 }

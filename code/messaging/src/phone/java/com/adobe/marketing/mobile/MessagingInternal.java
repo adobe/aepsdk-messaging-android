@@ -15,8 +15,6 @@ import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMD
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -51,7 +49,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class MessagingInternal extends Extension implements EventsHandler {
+class MessagingInternal extends Extension implements MessagingEventsHandler {
 
     private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final MessagingState messagingState;
@@ -65,9 +63,11 @@ class MessagingInternal extends Extension implements EventsHandler {
      * Called during messaging extension's registration.
      * The following listeners are registered during this extension's registration.
      * <ul>
-     *     <li> {@link MessagingRequestContentListener} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
+     *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
+     *      *     and EventSource {@link EventSource#SHARED_STATE}</li>
+     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
      *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
-     *      <li> {@link IdentityRequestContentListener} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
+     *      <li> {@link ListenerIdentityRequestContent} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      * </ul>
      *
@@ -112,14 +112,17 @@ class MessagingInternal extends Extension implements EventsHandler {
     }
 
     private void registerEventListeners(final ExtensionApi extensionApi) {
-        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), MessagingRequestContentListener.class, new ExtensionErrorCallback<ExtensionError>() {
+        ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) {
+            public void error(final ExtensionError extensionError) {
                 Log.error(MessagingConstant.LOG_TAG, "Error in registering %s event : Extension version - %s : Error %s",
                         MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
             }
-        });
-        extensionApi.registerListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, IdentityRequestContentListener.class);
+        };
+
+        extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
 
         Log.debug(MessagingConstant.LOG_TAG, "Registering Messaging extension - version %s",
                 MessagingConstant.EXTENSION_VERSION);
@@ -312,6 +315,14 @@ class MessagingInternal extends Extension implements EventsHandler {
         });
     }
 
+    @Override
+    public void processHubSharedState(Event event) {
+        if (isSharedStateUpdateFor(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, event) ||
+                isSharedStateUpdateFor(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
+            processEvents();
+        }
+    }
+
     /**
      * Get profile data with token
      * @param token push token which needs to be synced
@@ -400,6 +411,11 @@ class MessagingInternal extends Extension implements EventsHandler {
             // Convert the adobe string to json object
             final JSONObject xdmJson = new JSONObject(adobe);
             final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
+            
+            if (xdmMapObject == null) {
+                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
+                return;
+            }
 
             Map<String, Object> mixins = null;
 
@@ -468,5 +484,28 @@ class MessagingInternal extends Extension implements EventsHandler {
      */
     ConcurrentLinkedQueue<Event> getEventQueue() {
         return eventQueue;
+    }
+
+    /**
+     * Checks if the provided {@code event} is a shared state update event for {@code stateOwnerName}
+     *
+     * @param stateOwnerName the shared state owner name; should not be null
+     * @param event current event to check; should not be null
+     * @return {@code boolean} indicating if it is the shared state update for the provided {@code stateOwnerName}
+     */
+    private boolean isSharedStateUpdateFor(final String stateOwnerName, final Event event) {
+        if (stateOwnerName == null || stateOwnerName.isEmpty() || event == null) {
+            return false;
+        }
+
+        String stateOwner;
+
+        try {
+            stateOwner = (String) event.getEventData().get(MessagingConstant.EventDataKeys.STATE_OWNER);
+        } catch (ClassCastException e) {
+            return false;
+        }
+
+        return stateOwnerName.equals(stateOwner);
     }
 }

@@ -15,11 +15,11 @@ package com.adobe.marketing.mobile;
 import android.app.Application;
 import android.content.Context;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -31,11 +31,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -53,8 +51,6 @@ public class MessagingInternalTests {
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
-    @Mock
-    ExtensionUnexpectedError mockExtensionUnexpectedError;
     @Mock
     MessagingState messagingState;
     @Mock
@@ -84,11 +80,15 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
-        // verify 2 listeners are registered
+        // verify 4 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
-                eq(EventSource.REQUEST_CONTENT.getName()), eq(MessagingRequestContentListener.class), any(ExtensionErrorCallback.class));
-        verify(mockExtensionApi, times(1)).registerListener(eq(EventType.GENERIC_IDENTITY),
-                eq(EventSource.REQUEST_CONTENT), eq(IdentityRequestContentListener.class));
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerIdentityRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.HUB.getName()),
+                eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -133,6 +133,43 @@ public class MessagingInternalTests {
         Event anotherEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
         messagingInternal.queueEvent(anotherEvent);
         assertEquals("The size of the eventQueue should be correct", 2, messagingInternal.getEventQueue().size());
+    }
+
+    // ========================================================================================
+    // processHubSharedState
+    // ========================================================================================
+    @Test
+    public void test_processHubSharedState() {
+        //Mocks
+        EventData data = new EventData();
+        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME);
+        Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "eventQueue", mockEventQueue);
+
+        // Test
+        messagingInternal.processHubSharedState(mockEvent);
+        
+        // Verify
+        verify(mockEventQueue, times(1)).isEmpty();
+    }
+    
+    @Test
+    public void test_processHubSharedState_NoMatchingStateOwner() {
+        //Mocks
+        EventData data = new EventData();
+        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, "somerandomstateowner");
+        Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "eventQueue", mockEventQueue);
+
+        // Test
+        messagingInternal.processHubSharedState(mockEvent);
+
+        // Verify
+        verify(mockEventQueue, times(0)).isEmpty();
     }
 
     // ========================================================================================

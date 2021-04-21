@@ -50,6 +50,7 @@ final class MessagingConstant {
     }
 
     static final class EventDataKeys {
+        static final String STATE_OWNER = "stateowner";
 
         static final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";

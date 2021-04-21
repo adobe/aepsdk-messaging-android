@@ -18,9 +18,9 @@ package com.adobe.marketing.mobile;
  * Monitor REQUEST_CONTENT events for sending push notification token information.
  * @see MessagingInternal
  */
-public class IdentityRequestContentListener extends ExtensionListener {
+public class ListenerIdentityRequestContent extends ExtensionListener {
 
-    IdentityRequestContentListener(final ExtensionApi extensionApi, final String type, final String source) {
+    ListenerIdentityRequestContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
 

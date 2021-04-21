@@ -28,20 +28,20 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
-public class MessagingRequestContentListenerTests {
+public class ListenerMessagingRequestContentTests {
     @Mock
     MessagingInternal mockMessagingInternal;
 
     @Mock
     ExtensionApi mockExtensionApi;
 
-    private MessagingRequestContentListener messagingRequestContentListener;
+    private ListenerMessagingRequestContent listenerMessagingRequestContent;
     private int EXECUTOR_TIMEOUT = 5;
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
-        messagingRequestContentListener = new MessagingRequestContentListener(mockExtensionApi,
+        listenerMessagingRequestContent = new ListenerMessagingRequestContent(mockExtensionApi,
                 MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
@@ -54,7 +54,7 @@ public class MessagingRequestContentListenerTests {
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerMessagingRequestContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
@@ -69,7 +69,7 @@ public class MessagingRequestContentListenerTests {
                 EventSource.REQUEST_CONTENT.getName()).setData(null).build();
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerMessagingRequestContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
@@ -86,7 +86,7 @@ public class MessagingRequestContentListenerTests {
         when(mockExtensionApi.getExtension()).thenReturn(null);
 
         // test
-        messagingRequestContentListener.hear(mockEvent);
+        listenerMessagingRequestContent.hear(mockEvent);
         TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
