@@ -337,10 +337,10 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
         final Map<String, String> namespace = new HashMap<>();
         namespace.put(CODE, ECID);
-        namespace.put(ID, ecid);
 
         final Map<String, Object> identity = new HashMap<>();
         identity.put(NAMESPACE, namespace);
+        identity.put(ID, ecid);
 
         final ArrayList<Map<String, Object>> pushNotificationDetailsArray = new ArrayList<>();
         final Map<String, Object> pushNotificationDetailsData = new HashMap<>();

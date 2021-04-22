@@ -91,7 +91,7 @@ final class MessagingConstant {
                 static final String NAMESPACE = "namespace";
                 static final String CODE = "code";
                 static final String ID = "id";
-                static final String APP_ID = "appId";
+                static final String APP_ID = "appID";
                 static final String TOKEN = "token";
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
