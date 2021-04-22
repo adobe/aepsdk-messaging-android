@@ -1,5 +1,5 @@
 /*
-  Copyright 2020 Adobe. All rights reserved.
+  Copyright 2021 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -138,6 +138,41 @@ final class MessagingConstant {
             static final String ID = "id";
 
             private EdgeIdentity() {/* no-op */}
+        }
+    }
+
+    static final class PushNotificationPayload {
+        private PushNotificationPayload() {}
+
+        static final String TITLE = "adb_title";
+        static final String BODY = "adb_body";
+        static final String SOUND = "adb_sound";
+        static final String NOTIFICATION_COUNT = "adb_n_count";
+        static final String NOTIFICATION_PRIORITY = "adb_n_priority";
+        static final String CHANNEL_ID = "adb_channel_id";
+        static final String ICON = "adb_icon";
+        static final String IMAGE_URL = "adb_image";
+        static final String ACTION_TYPE = "adb_a_type";
+        static final String ACTION_URI = "adb_uri";
+        static final String ACTION_BUTTONS = "adb_act";
+        static final class ActionButtonType {
+            static final String DEEPLINK = "DEEPLINK";
+            static final String WEBURL = "WEBURL";
+            static final String DISMISS = "DISMISS";
+
+            private ActionButtonType() {/* no-op */}
+        }
+        static final class NotificationPriorities {
+            static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
+            static final String PRIORITY_MIN = "PRIORITY_MIN";
+            static final String PRIORITY_LOW = "PRIORITY_LOW";
+            static final String PRIORITY_HIGH = "PRIORITY_HIGH";
+            static final String PRIORITY_MAX = "PRIORITY_MAX";
+        }
+        static final class ActionButtons {
+            static final String LABEL = "label";
+            static final String URI = "uri";
+            static final String TYPE = "type";
         }
     }
 }

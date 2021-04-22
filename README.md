@@ -15,9 +15,15 @@ The Adobe Experience Platform Messaging extension for Android is currently in Al
 Integrate the Messaging into your app by including the following in your gradle file's `dependencies`:
 
 ```
-implementation 'com.adobe.marketing.mobile:messaging:1.0.0-alpha-2'
-implementation 'com.adobe.marketing.mobile:edge:1.0.0-beta-1'
+implementation 'com.adobe.marketing.mobile:messaging:1.0.0-alpha-3'
+implementation 'com.adobe.marketing.mobile:edge:1.1.0'
+implementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
 implementation 'com.adobe.marketing.mobile:sdk-core:+'
+```
+
+Firebase messaging sdk will be required for using FCM
+```
+implementation 'com.google.firebase:firebase-messaging:<latest-version>'
 ```
 
 ## Documentation
