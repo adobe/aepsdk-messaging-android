@@ -221,14 +221,14 @@ public class AEPMessagingFCMPushPayload {
     /**
      * Enum to denote the type of action
      */
-    enum ActionType {
+    public enum ActionType {
         DEEPLINK, WEBURL, DISMISS, NONE
     }
 
     /**
      * Class representing the action button with label, link and type
      */
-    class ActionButton {
+    public class ActionButton {
         private final String label;
         private final String link;
         private final ActionType type;
