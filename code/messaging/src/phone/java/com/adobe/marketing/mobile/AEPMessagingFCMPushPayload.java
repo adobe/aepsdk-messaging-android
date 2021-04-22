@@ -50,7 +50,7 @@ public class AEPMessagingFCMPushPayload {
      * Provides the AEPMessagingFCMPushPayload object
      * @param message {@link RemoteMessage} object received from {@link com.google.firebase.messaging.FirebaseMessagingService}
      */
-    public AEPMessagingFCMPushPayload(RemoteMessage message) {
+    public AEPMessagingFCMPushPayload(final RemoteMessage message) {
         if (message == null) {
             Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create AEPMessagingFCMPushPayload, remote message is null", SELF_TAG);
             return;
@@ -68,7 +68,7 @@ public class AEPMessagingFCMPushPayload {
      * Provides the AEPMessagingFCMPushPayload object
      * @param data {@link Map} map which indicates the data part of {@link RemoteMessage}
      */
-    public AEPMessagingFCMPushPayload(Map<String, String> data) {
+    public AEPMessagingFCMPushPayload(final Map<String, String> data) {
         init(data);
     }
 
@@ -127,8 +127,12 @@ public class AEPMessagingFCMPushPayload {
         return data;
     }
 
-    private void init(Map<String, String> data) {
+    private void init(final Map<String, String> data) {
         this.data = data;
+        if (data == null) {
+            Log.debug(MessagingConstant.LOG_TAG, "Payload extraction failed because data provided is null");
+            return;
+        }
         this.title = data.get(MessagingConstant.PushNotificationPayload.TITLE);
         this.body = data.get(MessagingConstant.PushNotificationPayload.BODY);
         this.sound = data.get(MessagingConstant.PushNotificationPayload.SOUND);
@@ -149,7 +153,7 @@ public class AEPMessagingFCMPushPayload {
         this.actionButtons = getActionButtonsFromString(data.get(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS));
     }
 
-    private int getNotificationPriorityFromString(String priority) {
+    private int getNotificationPriorityFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
         switch (priority) {
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
@@ -166,7 +170,7 @@ public class AEPMessagingFCMPushPayload {
         }
     }
 
-    private ActionType getActionTypeFromString(String type) {
+    private ActionType getActionTypeFromString(final String type) {
         if (type == null || type.isEmpty()) {
             return ActionType.NONE;
         }
@@ -201,7 +205,7 @@ public class AEPMessagingFCMPushPayload {
         return actionButtonList;
     }
 
-    private ActionButton getActionButton(JSONObject jsonObject) {
+    private ActionButton getActionButton(final JSONObject jsonObject) {
         try {
             String label = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {

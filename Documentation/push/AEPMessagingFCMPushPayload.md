@@ -1,5 +1,5 @@
 #  AEPMessagingFCMPushPayload Usage
-This documentation explains how to use `AEPMessagingFCMPushPayload` for getting the notification attributes like title, body, actions etc for creating the push notifications.
+This document explains how to use `AEPMessagingFCMPushPayload` for getting the notification attributes like title, body, actions etc for creating the push notifications.
 
 ## Creating the AEPMessagingFCMPushPayload object
 To do this, use the below constructors in the `FirebaseMessagingService` class's `onMessageReceived` method:
@@ -15,7 +15,7 @@ To do this, use the below constructors in the `FirebaseMessagingService` class's
 ```
 
 ## Public APIs
-This class provides apis for getting attributes from push payload which are used while creating the push notification.
+This class provides APIs for getting attributes from push payload which are used while creating the push notification.
 
 ### Get title
 Provides the title for creating push notification
@@ -86,7 +86,7 @@ Provides the list of buttons with label, type of action and uri/url.
     public List<ActionButton> getActionButtons()
 ```
 #### Class `ActionButton`
-This class provides action button with attributes (label, link and type) which are used while creating buttons in the push notification.
+This class provides action button with attributes (label, link and type) that are used while creating buttons in the push notification.
 ```java
     public ActionButton(final String label, final String link, final String type)
 ```

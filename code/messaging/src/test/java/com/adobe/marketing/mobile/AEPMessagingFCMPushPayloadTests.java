@@ -86,6 +86,7 @@ public class AEPMessagingFCMPushPayloadTests {
         Assert.assertEquals("deeplink", payload.getActionButtons().get(0).getLabel());
         Assert.assertEquals("notificationapp://", payload.getActionButtons().get(0).getLink());
         Assert.assertEquals("DEEPLINK", payload.getActionButtons().get(0).getType().name());
+        Assert.assertEquals(mockData, payload.getData());
     }
 
     // ========================================================================================
