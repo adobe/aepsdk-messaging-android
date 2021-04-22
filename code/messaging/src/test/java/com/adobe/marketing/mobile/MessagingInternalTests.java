@@ -294,7 +294,7 @@ public class MessagingInternalTests {
     @Test
     public void test_handlePushToken() {
         // expected
-        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\",\"id\":\"mock_ecid\"}},\"appId\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
+        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mock_ecid\"},\"appID\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
