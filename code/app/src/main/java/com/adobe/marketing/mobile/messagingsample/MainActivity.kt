@@ -18,8 +18,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
-import android.support.v4.app.NotificationCompat
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.Messaging
 import kotlinx.android.synthetic.main.activity_main.*
 

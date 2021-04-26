@@ -18,7 +18,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.AEPMessagingFCMPushPayload
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MobileCore
@@ -26,19 +26,19 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 class NotificationService : FirebaseMessagingService() {
-    override fun onNewToken(token: String?) {
+    override fun onNewToken(token: String) {
         super.onNewToken(token)
         print("MessagingApplication Firebase token :: $token")
         MobileCore.setPushIdentifier(token)
     }
 
-    override fun onMessageReceived(message: RemoteMessage?) {
+    override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
         val payload = AEPMessagingFCMPushPayload(message)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
             val channelName = "some channel name"
             channelId = if (payload.channelId != null) payload.channelId else channelId
@@ -55,10 +55,10 @@ class NotificationService : FirebaseMessagingService() {
 
             priority = payload.notificationPriority
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
-                Messaging.addPushTrackingDetails(this, message?.messageId, message?.data)
+                Messaging.addPushTrackingDetails(this, message.messageId, message.data)
             }, 0))
             setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
-                Messaging.addPushTrackingDetails(this, message?.messageId, message?.data)
+                Messaging.addPushTrackingDetails(this, message.messageId, message.data)
             }, 0))
             setAutoCancel(true)
         }

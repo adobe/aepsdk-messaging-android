@@ -23,7 +23,7 @@ android {
         versionCode 1
         versionName "1.0.0-alpha-3"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
     }
 
@@ -201,14 +201,26 @@ bintrayUpload.dependsOn('assemblePhone')
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+
+    // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
 
-    testImplementation 'junit:junit:4.13'
-    testImplementation "org.mockito:mockito-core:2.28.2"
+    // Firebase sdk test implementation
+    testImplementation "com.google.firebase:firebase-messaging:21.1.0"
+    testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
     testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
     testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
-    testImplementation 'org.json:json:20180130'
-    testImplementation "com.google.firebase:firebase-messaging:21.1.0"
+    testImplementation 'org.json:json:20180813'
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    // Using older version of PowerMock as it supports minimum Android API < 26
+    // the root issue appears to be a dependency with Objenesis in Mockito-Core
+    // where Objenesis 2 requires minimum Android API 26
+    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
+    androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
 }
 
 afterEvaluate {
@@ -232,6 +244,24 @@ task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebug
 
     reports {
         xml.enabled false
+        csv.enabled false
+        html.enabled true
+    }
+}
+
+task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPhoneDebugCoverageReport") {
+    def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
+    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
+
+    additionalClassDirs.setFrom files([debugTree])
+    additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
+    sourceDirectories.setFrom files(android.sourceSets.phone.java.sourceFiles)
+    executionData fileTree(dir: "$buildDir", includes: [
+            "outputs/code_coverage/phoneDebugAndroidTest/connected/*coverage.ec"
+    ])
+
+    reports {
+        xml.enabled true
         csv.enabled false
         html.enabled true
     }
