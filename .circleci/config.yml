@@ -30,10 +30,6 @@ jobs:
           command: make ci-build
 
       - run:
-          name: Build App
-          command: make ci-build-app
-
-      - run:
           name: UnitTests
           command: make ci-unit-test
       - store_artifacts:
