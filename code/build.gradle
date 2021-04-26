@@ -9,7 +9,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.3'
+        classpath 'com.android.tools.build:gradle:4.0.1'
         classpath 'org.codehaus.groovy:groovy-all:2.4.15'
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.11.0"
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
@@ -84,6 +84,6 @@ ext {
     junitVersion = "1.1.2"
     mockitoCoreVersion = "2.28.2"
     buildToolsVersion = "29.0.3"
-    testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     jacocoVersion = "0.8.5"
 }

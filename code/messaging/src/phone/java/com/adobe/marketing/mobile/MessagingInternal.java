@@ -279,8 +279,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
 
         String datasetId = messagingState.getExperienceEventDatasetId();
-        if (datasetId == null) {
-            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null", SELF_TAG);
+        if (datasetId == null || datasetId.isEmpty()) {
+            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null or empty", SELF_TAG);
             return;
         }
 

@@ -61,6 +61,9 @@ public final class Messaging {
 
     /**
      * Extracts and update the intent with xdm data and message id from data payload.
+     *
+     * This method needs to be called with the intent before the notification is created.
+     *
      * @param intent Intent which needs to be updated with xdm data and messageId
      * @param messageId String : message id from RemoteMessage which is received in FirebaseMessagingService#onMessageReceived
      * @param data Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
