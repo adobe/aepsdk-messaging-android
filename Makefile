@@ -46,14 +46,12 @@ ci-generate-library-debug:
 
 ci-generate-library-release:
 		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME}  assemblePhoneRelease)
-		cp code/messaging/build/outputs/aar/messaging-phone-release.aar sdk-build
 
-ci-publish-staging-all:
-		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} clean artifactoryPublish)
+build-release:
+	(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} clean lint assemblePhoneRelease)
 
-ci-publish-master-all:
-		(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} clean artifactoryPublish -PisMaster=true)
+ci-publish-staging: clean build-release
+	(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} publishReleasePublicationToSonatypeRepository --stacktrace)
 
-ci-publish:
-		(code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} assemblePhone)
-		(code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} bintrayUpload -PapiKey=$(APIKEY))
+ci-publish-main: clean build-release
+	(./code/gradlew -p code/${EXTENSION-LIBRARY-FOLDER-NAME} publishReleasePublicationToSonatypeRepository -Prelease)
