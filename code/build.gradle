@@ -30,11 +30,6 @@ allprojects {
     apply plugin: 'maven-publish'
 }
 
-moduleProjectName = rootProject.moduleProjectName
-moduleName=rootProject.moduleName
-moduleAARName=rootProject.moduleAARName
-moduleVersion=rootProject.moduleVersion
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
