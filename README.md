@@ -3,7 +3,7 @@
 ## BETA
 Adobe Experience Platform - Messaging is currently in BETA. Use of this code is by invitation only and not otherwise supported by Adobe. Please contact your Adobe Customer Success Manager to learn more.
 
-By using the Beta, you hereby acknowledge that the Beta is provided "as is" without warranty of any kind. Adobe shall have no obligation to maintain, correct, update, change, modify or otherwise support the Alpha. You are advised to use caution and not to rely in any way on the correct functioning or performance of such Alpha and/or accompanying materials.
+By using the Beta, you hereby acknowledge that the Beta is provided "as is" without warranty of any kind. Adobe shall have no obligation to maintain, correct, update, change, modify or otherwise support the Beta. You are advised to use caution and not to rely in any way on the correct functioning or performance of such Alpha and/or accompanying materials.
 
 ## About this project
 The AEPMessaging extension allows you to send push notification tokens and push notification click-through feedback to the Adobe Experience Platform.
