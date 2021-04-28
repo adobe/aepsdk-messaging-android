@@ -1,8 +1,12 @@
 name: Publish package to the Maven Central Repository
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'tag/version'
+        required: true
+        default: '1.0.0'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
