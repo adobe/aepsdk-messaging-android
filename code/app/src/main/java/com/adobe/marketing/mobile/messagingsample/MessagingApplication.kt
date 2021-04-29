@@ -32,17 +32,20 @@ class MessagingApplication : Application() {
         Edge.registerExtension();
 
         MobileCore.start {
-            // Necessary property id for MessagingSDKTest which has the edge configuration id needed by aep sdk
+            // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID("<appId>")
             MobileCore.lifecycleStart(null);
 
-            MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<expEventDatasetId>") as Map<String, Any>?)
+            // To configure the expereience event dataset for push tracking follow this url (https://aep-sdks.gitbook.io/docs/v/AEP-Edge-Docs/)
+            // Uncomment the below line if eventDataset is not configured in the messaging extension in launch
+            //MobileCore.updateConfiguration(mutableMapOf("messaging.eventDataset" to "<expEventDatasetId>") as Map<String, Any>?)
         }
 
         FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
             if(task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
+                // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
             }
         }

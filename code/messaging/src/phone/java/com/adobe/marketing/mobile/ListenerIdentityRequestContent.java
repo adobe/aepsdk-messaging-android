@@ -16,10 +16,12 @@ package com.adobe.marketing.mobile;
  *
  * <p>
  * Monitor REQUEST_CONTENT events for sending push notification token information.
+ *
  * @see MessagingInternal
  */
 public class ListenerIdentityRequestContent extends ExtensionListener {
-    private final String  SELF_TAG = "ListenerIdentityRequestContent";
+    private final String SELF_TAG = "ListenerIdentityRequestContent";
+
     ListenerIdentityRequestContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }

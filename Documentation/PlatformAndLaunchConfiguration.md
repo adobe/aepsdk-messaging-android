@@ -1,11 +1,11 @@
-#  Configuring Platform and Launch
+#  Configuring Edge & Launch
 
-- Setup the platform with schemas
-    - Take a note of which Sandbox were you working in for above steps. Let's call it SandBoxID
-    - Take a note of Experience Event Dataset name and ID
-- Create Edge configuration
-    - Update the experience event dataset and profile dataset
+- Configure the Edge configuration
+    - Follow [this](https://aep-sdks.gitbook.io/docs/v/AEP-Edge-Docs/getting-started/edge-configuration) document
+    - In the screen below update the experience event dataset and profile dataset
+    ![Edge Config](png/edge-config.png)
 - Setup launch mobile property
-    - Configure AEP Edge Extension
-    - Configure AEP Messaging Extension
-- Now that a Mobile Property is created, head over to the instruction to install the SDK.
+    - Follow [this](https://aep-sdks.gitbook.io/docs/v/AEP-Edge-Docs/getting-started/set-up-mobile-property) to create the property
+    - Follow [this](https://aep-sdks.gitbook.io/docs/v/AEP-Edge-Docs/using-mobile-extensions/adobe-edge#configure-the-adobe-experience-platform-edge-network-extension-in-experience-platform-launch) to configure AEP Edge Extension 
+    - Follow [this](https://aep-sdks.gitbook.io/docs/v/AEP-Edge-Docs/using-mobile-extensions/adobe-experience-platform-messaging#configure-the-adobe-experience-platform-messaging-extension-in-experience-platform-launch) to configure AEP Messaging Extension
+- Now that a Mobile Property is created, head over to the [instruction to install the SDK](../Documentation/SetupSDK.md).
