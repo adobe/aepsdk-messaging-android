@@ -1,17 +1,17 @@
-#  AEPMessagingFCMPushPayload Usage
-This document explains how to use `AEPMessagingFCMPushPayload` for getting the notification attributes like title, body, actions etc for creating the push notifications.
+#  MessagingPushPayload Usage
+This document explains how to use `MessagingPushPayload` for getting the notification attributes like title, body, actions etc for creating the push notifications.
 
-## Creating the AEPMessagingFCMPushPayload object
+## Creating the MessagingPushPayload object
 To do this, use the below constructors in the `FirebaseMessagingService` class's `onMessageReceived` method:
 
 ### Constructor
 
 ```java
-    public AEPMessagingFCMPushPayload(RemoteMessage message)
+    public MessagingPushPayload(RemoteMessage message)
 ```
 
 ```java
-    public AEPMessagingFCMPushPayload(Map<String, String> data)
+    public MessagingPushPayload(Map<String, String> data)
 ```
 
 ## Public APIs
@@ -26,7 +26,7 @@ Provides the title for creating push notification
 ### Get body
 Provides the body of the push notification.
 ```java
-    public String getTitle()
+    public String getBody()
 ```
 
 ### Get sound
@@ -94,5 +94,5 @@ This class provides action button with attributes (label, link and type) that ar
 ### Get action link
 Provides the link if present which is used while handling the interaction with push notification.  
 ```java
-    public Map<String, String> getData()
+    public String getActionUri()
 ```

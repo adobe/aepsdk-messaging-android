@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-public class AEPMessagingFCMPushPayloadTests {
-    private AEPMessagingFCMPushPayload payload;
+public class MessagingPushPayloadTests {
+    private MessagingPushPayload payload;
 
     private final String mockTitle = "mockTitle";
     private final String mockBody = "mockBody";
@@ -46,7 +46,7 @@ public class AEPMessagingFCMPushPayloadTests {
     @Before
     public void setup() {
         mockData = getMockData();
-        payload = new AEPMessagingFCMPushPayload(mockData);
+        payload = new MessagingPushPayload(mockData);
     }
 
     // ========================================================================================
@@ -56,14 +56,14 @@ public class AEPMessagingFCMPushPayloadTests {
     public void test_Constructor_with_RemoteMessage() {
         Bundle bundle = Mockito.mock(Bundle.class);
         RemoteMessage message = new RemoteMessage(bundle);
-        payload = new AEPMessagingFCMPushPayload(message);
+        payload = new MessagingPushPayload(message);
         Assert.assertNotNull(payload);
     }
 
     @Test
     public void test_Constructor_with_MapData() {
         Map<String, String> data = new HashMap<>();
-        payload = new AEPMessagingFCMPushPayload(data);
+        payload = new MessagingPushPayload(data);
         Assert.assertNotNull(payload);
     }
 
