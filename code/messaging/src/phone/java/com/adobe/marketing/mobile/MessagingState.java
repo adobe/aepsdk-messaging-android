@@ -1,5 +1,5 @@
 /*
- Copyright 2020 Adobe. All rights reserved.
+ Copyright 2021 Adobe. All rights reserved.
  This file is licensed to you under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License. You may obtain a copy
  of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -11,68 +11,69 @@
 
 package com.adobe.marketing.mobile;
 
+import java.util.List;
+import java.util.Map;
+
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ECID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ID;
+import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP;
+
 /**
  * MessagingState is used to store configuration and identity information
  */
 final class MessagingState {
-
-    //Configuration properties
-    private MobilePrivacyStatus privacyStatus = MobilePrivacyStatus.OPT_IN;
-
-    // Temp
-    // Temporary implementation for dccs hack for collecting push tokens
-    private String dccsURL;
-    private String experienceCloudOrg;
-
+    private final String SELF_TAG = "MessagingState";
     //Identity properties.
     private String ecid;
 
     // Messaging properties
-    private String profileDatasetId;
     private String experienceEventDatasetId;
 
 
-    void setState(final EventData configState, final EventData identityState) {
+    void setState(final Map<String, Object> configState, final Map<String, Object> edgeIdentityState) {
         setConfigState(configState);
-        setIdentityState(identityState);
+        setEdgeIdentityState(edgeIdentityState);
     }
 
-    private void setConfigState(final EventData configState) {
+    private void setConfigState(final Map<String, Object> configState) {
         if (configState != null) {
-            this.privacyStatus = MobilePrivacyStatus.fromString(configState.optString(MessagingConstant.EventDataKeys.Configuration.GLOBAL_PRIVACY_STATUS, ""));
-            this.profileDatasetId = configState.optString(MessagingConstant.EventDataKeys.Configuration.PROFILE_DATASET_ID, "");
-            this.experienceEventDatasetId = configState.optString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
-
-            // Temp
-            this.dccsURL = configState.optString(MessagingConstant.EventDataKeys.Configuration.DCCS_URL, null);
-            this.experienceCloudOrg = configState.optString(MessagingConstant.EventDataKeys.Configuration.EXPERIENCE_CLOUD_ORG, null);
+            Object expEventDatasetId = configState.get(EXPERIENCE_EVENT_DATASET_ID);
+            if (expEventDatasetId instanceof String) {
+                this.experienceEventDatasetId = (String) expEventDatasetId;
+            }
         }
     }
 
-    private void setIdentityState(final EventData identityState) {
-        if (identityState != null) {
-            this.ecid = identityState.optString(MessagingConstant.EventDataKeys.Identity.VISITOR_ID_MID, "");
+    private void setEdgeIdentityState(final Map<String, Object> edgeIdentityState) {
+        if (edgeIdentityState != null) {
+            try {
+                Object identityMapObj = edgeIdentityState.get(IDENTITY_MAP);
+                if (identityMapObj instanceof Map) {
+                    Map<String, Object> identityMap = (Map<String, Object>) identityMapObj;
+                    Object ecidsObj = identityMap.get(ECID);
+                    if (ecidsObj instanceof List) {
+                        List<Object> ecids = (List<Object>) identityMap.get(ECID);
+                        if (!ecids.isEmpty()) {
+                            Object ecidObject = ecids.get(0);
+                            if (ecidObject instanceof Map) {
+                                Map<String, Object> ecid = (Map<String, Object>) ecids.get(0);
+                                Object idObj = ecid.get(ID);
+                                if (idObj instanceof String) {
+                                    this.ecid = (String) idObj;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (ClassCastException e) {
+                Log.debug(MessagingConstant.LOG_TAG, "%s - Exception while trying to get the ecid. Error -> %s", SELF_TAG, e.getMessage());
+            }
         }
-    }
-
-    MobilePrivacyStatus getPrivacyStatus() {
-        return privacyStatus;
-    }
-
-    // Temp
-    String getDccsURL() {
-        return dccsURL;
-    }
-    String getExperienceCloudOrg() {
-        return experienceCloudOrg;
     }
 
     String getEcid() {
         return ecid;
-    }
-
-    String getProfileDatasetId() {
-        return profileDatasetId;
     }
 
     String getExperienceEventDatasetId() {
