@@ -12,7 +12,7 @@ The AEPMessaging extension, along with Adobe Customer Journey Optimizer, enables
 The Adobe Experience Platform Messaging extension for Android is currently in Beta development.
 
 ## Installation
-Integrate the Messaging into your app by including the following in your gradle file's `dependencies`:
+Integrate the AEPMessaging extension into your app by including the following in your gradle file's `dependencies`:
 
 ```
 implementation 'com.adobe.marketing.mobile:messaging:1.0.0-beta-1'

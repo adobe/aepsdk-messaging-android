@@ -28,8 +28,8 @@ import java.util.Map;
  * This class is used to create push notification payload object from remote message.
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
-public class AEPMessagingFCMPushPayload {
-    private final String  SELF_TAG = "AEPMessagingFCMPushPayload";
+public class MessagingPushPayload {
+    private final String  SELF_TAG = "MessagingPushPayload";
 
     private String title;
     private String body;
@@ -47,16 +47,16 @@ public class AEPMessagingFCMPushPayload {
     /**
      * Constructor
      *
-     * Provides the AEPMessagingFCMPushPayload object
+     * Provides the MessagingPushPayload object
      * @param message {@link RemoteMessage} object received from {@link com.google.firebase.messaging.FirebaseMessagingService}
      */
-    public AEPMessagingFCMPushPayload(final RemoteMessage message) {
+    public MessagingPushPayload(final RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create AEPMessagingFCMPushPayload, remote message is null", SELF_TAG);
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message is null", SELF_TAG);
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create AEPMessagingFCMPushPayload, remote message data payload is null", SELF_TAG);
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is null", SELF_TAG);
             return;
         }
         init(message.getData());
@@ -65,10 +65,10 @@ public class AEPMessagingFCMPushPayload {
     /**
      * Constructor
      *
-     * Provides the AEPMessagingFCMPushPayload object
+     * Provides the MessagingPushPayload object
      * @param data {@link Map} map which indicates the data part of {@link RemoteMessage}
      */
-    public AEPMessagingFCMPushPayload(final Map<String, String> data) {
+    public MessagingPushPayload(final Map<String, String> data) {
         init(data);
     }
 

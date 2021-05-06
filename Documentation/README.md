@@ -7,7 +7,7 @@
     * [Adding Firebase dependency](https://firebase.google.com/docs/cloud-messaging/android/client)
     * [Setup Sdk](./SetupSDK.md)
     * [API usage](./APIUsage.md)
-    * [Getting the payload](./push/AEPMessagingFCMPushPayload.md)
+    * [Getting the payload](./push/MessagingPushPayload.md)
     
 
 
