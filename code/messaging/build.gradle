@@ -94,39 +94,6 @@ version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersi
 
 publishing {
     publications {
-        aar(MavenPublication) {
-            groupId = 'com.adobe.marketing.mobile'
-            artifactId = rootProject.moduleName
-            version = rootProject.moduleVersion
-            artifact("$buildDir/outputs/aar/${moduleAARName}")
-            artifact javadocPublish
-            pom.withXml {
-                asNode().appendNode('name', mavenRepoName)
-                asNode().appendNode('description', mavenRepoDescription)
-                asNode().appendNode('url', 'https://aep-sdks.gitbook.io/docs/')
-                def scmNode = asNode().appendNode('scm')
-                scmNode.appendNode('url', 'https://github.com/Adobe-Marketing-Cloud/acp-sdks/')
-
-
-                def developersNode = asNode().appendNode('developers')
-                def developerNode = developersNode.appendNode('developer')
-                developerNode.appendNode('id', 'adobe')
-                developerNode.appendNode('name', 'adobe')
-
-                def licensesNode = asNode().appendNode('licenses')
-                def licenseNode = licensesNode.appendNode('license')
-                licenseNode.appendNode('name', 'Adobe Proprietary')
-
-                def dependenciesNode = asNode().appendNode('dependencies')
-
-                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
-
-                def coreDependencyNode = dependenciesNode.appendNode('dependency')
-                coreDependencyNode.appendNode('groupId', 'com.adobe.marketing.mobile')
-                coreDependencyNode.appendNode('artifactId', 'core')
-                coreDependencyNode.appendNode('version', mavenCoreVersion)
-            }
-        }
         release(MavenPublication) {
             groupId = 'com.adobe.marketing.mobile'
             artifactId = rootProject.moduleName
