@@ -216,7 +216,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
                 // Need experience event dataset id for sending the push token
                 if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
-                    Log.warning(LOG_TAG, "%s - Unable to sync push token, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
+                    Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
                     return;
                 }
 
