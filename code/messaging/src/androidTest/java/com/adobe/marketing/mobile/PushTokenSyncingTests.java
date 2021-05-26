@@ -47,7 +47,7 @@ public class PushTokenSyncingTests {
         MessagingFunctionalTestUtil.setEdgeIdentityPersistence(MessagingFunctionalTestUtil.createIdentityMap("ECID", "mockECID"));
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
-                put("someconfig", "someconfigvalue");
+                put("someconfig", "someConfigValue");
             }
         };
         MobileCore.updateConfiguration(config);
