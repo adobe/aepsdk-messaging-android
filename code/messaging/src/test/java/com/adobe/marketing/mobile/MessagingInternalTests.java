@@ -42,10 +42,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, LocalStorageService.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalTests {
 
-    private int EXECUTOR_TIMEOUT = 5;
     private MessagingInternal messagingInternal;
 
     // Mocks
@@ -328,6 +327,9 @@ public class MessagingInternalTests {
         assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
         assertEquals(expectedEventData, event.getData().toString());
+
+        // verify if the push token is stored in shared state
+        verify(mockExtensionApi, times(1)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
 
@@ -349,6 +351,7 @@ public class MessagingInternalTests {
         // verify
         PowerMockito.verifyStatic(MobileCore.class, times(0));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
     @Test
@@ -371,6 +374,7 @@ public class MessagingInternalTests {
         // verify
         PowerMockito.verifyStatic(MobileCore.class, times(0));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
     @Test
@@ -387,9 +391,6 @@ public class MessagingInternalTests {
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
-        // when getLocalStorageService() return mockLocalStorageService
-        LocalStorageService.DataStore mockDataStore = mock(LocalStorageService.DataStore.class);
-
         // when - then return mock
         when(messagingState.getEcid()).thenReturn(mockECID);
 
@@ -399,6 +400,7 @@ public class MessagingInternalTests {
         // verify
         PowerMockito.verifyStatic(MobileCore.class, times(0));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================

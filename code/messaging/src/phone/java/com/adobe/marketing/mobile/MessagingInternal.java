@@ -247,6 +247,19 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         if (eventData == null) {
             return;
         }
+
+        // Update the push token to the shared state
+        ExtensionErrorCallback<ExtensionError> errorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(final ExtensionError extensionError) {
+                Log.warning(MessagingConstant.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
+                        extensionError.getErrorName()));
+            }
+        };
+        Map<String, Object> map = new HashMap<>();
+        map.put(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().setSharedEventState(map, event, errorCallback);
+
         // Send an edge event with profile data as event data
         final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setEventData(eventData)
