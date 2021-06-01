@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile;
 final class MessagingConstant {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.0.0-beta-1";
+    static final String EXTENSION_VERSION = "1.0.0-beta-2";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
     private MessagingConstant() {}
@@ -138,6 +138,10 @@ final class MessagingConstant {
             static final String ID = "id";
 
             private EdgeIdentity() {/* no-op */}
+        }
+
+        static final class Messaging {
+            static final String PUSH_IDENTIFIER = "pushidentifier";
         }
     }
 
