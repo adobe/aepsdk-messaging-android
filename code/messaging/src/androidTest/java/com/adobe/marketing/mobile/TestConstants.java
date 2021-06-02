@@ -38,6 +38,7 @@ public class TestConstants {
 
 	public final class SharedStateName {
 		public static final String EVENT_HUB = "com.adobe.module.eventhub";
+		public static final String EDGE_IDENTITY = "com.adobe.module.identity";
 		private SharedStateName() { }
 	}
 }
