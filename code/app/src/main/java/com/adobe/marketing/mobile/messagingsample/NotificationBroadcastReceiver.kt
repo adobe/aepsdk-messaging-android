@@ -18,23 +18,36 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import com.adobe.marketing.mobile.Messaging
 
 
 class NotificationBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        val notificationManager = context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification: Notification? = intent?.getParcelableExtra(NOTIFICATION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val notificationChannel = NotificationChannel("10001", "NOTIFICATION_CHANNEL_NAME", importance)
-            notificationManager.createNotificationChannel(notificationChannel)
+        val action = intent?.action
+        val packageName = context?.packageName
+        if (action == null || packageName == null) {
+            return
         }
-        notification?.contentIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
-            Messaging.addPushTrackingDetails(this, "messageId", XDM_DATA)
-        }, 0)
-        val id = intent?.getIntExtra(NOTIFICATION_ID, 0)
-        id?.let { notificationManager.notify(it, notification) }
+
+        when(action) {
+            "${packageName}_adb_action_notification_clicked" -> {
+               Log.d("NotificationBroadcast", "${packageName}_adb_action_notification_clicked")
+            }
+        }
+
+//        val notificationManager = context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        val notification: Notification? = intent?.getParcelableExtra(NOTIFICATION)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            val importance = NotificationManager.IMPORTANCE_HIGH
+//            val notificationChannel = NotificationChannel("10001", "NOTIFICATION_CHANNEL_NAME", importance)
+//            notificationManager.createNotificationChannel(notificationChannel)
+//        }
+//        notification?.contentIntent = PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
+//            Messaging.addPushTrackingDetails(this, "messageId", XDM_DATA)
+//        }, 0)
+//        val id = intent?.getIntExtra(NOTIFICATION_ID, 0)
+//        id?.let { notificationManager.notify(it, notification) }
     }
 
     companion object {

@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 
+import androidx.annotation.NonNull;
+
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
@@ -29,7 +31,7 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
-    private final String  SELF_TAG = "MessagingPushPayload";
+    private static final String  SELF_TAG = "MessagingPushPayload";
 
     private String title;
     private String body;
@@ -56,7 +58,7 @@ public class MessagingPushPayload {
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is null", SELF_TAG);
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is empty", SELF_TAG);
             return;
         }
         init(message.getData());
@@ -70,6 +72,22 @@ public class MessagingPushPayload {
      */
     public MessagingPushPayload(final Map<String, String> data) {
         init(data);
+    }
+
+    /**
+     * Check whether the remote message is origination from AEP
+     * @return boolean value indicating whether the remote message is origination from AEP
+     */
+    public boolean isAEPPushMessage() {
+        if (data == null || data.isEmpty()) {
+            Log.error(MessagingConstant.LOG_TAG, "%s - Returning false as remote message data payload is empty", SELF_TAG);
+            return false;
+        }
+        return "true".equals(data.get(MessagingConstant.PushNotificationPayload.ADB));
+    }
+
+    public boolean isSilentPushMessage() {
+        return data != null && title == null && body == null;
     }
 
     public String getTitle() {

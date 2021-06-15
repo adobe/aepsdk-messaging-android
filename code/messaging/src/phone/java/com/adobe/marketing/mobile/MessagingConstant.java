@@ -148,6 +148,8 @@ final class MessagingConstant {
     static final class PushNotificationPayload {
         private PushNotificationPayload() {}
 
+        static final String ADB = "adb_";
+
         static final String TITLE = "adb_title";
         static final String BODY = "adb_body";
         static final String SOUND = "adb_sound";
@@ -177,6 +179,22 @@ final class MessagingConstant {
             static final String LABEL = "label";
             static final String URI = "uri";
             static final String TYPE = "type";
+        }
+
+        static final class DEFAULTS {
+            static final String DEFAULT_CHANNEL_ID = "adb_default_channel_id";
+            static final String DEFAULT_CHANNEL_NAME = "General";
+            static final String DEFAULT_CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        }
+
+        static final class ACTIONS {
+            static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
+            static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
+            static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
+        }
+
+        static final class REQUEST_CODES {
+            static final int PUSH_INTENT_REQUEST_CODE = 1000;
         }
     }
 }
