@@ -196,5 +196,11 @@ final class MessagingConstant {
         static final class REQUEST_CODES {
             static final int PUSH_INTENT_REQUEST_CODE = 1000;
         }
+
+        static final class ACTION_BUTTON_METADATA {
+            static final String LABEL = "adb_action_label";
+            static final String LINK = "adb_action_link";
+            static final String TYPE = "adb_action_type";
+        }
     }
 }

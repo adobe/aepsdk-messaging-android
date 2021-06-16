@@ -6,6 +6,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 
+import java.util.List;
+
 
 class MessagingPushNotificationFactory implements IMessagingPushNotificationFactory {
 
@@ -50,8 +52,17 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         notificationBuilder.setDeleteIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_NOTIFICATION_DELETED));
         // Setting the priority
         notificationBuilder.setPriority(payload.getNotificationPriority());
+        // Setting badge count
+        notificationBuilder.setNumber(payload.getBadgeCount());
         // Setting sound based on the android sdk version
         setSound(context, payload.getSound(), notificationBuilder);
+        // Setting the action buttons
+        List<MessagingPushPayload.ActionButton> buttons = payload.getActionButtons();
+        if (buttons != null && !buttons.isEmpty()) {
+            for (MessagingPushPayload.ActionButton button: buttons) {
+                MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId);
+            }
+        }
 
         return notificationBuilder.build();
     }

@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -31,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -144,6 +146,23 @@ class MessagingUtils {
     static Uri getSoundUri(Context context, String fileName) {
         int resID = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
         return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/" + resID);
+    }
+
+    static void addAction(Context context, MessagingPushPayload.ActionButton button, MessagingPushPayload payload, Notification.Builder notificationBuilder, String messageId) {
+        Bundle extras = getBundleFromMap(payload.getData());
+        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.LABEL, button.getLabel());
+        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.LINK, button.getLink());
+        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.TYPE, button.getType().name());
+        Intent intent = new Intent(context, MessagingPushReceiver.class);
+        intent.setAction(MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_BUTTON_CLICKED);
+        intent.putExtras(extras);
+        // Adding CJM specific details
+        Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstant.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
+        Notification.Action action = new Notification.Action(0, button.getLabel(), pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            notificationBuilder.addAction(action);
+        }
     }
 
     private static void createDefaultNotificationChannel(Context context, NotificationManager notificationManager, MessagingPushPayload payload) {
