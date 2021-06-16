@@ -3,9 +3,6 @@
 ## About this project
 The AEPMessaging extension, along with Adobe Customer Journey Optimizer, enables sending and tracking push notifications in the Adobe Experience Platform
 
-## Current version
-The Adobe Experience Platform Messaging extension for Android is currently in stable version 1.0.0.
-
 ## Installation
 Integrate the AEPMessaging extension into your app by including the following in your gradle file's `dependencies`:
 
