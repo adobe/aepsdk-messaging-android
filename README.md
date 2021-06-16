@@ -1,21 +1,13 @@
 # Adobe Experience Platform - Messaging extension for Android
 
-## BETA
-Adobe Experience Platform - Messaging is currently in BETA. Use of this code is by invitation only and not otherwise supported by Adobe. Please contact your Adobe Customer Success Manager to learn more.
-
-By using the Beta, you hereby acknowledge that the Beta is provided "as is" without warranty of any kind. Adobe shall have no obligation to maintain, correct, update, change, modify or otherwise support the Beta. You are advised to use caution and not to rely in any way on the correct functioning or performance of such Alpha and/or accompanying materials.
-
 ## About this project
 The AEPMessaging extension, along with Adobe Customer Journey Optimizer, enables sending and tracking push notifications in the Adobe Experience Platform
-
-## Current version
-The Adobe Experience Platform Messaging extension for Android is currently in Beta development.
 
 ## Installation
 Integrate the AEPMessaging extension into your app by including the following in your gradle file's `dependencies`:
 
 ```
-implementation 'com.adobe.marketing.mobile:messaging:1.0.0-beta-2'
+implementation 'com.adobe.marketing.mobile:messaging:1.0.0'
 implementation 'com.adobe.marketing.mobile:edge:1.+'
 implementation 'com.adobe.marketing.mobile:edgeidentity:1.+'
 implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
