@@ -37,6 +37,8 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="${applicationId}_adb_action_notification_clicked" />
+                <action android:name="${applicationId}_adb_action_button_clicked" />
+                <action android:name="${applicationId}_adb_action_notification_deleted" />
             </intent-filter>
         </receiver>
         <receiver

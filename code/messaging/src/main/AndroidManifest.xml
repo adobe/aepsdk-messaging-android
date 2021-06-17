@@ -4,7 +4,9 @@
     <application>
 
         <receiver android:name="com.adobe.marketing.mobile.MessagingPushReceiver"
-            android:exported="false"/>
+            android:exported="false">
+
+        </receiver>
 
     </application>
 

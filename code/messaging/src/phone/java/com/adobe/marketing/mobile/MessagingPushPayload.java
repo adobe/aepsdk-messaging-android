@@ -273,4 +273,16 @@ public class MessagingPushPayload {
             return type;
         }
     }
+
+    public static class ACTION_BUTTON_KEY {
+        public final static String LABEL = "adb_action_label";
+        public final static String LINK = "adb_action_link";
+        public final static String TYPE = "adb_action_type";
+    }
+
+    public static final class ACTION_KEY {
+        public static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
+        public static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
+        public static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
+    }
 }

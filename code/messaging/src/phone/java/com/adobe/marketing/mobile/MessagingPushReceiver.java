@@ -44,32 +44,21 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                 return;
             }
 
-            switch (action) {
-                case MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_NOTIFICATION_CLICKED:
-                    sendBroadcasts(context, intent, MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_NOTIFICATION_CLICKED);
-                    break;
-
-                case MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_BUTTON_CLICKED:
-                    sendBroadcasts(context, intent, MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_BUTTON_CLICKED);
-                    break;
-
-                default:
-                    Log.warning(MessagingConstant.LOG_TAG, "handleAction() - Ignoring broadcast. Broadcast message is not for Adobe messaging sdk.");
-                    break;
-            }
+            sendBroadcasts(context, intent, action);
         }
 
         private void sendBroadcasts(final Context context, final Intent intent, final String action) {
             String packageName = context.getPackageName();
             String broadcastingAction = packageName + "_" + action;
-            Intent sendIntent = new Intent(broadcastingAction);
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(broadcastingAction);
             sendIntent.putExtras(intent.getExtras());
-            List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(intent, 0);
+            List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(sendIntent, 0);
             if (receivers.isEmpty()) {
                 // log error no component
             } else {
                 for (ResolveInfo receiver : receivers) {
-                    Intent intent1 = new Intent(intent);
+                    Intent intent1 = new Intent(sendIntent);
                     String classInfo = receiver.activityInfo.name;
                     ComponentName name = new ComponentName(packageName, classInfo);
                     intent1.setComponent(name);

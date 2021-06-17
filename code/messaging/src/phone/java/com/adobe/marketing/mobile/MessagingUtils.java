@@ -32,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -150,11 +149,11 @@ class MessagingUtils {
 
     static void addAction(Context context, MessagingPushPayload.ActionButton button, MessagingPushPayload payload, Notification.Builder notificationBuilder, String messageId) {
         Bundle extras = getBundleFromMap(payload.getData());
-        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.LABEL, button.getLabel());
-        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.LINK, button.getLink());
-        extras.putString(MessagingConstant.PushNotificationPayload.ACTION_BUTTON_METADATA.TYPE, button.getType().name());
+        extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LABEL, button.getLabel());
+        extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LINK, button.getLink());
+        extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.TYPE, button.getType().name());
         Intent intent = new Intent(context, MessagingPushReceiver.class);
-        intent.setAction(MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_BUTTON_CLICKED);
+        intent.setAction(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         intent.putExtras(extras);
         // Adding CJM specific details
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());

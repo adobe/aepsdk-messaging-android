@@ -1,9 +1,7 @@
 package com.adobe.marketing.mobile;
 
 import android.app.Notification;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Build;
 
 import java.util.List;
@@ -47,9 +45,9 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         // Setting the large icon
         notificationBuilder.setLargeIcon(MessagingUtils.getLargeIcon(context, payload));
         // Setting the pending content intent for the notification
-        notificationBuilder.setContentIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_NOTIFICATION_CLICKED));
+        notificationBuilder.setContentIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_CLICKED));
         // Setting the pending delete intent for the notification
-        notificationBuilder.setDeleteIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingConstant.PushNotificationPayload.ACTIONS.ACTION_NOTIFICATION_DELETED));
+        notificationBuilder.setDeleteIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_DELETED));
         // Setting the priority
         notificationBuilder.setPriority(payload.getNotificationPriority());
         // Setting badge count

@@ -187,20 +187,8 @@ final class MessagingConstant {
             static final String DEFAULT_CHANNEL_DESCRIPTION = "Default channel for all notifications.";
         }
 
-        static final class ACTIONS {
-            static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
-            static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
-            static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
-        }
-
         static final class REQUEST_CODES {
             static final int PUSH_INTENT_REQUEST_CODE = 1000;
-        }
-
-        static final class ACTION_BUTTON_METADATA {
-            static final String LABEL = "adb_action_label";
-            static final String LINK = "adb_action_link";
-            static final String TYPE = "adb_action_type";
         }
     }
 }
