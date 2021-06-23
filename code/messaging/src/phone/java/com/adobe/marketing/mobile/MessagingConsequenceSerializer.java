@@ -16,21 +16,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * {@code MessagingRuleConsequenceSerializer} can be used to serialize {@code MessagingRuleConsequence} instance to a {@code Variant}
- * and to deserialize a {@code Variant} to {@code MessagingRuleConsequence} instance.
+ * {@code MessagingConsequenceSerializer} can be used to serialize a {@code MessagingConsequence} instance to a {@code Variant}
+ * and to deserialize a {@code Variant} to a {@code MessagingConsequence} instance.
  */
-final class MessagingRuleConsequenceSerializer implements VariantSerializer<MessagingRuleConsequence> {
+final class MessagingConsequenceSerializer implements VariantSerializer<MessagingConsequence> {
 
     /**
-     * Serializes the given {@code CampaignConsequence} instance to a {@code Variant}.
+     * Serializes the given {@code MessagingConsequence} instance to a {@code Variant}.
      *
-     * @param consequence {@link MessagingRuleConsequence} instance to serialize
-     * @return {@link Variant} representing {@code CampaignRuleConsequence}, or the null variant if {@code consequence} is null
+     * @param consequence {@link MessagingConsequence} instance to serialize
+     * @return {@link Variant} representing {@code MessagingConsequence}, or the null variant if {@code consequence} is null
      */
     @Override
-    public Variant serialize(final MessagingRuleConsequence consequence) {
+    public Variant serialize(final MessagingConsequence consequence) {
         if (consequence == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "serialize - CampaignRuleConsequence is null, so returning null Variant.");
+            Log.debug(MessagingConstant.LOG_TAG, "serialize - MessagingConsequence is null, so returning null Variant.");
             return Variant.fromNull();
         }
 
@@ -44,25 +44,25 @@ final class MessagingRuleConsequenceSerializer implements VariantSerializer<Mess
         map.put(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_TYPE, (type == null) ? Variant.fromNull() :
                 Variant.fromString(consequence.getType()));
 
-        Map<String, Variant> detailMap = consequence.getDetail();
+        Map<String, Variant> detailMap = consequence.getDetails();
         map.put(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_DETAIL,
                 (detailMap == null) ? Variant.fromNull() :
-                        Variant.fromVariantMap(consequence.getDetail()));
+                        Variant.fromVariantMap(consequence.getDetails()));
 
         return Variant.fromVariantMap(map);
     }
 
     /**
-     * Deserializes the given {@code Variant} to a {@code CampaignRuleConsequence} instance.
+     * Deserializes the given {@code Variant} to a {@code MessagingConsequence} instance.
      *
      * @param variant {@link Variant} to deserialize
-     * @return a {@link MessagingRuleConsequence} instance that was deserialized from the variant. Can be null.
+     * @return a {@link MessagingConsequence} instance that was deserialized from the variant. Can be null.
      *
      * @throws IllegalArgumentException if variant is null
      * @throws VariantSerializationFailedException if variant serialization failed
      */
     @Override
-    public MessagingRuleConsequence deserialize(final Variant variant) throws VariantSerializationFailedException {
+    public MessagingConsequence deserialize(final Variant variant) throws VariantSerializationFailedException {
         if (variant == null) {
             throw new IllegalArgumentException("Variant for deserialization is null.");
         }
@@ -85,7 +85,7 @@ final class MessagingRuleConsequenceSerializer implements VariantSerializer<Mess
 
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(MessagingConstant.LOG_TAG,
-                    "deserialize -  Unable to find field \"id\" in Campaign rules consequence. This a required field.");
+                    "deserialize -  Unable to find field \"id\" in Messaging rules consequence. This a required field.");
             throw new VariantSerializationFailedException("Consequence \"id\" is null or empty.");
         }
 
@@ -95,7 +95,7 @@ final class MessagingRuleConsequenceSerializer implements VariantSerializer<Mess
 
         if (StringUtils.isNullOrEmpty(type)) {
             Log.warning(MessagingConstant.LOG_TAG,
-                    "No valid field \"type\" in Campaign rules consequence. This is a required field.");
+                    "No valid field \"type\" in Messaging rules consequence. This is a required field.");
             throw new VariantSerializationFailedException("Consequence \"type\" is null or empty.");
         }
 
@@ -105,10 +105,10 @@ final class MessagingRuleConsequenceSerializer implements VariantSerializer<Mess
 
         if (detail == null || detail.isEmpty()) {
             Log.warning(MessagingConstant.LOG_TAG,
-                    "No valid field \"detail\" in Campaign rules consequence. This a required field.");
+                    "No valid field \"detail\" in Messaging rules consequence. This a required field.");
             throw new VariantSerializationFailedException("Consequence \"detail\" is null or empty.");
         }
 
-        return new MessagingRuleConsequence(id, type, detail);
+        return new MessagingConsequence(id, type, detail);
     }
 }

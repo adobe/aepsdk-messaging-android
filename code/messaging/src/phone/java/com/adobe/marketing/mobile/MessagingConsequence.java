@@ -15,51 +15,51 @@ package com.adobe.marketing.mobile;
 import java.util.Map;
 
 /**
- * {@code MessagingRuleConsequence} class represents a Messaging rule consequence.
+ * {@code MessagingConsequence} class represents a Messaging extension rule consequence present in an Edge response event from Offers.
  */
-class MessagingRuleConsequence {
+class MessagingConsequence {
     private final String id;
     private final String type;
-    private final Map<String, Variant> detail;
+    private final Map<String, Variant> details;
 
     /**
      * Constructor
      *
      * @param id {@link String} containing unique consequence Id
      * @param type {@code String} containing message consequence type
-     * @param detail {@code Map<String, Variant>} containing consequence detail
+     * @param details {@code Map<String, Variant>} containing consequence detail
      */
-    MessagingRuleConsequence(final String id, final String type,
-                            final Map<String, Variant> detail) {
+    MessagingConsequence(final String id, final String type,
+                            final Map<String, Variant> details) {
         this.id = id;
         this.type = type;
-        this.detail = detail;
+        this.details = details;
     }
 
     /**
-     * Get the {@code id} for this {@code CampaignRuleConsequence} instance.
+     * Get the {@code id} for this {@code MessagingConsequence} instance.
      *
-     * @return {@link String} containing this {@link MessagingRuleConsequence#id}
+     * @return {@link String} containing this {@link MessagingConsequence#id}
      */
     String getId() {
         return id;
     }
 
     /**
-     * Get the {@code type} for this {@code CampaignRuleConsequence} instance.
+     * Get the {@code type} for this {@code MessagingRuleConsequence} instance.
      *
-     * @return {@link String} containing this {@link MessagingRuleConsequence#type}
+     * @return {@link String} containing this {@link MessagingConsequence#type}
      */
     String getType() {
         return type;
     }
 
     /**
-     * Get the {@code detail} Map for this {@code CampaignRuleConsequence} instance.
+     * Get the {@code detail} Map for this {@code MessagingRuleConsequence} instance.
      *
-     * @return {@code Map<String,Variant>} containing this {@link MessagingRuleConsequence#detail}
+     * @return {@code Map<String,Variant>} containing this {@link MessagingConsequence#details}
      */
-    Map<String, Variant> getDetail() {
-        return detail;
+    Map<String, Variant> getDetails() {
+        return details;
     }
 }

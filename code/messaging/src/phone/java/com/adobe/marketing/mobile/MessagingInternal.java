@@ -641,12 +641,12 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 final Variant consequenceAsVariant = Variant.fromTypedObject(consequenceJsonArray.getJSONObject(i),
                         new JsonObjectVariantSerializer(jsonUtilityService));
 
-                MessagingRuleConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingRuleConsequenceSerializer());
+                MessagingConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingConsequenceSerializer());
 
                 if (consequence != null) {
 
                     final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
-                            new MessagingRuleConsequenceSerializer()).getVariantMap();
+                            new MessagingConsequenceSerializer()).getVariantMap();
 
                     EventData eventData = new EventData();
                     eventData.putVariantMap(MessagingConstant.EventDataKeys.MessagingRuleEngine.CONSEQUENCE_TRIGGERED,
