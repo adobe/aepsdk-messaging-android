@@ -70,6 +70,8 @@ final class MessagingConstant {
 
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
+            static final String REFRESH_MESSAGES = "refreshmessages";
+
             private Messaging() {
             }
 
@@ -99,17 +101,63 @@ final class MessagingConstant {
                 private PushNotificationDetailsDataKeys() {}
             }
         }
+
+        static final class Offers {
+            static final String PROPOSITIONS = "propositions";
+            static final String DECISION_SCOPES = "decisionscopes";
+            static final String ACTIVITY_ID = "activityId";
+            static final String PLACEMENT_ID = "placementId";
+            static final String ITEM_COUNT = "itemCount";
+            static final String ERROR = "error";
+            static final String TYPE = "type";
+            static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
+            static final String PREFETCH = "prefetch";
+            static final String RETRIEVE = "retrieve";
+            static final String REQUEST_EVENT_ID = "requestEventId";
+            static final String XDM_QUERY = "query";
+            static final String XDM = "xdm";
+            static final String DATA = "data";
+            static final String DATASET_ID = "datasetId";
+            static final String XDM_EVENT_TYPE = "eventType";
+            static final String PERSONALIZATION_REQUEST = "personalization.request";
+            static final String PAYLOAD = "payload";
+            static final String ACTIVITY = "activity";
+            static final String PLACEMENT = "placement";
+            static final String ID = "id";
+            static final String ITEMS = "items";
+            static final String CONTENT = "content";
+
+            private Offers() {}
+        }
+
+        static final class MessagingRuleEngine {
+            static final String JSON_KEY = "rules";
+            static final String JSON_CONDITION_KEY = "condition";
+            static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String MESSAGE_CONSEQUENCE_ID = "id";
+            static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+            static final String MESSAGE_CONSEQUENCE_MESSAGE_TYPE = "cjmiam";
+            private MessagingRuleEngine() {}
+        }
     }
 
     static final class EventType {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
+        static final String OFFERS = "com.adobe.eventType.offerDecisioning";
     }
 
     static final class EventName {
         static final String MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
         static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        static final String MESSAGING_REFRESH_IAM = "Refresh In-App Messages";
+    }
+
+    static final class EventSource {
+        static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
     }
 
     static final class EventDataValues {

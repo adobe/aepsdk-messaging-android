@@ -21,6 +21,7 @@ import android.os.SystemClock
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.MobileCore
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -30,6 +31,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         btn_getLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
+        }
+        btn_triggerIAM.setOnClickListener {
+            val contextData = HashMap<String, String>()
+            contextData.put("testShowMessage", "true")
+            MobileCore.trackAction("testShowMessage", contextData)
         }
         intent?.extras?.apply {
             if (getString(FROM) == "action") {
