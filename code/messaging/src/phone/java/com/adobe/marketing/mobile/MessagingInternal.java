@@ -15,6 +15,7 @@ import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMD
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
@@ -55,6 +56,14 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     private final MessagingState messagingState;
     private ExecutorService executorService;
     private final Object executorMutex = new Object();
+    private Module messagingModule;
+
+    // testing
+//    private final String POC_ACTIVITY_ID = "xcore:offer-activity:1315ce8f616d30e9";
+//    private final String POC_PLACEMENT_ID = "xcore:offer-placement:1315cd7dc3ed30e1";
+    private final String POC_ACTIVITY_ID_MULTI = "xcore:offer-activity:1323dbe94f2eef93";
+    private final String POC_PLACEMENT_ID_MULTI = "xcore:offer-placement:1323d9eb43aacada";
+    private final int MAX_ITEM_COUNT = 30;
 
     /**
      * Constructor.
@@ -64,11 +73,13 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * The following listeners are registered during this extension's registration.
      * <ul>
      *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
-     *      *     and EventSource {@link EventSource#SHARED_STATE}</li>
+     *           and EventSource {@link EventSource#SHARED_STATE}</li>
      *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
-     *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
+     *          and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link ListenerIdentityRequestContent} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
-     * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
+     * 	        and EventSource {@link EventSource#REQUEST_CONTENT}</li>
+     *      <li> {@link ListenerOffersPersonalizationDecisions} listening to event with eventType {@link MessagingConstant.EventType#EDGE}
+     * 	        and EventSource {@link MessagingConstant.EventSource#PERSONALIZATION_DECISIONS}</li>
      * </ul>
      *
      * @param extensionApi {@link ExtensionApi} instance
@@ -79,6 +90,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
         // Init the messaging state
         messagingState = new MessagingState();
+
+        // create a module to get access to the rules engine for adding ODE rules
+        messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {};
     }
 
     /**
@@ -123,9 +137,14 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstant.EventType.EDGE, MessagingConstant.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
 
         Log.debug(MessagingConstant.LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstant.EXTENSION_VERSION);
+
+        // fetch messages from offers
+        fetchMessages();
     }
 
     /**
@@ -196,6 +215,12 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 return;
             }
 
+            // refresh in-app messages from offers
+            if (eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
+                fetchMessages();
+                return;
+            }
+
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (edgeIdentitySharedState == null) {
                 Log.warning(MessagingConstant.LOG_TAG,
@@ -219,9 +244,12 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                     Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
                     return;
                 }
-
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
+            // validate the offer event then load any rules present
+            } else if (MessagingConstant.EventType.EDGE.equalsIgnoreCase(eventToProcess.getType()) &&
+                    MessagingConstant.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(eventToProcess.getSource())) {
+                handleOfferNotification(eventToProcess);
             }
 
             // event processed, remove it from the queue
@@ -471,6 +499,183 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
     }
 
+    // Rules retrieval and processing
+    /**
+     * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
+     */
+    private void fetchMessages() {
+        // create event to be handled by offers
+        final EventData eventData = new EventData();
+        eventData.putString(MessagingConstant.EventDataKeys.Offers.TYPE, MessagingConstant.EventDataKeys.Offers.PREFETCH);
+        final HashMap<String, Variant> decisionScopes = new HashMap<>();
+        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
+        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(POC_ACTIVITY_ID_MULTI));
+        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(POC_PLACEMENT_ID_MULTI));
+        eventData.putVariantMap(MessagingConstant.EventDataKeys.Offers.DECISION_SCOPES, decisionScopes);
+
+        final Event messageFetchEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_REFRESH_IAM, MessagingConstant.EventType.OFFERS, EventSource.REQUEST_CONTENT.getName())
+                .setData(eventData)
+                .build();
+
+        // send event
+        MobileCore.dispatchEvent(messageFetchEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "%s - Error in dispatching event for fetching messages from Offers.", SELF_TAG);
+            }
+        });
+    }
+
+    /**
+     * Converts the rules json present in the Edge response event payload into a
+     * list of rules then loads them in the rules engine.
+     */
+    private void handleOfferNotification(final Event event) {
+        final JSONObject payload = (JSONObject) event.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
+        if (payload == null || payload.length() == 0) {
+            return;
+        }
+
+        String rulesJsonString = null;
+        try {
+            final JSONObject activity = payload.getJSONObject(MessagingConstant.EventDataKeys.Offers.ACTIVITY);
+            final JSONObject placement = payload.getJSONObject(MessagingConstant.EventDataKeys.Offers.PLACEMENT);
+            final String offerActivityId = (String) activity.get(MessagingConstant.EventDataKeys.Offers.ID);
+            final String offerPlacementId = (String) placement.get(MessagingConstant.EventDataKeys.Offers.ID);
+            if (!offerActivityId.equals(POC_ACTIVITY_ID_MULTI) || !offerPlacementId.equals(POC_PLACEMENT_ID_MULTI)) {
+                return;
+            }
+            final JSONObject items = payload.getJSONArray(MessagingConstant.EventDataKeys.Offers.ITEMS).getJSONObject(0);
+            rulesJsonString = items.getJSONObject(MessagingConstant.EventDataKeys.Offers.DATA).getString(MessagingConstant.EventDataKeys.Offers.CONTENT);
+        } catch (Exception e) {
+            Log.debug(LOG_TAG, "handleOfferNotification -  JSON exception when attempting to retrieve rules json from the edge response event: %s", e.getLocalizedMessage());
+        }
+
+        List<Rule> rulesList;
+        final JsonUtilityService.JSONObject rulesJsonObject = getJsonUtilityService().createJSONObject(rulesJsonString);
+        rulesList = parseRulesFromJsonObject(rulesJsonObject);
+        messagingModule.replaceRules(rulesList);
+    }
+
+    /**
+     * Parses all rules from the provided {@code jsonObject} into a list of {@code Rules}s.
+     * <p>
+     * If input {@code jsonObject} is null or, if there is an error reading {@link JsonUtilityService.JSONArray} from it,
+     * empty {@code List<Rule>} is returned.
+     *
+     * @param jsonObject {@code JSONObject} containing the list of rules and consequences
+     * @return a {@code List} of {@code Rule} objects that were parsed from the input {@code jsonObject}
+     */
+    private List<Rule> parseRulesFromJsonObject(final JsonUtilityService.JSONObject jsonObject) {
+        final List<Rule> parsedRules = new ArrayList<>();
+
+        if (jsonObject == null) {
+            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.");
+            return parsedRules;
+        }
+
+        JsonUtilityService.JSONArray rulesJsonArray;
+
+        try {
+            rulesJsonArray = jsonObject.getJSONArray(MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_KEY);
+        } catch (final JsonException e) {
+            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules (%s)", e);
+            return parsedRules;
+        }
+
+        // loop through each rule definition
+        for (int i = 0; i < rulesJsonArray.length(); i++) {
+            try {
+                // get individual rule json object
+                final JsonUtilityService.JSONObject ruleObject = rulesJsonArray.getJSONObject(i);
+                // get rule condition
+                final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(
+                        MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_CONDITION_KEY);
+                final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
+                // get consequences
+                final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
+                        MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_CONSEQUENCES_KEY));
+
+                parsedRules.add(new Rule(condition, consequences));
+            } catch (final JsonException e) {
+                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e);
+            } catch (final UnsupportedConditionException e) {
+                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", e);
+            } catch (final IllegalArgumentException e) {
+                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to create rule object (%s)", e);
+            }
+        }
+
+        return parsedRules;
+    }
+
+    /**
+     * Parses {@code MessagingRuleConsequence} objects from the given {@code consequenceJsonArray} and converts them
+     * into a list of {@code Event}s.
+     * <p>
+     * @param consequenceJsonArray {@link JsonUtilityService.JSONArray} object containing 1 or more rule consequence definitions
+     * @return a {@code List} of consequence {@code Event} objects.
+     *
+     * @throws JsonException if errors occur during parsing
+     */
+    private List<Event> generateConsequenceEvents(final JsonUtilityService.JSONArray consequenceJsonArray) throws
+            JsonException {
+        final List<Event> parsedEvents = new ArrayList<Event>();
+
+        if (consequenceJsonArray == null) {
+            Log.debug(LOG_TAG,
+                    "generateConsequenceEvents -  The passed in consequence array is null, so returning an empty consequence events list.");
+            return  parsedEvents;
+        }
+
+        JsonUtilityService jsonUtilityService = getJsonUtilityService();
+
+        if (jsonUtilityService == null) {
+            Log.debug(LOG_TAG,
+                    "generateConsequenceEvents -  JsonUtility service is not available, returning empty consequence events list.");
+            return parsedEvents;
+        }
+
+        for (int i = 0; i < consequenceJsonArray.length(); i++) {
+            try {
+                final Variant consequenceAsVariant = Variant.fromTypedObject(consequenceJsonArray.getJSONObject(i),
+                        new JsonObjectVariantSerializer(jsonUtilityService));
+
+                MessagingRuleConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingRuleConsequenceSerializer());
+
+                if (consequence != null) {
+
+                    final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
+                            new MessagingRuleConsequenceSerializer()).getVariantMap();
+
+                    EventData eventData = new EventData();
+                    eventData.putVariantMap(MessagingConstant.EventDataKeys.MessagingRuleEngine.CONSEQUENCE_TRIGGERED,
+                            consequenceVariantMap);
+
+                    final Event event;
+
+                    if (consequence.getType().equals(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_MESSAGE_TYPE)) {
+                        event = new Event.Builder("Rules Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+                                .setData(eventData)
+                                .build();
+                    } else {
+                        event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                                .setData(eventData)
+                                .build();
+                    }
+
+                    parsedEvents.add(event);
+                }
+            } catch (VariantException ex) {
+                // shouldn't ever happen, but just in case
+                Log.warning(MessagingConstant.LOG_TAG,
+                        "Unable to convert consequence json object to a variant.");
+            }
+        }
+
+        return parsedEvents;
+    }
+
     // ========================================================================================
     // Getters for private members
     // ========================================================================================
@@ -520,5 +725,22 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
 
         return stateOwnerName.equals(stateOwner);
+    }
+
+    /**
+     * Returns platform {@code JsonUtilityService} instance.
+     *
+     * @return {@link JsonUtilityService} or null if {@link PlatformServices} are unavailable
+     */
+    private JsonUtilityService getJsonUtilityService() {
+        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
+            return null;
+        }
+
+        return platformServices.getJsonUtilityService();
     }
 }

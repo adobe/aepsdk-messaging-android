@@ -22,6 +22,7 @@ import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messagi
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
@@ -145,6 +146,25 @@ public final class Messaging {
             @Override
             public void error(ExtensionError extensionError) {
                 Log.error(LOG_TAG, "%s - Failed to track notification interactions: Error %s", SELF_TAG, extensionError.toString());
+            }
+        });
+    }
+
+    /**
+     * Initiates a network call to retrieve remote In-App Message definitions from Offers.
+     */
+    public static void refreshInAppMessages() {
+        final EventData eventData = new EventData();
+        eventData.putBoolean(REFRESH_MESSAGES, true);
+
+        final Event refreshMessageEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_REFRESH_IAM,
+                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+                .setData(eventData)
+                .build();
+        MobileCore.dispatchEvent(refreshMessageEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "%s - Failed to refresh in-app messages: Error %s", SELF_TAG, extensionError.toString());
             }
         });
     }
