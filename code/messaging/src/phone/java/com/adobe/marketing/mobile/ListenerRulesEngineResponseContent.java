@@ -13,15 +13,15 @@
 package com.adobe.marketing.mobile;
 
 /**
- * Listens for {@link MessagingConstant.EventType#EDGE}, {@link MessagingConstant.EventSource#PERSONALIZATION_DECISIONS} events.
+ * Listens for {@link EventType#RULES_ENGINE}, {@link EventSource#RESPONSE_CONTENT} events.
  *
  * <p>
- * Monitor Messaging Request content events for sending push notification tracking information.
+ * Monitor Rules response content events containing message definitions.
  * @see MessagingInternal
  */
-public class ListenerOffersPersonalizationDecisions extends ExtensionListener {
-    private final String SELF_TAG = "ListenerOffersPersonalizationDecisions";
-    ListenerOffersPersonalizationDecisions(final ExtensionApi extensionApi, final String type, final String source) {
+public class ListenerRulesEngineResponseContent extends ExtensionListener {
+    private final String SELF_TAG = "ListenerRulesEngineResponseContent";
+    ListenerRulesEngineResponseContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
 

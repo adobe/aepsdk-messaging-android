@@ -80,6 +80,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * 	        and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link ListenerOffersPersonalizationDecisions} listening to event with eventType {@link MessagingConstant.EventType#EDGE}
      * 	        and EventSource {@link MessagingConstant.EventSource#PERSONALIZATION_DECISIONS}</li>
+     *      <li> {@link ListenerRulesEngineResponseContent} listening to event with eventType {@link EventType#RULES_ENGINE}
+     * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      * </ul>
      *
      * @param extensionApi {@link ExtensionApi} instance
@@ -137,8 +139,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
-        extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstant.EventType.EDGE, MessagingConstant.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerRulesEngineResponseContent.class, listenerErrorCallback);
 
         Log.debug(MessagingConstant.LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstant.EXTENSION_VERSION);
@@ -233,12 +235,10 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
             if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
             } else if (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-
                 // Need experience event dataset id for sending the push token
                 if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
                     Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
@@ -246,12 +246,17 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-            // validate the offer event then load any rules present
+                return;
+            // validate the edge response event from Offers then load any rules present
             } else if (MessagingConstant.EventType.EDGE.equalsIgnoreCase(eventToProcess.getType()) &&
                     MessagingConstant.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(eventToProcess.getSource())) {
                 handleOfferNotification(eventToProcess);
+                return;
+            // handle rules response events containing message definitions
+            } else if(eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
+                createInAppMessage(eventToProcess);
+                return;
             }
-
             // event processed, remove it from the queue
             eventQueue.poll();
         }
@@ -499,7 +504,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
     }
 
+    // ========================================================================================
     // Rules retrieval and processing
+    // ========================================================================================
     /**
      * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
      */
@@ -529,9 +536,10 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     /**
      * Converts the rules json present in the Edge response event payload into a
      * list of rules then loads them in the rules engine.
+     * @param edgeResponseEvent An Edge {@link Event} containing a personalization decision payload retrieved from Offers.
      */
-    private void handleOfferNotification(final Event event) {
-        final JSONObject payload = (JSONObject) event.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
+    private void handleOfferNotification(final Event edgeResponseEvent) {
+        final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
         if (payload == null || payload.length() == 0) {
             return;
         }
@@ -577,7 +585,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         JsonUtilityService.JSONArray rulesJsonArray;
 
         try {
-            rulesJsonArray = jsonObject.getJSONArray(MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_KEY);
+            rulesJsonArray = jsonObject.getJSONArray(MessagingConstant.EventDataKeys.RulesEngine.JSON_KEY);
         } catch (final JsonException e) {
             Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules (%s)", e);
             return parsedRules;
@@ -590,11 +598,11 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 final JsonUtilityService.JSONObject ruleObject = rulesJsonArray.getJSONObject(i);
                 // get rule condition
                 final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(
-                        MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_CONDITION_KEY);
+                        MessagingConstant.EventDataKeys.RulesEngine.JSON_CONDITION_KEY);
                 final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
                 // get consequences
                 final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
-                        MessagingConstant.EventDataKeys.MessagingRuleEngine.JSON_CONSEQUENCES_KEY));
+                        MessagingConstant.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY));
 
                 parsedRules.add(new Rule(condition, consequences));
             } catch (final JsonException e) {
@@ -610,7 +618,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     }
 
     /**
-     * Parses {@code MessagingRuleConsequence} objects from the given {@code consequenceJsonArray} and converts them
+     * Parses {@code MessagingConsequence} objects from the given {@code consequenceJsonArray} and converts them
      * into a list of {@code Event}s.
      * <p>
      * @param consequenceJsonArray {@link JsonUtilityService.JSONArray} object containing 1 or more rule consequence definitions
@@ -644,25 +652,16 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 MessagingConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingConsequenceSerializer());
 
                 if (consequence != null) {
-
                     final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
                             new MessagingConsequenceSerializer()).getVariantMap();
 
                     EventData eventData = new EventData();
-                    eventData.putVariantMap(MessagingConstant.EventDataKeys.MessagingRuleEngine.CONSEQUENCE_TRIGGERED,
+                    eventData.putVariantMap(MessagingConstant.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
                             consequenceVariantMap);
 
-                    final Event event;
-
-                    if (consequence.getType().equals(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_MESSAGE_TYPE)) {
-                        event = new Event.Builder("Rules Event", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+                    final Event event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
                                 .setData(eventData)
                                 .build();
-                    } else {
-                        event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
-                                .setData(eventData)
-                                .build();
-                    }
 
                     parsedEvents.add(event);
                 }
@@ -674,6 +673,17 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
 
         return parsedEvents;
+    }
+
+    // ========================================================================================
+    // In-app message creation and display
+    // ========================================================================================
+    /**
+     * Creates an in-app message object then attempts to display it.
+     * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
+     */
+    private void createInAppMessage(final Event rulesEvent) {
+        // TODO: validate in app message. if valid, create in app message and attempt to display / schedule it.
     }
 
     // ========================================================================================

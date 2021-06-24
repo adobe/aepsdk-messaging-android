@@ -37,15 +37,15 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
         Map<String, Variant> map = new HashMap<>();
 
         String id = consequence.getId();
-        map.put(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_ID, (id == null) ? Variant.fromNull() :
+        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, (id == null) ? Variant.fromNull() :
                 Variant.fromString(consequence.getId()));
 
         String type = consequence.getType();
-        map.put(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_TYPE, (type == null) ? Variant.fromNull() :
+        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, (type == null) ? Variant.fromNull() :
                 Variant.fromString(consequence.getType()));
 
         Map<String, Variant> detailMap = consequence.getDetails();
-        map.put(MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_DETAIL,
+        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
                 (detailMap == null) ? Variant.fromNull() :
                         Variant.fromVariantMap(consequence.getDetails()));
 
@@ -81,7 +81,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
 
         // id - required field
         final String id = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_ID).optString(null);
+                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID).optString(null);
 
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(MessagingConstant.LOG_TAG,
@@ -91,7 +91,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
 
         // type - required field
         final String type = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_TYPE).optString(null);
+                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE).optString(null);
 
         if (StringUtils.isNullOrEmpty(type)) {
             Log.warning(MessagingConstant.LOG_TAG,
@@ -101,7 +101,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
 
         // detail - required field
         final Map<String, Variant> detail = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.MessagingRuleEngine.MESSAGE_CONSEQUENCE_DETAIL).optVariantMap(null);
+                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL).optVariantMap(null);
 
         if (detail == null || detail.isEmpty()) {
             Log.warning(MessagingConstant.LOG_TAG,

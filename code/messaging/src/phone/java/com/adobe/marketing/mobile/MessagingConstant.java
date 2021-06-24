@@ -130,7 +130,7 @@ final class MessagingConstant {
             private Offers() {}
         }
 
-        static final class MessagingRuleEngine {
+        static final class RulesEngine {
             static final String JSON_KEY = "rules";
             static final String JSON_CONDITION_KEY = "condition";
             static final String JSON_CONSEQUENCES_KEY = "consequences";
@@ -138,8 +138,7 @@ final class MessagingConstant {
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
-            static final String MESSAGE_CONSEQUENCE_MESSAGE_TYPE = "cjmiam";
-            private MessagingRuleEngine() {}
+            private RulesEngine() {}
         }
     }
 
