@@ -218,8 +218,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             }
 
             // refresh in-app messages from offers
-            if (eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
+            if (eventToProcess.getEventData() != null && eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
                 fetchMessages();
+                eventQueue.poll();
                 return;
             }
 
@@ -246,16 +247,13 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-                return;
             // validate the edge response event from Offers then load any rules present
             } else if (MessagingConstant.EventType.EDGE.equalsIgnoreCase(eventToProcess.getType()) &&
                     MessagingConstant.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(eventToProcess.getSource())) {
                 handleOfferNotification(eventToProcess);
-                return;
             // handle rules response events containing message definitions
             } else if(eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
                 createInAppMessage(eventToProcess);
-                return;
             }
             // event processed, remove it from the queue
             eventQueue.poll();

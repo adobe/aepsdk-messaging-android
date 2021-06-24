@@ -64,6 +64,8 @@ public class MessagingInternalTests {
     Application mockApplication;
     @Mock
     Context context;
+    @Mock
+    Core mockCore;
 
     @Before
     public void setup() {
@@ -71,6 +73,7 @@ public class MessagingInternalTests {
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         Mockito.when(App.getAppContext()).thenReturn(context);
+        Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
@@ -216,8 +219,8 @@ public class MessagingInternalTests {
         // verify
         verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockEvent, times(2)).getType();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        verify(mockEvent, times(3)).getType();
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 
     @Test
@@ -249,8 +252,8 @@ public class MessagingInternalTests {
         verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockEvent, times(1)).getType();
         verify(mockEvent, times(1)).getSource();
-        verify(mockEvent, times(1)).getEventData();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        verify(mockEvent, times(2)).getEventData();
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 
     @Test
@@ -284,7 +287,7 @@ public class MessagingInternalTests {
         verify(mockEvent, times(2)).getType();
         verify(mockEvent, times(1)).getSource();
         verify(mockEvent, times(1)).getData();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 
     // ========================================================================================
@@ -317,7 +320,8 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 2 events dispatched: Offers iam fetch event when extension is registered + edge event with push profile data
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -349,7 +353,8 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        // 1 event dispatched: Offers iam fetch event when extension is registered
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
@@ -372,7 +377,8 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        // 1 event dispatched: Offers iam fetch event when extension is registered
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
@@ -398,7 +404,8 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        // 1 event dispatched: Offers iam fetch event when extension is registered
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
@@ -433,7 +440,8 @@ public class MessagingInternalTests {
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 2 events dispatched: Offers iam fetch event when extension is registered + edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -468,7 +476,8 @@ public class MessagingInternalTests {
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 2 events dispatched: Offers iam fetch event when extension is registered + edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -516,7 +525,8 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 2 events dispatched: Offers iam fetch event when extension is registered + edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
