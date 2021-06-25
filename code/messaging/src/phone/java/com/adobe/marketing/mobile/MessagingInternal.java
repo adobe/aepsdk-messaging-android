@@ -250,9 +250,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             // validate the edge response event from Offers then load any rules present
             } else if (MessagingConstant.EventType.EDGE.equalsIgnoreCase(eventToProcess.getType()) &&
                     MessagingConstant.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(eventToProcess.getSource())) {
-                handleOfferNotification(eventToProcess);
+                handleOfferNotificationPayload(eventToProcess);
             // handle rules response events containing message definitions
-            } else if(eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
+            } else if (isMessagingConsequenceEvent(eventToProcess)) {
                 createInAppMessage(eventToProcess);
             }
             // event processed, remove it from the queue
@@ -515,7 +515,22 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
 
         return event.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)
-                && (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(event.getType()) && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource()));
+                && MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+    }
+
+    /**
+     * @param event A Rules Response Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a messaging consequence event.
+     */
+    private boolean isMessagingConsequenceEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return event.getEventData().containsKey(MessagingConstant.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED)
+                && EventType.RULES_ENGINE.getName().equalsIgnoreCase(event.getType())
+                && EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(event.getSource());
     }
 
     /**
@@ -552,7 +567,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * list of rules then loads them in the rules engine.
      * @param edgeResponseEvent An Edge {@link Event} containing a personalization decision payload retrieved from Offers.
      */
-    private void handleOfferNotification(final Event edgeResponseEvent) {
+    private void handleOfferNotificationPayload(final Event edgeResponseEvent) {
         final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
         if (payload == null || payload.length() == 0) {
             return;
@@ -617,8 +632,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 // get consequences
                 final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
                         MessagingConstant.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY));
-
-                parsedRules.add(new Rule(condition, consequences));
+                if(consequences.size() > 0) {
+                    parsedRules.add(new Rule(condition, consequences));
+                }
             } catch (final JsonException e) {
                 Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e);
             } catch (final UnsupportedConditionException e) {
@@ -642,7 +658,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     private List<Event> generateConsequenceEvents(final JsonUtilityService.JSONArray consequenceJsonArray) throws
             JsonException {
-        final List<Event> parsedEvents = new ArrayList<Event>();
+        final List<Event> parsedEvents = new ArrayList<>();
 
         if (consequenceJsonArray == null) {
             Log.debug(LOG_TAG,

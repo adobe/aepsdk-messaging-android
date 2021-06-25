@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile;
 import android.app.Application;
 import android.content.Context;
 
-import org.junit.Assert;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +29,7 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
@@ -47,6 +48,9 @@ import static org.mockito.Mockito.when;
 public class MessagingInternalTests {
 
     private MessagingInternal messagingInternal;
+    private AndroidPlatformServices platformServices;
+    private JsonUtilityService jsonUtilityService;
+    private EventHub eventHub;
 
     // Mocks
     @Mock
@@ -67,14 +71,21 @@ public class MessagingInternalTests {
     Context context;
     @Mock
     Core mockCore;
+    @Mock
+    AndroidPlatformServices mockPlatformServices;
 
     @Before
     public void setup() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
+        platformServices = new AndroidPlatformServices();
+        jsonUtilityService = platformServices.getJsonUtilityService();
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
         Mockito.when(App.getAppContext()).thenReturn(context);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
+        Mockito.when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
@@ -94,10 +105,10 @@ public class MessagingInternalTests {
                 eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.EDGE),
-                eq(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+                eq(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerOffersPersonalizationDecisions.class), any(ExtensionErrorCallback.class));
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
-                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerRulesEngineResponseContent.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -619,8 +630,7 @@ public class MessagingInternalTests {
     public void test_fetchMessages_CalledOnExtensionStart() {
         // setup
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        EventData eventData = new EventData();
-        eventData.putBoolean(REFRESH_MESSAGES, true);
+        // expected dispatched event data
         String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
 
         // verify dispatch event is called
@@ -638,8 +648,10 @@ public class MessagingInternalTests {
     public void test_refreshInAppMessages_Invoked() {
         // setup
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        // trigger event
         EventData eventData = new EventData();
         eventData.putBoolean(REFRESH_MESSAGES, true);
+        // expected dispatched event data
         String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
 
         // Mocks
@@ -658,7 +670,7 @@ public class MessagingInternalTests {
         messagingInternal.processEvents();
 
         // verify dispatch event is called
-        // 2 events dispatched: Offers iam fetch event when extension is registered + Offers iam fetch event when refresh in app messages api invoked
+        // 2 events dispatched: Offers iam fetch event when extension is registered + Offers iam fetch event when refresh in app messages event is received
         PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
@@ -672,36 +684,265 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test() {
+    public void test_handleEdgeResponseEvent_ValidOffersIAMPayloadPresent() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        MessagingInternal spy = Mockito.spy(messagingInternal);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"type\\\": \\\"cjmiam\\\", \\\"detail\\\": { \\\"remoteAssets\\\": [], \\\"html\\\": \\\"<html><head><\\/head><body bgcolor=\\\\\\\"black\\\\\\\"><br \\/><br \\/><br \\/><br \\/><br \\/><br \\/><h1 align=\\\\\\\"center\\\\\\\" style=\\\\\\\"color: white;\\\\\\\">IN-APP MESSAGING POWERED BY <br \\/>OFFER DECISIONING<\\/h1><h1 align=\\\\\\\"center\\\\\\\"><a style=\\\\\\\"color: white;\\\\\\\" href=\\\\\\\"adbinapp:\\/\\/cancel\\\\\\\" >dismiss me<\\/a><\\/h1><\\/body><\\/html>\\\", \\\"template\\\": \\\"fullscreen\\\" } } ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+        // expected messaging consequence payload
+        String expectedIAMPayload = "{\n" +
+                "        \"triggeredconsequence\" : {\n" +
+                "            \"id\" : \"341800180\",\n" +
+                "            \"detail\" : {\n" +
+                "                \"template\" : \"fullscreen\",\n" +
+                "                \"html\" : \"<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>\",\n" +
+                "                \"remoteAssets\" : [ ]\n" +
+                "            },\n" +
+                "            \"type\" : \"cjmiam\"\n" +
+                "        }\n" +
+                "    }";
+
         // Mocks
         Event mockEvent = mock(Event.class);
 
-        // when mock event getType called return MESSAGING
-        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.MESSAGING);
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.EDGE);
 
-        // when mock event getSource called return REQUEST_CONTENT
-        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS);
 
-        when(mockEvent.getEventData()).thenReturn(null);
-
-        // when configState containsKey return true
-        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
-                any(ExtensionErrorCallback.class))).thenReturn(mockConfigData);
-        when(mockConfigData.containsKey(anyString())).thenReturn(true);
-
-        when(mockExtensionApi.getXDMSharedEventState(anyString(), any(Event.class),
-                any(ExtensionErrorCallback.class))).thenReturn(mockEdgeIdentityData);
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify
-        verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockEvent, times(2)).getType();
-        verify(mockEvent, times(1)).getSource();
-        verify(mockEvent, times(1)).getData();
-        assertEquals(0, messagingInternal.getEventQueue().size());
+        // verify rule loaded
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        Map.Entry<Module, ConcurrentLinkedQueue<Rule>> entry = (Map.Entry) loadedRules.entrySet().iterator().next();
+        Rule loadedRule = entry.getValue().remove();
+        assertTrue(loadedRule.toString().contains(expectedIAMPayload));
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageId() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        MessagingInternal spy = Mockito.spy(messagingInternal);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"type\\\": \\\"cjmiam\\\", \\\"detail\\\": { \\\"remoteAssets\\\": [], \\\"html\\\": \\\"<html><head><\\/head><body bgcolor=\\\\\\\"black\\\\\\\"><br \\/><br \\/><br \\/><br \\/><br \\/><br \\/><h1 align=\\\\\\\"center\\\\\\\" style=\\\\\\\"color: white;\\\\\\\">IN-APP MESSAGING POWERED BY <br \\/>OFFER DECISIONING<\\/h1><h1 align=\\\\\\\"center\\\\\\\"><a style=\\\\\\\"color: white;\\\\\\\" href=\\\\\\\"adbinapp:\\/\\/cancel\\\\\\\" >dismiss me<\\/a><\\/h1><\\/body><\\/html>\\\", \\\"template\\\": \\\"fullscreen\\\" } } ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        Map.Entry<Module, ConcurrentLinkedQueue<Rule>> entry = (Map.Entry) loadedRules.entrySet().iterator().next();
+        assertEquals(0, entry.getValue().size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageType() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        MessagingInternal spy = Mockito.spy(messagingInternal);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"detail\\\": { \\\"remoteAssets\\\": [], \\\"html\\\": \\\"<html><head><\\/head><body bgcolor=\\\\\\\"black\\\\\\\"><br \\/><br \\/><br \\/><br \\/><br \\/><br \\/><h1 align=\\\\\\\"center\\\\\\\" style=\\\\\\\"color: white;\\\\\\\">IN-APP MESSAGING POWERED BY <br \\/>OFFER DECISIONING<\\/h1><h1 align=\\\\\\\"center\\\\\\\"><a style=\\\\\\\"color: white;\\\\\\\" href=\\\\\\\"adbinapp:\\/\\/cancel\\\\\\\" >dismiss me<\\/a><\\/h1><\\/body><\\/html>\\\", \\\"template\\\": \\\"fullscreen\\\" } } ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        Map.Entry<Module, ConcurrentLinkedQueue<Rule>> entry = (Map.Entry) loadedRules.entrySet().iterator().next();
+        assertEquals(0, entry.getValue().size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageDetail() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        MessagingInternal spy = Mockito.spy(messagingInternal);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"type\\\": \\\"cjmiam\\\"} ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        Map.Entry<Module, ConcurrentLinkedQueue<Rule>> entry = (Map.Entry) loadedRules.entrySet().iterator().next();
+        assertEquals(0, entry.getValue().size());
+    }
+    // ========================================================================================
+    // Helpers
+    // ========================================================================================
+    private void waitFor(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            fail("thread sleep error: " + e.getLocalizedMessage());
+        }
     }
 }
