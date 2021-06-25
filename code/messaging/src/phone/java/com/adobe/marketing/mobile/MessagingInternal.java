@@ -217,8 +217,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 return;
             }
 
-            // refresh in-app messages from offers
-            if (eventToProcess.getEventData() != null && eventToProcess.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)) {
+            // validate fetch messages event then refresh in-app messages from offers
+            if (isFetchMessagesEvent(eventToProcess)) {
                 fetchMessages();
                 eventQueue.poll();
                 return;
@@ -287,7 +287,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                         extensionError.getErrorName()));
             }
         };
-        Map<String, Object> map = new HashMap<>();
+        final HashMap<String, Object> map = new HashMap<>();
         map.put(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
         getApi().setSharedEventState(map, event, errorCallback);
 
@@ -506,20 +506,36 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     // Rules retrieval and processing
     // ========================================================================================
     /**
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a message fetch event.
+     */
+    private boolean isFetchMessagesEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return event.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)
+                && (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(event.getType()) && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource()));
+    }
+
+    /**
      * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
      */
     private void fetchMessages() {
         // create event to be handled by offers
-        final EventData eventData = new EventData();
-        eventData.putString(MessagingConstant.EventDataKeys.Offers.TYPE, MessagingConstant.EventDataKeys.Offers.PREFETCH);
-        final HashMap<String, Variant> decisionScopes = new HashMap<>();
-        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
-        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(POC_ACTIVITY_ID_MULTI));
-        decisionScopes.put(MessagingConstant.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(POC_PLACEMENT_ID_MULTI));
-        eventData.putVariantMap(MessagingConstant.EventDataKeys.Offers.DECISION_SCOPES, decisionScopes);
+        final ArrayList<Object> decisionScopes = new ArrayList<>();
+        final HashMap<String, Object> offersIdentifiers = new HashMap<>();
+        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
+        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(POC_ACTIVITY_ID_MULTI));
+        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(POC_PLACEMENT_ID_MULTI));
+        decisionScopes.add(offersIdentifiers);
+
+        final HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstant.EventDataKeys.Offers.TYPE, MessagingConstant.EventDataKeys.Offers.PREFETCH);
+        eventData.put(MessagingConstant.EventDataKeys.Offers.DECISION_SCOPES, decisionScopes);
 
         final Event messageFetchEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_REFRESH_IAM, MessagingConstant.EventType.OFFERS, EventSource.REQUEST_CONTENT.getName())
-                .setData(eventData)
+                .setEventData(eventData)
                 .build();
 
         // send event

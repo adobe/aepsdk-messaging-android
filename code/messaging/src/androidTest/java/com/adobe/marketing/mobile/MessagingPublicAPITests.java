@@ -368,6 +368,30 @@ public class MessagingPublicAPITests {
     }
 
     // --------------------------------------------------------------------------------------------
+    // Tests for Messaging.refreshInAppMessages API
+    // --------------------------------------------------------------------------------------------
+    @Test
+    public void testRefreshInAppMessages() throws InterruptedException {
+        // setup
+        String expectedMessagingEventData = "{\"refreshmessages\":true}";
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+        // test
+        Messaging.refreshInAppMessages();
+
+        // verify messaging request content event
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstant.EventType.MESSAGING,
+                EventSource.REQUEST_CONTENT.getName());
+        assertEquals(1, messagingRequestEvents.size());
+        assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
+
+        // verify offers request content event
+        List<Event> offersRequestEvents = getDispatchedEventsWith(MessagingConstant.EventType.OFFERS,
+                EventSource.REQUEST_CONTENT.getName());
+        assertEquals(1, offersRequestEvents.size());
+        assertEquals(expectedOffersEventData.trim(), offersRequestEvents.get(0).getData().toString());
+    }
+
+    // --------------------------------------------------------------------------------------------
     // Helpers
     // --------------------------------------------------------------------------------------------
     private Intent getResponseIntent() {

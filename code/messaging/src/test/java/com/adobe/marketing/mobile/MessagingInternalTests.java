@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
+import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -82,7 +83,7 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
-        // verify 4 listeners are registered
+        // verify 5 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
 
@@ -91,6 +92,12 @@ public class MessagingInternalTests {
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.HUB.getName()),
                 eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.EDGE),
+                eq(MessagingConstant.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -603,5 +610,98 @@ public class MessagingInternalTests {
 
         // verify
         assertEquals("Gets the same executor instance on the next get", executorService, messagingInternal.getExecutor());
+    }
+
+    // ========================================================================================
+    // Rules retrieval and processing
+    // ========================================================================================
+    @Test
+    public void test_fetchMessages_CalledOnExtensionStart() {
+        // setup
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        EventData eventData = new EventData();
+        eventData.putBoolean(REFRESH_MESSAGES, true);
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+
+        // verify dispatch event is called
+        // 1 events dispatched: Offers iam fetch event when extension is registered
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify events
+        Event event = eventCaptor.getAllValues().get(0);
+        assertNotNull(event.getData());
+        assertEquals(expectedOffersEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test_refreshInAppMessages_Invoked() {
+        // setup
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        EventData eventData = new EventData();
+        eventData.putBoolean(REFRESH_MESSAGES, true);
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+        // when mock event getType called return MESSAGING
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.MESSAGING);
+
+        // when mock event getSource called return REQUEST_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
+
+        // when get eventData called return data with "REFRESH_MESSAGES, true"
+        when(mockEvent.getEventData()).thenReturn(eventData.toObjectMap());
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify dispatch event is called
+        // 2 events dispatched: Offers iam fetch event when extension is registered + Offers iam fetch event when refresh in app messages api invoked
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify events
+        Event event = eventCaptor.getAllValues().get(0);
+        assertNotNull(event.getData());
+        assertEquals(expectedOffersEventData, event.getData().toString());
+        event = eventCaptor.getAllValues().get(1);
+        assertNotNull(event.getData());
+        assertEquals(expectedOffersEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test() {
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return MESSAGING
+        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.MESSAGING);
+
+        // when mock event getSource called return REQUEST_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
+
+        when(mockEvent.getEventData()).thenReturn(null);
+
+        // when configState containsKey return true
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockConfigData);
+        when(mockConfigData.containsKey(anyString())).thenReturn(true);
+
+        when(mockExtensionApi.getXDMSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockEdgeIdentityData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify
+        verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockEvent, times(2)).getType();
+        verify(mockEvent, times(1)).getSource();
+        verify(mockEvent, times(1)).getData();
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 }
