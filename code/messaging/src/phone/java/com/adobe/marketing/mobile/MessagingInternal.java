@@ -570,6 +570,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     private void handleOfferNotificationPayload(final Event edgeResponseEvent) {
         final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
         if (payload == null || payload.length() == 0) {
+            Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
             return;
         }
 
@@ -580,17 +581,17 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             final String offerActivityId = (String) activity.get(MessagingConstant.EventDataKeys.Offers.ID);
             final String offerPlacementId = (String) placement.get(MessagingConstant.EventDataKeys.Offers.ID);
             if (!offerActivityId.equals(POC_ACTIVITY_ID_MULTI) || !offerPlacementId.equals(POC_PLACEMENT_ID_MULTI)) {
+                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing. ");
                 return;
             }
             final JSONObject items = payload.getJSONArray(MessagingConstant.EventDataKeys.Offers.ITEMS).getJSONObject(0);
             rulesJsonString = items.getJSONObject(MessagingConstant.EventDataKeys.Offers.DATA).getString(MessagingConstant.EventDataKeys.Offers.CONTENT);
-        } catch (Exception e) {
-            Log.debug(LOG_TAG, "handleOfferNotification -  JSON exception when attempting to retrieve rules json from the edge response event: %s", e.getLocalizedMessage());
+        } catch (JSONException e) {
+            Log.debug(LOG_TAG, "handleOfferNotification - JSON exception when attempting to retrieve rules json from the edge response event: %s", e.getLocalizedMessage());
         }
 
-        List<Rule> rulesList;
         final JsonUtilityService.JSONObject rulesJsonObject = getJsonUtilityService().createJSONObject(rulesJsonString);
-        rulesList = parseRulesFromJsonObject(rulesJsonObject);
+        final  List<Rule> rulesList = parseRulesFromJsonObject(rulesJsonObject);
         messagingModule.replaceRules(rulesList);
     }
 
@@ -632,7 +633,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 // get consequences
                 final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
                         MessagingConstant.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY));
-                if(consequences.size() > 0) {
+                if(consequences != null) {
                     parsedRules.add(new Rule(condition, consequences));
                 }
             } catch (final JsonException e) {
@@ -696,9 +697,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                     parsedEvents.add(event);
                 }
             } catch (VariantException ex) {
-                // shouldn't ever happen, but just in case
                 Log.warning(MessagingConstant.LOG_TAG,
                         "Unable to convert consequence json object to a variant.");
+                return null;
             }
         }
 

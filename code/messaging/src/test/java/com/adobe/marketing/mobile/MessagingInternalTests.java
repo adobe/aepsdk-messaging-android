@@ -624,7 +624,7 @@ public class MessagingInternalTests {
     }
 
     // ========================================================================================
-    // Rules retrieval and processing
+    // IAM rules retrieval from Offers
     // ========================================================================================
     @Test
     public void test_fetchMessages_CalledOnExtensionStart() {
@@ -683,12 +683,14 @@ public class MessagingInternalTests {
         assertEquals(expectedOffersEventData, event.getData().toString());
     }
 
+    // ========================================================================================
+    // Offers rules payload processing
+    // ========================================================================================
     @Test
     public void test_handleEdgeResponseEvent_ValidOffersIAMPayloadPresent() throws Exception {
         // setup
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        MessagingInternal spy = Mockito.spy(messagingInternal);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -761,7 +763,6 @@ public class MessagingInternalTests {
         // setup
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        MessagingInternal spy = Mockito.spy(messagingInternal);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -821,7 +822,6 @@ public class MessagingInternalTests {
         // setup
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        MessagingInternal spy = Mockito.spy(messagingInternal);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -881,7 +881,6 @@ public class MessagingInternalTests {
         // setup
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        MessagingInternal spy = Mockito.spy(messagingInternal);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
