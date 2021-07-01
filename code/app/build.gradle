@@ -21,6 +21,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    applicationVariants.all { variant ->
+        variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
 }
 
 buildscript {
@@ -35,7 +38,7 @@ buildscript {
 }
 
 def adobeDependencies = [
-        core       : "com.adobe.marketing.mobile:core:+",
+        //core       : "com.adobe.marketing.mobile:core:+",
         userProfile: "com.adobe.marketing.mobile:userprofile:+",
         edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
         lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",
@@ -44,7 +47,7 @@ def adobeDependencies = [
 ]
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.firebase:firebase-messaging:21.1.0'
 

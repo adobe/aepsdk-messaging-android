@@ -24,16 +24,21 @@ import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 final class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
+
     // testing
     private final static String POC_ACTIVITY_ID_MULTI = "xcore:offer-activity:1323dbe94f2eef93";
     private final static String POC_PLACEMENT_ID_MULTI = "xcore:offer-placement:1323d9eb43aacada";
     private final static int MAX_ITEM_COUNT = 30;
     private final Module messagingModule;
+    private final MessagingInternal parent;
 
     /**
      * Constructor
+     *
+     * @param parent {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
      */
-    InAppNotificationHandler() {
+    InAppNotificationHandler(MessagingInternal parent) {
+        this.parent = parent;
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
@@ -213,12 +218,26 @@ final class InAppNotificationHandler {
     }
 
     /**
-     * Creates an in-app message object then attempts to display it.
+     * Create an in-app message object then attempt to display it.
      *
      * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
      */
     void createInAppMessage(final Event rulesEvent) {
-        // TODO: validate in app message. if valid, create in app message and attempt to display / schedule it.
+        final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
+        if (triggeredConsequence == null || triggeredConsequence.isEmpty()) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "Unable to create an in-app message, consequences are null or empty.");
+            return;
+        }
+
+        try {
+            Message message = new Message(parent, triggeredConsequence);
+            message.showMessage();
+        } catch (MessageRequiredFieldMissingException exception) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
+            return;
+        }
     }
 
     /**
@@ -227,7 +246,7 @@ final class InAppNotificationHandler {
      * @return {@link JsonUtilityService} or null if {@link PlatformServices} are unavailable
      */
     private JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+        final PlatformServices platformServices = getPlatformServices();
 
         if (platformServices == null) {
             Log.debug(LOG_TAG,
@@ -236,5 +255,22 @@ final class InAppNotificationHandler {
         }
 
         return platformServices.getJsonUtilityService();
+    }
+
+    /**
+     * Returns the {@code PlatformServices} instance.
+     *
+     * @return {@link PlatformServices} or null if {@link PlatformServices} are unavailable
+     */
+    private PlatformServices getPlatformServices() {
+        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getPlatformServices - Platform services are not available.");
+            return null;
+        }
+
+        return platformServices;
     }
 }

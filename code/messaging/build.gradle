@@ -71,6 +71,10 @@ android.libraryVariants.all { variant ->
     }
 }
 
+android.libraryVariants.all { variant ->
+    variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
+}
+
 task javadocInternal(type: Javadoc) {
     destinationDir = reporting.file("javadocInternal")
     options.memberLevel = JavadocMemberLevel.PRIVATE
@@ -161,8 +165,8 @@ signing {
 
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    //implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

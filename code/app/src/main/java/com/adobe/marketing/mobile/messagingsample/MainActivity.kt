@@ -18,24 +18,45 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.MobileCore
+import com.adobe.marketing.mobile.*
 import kotlinx.android.synthetic.main.activity_main.*
 
-
 class MainActivity : AppCompatActivity() {
+    private val customMessagingDelegate = CustomDelegate()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        MobileCore.setMessagingDelegate(customMessagingDelegate)
+
         btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
-        btnTriggerIAM.setOnClickListener {
+        btnTriggerFullscreenIAM.setOnClickListener {
             val contextData = hashMapOf("testShowMessage" to "true")
             MobileCore.trackAction("testShowMessage", contextData)
         }
+
+        allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
+            Toast.makeText(
+                this@MainActivity, message,
+                Toast.LENGTH_SHORT
+            ).show()
+            customMessagingDelegate.setShouldShowMessages(isChecked)
+        }
+
+        btnTriggerLastIAM.setOnClickListener {
+            Toast.makeText(
+                this@MainActivity, "Showing last message (ignores IAM enabled status).",
+                Toast.LENGTH_SHORT
+            ).show()
+            customMessagingDelegate.getLastTriggeredMessage()?.show()
+        }
+
         intent?.extras?.apply {
             if (getString(FROM) == "action") {
                 Messaging.handleNotificationResponse(intent, true, "button")
@@ -75,5 +96,27 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val FROM = "from"
+    }
+}
+
+class CustomDelegate: MessagingDelegate() {
+    lateinit var fullscreenMessage: UIService.UIFullScreenMessage
+
+    override fun onShow(fullscreenMessage: UIService.UIFullScreenMessage?) {
+        if (fullscreenMessage != null) {
+            this.fullscreenMessage = fullscreenMessage
+        }
+        super.onShow(fullscreenMessage)
+    }
+
+    override fun onDismiss(fullscreenMessage: UIService.UIFullScreenMessage?) {
+        if (fullscreenMessage != null) {
+            this.fullscreenMessage = fullscreenMessage
+        }
+        super.onDismiss(fullscreenMessage)
+    }
+
+    fun getLastTriggeredMessage(): UIService.UIFullScreenMessage? {
+        return fullscreenMessage
     }
 }

@@ -41,13 +41,11 @@ class ListenerHubSharedState extends ExtensionListener {
             return;
         }
 
-        final MessagingInternal parentExtension;
-        if (super.getParentExtension() == null) {
+        final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
+        if (parentExtension == null) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - The parent extension associated with this listener is null, ignoring the event.", SELF_TAG);
             return;
         }
-
-        parentExtension = (MessagingInternal) super.getParentExtension();
 
         parentExtension.getExecutor().execute(new Runnable() {
             @Override

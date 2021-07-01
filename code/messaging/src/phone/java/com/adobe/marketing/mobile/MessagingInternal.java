@@ -53,7 +53,7 @@ class MessagingInternal extends Extension {
     private final MessagingState messagingState;
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private final InAppNotificationHandler inAppNotificationHandler;
+    private InAppNotificationHandler inAppNotificationHandler;
     private ExecutorService executorService;
 
     /**
@@ -80,7 +80,7 @@ class MessagingInternal extends Extension {
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
 
-        inAppNotificationHandler = new InAppNotificationHandler();
+        inAppNotificationHandler = new InAppNotificationHandler(this);
         registerEventListeners(extensionApi);
 
         // Init the messaging state

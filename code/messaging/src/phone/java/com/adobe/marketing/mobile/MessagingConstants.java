@@ -50,6 +50,17 @@ final class MessagingConstants {
         static final String ECID = "ECID";
     }
 
+    static final class MESSAGING_SCHEME {
+        static final String ADOBE_INAPP = "adbinapp";
+        static final String PATH_CANCEL = "cancel";
+        static final String PATH_CONFIRM = "confirm";
+    }
+
+    static final class MESSAGE_INTERACTION {
+        static final String URL = "url";
+        static final String TYPE = "type";
+    }
+
     static final class EventDataKeys {
         static final String STATE_OWNER = "stateowner";
 
@@ -140,10 +151,21 @@ final class MessagingConstants {
             static final String JSON_CONSEQUENCES_KEY = "consequences";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {
+            }
+        }
+
+        static final class MessageTemplate {
+            static final String FULLSCREEN = "fullscreen";
+
+            private MessageTemplate() {
             }
         }
     }

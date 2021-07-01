@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 
@@ -27,6 +28,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,7 +74,13 @@ public class MessagingInternalTests {
     @Mock
     Core mockCore;
     @Mock
+    Activity mockActivity;
+    @Mock
+    AndroidFullscreenMessage mockAndroidFullscreenMessage;
+    @Mock
     AndroidPlatformServices mockPlatformServices;
+    @Mock
+    UIService mockUIService;
 
     @Before
     public void setup() {
@@ -85,7 +93,9 @@ public class MessagingInternalTests {
         mockCore.eventHub = eventHub;
         Mockito.when(App.getAppContext()).thenReturn(context);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
+        Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
         Mockito.when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
+        Mockito.when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
@@ -844,7 +854,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return PERSONALIZATION_DECISIONS
         when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
 
-        // when get eventData called return event data containing a valid offers iam payload
+        // when get eventData called return event data containing multiple valid offers iam payloads
         when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
@@ -930,7 +940,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return PERSONALIZATION_DECISIONS
         when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
 
-        // when get eventData called return event data containing a valid offers iam payload
+        // when get eventData called return event data containing one valid and one invalid offers iam payloads
         when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
@@ -991,7 +1001,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return PERSONALIZATION_DECISIONS
         when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
 
-        // when get eventData called return event data containing a valid offers iam payload
+        // when get eventData called return event data containing an invalid offers iam payload
         when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
@@ -1049,7 +1059,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return PERSONALIZATION_DECISIONS
         when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
 
-        // when get eventData called return event data containing a valid offers iam payload
+        // when get eventData called return event data containing an invalid offers iam payload
         when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
@@ -1107,7 +1117,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return PERSONALIZATION_DECISIONS
         when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
 
-        // when get eventData called return event data containing a valid offers iam payload
+        // when get eventData called return event data containing an invalid offers iam payload
         when(mockEvent.getEventData()).thenReturn(eventData);
 
         // test
@@ -1118,6 +1128,449 @@ public class MessagingInternalTests {
         ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
         assertEquals(0, loadedRules.size());
     }
+    // ========================================================================================
+    // handling rules response events
+    // ========================================================================================
+    @Test
+    public void test_handleRulesResponseEvent_ValidConsequencePresent() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a valid rules response content event with a triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is called
+        verify(mockAndroidFullscreenMessage, times(1)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_UnsupportedConsequenceType() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_MissingConsequenceType() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    public void test_handleRulesResponseEvent_NullConsequences() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_EmptyConsequences() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_EmptyDetails() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_NullDetails() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_TemplateUnsupported() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "alert");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_TemplateMissing() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_EmptyHTML() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "");
+                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_MissingHTML() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
+    @Test
+    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_MissingMessageId() {
+        // setup
+        MobileCore.setApplication(App.getApplication());
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        // trigger event
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return RULES_ENGINE
+        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
+
+        // when mock event getSource called return RESPONSE_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
+
+        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify AndroidFullscreenMessage.show is not called
+        verify(mockAndroidFullscreenMessage, times(0)).show();
+    }
+
     // ========================================================================================
     // Helpers
     // ========================================================================================
