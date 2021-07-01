@@ -24,6 +24,7 @@ import java.util.Map;
 
 class MessagingUtils {
     /* JSON - Map conversion helpers */
+
     /**
      * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
      * This method is recursive.
@@ -43,7 +44,7 @@ class MessagingUtils {
         if (keysIterator == null) return null;
 
         while (keysIterator.hasNext()) {
-            String nextKey  = keysIterator.next();
+            String nextKey = keysIterator.next();
             jsonAsMap.put(nextKey, fromJson(jsonObject.get(nextKey)));
         }
 
@@ -84,5 +85,76 @@ class MessagingUtils {
         } else {
             return json;
         }
+    }
+
+    // ========================================================================================
+    // Event Validation
+    // ========================================================================================
+
+    /**
+     * @param event A Generic Identity Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a generic identity request content event.
+     */
+    static boolean isGenericIdentityRequestEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(event.getType()) &&
+                EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+    }
+
+    /**
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a messaging request content event.
+     */
+    static boolean isMessagingRequestContentEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType()) &&
+                EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+    }
+
+    /**
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a message fetch event.
+     */
+    static boolean isFetchMessagesEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource())
+                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
+    }
+
+    /**
+     * @param event A Rules Response Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a messaging consequence event.
+     */
+    static boolean isMessagingConsequenceEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.RULES_ENGINE.getName().equalsIgnoreCase(event.getType())
+                && EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(event.getSource())
+                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
+    }
+
+    /**
+     * @param event An Edge Personalization Decision {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an edge personalization decision event.
+     */
+    static boolean isEdgePersonalizationDecisionEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.EDGE.equalsIgnoreCase(event.getType()) &&
+                MessagingConstants.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(event.getSource());
     }
 }

@@ -13,14 +13,14 @@
         android:text="Messaging Sample App" />
 
     <Button
-        android:id="@+id/btn_getLocalNotification"
+        android:id="@+id/btnGetLocalNotification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get Local Notification" />
 
     <Button
-        android:id="@+id/btn_triggerIAM"
-        android:layout_width="190dp"
+        android:id="@+id/btnTriggerIAM"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Trigger IAM" />
 

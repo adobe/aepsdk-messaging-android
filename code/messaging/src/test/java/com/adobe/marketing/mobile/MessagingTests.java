@@ -10,9 +10,7 @@
 */
 package com.adobe.marketing.mobile;
 
-import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +27,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -58,7 +56,7 @@ public class MessagingTests {
     public void test_extensionVersionAPI() {
         // test
         String extensionVersion = Messaging.extensionVersion();
-        Assert.assertEquals("The Extension version API returns the correct value", MessagingConstant.EXTENSION_VERSION,
+        Assert.assertEquals("The Extension version API returns the correct value", MessagingConstants.EXTENSION_VERSION,
                 extensionVersion);
     }
 
@@ -101,15 +99,15 @@ public class MessagingTests {
         String mockMessageId = "mockMessageId";
         String mockXDMData = "mockXDMData";
         Map<String, String> mockDataMap = new HashMap<>();
-        mockDataMap.put(MessagingConstant.TrackingKeys._XDM, mockXDMData);
+        mockDataMap.put(MessagingConstants.TrackingKeys._XDM, mockXDMData);
 
         // test
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
 
         // verify
         Assert.assertTrue(done);
-        verify(mockIntent, times(1)).putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, mockMessageId);
-        verify(mockIntent, times(1)).putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockXDMData);
+        verify(mockIntent, times(1)).putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, mockMessageId);
+        verify(mockIntent, times(1)).putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockXDMData);
     }
 
     // ========================================================================================
@@ -153,7 +151,7 @@ public class MessagingTests {
         Event event = eventCaptor.getValue();
         EventData eventData = event.getData();
         assertNotNull(eventData);
-        assertEquals(MessagingConstant.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         try {
             assertEquals(eventData.getString2(TRACK_INFO_KEY_ACTION_ID), mockActionId);
         } catch (VariantException e) {

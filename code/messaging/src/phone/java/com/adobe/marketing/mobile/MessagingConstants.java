@@ -11,13 +11,14 @@
  */
 package com.adobe.marketing.mobile;
 
-final class MessagingConstant {
+final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
-    private MessagingConstant() {}
+    private MessagingConstants() {
+    }
 
     static final class TrackingKeys {
         static final String _XDM = "_xdm";
@@ -83,7 +84,8 @@ final class MessagingConstant {
                 static final String XDM_DATA_EVENT_TYPE = "eventType";
                 static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
 
-                private XDMDataKeys() {}
+                private XDMDataKeys() {
+                }
             }
 
             static final class PushNotificationDetailsDataKeys {
@@ -98,7 +100,8 @@ final class MessagingConstant {
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
 
-                private PushNotificationDetailsDataKeys() {}
+                private PushNotificationDetailsDataKeys() {
+                }
             }
         }
 
@@ -127,7 +130,8 @@ final class MessagingConstant {
             static final String ITEMS = "items";
             static final String CONTENT = "content";
 
-            private Offers() {}
+            private Offers() {
+            }
         }
 
         static final class RulesEngine {
@@ -138,7 +142,9 @@ final class MessagingConstant {
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
-            private RulesEngine() {}
+
+            private RulesEngine() {
+            }
         }
     }
 
@@ -157,6 +163,8 @@ final class MessagingConstant {
 
     static final class EventSource {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
+        static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
     }
 
     static final class EventDataValues {
@@ -193,8 +201,6 @@ final class MessagingConstant {
     }
 
     static final class PushNotificationPayload {
-        private PushNotificationPayload() {}
-
         static final String TITLE = "adb_title";
         static final String BODY = "adb_body";
         static final String SOUND = "adb_sound";
@@ -206,6 +212,10 @@ final class MessagingConstant {
         static final String ACTION_TYPE = "adb_a_type";
         static final String ACTION_URI = "adb_uri";
         static final String ACTION_BUTTONS = "adb_act";
+
+        private PushNotificationPayload() {
+        }
+
         static final class ActionButtonType {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
@@ -213,6 +223,7 @@ final class MessagingConstant {
 
             private ActionButtonType() {/* no-op */}
         }
+
         static final class NotificationPriorities {
             static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
             static final String PRIORITY_MIN = "PRIORITY_MIN";
@@ -220,6 +231,7 @@ final class MessagingConstant {
             static final String PRIORITY_HIGH = "PRIORITY_HIGH";
             static final String PRIORITY_MAX = "PRIORITY_MAX";
         }
+
         static final class ActionButtons {
             static final String LABEL = "label";
             static final String URI = "uri";

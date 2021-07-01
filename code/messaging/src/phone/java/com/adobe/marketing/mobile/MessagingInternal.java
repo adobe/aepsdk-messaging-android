@@ -11,59 +11,50 @@
 */
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
-import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.ECID;
-import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.FCM;
-import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.COLLECT;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.DATASET_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.META;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MIXINS;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.XDM;
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class MessagingInternal extends Extension implements MessagingEventsHandler {
-    private final String SELF_TAG = "MessagingInternal";
-    private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private final MessagingState messagingState;
-    private ExecutorService executorService;
-    private final Object executorMutex = new Object();
-    private Module messagingModule;
+import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
+import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CJM;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.COLLECT;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.DATASET_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.EXPERIENCE;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
 
-    // testing
-//    private final String POC_ACTIVITY_ID = "xcore:offer-activity:1315ce8f616d30e9";
-//    private final String POC_PLACEMENT_ID = "xcore:offer-placement:1315cd7dc3ed30e1";
-    private final String POC_ACTIVITY_ID_MULTI = "xcore:offer-activity:1323dbe94f2eef93";
-    private final String POC_PLACEMENT_ID_MULTI = "xcore:offer-placement:1323d9eb43aacada";
-    private final int MAX_ITEM_COUNT = 30;
+class MessagingInternal extends Extension {
+    private final String SELF_TAG = "MessagingInternal";
+    private final MessagingState messagingState;
+    private final Object executorMutex = new Object();
+    private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
+    private final InAppNotificationHandler inAppNotificationHandler;
+    private ExecutorService executorService;
 
     /**
      * Constructor.
@@ -74,12 +65,12 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * <ul>
      *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
      *           and EventSource {@link EventSource#SHARED_STATE}</li>
-     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
+     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstants.EventType#MESSAGING}
      *          and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link ListenerIdentityRequestContent} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	        and EventSource {@link EventSource#REQUEST_CONTENT}</li>
-     *      <li> {@link ListenerOffersPersonalizationDecisions} listening to event with eventType {@link MessagingConstant.EventType#EDGE}
-     * 	        and EventSource {@link MessagingConstant.EventSource#PERSONALIZATION_DECISIONS}</li>
+     *      <li> {@link ListenerOffersPersonalizationDecisions} listening to event with eventType {@link MessagingConstants.EventType#EDGE}
+     * 	        and EventSource {@link MessagingConstants.EventSource#PERSONALIZATION_DECISIONS}</li>
      *      <li> {@link ListenerRulesEngineResponseContent} listening to event with eventType {@link EventType#RULES_ENGINE}
      * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      * </ul>
@@ -88,289 +79,19 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
+
+        inAppNotificationHandler = new InAppNotificationHandler();
         registerEventListeners(extensionApi);
 
         // Init the messaging state
         messagingState = new MessagingState();
-
-        // create a module to get access to the rules engine for adding ODE rules
-        messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {};
-    }
-
-    /**
-     * Overridden method of {@link Extension} class to provide a valid extension name to register with eventHub.
-     *
-     * @return A {@link String} extension name for Messaging
-     */
-    @Override
-    protected String getName() {
-        return EXTENSION_NAME;
-    }
-
-    /**
-     * Overridden method of {@link Extension} class to provide the extension version.
-     *
-     * @return A {@link String} representing the extension version
-     */
-    @Override
-    protected String getVersion() {
-        return EXTENSION_VERSION;
-    }
-
-    /**
-     * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
-     *
-     * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
-     */
-    protected void onUnexpectedError(final ExtensionUnexpectedError extensionUnexpectedError) {
-        super.onUnexpectedError(extensionUnexpectedError);
-        this.onUnregistered();
-    }
-
-    private void registerEventListeners(final ExtensionApi extensionApi) {
-        ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(final ExtensionError extensionError) {
-                Log.error(MessagingConstant.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
-                        SELF_TAG, MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
-            }
-        };
-
-        extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
-        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
-        extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
-        extensionApi.registerEventListener(MessagingConstant.EventType.EDGE, MessagingConstant.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
-        extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerRulesEngineResponseContent.class, listenerErrorCallback);
-
-        Log.debug(MessagingConstant.LOG_TAG, "%s - Registering Messaging extension - version %s",
-                SELF_TAG, MessagingConstant.EXTENSION_VERSION);
-
-        // fetch messages from offers
-        fetchMessages();
-    }
-
-    /**
-     * This method queues the provided event in {@link #eventQueue}.
-     *
-     * <p>
-     * The queued events are then processed in an orderly fashion.
-     * No action is taken if the provided event's value is null.
-     *
-     * @param event The {@link Event} thats needs to be queued
-     */
-    void queueEvent(final Event event) {
-        if (event == null) {
-            return;
-        }
-
-        eventQueue.add(event);
-    }
-
-    /**
-     * Processes the queued event one by one until queue is empty.
-     *
-     * <p>
-     * Suspends processing of the events in the queue if the configuration or identity shared state is not ready.
-     * Processed events are polled out of the {@link #eventQueue}.
-     */
-    void processEvents() {
-        while (!eventQueue.isEmpty()) {
-            Event eventToProcess = eventQueue.peek();
-
-            if (eventToProcess == null) {
-                Log.debug(MessagingConstant.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
-                return;
-            }
-
-            ExtensionErrorCallback<ExtensionError> configurationErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
-                @Override
-                public void error(final ExtensionError extensionError) {
-                    if (extensionError != null) {
-                        Log.warning(MessagingConstant.LOG_TAG,
-                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
-                                        extensionError.getErrorName()));
-                    }
-                }
-            };
-
-            ExtensionErrorCallback<ExtensionError> edgeIdentityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
-                @Override
-                public void error(final ExtensionError extensionError) {
-                    if (extensionError != null) {
-                        Log.warning(MessagingConstant.LOG_TAG,
-                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
-                                        extensionError.getErrorName()));
-                    }
-                }
-            };
-
-            final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
-                    eventToProcess, configurationErrorCallback);
-
-            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME,
-                    eventToProcess, edgeIdentityErrorCallback);
-
-            // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (configSharedState == null) {
-                Log.warning(MessagingConstant.LOG_TAG,
-                        "%s : Could not process event, configuration shared state is pending", SELF_TAG);
-                return;
-            }
-
-            // validate fetch messages event then refresh in-app messages from offers
-            if (isFetchMessagesEvent(eventToProcess)) {
-                fetchMessages();
-                eventQueue.poll();
-                return;
-            }
-
-            // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (edgeIdentitySharedState == null) {
-                Log.warning(MessagingConstant.LOG_TAG,
-                        "%s : Could not process event, identity shared state is pending", SELF_TAG);
-                return;
-            }
-
-            // Set the messaging state
-            messagingState.setState(configSharedState, edgeIdentitySharedState);
-
-            if (EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // handle the push token from generic identity request content event
-                handlePushToken(eventToProcess);
-            } else if (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
-                    EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
-                // Need experience event dataset id for sending the push token
-                if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
-                    Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
-                    return;
-                }
-                // handle the push tracking information from messaging request content event
-                handleTrackingInfo(eventToProcess);
-            // validate the edge response event from Offers then load any rules present
-            } else if (MessagingConstant.EventType.EDGE.equalsIgnoreCase(eventToProcess.getType()) &&
-                    MessagingConstant.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(eventToProcess.getSource())) {
-                handleOfferNotificationPayload(eventToProcess);
-            // handle rules response events containing message definitions
-            } else if (isMessagingConsequenceEvent(eventToProcess)) {
-                createInAppMessage(eventToProcess);
-            }
-            // event processed, remove it from the queue
-            eventQueue.poll();
-        }
-    }
-
-    @Override
-    public void handlePushToken(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            Log.debug(LOG_TAG, "%s - Unable to sync push token. Event or event data received is null.", SELF_TAG);
-            return;
-        }
-
-        final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
-
-        if (pushToken == null || pushToken.isEmpty()) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null or empty.");
-            return;
-        }
-
-        Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
-        if (eventData == null) {
-            return;
-        }
-
-        // Update the push token to the shared state
-        ExtensionErrorCallback<ExtensionError> errorCallback = new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(final ExtensionError extensionError) {
-                Log.warning(MessagingConstant.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
-                        extensionError.getErrorName()));
-            }
-        };
-        final HashMap<String, Object> map = new HashMap<>();
-        map.put(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().setSharedEventState(map, event, errorCallback);
-
-        // Send an edge event with profile data as event data
-        final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(eventData)
-                .build();
-        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
-            }
-        });
-    }
-
-    @Override
-    public void handleTrackingInfo(final Event event) {
-        final EventData eventData = event.getData();
-        if (eventData == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
-                    "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
-            return;
-        }
-        final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
-        final String messageId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
-        final boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
-        final String actionId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
-
-        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(MessagingConstant.LOG_TAG,
-                    "%s - handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.", SELF_TAG);
-            return;
-        }
-
-        String datasetId = messagingState.getExperienceEventDatasetId();
-        if (datasetId == null || datasetId.isEmpty()) {
-            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null or empty", SELF_TAG);
-            return;
-        }
-
-        // Creating the Meta Map
-        final Map<String, Object> metaMap = new HashMap<>();
-        final Map<String, Object> collectMap = new HashMap<>();
-        collectMap.put(DATASET_ID, datasetId);
-        metaMap.put(COLLECT, collectMap);
-
-        // Create XDM data with tracking data
-        final Map<String, Object> xdmMap = getXdmData(eventType, messageId, actionId);
-
-        // Adding application data to xdmMap
-        addApplicationData(isApplicationOpened, xdmMap);
-
-        // Adding xdm data to xdmMap
-        addXDMData(eventData, xdmMap);
-
-        final Map<String, Object> xdmData = new HashMap<>();
-        xdmData.put(XDM, xdmMap);
-        xdmData.put(META, metaMap);
-
-        final Event trackEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(xdmData)
-                .build();
-
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
-    }
-
-    @Override
-    public void processHubSharedState(Event event) {
-        if (isSharedStateUpdateFor(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, event) ||
-                isSharedStateUpdateFor(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
-            processEvents();
-        }
     }
 
     /**
      * Get profile data with token
+     *
      * @param token push token which needs to be synced
-     * @param ecid experience cloud id of the device
+     * @param ecid  experience cloud id of the device
      * @return {@link Map} of profile data in the correct format with token
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
@@ -432,9 +153,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> xdmMap) {
         final Map<String, Object> applicationMap = new HashMap<>();
         final Map<String, Object> launchesMap = new HashMap<>();
-        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
-        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
-        xdmMap.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
+        launchesMap.put(MessagingConstants.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
+        applicationMap.put(MessagingConstants.TrackingKeys.LAUNCHES, launchesMap);
+        xdmMap.put(MessagingConstants.TrackingKeys.APPLICATION, applicationMap);
     }
 
     /**
@@ -445,7 +166,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
-        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
+        final String adobe = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
         if (adobe == null) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;
@@ -455,7 +176,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             // Convert the adobe string to json object
             final JSONObject xdmJson = new JSONObject(adobe);
             final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
-            
+
             if (xdmMapObject == null) {
                 Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
                 return;
@@ -480,7 +201,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             xdmMap.putAll(mixins);
 
             // Check if the xdm data provided by the customer is using cjm for tracking
-            // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
+            // Check if both {@link MessagingConstants#EXPERIENCE} and {@link MessagingConstants#CUSTOMER_JOURNEY_MANAGEMENT} exists
             if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
                 Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
                 if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
@@ -502,219 +223,268 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
     }
 
-    // ========================================================================================
-    // Rules retrieval and processing
-    // ========================================================================================
     /**
-     * @param event A Messaging Request Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a message fetch event.
+     * Overridden method of {@link Extension} class to provide a valid extension name to register with eventHub.
+     *
+     * @return A {@link String} extension name for Messaging
      */
-    private boolean isFetchMessagesEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return event.getEventData().containsKey(MessagingConstant.EventDataKeys.Messaging.REFRESH_MESSAGES)
-                && MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(event.getType())
-                && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+    @Override
+    protected String getName() {
+        return EXTENSION_NAME;
     }
 
     /**
-     * @param event A Rules Response Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a messaging consequence event.
+     * Overridden method of {@link Extension} class to provide the extension version.
+     *
+     * @return A {@link String} representing the extension version
      */
-    private boolean isMessagingConsequenceEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return event.getEventData().containsKey(MessagingConstant.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED)
-                && EventType.RULES_ENGINE.getName().equalsIgnoreCase(event.getType())
-                && EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(event.getSource());
+    @Override
+    protected String getVersion() {
+        return EXTENSION_VERSION;
     }
 
     /**
-     * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
+     * Overridden method of {@link Extension} class to handle error occurred during registration of the module.
+     *
+     * @param extensionUnexpectedError {@link ExtensionUnexpectedError} occurred exception
      */
-    private void fetchMessages() {
-        // create event to be handled by offers
-        final ArrayList<Object> decisionScopes = new ArrayList<>();
-        final HashMap<String, Object> offersIdentifiers = new HashMap<>();
-        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
-        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(POC_ACTIVITY_ID_MULTI));
-        offersIdentifiers.put(MessagingConstant.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(POC_PLACEMENT_ID_MULTI));
-        decisionScopes.add(offersIdentifiers);
+    protected void onUnexpectedError(final ExtensionUnexpectedError extensionUnexpectedError) {
+        super.onUnexpectedError(extensionUnexpectedError);
+        this.onUnregistered();
+    }
 
-        final HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Offers.TYPE, MessagingConstant.EventDataKeys.Offers.PREFETCH);
-        eventData.put(MessagingConstant.EventDataKeys.Offers.DECISION_SCOPES, decisionScopes);
+    private void registerEventListeners(final ExtensionApi extensionApi) {
+        ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(final ExtensionError extensionError) {
+                Log.error(MessagingConstants.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
+                        SELF_TAG, MessagingConstants.EventType.MESSAGING, MessagingConstants.EXTENSION_VERSION, extensionError.toString());
+            }
+        };
 
-        final Event messageFetchEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_REFRESH_IAM, MessagingConstant.EventType.OFFERS, EventSource.REQUEST_CONTENT.getName())
+        extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerRulesEngineResponseContent.class, listenerErrorCallback);
+
+        Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
+                SELF_TAG, MessagingConstants.EXTENSION_VERSION);
+
+        // fetch messages from offers
+        inAppNotificationHandler.fetchMessages();
+    }
+
+    /**
+     * This method queues the provided event in {@link #eventQueue}.
+     *
+     * <p>
+     * The queued events are then processed in an orderly fashion.
+     * No action is taken if the provided event's value is null.
+     *
+     * @param event The {@link Event} thats needs to be queued
+     */
+    void queueEvent(final Event event) {
+        if (event == null) {
+            return;
+        }
+
+        eventQueue.add(event);
+    }
+
+    /**
+     * Processes the queued event one by one until queue is empty.
+     *
+     * <p>
+     * Suspends processing of the events in the queue if the configuration or identity shared state is not ready.
+     * Processed events are polled out of the {@link #eventQueue}.
+     */
+    void processEvents() {
+        while (!eventQueue.isEmpty()) {
+            Event eventToProcess = eventQueue.peek();
+
+            if (eventToProcess == null) {
+                Log.debug(MessagingConstants.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
+                return;
+            }
+
+            ExtensionErrorCallback<ExtensionError> configurationErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+                @Override
+                public void error(final ExtensionError extensionError) {
+                    if (extensionError != null) {
+                        Log.warning(MessagingConstants.LOG_TAG,
+                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
+                                        extensionError.getErrorName()));
+                    }
+                }
+            };
+
+            ExtensionErrorCallback<ExtensionError> edgeIdentityErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
+                @Override
+                public void error(final ExtensionError extensionError) {
+                    if (extensionError != null) {
+                        Log.warning(MessagingConstants.LOG_TAG,
+                                String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
+                                        extensionError.getErrorName()));
+                    }
+                }
+            };
+
+            final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
+                    eventToProcess, configurationErrorCallback);
+
+            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME,
+                    eventToProcess, edgeIdentityErrorCallback);
+
+            // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
+            if (configSharedState == null) {
+                Log.warning(MessagingConstants.LOG_TAG,
+                        "%s : Could not process event, configuration shared state is pending", SELF_TAG);
+                return;
+            }
+
+            // validate fetch messages event then refresh in-app messages from offers
+            if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
+                inAppNotificationHandler.fetchMessages();
+                eventQueue.poll();
+                return;
+            }
+
+            // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
+            if (edgeIdentitySharedState == null) {
+                Log.warning(MessagingConstants.LOG_TAG,
+                        "%s : Could not process event, identity shared state is pending", SELF_TAG);
+                return;
+            }
+
+            // Set the messaging state
+            messagingState.setState(configSharedState, edgeIdentitySharedState);
+
+            if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
+                // handle the push token from generic identity request content event
+                handlePushToken(eventToProcess);
+            } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
+                // Need experience event dataset id for sending the push token
+                if (!configSharedState.containsKey(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
+                    Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
+                    return;
+                }
+                // handle the push tracking information from messaging request content event
+                handleTrackingInfo(eventToProcess);
+                // validate the edge response event from Offers then load any rules present
+            } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
+                inAppNotificationHandler.handleOfferNotificationPayload(eventToProcess);
+                // handle rules response events containing message definitions
+            } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
+                inAppNotificationHandler.createInAppMessage(eventToProcess);
+            }
+            // event processed, remove it from the queue
+            eventQueue.poll();
+        }
+    }
+
+    public void handlePushToken(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            Log.debug(LOG_TAG, "%s - Unable to sync push token. Event or event data received is null.", SELF_TAG);
+            return;
+        }
+
+        final String pushToken = (String) event.getEventData().get(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER);
+
+        if (pushToken == null || pushToken.isEmpty()) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null or empty.");
+            return;
+        }
+
+        Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+        if (eventData == null) {
+            return;
+        }
+
+        // Update the push token to the shared state
+        ExtensionErrorCallback<ExtensionError> errorCallback = new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(final ExtensionError extensionError) {
+                Log.warning(MessagingConstants.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
+                        extensionError.getErrorName()));
+            }
+        };
+        final HashMap<String, Object> map = new HashMap<>();
+        map.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().setSharedEventState(map, event, errorCallback);
+
+        // Send an edge event with profile data as event data
+        final Event profileEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setEventData(eventData)
                 .build();
-
-        // send event
-        MobileCore.dispatchEvent(messageFetchEvent, new ExtensionErrorCallback<ExtensionError>() {
+        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for fetching messages from Offers.", SELF_TAG);
+                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
             }
         });
     }
 
-    /**
-     * Converts the rules json present in the Edge response event payload into a
-     * list of rules then loads them in the rules engine.
-     * @param edgeResponseEvent An Edge {@link Event} containing a personalization decision payload retrieved from Offers.
-     */
-    private void handleOfferNotificationPayload(final Event edgeResponseEvent) {
-        final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstant.EventDataKeys.Offers.PAYLOAD);
-        if (payload == null || payload.length() == 0) {
-            Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
+    public void handleTrackingInfo(final Event event) {
+        final EventData eventData = event.getData();
+        if (eventData == null) {
+            Log.debug(MessagingConstants.LOG_TAG,
+                    "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
+            return;
+        }
+        final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        final String messageId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+        final boolean isApplicationOpened = eventData.optBoolean(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
+        final String actionId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
+
+        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(MessagingConstants.LOG_TAG,
+                    "%s - handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.", SELF_TAG);
             return;
         }
 
-        String rulesJsonString = null;
-        try {
-            final JSONObject activity = payload.getJSONObject(MessagingConstant.EventDataKeys.Offers.ACTIVITY);
-            final JSONObject placement = payload.getJSONObject(MessagingConstant.EventDataKeys.Offers.PLACEMENT);
-            final String offerActivityId = (String) activity.get(MessagingConstant.EventDataKeys.Offers.ID);
-            final String offerPlacementId = (String) placement.get(MessagingConstant.EventDataKeys.Offers.ID);
-            if (!offerActivityId.equals(POC_ACTIVITY_ID_MULTI) || !offerPlacementId.equals(POC_PLACEMENT_ID_MULTI)) {
-                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing. ");
-                return;
-            }
-            final JSONObject items = payload.getJSONArray(MessagingConstant.EventDataKeys.Offers.ITEMS).getJSONObject(0);
-            rulesJsonString = items.getJSONObject(MessagingConstant.EventDataKeys.Offers.DATA).getString(MessagingConstant.EventDataKeys.Offers.CONTENT);
-        } catch (JSONException e) {
-            Log.debug(LOG_TAG, "handleOfferNotification - JSON exception when attempting to retrieve rules json from the edge response event: %s", e.getLocalizedMessage());
+        String datasetId = messagingState.getExperienceEventDatasetId();
+        if (datasetId == null || datasetId.isEmpty()) {
+            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null or empty", SELF_TAG);
+            return;
         }
 
-        final JsonUtilityService.JSONObject rulesJsonObject = getJsonUtilityService().createJSONObject(rulesJsonString);
-        final  List<Rule> rulesList = parseRulesFromJsonObject(rulesJsonObject);
-        messagingModule.replaceRules(rulesList);
+        // Creating the Meta Map
+        final Map<String, Object> metaMap = new HashMap<>();
+        final Map<String, Object> collectMap = new HashMap<>();
+        collectMap.put(DATASET_ID, datasetId);
+        metaMap.put(COLLECT, collectMap);
+
+        // Create XDM data with tracking data
+        final Map<String, Object> xdmMap = getXdmData(eventType, messageId, actionId);
+
+        // Adding application data to xdmMap
+        addApplicationData(isApplicationOpened, xdmMap);
+
+        // Adding xdm data to xdmMap
+        addXDMData(eventData, xdmMap);
+
+        final Map<String, Object> xdmData = new HashMap<>();
+        xdmData.put(XDM, xdmMap);
+        xdmData.put(META, metaMap);
+
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+                .setEventData(xdmData)
+                .build();
+
+        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
+            }
+        });
     }
 
-    /**
-     * Parses all rules from the provided {@code jsonObject} into a list of {@code Rules}s.
-     * <p>
-     * If input {@code jsonObject} is null or, if there is an error reading {@link JsonUtilityService.JSONArray} from it,
-     * empty {@code List<Rule>} is returned.
-     *
-     * @param jsonObject {@code JSONObject} containing the list of rules and consequences
-     * @return a {@code List} of {@code Rule} objects that were parsed from the input {@code jsonObject}
-     */
-    private List<Rule> parseRulesFromJsonObject(final JsonUtilityService.JSONObject jsonObject) {
-        final List<Rule> parsedRules = new ArrayList<>();
-
-        if (jsonObject == null) {
-            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.");
-            return parsedRules;
+    public void processHubSharedState(Event event) {
+        if (isSharedStateUpdateFor(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event) ||
+                isSharedStateUpdateFor(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
+            processEvents();
         }
-
-        JsonUtilityService.JSONArray rulesJsonArray;
-
-        try {
-            rulesJsonArray = jsonObject.getJSONArray(MessagingConstant.EventDataKeys.RulesEngine.JSON_KEY);
-        } catch (final JsonException e) {
-            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules (%s)", e);
-            return parsedRules;
-        }
-
-        // loop through each rule definition
-        for (int i = 0; i < rulesJsonArray.length(); i++) {
-            try {
-                // get individual rule json object
-                final JsonUtilityService.JSONObject ruleObject = rulesJsonArray.getJSONObject(i);
-                // get rule condition
-                final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(
-                        MessagingConstant.EventDataKeys.RulesEngine.JSON_CONDITION_KEY);
-                final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
-                // get consequences
-                final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
-                        MessagingConstant.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY));
-                if(consequences != null) {
-                    parsedRules.add(new Rule(condition, consequences));
-                }
-            } catch (final JsonException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e);
-            } catch (final UnsupportedConditionException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", e);
-            } catch (final IllegalArgumentException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to create rule object (%s)", e);
-            }
-        }
-
-        return parsedRules;
-    }
-
-    /**
-     * Parses {@code MessagingConsequence} objects from the given {@code consequenceJsonArray} and converts them
-     * into a list of {@code Event}s.
-     * <p>
-     * @param consequenceJsonArray {@link JsonUtilityService.JSONArray} object containing 1 or more rule consequence definitions
-     * @return a {@code List} of consequence {@code Event} objects.
-     *
-     * @throws JsonException if errors occur during parsing
-     */
-    private List<Event> generateConsequenceEvents(final JsonUtilityService.JSONArray consequenceJsonArray) throws
-            JsonException {
-        final List<Event> parsedEvents = new ArrayList<>();
-
-        if (consequenceJsonArray == null) {
-            Log.debug(LOG_TAG,
-                    "generateConsequenceEvents -  The passed in consequence array is null, so returning an empty consequence events list.");
-            return  parsedEvents;
-        }
-
-        JsonUtilityService jsonUtilityService = getJsonUtilityService();
-
-        if (jsonUtilityService == null) {
-            Log.debug(LOG_TAG,
-                    "generateConsequenceEvents -  JsonUtility service is not available, returning empty consequence events list.");
-            return parsedEvents;
-        }
-
-        for (int i = 0; i < consequenceJsonArray.length(); i++) {
-            try {
-                final Variant consequenceAsVariant = Variant.fromTypedObject(consequenceJsonArray.getJSONObject(i),
-                        new JsonObjectVariantSerializer(jsonUtilityService));
-
-                MessagingConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingConsequenceSerializer());
-
-                if (consequence != null) {
-                    final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
-                            new MessagingConsequenceSerializer()).getVariantMap();
-
-                    EventData eventData = new EventData();
-                    eventData.putVariantMap(MessagingConstant.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
-                            consequenceVariantMap);
-
-                    final Event event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
-                                .setData(eventData)
-                                .build();
-
-                    parsedEvents.add(event);
-                }
-            } catch (VariantException ex) {
-                Log.warning(MessagingConstant.LOG_TAG,
-                        "Unable to convert consequence json object to a variant.");
-                return null;
-            }
-        }
-
-        return parsedEvents;
-    }
-
-    // ========================================================================================
-    // In-app message creation and display
-    // ========================================================================================
-    /**
-     * Creates an in-app message object then attempts to display it.
-     * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
-     */
-    private void createInAppMessage(final Event rulesEvent) {
-        // TODO: validate in app message. if valid, create in app message and attempt to display / schedule it.
     }
 
     // ========================================================================================
@@ -749,7 +519,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * Checks if the provided {@code event} is a shared state update event for {@code stateOwnerName}
      *
      * @param stateOwnerName the shared state owner name; should not be null
-     * @param event current event to check; should not be null
+     * @param event          current event to check; should not be null
      * @return {@code boolean} indicating if it is the shared state update for the provided {@code stateOwnerName}
      */
     private boolean isSharedStateUpdateFor(final String stateOwnerName, final Event event) {
@@ -760,7 +530,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         String stateOwner;
 
         try {
-            stateOwner = (String) event.getEventData().get(MessagingConstant.EventDataKeys.STATE_OWNER);
+            stateOwner = (String) event.getEventData().get(MessagingConstants.EventDataKeys.STATE_OWNER);
         } catch (ClassCastException e) {
             return false;
         }

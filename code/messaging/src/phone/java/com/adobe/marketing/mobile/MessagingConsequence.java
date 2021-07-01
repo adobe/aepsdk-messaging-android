@@ -25,12 +25,12 @@ class MessagingConsequence {
     /**
      * Constructor
      *
-     * @param id {@link String} containing unique consequence Id
-     * @param type {@code String} containing message consequence type
+     * @param id      {@link String} containing unique consequence Id
+     * @param type    {@code String} containing message consequence type
      * @param details {@code Map<String, Variant>} containing consequence detail
      */
     MessagingConsequence(final String id, final String type,
-                            final Map<String, Variant> details) {
+                         final Map<String, Variant> details) {
         this.id = id;
         this.type = type;
         this.details = details;

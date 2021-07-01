@@ -13,14 +13,16 @@
 package com.adobe.marketing.mobile;
 
 /**
- * Listens for {@link MessagingConstant.EventType#EDGE}, {@link MessagingConstant.EventSource#PERSONALIZATION_DECISIONS} events.
+ * Listens for {@link MessagingConstants.EventType#EDGE}, {@link MessagingConstants.EventSource#PERSONALIZATION_DECISIONS} events.
  *
  * <p>
  * Monitor Messaging Request content events for sending push notification tracking information.
+ *
  * @see MessagingInternal
  */
 public class ListenerOffersPersonalizationDecisions extends ExtensionListener {
-    private final String SELF_TAG = "ListenerOffersPersonalizationDecisions";
+    private final static String SELF_TAG = "ListenerOffersPersonalizationDecisions";
+
     ListenerOffersPersonalizationDecisions(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
@@ -29,15 +31,17 @@ public class ListenerOffersPersonalizationDecisions extends ExtensionListener {
     public void hear(final Event event) {
 
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null, ignoring the event.", SELF_TAG);
             return;
         }
 
-        final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
-
-        if (parentExtension == null) {
+        final MessagingInternal parentExtension;
+        if (super.getParentExtension() == null) {
+            Log.debug(MessagingConstants.LOG_TAG, "%s - The parent extension associated with this listener is null, ignoring the event.", SELF_TAG);
             return;
         }
+
+        parentExtension = (MessagingInternal) super.getParentExtension();
 
         parentExtension.getExecutor().execute(new Runnable() {
             @Override

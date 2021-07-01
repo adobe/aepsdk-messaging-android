@@ -42,7 +42,7 @@ public class ListenerOffersPersonalizationDecisionsTests {
     @Before
     public void beforeEach() {
         listenerOffersPersonalizationDecisions = new ListenerOffersPersonalizationDecisions(mockExtensionApi,
-                MessagingConstant.EventType.EDGE, MessagingConstant.EventSource.PERSONALIZATION_DECISIONS);
+                MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
     }

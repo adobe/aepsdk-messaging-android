@@ -29,12 +29,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        btn_getLocalNotification.setOnClickListener {
+        btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
-        btn_triggerIAM.setOnClickListener {
-            val contextData = HashMap<String, String>()
-            contextData.put("testShowMessage", "true")
+        btnTriggerIAM.setOnClickListener {
+            val contextData = hashMapOf("testShowMessage" to "true")
             MobileCore.trackAction("testShowMessage", contextData)
         }
         intent?.extras?.apply {

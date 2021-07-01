@@ -30,24 +30,24 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
     @Override
     public Variant serialize(final MessagingConsequence consequence) {
         if (consequence == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "serialize - MessagingConsequence is null, so returning null Variant.");
+            Log.debug(MessagingConstants.LOG_TAG, "serialize - MessagingConsequence is null, so returning null Variant.");
             return Variant.fromNull();
         }
 
-        Map<String, Variant> map = new HashMap<>();
+        final Map<String, Variant> map = new HashMap<>();
 
-        String id = consequence.getId();
-        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, (id == null) ? Variant.fromNull() :
-                Variant.fromString(consequence.getId()));
+        final String id = consequence.getId();
+        map.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, (id == null) ? Variant.fromNull() :
+                Variant.fromString(id));
 
-        String type = consequence.getType();
-        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, (type == null) ? Variant.fromNull() :
-                Variant.fromString(consequence.getType()));
+        final String type = consequence.getType();
+        map.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, (type == null) ? Variant.fromNull() :
+                Variant.fromString(type));
 
-        Map<String, Variant> detailMap = consequence.getDetails();
-        map.put(MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+        final Map<String, Variant> detailMap = consequence.getDetails();
+        map.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
                 (detailMap == null) ? Variant.fromNull() :
-                        Variant.fromVariantMap(consequence.getDetails()));
+                        Variant.fromVariantMap(detailMap));
 
         return Variant.fromVariantMap(map);
     }
@@ -57,8 +57,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
      *
      * @param variant {@link Variant} to deserialize
      * @return a {@link MessagingConsequence} instance that was deserialized from the variant. Can be null.
-     *
-     * @throws IllegalArgumentException if variant is null
+     * @throws IllegalArgumentException            if variant is null
      * @throws VariantSerializationFailedException if variant serialization failed
      */
     @Override
@@ -68,7 +67,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
         }
 
         if (variant.getKind() == VariantKind.NULL) {
-            Log.trace(MessagingConstant.LOG_TAG,
+            Log.trace(MessagingConstants.LOG_TAG,
                     "deserialize -  Variant kind is null, null Consequence is returned.");
             return null;
         }
@@ -81,31 +80,31 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
 
         // id - required field
         final String id = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID).optString(null);
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID).optString(null);
 
         if (StringUtils.isNullOrEmpty(id)) {
-            Log.debug(MessagingConstant.LOG_TAG,
-                    "deserialize -  Unable to find field \"id\" in Messaging rules consequence. This a required field.");
+            Log.debug(MessagingConstants.LOG_TAG,
+                    "deserialize -  Unable to find field \"id\" in Messaging rules consequence. This is a required field.");
             throw new VariantSerializationFailedException("Consequence \"id\" is null or empty.");
         }
 
         // type - required field
         final String type = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE).optString(null);
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE).optString(null);
 
         if (StringUtils.isNullOrEmpty(type)) {
-            Log.warning(MessagingConstant.LOG_TAG,
+            Log.warning(MessagingConstants.LOG_TAG,
                     "No valid field \"type\" in Messaging rules consequence. This is a required field.");
             throw new VariantSerializationFailedException("Consequence \"type\" is null or empty.");
         }
 
         // detail - required field
         final Map<String, Variant> detail = Variant.optVariantFromMap(consequenceMap,
-                MessagingConstant.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL).optVariantMap(null);
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL).optVariantMap(null);
 
         if (detail == null || detail.isEmpty()) {
-            Log.warning(MessagingConstant.LOG_TAG,
-                    "No valid field \"detail\" in Messaging rules consequence. This a required field.");
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "No valid field \"detail\" in Messaging rules consequence. This is a required field.");
             throw new VariantSerializationFailedException("Consequence \"detail\" is null or empty.");
         }
 
