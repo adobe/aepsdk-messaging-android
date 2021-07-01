@@ -537,21 +537,4 @@ class MessagingInternal extends Extension {
 
         return stateOwnerName.equals(stateOwner);
     }
-
-    /**
-     * Returns platform {@code JsonUtilityService} instance.
-     *
-     * @return {@link JsonUtilityService} or null if {@link PlatformServices} are unavailable
-     */
-    private JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
-            return null;
-        }
-
-        return platformServices.getJsonUtilityService();
-    }
 }
