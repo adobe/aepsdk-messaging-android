@@ -3,6 +3,7 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
+
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -11,31 +12,24 @@
 
 package com.adobe.marketing.mobile;
 
-class ListenerHubSharedState extends ExtensionListener {
+/**
+ * Listens for {@link EventType#RULES_ENGINE}, {@link EventSource#RESPONSE_CONTENT} events.
+ *
+ * <p>
+ * Monitor Rules response content events containing message definitions.
+ *
+ * @see MessagingInternal
+ */
+public class ListenerRulesEngineResponseContent extends ExtensionListener {
+    private final static String SELF_TAG = "ListenerRulesEngineResponseContent";
 
-    private final static String SELF_TAG = "ListenerHubSharedState";
-
-    /**
-     * Constructor.
-     *
-     * @param extensionApi an instance of {@link ExtensionApi}
-     * @param type         the {@link String} eventType this listener is registered to handle
-     * @param source       the {@link String} eventSource this listener is registered to handle
-     */
-    ListenerHubSharedState(final ExtensionApi extensionApi, final String type, final String source) {
+    ListenerRulesEngineResponseContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
 
-
-    /**
-     * Method that gets called when event with event type {@link EventType#HUB}
-     * and with event source {@link EventSource#SHARED_STATE} is dispatched through eventHub.
-     * <p>
-     *
-     * @param event the hub shared state change {@link Event} to be processed
-     */
     @Override
     public void hear(final Event event) {
+
         if (event == null || event.getEventData() == null) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null, ignoring the event.", SELF_TAG);
             return;
@@ -50,7 +44,8 @@ class ListenerHubSharedState extends ExtensionListener {
         parentExtension.getExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                parentExtension.processHubSharedState(event);
+                parentExtension.queueEvent(event);
+                parentExtension.processEvents();
             }
         });
     }
