@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 
 class MessagingImageDownloaderTask implements Callable<Bitmap> {
     private final String url;
+
     MessagingImageDownloaderTask(String url) {
         this.url = url;
     }
@@ -24,14 +25,19 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
 
     private Bitmap download(String url) {
         Bitmap bitmap = null;
+        HttpURLConnection connection = null;
         try {
             URL imageUrl = new URL(url);
-            HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+            connection = (HttpURLConnection) imageUrl.openConnection();
             bitmap = BitmapFactory.decodeStream(connection.getInputStream());
-            connection.disconnect();
-        } catch(IOException e) {
+        } catch (IOException e) {
             Log.w(MessagingConstant.LOG_TAG, "Error downloading the image. Error: " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
+
         return bitmap;
     }
 }

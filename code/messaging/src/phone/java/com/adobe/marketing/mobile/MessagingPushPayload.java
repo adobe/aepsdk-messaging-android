@@ -14,8 +14,6 @@ package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 
-import androidx.annotation.NonNull;
-
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;

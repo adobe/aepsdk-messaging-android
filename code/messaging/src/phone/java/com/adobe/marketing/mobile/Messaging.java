@@ -198,7 +198,7 @@ public final class Messaging {
         }
 
         final Context appContext = MobileCore.getApplication().getApplicationContext();
-        final int notificationId = (int)System.currentTimeMillis();
+        final int notificationId = (int) System.currentTimeMillis();
         final String messageId = remoteMessage.getMessageId();
 
         new Thread(new Runnable() {

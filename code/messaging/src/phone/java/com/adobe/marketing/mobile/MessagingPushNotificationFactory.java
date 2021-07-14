@@ -9,6 +9,8 @@ import java.util.List;
 
 class MessagingPushNotificationFactory implements IMessagingPushNotificationFactory {
 
+    public static final int INVALID_SMALL_ICON_RES_ID = -1;
+
     private static volatile MessagingPushNotificationFactory singletonInstance = null;
 
     private MessagingPushNotificationFactory() {
@@ -83,7 +85,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     private boolean setDefaultSmallIcon(Context context, Notification.Builder builder) {
         // Use the launcher icon as the default small icon.
         int smallIcon = MessagingUtils.getDefaultSmallIconRes(context);
-        if (smallIcon == -1) {
+        if (smallIcon == INVALID_SMALL_ICON_RES_ID) {
             // log
             return false;
         }

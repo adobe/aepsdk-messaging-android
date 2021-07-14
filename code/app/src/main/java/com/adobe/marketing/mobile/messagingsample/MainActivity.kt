@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import com.adobe.marketing.mobile.Assurance
 import com.adobe.marketing.mobile.Messaging
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Assurance.startSession("{Your Session URL}")
         btn_getLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }

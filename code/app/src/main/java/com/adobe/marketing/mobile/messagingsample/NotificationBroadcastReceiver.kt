@@ -20,19 +20,20 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action
         val packageName = context?.packageName
-        if (action == null || packageName == null) {
-            return
-        }
 
-        when(action) {
-            "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_CLICKED}" -> {
-               Log.d("NotificationBroadcast", action)
-            }
-            "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_DELETED}" -> {
-                Log.d("NotificationBroadcast", "${packageName}_adb_action_notification_deleted")
-            }
-            "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED}" -> {
-                Log.d("NotificationBroadcast", "${packageName}_adb_action_button_clicked")
+        action?.also { action ->
+            packageName?.also { packageName ->
+                when (action) {
+                    "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_CLICKED}" -> {
+                        Log.d(TAG, action)
+                    }
+                    "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_DELETED}" -> {
+                        Log.d(TAG, "${packageName}_adb_action_notification_deleted")
+                    }
+                    "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED}" -> {
+                        Log.d(TAG, "${packageName}_adb_action_button_clicked")
+                    }
+                }
             }
         }
     }
@@ -41,5 +42,6 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
         const val NOTIFICATION_ID = "notification-id"
         const val NOTIFICATION = "notification"
         val XDM_DATA = mapOf("_xdm" to "{\n        \"cjm\": {\n          \"_experience\": {\n            \"customerJourneyManagement\": {\n              \"messageExecution\": {\n                \"messageExecutionID\": \"16-Sept-postman\",\n                \"messageID\": \"567111\",\n                \"journeyVersionID\": \"some-journeyVersionId\",\n                \"journeyVersionInstanceID\": \"someJourneyVersionInstanceID\"\n              }\n            }\n          }\n        }\n      }")
+        private const val TAG = "NotificationBroadcast"
     }
 }

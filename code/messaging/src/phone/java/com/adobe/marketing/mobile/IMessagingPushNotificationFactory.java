@@ -6,5 +6,5 @@ import android.content.Context;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 
 public interface IMessagingPushNotificationFactory {
-    public Notification create(Context context, MessagingPushPayload payload, String messageId);
+    Notification create(Context context, MessagingPushPayload payload, String messageId);
 }

@@ -129,7 +129,7 @@ class MessagingUtils {
         } catch (PackageManager.NameNotFoundException e) {
             Log.d(MessagingConstant.LOG_TAG, e.getMessage());
         }
-        return -1;
+        return MessagingPushNotificationFactory.INVALID_SMALL_ICON_RES_ID;
     }
 
     static Bitmap getLargeIcon(Context context, MessagingPushPayload payload) {

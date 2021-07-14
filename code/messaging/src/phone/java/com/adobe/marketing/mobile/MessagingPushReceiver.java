@@ -58,11 +58,11 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                 // log error no component
             } else {
                 for (ResolveInfo receiver : receivers) {
-                    Intent intent1 = new Intent(sendIntent);
+                    Intent broadcastIntent = new Intent(sendIntent);
                     String classInfo = receiver.activityInfo.name;
                     ComponentName name = new ComponentName(packageName, classInfo);
-                    intent1.setComponent(name);
-                    context.sendBroadcast(intent1);
+                    broadcastIntent.setComponent(name);
+                    context.sendBroadcast(broadcastIntent);
                 }
             }
         }

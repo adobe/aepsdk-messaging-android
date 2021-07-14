@@ -35,7 +35,10 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
         cache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
             protected int sizeOf(String key, Bitmap value) {
-                return super.sizeOf(key, value);
+                if (value != null) {
+                    return value.getAllocationByteCount() / 1024; //size of bitmap in KB.
+                }
+                return 0;
             }
         };
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -51,13 +54,13 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
         Bitmap bitmap = getBitmapFromMemCache(imageUrl);
         if (bitmap != null) {
             return bitmap;
-        } else {
-            Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl));
-            try {
-                bitmap = bitmapFuture.get();
-            } catch (ExecutionException | InterruptedException e) {
-                Log.w(MessagingConstant.LOG_TAG, "Failed to download the image", e);
-            }
+        }
+
+        Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl));
+        try {
+            bitmap = bitmapFuture.get();
+        } catch (ExecutionException | InterruptedException e) {
+            Log.w(MessagingConstant.LOG_TAG, "Failed to download the image", e);
         }
         return bitmap;
     }
