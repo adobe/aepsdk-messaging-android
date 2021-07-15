@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.iid.FirebaseInstanceId
 
 class MessagingApplication : Application() {
@@ -24,21 +23,22 @@ class MessagingApplication : Application() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
-        Messaging.registerExtension()
-        Identity.registerExtension()
-        UserProfile.registerExtension()
-        Lifecycle.registerExtension()
-        Signal.registerExtension()
+        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
+        com.adobe.marketing.mobile.Identity.registerExtension();
         Edge.registerExtension();
+        Assurance.registerExtension();
+        Lifecycle.registerExtension();
+        Signal.registerExtension();
+        UserProfile.registerExtension();
+        Messaging.registerExtension()
 
         MobileCore.start {
-            // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("<appId>")
-            MobileCore.lifecycleStart(null);
+            MobileCore.configureWithAppID("{Your App Id}")
+            MobileCore.lifecycleStart(null)
         }
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful) {
+        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
                 // Syncing the push token with experience platform

@@ -12,7 +12,10 @@
 
 package com.adobe.marketing.mobile;
 
+import android.content.Context;
 import android.content.Intent;
+
+import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Map;
 
@@ -26,9 +29,11 @@ import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
-
 public final class Messaging {
     private static final String SELF_TAG = "Messaging";
+
+    private static volatile IMessagingPushNotificationFactory notificationFactory;
+    private static volatile IMessagingImageDownloader imageDownloader;
 
     private Messaging() {}
 
@@ -50,6 +55,12 @@ public final class Messaging {
         if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
              Log.warning(LOG_TAG, "%s - Unable to register Messaging SDK since MobileCore is not initialized properly.", SELF_TAG);
         }
+
+        // Sets the notification factory to default MessagingPushNotificationFactory singleton instance
+        setPushNotificationFactory(MessagingPushNotificationFactory.getInstance());
+
+        // Sets the image downloader to MessagingDefaultImageDownloaded
+        setPushImageDownloader(MessagingDefaultImageDownloader.getInstance());
 
         MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {
             @Override
@@ -147,5 +158,60 @@ public final class Messaging {
                 Log.error(LOG_TAG, "%s - Failed to track notification interactions: Error %s", SELF_TAG, extensionError.toString());
             }
         });
+    }
+
+    /**
+     * Sets the notification factory which will be used by {@link MessagingPushNotificationHandler} to create the push notification
+     * @param factory
+     */
+    public static void setPushNotificationFactory(IMessagingPushNotificationFactory factory) {
+        if (factory == null) {
+            // log
+            return;
+        }
+        notificationFactory = factory;
+    }
+
+    /**
+     * Sets the image downloader which will be used for downloading large icon and images for notification
+     * @param downloader
+     */
+    public static void setPushImageDownloader(IMessagingImageDownloader downloader) {
+        if (downloader == null) {
+            // log
+            return;
+        }
+        imageDownloader = downloader;
+    }
+
+    public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage) {
+        if (remoteMessage == null) {
+            // Log remote message is null
+            return false;
+        }
+
+        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
+
+        if (!payload.isAEPPushMessage()) {
+            // Log not aep message
+            return false;
+        }
+
+        final Context appContext = MobileCore.getApplication().getApplicationContext();
+        final int notificationId = (int) System.currentTimeMillis();
+        final String messageId = remoteMessage.getMessageId();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MessagingPushNotificationHandler.handlePushNotification(appContext, notificationId, messageId, payload, notificationFactory);
+            }
+        }).start();
+
+        return true;
+    }
+
+    static IMessagingImageDownloader getImageDownloader() {
+        return imageDownloader;
     }
 }

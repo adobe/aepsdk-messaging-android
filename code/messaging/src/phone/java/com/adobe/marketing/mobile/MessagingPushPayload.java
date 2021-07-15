@@ -29,7 +29,7 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
-    private final String  SELF_TAG = "MessagingPushPayload";
+    private static final String  SELF_TAG = "MessagingPushPayload";
 
     private String title;
     private String body;
@@ -56,7 +56,7 @@ public class MessagingPushPayload {
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is null", SELF_TAG);
+            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is empty", SELF_TAG);
             return;
         }
         init(message.getData());
@@ -70,6 +70,22 @@ public class MessagingPushPayload {
      */
     public MessagingPushPayload(final Map<String, String> data) {
         init(data);
+    }
+
+    /**
+     * Check whether the remote message is origination from AEP
+     * @return boolean value indicating whether the remote message is origination from AEP
+     */
+    public boolean isAEPPushMessage() {
+        if (data == null || data.isEmpty()) {
+            Log.error(MessagingConstant.LOG_TAG, "%s - Returning false as remote message data payload is empty", SELF_TAG);
+            return false;
+        }
+        return "true".equals(data.get(MessagingConstant.PushNotificationPayload.ADB));
+    }
+
+    public boolean isSilentPushMessage() {
+        return data != null && title == null && body == null;
     }
 
     public String getTitle() {
@@ -254,5 +270,17 @@ public class MessagingPushPayload {
         public ActionType getType() {
             return type;
         }
+    }
+
+    public static class ACTION_BUTTON_KEY {
+        public final static String LABEL = "adb_action_label";
+        public final static String LINK = "adb_action_link";
+        public final static String TYPE = "adb_action_type";
+    }
+
+    public static final class ACTION_KEY {
+        public static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
+        public static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
+        public static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
     }
 }
