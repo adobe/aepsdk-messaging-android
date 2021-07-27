@@ -39,4 +39,8 @@
 
     </application>
 
+    <meta-data
+        android:name="activityId"
+        android:value="906E3A095DC834230A495FD6@AdobeOrg" />
+
 </manifest>

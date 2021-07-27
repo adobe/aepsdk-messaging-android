@@ -9,7 +9,13 @@
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
 */
+
 package com.adobe.marketing.mobile;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,16 +27,20 @@ import java.util.List;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
 
-final class InAppNotificationHandler {
+class InAppNotificationHandler {
+    // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
-
-    // testing
-    private final static String POC_ACTIVITY_ID_MULTI = "xcore:offer-activity:1323dbe94f2eef93";
-    private final static String POC_PLACEMENT_ID_MULTI = "xcore:offer-placement:1323d9eb43aacada";
-    private final static int MAX_ITEM_COUNT = 30;
     private final Module messagingModule;
-    private final MessagingInternal parent;
+    private String activityId;
+    private String placementId;
+
+    // package private
+    final MessagingInternal parent;
+
+    // testing vars
+    private final static int MAX_ITEM_COUNT = 30;
 
     /**
      * Constructor
@@ -48,12 +58,14 @@ final class InAppNotificationHandler {
      * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
      */
     void fetchMessages() {
+        // activity and placement are both required for message definition retrieval
+        getActivityAndPlacement(null);
         // create event to be handled by offers
         final ArrayList<Object> decisionScopes = new ArrayList<>();
         final HashMap<String, Object> offersIdentifiers = new HashMap<>();
         offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
-        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(POC_ACTIVITY_ID_MULTI));
-        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(POC_PLACEMENT_ID_MULTI));
+        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(activityId));
+        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(placementId));
         decisionScopes.add(offersIdentifiers);
 
         final HashMap<String, Object> eventData = new HashMap<>();
@@ -80,6 +92,7 @@ final class InAppNotificationHandler {
      * @param edgeResponseEvent An Edge {@link Event} containing a personalization decision payload retrieved from Offers.
      */
     void handleOfferNotificationPayload(final Event edgeResponseEvent) {
+        getActivityAndPlacement(edgeResponseEvent);
         final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Offers.PAYLOAD);
         if (payload == null || payload.length() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
@@ -91,14 +104,14 @@ final class InAppNotificationHandler {
             final JSONObject placement = payload.getJSONObject(MessagingConstants.EventDataKeys.Offers.PLACEMENT);
             final String offerActivityId = (String) activity.get(MessagingConstants.EventDataKeys.Offers.ID);
             final String offerPlacementId = (String) placement.get(MessagingConstants.EventDataKeys.Offers.ID);
-            if (!offerActivityId.equals(POC_ACTIVITY_ID_MULTI) || !offerPlacementId.equals(POC_PLACEMENT_ID_MULTI)) {
-                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing. ");
+            if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
+                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
                 return;
             }
             final JSONArray items = payload.getJSONArray(MessagingConstants.EventDataKeys.Offers.ITEMS);
             for (int index = 0; index < items.length(); index++) {
                 final String ruleJson = items.getJSONObject(index).getJSONObject(MessagingConstants.EventDataKeys.Offers.DATA).getString(MessagingConstants.EventDataKeys.Offers.CONTENT);
-                final JsonUtilityService.JSONObject rulesJsonObject = getJsonUtilityService().createJSONObject(ruleJson);
+                final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
                 final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
                 if (parsedRule != null) {
                     messagingModule.registerRule(parsedRule);
@@ -110,13 +123,61 @@ final class InAppNotificationHandler {
     }
 
     /**
+     * Create an in-app message object then attempt to display it.
+     *
+     * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
+     */
+    void createInAppMessage(final Event rulesEvent) {
+        final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
+        if (triggeredConsequence == null || triggeredConsequence.isEmpty()) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "Unable to create an in-app message, consequences are null or empty.");
+            return;
+        }
+
+        try {
+            Message message = new Message(parent, triggeredConsequence);
+            message.show();
+        } catch (MessageRequiredFieldMissingException exception) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
+            return;
+        }
+    }
+
+    private void getActivityAndPlacement(final Event eventToProcess) {
+        if(eventToProcess != null) {
+            final Map<String, Object> configSharedState = parent.getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
+                    eventToProcess, null);
+            if (configSharedState != null) {
+                Object edgeResponseActivityId = configSharedState.get(MessagingConstants.SharedState.Configuration.ORG_ID);
+                if (edgeResponseActivityId instanceof String) {
+                    this.activityId = (String) edgeResponseActivityId;
+                }
+            }
+        } else { // if we have no event passed in to retrieve the activity id from, read activity id from the app manifest
+            ApplicationInfo applicationInfo;
+            try {
+                final Application application = App.getApplication();
+                final Context context = application.getApplicationContext();
+                applicationInfo = application.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            } catch (PackageManager.NameNotFoundException exception) {
+                Log.warning(MessagingConstants.LOG_TAG,
+                        "An exception occurred when retrieving the manifest metadata: %s", exception.getLocalizedMessage());
+                return;
+            }
+            activityId = applicationInfo.metaData.getString("activityId");
+        }
+        this.placementId = App.getApplication().getPackageName();
+    }
+
+    /**
      * Parses rules from the provided {@code jsonObject} into a {@code Rule}.
      *
      * @param rulesJsonObject {@code JSONObject} containing a rule and consequences
      * @return a {@code Rule} object that was parsed from the input {@code jsonObject} or null if parsing failed.
      */
     private Rule parseRuleFromJsonObject(final JsonUtilityService.JSONObject rulesJsonObject) {
-
         if (rulesJsonObject == null) {
             Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.");
             return null;
@@ -178,7 +239,7 @@ final class InAppNotificationHandler {
             return parsedEvents;
         }
 
-        final JsonUtilityService jsonUtilityService = getJsonUtilityService();
+        final JsonUtilityService jsonUtilityService = MessagingUtils.getJsonUtilityService();
 
         if (jsonUtilityService == null) {
             Log.debug(LOG_TAG,
@@ -215,62 +276,5 @@ final class InAppNotificationHandler {
         }
 
         return parsedEvents;
-    }
-
-    /**
-     * Create an in-app message object then attempt to display it.
-     *
-     * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
-     */
-    void createInAppMessage(final Event rulesEvent) {
-        final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
-        if (triggeredConsequence == null || triggeredConsequence.isEmpty()) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "Unable to create an in-app message, consequences are null or empty.");
-            return;
-        }
-
-        try {
-            Message message = new Message(parent, triggeredConsequence);
-            message.showMessage();
-        } catch (MessageRequiredFieldMissingException exception) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
-            return;
-        }
-    }
-
-    /**
-     * Returns platform {@code JsonUtilityService} instance.
-     *
-     * @return {@link JsonUtilityService} or null if {@link PlatformServices} are unavailable
-     */
-    private JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
-            return null;
-        }
-
-        return platformServices.getJsonUtilityService();
-    }
-
-    /**
-     * Returns the {@code PlatformServices} instance.
-     *
-     * @return {@link PlatformServices} or null if {@link PlatformServices} are unavailable
-     */
-    private PlatformServices getPlatformServices() {
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getPlatformServices - Platform services are not available.");
-            return null;
-        }
-
-        return platformServices;
     }
 }

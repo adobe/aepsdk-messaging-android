@@ -9,6 +9,7 @@
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
 */
+
 package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
@@ -443,9 +444,9 @@ class MessagingInternal extends Extension {
             return;
         }
 
-        String datasetId = messagingState.getExperienceEventDatasetId();
+        final String datasetId = messagingState.getExperienceEventDatasetId();
         if (datasetId == null || datasetId.isEmpty()) {
-            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null or empty", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - Unable to record a message interaction, configuration information is not available.", SELF_TAG);
             return;
         }
 

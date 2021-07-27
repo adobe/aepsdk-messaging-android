@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+
 class MessagingUtils {
     /* JSON - Map conversion helpers */
 
@@ -90,7 +92,6 @@ class MessagingUtils {
     // ========================================================================================
     // Event Validation
     // ========================================================================================
-
     /**
      * @param event A Generic Identity Request Content {@link Event}.
      * @return {@code boolean} indicating if the passed in event is a generic identity request content event.
@@ -156,5 +157,59 @@ class MessagingUtils {
 
         return MessagingConstants.EventType.EDGE.equalsIgnoreCase(event.getType()) &&
                 MessagingConstants.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(event.getSource());
+    }
+
+    // ========================================================================================
+    // PlatformServices getters
+    // ========================================================================================
+    /**
+     * Returns the {@code PlatformServices} instance.
+     *
+     * @return {@link PlatformServices} or null if {@link PlatformServices} are unavailable
+     */
+    static PlatformServices getPlatformServices() {
+        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getPlatformServices - Platform services are not available.");
+            return null;
+        }
+
+        return platformServices;
+    }
+
+    /**
+     * Returns platform {@code JsonUtilityService} instance.
+     *
+     * @return {@link JsonUtilityService} or null if {@link PlatformServices} are unavailable
+     */
+    static JsonUtilityService getJsonUtilityService() {
+        final PlatformServices platformServices = getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
+            return null;
+        }
+
+        return platformServices.getJsonUtilityService();
+    }
+
+    /**
+     * Returns the {@code UIService} instance.
+     *
+     * @return {@link UIService} or null if {@link PlatformServices} are unavailable
+     */
+    static UIService getUIService() {
+        final PlatformServices platformServices = MessagingUtils.getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getPlatformServices - Platform services are not available.");
+            return null;
+        }
+
+        return platformServices.getUIService();
     }
 }

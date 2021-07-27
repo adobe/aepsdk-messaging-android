@@ -43,6 +43,14 @@ final class MessagingConstants {
         static final String LAUNCHES_VALUE = "value";
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
+
+        static final class IAM {
+            static final class EventType {
+                static final String DISMISS = "inapp.dismiss";
+                static final String INTERACT = "inapp.interact";
+                static final String TRIGGER = "inapp.trigger";
+            }
+        }
     }
 
     static final class JSON_VALUES {
@@ -54,11 +62,9 @@ final class MessagingConstants {
         static final String ADOBE_INAPP = "adbinapp";
         static final String PATH_CANCEL = "cancel";
         static final String PATH_CONFIRM = "confirm";
-    }
-
-    static final class MESSAGE_INTERACTION {
-        static final String URL = "url";
-        static final String TYPE = "type";
+        static final String PATH_DISMISS = "dismiss";
+        static final String INTERACTION = "interaction";
+        static final String DEEPLINK = "deeplink";
     }
 
     static final class EventDataKeys {
@@ -204,6 +210,7 @@ final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
+            static final String ORG_ID = "experienceCloud.org";
 
             private Configuration() {/* no-op */}
         }

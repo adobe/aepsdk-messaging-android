@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MobileCore.setMessagingDelegate(customMessagingDelegate)
+        customMessagingDelegate.autoTrack = true
 
         btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
@@ -46,15 +47,15 @@ class MainActivity : AppCompatActivity() {
                 this@MainActivity, message,
                 Toast.LENGTH_SHORT
             ).show()
-            customMessagingDelegate.setShouldShowMessages(isChecked)
+            customMessagingDelegate.showMessages = isChecked
         }
 
         btnTriggerLastIAM.setOnClickListener {
             Toast.makeText(
-                this@MainActivity, "Showing last message (ignores IAM enabled status).",
+                this@MainActivity, "Showing last message.",
                 Toast.LENGTH_SHORT
             ).show()
-            customMessagingDelegate.getLastTriggeredMessage()?.show()
+            (customMessagingDelegate.getLastTriggeredMessage()?.parent as? Message)?.show()
         }
 
         intent?.extras?.apply {
@@ -99,24 +100,33 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class CustomDelegate: MessagingDelegate() {
-    lateinit var fullscreenMessage: UIService.UIFullScreenMessage
+class CustomDelegate: MessageDelegate() {
+    private var currentMessage: UIService.FullscreenMessage? = null
+    var showMessages = true
 
-    override fun onShow(fullscreenMessage: UIService.UIFullScreenMessage?) {
-        if (fullscreenMessage != null) {
-            this.fullscreenMessage = fullscreenMessage
+    override fun shouldShowMessage(fullscreenMessage: UIService.FullscreenMessage?): Boolean {
+        if(!showMessages) {
+            if (fullscreenMessage != null) {
+                this.currentMessage = fullscreenMessage
+                val message = currentMessage!!.parent as Message
+                println("message was suppressed: ${message.messageId}")
+                message.track("message suppressed")
+            }
         }
+        return showMessages
+    }
+
+    override fun onShow(fullscreenMessage: UIService.FullscreenMessage?) {
         super.onShow(fullscreenMessage)
+        this.currentMessage = fullscreenMessage
     }
 
-    override fun onDismiss(fullscreenMessage: UIService.UIFullScreenMessage?) {
-        if (fullscreenMessage != null) {
-            this.fullscreenMessage = fullscreenMessage
-        }
+    override fun onDismiss(fullscreenMessage: UIService.FullscreenMessage?) {
         super.onDismiss(fullscreenMessage)
+        this.currentMessage = fullscreenMessage
     }
 
-    fun getLastTriggeredMessage(): UIService.UIFullScreenMessage? {
-        return fullscreenMessage
+    fun getLastTriggeredMessage(): UIService.FullscreenMessage? {
+        return currentMessage
     }
 }

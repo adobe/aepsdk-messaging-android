@@ -15,6 +15,9 @@ package com.adobe.marketing.mobile;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
 
 import org.json.JSONObject;
 import org.junit.Before;
@@ -38,8 +41,10 @@ import java.util.concurrent.ExecutorService;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,6 +58,7 @@ public class MessagingInternalTests {
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
+    private Map<String, Object> mockConfigState = new HashMap<>();
 
     // Mocks
     @Mock
@@ -76,14 +82,20 @@ public class MessagingInternalTests {
     @Mock
     Activity mockActivity;
     @Mock
-    AndroidFullscreenMessage mockAndroidFullscreenMessage;
+    MessagingFullscreenMessage mockFullscreenMessage;
     @Mock
     AndroidPlatformServices mockPlatformServices;
     @Mock
     UIService mockUIService;
+    @Mock
+    PackageManager packageManager;
+    @Mock
+    ApplicationInfo applicationInfo;
+    @Mock
+    Bundle bundle;
 
     @Before
-    public void setup() {
+    public void setup() throws PackageManager.NameNotFoundException {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -91,12 +103,24 @@ public class MessagingInternalTests {
         jsonUtilityService = platformServices.getJsonUtilityService();
         eventHub = new EventHub("testEventHub", mockPlatformServices);
         mockCore.eventHub = eventHub;
-        Mockito.when(App.getAppContext()).thenReturn(context);
-        Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
-        Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
-        Mockito.when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
-        Mockito.when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
+        when(MobileCore.getCore()).thenReturn(mockCore);
+        when(App.getCurrentActivity()).thenReturn(mockActivity);
+        when(mockApplication.getApplicationContext()).thenReturn(context);
+        when(context.getPackageName()).thenReturn("mock_placement");
+        // mocks for getting activity id from manifest
+        when(App.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getPackageManager()).thenReturn(packageManager);
+        when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
+        Whitebox.setInternalState(applicationInfo, "metaData", bundle);
+        when(bundle.getString(anyString())).thenReturn("mock_activity");
+
+        when(mockApplication.getPackageName()).thenReturn("mock_placement");
+        when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
+        when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class), nullable(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
         messagingInternal = new MessagingInternal(mockExtensionApi);
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        mockConfigState.put(MessagingConstants.SharedState.Configuration.ORG_ID, "mock_activity");
     }
 
     // ========================================================================================
@@ -104,6 +128,8 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         // verify 5 listeners are registered
         verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
@@ -330,7 +356,7 @@ public class MessagingInternalTests {
     @Test
     public void test_handlePushToken() {
         // expected
-        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mock_ecid\"},\"appID\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
+        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mock_ecid\"},\"appID\":\"mock_placement\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
@@ -348,7 +374,7 @@ public class MessagingInternalTests {
 
         // when App.getApplication().getPackageName() return mock packageName
         when(App.getApplication()).thenReturn(mockApplication);
-        when(mockApplication.getPackageName()).thenReturn("mock_package");
+        when(mockApplication.getPackageName()).thenReturn("mock_placement");
 
         //test
         messagingInternal.handlePushToken(mockEvent);
@@ -647,10 +673,10 @@ public class MessagingInternalTests {
         // setup
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         // expected dispatched event data
-        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"mock_activity\",\"placementId\":\"mock_placement\",\"itemCount\":30}],\"type\":\"prefetch\"}";
 
         // verify dispatch event is called
-        // 1 events dispatched: Offers iam fetch event when extension is registered
+        // 1 event dispatched: Offers iam fetch event when extension is registered
         PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
@@ -668,7 +694,7 @@ public class MessagingInternalTests {
         EventData eventData = new EventData();
         eventData.putBoolean(REFRESH_MESSAGES, true);
         // expected dispatched event data
-        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"mock_activity\",\"placementId\":\"mock_placement\",\"itemCount\":30}],\"type\":\"prefetch\"}";
 
         // Mocks
         Event mockEvent = mock(Event.class);
@@ -705,20 +731,18 @@ public class MessagingInternalTests {
     @Test
     public void test_handleEdgeResponseEvent_ValidOffersIAMPayloadPresent() throws Exception {
         // setup
-        // private mocks
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -777,20 +801,18 @@ public class MessagingInternalTests {
     @Test
     public void test_handleEdgeResponseEvent_MultipleValidOffersIAMPayloadPresent() throws Exception {
         // setup
-        // private mocks
-        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -883,12 +905,12 @@ public class MessagingInternalTests {
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -966,12 +988,12 @@ public class MessagingInternalTests {
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -1024,12 +1046,12 @@ public class MessagingInternalTests {
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -1082,12 +1104,186 @@ public class MessagingInternalTests {
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
         JSONObject payload = new JSONObject("    {\n" +
                 "      \"activity\" : {\n" +
-                "        \"id\" : \"xcore:offer-activity:1323dbe94f2eef93\",\n" +
+                "        \"id\" : \"mock_activity\",\n" +
                 "        \"etag\" : \"2\"\n" +
                 "      },\n" +
                 "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
                 "      \"placement\" : {\n" +
-                "        \"id\" : \"xcore:offer-placement:1323d9eb43aacada\",\n" +
+                "        \"id\" : \"mock_placement\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"type\\\": \\\"cjmiam\\\"} ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing an invalid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded for messaging extension
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        assertEquals(0, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadIsEmpty() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"mock_activity\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"mock_placement\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"type\\\": \\\"cjmiam\\\"} ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing an invalid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded for messaging extension
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        assertEquals(0, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidActivityId() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"invalid\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"mock_placement\",\n" +
+                "        \"etag\" : \"1\"\n" +
+                "      },\n" +
+                "      \"items\" : [\n" +
+                "        {\n" +
+                "          \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "          \"data\" : {\n" +
+                "            \"id\" : \"xcore:fallback-offer:1323dbbc1c6eef91\",\n" +
+                "            \"format\" : \"application\\/json\",\n" +
+                "            \"content\" : \"{ \\\"version\\\": 1, \\\"rules\\\": [ { \\\"condition\\\": { \\\"type\\\": \\\"group\\\", \\\"definition\\\": { \\\"logic\\\": \\\"and\\\", \\\"conditions\\\": [ { \\\"definition\\\": { \\\"key\\\": \\\"contextdata.testShowMessage\\\", \\\"matcher\\\": \\\"eq\\\", \\\"values\\\": [ \\\"true\\\" ] }, \\\"type\\\": \\\"matcher\\\" } ] } }, \\\"consequences\\\": [ { \\\"id\\\": \\\"341800180\\\", \\\"type\\\": \\\"cjmiam\\\"} ] } ] }\"\n" +
+                "          },\n" +
+                "          \"etag\" : \"1\",\n" +
+                "          \"schema\" : \"https:\\/\\/ns.adobe.com\\/experience\\/offer-management\\/content-component-json\"\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"id\" : \"cb25ecb0-d085-44ac-b73d-797a3265d37c\"\n" +
+                "    }\n" +
+                "  ]");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing an invalid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded for messaging extension
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        assertEquals(0, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidPlacementId() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("    {\n" +
+                "      \"activity\" : {\n" +
+                "        \"id\" : \"mock_activity\",\n" +
+                "        \"etag\" : \"2\"\n" +
+                "      },\n" +
+                "      \"scope\" : \"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTMyM2RiZTk0ZjJlZWY5MyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjEzMjNkOWViNDNhYWNhZGEiLCJpdGVtQ291bnQiOjMwfQ==\",\n" +
+                "      \"placement\" : {\n" +
+                "        \"id\" : \"invalid\",\n" +
                 "        \"etag\" : \"1\"\n" +
                 "      },\n" +
                 "      \"items\" : [\n" +
@@ -1137,7 +1333,7 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockFullscreenMessage);
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1166,8 +1362,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is called
-        verify(mockAndroidFullscreenMessage, times(1)).show();
+        // verify MessagingFullscreenMessage.show() is called
+        verify(mockFullscreenMessage, times(1)).show();
     }
 
     @Test
@@ -1176,7 +1372,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1205,8 +1402,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1215,7 +1412,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1243,8 +1441,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     public void test_handleRulesResponseEvent_NullConsequences() {
@@ -1252,7 +1450,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
@@ -1273,8 +1472,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1283,7 +1482,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> eventData = new HashMap<>();
@@ -1305,8 +1505,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1315,7 +1515,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
@@ -1341,8 +1542,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1351,7 +1552,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
@@ -1376,8 +1578,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1386,7 +1588,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1415,8 +1618,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1425,7 +1628,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1453,8 +1657,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1463,7 +1667,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1492,8 +1697,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1502,7 +1707,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1530,8 +1736,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     @Test
@@ -1540,7 +1746,8 @@ public class MessagingInternalTests {
         MobileCore.setApplication(App.getApplication());
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.UIFullScreenListener.class))).thenReturn(mockAndroidFullscreenMessage);
+                Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Extension.class))).thenReturn(mockFullscreenMessage);
+
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -1567,8 +1774,8 @@ public class MessagingInternalTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify AndroidFullscreenMessage.show is not called
-        verify(mockAndroidFullscreenMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() is not called
+        verify(mockFullscreenMessage, times(0)).show();
     }
 
     // ========================================================================================
