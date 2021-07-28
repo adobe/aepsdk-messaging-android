@@ -159,8 +159,7 @@ class InAppNotificationHandler {
             ApplicationInfo applicationInfo;
             try {
                 final Application application = App.getApplication();
-                final Context context = application.getApplicationContext();
-                applicationInfo = application.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+                applicationInfo = App.getApplication().getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
             } catch (PackageManager.NameNotFoundException exception) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "An exception occurred when retrieving the manifest metadata: %s", exception.getLocalizedMessage());
