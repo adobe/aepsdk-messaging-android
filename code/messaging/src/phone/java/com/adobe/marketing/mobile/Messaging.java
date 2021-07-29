@@ -76,7 +76,7 @@ public final class Messaging {
             Log.warning(LOG_TAG, "%s - Failed to add push tracking details as intent is null.", SELF_TAG);
             return false;
         }
-        if (messageId == null || messageId.isEmpty()) {
+        if (StringUtils.isNullOrEmpty(messageId)) {
             Log.warning(LOG_TAG, "%s - Failed to add push tracking details as MessageId is null.", SELF_TAG);
             return false;
         }
@@ -112,11 +112,11 @@ public final class Messaging {
             return;
         }
         String messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
-        if (messageId == null) {
+        if (StringUtils.isNullOrEmpty(messageId)) {
             // Check if the message Id is in the intent with the key TRACK_INFO_KEY_GOOGLE_MESSAGE_ID which comes through google directly
             // This happens when FirebaseMessagingService#onMessageReceived is not called.
             messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
-            if (messageId == null) {
+            if (StringUtils.isNullOrEmpty(messageId)) {
                 Log.warning(LOG_TAG, "%s - Failed to track notification interactions, message id provided is null", SELF_TAG);
                 return;
             }
@@ -132,7 +132,7 @@ public final class Messaging {
         eventData.putBoolean(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
         eventData.putString(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
 
-        if (customActionId == null) {
+        if (StringUtils.isNullOrEmpty(customActionId)) {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED);
         } else {
             eventData.putString(TRACK_INFO_KEY_ACTION_ID, customActionId);

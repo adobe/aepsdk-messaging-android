@@ -54,6 +54,10 @@ android {
         sourceCompatibility rootProject.ext.sourceCompatibility
         targetCompatibility rootProject.ext.targetCompatibility
     }
+
+    libraryVariants.all { variant ->
+        variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
 }
 
 android.libraryVariants.all { variant ->
@@ -69,10 +73,6 @@ android.libraryVariants.all { variant ->
             links "https://developer.android.com/reference"
         }
     }
-}
-
-android.libraryVariants.all { variant ->
-    variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
 }
 
 task javadocInternal(type: Javadoc) {

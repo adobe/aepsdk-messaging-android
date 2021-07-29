@@ -170,6 +170,46 @@ public class MessagingInternalIAMPayloadTests {
         assertEquals(expectedOffersEventData, event.getData().toString());
     }
 
+    @Test
+    public void test_refreshInAppMessages_Invoked_WhenPackageManagerManifestRetrievalFails() {
+        // setup package manager to throw NameNotFoundException
+        try {
+            when(packageManager.getApplicationInfo(anyString(), anyInt())).thenThrow(PackageManager.NameNotFoundException.class);
+            messagingInternal = new MessagingInternal(mockExtensionApi);
+        } catch (PackageManager.NameNotFoundException e) { }
+        // setup
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        // trigger event
+        EventData eventData = new EventData();
+        eventData.putBoolean(REFRESH_MESSAGES, true);
+        // expected dispatched event data
+        String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"mock_activity\",\"placementId\":\"mock_placement\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+        // when mock event getType called return MESSAGING
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+
+        // when mock event getSource called return REQUEST_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
+
+        // when get eventData called return data with "REFRESH_MESSAGES, true"
+        when(mockEvent.getEventData()).thenReturn(eventData.toObjectMap());
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify 1 event dispatched (Offers iam fetch event when extension is registered)
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify events
+        Event event = eventCaptor.getAllValues().get(0);
+        assertNotNull(event.getData());
+        assertEquals(expectedOffersEventData, event.getData().toString());
+    }
+
     // ========================================================================================
     // Offers rules payload processing
     // ========================================================================================
@@ -573,6 +613,73 @@ public class MessagingInternalIAMPayloadTests {
                 "    }\n" +
                 "  ]");
         eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing an invalid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded for messaging extension
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        assertEquals(0, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadJsonIsEmpty() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        JSONObject payload = new JSONObject("{}");
+        eventData.put("payload", payload);
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing an invalid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded for messaging extension
+        ConcurrentHashMap loadedRules = mockCore.eventHub.getModuleRuleAssociation();
+        assertEquals(0, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadJsonIsNull() throws Exception {
+        // setup
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        eventData.put("payload", null);
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks

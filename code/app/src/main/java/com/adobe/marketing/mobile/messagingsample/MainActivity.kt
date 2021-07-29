@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        MobileCore.setMessagingDelegate(customMessagingDelegate)
+        MobileCore.setFullscreenMessageDelegate(customMessagingDelegate)
         customMessagingDelegate.autoTrack = true
 
         btnGetLocalNotification.setOnClickListener {

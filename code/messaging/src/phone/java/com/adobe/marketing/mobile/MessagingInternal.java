@@ -48,6 +48,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.IAM;
 
 class MessagingInternal extends Extension {
     private final String SELF_TAG = "MessagingInternal";
@@ -137,17 +138,25 @@ class MessagingInternal extends Extension {
      */
     private static Map<String, Object> getXdmData(final String eventType, final String messageId, final String actionId) {
         final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
+        final Map<String, Object> trackingMap = new HashMap<>();
         final Map<String, Object> customActionMap = new HashMap<>();
 
         if (actionId != null) {
             customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
-            pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
+            trackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
         }
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
+        // determine if we have a push message interaction
+        if(!eventType.equals(IAM.EventType.INTERACT)) {
+            trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
+            trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+            xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+            xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, trackingMap);
+        } else {
+            trackingMap.put("messageId", messageId);
+            xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+            xdmMap.put("iamTracking", trackingMap);
+        }
+
         return xdmMap;
     }
 

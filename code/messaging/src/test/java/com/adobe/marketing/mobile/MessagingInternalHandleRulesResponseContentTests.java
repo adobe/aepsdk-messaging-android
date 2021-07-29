@@ -68,7 +68,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     @Mock
     Bundle bundle;
     @Mock
-    MessagingFullscreenMessage mockFullscreenMessage;
+    AEPFullscreenMessage mockFullscreenMessage;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException {

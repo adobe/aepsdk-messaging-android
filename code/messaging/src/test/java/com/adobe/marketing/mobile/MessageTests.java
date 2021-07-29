@@ -42,8 +42,7 @@ import static org.mockito.Mockito.when;
 public class MessageTests {
 
     private Message message;
-    // for use
-    private MessagingFullscreenMessage messagingFullscreenMessage;
+    private AEPFullscreenMessage aepFullscreenMessage;
     private Map<String, Object> consequence = new HashMap<>();
     Map<String, Object> details = new HashMap<>();
     private EventHub eventHub;
@@ -60,7 +59,7 @@ public class MessageTests {
     @Mock
     UIService mockUIService;
     @Mock
-    MessagingFullscreenMessage mockMessagingFullscreenMessage;
+    AEPFullscreenMessage mockFullscreenMessage;
     @Mock
     Message mockMessage;
     @Mock
@@ -95,8 +94,8 @@ public class MessageTests {
         Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
         Mockito.when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockMessagingFullscreenMessage);
-        Mockito.when(mockMessagingFullscreenMessage.getParent()).thenReturn(mockMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockFullscreenMessage);
+        Mockito.when(mockFullscreenMessage.getParent()).thenReturn(mockMessage);
         Mockito.when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
 
         eventHub = new EventHub("testEventHub", mockPlatformServices);
@@ -126,11 +125,11 @@ public class MessageTests {
         // test
         message.show();
 
-        // verify MessagingFullscreenMessage show called
-        verify(mockMessagingFullscreenMessage, times(1)).show();
+        // verify aepFullscreenMessage show called
+        verify(mockFullscreenMessage, times(1)).show();
 
-        // verify triggered tracking event
-        verify(mockMessagingInternal).handleTrackingInfo(eventArgumentCaptor.capture());
+        // verify tracking event data
+        verify(mockMessagingInternal, times(1)).handleTrackingInfo(eventArgumentCaptor.capture());
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedData);
     }
@@ -140,8 +139,12 @@ public class MessageTests {
         // setup custom delegate, show message is true by default
         CustomDelegate customDelegate = new CustomDelegate();
         // setup mocks
-        messagingFullscreenMessage = new MessagingFullscreenMessage("html", customDelegate, false, mockMessagesMonitor, message);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockMessagingFullscreenMessage);
+        try {
+            aepFullscreenMessage = new AEPFullscreenMessage("html", customDelegate, false, mockMessagesMonitor, message);
+        } catch (MessageCreationException e) {
+            fail(e.getLocalizedMessage());
+        }
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockFullscreenMessage);
         try {
             message = new Message(mockMessagingInternal, consequence);
         } catch (MessageRequiredFieldMissingException e) {
@@ -160,11 +163,11 @@ public class MessageTests {
         // test
         message.show();
 
-        // verify MessagingFullscreenMessage show called
-        verify(mockMessagingFullscreenMessage, times(1)).show();
+        // verify aepFullscreenMessage show called
+        verify(mockFullscreenMessage, times(1)).show();
 
-        // verify triggered tracking event
-        verify(mockMessagingInternal).handleTrackingInfo(eventArgumentCaptor.capture());
+        // verify tracking event data
+        verify(mockMessagingInternal, times(1)).handleTrackingInfo(eventArgumentCaptor.capture());
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedData);
     }
@@ -175,8 +178,11 @@ public class MessageTests {
         CustomDelegate customDelegate = new CustomDelegate();
         customDelegate.setShowMessage(false);
         // setup mocks
-        messagingFullscreenMessage = new MessagingFullscreenMessage("html", customDelegate, false, mockMessagesMonitor, message);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(messagingFullscreenMessage);
+        try {
+            aepFullscreenMessage = new AEPFullscreenMessage("html", customDelegate, false, mockMessagesMonitor, message);
+        } catch (MessageCreationException e) {
+            fail(e.getLocalizedMessage());
+        }        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(aepFullscreenMessage);
         try {
             message = new Message(mockMessagingInternal, consequence);
         } catch (MessageRequiredFieldMissingException e) {
@@ -197,7 +203,7 @@ public class MessageTests {
         // test
         message.show();
 
-        // expect 2 events: triggered tracking + suppressed tracking
+        // expect 2 tracking events: triggered tracking + suppressed tracking
         verify(mockMessagingInternal, times(2)).handleTrackingInfo(eventArgumentCaptor.capture());
         List<Event> capturedEvents = eventArgumentCaptor.getAllValues();
         // verify triggered tracking event
@@ -220,11 +226,11 @@ public class MessageTests {
         // test
         message.dismiss();
 
-        // verify MessagingFullscreenMessage dismiss called
-        verify(mockMessagingFullscreenMessage, times(1)).dismiss();
+        // verify aepFullscreenMessage dismiss called
+        verify(mockFullscreenMessage, times(1)).dismiss();
 
         // verify dismissed tracking event
-        verify(mockMessagingInternal).handleTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(1)).handleTrackingInfo(eventArgumentCaptor.capture());
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedData);
     }
@@ -233,8 +239,11 @@ public class MessageTests {
     public void test_messageShowFailure() {
         // setup mocks
         when(mockMessagesMonitor.isDisplayed()).thenReturn(true);
-        messagingFullscreenMessage = new MessagingFullscreenMessage("html", mockMessage,false, mockMessagesMonitor, message);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(messagingFullscreenMessage);
+        try {
+            aepFullscreenMessage = new AEPFullscreenMessage("html", mockMessage, false, mockMessagesMonitor, message);
+        } catch (MessageCreationException e) {
+            fail(e.getLocalizedMessage());
+        }        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(aepFullscreenMessage);
         try {
             message = new Message(mockMessagingInternal, consequence);
         } catch (MessageRequiredFieldMissingException e) {
@@ -252,7 +261,7 @@ public class MessageTests {
     public void test_overrideUrlLoad() {
         // setup
         message.messagingInternal = mockMessagingInternal;
-        when(mockMessagingFullscreenMessage.getParent()).thenReturn(message);
+        when(mockFullscreenMessage.getParent()).thenReturn(message);
 
         // setup expected events
         HashMap<String, Object> expectedDeepLinkClickedTrackingData = new HashMap<>();
@@ -266,7 +275,7 @@ public class MessageTests {
         expectedDismissedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "dismissed");
 
         // test
-        message.overrideUrlLoad(mockMessagingFullscreenMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
+        message.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
 
         // expect 2 events: deeplink click tracking + dismissed tracking
         verify(mockMessagingInternal, times(2)).handleTrackingInfo(eventArgumentCaptor.capture());
@@ -281,5 +290,31 @@ public class MessageTests {
 
         // verify showUrl called
         verify(mockUIService, times(1)).showUrl("https://adobe.com");
+    }
+
+    @Test
+    public void test_messageTrack() {
+        // setup expected events
+        HashMap<String, Object> expectedTrackingData = new HashMap<>();
+        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.TrackingKeys.IAM.EventType.INTERACT);
+        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "123456789");
+        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock track");
+
+        // test
+        message.track("mock track");
+
+        // verify mock tracking event
+        verify(mockMessagingInternal, times(1)).handleTrackingInfo(eventArgumentCaptor.capture());
+        Event trackingEvent = eventArgumentCaptor.getValue();
+        assertEquals(trackingEvent.getEventData(), expectedTrackingData);
+    }
+
+    @Test
+    public void test_messageTrackWithInvalidInteractionType() {
+        // test
+        message.track("");
+
+        // verify mock tracking event
+        verify(mockMessagingInternal, times(0)).handleTrackingInfo(any(Event.class));
     }
 }

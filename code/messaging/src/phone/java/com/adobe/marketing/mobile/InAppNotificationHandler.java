@@ -13,7 +13,6 @@
 package com.adobe.marketing.mobile;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
 
 class InAppNotificationHandler {
     // private vars
@@ -60,6 +58,10 @@ class InAppNotificationHandler {
     void fetchMessages() {
         // activity and placement are both required for message definition retrieval
         getActivityAndPlacement(null);
+        if(StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(placementId)) {
+            Log.trace(LOG_TAG, "%s - Unable to retrieve message definitions - activity and placement ids are both required.", SELF_TAG);
+            return;
+        }
         // create event to be handled by offers
         final ArrayList<Object> decisionScopes = new ArrayList<>();
         final HashMap<String, Object> offersIdentifiers = new HashMap<>();
@@ -146,6 +148,7 @@ class InAppNotificationHandler {
     }
 
     private void getActivityAndPlacement(final Event eventToProcess) {
+        this.placementId = App.getApplication().getPackageName();
         if(eventToProcess != null) {
             final Map<String, Object> configSharedState = parent.getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, null);
@@ -167,7 +170,6 @@ class InAppNotificationHandler {
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
-        this.placementId = App.getApplication().getPackageName();
     }
 
     /**

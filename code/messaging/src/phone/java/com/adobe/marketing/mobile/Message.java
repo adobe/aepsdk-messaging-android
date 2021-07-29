@@ -75,7 +75,7 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
         }
 
-        this.customDelegate = MobileCore.getMessagingDelegate();
+        this.customDelegate = MobileCore.getFullscreenMessageDelegate();
 
         if (customDelegate != null) {
             this.fullscreenMessage = MessagingUtils.getUIService().createFullscreenMessage(html, customDelegate, false, this);
