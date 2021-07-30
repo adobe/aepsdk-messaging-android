@@ -437,6 +437,7 @@ class MessagingInternal extends Extension {
 
     public void handleTrackingInfo(final Event event) {
         final EventData eventData = event.getData();
+
         if (eventData == null) {
             Log.debug(MessagingConstants.LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
@@ -478,7 +479,13 @@ class MessagingInternal extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        // Determine the tracking event name based on the passed in event name
+        String eventName = MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT;
+        String a = event.getName();
+        if(event.getName().equals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT)) {
+            eventName = MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT;
+        }
+        final Event trackEvent = new Event.Builder(eventName, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setEventData(xdmData)
                 .build();
 

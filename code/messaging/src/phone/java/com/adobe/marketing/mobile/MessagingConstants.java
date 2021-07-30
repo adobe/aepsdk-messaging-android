@@ -187,6 +187,7 @@ final class MessagingConstants {
         static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String MESSAGING_REFRESH_IAM = "Refresh In-App Messages";
+        static final String MESSAGING_IAM_TRACKING_EDGE_EVENT = "In-app message tracking edge event";
     }
 
     static final class EventSource {
