@@ -12,18 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -48,15 +36,29 @@ import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.IAM;
+
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class MessagingInternal extends Extension {
     private final String SELF_TAG = "MessagingInternal";
     private final MessagingState messagingState;
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private InAppNotificationHandler inAppNotificationHandler;
+    private final InAppNotificationHandler inAppNotificationHandler;
+    private final AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
+    // FIXME: for testing
+    private int messageCount = 1;
 
     /**
      * Constructor.
@@ -87,6 +89,12 @@ class MessagingInternal extends Extension {
 
         // Init the messaging state
         messagingState = new MessagingState();
+
+        // Init EventHistory database
+        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+        final SystemInfoService systemInfoService = platformServices == null ? null : platformServices.getSystemInfoService();
+        androidEventHistory = new AndroidEventHistory(systemInfoService);
+        MobileCore.getCore().eventHub.setEventHistory(androidEventHistory);
     }
 
     /**
@@ -145,17 +153,11 @@ class MessagingInternal extends Extension {
             customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
             trackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
         }
-        // determine if we have a push message interaction
-        if(!eventType.equals(IAM.EventType.INTERACT)) {
-            trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
-            trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-            xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-            xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, trackingMap);
-        } else {
-            trackingMap.put("messageId", messageId);
-            xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-            xdmMap.put("iamTracking", trackingMap);
-        }
+
+        trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
+        trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, trackingMap);
 
         return xdmMap;
     }
@@ -357,6 +359,25 @@ class MessagingInternal extends Extension {
             if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
                 inAppNotificationHandler.fetchMessages();
                 eventQueue.poll();
+                // FIXME: for testing, remove ================================================================
+                final EventHistoryRequestWithCallbackHandler[] requests = new EventHistoryRequestWithCallbackHandler[messageCount + 1];
+                for (int i = 0; i < messageCount ; i++) {
+                    final EventData eventDataMask = new EventData();
+                    eventDataMask.putString("xdm.eventType", "inapp.interact");
+                    eventDataMask.putString("xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID", "dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime");
+                    eventDataMask.putString("xdm.inappMessageTracking.action", "triggered");
+                    final EventHistoryResultHandler<Integer> deleteHandler = new EventHistoryResultHandler<Integer>() {
+                        @Override
+                        public void call(final Integer deleteCount) {
+                            Log.debug("DELETE FROM DB", "Entries deleted: %s", deleteCount);
+                        }
+                    };
+                    EventHistoryRequestWithCallbackHandler request = new EventHistoryRequestWithCallbackHandler(eventDataMask, 0, System.currentTimeMillis(), deleteHandler);
+                    requests[i] = request;
+                }
+                androidEventHistory.deleteEvents(requests);
+                messageCount = 0;
+                // FIXME: ========================================================================================
                 return;
             }
 
@@ -381,10 +402,10 @@ class MessagingInternal extends Extension {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-                // validate the edge response event from Offers then load any rules present
+            // validate the edge response event from Offers then load any rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
                 inAppNotificationHandler.handleOfferNotificationPayload(eventToProcess);
-                // handle rules response events containing message definitions
+            // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
             }
@@ -437,7 +458,6 @@ class MessagingInternal extends Extension {
 
     public void handleTrackingInfo(final Event event) {
         final EventData eventData = event.getData();
-
         if (eventData == null) {
             Log.debug(MessagingConstants.LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
@@ -479,13 +499,104 @@ class MessagingInternal extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        // Determine the tracking event name based on the passed in event name
-        String eventName = MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT;
-        String a = event.getName();
-        if(event.getName().equals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT)) {
-            eventName = MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT;
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), null)
+                .setEventData(xdmData)
+                .build();
+
+        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(ExtensionError extensionError) {
+                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
+            }
+        });
+    }
+
+    public void handleInAppTrackingInfo(final Event event) {
+        final String datasetId = messagingState.getExperienceEventDatasetId();
+        if (StringUtils.isNullOrEmpty(datasetId)) {
+            Log.warning(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
+            return;
         }
-        final Event trackEvent = new Event.Builder(eventName, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+
+        final EventData eventData = event.getData();
+        // FIXME: event history POC, try to retrieve the amount of events which match the current triggered tracking event ===========
+        final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        final String trackingType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
+        final String messageId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, null);
+
+        if (trackingType.equals("triggered") || trackingType.equals("displayed") || trackingType.equals("dismissed")
+                || trackingType.equals("closed")) {
+            //messageCount++;
+            final EventHistoryRequestWithCallbackHandler[] requests = new EventHistoryRequestWithCallbackHandler[messageCount];
+            for (int i = 0; i < messageCount ; i++) {
+                // create handler
+                final EventHistoryResultHandler<DatabaseService.QueryResult> resultHandler = new EventHistoryResultHandler<DatabaseService.QueryResult>() {
+                    @Override
+                    public void call(final DatabaseService.QueryResult result) {
+                        try {
+                            int count = result.getInt(0);
+                            long oldest = result.getLong(1);
+                            long newest = result.getLong(2);
+                            Log.debug("handleInAppTrackingInfo", "Message Id: %s, %s tracking event matched %s times in " +
+                                    "the event history database. " +
+                                    "oldest match found at %s, " +
+                                    "newest match found at %s.", messageCount, trackingType, count, oldest, newest);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                // create request
+                final EventData eventDataMask = new EventData();
+                eventDataMask.putString("xdm.eventType", eventType);
+                eventDataMask.putString("xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID", messageId);
+                eventDataMask.putString("xdm.inappMessageTracking.action", trackingType);
+                final EventHistoryRequestWithCallbackHandler request = new EventHistoryRequestWithCallbackHandler(eventDataMask, 0, System.currentTimeMillis(), resultHandler);
+                requests[i] = request;
+            }
+            if (messageCount != 0) {
+                androidEventHistory.getEvents(requests, true);
+            }
+        }
+        // FIXME: ==============================================================================================================
+
+        // Create XDM data with tracking data
+        final Map<String, Object> xdmMap = new HashMap<>();
+        final Map<String, Object> experienceMap = new HashMap<>();
+        final Map<String, Object> messageExecutionMap = new HashMap<>();
+        final Map<String, Object> cjmMap = new HashMap<>();
+        messageExecutionMap.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, messageId);
+        cjmMap.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION, messageExecutionMap);
+        experienceMap.put(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT, cjmMap);
+        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
+
+        // add iam mixin information if this is an interact eventType
+        if (eventType.equals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT) && !StringUtils.isNullOrEmpty(trackingType)) {
+            final Map<String, Object> actionMap = new HashMap<>();
+            actionMap.put(XDMDataKeys.ACTION, trackingType);
+            xdmMap.put(XDMDataKeys.XDM_DATA_IN_APP_NOTIFICATION_TRACKING, actionMap);
+        }
+
+        // Creating the Meta Map
+        final Map<String, Object> metaMap = new HashMap<>();
+        final Map<String, Object> collectMap = new HashMap<>();
+        collectMap.put(DATASET_ID, datasetId);
+        metaMap.put(COLLECT, collectMap);
+
+        // Adding xdm data to xdmMap
+        addXDMData(eventData, xdmMap);
+
+        final Map<String, Object> xdmData = new HashMap<>();
+        xdmData.put(XDM, xdmMap);
+        xdmData.put(META, metaMap);
+
+        // FIXME: event history POC, use message id and custom action (e.g. "triggered") as a mask =============
+        final String[] mask = {"xdm.eventType",
+                "xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID",
+                "xdm.inappMessageTracking.action"};
+
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
                 .setEventData(xdmData)
                 .build();
 

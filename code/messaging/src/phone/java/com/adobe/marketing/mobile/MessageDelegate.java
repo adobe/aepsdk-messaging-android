@@ -12,15 +12,24 @@
 
 package com.adobe.marketing.mobile;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import android.webkit.ValueCallback;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+
 public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
+    private final static String AMPERSAND = "&";
+    private final static String EXPECTED_JAVASCRIPT_PARAM = "js=";
     // public properties
     public String messageId;
     public boolean autoTrack = true;
@@ -39,13 +48,13 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
         }
 
         final HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.TrackingKeys.IAM.EventType.INTERACT);
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, messageId);
         eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, interactionType);
 
         final Event event = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT).setEventData(eventData).build();
         Log.debug(LOG_TAG, "%s - Tracking interaction (%s) for message id %s", SELF_TAG, interactionType, messageId);
-        messagingInternal.handleTrackingInfo(event);
+        messagingInternal.handleInAppTrackingInfo(event);
     }
 
     /**
@@ -54,15 +63,32 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      * @param url {@link String} containing url to be shown
      */
     protected void openUrl(final String url) {
-        if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(LOG_TAG, "%s - Cannot open a null or empty URL.", SELF_TAG);
-            return;
-        }
-
         final UIService uiService = MessagingUtils.getUIService();
 
         if (uiService == null || !uiService.showUrl(url)) {
             Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, url);
+        }
+    }
+
+    // javascript handling POC
+    /**
+     * Attempts to run the provided javascript code
+     *
+     * @param javascript {@link String} containing javascript code to be executed
+     */
+    protected void loadJavascript(final String javascript) {
+        final WebView jsWebview = new WebView(App.getAppContext());
+        final WebSettings settings = jsWebview.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+
+        if (jsWebview != null) {
+            jsWebview.evaluateJavascript(javascript, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    Log.debug(LOG_TAG,"Javascript callback: " + value);
+                }
+            });
         }
     }
     // ============================================================================================
@@ -78,7 +104,8 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     public void onDismiss(final UIService.FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message dismissed.", SELF_TAG);
-        final Message message = (Message) fullscreenMessage.getParent();
+        final AEPMessageSettings aepMessageSettings = (AEPMessageSettings) fullscreenMessage.getSettings();
+        final Message message = (Message) aepMessageSettings.getParent();
         message.dismiss();
     }
 
@@ -87,6 +114,14 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
         return true;
     }
 
+    /**
+     * Invoked when a {@link AEPMessage} is attempting to load a URL.
+     *
+     * @param fullscreenMessage the {@link UIService.FullscreenMessage} instance
+     * @param urlString {@link String} containing the URL being loaded by the {@code AEPMessage}
+     *
+     * @return true if the SDK wants to handle the URL
+     */
     @Override
     public boolean overrideUrlLoad(final UIService.FullscreenMessage fullscreenMessage, final String urlString) {
         Log.trace(LOG_TAG, "%s - Fullscreen overrideUrlLoad callback received with url (%s)", SELF_TAG, urlString);
@@ -97,9 +132,25 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
         }
 
         URI uri;
-        try {
-            uri = new URI(urlString);
 
+        // JS poc
+        // we need to url encode any javascript if present in the url
+        String localUrlString = urlString;
+        final String[] tokens = urlString.split(AMPERSAND);
+        if (tokens[tokens.length - 1].contains(EXPECTED_JAVASCRIPT_PARAM)) {
+            try {
+                // encode the content after "js="
+                final String urlEncodedJavascript = URLEncoder.encode(tokens[tokens.length - 1].substring(3), StandardCharsets.UTF_8.toString());
+                localUrlString = tokens[0] + AMPERSAND + EXPECTED_JAVASCRIPT_PARAM + urlEncodedJavascript;
+                // the UrlEncoder replaces spaces with "+". we need to manually encode "+" to "%20"".
+                localUrlString = localUrlString.replace("+", "%20");
+            } catch (UnsupportedEncodingException unsupportedEncodingException) {
+                Log.debug(LOG_TAG, "%s - Invalid encoding type (%s), javascript will be ignored.", SELF_TAG, StandardCharsets.UTF_8);
+            }
+        }
+
+        try {
+            uri = new URI(localUrlString);
         } catch (URISyntaxException ex) {
             Log.debug(LOG_TAG, "%s - Invalid message URI found (%s).", SELF_TAG, urlString);
             return true;
@@ -117,7 +168,9 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
         final String query = uri.getQuery();
         final Map<String, String> messageData = UrlUtilities.extractQueryParameters(query);
 
-        final Message message = (Message) fullscreenMessage.getParent();
+        final AEPMessageSettings aepMessageSettings = (AEPMessageSettings) fullscreenMessage.getSettings();
+        final Message message = (Message) aepMessageSettings.getParent();
+
         if (messageData != null && !messageData.isEmpty()) {
             // handle optional tracking
             final String interaction = messageData.get(MessagingConstants.MESSAGING_SCHEME.INTERACTION);
@@ -130,15 +183,21 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
                 }
             }
 
-            final String host = uri.getHost();
-            if (host.equals(MessagingConstants.MESSAGING_SCHEME.PATH_DISMISS)) {
-                message.dismiss();
-            }
-
             final String deeplink = messageData.get("link");
             if (!StringUtils.isNullOrEmpty(deeplink)) {
                 openUrl(deeplink);
             }
+
+            // JS poc
+            final String javasscript = messageData.get("js");
+            if (!StringUtils.isNullOrEmpty(javasscript)) {
+                loadJavascript(javasscript);
+            }
+        }
+
+        final String host = uri.getHost();
+        if ((host.equals(MessagingConstants.MESSAGING_SCHEME.PATH_DISMISS)) || (host.equals(MessagingConstants.MESSAGING_SCHEME.PATH_CANCEL))) {
+            message.dismiss();
         }
 
         return true;

@@ -68,7 +68,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     @Mock
     Bundle bundle;
     @Mock
-    AEPFullscreenMessage mockFullscreenMessage;
+    AEPMessage mockAEPMessage;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException {
@@ -96,7 +96,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
 
         // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(Object.class))).thenReturn(mockFullscreenMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(mockAEPMessage);
 
         messagingInternal = new MessagingInternal(mockExtensionApi);
         MobileCore.setApplication(App.getApplication());
@@ -136,7 +136,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is called
-        verify(mockFullscreenMessage, times(1)).show();
+        verify(mockAEPMessage, times(1)).show();
     }
 
     @Test
@@ -170,7 +170,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -203,7 +203,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     public void test_handleRulesResponseEvent_NullConsequences() {
@@ -228,7 +228,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -255,7 +255,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -286,7 +286,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -316,7 +316,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -350,7 +350,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -383,7 +383,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -417,7 +417,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -450,7 +450,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 
     @Test
@@ -482,6 +482,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.processEvents();
 
         // verify MessagingFullscreenMessage.show() is not called
-        verify(mockFullscreenMessage, times(0)).show();
+        verify(mockAEPMessage, times(0)).show();
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="iam_types_array">
+        <item>Fullscreen</item>
+        <item>Top Banner</item>
+        <item>Bottom Banner</item>
+        <item>Center Banner</item>
+        <item>Top Half</item>
+        <item>Bottom Half</item>
+        <item>Center Modal</item>
+    </string-array>
+</resources>

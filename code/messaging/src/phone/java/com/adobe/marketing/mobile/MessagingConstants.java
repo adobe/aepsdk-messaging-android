@@ -43,14 +43,6 @@ final class MessagingConstants {
         static final String LAUNCHES_VALUE = "value";
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
-
-        static final class IAM {
-            static final class EventType {
-                static final String DISMISS = "inapp.dismiss";
-                static final String INTERACT = "inapp.interact";
-                static final String TRIGGER = "inapp.trigger";
-            }
-        }
     }
 
     static final class JSON_VALUES {
@@ -80,6 +72,8 @@ final class MessagingConstants {
         static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
+            static final String TRACK_INFO_KEY_MESSAGE_EXECUTION = "messageExecution";
+            static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
 
@@ -100,6 +94,8 @@ final class MessagingConstants {
                 static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
                 static final String XDM_DATA_EVENT_TYPE = "eventType";
                 static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
+                static final String XDM_DATA_IN_APP_NOTIFICATION_TRACKING = "inappMessageTracking";
+                static final String ACTION = "action";
 
                 private XDMDataKeys() {
                 }
@@ -120,8 +116,20 @@ final class MessagingConstants {
                 private PushNotificationDetailsDataKeys() {
                 }
             }
+
+            static final class IAMDetailsDataKeys {
+                static final class EventType {
+                    static final String DISMISS = "inapp.dismiss";
+                    static final String INTERACT = "inapp.interact";
+                    static final String TRIGGER = "inapp.trigger";
+                    static final String DISPLAY = "inapp.display";
+                }
+                private IAMDetailsDataKeys() {
+                }
+            }
         }
 
+        // to be replaced with Optimize
         static final class Offers {
             static final String PROPOSITIONS = "propositions";
             static final String DECISION_SCOPES = "decisionscopes";
@@ -172,6 +180,28 @@ final class MessagingConstants {
             static final String FULLSCREEN = "fullscreen";
 
             private MessageTemplate() {
+            }
+        }
+
+        static final class MobileParametersKeys {
+            static final String MOBILE_PARAMETERS = "mobileParameters";
+            static final String SCHEMA_VERSION = "schemaVersion";
+            static final String WIDTH = "width";
+            static final String HEIGHT = "height";
+            static final String VERTICAL_ALIGN = "verticalAlign";
+            static final String VERTICAL_INSET = "verticalInset";
+            static final String HORIZONTAL_ALIGN = "horizontalAlign";
+            static final String HORIZONTAL_INSET = "horizontalInset";
+            static final String UI_TAKEOVER = "uiTakeover";
+            static final String DISPLAY_ANIMATION = "displayAnimation";
+            static final String DISMISS_ANIMATION = "dismissAnimation";
+            static final String BACKDROP_COLOR = "backdropColor";
+            static final String BACKDROP_OPACITY = "backdropOpacity";
+            static final String CORNER_RADIUS = "cornerRadius";
+            static final String GESTURES = "gestures";
+            static final String BODY = "body";
+
+            private MobileParametersKeys() {
             }
         }
     }

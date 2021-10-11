@@ -12,13 +12,15 @@
 
 package com.adobe.marketing.mobile;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
-    private UIService.FullscreenMessage fullscreenMessage;
+    private AEPMessage aepMessage;
     private UIService.FullscreenMessageDelegate customDelegate;
 
     /**
@@ -37,14 +39,8 @@ public class Message extends MessageDelegate {
      * @param consequence {@link Map} containing a {@code Message} defining payload
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingInternal parent, final Map consequence) throws MessageRequiredFieldMissingException {
+    public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings) throws MessageRequiredFieldMissingException {
         this.messagingInternal = parent;
-        this.messageId = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
-
-        if (StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);
-            throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
-        }
 
         final String consequenceType = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
 
@@ -61,12 +57,23 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        final String template = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE);
-        if (StringUtils.isNullOrEmpty(template) || !template.equals(MessagingConstants.EventDataKeys.MessageTemplate.FULLSCREEN)) {
-            Log.debug(MessagingConstants.LOG_TAG,
-                    "%s - Unable to create an in-app message due to a missing or unsupported message template: %s.", SELF_TAG, template);
-            throw new MessageRequiredFieldMissingException("Required field: \"template\" is null, empty, or contains an unsupported template type");
+        final Map<String, Object> xdmMap = (HashMap) details.get(MessagingConstants.TrackingKeys._XDM);
+        final Map<String, Object> mixinMap = (HashMap) xdmMap.get(MessagingConstants.TrackingKeys.MIXINS);
+        final Map<String, Object> experienceMap = (HashMap) mixinMap.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+        final Map<String, Object> cjmMap = (HashMap) experienceMap.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
+        final Map<String, Object> messageExecutionMap = (HashMap) cjmMap.get(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION);
+        this.messageId = (String) messageExecutionMap.get(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID);
+
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);
+            throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
+//        final String template = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE);
+//        if (StringUtils.isNullOrEmpty(template) || !template.equals(MessagingConstants.EventDataKeys.MessageTemplate.FULLSCREEN)) {
+//            Log.debug(MessagingConstants.LOG_TAG,
+//                    "%s - Unable to create an in-app message due to a missing or unsupported message template: %s.", SELF_TAG, template);
+//            throw new MessageRequiredFieldMissingException("Required field: \"template\" is null, empty, or contains an unsupported template type");
+//        }
 
         final String html = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
         if (StringUtils.isNullOrEmpty(html)) {
@@ -75,31 +82,172 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
         }
 
-        this.customDelegate = MobileCore.getFullscreenMessageDelegate();
-
-        if (customDelegate != null) {
-            this.fullscreenMessage = MessagingUtils.getUIService().createFullscreenMessage(html, customDelegate, false, this);
+        // message customization poc
+        final UIService.MessageSettings settings;
+        AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
+        if(rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
+            settings = addMessageSettings(messageSettingsBuilder, rawMessageSettings);
         } else {
-            this.fullscreenMessage = MessagingUtils.getUIService().createFullscreenMessage(html, this, false, this);
+            settings = messageSettingsBuilder.build();
+        }
+
+        this.customDelegate = MobileCore.getFullscreenMessageDelegate();
+        if (customDelegate != null) {
+            this.aepMessage = (AEPMessage) MessagingUtils.getUIService().createFullscreenMessage(html, customDelegate, false, settings);
+        } else {
+            this.aepMessage = (AEPMessage) MessagingUtils.getUIService().createFullscreenMessage(html, this, false, settings);
         }
     }
 
     // ui management
     public void show() {
-        if (fullscreenMessage != null) {
+        if (aepMessage != null) {
             if (autoTrack) {
                 track("triggered");
             }
-            fullscreenMessage.show();
+            aepMessage.show();
         }
     }
 
     public void dismiss() {
-        if (fullscreenMessage != null) {
+        if (aepMessage != null) {
             if (autoTrack) {
                 track("dismissed");
             }
-            fullscreenMessage.dismiss();
+
+            aepMessage.dismiss();
         }
+    }
+
+    // message customization poc
+    /**
+     * Sample Message payload:
+     *      "messageSetting": {
+     *         "schemaVersion": "1.0",
+     *          "width": "80",
+     *          "height": "50",
+     *          "verticalAlign": "center",
+     *          "verticalInset": "0",
+     *          "horizontalAlign": "center",
+     *          "horizontalInset": "0",
+     *          "uiTakeover": true,
+     *          "displayAnimation": "top",
+     *          "dismissAnimation": "top",
+     *          "backdropColor": "AA00EE",
+     *          "backdropOpacity": 0.2,
+     *          "gestures": {
+     *              "swipeUp": "adbinapp://dismiss",
+     *              "swipeDown": "adbinapp://dismiss",
+     *              "swipeLeft": "adbinapp://dismiss?interaction=negative",
+     *              "swipeRight": "adbinapp://dismiss?interaction=positive",
+     *              "tapBackground": "adbinapp://dismiss"
+     *          }
+     *      }
+     */
+    private UIService.MessageSettings addMessageSettings(AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
+        int width, height, verticalInset, horizontalInset;
+        String backdropColor;
+        float backdropOpacity;
+        float cornerRadius;
+        boolean uiTakeover;
+        UIService.MessageAlignment verticalAlign, horizontalAlign;
+        UIService.MessageAnimation displayAnimation, dismissAnimation;
+        Map<UIService.MessageGesture, String> gestureStringMap = new HashMap<>();
+
+        if (rawSettings.get(MobileParametersKeys.WIDTH) == null) {
+            width = 100;
+        } else {
+            width = (Integer) rawSettings.get(MobileParametersKeys.WIDTH);
+        }
+
+        if (rawSettings.get(MobileParametersKeys.HEIGHT) == null) {
+            height = 100;
+        } else {
+            height = (Integer) rawSettings.get(MobileParametersKeys.HEIGHT);
+        }
+
+        if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) == null) {
+            verticalAlign = UIService.MessageAlignment.CENTER;
+        } else {
+            verticalAlign = UIService.MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN)).toUpperCase());
+        }
+
+        if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) == null) {
+            verticalInset = 0;
+        } else {
+            verticalInset = (Integer) rawSettings.get(MobileParametersKeys.VERTICAL_INSET);
+        }
+
+        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) == null) {
+            horizontalAlign = UIService.MessageAlignment.CENTER;
+        } else {
+            horizontalAlign = UIService.MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN)).toUpperCase());
+        }
+
+        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) == null) {
+            horizontalInset = 0;
+        } else {
+            horizontalInset = (Integer) rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET);
+        }
+
+        if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) == null) {
+            displayAnimation = UIService.MessageAnimation.NONE;
+        } else {
+            displayAnimation = UIService.MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION)).toUpperCase());
+        }
+
+        if (rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION) == null) {
+            dismissAnimation = UIService.MessageAnimation.NONE;
+        } else {
+            dismissAnimation = UIService.MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION)).toUpperCase());
+        }
+
+        if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) == null) {
+            backdropColor = "#FFFFFF";
+        } else {
+            backdropColor = "#" + rawSettings.get(MobileParametersKeys.BACKDROP_COLOR);
+        }
+
+        if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) == null) {
+            backdropOpacity = 0.0f;
+        } else {
+            final double opacity = (Double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY);
+            backdropOpacity = (float) opacity;
+        }
+
+        if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) == null) {
+            cornerRadius = 0.0f;
+        } else {
+            final double radius = (Double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS);
+            cornerRadius = (float) radius;
+        }
+
+        if (rawSettings.get(MobileParametersKeys.UI_TAKEOVER) == null) {
+            uiTakeover = true;
+        } else {
+            uiTakeover = (boolean) rawSettings.get(MobileParametersKeys.UI_TAKEOVER);
+        }
+
+        // we need to convert key strings present in the gestures map to MessageGesture enum keys
+        final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(MobileParametersKeys.GESTURES);
+        for (Map.Entry<String,String> entry : stringMap.entrySet()) {
+            final UIService.MessageGesture gesture = UIService.MessageGesture.get(entry.getKey());
+            gestureStringMap.put(gesture, entry.getValue());
+        }
+        
+        return builder.setWidth(width)
+                .setHeight(height)
+                .setVerticalInset(verticalInset)
+                .setHorizontalInset(horizontalInset)
+                .setVerticalAlign(verticalAlign)
+                .setHorizontalAlign(horizontalAlign)
+                .setDisplayAnimation(displayAnimation)
+                .setDismissAnimation(dismissAnimation)
+                .setBackdropColor(backdropColor)
+                .setBackdropOpacity(backdropOpacity)
+                .setCornerRadius(cornerRadius)
+                .setUiTakeover(uiTakeover)
+                .setGestures(gestureStringMap)
+                .build();
     }
 }

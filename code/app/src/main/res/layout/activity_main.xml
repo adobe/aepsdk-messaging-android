@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#C5C5CA"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".MainActivity">
@@ -22,19 +23,30 @@
         android:id="@+id/btnTriggerFullscreenIAM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Trigger Fullscreen IAM" />
+        android:text="Trigger IAM" />
+
+    <Spinner
+        android:id="@+id/iamTypeSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Switch
         android:id="@+id/allowIAMSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
-        android:text="Allow Fullscreen IAM" />
+        android:text="Allow IAM" />
 
     <Button
         android:id="@+id/btnTriggerLastIAM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Trigger Most Recent IAM" />
+
+    <Button
+        android:id="@+id/btnCleanEventHistory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="clean event history" />
 
 </LinearLayout>

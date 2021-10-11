@@ -23,8 +23,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.adobe.marketing.mobile.FullscreenMessageActivity" />
-
         <service
             android:name=".NotificationService"
             android:enabled="true"

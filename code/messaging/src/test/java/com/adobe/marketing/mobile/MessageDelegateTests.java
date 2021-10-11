@@ -33,20 +33,23 @@ public class MessageDelegateTests {
     private MessageDelegate messageDelegate = new MessageDelegate();
 
     @Mock
-    AEPFullscreenMessage mockFullscreenMessage;
+    AEPMessage mockAEPMessage;
+    @Mock
+    AEPMessageSettings mockAEPMessageSettings;
     @Mock
     Message mockMessage;
 
     @Before
     public void setup() {
         PowerMockito.mockStatic(Log.class);
-        Mockito.when(mockFullscreenMessage.getParent()).thenReturn(mockMessage);
+        Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
+        Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
     }
 
     @Test
     public void test_onMessageShow() {
         // test
-        messageDelegate.onShow(mockFullscreenMessage);
+        messageDelegate.onShow(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -56,7 +59,7 @@ public class MessageDelegateTests {
     @Test
     public void test_onMessageDismiss() {
         // test
-        messageDelegate.onDismiss(mockFullscreenMessage);
+        messageDelegate.onDismiss(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);

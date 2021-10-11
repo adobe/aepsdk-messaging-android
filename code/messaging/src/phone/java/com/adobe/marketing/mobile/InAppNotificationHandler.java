@@ -22,6 +22,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,9 @@ class InAppNotificationHandler {
 
     // testing vars
     private final static int MAX_ITEM_COUNT = 30;
+
+    // message customization poc
+    private Map<String, Object> rawMessageParameters = new HashMap<>();
 
     /**
      * Constructor
@@ -95,6 +99,9 @@ class InAppNotificationHandler {
      */
     void handleOfferNotificationPayload(final Event edgeResponseEvent) {
         getActivityAndPlacement(edgeResponseEvent);
+        // TODO: FOR TESTING ONLY, REMOVE WHEN OPTIMIZE EXTENSION ADDED ========================================================
+        messagingModule.unregisterAllRules();
+        // TODO: ===============================================================================================================
         final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Offers.PAYLOAD);
         if (payload == null || payload.length() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
@@ -111,11 +118,13 @@ class InAppNotificationHandler {
                 return;
             }
             final JSONArray items = payload.getJSONArray(MessagingConstants.EventDataKeys.Offers.ITEMS);
+
             for (int index = 0; index < items.length(); index++) {
                 final String ruleJson = items.getJSONObject(index).getJSONObject(MessagingConstants.EventDataKeys.Offers.DATA).getString(MessagingConstants.EventDataKeys.Offers.CONTENT);
                 final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
                 final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
                 if (parsedRule != null) {
+                    Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
                     messagingModule.registerRule(parsedRule);
                 }
             }
@@ -138,7 +147,7 @@ class InAppNotificationHandler {
         }
 
         try {
-            Message message = new Message(parent, triggeredConsequence);
+            Message message = new Message(parent, triggeredConsequence, rawMessageParameters);
             message.show();
         } catch (MessageRequiredFieldMissingException exception) {
             Log.warning(MessagingConstants.LOG_TAG,
@@ -204,11 +213,25 @@ class InAppNotificationHandler {
                         MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY);
                 final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
                 // get consequences
-                final List<Event> consequences = generateConsequenceEvents(ruleObject.getJSONArray(
-                        MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY));
+                final JsonUtilityService.JSONArray consequenceJSONArray = ruleObject.getJSONArray(
+                        MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+                final List<Event> consequences = generateConsequenceEvents(consequenceJSONArray);
                 if (consequences != null) {
                     parsedRule = new Rule(condition, consequences);
                 }
+                // message customization poc
+                // get message settings
+                final JsonUtilityService.JSONObject consequenceJson = (JsonUtilityService.JSONObject) consequenceJSONArray.get(0);
+                final JsonUtilityService.JSONObject detailJson = consequenceJson.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+                final JsonUtilityService.JSONObject parametersJson = detailJson.getJSONObject(MessagingConstants.EventDataKeys.MobileParametersKeys.MOBILE_PARAMETERS);
+                // convert JsonUtilityService.JSONObject to JSONObject
+                try {
+                    JSONObject convertedJSON = new JSONObject(parametersJson.toString());
+                    rawMessageParameters = MessagingUtils.toMap(convertedJSON);
+                } catch (JSONException jsonException) {
+                    Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to convert from JsonUtilityService.JSONObject to JSONObject (%s)", jsonException.getLocalizedMessage());
+                }
+
             } catch (final JsonException e) {
                 Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e);
             } catch (final UnsupportedConditionException e) {
