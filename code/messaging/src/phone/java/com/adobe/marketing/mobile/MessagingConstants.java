@@ -59,6 +59,12 @@ final class MessagingConstants {
         static final String DEEPLINK = "deeplink";
     }
 
+    static final class DefaultValues {
+        static final class Optimize {
+            static final int MAX_ITEM_COUNT = 30;
+        }
+    }
+
     static final class EventDataKeys {
         static final String STATE_OWNER = "stateowner";
 
@@ -129,33 +135,24 @@ final class MessagingConstants {
             }
         }
 
-        // to be replaced with Optimize
-        static final class Offers {
-            static final String PROPOSITIONS = "propositions";
+        static final class Optimize {
+            static final String REQUEST_TYPE = "requesttype";
             static final String DECISION_SCOPES = "decisionscopes";
-            static final String ACTIVITY_ID = "activityId";
-            static final String PLACEMENT_ID = "placementId";
-            static final String ITEM_COUNT = "itemCount";
-            static final String ERROR = "error";
-            static final String TYPE = "type";
-            static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
-            static final String PREFETCH = "prefetch";
-            static final String RETRIEVE = "retrieve";
-            static final String REQUEST_EVENT_ID = "requestEventId";
-            static final String XDM_QUERY = "query";
-            static final String XDM = "xdm";
+            static final String NAME = "name";
+            static final String ID = "id";
             static final String DATA = "data";
-            static final String DATASET_ID = "datasetId";
-            static final String XDM_EVENT_TYPE = "eventType";
-            static final String PERSONALIZATION_REQUEST = "personalization.request";
+            static final String CONTENT = "content";
             static final String PAYLOAD = "payload";
             static final String ACTIVITY = "activity";
             static final String PLACEMENT = "placement";
-            static final String ID = "id";
             static final String ITEMS = "items";
-            static final String CONTENT = "content";
+            private Optimize() {
+            }
+        }
 
-            private Offers() {
+        static final class Values {
+            static final class Optimize {
+                static final String UPDATE_PROPOSITIONS = "updatepropositions";
             }
         }
 
@@ -210,13 +207,14 @@ final class MessagingConstants {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
         static final String OFFERS = "com.adobe.eventType.offerDecisioning";
+        static final String OPTIMIZE = "com.adobe.eventType.optimize";
     }
 
     static final class EventName {
         static final String MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
         static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
-        static final String MESSAGING_REFRESH_IAM = "Refresh In-App Messages";
+        static final String MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS = "Retrieve message definitions";
         static final String MESSAGING_IAM_TRACKING_EDGE_EVENT = "In-app message tracking edge event";
     }
 

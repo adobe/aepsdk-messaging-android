@@ -20,9 +20,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +37,6 @@ class InAppNotificationHandler {
 
     // package private
     final MessagingInternal parent;
-
-    // testing vars
-    private final static int MAX_ITEM_COUNT = 30;
 
     // message customization poc
     private Map<String, Object> rawMessageParameters = new HashMap<>();
@@ -66,29 +63,39 @@ class InAppNotificationHandler {
             Log.trace(LOG_TAG, "%s - Unable to retrieve message definitions - activity and placement ids are both required.", SELF_TAG);
             return;
         }
-        // create event to be handled by offers
-        final ArrayList<Object> decisionScopes = new ArrayList<>();
-        final HashMap<String, Object> offersIdentifiers = new HashMap<>();
-        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.ITEM_COUNT, Variant.fromInteger(MAX_ITEM_COUNT));
-        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.ACTIVITY_ID, Variant.fromString(activityId));
-        offersIdentifiers.put(MessagingConstants.EventDataKeys.Offers.PLACEMENT_ID, Variant.fromString(placementId));
-        decisionScopes.add(offersIdentifiers);
+        // create event to be handled by optimize
+        final HashMap<String, Object> optimizeData = new HashMap<>();
+        final HashMap<String, String> decisionScopes = new HashMap<>();
+        decisionScopes.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScope(activityId, placementId));
+        optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
+        optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
 
-        final HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Offers.TYPE, MessagingConstants.EventDataKeys.Offers.PREFETCH);
-        eventData.put(MessagingConstants.EventDataKeys.Offers.DECISION_SCOPES, decisionScopes);
-
-        final Event messageFetchEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_REFRESH_IAM, MessagingConstants.EventType.OFFERS, MessagingConstants.EventSource.REQUEST_CONTENT)
-                .setEventData(eventData)
+        final Event messageFetchEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS, MessagingConstants.EventType.OPTIMIZE, MessagingConstants.EventSource.REQUEST_CONTENT)
+                .setEventData(optimizeData)
                 .build();
 
         // send event
         MobileCore.dispatchEvent(messageFetchEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.warning(LOG_TAG, "%s - Error in dispatching event for fetching messages from Offers.", SELF_TAG);
+                Log.warning(LOG_TAG, "%s - Error in dispatching event for refreshing messages from Optimize.", SELF_TAG);
             }
         });
+    }
+
+    /**
+     * Takes an activity and placement and returns an encoded string in the format expected
+     * by the Optimize extension for retrieving offers
+     *
+     * @param activityId {@code String} containing the activity id
+     * @param placementId {@code String} containing the placement id
+     * @return a base64 encoded JSON string to be used by the Optimize extension
+     */
+    private String getEncodedDecisionScope(final String activityId, final String placementId) {
+        final byte[] decisionScopeBytes = String.format("{\"activityId\":\"%s\",\"placementId\":\"%s\",\"itemCount\":%s}", activityId, placementId, MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT).getBytes(StandardCharsets.UTF_8);
+
+        final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+        return new String(androidEncodingService.base64Encode(decisionScopeBytes));
     }
 
     /**
@@ -109,15 +116,15 @@ class InAppNotificationHandler {
         }
 
         try {
-            final JSONObject activity = payload.getJSONObject(MessagingConstants.EventDataKeys.Offers.ACTIVITY);
-            final JSONObject placement = payload.getJSONObject(MessagingConstants.EventDataKeys.Offers.PLACEMENT);
-            final String offerActivityId = (String) activity.get(MessagingConstants.EventDataKeys.Offers.ID);
-            final String offerPlacementId = (String) placement.get(MessagingConstants.EventDataKeys.Offers.ID);
+            final JSONObject activity = payload.getJSONObject(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+            final JSONObject placement = payload.getJSONObject(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+            final String offerActivityId = (String) activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
+            final String offerPlacementId = (String) placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
             if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
                 Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
                 return;
             }
-            final JSONArray items = payload.getJSONArray(MessagingConstants.EventDataKeys.Offers.ITEMS);
+            final JSONArray items = payload.getJSONArray(MessagingConstants.EventDataKeys.Optimize.ITEMS);
 
             for (int index = 0; index < items.length(); index++) {
                 final String ruleJson = items.getJSONObject(index).getJSONObject(MessagingConstants.EventDataKeys.Offers.DATA).getString(MessagingConstants.EventDataKeys.Offers.CONTENT);
