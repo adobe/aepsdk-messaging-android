@@ -12,11 +12,12 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+
 import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,18 +27,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
+    // package private
+    final MessagingInternal parent;
     private final Module messagingModule;
     private String activityId;
     private String placementId;
-
-    // package private
-    final MessagingInternal parent;
-
     // message customization poc
     private Map<String, Object> rawMessageParameters = new HashMap<>();
 
@@ -59,14 +56,16 @@ class InAppNotificationHandler {
     void fetchMessages() {
         // activity and placement are both required for message definition retrieval
         getActivityAndPlacement(null);
-        if(StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(placementId)) {
+        if (StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(placementId)) {
             Log.trace(LOG_TAG, "%s - Unable to retrieve message definitions - activity and placement ids are both required.", SELF_TAG);
             return;
         }
         // create event to be handled by optimize
         final HashMap<String, Object> optimizeData = new HashMap<>();
-        final HashMap<String, String> decisionScopes = new HashMap<>();
-        decisionScopes.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScope(activityId, placementId));
+        final ArrayList<Map<String, Object>> decisionScopes = new ArrayList<>();
+        final HashMap<String, Object> decisionScope = new HashMap<>();
+        decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScope(activityId, placementId));
+        decisionScopes.add(decisionScope);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
 
@@ -87,7 +86,7 @@ class InAppNotificationHandler {
      * Takes an activity and placement and returns an encoded string in the format expected
      * by the Optimize extension for retrieving offers
      *
-     * @param activityId {@code String} containing the activity id
+     * @param activityId  {@code String} containing the activity id
      * @param placementId {@code String} containing the placement id
      * @return a base64 encoded JSON string to be used by the Optimize extension
      */
@@ -107,37 +106,35 @@ class InAppNotificationHandler {
     void handleOfferNotificationPayload(final Event edgeResponseEvent) {
         getActivityAndPlacement(edgeResponseEvent);
         // TODO: FOR TESTING ONLY, REMOVE WHEN OPTIMIZE EXTENSION ADDED ========================================================
-        messagingModule.unregisterAllRules();
+        //messagingModule.unregisterAllRules();
         // TODO: ===============================================================================================================
-        final JSONObject payload = (JSONObject) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Offers.PAYLOAD);
-        if (payload == null || payload.length() == 0) {
+        final ArrayList<HashMap<String, Variant>> payload = (ArrayList<HashMap<String, Variant>>) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+        if (payload == null && payload.size() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
             return;
         }
+            for (HashMap<String, Variant> entry : payload) {
+                final Map<String, String> activity = (Map<String, String>) entry.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+                final Map<String, String> placement = (Map<String, String>) entry.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+                final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
+                final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
+                if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
+                    Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
+                    return;
+                }
+                final List<HashMap<String, Variant>> items = (List<HashMap<String, Variant>>) entry.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
 
-        try {
-            final JSONObject activity = payload.getJSONObject(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-            final JSONObject placement = payload.getJSONObject(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
-            final String offerActivityId = (String) activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
-            final String offerPlacementId = (String) placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
-            if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
-                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
-                return;
-            }
-            final JSONArray items = payload.getJSONArray(MessagingConstants.EventDataKeys.Optimize.ITEMS);
-
-            for (int index = 0; index < items.length(); index++) {
-                final String ruleJson = items.getJSONObject(index).getJSONObject(MessagingConstants.EventDataKeys.Offers.DATA).getString(MessagingConstants.EventDataKeys.Offers.CONTENT);
-                final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
-                final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
-                if (parsedRule != null) {
-                    Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
-                    messagingModule.registerRule(parsedRule);
+                for (Map<String, Variant> currentItem: items) {
+                    final Map<String, String> data = (Map<String, String>) currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
+                    final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
+                    final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
+                    final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
+                    if (parsedRule != null) {
+                        Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
+                        messagingModule.registerRule(parsedRule);
+                    }
                 }
             }
-        } catch (JSONException e) {
-            Log.debug(LOG_TAG, "handleOfferNotification - JSON exception when attempting to retrieve rules json from the edge response event: %s", e.getLocalizedMessage());
-        }
     }
 
     /**
@@ -164,8 +161,10 @@ class InAppNotificationHandler {
     }
 
     private void getActivityAndPlacement(final Event eventToProcess) {
+        // placementId = package name
         this.placementId = App.getApplication().getPackageName();
-        if(eventToProcess != null) {
+        if (eventToProcess != null) {
+            // activityId = IMS OrgID
             final Map<String, Object> configSharedState = parent.getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, null);
             if (configSharedState != null) {
@@ -185,7 +184,13 @@ class InAppNotificationHandler {
                 return;
             }
             activityId = applicationInfo.metaData.getString("activityId");
+            placementId = applicationInfo.metaData.getString("placementId");
         }
+        // TODO: for testing, remove
+        //activityId = "xcore:offer-activity:13c2593fcbcfacbd";
+        activityId = "xcore:offer-activity:14090235e6b6757a";
+        //placementId = "xcore:offer-placement:13d01b7516bf0613";
+        placementId = "xcore:offer-placement:140a176f272ee651";
     }
 
     /**

@@ -68,12 +68,6 @@ public class Message extends MessageDelegate {
             Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
-//        final String template = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE);
-//        if (StringUtils.isNullOrEmpty(template) || !template.equals(MessagingConstants.EventDataKeys.MessageTemplate.FULLSCREEN)) {
-//            Log.debug(MessagingConstants.LOG_TAG,
-//                    "%s - Unable to create an in-app message due to a missing or unsupported message template: %s.", SELF_TAG, template);
-//            throw new MessageRequiredFieldMissingException("Required field: \"template\" is null, empty, or contains an unsupported template type");
-//        }
 
         final String html = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
         if (StringUtils.isNullOrEmpty(html)) {
@@ -157,13 +151,13 @@ public class Message extends MessageDelegate {
         if (rawSettings.get(MobileParametersKeys.WIDTH) == null) {
             width = 100;
         } else {
-            width = (Integer) rawSettings.get(MobileParametersKeys.WIDTH);
+            width = Integer.parseInt(rawSettings.get(MobileParametersKeys.WIDTH).toString());
         }
 
         if (rawSettings.get(MobileParametersKeys.HEIGHT) == null) {
             height = 100;
         } else {
-            height = (Integer) rawSettings.get(MobileParametersKeys.HEIGHT);
+            height = Integer.parseInt(rawSettings.get(MobileParametersKeys.HEIGHT).toString());
         }
 
         if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) == null) {
@@ -175,7 +169,7 @@ public class Message extends MessageDelegate {
         if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) == null) {
             verticalInset = 0;
         } else {
-            verticalInset = (Integer) rawSettings.get(MobileParametersKeys.VERTICAL_INSET);
+            verticalInset = Integer.parseInt(rawSettings.get(MobileParametersKeys.VERTICAL_INSET).toString());
         }
 
         if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) == null) {
@@ -187,7 +181,7 @@ public class Message extends MessageDelegate {
         if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) == null) {
             horizontalInset = 0;
         } else {
-            horizontalInset = (Integer) rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET);
+            horizontalInset = Integer.parseInt(rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET).toString());
         }
 
         if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) == null) {
@@ -225,14 +219,16 @@ public class Message extends MessageDelegate {
         if (rawSettings.get(MobileParametersKeys.UI_TAKEOVER) == null) {
             uiTakeover = true;
         } else {
-            uiTakeover = (boolean) rawSettings.get(MobileParametersKeys.UI_TAKEOVER);
+            uiTakeover = Boolean.getBoolean(rawSettings.get(MobileParametersKeys.UI_TAKEOVER).toString());
         }
 
         // we need to convert key strings present in the gestures map to MessageGesture enum keys
         final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(MobileParametersKeys.GESTURES);
-        for (Map.Entry<String,String> entry : stringMap.entrySet()) {
-            final UIService.MessageGesture gesture = UIService.MessageGesture.get(entry.getKey());
-            gestureStringMap.put(gesture, entry.getValue());
+        if (stringMap != null && !stringMap.isEmpty()) {
+            for (Map.Entry<String, String> entry : stringMap.entrySet()) {
+                final UIService.MessageGesture gesture = UIService.MessageGesture.get(entry.getKey());
+                gestureStringMap.put(gesture, entry.getValue());
+            }
         }
         
         return builder.setWidth(width)

@@ -29,6 +29,8 @@ final class MessagingState {
 
     // Messaging properties
     private String experienceEventDatasetId;
+    private boolean configStateSet = false;
+    private boolean identityStateSet = false;
 
 
     void setState(final Map<String, Object> configState, final Map<String, Object> edgeIdentityState) {
@@ -41,6 +43,7 @@ final class MessagingState {
             Object expEventDatasetId = configState.get(EXPERIENCE_EVENT_DATASET_ID);
             if (expEventDatasetId instanceof String) {
                 this.experienceEventDatasetId = (String) expEventDatasetId;
+                configStateSet = true;
             }
         }
     }
@@ -61,6 +64,7 @@ final class MessagingState {
                                 Object idObj = ecid.get(ID);
                                 if (idObj instanceof String) {
                                     this.ecid = (String) idObj;
+                                    identityStateSet = true;
                                 }
                             }
                         }
@@ -78,5 +82,9 @@ final class MessagingState {
 
     String getExperienceEventDatasetId() {
         return experienceEventDatasetId;
+    }
+
+    boolean isReadyForEvents() {
+        return configStateSet && identityStateSet;
     }
 }

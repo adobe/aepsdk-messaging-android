@@ -33,6 +33,8 @@ class MainActivity : Activity() {
     private val customMessagingDelegate = CustomDelegate()
     private lateinit var spinner: Spinner
     private var count = 0;
+    private var triggerKey = "key"
+    private var triggerValue = "value"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +46,7 @@ class MainActivity : Activity() {
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter.createFromResource(
             this,
-            R.array.iam_types_array,
+            R.array.iam_types_array2,
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             // Specify the layout to use when the list of choices appears
@@ -57,18 +59,28 @@ class MainActivity : Activity() {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
                 // An item was selected. You can retrieve the selected item using
                 // parent.getItemAtPosition(pos)
-                if (parent.getItemAtPosition(pos).equals("Top Banner")) {
-                    generateAndDispatchEdgeResponseEvent(15, 90,"top", 2, "center", 2, "top", "top", "913622", 0.75, 75.0,true)
-                } else if (parent.getItemAtPosition(pos).equals("Bottom Banner")) {
-                    generateAndDispatchEdgeResponseEvent(10, 95,"bottom", 0, "center", 1, "bottom", "bottom","116975", 0.10,0.0,false)
-                } else if (parent.getItemAtPosition(pos).equals("Center Banner")) {
-                    generateAndDispatchEdgeResponseEvent(10, 100,"center", 0, "center", 10, "fade", "fade","FFC300", 0.81, 0.0,false)
-                } else if (parent.getItemAtPosition(pos).equals("Top Half")) {
-                    generateAndDispatchEdgeResponseEvent(50, 100, "top", 0, "left", 0, "left", "right","5E7072", 0.5, 90.0,true)
-                } else if (parent.getItemAtPosition(pos).equals("Bottom Half")) {
-                    generateAndDispatchEdgeResponseEvent(50, 100, "bottom", 0, "left", 0, "right", "left","85B085", 0.90, 0.0, false)
-                } else if (parent.getItemAtPosition(pos).equals("Center Modal")) {
-                    generateAndDispatchEdgeResponseEvent(75, 75, "center", 10, "center", 5, "fade", "fade","3175F4", 0.2, 70.0, false)
+//                if (parent.getItemAtPosition(pos).equals("Top Banner")) {
+//                    generateAndDispatchEdgeResponseEvent(15, 90,"top", 2, "center", 2, "top", "top", "913622", 0.75, 75.0,true)
+//                } else if (parent.getItemAtPosition(pos).equals("Bottom Banner")) {
+//                    generateAndDispatchEdgeResponseEvent(10, 95,"bottom", 0, "center", 1, "bottom", "bottom","116975", 0.10,0.0,false)
+//                } else if (parent.getItemAtPosition(pos).equals("Center Banner")) {
+//                    generateAndDispatchEdgeResponseEvent(10, 100,"center", 0, "center", 10, "fade", "fade","FFC300", 0.81, 0.0,false)
+//                } else if (parent.getItemAtPosition(pos).equals("Top Half")) {
+//                    generateAndDispatchEdgeResponseEvent(50, 100, "top", 0, "left", 0, "left", "right","5E7072", 0.5, 90.0,true)
+//                } else if (parent.getItemAtPosition(pos).equals("Bottom Half")) {
+//                    generateAndDispatchEdgeResponseEvent(50, 100, "bottom", 0, "left", 0, "right", "left","85B085", 0.90, 0.0, false)
+//                } else if (parent.getItemAtPosition(pos).equals("Center Modal")) {
+//                    generateAndDispatchEdgeResponseEvent(75, 75, "center", 10, "center", 5, "fade", "fade","3175F4", 0.2, 70.0, false)
+//                }
+                if (parent.getItemAtPosition(pos).equals("Generic fullscreen")) {
+                    triggerKey = "key"
+                    triggerValue = "value"
+                } else if (parent.getItemAtPosition(pos).equals("Free shot fullscreen")) {
+                    triggerKey = "shot"
+                    triggerValue = "free"
+                } else if (parent.getItemAtPosition(pos).equals("Frog fullscreen")) {
+                    triggerKey = "drink"
+                    triggerValue = "daily"
                 }
             }
 
@@ -82,10 +94,8 @@ class MainActivity : Activity() {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
         btnTriggerFullscreenIAM.setOnClickListener {
-//            val contextData = hashMapOf("foo" to "bar")
-//            MobileCore.trackAction("testShowMessage", contextData)
             val eventData = HashMap<String, Any>()
-            eventData.put("foo", "bar")
+            eventData.put(triggerKey, triggerValue)
 
             val iamTrigger = Event.Builder(
                 "test",
