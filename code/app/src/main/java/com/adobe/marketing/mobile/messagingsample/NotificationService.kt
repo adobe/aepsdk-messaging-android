@@ -56,17 +56,17 @@ class NotificationService : FirebaseMessagingService() {
             priority = payload.notificationPriority
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
                 Messaging.addPushTrackingDetails(this, message.messageId, message.data)
-            }, 0))
+            }, if(Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0))
             setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
                 Messaging.addPushTrackingDetails(this, message.messageId, message.data)
-            }, 0))
+            }, if(Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0))
             setAutoCancel(true)
         }
 
         notificationManager.notify(NOTIFICATION_ID, builder.build())
     }
 
-    fun getImportance(priority: Int): Int {
+    private fun getImportance(priority: Int): Int {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             when (priority) {
                 Notification.PRIORITY_MIN -> NotificationManager.IMPORTANCE_MIN
@@ -76,9 +76,9 @@ class NotificationService : FirebaseMessagingService() {
                 Notification.PRIORITY_DEFAULT -> NotificationManager.IMPORTANCE_DEFAULT
                 else -> NotificationManager.IMPORTANCE_NONE
             }
-        } else NotificationManager.IMPORTANCE_DEFAULT
+        } else
+            NotificationManager.IMPORTANCE_DEFAULT
     }
-
 
     companion object {
         @JvmField
