@@ -199,20 +199,20 @@ public class Message extends MessageDelegate {
         if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) == null) {
             backdropColor = "#FFFFFF";
         } else {
-            backdropColor = "#" + rawSettings.get(MobileParametersKeys.BACKDROP_COLOR);
+            backdropColor = (String) rawSettings.get(MobileParametersKeys.BACKDROP_COLOR);
         }
 
         if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) == null) {
             backdropOpacity = 0.0f;
         } else {
-            final double opacity = (Double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY);
+            final double opacity = ((Double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY));
             backdropOpacity = (float) opacity;
         }
 
         if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) == null) {
             cornerRadius = 0.0f;
         } else {
-            final double radius = (Double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS);
+            final int radius = ((Integer) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
             cornerRadius = (float) radius;
         }
 

@@ -24,12 +24,13 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
-class MainActivity : Activity() {
+class MainActivity : AppCompatActivity() {
     private val customMessagingDelegate = CustomDelegate()
     private lateinit var spinner: Spinner
     private var count = 0;
@@ -72,15 +73,18 @@ class MainActivity : Activity() {
 //                } else if (parent.getItemAtPosition(pos).equals("Center Modal")) {
 //                    generateAndDispatchEdgeResponseEvent(75, 75, "center", 10, "center", 5, "fade", "fade","3175F4", 0.2, 70.0, false)
 //                }
-                if (parent.getItemAtPosition(pos).equals("Generic fullscreen")) {
-                    triggerKey = "key"
-                    triggerValue = "value"
-                } else if (parent.getItemAtPosition(pos).equals("Free shot fullscreen")) {
-                    triggerKey = "shot"
-                    triggerValue = "free"
-                } else if (parent.getItemAtPosition(pos).equals("Frog fullscreen")) {
-                    triggerKey = "drink"
-                    triggerValue = "daily"
+                if (parent.getItemAtPosition(pos).equals("Banner IAM")) {
+                    triggerKey = "ryan"
+                    triggerValue = "banner"
+                } else if (parent.getItemAtPosition(pos).equals("Foo bar iam")) {
+                    triggerKey = "foo"
+                    triggerValue = "bar"
+                } else if (parent.getItemAtPosition(pos).equals("Ryan test no advanced settings")) {
+                    triggerKey = "user"
+                    triggerValue = "ryan"
+                } else if (parent.getItemAtPosition(pos).equals("Ryan test with advanced settings")) {
+                    triggerKey = "ryan"
+                    triggerValue = "test2"
                 }
             }
 

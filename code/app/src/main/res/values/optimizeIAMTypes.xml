@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="iam_types_array2">
-        <item>Generic fullscreen</item>
+        <item>Banner IAM</item>
         <item>Free shot fullscreen</item>
-        <item>Frog fullscreen</item>
+        <item>Ryan test no advanced settings</item>
+        <item>Ryan test with advanced settings</item>
     </string-array>
 </resources>

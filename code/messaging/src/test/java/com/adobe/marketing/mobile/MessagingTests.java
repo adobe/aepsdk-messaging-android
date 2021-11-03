@@ -30,7 +30,6 @@ import java.util.Map;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -267,6 +266,6 @@ public class MessagingTests {
         assertNotNull(eventData);
         assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
-        assertEquals(MessagingConstants.EventName.MESSAGING_REFRESH_IAM.toLowerCase(), event.getName().toLowerCase());
+        assertEquals(MessagingConstants.EventName.MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS.toLowerCase(), event.getName().toLowerCase());
     }
 }

@@ -165,8 +165,9 @@ signing {
 
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    //implementation fileTree(dir: 'libs', include: ['*.aar'])
     //implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+    // submodule dependencies, for testing only
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

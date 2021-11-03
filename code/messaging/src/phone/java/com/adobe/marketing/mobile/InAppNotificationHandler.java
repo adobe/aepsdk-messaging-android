@@ -35,8 +35,6 @@ class InAppNotificationHandler {
     private final Module messagingModule;
     private String activityId;
     private String placementId;
-    // message customization poc
-    private Map<String, Object> rawMessageParameters = new HashMap<>();
 
     /**
      * Constructor
@@ -150,13 +148,31 @@ class InAppNotificationHandler {
             return;
         }
 
+        // message customization poc
+        // get message settings
         try {
-            Message message = new Message(parent, triggeredConsequence, rawMessageParameters);
+            final JsonUtilityService jsonUtilityService = MessagingUtils.getJsonUtilityService();
+            final JsonUtilityService.JSONObject consequenceJson = jsonUtilityService.createJSONObject(triggeredConsequence);
+            final JsonUtilityService.JSONObject detailJson = consequenceJson.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final JsonUtilityService.JSONObject parametersJson = detailJson.getJSONObject(MessagingConstants.EventDataKeys.MobileParametersKeys.MOBILE_PARAMETERS);
+            // convert JsonUtilityService.JSONObject to JSONObject
+            JSONObject convertedJSON = new JSONObject(parametersJson.toString());
+            Map<String, Object> rawParameters = MessagingUtils.toMap(convertedJSON);
+            Message message = new Message(parent, triggeredConsequence, rawParameters);
             message.show();
-        } catch (MessageRequiredFieldMissingException exception) {
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "createInAppMessage -  Unable to convert from JsonUtilityService.JSONObject to JSONObject (%s)", jsonException.getLocalizedMessage());
+        } catch (final JsonException jsonException) {
+            Log.debug(LOG_TAG, "createInAppMessage -  Unable to get JSONObject (%s)", jsonException.getLocalizedMessage());
+            // TODO: for testing, add fake parameters
+
+//            JSONObject convertedJSON = new JSONObject(parametersJson.toString());
+//            Map<String, Object> rawParameters = MessagingUtils.toMap(convertedJSON);
+//            Message message = new Message(parent, triggeredConsequence, rawParameters);
+//            message.show();
+        } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(MessagingConstants.LOG_TAG,
                     "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
-            return;
         }
     }
 
@@ -189,8 +205,8 @@ class InAppNotificationHandler {
         // TODO: for testing, remove
         //activityId = "xcore:offer-activity:13c2593fcbcfacbd";
         activityId = "xcore:offer-activity:14090235e6b6757a";
-        //placementId = "xcore:offer-placement:13d01b7516bf0613";
-        placementId = "xcore:offer-placement:140a176f272ee651";
+        placementId = "xcore:offer-placement:142be72cd583bd40";
+        //placementId = "xcore:offer-placement:140a176f272ee651";
     }
 
     /**
@@ -231,21 +247,8 @@ class InAppNotificationHandler {
                 if (consequences != null) {
                     parsedRule = new Rule(condition, consequences);
                 }
-                // message customization poc
-                // get message settings
-                final JsonUtilityService.JSONObject consequenceJson = (JsonUtilityService.JSONObject) consequenceJSONArray.get(0);
-                final JsonUtilityService.JSONObject detailJson = consequenceJson.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-                final JsonUtilityService.JSONObject parametersJson = detailJson.getJSONObject(MessagingConstants.EventDataKeys.MobileParametersKeys.MOBILE_PARAMETERS);
-                // convert JsonUtilityService.JSONObject to JSONObject
-                try {
-                    JSONObject convertedJSON = new JSONObject(parametersJson.toString());
-                    rawMessageParameters = MessagingUtils.toMap(convertedJSON);
-                } catch (JSONException jsonException) {
-                    Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to convert from JsonUtilityService.JSONObject to JSONObject (%s)", jsonException.getLocalizedMessage());
-                }
-
             } catch (final JsonException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e);
+                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e.getLocalizedMessage());
             } catch (final UnsupportedConditionException e) {
                 Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", e);
             } catch (final IllegalArgumentException e) {

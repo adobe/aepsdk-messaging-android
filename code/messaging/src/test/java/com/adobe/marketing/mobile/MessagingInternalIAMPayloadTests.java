@@ -55,6 +55,7 @@ public class MessagingInternalIAMPayloadTests {
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
     private Map<String, Object> mockConfigState = new HashMap<>();
+    private Map<String, Object> mockIdentityState = new HashMap<>();
 
     // Mocks
     @Mock
@@ -104,8 +105,12 @@ public class MessagingInternalIAMPayloadTests {
         when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
 
         // setup configuration shared state mock
-        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class), nullable(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
+        when(mockExtensionApi.getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, any(Event.class), nullable(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
         mockConfigState.put(MessagingConstants.SharedState.Configuration.ORG_ID, "mock_org_id");
+
+        // setup identity shared state mock
+        when(mockExtensionApi.getSharedEventState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, any(Event.class), nullable(ExtensionErrorCallback.class))).thenReturn(mockIdentityState);
+        mockIdentityState.put(MessagingConstants.SharedState.Configuration.ORG_ID, "mock_org_id");
 
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
