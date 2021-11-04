@@ -24,6 +24,7 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import android.os.Build.VERSION_CODES.M
 
 class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -56,28 +57,27 @@ class NotificationService : FirebaseMessagingService() {
             priority = payload.notificationPriority
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
                 Messaging.addPushTrackingDetails(this, message.messageId, message.data)
-            }, if(Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0))
+            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
                 Messaging.addPushTrackingDetails(this, message.messageId, message.data)
-            }, if(Build.VERSION.SDK_INT >= 23) PendingIntent.FLAG_IMMUTABLE else 0))
+            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setAutoCancel(true)
         }
 
         notificationManager.notify(NOTIFICATION_ID, builder.build())
     }
 
-    private fun getImportance(priority: Int): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            when (priority) {
-                Notification.PRIORITY_MIN -> NotificationManager.IMPORTANCE_MIN
-                Notification.PRIORITY_LOW -> NotificationManager.IMPORTANCE_LOW
-                Notification.PRIORITY_HIGH -> NotificationManager.IMPORTANCE_HIGH
-                Notification.PRIORITY_MAX -> NotificationManager.IMPORTANCE_MAX
-                Notification.PRIORITY_DEFAULT -> NotificationManager.IMPORTANCE_DEFAULT
-                else -> NotificationManager.IMPORTANCE_NONE
-            }
-        } else
-            NotificationManager.IMPORTANCE_DEFAULT
+    private fun getImportance(priority: Int) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        when (priority) {
+            Notification.PRIORITY_MIN -> NotificationManager.IMPORTANCE_MIN
+            Notification.PRIORITY_LOW -> NotificationManager.IMPORTANCE_LOW
+            Notification.PRIORITY_HIGH -> NotificationManager.IMPORTANCE_HIGH
+            Notification.PRIORITY_MAX -> NotificationManager.IMPORTANCE_MAX
+            Notification.PRIORITY_DEFAULT -> NotificationManager.IMPORTANCE_DEFAULT
+            else -> NotificationManager.IMPORTANCE_NONE
+        }
+    } else {
+        NotificationManager.IMPORTANCE_DEFAULT
     }
 
     companion object {
