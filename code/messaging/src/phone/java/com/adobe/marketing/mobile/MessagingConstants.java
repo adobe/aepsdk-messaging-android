@@ -80,6 +80,9 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
             static final String TRACK_INFO_KEY_MESSAGE_EXECUTION = "messageExecution";
             static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
+            static final String TRACK_INFO_KEY_MESSAGE_PUBLICATION_ID = "messagePublicationID";
+            static final String TRACK_INFO_KEY_AJO_CAMPAIGN_ID = "ajoCampaignID";
+            static final String TRACK_INFO_KEY_AJO_CAMPAIGN_VERSION_ID = "ajoCampaignVersionID";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
 
@@ -167,6 +170,7 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {

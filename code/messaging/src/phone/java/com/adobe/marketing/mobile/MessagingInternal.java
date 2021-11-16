@@ -357,35 +357,6 @@ class MessagingInternal extends Extension {
                 return;
             }
 
-            // validate fetch messages event then refresh in-app messages from offers
-            if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
-                // TODO: for testing, remove ================================================================
-                final EventHistoryRequest[] requests = new EventHistoryRequest[messageCount];
-                for (int i = 0; i < messageCount ; i++) {
-                    final HashMap<String, Variant> eventDataMask = new HashMap<>();
-                    eventDataMask.put("xdm.eventType", Variant.fromString("inapp.interact"));
-                    eventDataMask.put("xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID", Variant.fromString("dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime"));
-                    eventDataMask.put("xdm.inappMessageTracking.action", Variant.fromString("triggered"));
-                    EventHistoryRequest request = new EventHistoryRequest(eventDataMask, 0, System.currentTimeMillis());
-                    requests[i] = request;
-                }
-                final EventHistoryResultHandler<Integer> deleteHandler = new EventHistoryResultHandler<Integer>() {
-                    @Override
-                    public void call(final Integer deleteCount) {
-                        Log.debug("DELETE FROM DB", "Entries deleted: %s", deleteCount);
-                    }
-                };
-                androidEventHistory.deleteEvents(requests, deleteHandler);
-                //messageCount = 0;
-                // TODO: ========================================================================================
-                // fetch messages if we have configuration
-                if (messagingState.isReadyForEvents()) {
-                    inAppNotificationHandler.fetchMessages();
-                }
-                eventQueue.poll();
-                return;
-            }
-
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (edgeIdentitySharedState == null) {
                 Log.warning(MessagingConstants.LOG_TAG,
@@ -395,6 +366,15 @@ class MessagingInternal extends Extension {
 
             // Set the messaging state
             messagingState.setState(configSharedState, edgeIdentitySharedState);
+
+            // validate fetch messages event then refresh in-app messages from offers
+            if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
+                if (messagingState.isConfigStateSet()) {
+                    inAppNotificationHandler.fetchMessages();
+                }
+                eventQueue.poll();
+                return;
+            }
 
             if (messagingState.isReadyForEvents() && !initialMessageFetchComplete) {
                 inAppNotificationHandler.fetchMessages();

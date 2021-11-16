@@ -165,9 +165,10 @@ signing {
 
 
 dependencies {
-    //implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation fileTree(dir: 'libs', include: ['*.aar'])
     //implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
-    // submodule dependencies, for testing only
+    //compileOnly files('libs/android-core-library-phone-coreBundle-debug.aar')
+    //compileOnly files('libs/optimize-phone-debug.aar')
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

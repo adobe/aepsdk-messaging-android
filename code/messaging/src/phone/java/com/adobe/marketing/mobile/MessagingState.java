@@ -87,4 +87,8 @@ final class MessagingState {
     boolean isReadyForEvents() {
         return configStateSet && identityStateSet;
     }
+
+    boolean isConfigStateSet() {
+        return configStateSet;
+    }
 }

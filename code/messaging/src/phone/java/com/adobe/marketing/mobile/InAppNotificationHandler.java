@@ -151,25 +151,10 @@ class InAppNotificationHandler {
         // message customization poc
         // get message settings
         try {
-            final JsonUtilityService jsonUtilityService = MessagingUtils.getJsonUtilityService();
-            final JsonUtilityService.JSONObject consequenceJson = jsonUtilityService.createJSONObject(triggeredConsequence);
-            final JsonUtilityService.JSONObject detailJson = consequenceJson.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            final JsonUtilityService.JSONObject parametersJson = detailJson.getJSONObject(MessagingConstants.EventDataKeys.MobileParametersKeys.MOBILE_PARAMETERS);
-            // convert JsonUtilityService.JSONObject to JSONObject
-            JSONObject convertedJSON = new JSONObject(parametersJson.toString());
-            Map<String, Object> rawParameters = MessagingUtils.toMap(convertedJSON);
-            Message message = new Message(parent, triggeredConsequence, rawParameters);
+            final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
+            Message message = new Message(parent, triggeredConsequence, mobileParameters);
             message.show();
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "createInAppMessage -  Unable to convert from JsonUtilityService.JSONObject to JSONObject (%s)", jsonException.getLocalizedMessage());
-        } catch (final JsonException jsonException) {
-            Log.debug(LOG_TAG, "createInAppMessage -  Unable to get JSONObject (%s)", jsonException.getLocalizedMessage());
-            // TODO: for testing, add fake parameters
-
-//            JSONObject convertedJSON = new JSONObject(parametersJson.toString());
-//            Map<String, Object> rawParameters = MessagingUtils.toMap(convertedJSON);
-//            Message message = new Message(parent, triggeredConsequence, rawParameters);
-//            message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(MessagingConstants.LOG_TAG,
                     "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
@@ -203,10 +188,11 @@ class InAppNotificationHandler {
             placementId = applicationInfo.metaData.getString("placementId");
         }
         // TODO: for testing, remove
-        //activityId = "xcore:offer-activity:13c2593fcbcfacbd";
         activityId = "xcore:offer-activity:14090235e6b6757a";
+        // Southwest Demo app testing
+        //placementId = "xcore:offer-placement:142426be131dce37";
+        // ryan created
         placementId = "xcore:offer-placement:142be72cd583bd40";
-        //placementId = "xcore:offer-placement:140a176f272ee651";
     }
 
     /**

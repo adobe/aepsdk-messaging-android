@@ -18,6 +18,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +49,39 @@ public class MessagingInternalHandleRulesResponseContentTests {
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
+    private Map<String, Object> mobileParameters = new HashMap<String, Object>() {
+        {
+            put(MessagingConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
+            put(MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");
+            put(MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
+            put(MessagingConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "bottom");
+            put(MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
+        }
+    };
+    private Map<String, Object> messageExecutionMap = new HashMap<String, Object>() {
+        {
+            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "messageExecutionID");
+            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "messageID");
+            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_PUBLICATION_ID, "messagePublicationID");
+            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_AJO_CAMPAIGN_ID, "campaignID");
+            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_AJO_CAMPAIGN_VERSION_ID, "campaignVersionID");
+        }
+    };
+    private Map<String, Object> cjmMap = new HashMap<String, Object>() {
+        {
+            put(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT, messageExecutionMap);
+        }
+    };
+    private Map<String, Object> experienceMap = new HashMap<String, Object>() {
+        {
+            put(MessagingConstants.TrackingKeys.EXPERIENCE, cjmMap);
+        }
+    };
+    private Map<String, Object> mixinsMap = new HashMap<String, Object>() {
+        {
+            put(MessagingConstants.TrackingKeys.MIXINS, experienceMap);
+        }
+    };
 
     // Mocks
     @Mock
@@ -106,13 +141,15 @@ public class MessagingInternalHandleRulesResponseContentTests {
     // handling rules response events
     // ========================================================================================
     @Test
-    public void test_handleRulesResponseEvent_ValidConsequencePresent() {
+    public void test_handleRulesResponseEvent_ValidConsequencePresent() throws JSONException {
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        details.put(MessagingConstants.TrackingKeys._XDM, mixinsMap);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
