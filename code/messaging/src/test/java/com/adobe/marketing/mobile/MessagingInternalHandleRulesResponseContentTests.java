@@ -30,13 +30,16 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,30 +61,12 @@ public class MessagingInternalHandleRulesResponseContentTests {
             put(MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
         }
     };
-    private Map<String, Object> messageExecutionMap = new HashMap<String, Object>() {
-        {
-            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "messageExecutionID");
-            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "messageID");
-            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_PUBLICATION_ID, "messagePublicationID");
-            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_AJO_CAMPAIGN_ID, "campaignID");
-            put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_AJO_CAMPAIGN_VERSION_ID, "campaignVersionID");
-        }
-    };
-    private Map<String, Object> cjmMap = new HashMap<String, Object>() {
-        {
-            put(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT, messageExecutionMap);
-        }
-    };
-    private Map<String, Object> experienceMap = new HashMap<String, Object>() {
-        {
-            put(MessagingConstants.TrackingKeys.EXPERIENCE, cjmMap);
-        }
-    };
-    private Map<String, Object> mixinsMap = new HashMap<String, Object>() {
-        {
-            put(MessagingConstants.TrackingKeys.MIXINS, experienceMap);
-        }
-    };
+    private Map<String, Object> mockConfigState = new HashMap<>();
+    private Map<String, Object> mockIdentityState = new HashMap<>();
+    private Map<String, Object> identityMap = new HashMap<>();
+    private Map<String, Object> ecidMap = new HashMap<>();
+    private List<Map> ids = new ArrayList<>();
+    private byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
 
     // Mocks
     @Mock
@@ -94,6 +79,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
     Core mockCore;
     @Mock
     AndroidPlatformServices mockPlatformServices;
+    @Mock
+    AndroidEncodingService mockAndroidEncodingService;
     @Mock
     UIService mockUIService;
     @Mock
@@ -129,9 +116,22 @@ public class MessagingInternalHandleRulesResponseContentTests {
         jsonUtilityService = platformServices.getJsonUtilityService();
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
         when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
+        when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
+        when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
 
         // setup createFullscreenMessage mock
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(mockAEPMessage);
+
+        // setup configuration shared state mock
+        when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
+        mockConfigState.put(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "mock_dataset_id");
+
+        // setup identity shared state mock
+        when(mockExtensionApi.getXDMSharedEventState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockIdentityState);
+        ecidMap.put(MessagingConstants.SharedState.EdgeIdentity.ID, "mock_ecid");
+        ids.add(ecidMap);
+        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, ids);
+        mockIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
 
         messagingInternal = new MessagingInternal(mockExtensionApi);
         MobileCore.setApplication(App.getApplication());
@@ -141,7 +141,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     // handling rules response events
     // ========================================================================================
     @Test
-    public void test_handleRulesResponseEvent_ValidConsequencePresent() throws JSONException {
+    public void test_handleRulesResponseEvent_ValidConsequencePresent() {
         // trigger event
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -149,7 +149,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-        details.put(MessagingConstants.TrackingKeys._XDM, mixinsMap);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
@@ -334,73 +333,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return RULES_ENGINE
-        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
-
-        // when mock event getSource called return RESPONSE_CONTENT
-        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
-
-        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
-    }
-
-    @Test
-    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_TemplateUnsupported() {
-        // trigger event
-        Map<String, Object> consequence = new HashMap<>();
-        Map<String, Object> details = new HashMap<>();
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "alert");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return RULES_ENGINE
-        when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE.getName());
-
-        // when mock event getSource called return RESPONSE_CONTENT
-        when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT.getName());
-
-        // when get eventData called return event data containing a rules response content event with an invalid triggered consequence
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
-    }
-
-    @Test
-    public void test_handleRulesResponseEvent_InvalidConsequenceDetails_TemplateMissing() {
-        // trigger event
-        Map<String, Object> consequence = new HashMap<>();
-        Map<String, Object> details = new HashMap<>();
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
         // Mocks

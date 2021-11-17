@@ -56,13 +56,7 @@ public class Message extends MessageDelegate {
                     "%s - Invalid consequence. Required field \"detail\" is null or empty.", SELF_TAG);
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
-
-        final Map<String, Object> xdmMap = (HashMap) details.get(MessagingConstants.TrackingKeys._XDM);
-        final Map<String, Object> mixinMap = (HashMap) xdmMap.get(MessagingConstants.TrackingKeys.MIXINS);
-        final Map<String, Object> experienceMap = (HashMap) mixinMap.get(MessagingConstants.TrackingKeys.EXPERIENCE);
-        final Map<String, Object> cjmMap = (HashMap) experienceMap.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
-        final Map<String, Object> messageExecutionMap = (HashMap) cjmMap.get(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION);
-        this.messageId = (String) messageExecutionMap.get(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID);
+        this.messageId = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
 
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);

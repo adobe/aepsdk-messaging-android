@@ -103,11 +103,8 @@ class InAppNotificationHandler {
      */
     void handleOfferNotificationPayload(final Event edgeResponseEvent) {
         getActivityAndPlacement(edgeResponseEvent);
-        // TODO: FOR TESTING ONLY, REMOVE WHEN OPTIMIZE EXTENSION ADDED ========================================================
-        //messagingModule.unregisterAllRules();
-        // TODO: ===============================================================================================================
         final ArrayList<HashMap<String, Variant>> payload = (ArrayList<HashMap<String, Variant>>) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
-        if (payload == null && payload.size() == 0) {
+        if (payload == null || payload.size() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
             return;
         }
@@ -152,6 +149,11 @@ class InAppNotificationHandler {
         // get message settings
         try {
             final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            if (details == null || details.isEmpty()) {
+                Log.warning(MessagingConstants.LOG_TAG,
+                        "Unable to create an in-app message, the consequence details are null or empty");
+                return;
+            }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             Message message = new Message(parent, triggeredConsequence, mobileParameters);
             message.show();

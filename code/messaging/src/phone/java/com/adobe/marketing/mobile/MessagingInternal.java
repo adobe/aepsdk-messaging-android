@@ -351,14 +351,14 @@ class MessagingInternal extends Extension {
                     eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (configSharedState == null) {
+            if (configSharedState == null || configSharedState.isEmpty()) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (edgeIdentitySharedState == null) {
+            if (edgeIdentitySharedState == null || edgeIdentitySharedState.isEmpty()) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
@@ -513,45 +513,45 @@ class MessagingInternal extends Extension {
         final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
         final String trackingType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
         final String messageId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, null);
-
-        if (trackingType.equals("triggered") || trackingType.equals("displayed") || trackingType.equals("dismissed")
-                || trackingType.equals("closed")) {
-            //messageCount++;
-            final EventHistoryRequest[] requests = new EventHistoryRequest[messageCount];
-            for (int i = 0; i < messageCount ; i++) {
-                // create request
-                final HashMap<String, Variant> eventDataMask = new HashMap<>();
-                eventDataMask.put("xdm.eventType", Variant.fromString(eventType));
-                eventDataMask.put("xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID", Variant.fromString(messageId));
-                eventDataMask.put("xdm.inappMessageTracking.action", Variant.fromString(trackingType));
-                final EventHistoryRequest request = new EventHistoryRequest(eventDataMask, 0, System.currentTimeMillis());
-                requests[i] = request;
-            }
-            if (messageCount+1 != 0) {
-                // create handler
-                final EventHistoryResultHandler<ArrayList<DatabaseService.QueryResult>> resultHandler = new EventHistoryResultHandler<ArrayList<DatabaseService.QueryResult>>() {
-                    @Override
-                    public void call(final ArrayList<DatabaseService.QueryResult> results) {
-                        try {
-                            for (DatabaseService.QueryResult result: results) {
-                                result.moveToFirst();
-                                int count = result.getInt(0);
-                                long oldest = result.getLong(1);
-                                long newest = result.getLong(2);
-                                Log.debug("handleInAppTrackingInfo", "Message Id: %s, %s tracking event matched %s times in " +
-                                        "the event history database. " +
-                                        "oldest match found at %s, " +
-                                        "newest match found at %s.", messageCount, trackingType, count, oldest, newest);
-                                result.close();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                androidEventHistory.getEvents(requests, true, resultHandler);
-            }
-        }
+//
+//        if (trackingType.equals("triggered") || trackingType.equals("displayed") || trackingType.equals("dismissed")
+//                || trackingType.equals("closed")) {
+//            //messageCount++;
+//            final EventHistoryRequest[] requests = new EventHistoryRequest[messageCount];
+//            for (int i = 0; i < messageCount ; i++) {
+//                // create request
+//                final HashMap<String, Variant> eventDataMask = new HashMap<>();
+//                eventDataMask.put("xdm.eventType", Variant.fromString(eventType));
+//                eventDataMask.put("xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID", Variant.fromString(messageId));
+//                eventDataMask.put("xdm.inappMessageTracking.action", Variant.fromString(trackingType));
+//                final EventHistoryRequest request = new EventHistoryRequest(eventDataMask, 0, System.currentTimeMillis());
+//                requests[i] = request;
+//            }
+//            if (messageCount+1 != 0) {
+//                // create handler
+//                final EventHistoryResultHandler<ArrayList<DatabaseService.QueryResult>> resultHandler = new EventHistoryResultHandler<ArrayList<DatabaseService.QueryResult>>() {
+//                    @Override
+//                    public void call(final ArrayList<DatabaseService.QueryResult> results) {
+//                        try {
+//                            for (DatabaseService.QueryResult result: results) {
+//                                result.moveToFirst();
+//                                int count = result.getInt(0);
+//                                long oldest = result.getLong(1);
+//                                long newest = result.getLong(2);
+//                                Log.debug("handleInAppTrackingInfo", "Message Id: %s, %s tracking event matched %s times in " +
+//                                        "the event history database. " +
+//                                        "oldest match found at %s, " +
+//                                        "newest match found at %s.", messageCount, trackingType, count, oldest, newest);
+//                                result.close();
+//                            }
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                };
+//                androidEventHistory.getEvents(requests, true, resultHandler);
+//            }
+//        }
         // TODO: ==============================================================================================================
 
         // Create XDM data with tracking data
