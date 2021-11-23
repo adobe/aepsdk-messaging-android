@@ -58,15 +58,23 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     }
 
     /**
-     * Requests that the {@code UIService} show this {@code url}.
+     * Determines if the passed in {@code String} link is a deeplink. If not,
+     * the {@link UIService} is used to load the link.
      *
-     * @param url {@link String} containing url to be shown
+     * @param link {@link String} containing the deeplink to load or url to be shown
      */
-    protected void openUrl(final String url) {
+    protected void openUrl(final UIService.FullscreenMessage message, final String link) {
+        // if we have a deeplink, open the url via an intent
+        if (link.contains("adb_deeplink")) {
+            Log.debug(LOG_TAG, "Opening deeplink %s.", SELF_TAG, link);
+            message.openUrl(link);
+            return;
+        }
+        // otherwise open the url with the ui service
         final UIService uiService = MessagingUtils.getUIService();
 
-        if (uiService == null || !uiService.showUrl(url)) {
-            Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, url);
+        if (uiService == null || !uiService.showUrl(link)) {
+            Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, link);
         }
     }
 
@@ -183,9 +191,10 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
                 }
             }
 
-            final String deeplink = messageData.get("link");
-            if (!StringUtils.isNullOrEmpty(deeplink)) {
-                openUrl(deeplink);
+            // handle optional deep link
+            final String url = messageData.get("url");
+            if (!StringUtils.isNullOrEmpty(url)) {
+                    openUrl(fullscreenMessage, url);
             }
 
             // JS poc
