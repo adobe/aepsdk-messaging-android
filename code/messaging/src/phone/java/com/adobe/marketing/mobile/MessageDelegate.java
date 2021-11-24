@@ -26,6 +26,7 @@ import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+// TODO: add constants for strings / magic numbers
 public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final static String AMPERSAND = "&";

@@ -38,8 +38,6 @@ class MessagingApplication : Application() {
             // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID("3149c49c3910/cf7779260cdd/launch-be72758aa82a-development")
             MobileCore.lifecycleStart(null)
-//            Thread.sleep(2000)
-            // dispatchEdgeResponseEvent()
             // update config to use cjmstage for int integration
             val cjmStageConfig = HashMap<String, Any>()
             cjmStageConfig["edge.environment"] = "int"

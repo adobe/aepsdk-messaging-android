@@ -18,9 +18,6 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,11 +38,19 @@ class InAppNotificationHandler {
      *
      * @param parent {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
      */
-    InAppNotificationHandler(MessagingInternal parent) {
+    InAppNotificationHandler(final MessagingInternal parent, final CacheManager cacheManager) {
         this.parent = parent;
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
+        // load any cached rules
+        if (cacheManager != null && MessagingUtils.areMessagesCached(cacheManager)) {
+            ArrayList<Map<String, Variant>> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
+            if (cachedMessages != null && !cachedMessages.isEmpty()) {
+                Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
+                handleOfferNotificationPayload(cachedMessages, null);
+            }
+        }
     }
 
     /**
@@ -99,37 +104,77 @@ class InAppNotificationHandler {
      * Converts the rules json present in the Edge response event payload into a
      * list of rules then loads them in the rules engine.
      *
-     * @param edgeResponseEvent An Edge {@link Event} containing a personalization decision payload retrieved from Offers.
+     * @param payload An {@link ArrayList} containing the personalization decision payload retrieved from Offers
+     * @param edgeResponseEvent The {@link Event} which contained the personalization decision payload. This can be null if cached
+     *                          messages are being loaded.
      */
-    void handleOfferNotificationPayload(final Event edgeResponseEvent) {
-        getActivityAndPlacement(edgeResponseEvent);
-        final ArrayList<HashMap<String, Variant>> payload = (ArrayList<HashMap<String, Variant>>) edgeResponseEvent.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+    void handleOfferNotificationPayload(final ArrayList<Map<String, Variant>> payload, final Event edgeResponseEvent) {
         if (payload == null || payload.size() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
             return;
         }
-            for (HashMap<String, Variant> entry : payload) {
-                final Map<String, String> activity = (Map<String, String>) entry.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-                final Map<String, String> placement = (Map<String, String>) entry.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
-                final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
-                final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
-                if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
-                    Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
+        getActivityAndPlacement(edgeResponseEvent);
+        for (Map<String, Variant> entry : payload) {
+            final Map<String, String> activity;
+            final Map<String, String> placement;
+            final Object activityMap = entry.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+            final Object placementMap = entry.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+            try {
+                if (activityMap instanceof Variant) {
+                    activity = ((Variant) activityMap).getStringMap();
+                } else {
+                    activity = (Map<String, String>) activityMap;
+                }
+                if (placementMap instanceof Variant) {
+                    placement = ((Variant) placementMap).getStringMap();
+                } else {
+                    placement = (Map<String, String>) placementMap;
+                }
+            } catch (final VariantException e) {
+                Log.warning(LOG_TAG, "handleOfferNotification - Exception occurred when converting the VariantMap to StringMap: %s", e.getMessage());
+                return;
+            }
+            final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
+            final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
+            if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
+                Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
+                return;
+            }
+
+            List<HashMap<String, Variant>> items = new ArrayList<>();
+            Object itemsList = entry.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
+            if (itemsList instanceof Variant) {
+                List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
+                for (Object element: variantList) {
+                    final MapVariant mapVariant = (MapVariant) element;
+                    items.add((HashMap<String, Variant>) mapVariant.getVariantMap());
+                }
+            } else {
+                items = (List<HashMap<String, Variant>>) itemsList;
+            }
+
+            for (Map<String, Variant> currentItem: items) {
+                final Object itemObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
+                final Map<String, String> data;
+                try {
+                    if (itemObject instanceof Variant) {
+                        data = ((Variant) itemObject).getStringMap();
+                    } else {
+                        data = (Map<String, String>) itemObject;
+                    }
+                } catch (final VariantException e) {
+                    Log.warning(LOG_TAG, "handleOfferNotification - Exception occurred when converting the VariantMap to StringMap: %s", e.getMessage());
                     return;
                 }
-                final List<HashMap<String, Variant>> items = (List<HashMap<String, Variant>>) entry.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
-
-                for (Map<String, Variant> currentItem: items) {
-                    final Map<String, String> data = (Map<String, String>) currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
-                    final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
-                    final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
-                    final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
-                    if (parsedRule != null) {
-                        Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
-                        messagingModule.registerRule(parsedRule);
-                    }
+                final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
+                final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
+                final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
+                if (parsedRule != null) {
+                    Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
+                    messagingModule.registerRule(parsedRule);
                 }
             }
+        }
     }
 
     /**

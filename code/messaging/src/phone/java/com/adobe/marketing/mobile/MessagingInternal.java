@@ -55,11 +55,9 @@ class MessagingInternal extends Extension {
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
+    private CacheManager cacheManager;
     private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
-    private boolean initialMessageFetchComplete = false;
-    // TODO: for testing
-    private int messageCount = 1;
 
     /**
      * Constructor.
@@ -78,6 +76,8 @@ class MessagingInternal extends Extension {
      * 	        and EventSource {@link MessagingConstants.EventSource#PERSONALIZATION_DECISIONS}</li>
      *      <li> {@link ListenerRulesEngineResponseContent} listening to event with eventType {@link EventType#RULES_ENGINE}
      * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
+     *      <li> {@link ListenerLifecycleResponseContent} listening to event with eventType {@link EventType#LIFECYCLE}
+     * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      * </ul>
      *
      * @param extensionApi {@link ExtensionApi} instance
@@ -85,21 +85,30 @@ class MessagingInternal extends Extension {
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
 
-        inAppNotificationHandler = new InAppNotificationHandler(this);
-        registerEventListeners(extensionApi);
+        final PlatformServices platformServices = MessagingUtils.getPlatformServices();
+        final SystemInfoService systemInfoService = platformServices.getSystemInfoService();
 
-        // Init the messaging state
-        messagingState = new MessagingState();
+        // initialize the cache manager
+        try {
+            cacheManager = new CacheManager(systemInfoService);
+        } catch (final MissingPlatformServicesException e) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the CacheManager: %s", e.getMessage());
+        }
 
-        // Init EventHistory database
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
-        final SystemInfoService systemInfoService = platformServices == null ? null : platformServices.getSystemInfoService();
+        // initialize the EventHistory database
         try {
             androidEventHistory = new AndroidEventHistory(systemInfoService);
             MobileCore.getCore().eventHub.setEventHistory(androidEventHistory);
-        } catch (EventHistoryDatabaseCreationException e) {
-            Log.debug(LOG_TAG, "Exception occurred when creating event history: %s", e.getMessage());
+        } catch (final EventHistoryDatabaseCreationException e) {
+            Log.warning(LOG_TAG, "Exception occurred when creating event history: %s", e.getMessage());
         }
+
+        // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
+        inAppNotificationHandler = new InAppNotificationHandler(this, cacheManager);
+        registerEventListeners(extensionApi);
+
+        // initialize the messaging state
+        messagingState = new MessagingState();
     }
 
     /**
@@ -284,6 +293,7 @@ class MessagingInternal extends Extension {
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerRulesEngineResponseContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(EventType.LIFECYCLE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerLifecycleResponseContent.class, listenerErrorCallback);
 
         Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstants.EXTENSION_VERSION);
@@ -376,9 +386,10 @@ class MessagingInternal extends Extension {
                 return;
             }
 
-            if (messagingState.isReadyForEvents() && !initialMessageFetchComplete) {
+            // fetch message definitions on app launch
+            if (messagingState.isReadyForEvents()
+                    && MessagingUtils.isLifecycleStartEvent(eventToProcess)) {
                 inAppNotificationHandler.fetchMessages();
-                initialMessageFetchComplete = true;
             }
 
             if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
@@ -392,10 +403,12 @@ class MessagingInternal extends Extension {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-                // validate the edge response event from Optimize then load any iam rules present
+            // validate the edge response event from Optimize then load any iam rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
-                inAppNotificationHandler.handleOfferNotificationPayload(eventToProcess);
-                // handle rules response events containing message definitions
+                final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+                inAppNotificationHandler.handleOfferNotificationPayload(payload, eventToProcess);
+                MessagingUtils.cacheRetrievedMessages(cacheManager, payload);
+            // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
             }

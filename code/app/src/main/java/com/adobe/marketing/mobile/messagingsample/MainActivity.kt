@@ -33,7 +33,6 @@ import org.json.JSONObject
 class MainActivity : AppCompatActivity() {
     private val customMessagingDelegate = CustomDelegate()
     private lateinit var spinner: Spinner
-    private var count = 0;
     private var triggerKey = "key"
     private var triggerValue = "value"
 
@@ -200,6 +199,16 @@ class MainActivity : AppCompatActivity() {
         MobileCore.dispatchEvent(edgeResponseEvent, null)
         // increment count to update message id
         // count++
+    }
+
+    override fun onResume() {
+        super.onResume()
+        MobileCore.lifecycleStart(null)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        MobileCore.lifecyclePause()
     }
 }
 

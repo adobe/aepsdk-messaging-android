@@ -16,6 +16,8 @@ final class MessagingConstants {
     static final String LOG_TAG = "Messaging";
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String CACHE_NAME = "com.adobe.messaging.cache";
+    static final String CACHE_SUBDIRECTORY = "messages";
 
     private MessagingConstants() {
     }
@@ -220,6 +222,7 @@ final class MessagingConstants {
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS = "Retrieve message definitions";
         static final String MESSAGING_IAM_TRACKING_EDGE_EVENT = "In-app message tracking edge event";
+        static final String LIFECYCLE_START = "LifecycleStart";
     }
 
     static final class EventSource {
