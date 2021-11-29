@@ -58,6 +58,7 @@ class MessagingInternal extends Extension {
     private CacheManager cacheManager;
     private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
+    private boolean initialMessageFetchComplete = false;
 
     /**
      * Constructor.
@@ -75,8 +76,6 @@ class MessagingInternal extends Extension {
      *      <li> {@link ListenerOffersPersonalizationDecisions} listening to event with eventType {@link MessagingConstants.EventType#EDGE}
      * 	        and EventSource {@link MessagingConstants.EventSource#PERSONALIZATION_DECISIONS}</li>
      *      <li> {@link ListenerRulesEngineResponseContent} listening to event with eventType {@link EventType#RULES_ENGINE}
-     * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
-     *      <li> {@link ListenerLifecycleResponseContent} listening to event with eventType {@link EventType#LIFECYCLE}
      * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
      * </ul>
      *
@@ -293,7 +292,6 @@ class MessagingInternal extends Extension {
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, ListenerOffersPersonalizationDecisions.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.RULES_ENGINE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerRulesEngineResponseContent.class, listenerErrorCallback);
-        extensionApi.registerEventListener(EventType.LIFECYCLE.getName(), EventSource.RESPONSE_CONTENT.getName(), ListenerLifecycleResponseContent.class, listenerErrorCallback);
 
         Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstants.EXTENSION_VERSION);
@@ -377,22 +375,19 @@ class MessagingInternal extends Extension {
             // Set the messaging state
             messagingState.setState(configSharedState, edgeIdentitySharedState);
 
+            // fetch messages from offers on initial launch once we have configuration and identity state set
+            if (messagingState.isReadyForEvents()
+                    && !initialMessageFetchComplete) {
+                inAppNotificationHandler.fetchMessages();
+                initialMessageFetchComplete = true;
+            }
+
             // validate fetch messages event then refresh in-app messages from offers
             if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
                 if (messagingState.isConfigStateSet()) {
                     inAppNotificationHandler.fetchMessages();
                 }
-                eventQueue.poll();
-                return;
-            }
-
-            // fetch message definitions on app launch
-            if (messagingState.isReadyForEvents()
-                    && MessagingUtils.isLifecycleStartEvent(eventToProcess)) {
-                inAppNotificationHandler.fetchMessages();
-            }
-
-            if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
+            } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
             } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {

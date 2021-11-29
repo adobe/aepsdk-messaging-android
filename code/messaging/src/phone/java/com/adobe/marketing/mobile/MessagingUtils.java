@@ -36,8 +36,9 @@ import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
-    /* JSON - Map conversion helpers */
+    private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
 
+    /* JSON - Map conversion helpers */
     /**
      * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
      * This method is recursive.
@@ -70,17 +71,15 @@ class MessagingUtils {
      * The elements for which the conversion fails will be skipped.
      *
      * @param jsonObject to be converted
-     * @return {@code Map<String, Variant>} containing the elements from the provided json, null if {@code jsonObject} is null
+     * @return {@link Map<String, Variant>} containing the elements from the provided json, null if {@code jsonObject} is null
      */
     static Map<String, Variant> toVariantMap(final JSONObject jsonObject) throws JSONException {
         if (jsonObject == null) {
             return null;
         }
 
-        Map<String, Variant> jsonAsVariantMap = new HashMap<>();
-        Iterator<String> keysIterator = jsonObject.keys();
-
-        if (keysIterator == null) return null;
+        final Map<String, Variant> jsonAsVariantMap = new HashMap<>();
+        final Iterator<String> keysIterator = jsonObject.keys();
 
         while (keysIterator.hasNext()) {
             final String nextKey = keysIterator.next();
@@ -89,36 +88,6 @@ class MessagingUtils {
         }
 
         return jsonAsVariantMap;
-    }
-
-    static Variant getVariantValue(final Object value) {
-        Variant convertedValue;
-        if (value instanceof String) {
-            convertedValue = StringVariant.fromString((String) value);
-        } else if (value instanceof Double) {
-            convertedValue = DoubleVariant.fromDouble((Double) value);
-        } else if (value instanceof Integer) {
-            convertedValue = IntegerVariant.fromInteger((int) value);
-        } else if (value instanceof Boolean) {
-            convertedValue = BooleanVariant.fromBoolean((boolean) value);
-        } else if (value instanceof Long) {
-            convertedValue = LongVariant.fromLong((long) value);
-        } else if (value instanceof Map) {
-            final HashMap<String, Variant> map = new HashMap<>();
-            for(Map.Entry entry: ((Map<String, Object>) value).entrySet()) {
-                map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
-            }
-            convertedValue = Variant.fromVariantMap((Map<String, Variant>) map);
-        } else if (value instanceof List) {
-            final ArrayList<Variant> list = new ArrayList<>();
-            for (final Object element: (ArrayList) value) {
-                list.add((Variant) getVariantValue(element));
-            }
-            convertedValue = Variant.fromVariantList(list);
-        } else {
-            convertedValue = (Variant) value;
-        }
-        return convertedValue;
     }
 
     /**
@@ -144,11 +113,13 @@ class MessagingUtils {
         return jsonArrayAsList;
     }
 
-    // ========================================================================================
-    // Event Validation
-    // ========================================================================================
-
-    private static Object fromJson(Object json) throws JSONException {
+    /**
+     * Converts provided {@link JSONObject} to a {@link Map} or {@link JSONArray} into a {@link List}.
+     *
+     * @param json to be converted
+     * @return {@link Object} converted from the provided json object.
+     */
+    private static Object fromJson(final Object json) throws JSONException {
         if (json == JSONObject.NULL) {
             return null;
         } else if (json instanceof JSONObject) {
@@ -160,6 +131,46 @@ class MessagingUtils {
         }
     }
 
+    /**
+     * Converts the provided {@link Object} into a {@link Variant}.
+     * This method is recursive if the passed in {@code Object} is a {@link Map} or {@link List}.
+     *
+     * @param value to be converted to a variant
+     * @return {@code Variant} value of the passed in {@code Object}
+     */
+    private static Variant getVariantValue(final Object value) {
+        final Variant convertedValue;
+        if (value instanceof String) {
+            convertedValue = StringVariant.fromString((String) value);
+        } else if (value instanceof Double) {
+            convertedValue = DoubleVariant.fromDouble((Double) value);
+        } else if (value instanceof Integer) {
+            convertedValue = IntegerVariant.fromInteger((int) value);
+        } else if (value instanceof Boolean) {
+            convertedValue = BooleanVariant.fromBoolean((boolean) value);
+        } else if (value instanceof Long) {
+            convertedValue = LongVariant.fromLong((long) value);
+        } else if (value instanceof Map) {
+            final HashMap<String, Variant> map = new HashMap<>();
+            for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
+                map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
+            }
+            convertedValue = Variant.fromVariantMap((Map<String, Variant>) map);
+        } else if (value instanceof List) {
+            final ArrayList<Variant> list = new ArrayList<>();
+            for (final Object element : (List) value) {
+                list.add((Variant) getVariantValue(element));
+            }
+            convertedValue = Variant.fromVariantList(list);
+        } else {
+            convertedValue = (Variant) value;
+        }
+        return convertedValue;
+    }
+
+    // ========================================================================================
+    // Event Validation
+    // ========================================================================================
     /**
      * @param event A Generic Identity Request Content {@link Event}.
      * @return {@code boolean} indicating if the passed in event is a generic identity request content event.
@@ -230,21 +241,6 @@ class MessagingUtils {
     // ========================================================================================
     // PlatformServices getters
     // ========================================================================================
-
-    /**
-     * @param event A Lifecycle Response Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a lifecycle response content start event.
-     */
-    static boolean isLifecycleStartEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return EventType.LIFECYCLE.getName().equalsIgnoreCase(event.getType()) &&
-                EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(event.getSource()) &&
-                event.getName().equalsIgnoreCase(MessagingConstants.EventName.LIFECYCLE_START);
-    }
-
     /**
      * Returns the {@link PlatformServices} instance.
      *
@@ -297,25 +293,39 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Cache utilities
+    // Message Caching utilities
     // ========================================================================================
-    private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
-
+    /**
+     * Determines if messages have been previously cached.
+     *
+     * @return {@code boolean} containing true if cached messages are found, false otherwise.
+     */
     static boolean areMessagesCached(final CacheManager cacheManager) {
-        if (cacheManager != null) {
-            return cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false) != null;
+        if (cacheManager == null) {
+            return false;
         }
-        return false;
+        return cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false) != null;
     }
 
+    /**
+     * Caches the {@link ArrayList<Map<String, Variant>>} contents.
+     *
+     * @param cacheManager the {@link CacheManager} to use for caching the message payloads.
+     * @param messagePayload the {@code ArrayList<Map<String, Variant>>} containing the message payloads to be cached.
+     */
     static void cacheRetrievedMessages(final CacheManager cacheManager, final ArrayList<Map<String, Variant>> messagePayload) {
         if (cacheManager != null) {
             // clean any existing cached files first
-            cacheManager.deleteCachedDataForURL(CACHE_NAME);
+            clearCachedMessages(cacheManager);
+            // quick out if an empty message payload was received
+            if (messagePayload == null || messagePayload.isEmpty()) {
+                return;
+            }
             Log.debug(LOG_TAG, "Creating new cached message definitions at: %s", cacheManager.getBaseFilePath(CACHE_NAME, CACHE_SUBDIRECTORY));
             final Date date = new Date(System.currentTimeMillis());
             final File cachedMessages = cacheManager.createNewCacheFile(CACHE_NAME, CACHE_SUBDIRECTORY, date);
             try {
+                // convert the message payload to JSON then cache the JSON as a string
                 final Object json = toJSON(messagePayload);
                 readInputStreamIntoFile(cachedMessages, new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)), false);
             } catch (final JSONException e) {
@@ -324,6 +334,22 @@ class MessagingUtils {
         }
     }
 
+    /**
+     * Delete all contents in the {@link Messaging} extension cache.
+     *
+     * @param cacheManager the {@link CacheManager} to use for clearing cached messages.
+     */
+    static void clearCachedMessages(final CacheManager cacheManager) {
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), CACHE_NAME, true);
+        Log.trace(LOG_TAG, "In-app messaging cache has been deleted.");
+    }
+
+    /**
+     * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     *
+     * @param object to be converted to jSON
+     * @return {@link Object} containing a json object or json array
+     */
     private static Object toJSON(final Object object) throws JSONException {
         if (object instanceof HashMap) {
             JSONObject jsonObject = new JSONObject();
@@ -350,8 +376,8 @@ class MessagingUtils {
      *
      * @param cachedFile File to which the content has to be written
      * @param input      Inputstream with json content
-     * @param append     true, if you wanna append the input stream to the existing file content
-     * @return true if the inputstream has been successfully written into the file
+     * @param append     true, if you want to append the input stream to the existing file content
+     * @return {@code boolean} containing true if the inputstream has been successfully written into the file, false otherwise
      */
     private static boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
         boolean result;
@@ -394,40 +420,42 @@ class MessagingUtils {
         return result;
     }
 
+    /**
+     * Retrieves cached {@code String} message payloads and returns the messages in a {@link ArrayList<Map<String, Variant>>}.
+     *
+     * @param cacheManager the {@link CacheManager} to use for retrieving the cached the message payloads.
+     * @return a {@code ArrayList<Map<String, Variant>>} containing the message payloads.
+     */
     static ArrayList<Map<String, Variant>> getCachedMessages(final CacheManager cacheManager) {
-        final ArrayList<Map<String, Variant>> payload = new ArrayList<>();
-
-        if (cacheManager != null) {
-            final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false);
-            FileInputStream fileInputStream;
-            try {
-                fileInputStream = new FileInputStream(cachedMessageFile);
-                final String streamContents = StringUtils.streamToString(fileInputStream);
-                fileInputStream.close();
-                final JSONArray cachedMessagePayload = new JSONArray(streamContents);
-                // convert each JSONObject in the payload JSONArray into a VariantMap and add it to an ArrayList
-                // for processing in handleOfferNotificationPayload.
-                for (int i = 0; i < cachedMessagePayload.length(); i++) {
-                    final Map<String, Variant> variantHashMap = toVariantMap(cachedMessagePayload.getJSONObject(i));
-                    payload.add(variantHashMap);
-                }
-            } catch (final FileNotFoundException fileNotFoundException) {
-                Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
-                return null;
-            } catch (final IOException ioException) {
-                Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
-                return null;
-//            } catch (final VariantException variantException) {
-//                Log.warning(LOG_TAG, "Exception occurred when creating a VariantMap: %s", variantException.getMessage());
-//                return null;
-            } catch (final JSONException jsonException) {
-                Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
-                return null;
-            } finally {
-                return payload;
-            }
+        if (cacheManager == null) {
+            Log.error(LOG_TAG, "CacheManager is null, unable to get cached messages.");
+            return null;
         }
-        Log.error(LOG_TAG, "CacheManager is null, unable to get cached messages.");
-        return null;
+        final ArrayList<Map<String, Variant>> payload = new ArrayList<>();
+        final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false);
+        FileInputStream fileInputStream;
+        try {
+            fileInputStream = new FileInputStream(cachedMessageFile);
+            final String streamContents = StringUtils.streamToString(fileInputStream);
+            fileInputStream.close();
+            final JSONArray cachedMessagePayload = new JSONArray(streamContents);
+            // convert each JSONObject in the payload JSONArray into a VariantMap and add it to an ArrayList
+            // for processing in handleOfferNotificationPayload.
+            for (int i = 0; i < cachedMessagePayload.length(); i++) {
+                final Map<String, Variant> variantHashMap = toVariantMap(cachedMessagePayload.getJSONObject(i));
+                payload.add(variantHashMap);
+            }
+        } catch (final FileNotFoundException fileNotFoundException) {
+            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
+            return null;
+        } catch (final IOException ioException) {
+            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
+            return null;
+        } catch (final JSONException jsonException) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
+            return null;
+        } finally {
+            return payload;
+        }
     }
 }

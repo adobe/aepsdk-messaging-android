@@ -59,6 +59,8 @@ final class MessagingConstants {
         static final String PATH_DISMISS = "dismiss";
         static final String INTERACTION = "interaction";
         static final String DEEPLINK = "deeplink";
+        static final String LINK = "link";
+        static final String JS = "js";
     }
 
     static final class DefaultValues {

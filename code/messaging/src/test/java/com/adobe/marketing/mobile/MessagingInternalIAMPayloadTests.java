@@ -230,8 +230,8 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal.processEvents();
 
         // verify dispatch event is called
-        // 1 event dispatched: Offers iam fetch event when refresh in app messages event is received
-        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        // 2 events dispatched: Offers iam fetch event on initial launch and Offers iam fetch event when refresh in app messages event is received
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event

@@ -43,7 +43,7 @@ class InAppNotificationHandler {
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
-        // load any cached rules
+        // load cached rules (if any) when InAppNotificationHandler is instantiated
         if (cacheManager != null && MessagingUtils.areMessagesCached(cacheManager)) {
             ArrayList<Map<String, Variant>> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
             if (cachedMessages != null && !cachedMessages.isEmpty()) {

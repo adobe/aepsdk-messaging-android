@@ -142,7 +142,6 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
 
         URI uri;
 
-        // JS poc
         // we need to url encode any javascript if present in the url
         String localUrlString = urlString;
         final String[] tokens = urlString.split(AMPERSAND);
@@ -193,13 +192,13 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
             }
 
             // handle optional deep link
-            final String url = messageData.get("url");
+            final String url = messageData.get(MessagingConstants.MESSAGING_SCHEME.LINK);
             if (!StringUtils.isNullOrEmpty(url)) {
                     openUrl(fullscreenMessage, url);
             }
 
-            // JS poc
-            final String javasscript = messageData.get("js");
+            // handle optional javascript code to be executed
+            final String javasscript = messageData.get(MessagingConstants.MESSAGING_SCHEME.JS);
             if (!StringUtils.isNullOrEmpty(javasscript)) {
                 loadJavascript(javasscript);
             }
