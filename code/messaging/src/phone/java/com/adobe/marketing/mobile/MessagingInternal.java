@@ -401,8 +401,10 @@ class MessagingInternal extends Extension {
             // validate the edge response event from Optimize then load any iam rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
                 final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
-                inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
-                MessagingUtils.cacheRetrievedMessages(cacheManager, payload.get(0));
+                if (payload != null && payload.size() > 0) {
+                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
+                    MessagingUtils.cacheRetrievedMessages(cacheManager, payload.get(0));
+                }
             // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
