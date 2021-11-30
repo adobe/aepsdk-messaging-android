@@ -308,12 +308,12 @@ class MessagingUtils {
     }
 
     /**
-     * Caches the {@link ArrayList<Map<String, Variant>>} contents.
+     * Caches the {@link Map<String, Variant>} contents.
      *
      * @param cacheManager the {@link CacheManager} to use for caching the message payloads.
-     * @param messagePayload the {@code ArrayList<Map<String, Variant>>} containing the message payloads to be cached.
+     * @param messagePayload the {@code Map<String, Variant>} containing the message payloads to be cached.
      */
-    static void cacheRetrievedMessages(final CacheManager cacheManager, final ArrayList<Map<String, Variant>> messagePayload) {
+    static void cacheRetrievedMessages(final CacheManager cacheManager, final Map<String, Variant> messagePayload) {
         if (cacheManager != null) {
             // clean any existing cached files first
             clearCachedMessages(cacheManager);
@@ -350,7 +350,7 @@ class MessagingUtils {
      * @param object to be converted to jSON
      * @return {@link Object} containing a json object or json array
      */
-    private static Object toJSON(final Object object) throws JSONException {
+    protected static Object toJSON(final Object object) throws JSONException {
         if (object instanceof HashMap) {
             JSONObject jsonObject = new JSONObject();
             final HashMap map = (HashMap) object;
@@ -421,30 +421,28 @@ class MessagingUtils {
     }
 
     /**
-     * Retrieves cached {@code String} message payloads and returns the messages in a {@link ArrayList<Map<String, Variant>>}.
+     * Retrieves cached {@code String} message payloads and returns the messages in a {@link Map<String, Variant>}.
      *
      * @param cacheManager the {@link CacheManager} to use for retrieving the cached the message payloads.
-     * @return a {@code ArrayList<Map<String, Variant>>} containing the message payloads.
+     * @return a {@code Map<String, Variant>} containing the message payloads.
      */
-    static ArrayList<Map<String, Variant>> getCachedMessages(final CacheManager cacheManager) {
+    static Map<String, Variant> getCachedMessages(final CacheManager cacheManager) {
         if (cacheManager == null) {
             Log.error(LOG_TAG, "CacheManager is null, unable to get cached messages.");
             return null;
         }
-        final ArrayList<Map<String, Variant>> payload = new ArrayList<>();
         final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false);
+        if (cachedMessageFile == null) {
+            Log.trace(LOG_TAG, "Unable to find a cached message.");
+            return null;
+        }
         FileInputStream fileInputStream;
         try {
             fileInputStream = new FileInputStream(cachedMessageFile);
             final String streamContents = StringUtils.streamToString(fileInputStream);
             fileInputStream.close();
-            final JSONArray cachedMessagePayload = new JSONArray(streamContents);
-            // convert each JSONObject in the payload JSONArray into a VariantMap and add it to an ArrayList
-            // for processing in handleOfferNotificationPayload.
-            for (int i = 0; i < cachedMessagePayload.length(); i++) {
-                final Map<String, Variant> variantHashMap = toVariantMap(cachedMessagePayload.getJSONObject(i));
-                payload.add(variantHashMap);
-            }
+            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
+            return toVariantMap(cachedMessagePayload);
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
             return null;
@@ -454,8 +452,6 @@ class MessagingUtils {
         } catch (final JSONException jsonException) {
             Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
             return null;
-        } finally {
-            return payload;
         }
     }
 }

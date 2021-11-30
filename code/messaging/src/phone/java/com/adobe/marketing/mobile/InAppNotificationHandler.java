@@ -29,7 +29,7 @@ class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     // package private
     final MessagingInternal parent;
-    private final Module messagingModule;
+    private Module messagingModule;
     private String activityId;
     private String placementId;
 
@@ -45,7 +45,7 @@ class InAppNotificationHandler {
         };
         // load cached rules (if any) when InAppNotificationHandler is instantiated
         if (cacheManager != null && MessagingUtils.areMessagesCached(cacheManager)) {
-            ArrayList<Map<String, Variant>> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
+            Map<String, Variant> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
                 handleOfferNotificationPayload(cachedMessages, null);
@@ -104,21 +104,21 @@ class InAppNotificationHandler {
      * Converts the rules json present in the Edge response event payload into a
      * list of rules then loads them in the rules engine.
      *
-     * @param payload An {@link ArrayList} containing the personalization decision payload retrieved from Offers
+     * @param payload An {@link Map<String, Variant>} containing the personalization decision payload retrieved from Offers
      * @param edgeResponseEvent The {@link Event} which contained the personalization decision payload. This can be null if cached
      *                          messages are being loaded.
      */
-    void handleOfferNotificationPayload(final ArrayList<Map<String, Variant>> payload, final Event edgeResponseEvent) {
+    void handleOfferNotificationPayload(final Map<String, Variant> payload, final Event edgeResponseEvent) {
         if (payload == null || payload.size() == 0) {
             Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
             return;
         }
         getActivityAndPlacement(edgeResponseEvent);
-        for (Map<String, Variant> entry : payload) {
-            final Map<String, String> activity;
-            final Map<String, String> placement;
-            final Object activityMap = entry.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-            final Object placementMap = entry.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+
+        final Map<String, String> activity;
+        final Map<String, String> placement;
+        final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+        final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
             try {
                 if (activityMap instanceof Variant) {
                     activity = ((Variant) activityMap).getStringMap();
@@ -142,7 +142,7 @@ class InAppNotificationHandler {
             }
 
             List<HashMap<String, Variant>> items = new ArrayList<>();
-            Object itemsList = entry.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
+            Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
             if (itemsList instanceof Variant) {
                 List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
                 for (Object element: variantList) {
@@ -174,7 +174,6 @@ class InAppNotificationHandler {
                     messagingModule.registerRule(parsedRule);
                 }
             }
-        }
     }
 
     /**
@@ -348,5 +347,10 @@ class InAppNotificationHandler {
         }
 
         return parsedEvents;
+    }
+
+    // for unit tests
+    protected void setMessagingModule(final Module messagingModule) {
+        this.messagingModule = messagingModule;
     }
 }

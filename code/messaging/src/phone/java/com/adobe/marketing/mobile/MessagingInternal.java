@@ -54,7 +54,7 @@ class MessagingInternal extends Extension {
     private final MessagingState messagingState;
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private final InAppNotificationHandler inAppNotificationHandler;
+    private InAppNotificationHandler inAppNotificationHandler;
     private CacheManager cacheManager;
     private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
@@ -401,8 +401,8 @@ class MessagingInternal extends Extension {
             // validate the edge response event from Optimize then load any iam rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
                 final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
-                inAppNotificationHandler.handleOfferNotificationPayload(payload, eventToProcess);
-                MessagingUtils.cacheRetrievedMessages(cacheManager, payload);
+                inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
+                MessagingUtils.cacheRetrievedMessages(cacheManager, payload.get(0));
             // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
