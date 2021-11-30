@@ -10,21 +10,27 @@
 */
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 class TestUtils {
+    private static final String LOG_TAG = "TestUtils";
 
     /**
      * Serialize the given {@code map} to a JSON Object, then flattens to {@code Map<String, String>}.
@@ -83,6 +89,25 @@ class TestUtils {
         } else if (jsonNode.isValueNode()) {
             ValueNode valueNode = (ValueNode) jsonNode;
             map.put(currentPath, valueNode.asText());
+        }
+    }
+
+    static Map<String, Variant> loadJsonFromFile(final String name) {
+        try {
+            final InputStream inputStream = TestUtils.class.getClassLoader().getResourceAsStream(name + ".json");
+            final String streamContents = StringUtils.streamToString(inputStream);
+            inputStream.close();
+            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
+            return toVariantMap(cachedMessagePayload);
+        } catch (final FileNotFoundException fileNotFoundException) {
+            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
+            return null;
+        } catch (final IOException ioException) {
+            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
+            return null;
+        } catch (final JSONException jsonException) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
+            return null;
         }
     }
 }

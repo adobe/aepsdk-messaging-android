@@ -165,10 +165,10 @@ signing {
 
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
     //implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
     //compileOnly files('libs/android-core-library-phone-coreBundle-debug.aar')
     //compileOnly files('libs/optimize-phone-debug.aar')
+    implementation project(":messaging:aar")
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
@@ -188,7 +188,9 @@ dependencies {
     // where Objenesis 2 requires minimum Android API 26
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
+    androidTestImplementation ('com.adobe.marketing.mobile:edgeidentity:1.0.0') {
+        transitive = false;
+    }
 }
 
 afterEvaluate {

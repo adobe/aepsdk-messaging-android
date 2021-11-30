@@ -104,9 +104,11 @@ public class MessageCachingTests {
     }
 
     @Test
-    public void testCacheMessagePayload() {
+    public void testCacheMessagePayload() throws URISyntaxException {
         // setup
         final Map<String, Variant> payload = TestUtils.loadJsonFromFile("show_once");
+        final File cachedMessageLocation = new File(TestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
+        when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
         // test
         MessagingUtils.cacheRetrievedMessages(mockCacheManager, payload);
         // verify deleteFilesNotInList called
