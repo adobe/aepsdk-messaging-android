@@ -12,16 +12,16 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
-
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
-    private AEPMessage aepMessage;
-    private UIService.FullscreenMessageDelegate customDelegate;
+    private final AEPMessage aepMessage;
+    private final UIService.FullscreenMessageDelegate customDelegate;
 
     /**
      * Constructor.
@@ -35,7 +35,7 @@ public class Message extends MessageDelegate {
      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Variant>} containing details of the Message to be displayed</li>
      * </ul>
      *
-     * @param parent {@link MessagingInternal} instance that created this Message.
+     * @param parent      {@link MessagingInternal} instance that created this Message.
      * @param consequence {@link Map} containing a {@code Message} defining payload
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
@@ -73,7 +73,7 @@ public class Message extends MessageDelegate {
         // message customization poc
         final UIService.MessageSettings settings;
         AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
-        if(rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
+        if (rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
             settings = addMessageSettings(messageSettingsBuilder, rawMessageSettings);
         } else {
             settings = messageSettingsBuilder.build();
@@ -108,29 +108,30 @@ public class Message extends MessageDelegate {
     }
 
     // message customization poc
+
     /**
      * Sample Message payload:
-     *      "messageSetting": {
-     *         "schemaVersion": "1.0",
-     *          "width": "80",
-     *          "height": "50",
-     *          "verticalAlign": "center",
-     *          "verticalInset": "0",
-     *          "horizontalAlign": "center",
-     *          "horizontalInset": "0",
-     *          "uiTakeover": true,
-     *          "displayAnimation": "top",
-     *          "dismissAnimation": "top",
-     *          "backdropColor": "AA00EE",
-     *          "backdropOpacity": 0.2,
-     *          "gestures": {
-     *              "swipeUp": "adbinapp://dismiss",
-     *              "swipeDown": "adbinapp://dismiss",
-     *              "swipeLeft": "adbinapp://dismiss?interaction=negative",
-     *              "swipeRight": "adbinapp://dismiss?interaction=positive",
-     *              "tapBackground": "adbinapp://dismiss"
-     *          }
-     *      }
+     * "messageSetting": {
+     * "schemaVersion": "1.0",
+     * "width": "80",
+     * "height": "50",
+     * "verticalAlign": "center",
+     * "verticalInset": "0",
+     * "horizontalAlign": "center",
+     * "horizontalInset": "0",
+     * "uiTakeover": true,
+     * "displayAnimation": "top",
+     * "dismissAnimation": "top",
+     * "backdropColor": "AA00EE",
+     * "backdropOpacity": 0.2,
+     * "gestures": {
+     * "swipeUp": "adbinapp://dismiss",
+     * "swipeDown": "adbinapp://dismiss",
+     * "swipeLeft": "adbinapp://dismiss?interaction=negative",
+     * "swipeRight": "adbinapp://dismiss?interaction=positive",
+     * "tapBackground": "adbinapp://dismiss"
+     * }
+     * }
      */
     private UIService.MessageSettings addMessageSettings(AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;
@@ -224,7 +225,7 @@ public class Message extends MessageDelegate {
                 gestureStringMap.put(gesture, entry.getValue());
             }
         }
-        
+
         return builder.setWidth(width)
                 .setHeight(height)
                 .setVerticalInset(verticalInset)

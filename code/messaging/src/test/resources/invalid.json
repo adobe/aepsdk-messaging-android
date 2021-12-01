@@ -1,6 +1,9 @@
 {
   "version": 1,
-  "rules": [ {invalid},
+  "rules": [
+    {
+      invalid
+    },
     {
       "condition": {
         "type": "group",

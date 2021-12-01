@@ -12,6 +12,12 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+
+import android.webkit.ValueCallback;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -19,12 +25,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-
-import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 
 // TODO: add constants for strings / magic numbers
 public class MessageDelegate implements UIService.FullscreenMessageDelegate {
@@ -42,7 +42,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      * Dispatch tracking information via a Messaging request content event.
      */
     public void track(final String interactionType) {
-        if(StringUtils.isNullOrEmpty(interactionType)) {
+        if (StringUtils.isNullOrEmpty(interactionType)) {
             Log.debug(LOG_TAG,
                     "%s - Unable to record a message interaction - interaction string was null or empty.", SELF_TAG);
             return;
@@ -80,6 +80,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     }
 
     // javascript handling POC
+
     /**
      * Attempts to run the provided javascript code
      *
@@ -95,11 +96,12 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
             jsWebview.evaluateJavascript(javascript, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String value) {
-                    Log.debug(LOG_TAG,"Javascript callback: " + value);
+                    Log.debug(LOG_TAG, "Javascript callback: " + value);
                 }
             });
         }
     }
+
     // ============================================================================================
     // FullscreenMessageDelegate implementation
     // ============================================================================================
@@ -127,8 +129,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      * Invoked when a {@link AEPMessage} is attempting to load a URL.
      *
      * @param fullscreenMessage the {@link UIService.FullscreenMessage} instance
-     * @param urlString {@link String} containing the URL being loaded by the {@code AEPMessage}
-     *
+     * @param urlString         {@link String} containing the URL being loaded by the {@code AEPMessage}
      * @return true if the SDK wants to handle the URL
      */
     @Override
@@ -186,7 +187,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
                 // ensure we have the MessagingInternal class available for tracking
                 messagingInternal = message.messagingInternal;
                 messageId = message.messageId;
-                if(messagingInternal != null) {
+                if (messagingInternal != null) {
                     track(interaction);
                 }
             }
@@ -194,7 +195,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
             // handle optional deep link
             final String url = messageData.get(MessagingConstants.MESSAGING_SCHEME.LINK);
             if (!StringUtils.isNullOrEmpty(url)) {
-                    openUrl(fullscreenMessage, url);
+                openUrl(fullscreenMessage, url);
             }
 
             // handle optional javascript code to be executed

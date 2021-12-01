@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.adobe.marketing.mobile.messagingsample">
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -36,10 +37,12 @@
         <receiver android:name=".NotificationDeleteReceiver" />
 
         <meta-data
+            tools:replace="android:value"
             android:name="activityId"
             android:value="xcore:offer-activity:13c2593fcbcfacbd"/>
 <!--            android:value="xcore:offer-activity:14090235e6b6757a"/>-->
         <meta-data
+            tools:replace="android:value"
             android:name="placementId"
             android:value="xcore:offer-placement:13d01b7516bf0613"/>
 <!--            android:value="xcore:offer-placement:140a176f272ee651"/>-->

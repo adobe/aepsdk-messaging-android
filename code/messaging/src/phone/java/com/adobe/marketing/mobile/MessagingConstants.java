@@ -131,13 +131,14 @@ final class MessagingConstants {
             }
 
             static final class IAMDetailsDataKeys {
+                private IAMDetailsDataKeys() {
+                }
+
                 static final class EventType {
                     static final String DISMISS = "inapp.dismiss";
                     static final String INTERACT = "inapp.interact";
                     static final String TRIGGER = "inapp.trigger";
                     static final String DISPLAY = "inapp.display";
-                }
-                private IAMDetailsDataKeys() {
                 }
             }
         }
@@ -153,6 +154,7 @@ final class MessagingConstants {
             static final String ACTIVITY = "activity";
             static final String PLACEMENT = "placement";
             static final String ITEMS = "items";
+
             private Optimize() {
             }
         }

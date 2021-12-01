@@ -10,23 +10,18 @@
 */
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.fail;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-
-import com.adobe.marketing.mobile.edge.identity.AuthenticatedState;
-import com.adobe.marketing.mobile.edge.identity.IdentityItem;
-import com.adobe.marketing.mobile.edge.identity.IdentityMap;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.fail;
 
 public class MessagingFunctionalTestUtil {
 

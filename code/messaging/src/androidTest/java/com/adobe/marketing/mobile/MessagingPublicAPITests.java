@@ -11,6 +11,14 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import android.content.Intent;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -26,14 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-
-import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class MessagingPublicAPITests {
@@ -88,7 +88,7 @@ public class MessagingPublicAPITests {
         // Messaging.registerExtension() is called in the setup method
 
         // verify that the extension is registered with the correct version details
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(TestConstants.SharedStateName.EVENT_HUB,1000));
+        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(TestConstants.SharedStateName.EVENT_HUB, 1000));
         assertEquals(MessagingConstants.EXTENSION_VERSION, sharedStateMap.get("extensions.com.adobe.messaging.version"));
     }
 
@@ -374,9 +374,10 @@ public class MessagingPublicAPITests {
     public void testRefreshInAppMessages() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        final String expectedOffersEventData = "{\"decisionscopes\":[{\"activityId\":\"xcore:offer-activity:1323dbe94f2eef93\",\"placementId\":\"xcore:offer-placement:1323d9eb43aacada\",\"itemCount\":30}],\"type\":\"prefetch\"}";
+        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTQwOTAyMzVlNmI2NzU3YSIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjE0MmJlNzJjZDU4M2JkNDAiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
         // test
         Messaging.refreshInAppMessages();
+        TestHelper.sleep(500);
 
         // verify messaging request content event
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
@@ -384,11 +385,11 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify offers request content event
-        final List<Event> offersRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.OFFERS,
+        // verify optimize request content events (intial offers fetch on app launch and offers fetch from refreshInAppMessages API)
+        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.OPTIMIZE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(1, offersRequestEvents.size());
-        assertEquals(expectedOffersEventData.trim(), offersRequestEvents.get(0).getData().toString());
+        assertEquals(2, optimizeRequestEvents.size());
+        assertEquals(expectedOffersEventData.trim(), optimizeRequestEvents.get(1).getData().toString());
     }
 
     // --------------------------------------------------------------------------------------------

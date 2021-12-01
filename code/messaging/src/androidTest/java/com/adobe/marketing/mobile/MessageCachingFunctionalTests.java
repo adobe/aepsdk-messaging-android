@@ -11,6 +11,10 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.After;
@@ -21,23 +25,16 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-
-import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @RunWith(AndroidJUnit4.class)
 public class MessageCachingFunctionalTests {
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
+    CacheManager cacheManager;
 
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
@@ -63,13 +60,14 @@ public class MessageCachingFunctionalTests {
         });
 
         latch.await();
-        resetTestExpectations();
+
+        // setup cache manager
+        final SystemInfoService systemInfoService = MobileCore.getCore().eventHub.getPlatformServices().getSystemInfoService();
+        cacheManager = new CacheManager(systemInfoService);
     }
 
     @After
-    public void tearDown() throws MissingPlatformServicesException {
-        final SystemInfoService systemInfoService = MobileCore.getCore().eventHub.getPlatformServices().getSystemInfoService();
-        final CacheManager cacheManager = new CacheManager(systemInfoService);
+    public void tearDown() {
         MessagingUtils.clearCachedMessages(cacheManager);
     }
 
@@ -77,28 +75,30 @@ public class MessageCachingFunctionalTests {
     // Caching received message payload
     // --------------------------------------------------------------------------------------------
     @Test
-    public void testCachingReceivedMessagePayload() throws InterruptedException {
-        // expected results
-        String expectedEdgeEvent = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mockECID\"},\"appID\":\"com.adobe.marketing.mobile.messaging.test\",\"platform\":\"fcm\",\"token\":\"mockPushToken\"}]}}";
-        // messages are retrieved on app launch
-
-        // verify message loaded into rules engine
+    public void testCaching_ReceivedMessagePayload() {
+        // dispatch edge response event containing a messaging payload
+        FunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
+        // wait for event and rules processing
+        TestHelper.sleep(100);
+        // verify rule payload was loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
-        final Map.Entry<Module, ConcurrentLinkedQueue> entry = (Map.Entry<Module, ConcurrentLinkedQueue>) moduleRules.get("Messaging");
-        // verify message cached
-//        List<Event> genericIdentityEvents = getDispatchedEventsWith(EventType.GENERIC_IDENTITY.getName(),
-//                EventSource.REQUEST_CONTENT.getName());
-//        assertEquals(1, genericIdentityEvents.size());
+        assertEquals(1, moduleRules.size());
+        // verify message payload was cached
+        assertTrue(MessagingUtils.areMessagesCached(cacheManager));
+        final Map<String, Variant> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
+        assertEquals(cachedMessages, FunctionalTestUtils.getVariantMapFromFile("optimize_payload.json"));
+    }
 
-        // verify edge event
-//        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
-//                EventSource.REQUEST_CONTENT.getName());
-//        assertEquals(1, edgeRequestEvents.size());
-//        assertEquals(expectedEdgeEvent, edgeRequestEvents.get(0).getData().toString());
-
-        // verify shared state is updated with the push token
-//        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
-//        String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
-//        assertEquals("mockPushToken", pushToken);
+    @Test
+    public void testCaching_ReceivedInvalidMessagePayload() {
+        // dispatch edge response event containing a messaging payload
+        FunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
+        // wait for event and rules processing
+        TestHelper.sleep(100);
+        // verify rule payload was not loaded into rules engine
+        final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
+        assertEquals(0, moduleRules.size());
+        // verify message payload was not cached
+        assertFalse(MessagingUtils.areMessagesCached(cacheManager));
     }
 }

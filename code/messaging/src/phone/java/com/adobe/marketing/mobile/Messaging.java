@@ -12,10 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import android.content.Intent;
-
-import java.util.Map;
-
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
@@ -26,6 +22,10 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+
+import android.content.Intent;
+
+import java.util.Map;
 
 
 public final class Messaging {

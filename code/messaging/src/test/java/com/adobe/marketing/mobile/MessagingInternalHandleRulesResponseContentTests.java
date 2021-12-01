@@ -12,14 +12,21 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,23 +43,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalHandleRulesResponseContentTests {
-    private MessagingInternal messagingInternal;
-    private AndroidPlatformServices platformServices;
-    private JsonUtilityService jsonUtilityService;
-    private EventHub eventHub;
-    private Map<String, Object> mobileParameters = new HashMap<String, Object>() {
+    private final Map<String, Object> mobileParameters = new HashMap<String, Object>() {
         {
             put(MessagingConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
             put(MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");
@@ -61,13 +55,12 @@ public class MessagingInternalHandleRulesResponseContentTests {
             put(MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
         }
     };
-    private Map<String, Object> mockConfigState = new HashMap<>();
-    private Map<String, Object> mockIdentityState = new HashMap<>();
-    private Map<String, Object> identityMap = new HashMap<>();
-    private Map<String, Object> ecidMap = new HashMap<>();
-    private List<Map> ids = new ArrayList<>();
-    private byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
-
+    private final Map<String, Object> mockConfigState = new HashMap<>();
+    private final Map<String, Object> mockIdentityState = new HashMap<>();
+    private final Map<String, Object> identityMap = new HashMap<>();
+    private final Map<String, Object> ecidMap = new HashMap<>();
+    private final List<Map> ids = new ArrayList<>();
+    private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -91,6 +84,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
     Bundle bundle;
     @Mock
     AEPMessage mockAEPMessage;
+    private MessagingInternal messagingInternal;
+    private AndroidPlatformServices platformServices;
+    private JsonUtilityService jsonUtilityService;
+    private EventHub eventHub;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException {

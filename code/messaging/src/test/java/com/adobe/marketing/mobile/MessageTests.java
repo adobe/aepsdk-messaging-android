@@ -11,6 +11,13 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.app.Activity;
 
 import org.junit.Before;
@@ -30,24 +37,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, App.class, MessagingState.class})
 public class MessageTests {
 
-    private Message message;
-    private AEPMessage aepMessage;
-    private Map<String, Object> consequence = new HashMap<>();
+    private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
+    private final Map<String, Object> consequence = new HashMap<>();
     Map<String, Object> details = new HashMap<>();
-    private EventHub eventHub;
-    private static String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
-
     @Mock
     Core mockCore;
     @Mock
@@ -70,24 +66,9 @@ public class MessageTests {
     MessagingInternal mockMessagingInternal;
     @Captor
     ArgumentCaptor<Event> eventArgumentCaptor;
-
-    class CustomDelegate extends MessageDelegate {
-        private boolean showMessage = true;
-
-        @Override
-        public boolean shouldShowMessage(UIService.FullscreenMessage fullscreenMessage) {
-            if(!showMessage) {
-                AEPMessageSettings settings = (AEPMessageSettings) fullscreenMessage.getSettings();
-                Message message = (Message) settings.getParent();
-                message.track("suppressed");
-            }
-            return showMessage;
-        }
-
-        public void setShowMessage(boolean showMessage) {
-            this.showMessage = showMessage;
-        }
-    }
+    private Message message;
+    private AEPMessage aepMessage;
+    private EventHub eventHub;
 
     @Before
     public void setup() {
@@ -188,7 +169,8 @@ public class MessageTests {
             aepMessage = new AEPMessage("html", customDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
-        }        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
+        }
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
         try {
             message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
         } catch (MessageRequiredFieldMissingException e) {
@@ -249,7 +231,8 @@ public class MessageTests {
             aepMessage = new AEPMessage("html", mockMessage, false, mockMessagesMonitor, mockAEPMessageSettings);
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
-        }        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
+        }
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
         try {
             message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
         } catch (MessageRequiredFieldMissingException e) {
@@ -323,5 +306,23 @@ public class MessageTests {
 
         // verify mock tracking event
         verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(any(Event.class));
+    }
+
+    class CustomDelegate extends MessageDelegate {
+        private boolean showMessage = true;
+
+        @Override
+        public boolean shouldShowMessage(UIService.FullscreenMessage fullscreenMessage) {
+            if (!showMessage) {
+                AEPMessageSettings settings = (AEPMessageSettings) fullscreenMessage.getSettings();
+                Message message = (Message) settings.getParent();
+                message.track("suppressed");
+            }
+            return showMessage;
+        }
+
+        public void setShowMessage(boolean showMessage) {
+            this.showMessage = showMessage;
+        }
     }
 }

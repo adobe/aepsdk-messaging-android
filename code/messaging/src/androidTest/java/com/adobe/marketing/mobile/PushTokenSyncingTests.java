@@ -11,6 +11,12 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Before;
@@ -23,12 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-
-import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 @RunWith(AndroidJUnit4.class)
 public class PushTokenSyncingTests {
@@ -86,7 +86,7 @@ public class PushTokenSyncingTests {
         assertEquals(expectedEdgeEvent, edgeRequestEvents.get(0).getData().toString());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertEquals("mockPushToken", pushToken);
     }
@@ -107,7 +107,7 @@ public class PushTokenSyncingTests {
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
@@ -128,7 +128,7 @@ public class PushTokenSyncingTests {
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }

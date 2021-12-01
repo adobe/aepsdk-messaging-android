@@ -19,13 +19,8 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 public class MessagingUtilsTests {
-    private final String mockJsonObj =  "{\n" +
+    private final String mockJsonObj = "{\n" +
             "   \"messageProfile\":{\n" +
             "      \"channel\":{\n" +
             "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
@@ -35,7 +30,7 @@ public class MessagingUtilsTests {
             "      \"platform\":\"fcm\"\n" +
             "   }\n" +
             "}";
-    private final String mockJsonArr =  "[\n" +
+    private final String mockJsonArr = "[\n" +
             "   {\n" +
             "      \"channel\": {\n" +
             "         \"_id\": \"https://ns.adobe.com/xdm/channels/push\"\n" +
@@ -45,6 +40,7 @@ public class MessagingUtilsTests {
             "      \"platform\": \"fcm\"\n" +
             "   }\n" +
             "]";
+
     // ========================================================================================
     // toMap
     // ========================================================================================
@@ -77,6 +73,7 @@ public class MessagingUtilsTests {
             Assert.fail();
         }
     }
+
     // ========================================================================================
     // toList
     // ========================================================================================

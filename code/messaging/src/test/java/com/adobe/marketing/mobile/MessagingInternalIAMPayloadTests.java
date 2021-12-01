@@ -12,6 +12,17 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -37,32 +48,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalIAMPayloadTests {
 
-    private MessagingInternal messagingInternal;
-    private AndroidPlatformServices platformServices;
-    private JsonUtilityService jsonUtilityService;
-    private EventHub eventHub;
-    private Map<String, Object> mockConfigState = new HashMap<>();
-    private Map<String, Object> mockIdentityState = new HashMap<>();
-    private Map<String, Object> identityMap = new HashMap<>();
-    private Map<String, Object> ecidMap = new HashMap<>();
-    private List<Map> ids = new ArrayList<>();
-    private byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
-
+    private final Map<String, Object> mockConfigState = new HashMap<>();
+    private final Map<String, Object> mockIdentityState = new HashMap<>();
+    private final Map<String, Object> identityMap = new HashMap<>();
+    private final Map<String, Object> ecidMap = new HashMap<>();
+    private final List<Map> ids = new ArrayList<>();
+    private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -84,6 +79,10 @@ public class MessagingInternalIAMPayloadTests {
     ApplicationInfo applicationInfo;
     @Mock
     Bundle bundle;
+    private MessagingInternal messagingInternal;
+    private AndroidPlatformServices platformServices;
+    private JsonUtilityService jsonUtilityService;
+    private EventHub eventHub;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, InterruptedException {

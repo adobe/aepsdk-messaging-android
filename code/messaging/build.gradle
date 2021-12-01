@@ -29,7 +29,7 @@ android {
     }
 
     flavorDimensions "target"
-    productFlavors{
+    productFlavors {
         phone {
             dimension "target"
         }
@@ -58,6 +58,19 @@ android {
     libraryVariants.all { variant ->
         variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }
+
+    sourceSets {
+        String sharedTestJavaDir = 'src/sharedTest/java'
+
+        test {
+            java.srcDirs += [sharedTestJavaDir]
+        }
+
+        androidTest {
+            java.srcDirs += [sharedTestJavaDir]
+            resources.srcDirs += ['src/test/resources']
+        }
+    }
 }
 
 android.libraryVariants.all { variant ->
@@ -65,7 +78,7 @@ android.libraryVariants.all { variant ->
         source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-        doFirst{classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)}
+        doFirst { classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) }
 
         exclude "**/BuildConfig.java"
         exclude "**/R.java"
@@ -94,7 +107,7 @@ def isReleaseBuild() {
     return hasProperty('release')
 }
 
-version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersion+"-SNAPSHOT"
+version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersion + "-SNAPSHOT"
 
 publishing {
     publications {
@@ -149,9 +162,9 @@ publishing {
     }
 }
 
-ext."signing.gnupg.executable"="gpg"
-ext."signing.gnupg.keyName"=System.getenv("GPG_KEY_ID")
-ext."signing.gnupg.passphrase"=System.getenv("GPG_PASSPHRASE")
+ext."signing.gnupg.executable" = "gpg"
+ext."signing.gnupg.keyName" = System.getenv("GPG_KEY_ID")
+ext."signing.gnupg.passphrase" = System.getenv("GPG_PASSPHRASE")
 
 signing {
     useGpgCmd()
@@ -188,8 +201,8 @@ dependencies {
     // where Objenesis 2 requires minimum Android API 26
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation ('com.adobe.marketing.mobile:edgeidentity:1.0.0') {
-        transitive = false;
+    androidTestImplementation('com.adobe.marketing.mobile:edgeidentity:1.0.0') {
+        transitive = false
     }
 }
 

@@ -16,44 +16,44 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ADBCountDownLatch {
-	private final CountDownLatch latch;
-	private final int initialCount;
-	private final AtomicInteger currentCount;
+    private final CountDownLatch latch;
+    private final int initialCount;
+    private final AtomicInteger currentCount;
 
-	public ADBCountDownLatch(final int expectedCount) {
-		this.initialCount = expectedCount;
-		this.latch = new CountDownLatch(expectedCount);
-		this.currentCount = new AtomicInteger();
-	}
+    public ADBCountDownLatch(final int expectedCount) {
+        this.initialCount = expectedCount;
+        this.latch = new CountDownLatch(expectedCount);
+        this.currentCount = new AtomicInteger();
+    }
 
-	public void await() throws InterruptedException {
-		latch.await();
-	}
+    public void await() throws InterruptedException {
+        latch.await();
+    }
 
-	public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
-		return latch.await(timeout, unit);
-	}
+    public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+        return latch.await(timeout, unit);
+    }
 
-	public void countDown() {
-		currentCount.incrementAndGet();
-		latch.countDown();
-	}
+    public void countDown() {
+        currentCount.incrementAndGet();
+        latch.countDown();
+    }
 
-	public long getCount() {
-		return latch.getCount();
-	}
+    public long getCount() {
+        return latch.getCount();
+    }
 
-	public int getInitialCount() {
-		return initialCount;
-	}
+    public int getInitialCount() {
+        return initialCount;
+    }
 
-	public int getCurrentCount() {
-		return currentCount.get();
-	}
+    public int getCurrentCount() {
+        return currentCount.get();
+    }
 
-	@Override
-	public String toString() {
-		return String.format("%s, initial: %d, current: %d", latch.toString(), initialCount, currentCount.get());
-	}
+    @Override
+    public String toString() {
+        return String.format("%s, initial: %d, current: %d", latch.toString(), initialCount, currentCount.get());
+    }
 
 }

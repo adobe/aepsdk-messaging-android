@@ -39,6 +39,7 @@ class MessagingUtils {
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
 
     /* JSON - Map conversion helpers */
+
     /**
      * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
      * This method is recursive.
@@ -171,6 +172,7 @@ class MessagingUtils {
     // ========================================================================================
     // Event Validation
     // ========================================================================================
+
     /**
      * @param event A Generic Identity Request Content {@link Event}.
      * @return {@code boolean} indicating if the passed in event is a generic identity request content event.
@@ -241,6 +243,7 @@ class MessagingUtils {
     // ========================================================================================
     // PlatformServices getters
     // ========================================================================================
+
     /**
      * Returns the {@link PlatformServices} instance.
      *
@@ -295,6 +298,7 @@ class MessagingUtils {
     // ========================================================================================
     // Message Caching utilities
     // ========================================================================================
+
     /**
      * Determines if messages have been previously cached.
      *
@@ -310,7 +314,7 @@ class MessagingUtils {
     /**
      * Caches the {@link Map<String, Variant>} contents.
      *
-     * @param cacheManager the {@link CacheManager} to use for caching the message payloads.
+     * @param cacheManager   the {@link CacheManager} to use for caching the message payloads.
      * @param messagePayload the {@code Map<String, Variant>} containing the message payloads to be cached.
      */
     static void cacheRetrievedMessages(final CacheManager cacheManager, final Map<String, Variant> messagePayload) {
@@ -340,7 +344,7 @@ class MessagingUtils {
      * @param cacheManager the {@link CacheManager} to use for clearing cached messages.
      */
     static void clearCachedMessages(final CacheManager cacheManager) {
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), CACHE_NAME, true);
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), CACHE_SUBDIRECTORY, true);
         Log.trace(LOG_TAG, "In-app messaging cache has been deleted.");
     }
 

@@ -26,11 +26,10 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 public class MessagingStateTests {
-    private MessagingState messagingState;
-
     // mocks
     private final String MOCK_EXP_EVENT_DATASET = "mock_exp_event_dataset";
     private final String MOCK_VID = "mock_vid";
+    private MessagingState messagingState;
 
     @Before
     public void before() {
@@ -55,7 +54,7 @@ public class MessagingStateTests {
         //mocks
         EventData mockConfigEventData = getMockConfigEventData();
         EventData mockIdentityEventData = getMockEdgeIdentityEventData();
-        
+
         // test
         messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
 
