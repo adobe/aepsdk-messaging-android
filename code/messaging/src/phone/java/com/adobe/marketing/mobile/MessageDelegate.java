@@ -26,11 +26,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: add constants for strings / magic numbers
 public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final static String AMPERSAND = "&";
     private final static String EXPECTED_JAVASCRIPT_PARAM = "js=";
+    private final static String ADOBE_DEEPLINK = "adb_deeplink";
     // public properties
     public String messageId;
     public boolean autoTrack = true;
@@ -66,7 +66,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      */
     protected void openUrl(final UIService.FullscreenMessage message, final String link) {
         // if we have a deeplink, open the url via an intent
-        if (link.contains("adb_deeplink")) {
+        if (link.contains(ADOBE_DEEPLINK)) {
             Log.debug(LOG_TAG, "Opening deeplink %s.", SELF_TAG, link);
             message.openUrl(link);
             return;
@@ -78,8 +78,6 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
             Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, link);
         }
     }
-
-    // javascript handling POC
 
     /**
      * Attempts to run the provided javascript code

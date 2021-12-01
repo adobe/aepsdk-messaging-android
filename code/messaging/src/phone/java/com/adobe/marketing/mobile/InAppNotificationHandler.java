@@ -189,7 +189,6 @@ class InAppNotificationHandler {
             return;
         }
 
-        // message customization poc
         // get message settings
         try {
             final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
@@ -232,12 +231,6 @@ class InAppNotificationHandler {
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
-        // TODO: for testing, remove
-        activityId = "xcore:offer-activity:14090235e6b6757a";
-        // Southwest Demo app testing
-        //placementId = "xcore:offer-placement:142426be131dce37";
-        // ryan created
-        placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**
