@@ -44,7 +44,7 @@ public class MessageCachingFunctionalTests {
         MessagingFunctionalTestUtil.setEdgeIdentityPersistence(MessagingFunctionalTestUtil.createIdentityMap("ECID", "mockECID"));
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
-                put("someconfig", "someConfigValue");
+                put("experienceCloud.org", "xcore:offer-activity:13c2593fcbcfacbd");
             }
         };
         MobileCore.updateConfiguration(config);

@@ -136,8 +136,9 @@ class InAppNotificationHandler {
         }
         final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
         final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
+        Log.debug(LOG_TAG, "handleOfferNotification - Retrieved activity id is: (%s), retrieved placement id is: (%s)", offerActivityId, offerPlacementId);
         if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
-            Log.warning(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the expected offer activity id or placement id is missing.");
+            Log.debug(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", activityId, placementId);
             return;
         }
 
@@ -189,7 +190,6 @@ class InAppNotificationHandler {
             return;
         }
 
-        // get message settings
         try {
             final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             if (details == null || details.isEmpty()) {
@@ -209,25 +209,26 @@ class InAppNotificationHandler {
     private void getActivityAndPlacement(final Event eventToProcess) {
         // placementId = package name
         placementId = App.getApplication().getPackageName();
+        // activityId = IMS OrgID. If we have no event passed in to retrieve the activity id from, read activity id from the app manifest.
         if (eventToProcess != null) {
-            // activityId = IMS OrgID
             final Map<String, Object> configSharedState = parent.getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, null);
             if (configSharedState != null) {
                 Object edgeResponseActivityId = configSharedState.get(MessagingConstants.SharedState.Configuration.ORG_ID);
                 if (edgeResponseActivityId instanceof String) {
-                    this.activityId = (String) edgeResponseActivityId;
+                    activityId = (String) edgeResponseActivityId;
+                    Log.debug(MessagingConstants.LOG_TAG,
+                            "Got activity id (%s) from event.", activityId);
                 }
             }
-        } else { // if we have no event passed in to retrieve the activity id from, read activity id from the app manifest
-            ApplicationInfo applicationInfo;
+        } else {
+            ApplicationInfo applicationInfo = null;
             try {
                 final Application application = App.getApplication();
                 applicationInfo = App.getApplication().getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
             } catch (PackageManager.NameNotFoundException exception) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "An exception occurred when retrieving the manifest metadata: %s", exception.getLocalizedMessage());
-                return;
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
