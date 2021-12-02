@@ -16,7 +16,6 @@ import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
 import com.adobe.marketing.mobile.optimize.Optimize
 import com.google.firebase.iid.FirebaseInstanceId
-import org.json.JSONObject
 
 class MessagingApplication : Application() {
 

@@ -68,14 +68,16 @@ public class MessageCachingFunctionalTests {
 
     @After
     public void tearDown() {
+        // clear cache and loaded rules
         MessagingUtils.clearCachedMessages(cacheManager);
+        MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
     // --------------------------------------------------------------------------------------------
     // Caching received message payload
     // --------------------------------------------------------------------------------------------
     @Test
-    public void testCaching_ReceivedMessagePayload() {
+    public void testMessageCaching_ReceivedMessagePayload() {
         // dispatch edge response event containing a messaging payload
         FunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
         // wait for event and rules processing
@@ -90,7 +92,7 @@ public class MessageCachingFunctionalTests {
     }
 
     @Test
-    public void testCaching_ReceivedInvalidMessagePayload() {
+    public void testMessageCaching_ReceivedInvalidMessagePayload() {
         // dispatch edge response event containing a messaging payload
         FunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
         // wait for event and rules processing

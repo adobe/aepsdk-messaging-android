@@ -62,13 +62,13 @@ public class TestUtils {
         if (invalidActivityId) {
             activity.put("id", "xcore:offer-activity:invalid");
         } else {
-            activity.put("id", "xcore:offer-activity:14090235e6b6757a");
+            activity.put("id", "mock_activity");
         }
         placement.put("etag", "1");
         if (invalidPlacementId) {
             placement.put("id", "xcore:offer-placement:invalid");
         } else {
-            placement.put("id", "xcore:offer-placement:142be72cd583bd40");
+            placement.put("id", "mock_placement");
         }
         messagePayload.put("activity", activity);
         messagePayload.put("placement", placement);

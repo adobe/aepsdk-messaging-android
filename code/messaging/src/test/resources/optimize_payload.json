@@ -1,6 +1,6 @@
 {
   "activity": {
-    "id": "xcore:offer-activity:14090235e6b6757a",
+    "id": "xcore:offer-activity:13c2593fcbcfacbd",
     "etag": "9"
   },
   "id": "57d8f990-734a-4d7b-a7e7-739b03753226",
@@ -21,7 +21,7 @@
     }
   ],
   "placement": {
-    "id": "xcore:offer-placement:142be72cd583bd40",
+    "id": "com.adobe.marketing.mobile.messaging.test",
     "etag": "1"
   }
 }

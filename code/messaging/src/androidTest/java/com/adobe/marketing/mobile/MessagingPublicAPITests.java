@@ -374,7 +374,7 @@ public class MessagingPublicAPITests {
     public void testRefreshInAppMessages() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTQwOTAyMzVlNmI2NzU3YSIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjE0MmJlNzJjZDU4M2JkNDAiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
+        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTNjMjU5M2ZjYmNmYWNiZCIsInBsYWNlbWVudElkIjoiY29tLmFkb2JlLm1hcmtldGluZy5tb2JpbGUubWVzc2FnaW5nLnRlc3QiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
         // test
         Messaging.refreshInAppMessages();
         TestHelper.sleep(500);
@@ -385,7 +385,7 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify optimize request content events (intial offers fetch on app launch and offers fetch from refreshInAppMessages API)
+        // verify optimize request content events (initial offers fetch on app launch and offers fetch from refreshInAppMessages API)
         final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.OPTIMIZE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(2, optimizeRequestEvents.size());

@@ -63,7 +63,7 @@ class InAppNotificationHandler {
             Log.trace(LOG_TAG, "%s - Unable to retrieve message definitions - activity and placement ids are both required.", SELF_TAG);
             return;
         }
-        // create event to be handled by optimize
+        // create event to be handled by the Optimize extension
         final HashMap<String, Object> optimizeData = new HashMap<>();
         final ArrayList<Map<String, Object>> decisionScopes = new ArrayList<>();
         final HashMap<String, Object> decisionScope = new HashMap<>();

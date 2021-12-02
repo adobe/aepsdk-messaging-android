@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.Notification
 import android.app.PendingIntent
@@ -28,7 +27,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
 import kotlinx.android.synthetic.main.activity_main.*
-import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
     private val customMessagingDelegate = CustomDelegate()
