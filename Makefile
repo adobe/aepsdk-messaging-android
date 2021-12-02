@@ -28,7 +28,7 @@ ci-build: create-ci
 ci-unit-test: create-ci
 	(mkdir -p ci/unit-test)
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) platformUnitTestJacocoReport)
-	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build/reports/coverage/phone/debug ./ci/unit-test/)
+	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build/reports/jacoco/platformUnitTestJacocoReport ./ci/unit-test/)
 
 ci-functional-test: create-ci
 	(mkdir -p ci/functional-test)
