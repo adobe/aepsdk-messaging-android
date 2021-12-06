@@ -139,10 +139,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
     // ========================================================================================
     @Test
     public void test_handleRulesResponseEvent_ValidConsequencePresent() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
@@ -174,10 +197,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_UnsupportedConsequenceType() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
@@ -208,10 +254,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_MissingConsequenceType() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
@@ -240,7 +309,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     }
 
     public void test_handleRulesResponseEvent_NullConsequences() {
-        // trigger event
+        // setup
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
 
@@ -266,7 +335,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_InvalidConsequenceDetails_EmptyConsequences() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
@@ -293,7 +362,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_EmptyDetails() {
-        // trigger event
+        // setup
         Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
@@ -324,7 +393,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_NullDetails() {
-        // trigger event
+        // setup
         Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
@@ -354,10 +423,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_InvalidConsequenceDetails_EmptyHTML() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
@@ -388,10 +480,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_InvalidConsequenceDetails_MissingHTML() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
@@ -421,10 +536,33 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
     @Test
     public void test_handleRulesResponseEvent_InvalidConsequenceDetails_MissingMessageId() {
-        // trigger event
+        // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);

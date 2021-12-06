@@ -86,7 +86,31 @@ public class MessageTests {
         eventHub = new EventHub("testEventHub", mockPlatformServices);
         mockCore.eventHub = eventHub;
 
+        Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
@@ -114,9 +138,12 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
     }
 
     @Test
@@ -153,9 +180,12 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(expectedData, trackingEvent.getEventData());
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
     }
 
     @Test
@@ -192,15 +222,21 @@ public class MessageTests {
         message.show();
 
         // expect 2 tracking events: triggered tracking + suppressed tracking
-        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         List<Event> capturedEvents = eventArgumentCaptor.getAllValues();
         // verify triggered tracking event
         Event triggeredTrackingEvent = capturedEvents.get(0);
         assertEquals(triggeredTrackingEvent.getEventData(), expectedTriggeredEventData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, triggeredTrackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), triggeredTrackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), triggeredTrackingEvent.getSource());
 
         // verify custom delegate tracking event
         Event suppressedTrackingEvent = capturedEvents.get(1);
         assertEquals(suppressedTrackingEvent.getEventData(), expectedSuppressedEventData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, suppressedTrackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), suppressedTrackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), suppressedTrackingEvent.getSource());
     }
 
     @Test
@@ -218,9 +254,12 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).dismiss();
 
         // verify dismissed tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
     }
 
     @Test
@@ -268,15 +307,21 @@ public class MessageTests {
         message.overrideUrlLoad(mockAEPMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
 
         // expect 2 events: deeplink click tracking + dismissed tracking
-        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         List<Event> capturedEvents = eventArgumentCaptor.getAllValues();
         // verify triggered tracking event
         Event triggeredTrackingEvent = capturedEvents.get(0);
         assertEquals(triggeredTrackingEvent.getEventData(), expectedDeepLinkClickedTrackingData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, triggeredTrackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), triggeredTrackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), triggeredTrackingEvent.getSource());
 
         // verify custom delegate tracking event
         Event suppressedTrackingEvent = capturedEvents.get(1);
         assertEquals(suppressedTrackingEvent.getEventData(), expectedDismissedTrackingData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, suppressedTrackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), suppressedTrackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), suppressedTrackingEvent.getSource());
 
         // verify showUrl called
         verify(mockUIService, times(1)).showUrl("https://adobe.com");
@@ -294,9 +339,12 @@ public class MessageTests {
         message.track("mock track");
 
         // verify mock tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
         Event trackingEvent = eventArgumentCaptor.getValue();
         assertEquals(trackingEvent.getEventData(), expectedTrackingData);
+        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
+        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
+        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
     }
 
     @Test
@@ -305,7 +353,7 @@ public class MessageTests {
         message.track("");
 
         // verify mock tracking event
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(any(Event.class));
+        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(any(Event.class), any(Map.class));
     }
 
     class CustomDelegate extends MessageDelegate {

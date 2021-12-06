@@ -53,9 +53,9 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
         eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, messageId);
         eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, interactionType);
 
-        final Event event = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT).setEventData(eventData).build();
+        final Event event = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT).setEventData(eventData).build();
         Log.debug(LOG_TAG, "%s - Tracking interaction (%s) for message id %s", SELF_TAG, interactionType, messageId);
-        messagingInternal.handleInAppTrackingInfo(event);
+        messagingInternal.handleInAppTrackingInfo(event, details);
     }
 
     /**

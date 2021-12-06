@@ -36,6 +36,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys._XDM;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 
@@ -170,7 +171,7 @@ class MessagingInternal extends Extension {
         trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
         trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
         xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, trackingMap);
+        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING_MIXIN_NAME, trackingMap);
 
         return xdmMap;
     }
@@ -511,50 +512,52 @@ class MessagingInternal extends Extension {
         });
     }
 
-    public void handleInAppTrackingInfo(final Event event) {
+    public void handleInAppTrackingInfo(final Event event, final Map<String, Object> messageDetails) {
         final String datasetId = messagingState.getExperienceEventDatasetId();
         if (StringUtils.isNullOrEmpty(datasetId)) {
-            Log.warning(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
+            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
+            return;
+        }
+
+        if (messageDetails == null || messageDetails.isEmpty()) {
+            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the experience info is missing.", SELF_TAG);
             return;
         }
 
         final EventData eventData = event.getData();
         final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
         final String trackingType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
-        final String messageId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, null);
 
         // Create XDM data with tracking data
         final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> experienceMap = new HashMap<>();
-        final Map<String, Object> messageExecutionMap = new HashMap<>();
-        final Map<String, Object> cjmMap = new HashMap<>();
-        messageExecutionMap.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, messageId);
-        cjmMap.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION, messageExecutionMap);
-        experienceMap.put(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT, cjmMap);
+        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(_XDM);
+        final Map<String, Object> xdmMixinsMap = (Map<String, Object>) xdm.get(MIXINS);
+        final Map<String, Object> experienceXdmMap = (Map<String, Object>) xdmMixinsMap.get(EXPERIENCE);
         xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
+        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceXdmMap);
 
         // add iam mixin information if this is an interact eventType
         if (eventType.equals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT) && !StringUtils.isNullOrEmpty(trackingType)) {
             final Map<String, Object> actionMap = new HashMap<>();
             actionMap.put(XDMDataKeys.ACTION, trackingType);
-            xdmMap.put(XDMDataKeys.XDM_DATA_IN_APP_NOTIFICATION_TRACKING, actionMap);
+            xdmMap.put(XDMDataKeys.XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME, actionMap);
         }
 
-        // Creating the Meta Map
+        // Create the Meta Map
         final Map<String, Object> metaMap = new HashMap<>();
         final Map<String, Object> collectMap = new HashMap<>();
         collectMap.put(DATASET_ID, datasetId);
         metaMap.put(COLLECT, collectMap);
 
-        // Adding xdm data to xdmMap
-        addXDMData(eventData, xdmMap);
-
+        // Create xdm edge event data
         final Map<String, Object> xdmData = new HashMap<>();
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        // Create the mask for storing event history
+        final String[] mask = {MessagingConstants.EventMask.XDM.EVENT_TYPE, MessagingConstants.EventMask.XDM.MESSAGE_EXECUTION_ID, MessagingConstants.EventMask.XDM.TRACKING_ACTION};
+
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
                 .setEventData(xdmData)
                 .build();
 

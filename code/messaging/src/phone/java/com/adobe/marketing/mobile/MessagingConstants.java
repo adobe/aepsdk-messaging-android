@@ -106,8 +106,8 @@ final class MessagingConstants {
                 static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
                 static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
                 static final String XDM_DATA_EVENT_TYPE = "eventType";
-                static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
-                static final String XDM_DATA_IN_APP_NOTIFICATION_TRACKING = "inappMessageTracking";
+                static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME = "inappMessageTracking";
                 static final String ACTION = "action";
 
                 private XDMDataKeys() {
@@ -177,6 +177,7 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_XDM = "_xdm";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {
@@ -216,7 +217,6 @@ final class MessagingConstants {
     static final class EventType {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
-        static final String OFFERS = "com.adobe.eventType.offerDecisioning";
         static final String OPTIMIZE = "com.adobe.eventType.optimize";
     }
 
@@ -226,7 +226,7 @@ final class MessagingConstants {
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS = "Retrieve message definitions";
         static final String MESSAGING_IAM_TRACKING_EDGE_EVENT = "In-app message tracking edge event";
-        static final String LIFECYCLE_START = "LifecycleStart";
+        static final String MESSAGING_IAM_TRACKING_MESSAGING_EVENT = "In-app message tracking messaging event";
     }
 
     static final class EventSource {
@@ -238,6 +238,15 @@ final class MessagingConstants {
     static final class EventDataValues {
         static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
         static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
+    }
+
+    static final class EventMask {
+        static final class XDM {
+            // mask values for experience event storage in event history
+            static final String EVENT_TYPE = "xdm.eventType";
+            static final String MESSAGE_EXECUTION_ID = "xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID";
+            static final String TRACKING_ACTION = "xdm.inappMessageTracking.action";
+        }
     }
 
     static final class SharedState {

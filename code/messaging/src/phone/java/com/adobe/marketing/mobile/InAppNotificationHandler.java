@@ -341,9 +341,4 @@ class InAppNotificationHandler {
 
         return parsedEvents;
     }
-
-    // for unit tests
-    protected void setMessagingModule(final Module messagingModule) {
-        this.messagingModule = messagingModule;
-    }
 }

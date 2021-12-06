@@ -514,7 +514,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleTrackingInfo_when_mixinsData() {
+    public void test_handleTrackingInfo_when_mixinsDataPresent() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         final String expectedEventData = "{\"xdm\":{\"pushNotificationTracking\":{\"customAction\":{\"actionID\":\"mock_actionId\"},\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":0}},\"eventType\":\"mock_eventType\",\"_experience\":{\"customerJourneyManagement\":{\"pushChannelContext\":{\"platform\":\"fcm\"},\"messageExecution\":{\"messageExecutionID\":\"16-Sept-postman\",\"journeyVersionInstanceId\":\"someJourneyVersionInstanceId\",\"messageID\":\"567\",\"journeyVersionID\":\"some-journeyVersionId\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/push\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
         final String mockCJMData = "{\n" +
@@ -593,21 +593,81 @@ public class MessagingInternalTests {
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
         //test
         messagingInternal.handleTrackingInfo(mockEvent);
 
-        // verify
         // verify
         verify(messagingState, times(0)).getExperienceEventDatasetId();
     }
 
     @Test
     public void test_handleTrackingInfo_when_MessageIdIsNull() {
+        final String mockCJMData = "{\n" +
+                "        \"mixins\" :{\n" +
+                "          \"_experience\": {\n" +
+                "            \"customerJourneyManagement\": {\n" +
+                "              \"messageExecution\": {\n" +
+                "                \"messageExecutionID\": \"16-Sept-postman\",\n" +
+                "                \"messageID\": \"567\",\n" +
+                "                \"journeyVersionID\": \"some-journeyVersionId\",\n" +
+                "                \"journeyVersionInstanceId\": \"someJourneyVersionInstanceId\"\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }";
+
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
         eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        verify(messagingState, times(0)).getExperienceEventDatasetId();
+    }
+
+    @Test
+    public void test_handleTrackingInfo_when_ExperienceEventDatasetIsEmpty() {
+        // setup
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("");
+        // Mocks
+        final String mockCJMData = "{\n" +
+                "        \"mixins\" :{\n" +
+                "          \"_experience\": {\n" +
+                "            \"customerJourneyManagement\": {\n" +
+                "              \"messageExecution\": {\n" +
+                "                \"messageExecutionID\": \"16-Sept-postman\",\n" +
+                "                \"messageID\": \"567\",\n" +
+                "                \"journeyVersionID\": \"some-journeyVersionId\",\n" +
+                "                \"journeyVersionInstanceId\": \"someJourneyVersionInstanceId\"\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }";
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -616,7 +676,11 @@ public class MessagingInternalTests {
         messagingInternal.handleTrackingInfo(mockEvent);
 
         // verify
-        verify(messagingState, times(0)).getExperienceEventDatasetId();
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // 0 events dispatched: edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
