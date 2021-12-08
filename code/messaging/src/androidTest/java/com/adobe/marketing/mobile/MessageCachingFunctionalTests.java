@@ -34,7 +34,7 @@ public class MessageCachingFunctionalTests {
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
-    CacheManager cacheManager;
+    MessagingCacheUtilities messagingCacheUtilities;
 
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
@@ -61,15 +61,16 @@ public class MessageCachingFunctionalTests {
 
         latch.await();
 
-        // setup cache manager
-        final SystemInfoService systemInfoService = MobileCore.getCore().eventHub.getPlatformServices().getSystemInfoService();
-        cacheManager = new CacheManager(systemInfoService);
+        // setup messaging caching
+        final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
+        final NetworkService networkService = MessagingUtils.getPlatformServices().getNetworkService();
+        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
     }
 
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        MessagingUtils.clearCachedMessages(cacheManager);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -86,8 +87,8 @@ public class MessageCachingFunctionalTests {
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(1, moduleRules.size());
         // verify message payload was cached
-        assertTrue(MessagingUtils.areMessagesCached(cacheManager));
-        final Map<String, Variant> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
+        assertTrue(messagingCacheUtilities.areMessagesCached());
+        final Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
         assertEquals(cachedMessages, FunctionalTestUtils.getVariantMapFromFile("optimize_payload.json"));
     }
 
@@ -101,6 +102,6 @@ public class MessageCachingFunctionalTests {
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(0, moduleRules.size());
         // verify message payload was not cached
-        assertFalse(MessagingUtils.areMessagesCached(cacheManager));
+        assertFalse(messagingCacheUtilities.areMessagesCached());
     }
 }

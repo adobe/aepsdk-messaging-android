@@ -39,6 +39,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +74,10 @@ public class MessagingInternalIAMPayloadTests {
     UIService mockUIService;
     @Mock
     AndroidEncodingService mockAndroidEncodingService;
+    @Mock
+    AndroidSystemInfoService mockAndroidSystemInfoService;
+    @Mock
+    AndroidNetworkService mockAndroidNetworkService;
     @Mock
     PackageManager packageManager;
     @Mock
@@ -110,7 +115,11 @@ public class MessagingInternalIAMPayloadTests {
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
         when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
         when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);

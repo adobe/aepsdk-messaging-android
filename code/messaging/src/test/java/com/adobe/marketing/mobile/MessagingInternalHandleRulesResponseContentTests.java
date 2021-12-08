@@ -37,6 +37,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,6 +77,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
     @Mock
     AndroidEncodingService mockAndroidEncodingService;
     @Mock
+    AndroidSystemInfoService mockAndroidSystemInfoService;
+    @Mock
+    AndroidNetworkService mockAndroidNetworkService;
+    @Mock
     UIService mockUIService;
     @Mock
     PackageManager packageManager;
@@ -84,13 +90,14 @@ public class MessagingInternalHandleRulesResponseContentTests {
     Bundle bundle;
     @Mock
     AEPMessage mockAEPMessage;
+
     private MessagingInternal messagingInternal;
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
 
     @Before
-    public void setup() throws PackageManager.NameNotFoundException {
+    public void setup() throws PackageManager.NameNotFoundException, URISyntaxException {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -114,7 +121,11 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
         when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
         when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
         // setup createFullscreenMessage mock
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(mockAEPMessage);

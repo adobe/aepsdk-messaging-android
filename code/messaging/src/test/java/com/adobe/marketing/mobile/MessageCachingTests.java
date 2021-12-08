@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
@@ -32,13 +33,21 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
+@PrepareForTest({MobileCore.class})
 public class MessageCachingTests {
     @Mock
     CacheManager mockCacheManager;
+    @Mock
+    SystemInfoService mockSystemInfoService;
+    @Mock
+    NetworkService mockNetworkService;
+
+    private MessagingCacheUtilities messagingCacheUtilities;
 
     @Before
     public void setup() {
-
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
+        messagingCacheUtilities.setCacheManager(mockCacheManager);
     }
 
     @Test
@@ -48,7 +57,7 @@ public class MessageCachingTests {
         final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("show_once.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Variant> retrievedPayload = MessagingUtils.getCachedMessages(mockCacheManager);
+        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify payload retrieved
@@ -58,19 +67,9 @@ public class MessageCachingTests {
     @Test
     public void testLoadCachedMessages_WhenNoMessageCached() {
         // test
-        final Map<String, Variant> retrievedPayload = MessagingUtils.getCachedMessages(mockCacheManager);
+        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
-        // verify null payload retrieved
-        assertEquals(null, retrievedPayload);
-    }
-
-    @Test
-    public void testLoadCachedMessages_WhenCacheManagerIsNull() {
-        // test
-        final Map<String, Variant> retrievedPayload = MessagingUtils.getCachedMessages(null);
-        // verify getFileForCachedURL not called
-        verify(mockCacheManager, times(0)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
         assertEquals(null, retrievedPayload);
     }
@@ -81,7 +80,7 @@ public class MessageCachingTests {
         final File cachedFile = null;
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Variant> retrievedPayload = MessagingUtils.getCachedMessages(mockCacheManager);
+        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL not called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -95,7 +94,7 @@ public class MessageCachingTests {
         final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("invalid.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Variant> retrievedPayload = MessagingUtils.getCachedMessages(mockCacheManager);
+        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -109,7 +108,7 @@ public class MessageCachingTests {
         final File cachedMessageLocation = new File(TestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
         when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
         // test
-        MessagingUtils.cacheRetrievedMessages(mockCacheManager, payload);
+        messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called
         verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
         // verify createNewCacheFile called
@@ -119,7 +118,7 @@ public class MessageCachingTests {
     @Test
     public void testClearCache() {
         // test
-        MessagingUtils.clearCachedMessages(mockCacheManager);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
         // verify deleteFilesNotInList called
         verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
     }

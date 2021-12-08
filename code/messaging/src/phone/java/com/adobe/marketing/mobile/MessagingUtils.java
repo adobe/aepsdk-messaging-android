@@ -11,33 +11,19 @@
  */
 
 package com.adobe.marketing.mobile;
-
-import static com.adobe.marketing.mobile.MessagingConstants.CACHE_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
-    private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
-
     /* JSON - Map conversion helpers */
 
     /**
@@ -293,169 +279,5 @@ class MessagingUtils {
         }
 
         return platformServices.getUIService();
-    }
-
-    // ========================================================================================
-    // Message Caching utilities
-    // ========================================================================================
-
-    /**
-     * Determines if messages have been previously cached.
-     *
-     * @return {@code boolean} containing true if cached messages are found, false otherwise.
-     */
-    static boolean areMessagesCached(final CacheManager cacheManager) {
-        if (cacheManager == null) {
-            return false;
-        }
-        return cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false) != null;
-    }
-
-    /**
-     * Caches the {@link Map<String, Variant>} contents.
-     *
-     * @param cacheManager   the {@link CacheManager} to use for caching the message payloads.
-     * @param messagePayload the {@code Map<String, Variant>} containing the message payloads to be cached.
-     */
-    static void cacheRetrievedMessages(final CacheManager cacheManager, final Map<String, Variant> messagePayload) {
-        if (cacheManager != null) {
-            // clean any existing cached files first
-            clearCachedMessages(cacheManager);
-            // quick out if an empty message payload was received
-            if (messagePayload == null || messagePayload.isEmpty()) {
-                return;
-            }
-            Log.debug(LOG_TAG, "Creating new cached message definitions at: %s", cacheManager.getBaseFilePath(CACHE_NAME, CACHE_SUBDIRECTORY));
-            final Date date = new Date(System.currentTimeMillis());
-            final File cachedMessages = cacheManager.createNewCacheFile(CACHE_NAME, CACHE_SUBDIRECTORY, date);
-            try {
-                // convert the message payload to JSON then cache the JSON as a string
-                final Object json = toJSON(messagePayload);
-                readInputStreamIntoFile(cachedMessages, new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)), false);
-            } catch (final JSONException e) {
-                Log.error(LOG_TAG, "JSONException while attempting to create JSON from ArrayList payload: (%s)", e);
-            }
-        }
-    }
-
-    /**
-     * Delete all contents in the {@link Messaging} extension cache.
-     *
-     * @param cacheManager the {@link CacheManager} to use for clearing cached messages.
-     */
-    static void clearCachedMessages(final CacheManager cacheManager) {
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), CACHE_SUBDIRECTORY, true);
-        Log.trace(LOG_TAG, "In-app messaging cache has been deleted.");
-    }
-
-    /**
-     * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
-     *
-     * @param object to be converted to jSON
-     * @return {@link Object} containing a json object or json array
-     */
-    protected static Object toJSON(final Object object) throws JSONException {
-        if (object instanceof HashMap) {
-            JSONObject jsonObject = new JSONObject();
-            final HashMap map = (HashMap) object;
-            for (final Object key : map.keySet()) {
-                jsonObject.put(key.toString(), toJSON(map.get(key)));
-            }
-            return jsonObject;
-        } else if (object instanceof Iterable) {
-            JSONArray jsonArray = new JSONArray();
-            for (final Object value : ((Iterable) object)) {
-                jsonArray.put(toJSON(value));
-            }
-            return jsonArray;
-        } else {
-            return object;
-        }
-    }
-
-    /**
-     * Writes the inputStream into the file.
-     * <p>
-     * Will append the content of the inputStream to the existing file if the boolean is set as true.
-     *
-     * @param cachedFile File to which the content has to be written
-     * @param input      Inputstream with json content
-     * @param append     true, if you want to append the input stream to the existing file content
-     * @return {@code boolean} containing true if the inputstream has been successfully written into the file, false otherwise
-     */
-    private static boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
-        boolean result;
-
-        if (cachedFile == null || input == null) {
-            return false;
-        }
-
-        FileOutputStream output = null;
-
-        try {
-            output = new FileOutputStream(cachedFile, append);
-            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
-            int count;
-
-            while ((count = input.read(data)) != -1) {
-                output.write(data, 0, count);
-            }
-
-            result = true;
-        } catch (final IOException e) {
-            Log.error(LOG_TAG, "IOException while attempting to write remote file (%s)",
-                    e);
-            return false;
-        } catch (final Exception e) {
-            Log.error(LOG_TAG, "Unexpected exception while attempting to write remote file (%s)",
-                    e);
-            return false;
-        } finally {
-            try {
-                if (output != null) {
-                    output.close();
-                }
-
-            } catch (final Exception e) {
-                Log.error(LOG_TAG, "Unable to close the OutputStream (%s) ", e);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Retrieves cached {@code String} message payloads and returns the messages in a {@link Map<String, Variant>}.
-     *
-     * @param cacheManager the {@link CacheManager} to use for retrieving the cached the message payloads.
-     * @return a {@code Map<String, Variant>} containing the message payloads.
-     */
-    static Map<String, Variant> getCachedMessages(final CacheManager cacheManager) {
-        if (cacheManager == null) {
-            Log.error(LOG_TAG, "CacheManager is null, unable to get cached messages.");
-            return null;
-        }
-        final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, CACHE_SUBDIRECTORY, false);
-        if (cachedMessageFile == null) {
-            Log.trace(LOG_TAG, "Unable to find a cached message.");
-            return null;
-        }
-        FileInputStream fileInputStream;
-        try {
-            fileInputStream = new FileInputStream(cachedMessageFile);
-            final String streamContents = StringUtils.streamToString(fileInputStream);
-            fileInputStream.close();
-            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
-            return toVariantMap(cachedMessagePayload);
-        } catch (final FileNotFoundException fileNotFoundException) {
-            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
-            return null;
-        } catch (final IOException ioException) {
-            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
-            return null;
-        } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
-            return null;
-        }
     }
 }

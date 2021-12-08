@@ -17,7 +17,8 @@ final class MessagingConstants {
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_NAME = "com.adobe.messaging.cache";
-    static final String CACHE_SUBDIRECTORY = "messages";
+    static final String MESSAGES_CACHE_SUBDIRECTORY = "messages";
+    static final String IMAGES_CACHE_SUBDIRECTORY = "images";
 
     private MessagingConstants() {
     }

@@ -56,7 +56,7 @@ class MessagingInternal extends Extension {
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
-    private CacheManager cacheManager;
+    private MessagingCacheUtilities messagingCacheUtilities;
     private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
     private boolean initialMessageFetchComplete = false;
@@ -87,13 +87,10 @@ class MessagingInternal extends Extension {
 
         final PlatformServices platformServices = MessagingUtils.getPlatformServices();
         final SystemInfoService systemInfoService = platformServices.getSystemInfoService();
+        final NetworkService networkService = platformServices.getNetworkService();
 
-        // initialize the cache manager
-        try {
-            cacheManager = new CacheManager(systemInfoService);
-        } catch (final MissingPlatformServicesException e) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the CacheManager: %s", e.getMessage());
-        }
+        // initialize the Messaging Caching functionality
+        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
 
         // initialize the EventHistory database
         try {
@@ -104,7 +101,7 @@ class MessagingInternal extends Extension {
         }
 
         // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
-        inAppNotificationHandler = new InAppNotificationHandler(this, cacheManager);
+        inAppNotificationHandler = new InAppNotificationHandler(this, messagingCacheUtilities);
         registerEventListeners(extensionApi);
 
         // initialize the messaging state
@@ -404,7 +401,7 @@ class MessagingInternal extends Extension {
                 final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
                     inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
-                    MessagingUtils.cacheRetrievedMessages(cacheManager, payload.get(0));
+                    messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
                 }
                 // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
@@ -625,5 +622,10 @@ class MessagingInternal extends Extension {
         }
 
         return stateOwnerName.equals(stateOwner);
+    }
+
+    // for unit tests
+    protected MessagingCacheUtilities getMessagingCaching() {
+        return messagingCacheUtilities;
     }
 }

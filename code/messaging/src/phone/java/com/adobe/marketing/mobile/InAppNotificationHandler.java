@@ -18,6 +18,8 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
+import com.google.android.gms.common.util.ArrayUtils;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,25 +29,28 @@ import java.util.Map;
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
-    // package private
-    final MessagingInternal parent;
+    private final ArrayList<ImageAsset> imageAssetList = new ArrayList<>();
     private Module messagingModule;
+    private MessagingCacheUtilities cacheUtilities;
     private String activityId;
     private String placementId;
+    // package private
+    final MessagingInternal parent;
 
     /**
      * Constructor
      *
      * @param parent {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
      */
-    InAppNotificationHandler(final MessagingInternal parent, final CacheManager cacheManager) {
+    InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
+        this.cacheUtilities = messagingCacheUtilities;
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
         // load cached rules (if any) when InAppNotificationHandler is instantiated
-        if (cacheManager != null && MessagingUtils.areMessagesCached(cacheManager)) {
-            Map<String, Variant> cachedMessages = MessagingUtils.getCachedMessages(cacheManager);
+        if (messagingCacheUtilities != null && messagingCacheUtilities.areMessagesCached()) {
+            Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
                 handleOfferNotificationPayload(cachedMessages, null);
@@ -154,6 +159,9 @@ class InAppNotificationHandler {
             items = (List<HashMap<String, Variant>>) itemsList;
         }
 
+        final ArrayList<JsonUtilityService.JSONObject> rawRuleJsons = new ArrayList<>();
+        final ArrayList<Rule> parsedRules = new ArrayList<>();
+        // collect image assets from the payload
         for (Map<String, Variant> currentItem : items) {
             final Object itemObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
             final Map<String, String> data;
@@ -168,13 +176,26 @@ class InAppNotificationHandler {
                 return;
             }
             final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
-            final JsonUtilityService.JSONObject rulesJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
+            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
+            rawRuleJsons.add(ruleJsonObject);
+
+            // parse <img src="xxx" alt "xxx"> from each item in items.
+            // if its not cached, cache it using MessagingUtils.cacheRetrievedImageAsset then replace it in the rules json.
+            // if it is already cached, just replace it in the rules json.
+            getImageAssetFromRule(ruleJsonObject);
+        }
+        // download and cache image assets
+        cacheUtilities.cacheImageAssets(imageAssetList);
+        // replace http url's in each rule with the cached asset
+        for (final JsonUtilityService.JSONObject ruleJson : rawRuleJsons) {
+            final JsonUtilityService.JSONObject rulesJsonObject = replaceHttpUrlWithCachedImageInRule(ruleJson);
             final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
             if (parsedRule != null) {
-                Log.debug(LOG_TAG, "handleOfferNotification - registering rule: %s", parsedRule.toString());
-                messagingModule.registerRule(parsedRule);
+                parsedRules.add(parsedRule);
             }
         }
+        Log.debug(LOG_TAG, "handleOfferNotification - registering %s rules", parsedRules.size());
+        messagingModule.replaceRules(parsedRules);
     }
 
     /**
@@ -206,6 +227,63 @@ class InAppNotificationHandler {
         }
     }
 
+    private void getImageAssetFromRule(final JsonUtilityService.JSONObject ruleJson) {
+        final ImageAsset imageAsset = extractImageAssetFromJson(ruleJson);
+        if (cacheUtilities.assetIsDownloadable(imageAsset.getAssetUrl())) {
+            imageAssetList.add(imageAsset);
+        }
+    }
+
+    private JsonUtilityService.JSONObject replaceHttpUrlWithCachedImageInRule(final JsonUtilityService.JSONObject ruleJson) {
+        final JsonUtilityService.JSONObject ruleJsonCopy = ruleJson;
+        final ImageAsset imageAsset = extractImageAssetFromJson(ruleJson);
+        // replace http url with cache url, TODO: handle "alt" images present for image asset
+        final String cacheAssetUrl = cacheUtilities.getCachedImageAssetUrl(imageAsset.getAssetUrl()) + imageAsset.getAssetExtension();
+        try {
+            final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
+            final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
+            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray("consequences");
+            final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
+            final JsonUtilityService.JSONObject detail = consequence.getJSONObject("detail");
+            String html = detail.getString("html");
+            html = html.substring(0, imageAsset.getBeginIndex()) + "\"" + cacheAssetUrl + "\"" + html.substring(imageAsset.getEndIndex(), html.length() - 1);
+            // rebuild rulesJson using modified html
+            detail.put("html", html);
+            consequence.put("detail", detail);
+            consequenceJsonArray.put(consequence);
+            json.put("consequences", consequenceJsonArray);
+            rulesJsonArray.put(json);
+            ruleJsonCopy.put("rules", rulesJsonArray);
+            return ruleJsonCopy;
+        } catch (final JsonException jsonException) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "An exception occurred during http image asset replacement: %s", jsonException.getMessage());
+            // return rules unchanged if any exception occurred during asset replacement
+            return ruleJson;
+        }
+    }
+
+    // parse <img src="xxx" alt "xxx"> from each item in items.
+    private ImageAsset extractImageAssetFromJson(final JsonUtilityService.JSONObject ruleJson) {
+        try {
+            final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
+            final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
+            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray("consequences");
+            final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
+            final JsonUtilityService.JSONObject detail = consequence.getJSONObject("detail");
+            String html = detail.getString("html");
+            final int beginIndex = html.lastIndexOf("<img src=") + 9;
+            final int endIndex = html.lastIndexOf("alt=") + 6;
+            final String imageAssetUrl = (html.substring(beginIndex, endIndex)).replace("\"", "");
+            final String[] imageAssetTokens = imageAssetUrl.split(" ");
+            return new ImageAsset(imageAssetTokens[0], beginIndex, endIndex);
+        }  catch (final JsonException jsonException) {
+            Log.warning(MessagingConstants.LOG_TAG,
+                    "An exception occurred during image asset extraction: %s", jsonException.getMessage());
+            return null;
+        }
+    }
+
     private void getActivityAndPlacement(final Event eventToProcess) {
         // placementId = package name
         placementId = App.getApplication().getPackageName();
@@ -232,6 +310,9 @@ class InAppNotificationHandler {
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
+        // TODO: for testing, remove
+        activityId = "xcore:offer-activity:14090235e6b6757a";
+        placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**

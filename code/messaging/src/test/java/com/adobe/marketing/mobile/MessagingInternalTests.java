@@ -39,6 +39,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -68,6 +69,10 @@ public class MessagingInternalTests {
     @Mock
     AndroidPlatformServices mockPlatformServices;
     @Mock
+    AndroidSystemInfoService mockAndroidSystemInfoService;
+    @Mock
+    AndroidNetworkService mockAndroidNetworkService;
+    @Mock
     PackageManager packageManager;
     @Mock
     ApplicationInfo applicationInfo;
@@ -81,6 +86,10 @@ public class MessagingInternalTests {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
         eventHub = new EventHub("testEventHub", mockPlatformServices);
         mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
