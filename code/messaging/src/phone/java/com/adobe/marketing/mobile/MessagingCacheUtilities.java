@@ -38,7 +38,6 @@ import java.util.Map;
 public class MessagingCacheUtilities {
     private final int STREAM_WRITE_BUFFER_SIZE = 4096;
     private final String FILE_PATH = "file://";
-    private ArrayList<String> assetsCollection = new ArrayList<>();
     private CacheManager cacheManager;
     private final SystemInfoService systemInfoService;
     private final NetworkService networkService;
@@ -65,26 +64,16 @@ public class MessagingCacheUtilities {
     }
 
     /**
-     * Determines if the specified image asset url has been previously cached.
-     *
-     * @param assetUrl the {@code String} url of the image asset.
-     * @return {@code boolean} containing true if the image asset has been previously cached, false otherwise.
-     */
-    boolean isImageAssetCached(final String assetUrl) {
-        return cacheManager.getFileForCachedURL(assetUrl, IMAGES_CACHE_SUBDIRECTORY, false) != null;
-    }
-
-    /**
      * Caches the assets provided in the {@link java.util.List}.
      *
-     * @param assetsCollection a {@link List<ImageAsset>} containing asset url's to be cached.
+     * @param assetsCollection a {@link List<String>} containing asset url's to be cached.
      */
-    void cacheImageAssets(final List<ImageAsset> assetsCollection) {
+    void cacheImageAssets(final List<String> assetsCollection) {
         final ArrayList<String> assetsToRetain = new ArrayList<>();
 
         if (assetsCollection != null && !assetsCollection.isEmpty()) {
-            for (final ImageAsset imageAsset : assetsCollection) {
-                final String url = imageAsset.getAssetUrl();
+            for (final String imageAsset : assetsCollection) {
+                final String url = imageAsset;
                 if (assetIsDownloadable(url)) {
                     assetsToRetain.add(url);
                 }
@@ -94,16 +83,16 @@ public class MessagingCacheUtilities {
         // clean any existing cached images first
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
         for (final String asset: assetsToRetain) {
-            Log.debug(LOG_TAG, "Creating new cached image assets at: %s", cacheManager.getBaseFilePath(CACHE_NAME, IMAGES_CACHE_SUBDIRECTORY));
+            final String cacheDirectory = cacheManager.getFileForCachedURL(asset, IMAGES_CACHE_SUBDIRECTORY, true).getAbsolutePath();
+            Log.debug(LOG_TAG, "Creating new cached image assets at: %s", cacheDirectory);
             try {
-                final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, IMAGES_CACHE_SUBDIRECTORY);
+                final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, cacheDirectory);
                 remoteDownloader.startDownload();
             } catch (final MissingPlatformServicesException exception) {
                 Log.warning(LOG_TAG, "Failed to cache asset: %s, the platform services were not available.", asset);
             }
         }
     }
-
 
     /**
      * Determine whether the provided {@code assetPath} is downloadable.
@@ -139,7 +128,7 @@ public class MessagingCacheUtilities {
     }
 
     /**
-     * Creates assets cache directory for a {@code Message}.
+     * Creates the "images" cache directory for the {@link Messaging} extension.
      * <p>
      * This method checks if the cache directory already exists in which case no new directory is created for assets.
      */
@@ -189,6 +178,46 @@ public class MessagingCacheUtilities {
     void clearCachedDataFromSubdirectory(final String cacheSubdirectory) {
         cacheManager.deleteFilesNotInList(new ArrayList<String>(), cacheSubdirectory, true);
         Log.trace(LOG_TAG, "In-app messaging %s cache has been deleted.", cacheSubdirectory);
+    }
+
+    /**
+     * Retrieves cached {@code String} message payloads and returns the messages in a {@link Map<String, Variant>}.
+     *
+     * @return a {@code Map<String, Variant>} containing the message payloads.
+     */
+    Map<String, Variant> getCachedMessages() {
+        final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, MESSAGES_CACHE_SUBDIRECTORY, false);
+        if (cachedMessageFile == null) {
+            Log.trace(LOG_TAG, "Unable to find a cached message.");
+            return null;
+        }
+
+        try {
+            final FileInputStream fileInputStream = new FileInputStream(cachedMessageFile);
+            final String streamContents = StringUtils.streamToString(fileInputStream);
+            fileInputStream.close();
+            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
+            return MessagingUtils.toVariantMap(cachedMessagePayload);
+        } catch (final FileNotFoundException fileNotFoundException) {
+            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
+            return null;
+        } catch (final IOException ioException) {
+            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
+            return null;
+        } catch (final JSONException jsonException) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
+            return null;
+        }
+    }
+
+    String createCachedImageAssetUrl(final String remoteUrl) {
+        final File cachedMessageFile = cacheManager.createNewCacheFile(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
+        if (cachedMessageFile == null) {
+            Log.trace(LOG_TAG, "Unable to create a cached file for the url: %s", remoteUrl);
+            return null;
+        }
+
+        return cacheManager.getFileForCachedURL(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, true).getAbsolutePath();
     }
 
     /**
@@ -265,46 +294,6 @@ public class MessagingCacheUtilities {
         }
 
         return result;
-    }
-
-    /**
-     * Retrieves cached {@code String} message payloads and returns the messages in a {@link Map<String, Variant>}.
-     *
-     * @return a {@code Map<String, Variant>} containing the message payloads.
-     */
-    Map<String, Variant> getCachedMessages() {
-        final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, MESSAGES_CACHE_SUBDIRECTORY, false);
-        if (cachedMessageFile == null) {
-            Log.trace(LOG_TAG, "Unable to find a cached message.");
-            return null;
-        }
-
-        try {
-            final FileInputStream fileInputStream = new FileInputStream(cachedMessageFile);
-            final String streamContents = StringUtils.streamToString(fileInputStream);
-            fileInputStream.close();
-            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
-            return MessagingUtils.toVariantMap(cachedMessagePayload);
-        } catch (final FileNotFoundException fileNotFoundException) {
-            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
-            return null;
-        } catch (final IOException ioException) {
-            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
-            return null;
-        } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the JSONArray: %s", jsonException.getMessage());
-            return null;
-        }
-    }
-
-    final String getCachedImageAssetUrl(final String remoteUrl) {
-        final File cachedMessageFile = cacheManager.getFileForCachedURL(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, false);
-        if (cachedMessageFile == null) {
-            Log.trace(LOG_TAG, "Unable to find a cached image asset for the url: %s", remoteUrl);
-            return null;
-        }
-
-        return FILE_PATH + cachedMessageFile.getAbsolutePath();
     }
 
     // for unit tests

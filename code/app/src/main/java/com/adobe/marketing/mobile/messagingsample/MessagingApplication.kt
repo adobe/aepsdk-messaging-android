@@ -23,7 +23,7 @@ class MessagingApplication : Application() {
         super.onCreate()
 
         MobileCore.setApplication(this)
-        MobileCore.setLogLevel(LoggingMode.DEBUG)
+        MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
         Messaging.registerExtension()
         Optimize.registerExtension()

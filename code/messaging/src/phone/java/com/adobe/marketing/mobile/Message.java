@@ -39,7 +39,7 @@ public class Message extends MessageDelegate {
      * @param consequence {@link Map} containing a {@code Message} defining payload
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings) throws MessageRequiredFieldMissingException {
+    public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
         this.messagingInternal = parent;
 
         final String consequenceType = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
@@ -85,6 +85,7 @@ public class Message extends MessageDelegate {
         } else {
             this.aepMessage = (AEPMessage) MessagingUtils.getUIService().createFullscreenMessage(html, this, false, settings);
         }
+        this.aepMessage.setLocalAssetsMap(assetMap);
     }
 
     // ui management

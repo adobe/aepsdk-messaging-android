@@ -18,8 +18,6 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import com.google.android.gms.common.util.ArrayUtils;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +27,8 @@ import java.util.Map;
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
-    private final ArrayList<ImageAsset> imageAssetList = new ArrayList<>();
+    private final ArrayList<String> imageAssetList = new ArrayList<>();
+    private final Map<String, String> assetMap = new HashMap<>();
     private Module messagingModule;
     private MessagingCacheUtilities cacheUtilities;
     private String activityId;
@@ -180,16 +179,15 @@ class InAppNotificationHandler {
             rawRuleJsons.add(ruleJsonObject);
 
             // parse <img src="xxx" alt "xxx"> from each item in items.
-            // if its not cached, cache it using MessagingUtils.cacheRetrievedImageAsset then replace it in the rules json.
-            // if it is already cached, just replace it in the rules json.
+            // add the found assets to the imageAssetList so only current assets will be cached.
+            // additionally, build the assetMap containing the remote url to cached image mapping.
             getImageAssetFromRule(ruleJsonObject);
         }
         // download and cache image assets
         cacheUtilities.cacheImageAssets(imageAssetList);
-        // replace http url's in each rule with the cached asset
+        // create rules from the raw jsons and load them
         for (final JsonUtilityService.JSONObject ruleJson : rawRuleJsons) {
-            final JsonUtilityService.JSONObject rulesJsonObject = replaceHttpUrlWithCachedImageInRule(ruleJson);
-            final Rule parsedRule = parseRuleFromJsonObject(rulesJsonObject);
+            final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
             if (parsedRule != null) {
                 parsedRules.add(parsedRule);
             }
@@ -219,7 +217,8 @@ class InAppNotificationHandler {
                 return;
             }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            Message message = new Message(parent, triggeredConsequence, mobileParameters);
+            // the asset map is populated when the edge response event containing messages is processed
+            Message message = new Message(parent, triggeredConsequence, mobileParameters, assetMap);
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(MessagingConstants.LOG_TAG,
@@ -228,43 +227,19 @@ class InAppNotificationHandler {
     }
 
     private void getImageAssetFromRule(final JsonUtilityService.JSONObject ruleJson) {
-        final ImageAsset imageAsset = extractImageAssetFromJson(ruleJson);
-        if (cacheUtilities.assetIsDownloadable(imageAsset.getAssetUrl())) {
+        final String imageAsset = extractImageAssetFromJson(ruleJson);
+        if (cacheUtilities.assetIsDownloadable(imageAsset)) {
             imageAssetList.add(imageAsset);
         }
-    }
-
-    private JsonUtilityService.JSONObject replaceHttpUrlWithCachedImageInRule(final JsonUtilityService.JSONObject ruleJson) {
-        final JsonUtilityService.JSONObject ruleJsonCopy = ruleJson;
-        final ImageAsset imageAsset = extractImageAssetFromJson(ruleJson);
-        // replace http url with cache url, TODO: handle "alt" images present for image asset
-        final String cacheAssetUrl = cacheUtilities.getCachedImageAssetUrl(imageAsset.getAssetUrl()) + imageAsset.getAssetExtension();
-        try {
-            final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-            final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
-            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray("consequences");
-            final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
-            final JsonUtilityService.JSONObject detail = consequence.getJSONObject("detail");
-            String html = detail.getString("html");
-            html = html.substring(0, imageAsset.getBeginIndex()) + "\"" + cacheAssetUrl + "\"" + html.substring(imageAsset.getEndIndex(), html.length() - 1);
-            // rebuild rulesJson using modified html
-            detail.put("html", html);
-            consequence.put("detail", detail);
-            consequenceJsonArray.put(consequence);
-            json.put("consequences", consequenceJsonArray);
-            rulesJsonArray.put(json);
-            ruleJsonCopy.put("rules", rulesJsonArray);
-            return ruleJsonCopy;
-        } catch (final JsonException jsonException) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "An exception occurred during http image asset replacement: %s", jsonException.getMessage());
-            // return rules unchanged if any exception occurred during asset replacement
-            return ruleJson;
-        }
+        // create a cache location to store the asset.
+        // TODO: handle "alt" images present for image asset
+        final String cacheAssetUrl = cacheUtilities.createCachedImageAssetUrl(imageAsset);
+        // update assetMap
+        assetMap.put(imageAsset, cacheAssetUrl);
     }
 
     // parse <img src="xxx" alt "xxx"> from each item in items.
-    private ImageAsset extractImageAssetFromJson(final JsonUtilityService.JSONObject ruleJson) {
+    private String extractImageAssetFromJson(final JsonUtilityService.JSONObject ruleJson) {
         try {
             final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
             final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
@@ -276,7 +251,7 @@ class InAppNotificationHandler {
             final int endIndex = html.lastIndexOf("alt=") + 6;
             final String imageAssetUrl = (html.substring(beginIndex, endIndex)).replace("\"", "");
             final String[] imageAssetTokens = imageAssetUrl.split(" ");
-            return new ImageAsset(imageAssetTokens[0], beginIndex, endIndex);
+            return imageAssetTokens[0];
         }  catch (final JsonException jsonException) {
             Log.warning(MessagingConstants.LOG_TAG,
                     "An exception occurred during image asset extraction: %s", jsonException.getMessage());

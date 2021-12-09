@@ -117,7 +117,7 @@ public class MessageTests {
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
         try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
+            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
             fail(e.getLocalizedMessage());
         }
@@ -159,7 +159,7 @@ public class MessageTests {
         }
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(mockAEPMessage);
         try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
+            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
             fail(e.getLocalizedMessage());
         }
@@ -202,7 +202,7 @@ public class MessageTests {
         }
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
         try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
+            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
             fail(e.getLocalizedMessage());
         }
@@ -273,7 +273,7 @@ public class MessageTests {
         }
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(aepMessage);
         try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>());
+            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
             fail(e.getLocalizedMessage());
         }
