@@ -42,7 +42,7 @@ public class PushTokenSyncingTests {
 
     @Before
     public void setup() throws Exception {
-        MessagingFunctionalTestUtil.setEdgeIdentityPersistence(MessagingFunctionalTestUtil.createIdentityMap("ECID", "mockECID"));
+        MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
                 put("someconfig", "someConfigValue");

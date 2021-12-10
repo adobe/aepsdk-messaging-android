@@ -18,12 +18,18 @@ import android.content.SharedPreferences;
 
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MessagingFunctionalTestUtil {
+public class MessagingFunctionalTestUtils {
+    private static final String LOG_TAG = "MessagingFunctionalTestUtil";
+    private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
 
     /**
      * Set the persistence data for Edge Identity extension.
@@ -83,5 +89,48 @@ public class MessagingFunctionalTestUtil {
         xdmMap.put("identityMap", identityMap);
 
         return xdmMap;
+    }
+
+    static InputStream convertResourceFileToInputStream(final String name, final String fileExtension) {
+        return FunctionalTestUtils.class.getClassLoader().getResourceAsStream(name + fileExtension);
+    }
+
+    static boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
+        boolean result;
+
+        if (cachedFile == null || input == null) {
+            return false;
+        }
+
+        FileOutputStream output = null;
+
+        try {
+            output = new FileOutputStream(cachedFile, append);
+            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
+            int count;
+
+            while ((count = input.read(data)) != -1) {
+                output.write(data, 0, count);
+            }
+
+            result = true;
+        } catch (final IOException e) {
+            Log.error(LOG_TAG, "IOException while attempting to write remote file (%s)", e);
+            return false;
+        } catch (final Exception e) {
+            Log.error(LOG_TAG, "Unexpected exception while attempting to write remote file (%s)", e);
+            return false;
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }
+
+            } catch (final Exception e) {
+                Log.error(LOG_TAG, "Unable to close the OutputStream (%s) ", e);
+            }
+        }
+
+        return result;
     }
 }

@@ -27,6 +27,8 @@ import java.util.Map;
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
+    private final static String IMAGE_SRC_TAG_BEGIN = "<img src=";
+    private final static String IMAGE_SRC_TAG_END = "alt=";
     private final ArrayList<String> imageAssetList = new ArrayList<>();
     private final Map<String, String> assetMap = new HashMap<>();
     private Module messagingModule;
@@ -58,7 +60,7 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Generates and dispatches an event prompting the Personalization extension to fetch in-app messages.
+     * Generates and dispatches an event prompting the Optimize extension to fetch in-app messages.
      */
     void fetchMessages() {
         // activity and placement are both required for message definition retrieval
@@ -105,8 +107,7 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Converts the rules json present in the Edge response event payload into a
-     * list of rules then loads them in the rules engine.
+     * Converts the rules json present in the Edge response event payload into a list of rules then loads them in the {@link RulesEngine}.
      *
      * @param payload           An {@link Map<String, Variant>} containing the personalization decision payload retrieved from Offers
      * @param edgeResponseEvent The {@link Event} which contained the personalization decision payload. This can be null if cached
@@ -114,7 +115,7 @@ class InAppNotificationHandler {
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload, final Event edgeResponseEvent) {
         if (payload == null || payload.size() == 0) {
-            Log.warning(LOG_TAG, "handleOfferNotification - Aborting handling of the Offers IAM payload because it is null or empty.");
+            Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
             return;
         }
         getActivityAndPlacement(edgeResponseEvent);
@@ -135,22 +136,22 @@ class InAppNotificationHandler {
                 placement = (Map<String, String>) placementMap;
             }
         } catch (final VariantException e) {
-            Log.warning(LOG_TAG, "handleOfferNotification - Exception occurred when converting the VariantMap to StringMap: %s", e.getMessage());
+            Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
             return;
         }
         final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
         final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
-        Log.debug(LOG_TAG, "handleOfferNotification - Retrieved activity id is: (%s), retrieved placement id is: (%s)", offerActivityId, offerPlacementId);
+        Log.debug(LOG_TAG, "%s - Retrieved activity id is: (%s), retrieved placement id is: (%s)", SELF_TAG, offerActivityId, offerPlacementId);
         if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
-            Log.debug(LOG_TAG, "handleOfferNotification - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", activityId, placementId);
+            Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", SELF_TAG, activityId, placementId);
             return;
         }
 
         List<HashMap<String, Variant>> items = new ArrayList<>();
-        Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
+        final Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
         if (itemsList instanceof Variant) {
-            List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
-            for (Object element : variantList) {
+            final List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
+            for (final Object element : variantList) {
                 final MapVariant mapVariant = (MapVariant) element;
                 items.add((HashMap<String, Variant>) mapVariant.getVariantMap());
             }
@@ -158,41 +159,44 @@ class InAppNotificationHandler {
             items = (List<HashMap<String, Variant>>) itemsList;
         }
 
-        final ArrayList<JsonUtilityService.JSONObject> rawRuleJsons = new ArrayList<>();
+        final ArrayList<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
         final ArrayList<Rule> parsedRules = new ArrayList<>();
-        // collect image assets from the payload
-        for (Map<String, Variant> currentItem : items) {
-            final Object itemObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
+        // Loop through each rule in the payload and collect the rule json's present.
+        // Additionally, extract the image assets and build the assetMap.
+        for (final Map<String, Variant> currentItem : items) {
+            final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
             final Map<String, String> data;
             try {
-                if (itemObject instanceof Variant) {
-                    data = ((Variant) itemObject).getStringMap();
+                if (dataObject instanceof Variant) {
+                    data = ((Variant) dataObject).getStringMap();
                 } else {
-                    data = (Map<String, String>) itemObject;
+                    data = (Map<String, String>) dataObject;
                 }
             } catch (final VariantException e) {
-                Log.warning(LOG_TAG, "handleOfferNotification - Exception occurred when converting the VariantMap to StringMap: %s", e.getMessage());
+                Log.warning(LOG_TAG, "%s - Exception occurred when converting s VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
                 return;
             }
             final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
             final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
-            rawRuleJsons.add(ruleJsonObject);
+            ruleJsons.add(ruleJsonObject);
 
-            // parse <img src="xxx" alt "xxx"> from each item in items.
-            // add the found assets to the imageAssetList so only current assets will be cached.
-            // additionally, build the assetMap containing the remote url to cached image mapping.
-            getImageAssetFromRule(ruleJsonObject);
+            // Parse the "img src" from each html payload in the current rule being processed then
+            // add the found assets to the imageAssetList so only current assets will be cached when the
+            // RemoteDownloader is used to download the image assets.
+            // Additionally, update the asset map with a remote url to cached asset mapping which will be used
+            // by the Message Webview to load cached assets when displaying the IAM html.
+            buildAssetListAndAssetMap(ruleJsonObject);
         }
         // download and cache image assets
         cacheUtilities.cacheImageAssets(imageAssetList);
-        // create rules from the raw jsons and load them
-        for (final JsonUtilityService.JSONObject ruleJson : rawRuleJsons) {
+        // create Rule objects from the rule jsons and load them into the RulesEngine
+        for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
             if (parsedRule != null) {
                 parsedRules.add(parsedRule);
             }
         }
-        Log.debug(LOG_TAG, "handleOfferNotification - registering %s rules", parsedRules.size());
+        Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %s rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
     }
 
@@ -204,16 +208,16 @@ class InAppNotificationHandler {
     void createInAppMessage(final Event rulesEvent) {
         final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
         if (triggeredConsequence == null || triggeredConsequence.isEmpty()) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "Unable to create an in-app message, consequences are null or empty.");
+            Log.warning(LOG_TAG,
+                    "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
             return;
         }
 
         try {
             final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             if (details == null || details.isEmpty()) {
-                Log.warning(MessagingConstants.LOG_TAG,
-                        "Unable to create an in-app message, the consequence details are null or empty");
+                Log.warning(LOG_TAG,
+                        "%s - Unable to create an in-app message, the consequence details are null or empty", SELF_TAG);
                 return;
             }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
@@ -221,40 +225,57 @@ class InAppNotificationHandler {
             Message message = new Message(parent, triggeredConsequence, mobileParameters, assetMap);
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
+            Log.warning(LOG_TAG,
+                    "%s - Unable to create an in-app message, an exception occurred during creation: %s", SELF_TAG, exception.getLocalizedMessage());
         }
     }
 
-    private void getImageAssetFromRule(final JsonUtilityService.JSONObject ruleJson) {
+    /**
+     * Populates the image asset {@code List} with {@code String} image asset urls.
+     * Additionally, this function will populate the asset {@code Map} with remote urls
+     * mapped to cached asset path {@code String}s.
+     *
+     * @param ruleJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
+     */
+    private void buildAssetListAndAssetMap(final JsonUtilityService.JSONObject ruleJson) {
         final String imageAsset = extractImageAssetFromJson(ruleJson);
         if (cacheUtilities.assetIsDownloadable(imageAsset)) {
             imageAssetList.add(imageAsset);
         }
         // create a cache location to store the asset.
-        // TODO: handle "alt" images present for image asset
         final String cacheAssetUrl = cacheUtilities.createCachedImageAssetUrl(imageAsset);
-        // update assetMap
+        // update assetMap with a remote url to cached asset path mapping
         assetMap.put(imageAsset, cacheAssetUrl);
     }
 
-    // parse <img src="xxx" alt "xxx"> from each item in items.
+    /**
+     * Extracts the image asset url as a {@code String} from the given in-app message payload.
+     *
+     * @param ruleJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
+     * @return {@code String} containing the image asset url.
+     */
     private String extractImageAssetFromJson(final JsonUtilityService.JSONObject ruleJson) {
+        if (ruleJson == null || ruleJson.length() <= 0) {
+            Log.warning(LOG_TAG,
+                    "%s - Unable to extract the image asset, the provided json is null or empty.");
+            return null;
+        }
         try {
             final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
             final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
-            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray("consequences");
+            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
             final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
-            final JsonUtilityService.JSONObject detail = consequence.getJSONObject("detail");
-            String html = detail.getString("html");
-            final int beginIndex = html.lastIndexOf("<img src=") + 9;
-            final int endIndex = html.lastIndexOf("alt=") + 6;
+            final JsonUtilityService.JSONObject detail = consequence.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final String html = detail.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+            final int beginIndex = html.lastIndexOf(IMAGE_SRC_TAG_BEGIN) + 9;
+            final int endIndex = html.lastIndexOf(IMAGE_SRC_TAG_END) + 6;
             final String imageAssetUrl = (html.substring(beginIndex, endIndex)).replace("\"", "");
             final String[] imageAssetTokens = imageAssetUrl.split(" ");
+            // the image asset url is always the first token in the "<img src />" tag
             return imageAssetTokens[0];
         }  catch (final JsonException jsonException) {
-            Log.warning(MessagingConstants.LOG_TAG,
-                    "An exception occurred during image asset extraction: %s", jsonException.getMessage());
+            Log.warning(LOG_TAG,
+                    "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());
             return null;
         }
     }
@@ -270,8 +291,8 @@ class InAppNotificationHandler {
                 Object edgeResponseActivityId = configSharedState.get(MessagingConstants.SharedState.Configuration.ORG_ID);
                 if (edgeResponseActivityId instanceof String) {
                     activityId = (String) edgeResponseActivityId;
-                    Log.debug(MessagingConstants.LOG_TAG,
-                            "Got activity id (%s) from event.", activityId);
+                    Log.debug(LOG_TAG,
+                            "%s - Got activity id (%s) from event.", SELF_TAG, activityId);
                 }
             }
         } else {
@@ -280,14 +301,14 @@ class InAppNotificationHandler {
                 final Application application = App.getApplication();
                 applicationInfo = App.getApplication().getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
             } catch (PackageManager.NameNotFoundException exception) {
-                Log.warning(MessagingConstants.LOG_TAG,
-                        "An exception occurred when retrieving the manifest metadata: %s", exception.getLocalizedMessage());
+                Log.warning(LOG_TAG,
+                        "%s - An exception occurred when retrieving the manifest metadata: %s", SELF_TAG, exception.getLocalizedMessage());
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
         // TODO: for testing, remove
-        activityId = "xcore:offer-activity:14090235e6b6757a";
-        placementId = "xcore:offer-placement:142be72cd583bd40";
+//        activityId = "xcore:offer-activity:14090235e6b6757a";
+//        placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**
@@ -298,7 +319,7 @@ class InAppNotificationHandler {
      */
     private Rule parseRuleFromJsonObject(final JsonUtilityService.JSONObject rulesJsonObject) {
         if (rulesJsonObject == null) {
-            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.");
+            Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.", SELF_TAG);
             return null;
         }
 
@@ -306,8 +327,8 @@ class InAppNotificationHandler {
 
         try {
             rulesJsonArray = rulesJsonObject.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-        } catch (final JsonException e) {
-            Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse rules (%s)", e);
+        } catch (final JsonException jsonException) {
+            Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse rules (%s)", SELF_TAG, jsonException);
             return null;
         }
 
@@ -329,11 +350,11 @@ class InAppNotificationHandler {
                     parsedRule = new Rule(condition, consequences);
                 }
             } catch (final JsonException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", e.getLocalizedMessage());
+                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", SELF_TAG, e.getLocalizedMessage());
             } catch (final UnsupportedConditionException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", e);
+                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", SELF_TAG, e);
             } catch (final IllegalArgumentException e) {
-                Log.debug(LOG_TAG, "parseRulesFromJsonObject -  Unable to create rule object (%s)", e);
+                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to create rule object (%s)", SELF_TAG, e);
             }
         }
 
@@ -355,7 +376,7 @@ class InAppNotificationHandler {
 
         if (consequenceJsonArray == null || consequenceJsonArray.length() == 0) {
             Log.debug(LOG_TAG,
-                    "generateConsequenceEvents -  The passed in consequence array is null, so returning an empty consequence events list.");
+                    "%s - generateConsequenceEvents -  The passed in consequence array is null, so returning an empty consequence events list.", SELF_TAG);
             return parsedEvents;
         }
 
@@ -363,7 +384,7 @@ class InAppNotificationHandler {
 
         if (jsonUtilityService == null) {
             Log.debug(LOG_TAG,
-                    "generateConsequenceEvents -  JsonUtility service is not available, returning empty consequence events list.");
+                    "%s - generateConsequenceEvents -  JsonUtility service is not available, returning empty consequence events list.", SELF_TAG);
             return parsedEvents;
         }
 
@@ -389,8 +410,8 @@ class InAppNotificationHandler {
                     parsedEvents.add(event);
                 }
             } catch (VariantException ex) {
-                Log.warning(MessagingConstants.LOG_TAG,
-                        "Unable to convert consequence json object to a variant.");
+                Log.warning(LOG_TAG,
+                        "%s - Unable to convert consequence json object to a variant.", SELF_TAG);
                 return null;
             }
         }

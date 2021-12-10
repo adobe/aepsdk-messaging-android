@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +26,9 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +36,9 @@ import java.util.concurrent.CountDownLatch;
 
 @RunWith(AndroidJUnit4.class)
 public class MessageCachingFunctionalTests {
+    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
+    private CacheManager cacheManager;
+
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
@@ -41,7 +49,7 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingFunctionalTestUtil.setEdgeIdentityPersistence(MessagingFunctionalTestUtil.createIdentityMap("ECID", "mockECID"));
+        MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
                 put("experienceCloud.org", "xcore:offer-activity:13c2593fcbcfacbd");
@@ -65,6 +73,15 @@ public class MessageCachingFunctionalTests {
         final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
         final NetworkService networkService = MessagingUtils.getPlatformServices().getNetworkService();
         messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+
+        cacheManager = new CacheManager(systemInfoService);
+        // ensure cache is cleared before testing
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), IMAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), MESSAGES_CACHE_SUBDIRECTORY);
+
+        // write a image file from resources to the image asset cache
+        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
+        MessagingFunctionalTestUtils.readInputStreamIntoFile(mockCachedImage, MessagingFunctionalTestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
     }
 
     @After

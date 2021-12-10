@@ -13,6 +13,8 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
+import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,6 +31,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +46,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +63,7 @@ public class MessagingInternalIAMPayloadTests {
     private final Map<String, Object> ecidMap = new HashMap<>();
     private final List<Map> ids = new ArrayList<>();
     private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
+    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -88,9 +93,10 @@ public class MessagingInternalIAMPayloadTests {
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
+    private CacheManager cacheManager;
 
     @Before
-    public void setup() throws PackageManager.NameNotFoundException, InterruptedException {
+    public void setup() throws PackageManager.NameNotFoundException, InterruptedException, MissingPlatformServicesException {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -118,8 +124,18 @@ public class MessagingInternalIAMPayloadTests {
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
         when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
+
+        // setup mock cache
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
+        cacheManager = new CacheManager(mockAndroidSystemInfoService);
+        // ensure cache is cleared before testing
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), IMAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(new ArrayList<String>(), MESSAGES_CACHE_SUBDIRECTORY);
+
+        // write a image file from resources to the mock image asset cache
+        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
+        TestUtils.readInputStreamIntoFile(mockCachedImage, TestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
 
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
@@ -335,9 +351,9 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify no rules loaded
+        // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
+        assertEquals(1, moduleRules.size());
     }
 
     @Test
@@ -366,9 +382,9 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify no rules loaded
+        // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
+        assertEquals(1, moduleRules.size());
     }
 
     @Test
@@ -397,9 +413,9 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify no rules loaded
+        // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
+        assertEquals(1, moduleRules.size());
     }
 
     @Test
