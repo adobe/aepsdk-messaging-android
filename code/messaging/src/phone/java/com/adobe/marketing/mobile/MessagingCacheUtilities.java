@@ -51,7 +51,7 @@ public class MessagingCacheUtilities {
             Log.warning(LOG_TAG, "%s - Could not create MessagingCacheUtilities: %s", SELF_TAG, exception.getMessage());
             return;
         }
-        createMessageAssetCacheDirectory();
+        createImageAssetsCacheDirectory();
     }
     // ========================================================================================================
     // Message payload caching
@@ -238,20 +238,20 @@ public class MessagingCacheUtilities {
     }
 
     /**
-     * Creates the "images" cache directory for the {@link Messaging} extension.
-     * <p>
-     * This method checks if the cache directory already exists in which case no new directory is created for assets.
+     * Creates a {@link File} in the image asset cache directory to be used for caching a remote image.
+     *
      * @param remoteUrl A {@code String} containing the remote asset url
      * @return A @code String} containing the cache path for the remote url.
      */
     String createCachedImageAssetUrl(final String remoteUrl) {
-        final File cachedMessageFile = cacheManager.createNewCacheFile(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
-        if (cachedMessageFile == null) {
-            Log.trace(LOG_TAG, "%s - Unable to create a cached file for the url: %s", SELF_TAG, remoteUrl);
-            return null;
+        File imageAssetCacheFile = cacheManager.getFileForCachedURL(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, false);
+        if (imageAssetCacheFile == null || !imageAssetCacheFile.exists()) {
+            Log.trace(LOG_TAG, "%s - No image asset cache file exists, creating one for: %s", SELF_TAG, remoteUrl);
+            imageAssetCacheFile = cacheManager.createNewCacheFile(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
+            imageAssetCacheFile.setWritable(true);
         }
 
-        return cacheManager.getFileForCachedURL(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, false).getAbsolutePath();
+        return imageAssetCacheFile.getAbsolutePath();
     }
 
     /**
@@ -265,19 +265,17 @@ public class MessagingCacheUtilities {
         if (assetsCollection != null && !assetsCollection.isEmpty()) {
             for (final String imageAsset : assetsCollection) {
                 final String url = imageAsset;
-                if (assetIsDownloadable(url)) {
+                if (assetIsDownloadable(url) && !assetsToRetain.contains(url)) {
                     assetsToRetain.add(url);
                 }
             }
         }
 
-        // clean any existing cached images first
+        // clean any existing cached images first then use the RemoteDownloader to download the assets
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
         for (final String asset: assetsToRetain) {
-            final String cacheDirectory = cacheManager.getFileForCachedURL(asset, IMAGES_CACHE_SUBDIRECTORY, false).getAbsolutePath();
-            Log.debug(LOG_TAG, "%s - Creating new cached image assets at: %s", SELF_TAG, cacheDirectory);
             try {
-                final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, cacheDirectory);
+                final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, IMAGES_CACHE_SUBDIRECTORY);
                 remoteDownloader.startDownload();
             } catch (final MissingPlatformServicesException exception) {
                 Log.warning(LOG_TAG, "%s - Failed to cache asset: %s, the platform services were not available.", SELF_TAG, asset);
@@ -290,11 +288,11 @@ public class MessagingCacheUtilities {
      * <p>
      * This method checks if the cache directory already exists in which case no new directory is created for assets.
      */
-    private void createMessageAssetCacheDirectory() {
+    private void createImageAssetsCacheDirectory() {
         final File assetDir = new File(systemInfoService.getApplicationCacheDir() + File.separator + IMAGES_CACHE_SUBDIRECTORY);
 
         if (!assetDir.exists() && !assetDir.mkdirs()) {
-            Log.warning(LOG_TAG, "%s - Unable to create directory for caching message assets", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - Unable to create directory for caching image assets", SELF_TAG);
         }
     }
 

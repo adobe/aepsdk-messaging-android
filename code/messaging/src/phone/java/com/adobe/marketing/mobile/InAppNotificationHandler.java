@@ -178,14 +178,17 @@ class InAppNotificationHandler {
             }
             final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
             final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
-            ruleJsons.add(ruleJsonObject);
+            // we want to discard invalid jsons
+            if (ruleJsonObject != null) {
+                ruleJsons.add(ruleJsonObject);
 
-            // Parse the "img src" from each html payload in the current rule being processed then
-            // add the found assets to the imageAssetList so only current assets will be cached when the
-            // RemoteDownloader is used to download the image assets.
-            // Additionally, update the asset map with a remote url to cached asset mapping which will be used
-            // by the Message Webview to load cached assets when displaying the IAM html.
-            buildAssetListAndAssetMap(ruleJsonObject);
+                // Parse the "img src" from each html payload in the current rule being processed then
+                // add the found assets to the imageAssetList so only current assets will be cached when the
+                // RemoteDownloader is used to download the image assets.
+                // Additionally, update the asset map with a remote url to cached asset mapping which will be used
+                // by the Message Webview to load cached assets when displaying the IAM html.
+                buildAssetListAndAssetMap(ruleJsonObject);
+            }
         }
         // download and cache image assets
         cacheUtilities.cacheImageAssets(imageAssetList);
@@ -306,9 +309,9 @@ class InAppNotificationHandler {
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
-        // TODO: for testing, remove
-//        activityId = "xcore:offer-activity:14090235e6b6757a";
-//        placementId = "xcore:offer-placement:142be72cd583bd40";
+        // TODO: for manual testing, remove
+        // activityId = "xcore:offer-activity:14090235e6b6757a";
+        // placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**

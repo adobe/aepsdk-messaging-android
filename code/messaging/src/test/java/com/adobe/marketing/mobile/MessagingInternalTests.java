@@ -29,6 +29,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,6 +41,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -73,6 +75,8 @@ public class MessagingInternalTests {
     @Mock
     AndroidNetworkService mockAndroidNetworkService;
     @Mock
+    AndroidJsonUtility mockAndroidJsonUtility;
+    @Mock
     PackageManager packageManager;
     @Mock
     ApplicationInfo applicationInfo;
@@ -82,12 +86,13 @@ public class MessagingInternalTests {
     private EventHub eventHub;
 
     @Before
-    public void setup() throws PackageManager.NameNotFoundException {
+    public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        when(mockPlatformServices.getJsonUtilityService()).thenReturn(mockAndroidJsonUtility);
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
         eventHub = new EventHub("testEventHub", mockPlatformServices);

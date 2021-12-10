@@ -82,12 +82,10 @@ public class TestUtils {
         return payload;
     }
 
-    static Map<String, Variant> loadJsonFromFile(final String name) {
+    static Map<String, Variant> getMapFromFile(final String name) {
         try {
             final InputStream inputStream = TestUtils.convertResourceFileToInputStream(name, ".json");
-            final String streamContents = StringUtils.streamToString(inputStream);
-            inputStream.close();
-            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
+            final JSONObject cachedMessagePayload = loadJsonFromFile(inputStream);
             return toVariantMap(cachedMessagePayload);
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
@@ -99,6 +97,12 @@ public class TestUtils {
             Log.warning(LOG_TAG, "Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
             return null;
         }
+    }
+
+    static JSONObject loadJsonFromFile(final InputStream inputStream) throws IOException, JSONException {
+        final String streamContents = StringUtils.streamToString(inputStream);
+        inputStream.close();
+        return new JSONObject(streamContents);
     }
 
     static InputStream convertResourceFileToInputStream(final String name, final String fileExtension) {
