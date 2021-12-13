@@ -35,12 +35,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MessagingCacheUtilities {
+class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
     private final int STREAM_WRITE_BUFFER_SIZE = 4096;
     private CacheManager cacheManager;
     private final SystemInfoService systemInfoService;
     private final NetworkService networkService;
+    private final Map<String, String> assetMap = new HashMap<>();
 
     MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService) {
         this.systemInfoService = systemInfoService;
@@ -76,7 +77,7 @@ public class MessagingCacheUtilities {
     }
 
     /**
-     * Retrieves cached {@code String} message payloads and returns the messages in a {@link Map<String, Variant>}.
+     * Retrieves cached {@code String} message payloads and returns them in a {@link Map<String, Variant>}.
      *
      * @return a {@code Map<String, Variant>} containing the message payloads.
      */
@@ -131,55 +132,6 @@ public class MessagingCacheUtilities {
     }
 
     /**
-     * Writes the inputStream into the file.
-     * <p>
-     * The content of the inputStream is appended to an existing file if the boolean is set as true.
-     *
-     * @param cachedFile File to which the content has to be written
-     * @param input      The inputstream to be written to the cache
-     * @param append     true, if you want to append the input stream to the existing file content
-     * @return {@code boolean} containing true if the inputstream has been successfully written into the file, false otherwise
-     */
-    private boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
-        boolean result;
-
-        if (cachedFile == null || input == null) {
-            return false;
-        }
-
-        FileOutputStream output = null;
-
-        try {
-            output = new FileOutputStream(cachedFile, append);
-            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
-            int count;
-
-            while ((count = input.read(data)) != -1) {
-                output.write(data, 0, count);
-            }
-
-            result = true;
-        } catch (final IOException e) {
-            Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
-            return false;
-        } catch (final Exception e) {
-            Log.error(LOG_TAG, "%s - Unexpected exception while attempting to write remote file (%s)", SELF_TAG, e);
-            return false;
-        } finally {
-            try {
-                if (output != null) {
-                    output.close();
-                }
-
-            } catch (final Exception e) {
-                Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", SELF_TAG, e);
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Caches the {@link Map <String, Variant>} message payload.
      *
      * @param messagePayload the {@code Map<String, Variant>} containing the message payload to be cached.
@@ -201,6 +153,51 @@ public class MessagingCacheUtilities {
         } catch (final JSONException e) {
             Log.error(LOG_TAG, "%s - JSONException while attempting to create JSON from ArrayList payload: (%s)", SELF_TAG, e);
         }
+    }
+
+    /**
+     * Writes the provided {@link InputStream} into the provided cache {@link File}.
+     * <p>
+     * The content of the inputStream is appended to an existing file if the boolean is set as true.
+     *
+     * @param cachedFile {@code File} to which the content has to be written
+     * @param input      The {@code InputStream} to be written to the cache
+     * @param append     true, if you want to append the input stream to the existing file content
+     * @return {@code boolean} containing true if the {@code InputStream} has been successfully written into the file, false otherwise
+     */
+    private boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
+        if (cachedFile == null || input == null) {
+            return false;
+        }
+
+        FileOutputStream output = null;
+
+        try {
+            output = new FileOutputStream(cachedFile, append);
+            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
+            int count;
+
+            while ((count = input.read(data)) != -1) {
+                output.write(data, 0, count);
+            }
+        } catch (final IOException e) {
+            Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
+            return false;
+        } catch (final Exception e) {
+            Log.error(LOG_TAG, "%s - Unexpected exception while attempting to write remote file (%s)", SELF_TAG, e);
+            return false;
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }
+
+            } catch (final Exception e) {
+                Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", SELF_TAG, e);
+            }
+        }
+
+        return true;
     }
 
     // ========================================================================================================
@@ -228,30 +225,19 @@ public class MessagingCacheUtilities {
         return new RemoteDownloader(networkService, systemInfoService, currentAssetUrl, cacheSubDirectory) {
             @Override
             protected void onDownloadComplete(final File downloadedFile) {
+                // Update the asset map with a remote url to cached asset mapping on successful image asset download
+                // which will be used by the Message Webview to load cached assets when displaying the IAM html.
+                // If the download fails, use the remote url when displaying the message. Another attempt to cache the remote
+                // image asset will be made on the next app launch.
                 if (downloadedFile != null) {
                     Log.trace(LOG_TAG, "%s - %s has been downloaded and cached.", SELF_TAG, currentAssetUrl);
+                    assetMap.put(currentAssetUrl, downloadedFile.getAbsolutePath());
                 } else {
                     Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, currentAssetUrl);
+                    assetMap.put(currentAssetUrl, currentAssetUrl);
                 }
             }
         };
-    }
-
-    /**
-     * Creates a {@link File} in the image asset cache directory to be used for caching a remote image.
-     *
-     * @param remoteUrl A {@code String} containing the remote asset url
-     * @return A @code String} containing the cache path for the remote url.
-     */
-    String createCachedImageAssetUrl(final String remoteUrl) {
-        File imageAssetCacheFile = cacheManager.getFileForCachedURL(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, false);
-        if (imageAssetCacheFile == null || !imageAssetCacheFile.exists()) {
-            Log.trace(LOG_TAG, "%s - No image asset cache file exists, creating one for: %s", SELF_TAG, remoteUrl);
-            imageAssetCacheFile = cacheManager.createNewCacheFile(remoteUrl, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
-            imageAssetCacheFile.setWritable(true);
-        }
-
-        return imageAssetCacheFile.getAbsolutePath();
     }
 
     /**
@@ -264,15 +250,15 @@ public class MessagingCacheUtilities {
 
         if (assetsCollection != null && !assetsCollection.isEmpty()) {
             for (final String imageAsset : assetsCollection) {
-                final String url = imageAsset;
-                if (assetIsDownloadable(url) && !assetsToRetain.contains(url)) {
-                    assetsToRetain.add(url);
+                if (assetIsDownloadable(imageAsset) && !assetsToRetain.contains(imageAsset)) {
+                    assetsToRetain.add(imageAsset);
                 }
             }
         }
 
         // clean any existing cached images first then use the RemoteDownloader to download the assets
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
+
         for (final String asset: assetsToRetain) {
             try {
                 final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, IMAGES_CACHE_SUBDIRECTORY);
@@ -281,6 +267,10 @@ public class MessagingCacheUtilities {
                 Log.warning(LOG_TAG, "%s - Failed to cache asset: %s, the platform services were not available.", SELF_TAG, asset);
             }
         }
+    }
+
+    Map<String, String> getAssetMap() {
+        return assetMap;
     }
 
     /**

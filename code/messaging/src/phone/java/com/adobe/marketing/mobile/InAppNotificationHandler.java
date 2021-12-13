@@ -29,14 +29,14 @@ class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     private final static String IMAGE_SRC_TAG_BEGIN = "<img src=";
     private final static String IMAGE_SRC_TAG_END = "alt=";
-    private final ArrayList<String> imageAssetList = new ArrayList<>();
-    private final Map<String, String> assetMap = new HashMap<>();
-    private Module messagingModule;
-    private MessagingCacheUtilities cacheUtilities;
-    private String activityId;
-    private String placementId;
     // package private
     final MessagingInternal parent;
+    private final ArrayList<String> imageAssetList = new ArrayList<>();
+    private final Map<String, String> assetMap = new HashMap<>();
+    private final Module messagingModule;
+    private final MessagingCacheUtilities cacheUtilities;
+    private String activityId;
+    private String placementId;
 
     /**
      * Constructor
@@ -162,7 +162,7 @@ class InAppNotificationHandler {
         final ArrayList<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
         final ArrayList<Rule> parsedRules = new ArrayList<>();
         // Loop through each rule in the payload and collect the rule json's present.
-        // Additionally, extract the image assets and build the assetMap.
+        // Additionally, extract the image assets and build the asset list for asset caching.
         for (final Map<String, Variant> currentItem : items) {
             final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
             final Map<String, String> data;
@@ -185,9 +185,10 @@ class InAppNotificationHandler {
                 // Parse the "img src" from each html payload in the current rule being processed then
                 // add the found assets to the imageAssetList so only current assets will be cached when the
                 // RemoteDownloader is used to download the image assets.
-                // Additionally, update the asset map with a remote url to cached asset mapping which will be used
-                // by the Message Webview to load cached assets when displaying the IAM html.
-                buildAssetListAndAssetMap(ruleJsonObject);
+                final String imageAsset = extractImageAssetFromJson(ruleJsonObject);
+                if (cacheUtilities.assetIsDownloadable(imageAsset)) {
+                    imageAssetList.add(imageAsset);
+                }
             }
         }
         // download and cache image assets
@@ -225,30 +226,12 @@ class InAppNotificationHandler {
             }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
-            Message message = new Message(parent, triggeredConsequence, mobileParameters, assetMap);
+            Message message = new Message(parent, triggeredConsequence, mobileParameters, cacheUtilities.getAssetMap());
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, an exception occurred during creation: %s", SELF_TAG, exception.getLocalizedMessage());
         }
-    }
-
-    /**
-     * Populates the image asset {@code List} with {@code String} image asset urls.
-     * Additionally, this function will populate the asset {@code Map} with remote urls
-     * mapped to cached asset path {@code String}s.
-     *
-     * @param ruleJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
-     */
-    private void buildAssetListAndAssetMap(final JsonUtilityService.JSONObject ruleJson) {
-        final String imageAsset = extractImageAssetFromJson(ruleJson);
-        if (cacheUtilities.assetIsDownloadable(imageAsset)) {
-            imageAssetList.add(imageAsset);
-        }
-        // create a cache location to store the asset.
-        final String cacheAssetUrl = cacheUtilities.createCachedImageAssetUrl(imageAsset);
-        // update assetMap with a remote url to cached asset path mapping
-        assetMap.put(imageAsset, cacheAssetUrl);
     }
 
     /**
@@ -276,7 +259,7 @@ class InAppNotificationHandler {
             final String[] imageAssetTokens = imageAssetUrl.split(" ");
             // the image asset url is always the first token in the "<img src />" tag
             return imageAssetTokens[0];
-        }  catch (final JsonException jsonException) {
+        } catch (final JsonException jsonException) {
             Log.warning(LOG_TAG,
                     "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());
             return null;
@@ -310,8 +293,8 @@ class InAppNotificationHandler {
             activityId = applicationInfo.metaData.getString("activityId");
         }
         // TODO: for manual testing, remove
-        // activityId = "xcore:offer-activity:14090235e6b6757a";
-        // placementId = "xcore:offer-placement:142be72cd583bd40";
+        activityId = "xcore:offer-activity:14090235e6b6757a";
+        placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**
