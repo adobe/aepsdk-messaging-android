@@ -64,6 +64,12 @@ public class MessagingInternalIAMPayloadTests {
     private final List<Map> ids = new ArrayList<>();
     private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
     private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
+    private MessagingInternal messagingInternal;
+    private AndroidPlatformServices platformServices;
+    private JsonUtilityService jsonUtilityService;
+    private EventHub eventHub;
+    private CacheManager cacheManager;
+
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -89,11 +95,6 @@ public class MessagingInternalIAMPayloadTests {
     ApplicationInfo applicationInfo;
     @Mock
     Bundle bundle;
-    private MessagingInternal messagingInternal;
-    private AndroidPlatformServices platformServices;
-    private JsonUtilityService jsonUtilityService;
-    private EventHub eventHub;
-    private CacheManager cacheManager;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, InterruptedException, MissingPlatformServicesException {

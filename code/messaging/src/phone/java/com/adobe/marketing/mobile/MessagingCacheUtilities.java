@@ -204,43 +204,6 @@ class MessagingCacheUtilities {
     // Image asset caching
     // ========================================================================================================
     /**
-     * Determine whether the provided {@code String} assetPath is downloadable.
-     *
-     * @param assetPath {@code String} containing the asset path to check
-     * @return {@code boolean} indicating whether the provided asset is downloadable
-     */
-    boolean assetIsDownloadable(final String assetPath) {
-        return StringUtils.stringIsUrl(assetPath) && (assetPath.startsWith("http") || assetPath.startsWith("https"));
-    }
-
-    /**
-     * Returns a {@link RemoteDownloader} object for the provided {@code String} currentAssetUrl.
-     *
-     * @param currentAssetUrl {@code String} containing the URL of the asset to be downloaded
-     * @param cacheSubDirectory {@code String} containing the subdirectory to store the cached asset
-     * @return A {@code RemoteDownloader} configured with the {@code String} currentAssetUrl
-     * @throws MissingPlatformServicesException when {@link NetworkService} or {@link SystemInfoService} are null
-     */
-    private RemoteDownloader getRemoteDownloader(final String currentAssetUrl, final String cacheSubDirectory) throws MissingPlatformServicesException {
-        return new RemoteDownloader(networkService, systemInfoService, currentAssetUrl, cacheSubDirectory) {
-            @Override
-            protected void onDownloadComplete(final File downloadedFile) {
-                // Update the asset map with a remote url to cached asset mapping on successful image asset download
-                // which will be used by the Message Webview to load cached assets when displaying the IAM html.
-                // If the download fails, use the remote url when displaying the message. Another attempt to cache the remote
-                // image asset will be made on the next app launch.
-                if (downloadedFile != null) {
-                    Log.trace(LOG_TAG, "%s - %s has been downloaded and cached.", SELF_TAG, currentAssetUrl);
-                    assetMap.put(currentAssetUrl, downloadedFile.getAbsolutePath());
-                } else {
-                    Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, currentAssetUrl);
-                    assetMap.put(currentAssetUrl, currentAssetUrl);
-                }
-            }
-        };
-    }
-
-    /**
      * Caches the assets provided in the {@link java.util.List}.
      *
      * @param assetsCollection a {@link List<String>} containing asset url's to be cached.
@@ -269,8 +232,50 @@ class MessagingCacheUtilities {
         }
     }
 
+    /**
+     * Determine whether the provided {@code String} assetPath is downloadable.
+     *
+     * @param assetPath {@code String} containing the asset path to check
+     * @return {@code boolean} indicating whether the provided asset is downloadable
+     */
+    boolean assetIsDownloadable(final String assetPath) {
+        return StringUtils.stringIsUrl(assetPath) && (assetPath.startsWith("http") || assetPath.startsWith("https"));
+    }
+
+    /**
+     * Returns a {@link Map<String, String>} containing the remote asset mapped to it's cached location.
+     *
+     * @return {@code Map<String, String} containing the remote URL mapped to the asset cache location
+     */
     Map<String, String> getAssetMap() {
         return assetMap;
+    }
+
+    /**
+     * Returns a {@link RemoteDownloader} object for the provided {@code String} currentAssetUrl.
+     *
+     * @param currentAssetUrl {@code String} containing the URL of the asset to be downloaded
+     * @param cacheSubDirectory {@code String} containing the subdirectory to store the cached asset
+     * @return A {@code RemoteDownloader} configured with the {@code String} currentAssetUrl
+     * @throws MissingPlatformServicesException when {@link NetworkService} or {@link SystemInfoService} are null
+     */
+    private RemoteDownloader getRemoteDownloader(final String currentAssetUrl, final String cacheSubDirectory) throws MissingPlatformServicesException {
+        return new RemoteDownloader(networkService, systemInfoService, currentAssetUrl, cacheSubDirectory) {
+            @Override
+            protected void onDownloadComplete(final File downloadedFile) {
+                // Update the asset map with a remote url to cached asset mapping on successful image asset download
+                // which will be used by the Message Webview to load cached assets when displaying the IAM html.
+                // If the download fails, use the remote url when displaying the message. Another attempt to cache the remote
+                // image asset will be made on the next app launch.
+                if (downloadedFile != null) {
+                    Log.trace(LOG_TAG, "%s - %s has been downloaded and cached.", SELF_TAG, currentAssetUrl);
+                    assetMap.put(currentAssetUrl, downloadedFile.getAbsolutePath());
+                } else {
+                    Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, currentAssetUrl);
+                    assetMap.put(currentAssetUrl, currentAssetUrl);
+                }
+            }
+        };
     }
 
     /**

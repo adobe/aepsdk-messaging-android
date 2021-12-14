@@ -34,7 +34,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MobileCore.class})
-public class MessageCachingTests {
+public class MessagePayloadCachingTests {
     @Mock
     CacheManager mockCacheManager;
     @Mock

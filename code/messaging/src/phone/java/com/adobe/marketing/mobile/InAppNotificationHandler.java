@@ -293,8 +293,8 @@ class InAppNotificationHandler {
             activityId = applicationInfo.metaData.getString("activityId");
         }
         // TODO: for manual testing, remove
-        activityId = "xcore:offer-activity:14090235e6b6757a";
-        placementId = "xcore:offer-placement:142be72cd583bd40";
+        // activityId = "xcore:offer-activity:14090235e6b6757a";
+        // placementId = "xcore:offer-placement:142be72cd583bd40";
     }
 
     /**
