@@ -12,12 +12,12 @@
 package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -78,14 +78,33 @@ public class ImageAssetCachingTests {
         // setup mock cache
         final File mockCache = new File("mock_cache");
         Mockito.when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-
-        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
-        messagingCacheUtilities.setCacheManager(mockCacheManager);
     }
 
     @Test
-    public void testCacheImageAssets_ValidImageAssetListTriggersRemoteAssetFetch() {
+    public void testCreateMessagingCacheUtilities_nullCacheManager() throws MissingPlatformServicesException {
         // setup
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
+        messagingCacheUtilities.setCacheManager(null);
+        ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
+        final ArrayList<String> imageAssets = new ArrayList<>();
+        imageAssets.add(IMAGE_URL);
+        imageAssets.add(IMAGE_URL2);
+        // test
+        messagingCacheUtilities.cacheImageAssets(imageAssets);
+        // verify cache manager deleteFilesNotInList not called
+        verify(mockCacheManager, times(0)).deleteFilesNotInList(assetListCaptor.capture(), anyString());
+        // verify 0 network requests made containing the remote downloader in the callback
+        verify(mockNetworkService, times(0)).connectUrlAsync(anyString(),
+                any(NetworkService.HttpCommand.class),
+                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
+    }
+
+    @Test
+    public void testCacheImageAssets_ValidImageAssetListTriggersRemoteAssetFetch() throws MissingPlatformServicesException {
+        // setup
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
+        messagingCacheUtilities.setCacheManager(mockCacheManager);
         ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
         final ArrayList<String> imageAssets = new ArrayList<>();
@@ -105,8 +124,10 @@ public class ImageAssetCachingTests {
     }
 
     @Test
-    public void testCacheImageAssets_EmptyImageAssetListDoesNotTriggerRemoteAssetFetch() {
+    public void testCacheImageAssets_EmptyImageAssetListDoesNotTriggerRemoteAssetFetch() throws MissingPlatformServicesException {
         // setup
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
+        messagingCacheUtilities.setCacheManager(mockCacheManager);
         ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
         final ArrayList<String> imageAssets = new ArrayList<>();
@@ -121,39 +142,19 @@ public class ImageAssetCachingTests {
                 ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
     }
 
-    @Test
-    public void testCacheImageAssets_NetworkServiceNotAvailable() {
-        // setup
-        when(mockPlatformServices.getNetworkService()).thenReturn(null);
-        ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
-        final ArrayList<String> imageAssets = new ArrayList<>();
+    @Test(expected = MissingPlatformServicesException.class)
+    public void testCacheImageAssets_NetworkServiceNotAvailable() throws MissingPlatformServicesException {
         // test
-        messagingCacheUtilities.cacheImageAssets(imageAssets);
-        // verify cache manager deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(assetListCaptor.capture(), anyString());
-        assertEquals(0, assetListCaptor.getValue().size());
-        // verify 0 network requests made containing the remote downloader in the callback
-        verify(mockNetworkService, times(0)).connectUrlAsync(anyString(),
-                any(NetworkService.HttpCommand.class),
-                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, null);
+        // verify messaging cache utilities object wasn't created
+        assertNull(messagingCacheUtilities);
     }
 
-    @Test
-    public void testCacheImageAssets_SystemInfoServiceNotAvailable() {
-        // setup
-        when(mockPlatformServices.getSystemInfoService()).thenReturn(null);
-        ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
-        final ArrayList<String> imageAssets = new ArrayList<>();
+    @Test(expected = MissingPlatformServicesException.class)
+    public void testCacheImageAssets_SystemInfoServiceNotAvailable() throws MissingPlatformServicesException {
         // test
-        messagingCacheUtilities.cacheImageAssets(imageAssets);
-        // verify cache manager deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(assetListCaptor.capture(), anyString());
-        assertEquals(0, assetListCaptor.getValue().size());
-        // verify 0 network requests made containing the remote downloader in the callback
-        verify(mockNetworkService, times(0)).connectUrlAsync(anyString(),
-                any(NetworkService.HttpCommand.class),
-                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
+        messagingCacheUtilities = new MessagingCacheUtilities(null, mockNetworkService);
+        // verify messaging cache utilities object wasn't created
+        assertNull(messagingCacheUtilities);
     }
 }

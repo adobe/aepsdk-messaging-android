@@ -125,6 +125,7 @@ public class Message extends MessageDelegate {
      * "dismissAnimation": "top",
      * "backdropColor": "AA00EE",
      * "backdropOpacity": 0.2,
+     * "cornerRadius": 15,
      * "gestures": {
      * "swipeUp": "adbinapp://dismiss",
      * "swipeDown": "adbinapp://dismiss",

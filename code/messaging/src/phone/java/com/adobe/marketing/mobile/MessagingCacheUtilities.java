@@ -43,15 +43,13 @@ class MessagingCacheUtilities {
     private final NetworkService networkService;
     private final Map<String, String> assetMap = new HashMap<>();
 
-    MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService) {
+    MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService) throws MissingPlatformServicesException {
         this.systemInfoService = systemInfoService;
         this.networkService = networkService;
-        try {
-            cacheManager = new CacheManager(systemInfoService);
-        } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "%s - Could not create MessagingCacheUtilities: %s", SELF_TAG, exception.getMessage());
-            return;
+        if (networkService == null) {
+                throw new MissingPlatformServicesException("Network service implementation missing");
         }
+        cacheManager = new CacheManager(systemInfoService);
         createImageAssetsCacheDirectory();
     }
     // ========================================================================================================
@@ -183,16 +181,12 @@ class MessagingCacheUtilities {
         } catch (final IOException e) {
             Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
             return false;
-        } catch (final Exception e) {
-            Log.error(LOG_TAG, "%s - Unexpected exception while attempting to write remote file (%s)", SELF_TAG, e);
-            return false;
         } finally {
             try {
                 if (output != null) {
                     output.close();
                 }
-
-            } catch (final Exception e) {
+            } catch (final IOException e) {
                 Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", SELF_TAG, e);
             }
         }
@@ -209,6 +203,11 @@ class MessagingCacheUtilities {
      * @param assetsCollection a {@link List<String>} containing asset url's to be cached.
      */
     void cacheImageAssets(final List<String> assetsCollection) {
+        if (cacheManager == null) {
+            Log.trace(LOG_TAG, "%s - Failed to cache asset, the cache manager is not available.", SELF_TAG);
+            return;
+        }
+
         final ArrayList<String> assetsToRetain = new ArrayList<>();
 
         if (assetsCollection != null && !assetsCollection.isEmpty()) {
@@ -219,7 +218,8 @@ class MessagingCacheUtilities {
             }
         }
 
-        // clean any existing cached images first then use the RemoteDownloader to download the assets
+        // clean any cached images which are no longer needed then use the RemoteDownloader to download
+        // any new assets that have not been previously cached.
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
 
         for (final String asset: assetsToRetain) {

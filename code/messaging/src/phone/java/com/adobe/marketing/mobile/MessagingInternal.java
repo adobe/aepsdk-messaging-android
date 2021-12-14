@@ -90,7 +90,11 @@ class MessagingInternal extends Extension {
         final NetworkService networkService = platformServices.getNetworkService();
 
         // initialize the Messaging Caching functionality
-        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+        try {
+            messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+        } catch (final MissingPlatformServicesException e) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
+        }
 
         // initialize the EventHistory database
         try {

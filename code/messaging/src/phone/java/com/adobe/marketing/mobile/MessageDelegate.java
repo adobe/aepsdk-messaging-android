@@ -65,6 +65,10 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      * @param link {@link String} containing the deeplink to load or url to be shown
      */
     protected void openUrl(final UIService.FullscreenMessage message, final String link) {
+        if (StringUtils.isNullOrEmpty(link)) {
+            Log.trace(LOG_TAG, "Will not open url, it is null or empty.");
+            return;
+        }
         // if we have a deeplink, open the url via an intent
         if (link.contains(ADOBE_DEEPLINK)) {
             Log.debug(LOG_TAG, "Opening deeplink %s.", SELF_TAG, link);
@@ -85,19 +89,22 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      * @param javascript {@link String} containing javascript code to be executed
      */
     protected void loadJavascript(final String javascript) {
-        final WebView jsWebview = new WebView(App.getAppContext());
+        if (StringUtils.isNullOrEmpty(javascript)) {
+            Log.trace(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
+            return;
+        }
+        final WebView jsWebview = new WebView(MobileCore.getApplication().getApplicationContext());
         final WebSettings settings = jsWebview.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
 
-        if (jsWebview != null) {
-            jsWebview.evaluateJavascript(javascript, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String value) {
-                    Log.debug(LOG_TAG, "Javascript callback: " + value);
-                }
-            });
-        }
+        jsWebview.evaluateJavascript(javascript, new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String value) {
+                Log.debug(LOG_TAG, "Javascript callback: " + value);
+                jsWebview.destroy();
+            }
+        });
     }
 
     // ============================================================================================
