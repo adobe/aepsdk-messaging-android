@@ -36,11 +36,6 @@ public class MessageCachingTests {
     @Mock
     CacheManager mockCacheManager;
 
-    @Before
-    public void setup() {
-
-    }
-
     @Test
     public void testLoadCachedMessages() throws URISyntaxException {
         // setup
