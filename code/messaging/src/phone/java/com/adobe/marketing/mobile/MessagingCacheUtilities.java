@@ -268,7 +268,7 @@ class MessagingCacheUtilities {
                 // If the download fails, use the remote url when displaying the message. Another attempt to cache the remote
                 // image asset will be made on the next app launch.
                 if (downloadedFile != null) {
-                    Log.trace(LOG_TAG, "%s - %s has been downloaded and cached.", SELF_TAG, currentAssetUrl);
+                    Log.trace(LOG_TAG, "%s - %s has been downloaded or was previously cached.", SELF_TAG, currentAssetUrl);
                     assetMap.put(currentAssetUrl, downloadedFile.getAbsolutePath());
                 } else {
                     Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, currentAssetUrl);

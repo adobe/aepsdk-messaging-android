@@ -23,12 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
-    private final static String IMAGE_SRC_TAG_BEGIN = "<img src=";
-    private final static String IMAGE_SRC_TAG_END = "alt=";
+    private final static String IMAGE_SRC_PATTERN = "(<img\\b|(?!^)\\G)[^>]*?\\b(src)=([\"']?)([^>]*?)\\3";
     // package private
     final MessagingInternal parent;
     private final ArrayList<String> imageAssetList = new ArrayList<>();
@@ -253,12 +254,18 @@ class InAppNotificationHandler {
             final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
             final JsonUtilityService.JSONObject detail = consequence.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             final String html = detail.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
-            final int beginIndex = html.lastIndexOf(IMAGE_SRC_TAG_BEGIN) + 9;
-            final int endIndex = html.lastIndexOf(IMAGE_SRC_TAG_END) + 6;
-            final String imageAssetUrl = (html.substring(beginIndex, endIndex)).replace("\"", "");
-            final String[] imageAssetTokens = imageAssetUrl.split(" ");
-            // the image asset url is always the first token in the "<img src />" tag
-            return imageAssetTokens[0];
+            final Pattern pattern = Pattern.compile(IMAGE_SRC_PATTERN);
+            final Matcher matcher = pattern.matcher(html);
+            matcher.find();
+            // matcher.group(1) will contain "<img" if a match was found
+            if (matcher.group(1).isEmpty()) {
+                Log.trace(LOG_TAG, "No image asset found in html.");
+                return null;
+            }
+            // matcher.group{4} will contain the image asset url
+            final String imageAsset = matcher.group(4);
+            Log.trace(LOG_TAG, "Found image asset in html: %s", imageAsset);
+            return imageAsset;
         } catch (final JsonException jsonException) {
             Log.warning(LOG_TAG,
                     "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());
