@@ -30,14 +30,14 @@ class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
     private final static String IMAGE_SRC_PATTERN = "(<img\\b|(?!^)\\G)[^>]*?\\b(src)=([\"']?)([^>]*?)\\3";
-    // package private
-    final MessagingInternal parent;
     private final ArrayList<String> imageAssetList = new ArrayList<>();
     private final Map<String, String> assetMap = new HashMap<>();
     private final Module messagingModule;
     private final MessagingCacheUtilities cacheUtilities;
     private String activityId;
     private String placementId;
+    // package private
+    final MessagingInternal parent;
 
     /**
      * Constructor
