@@ -24,6 +24,9 @@ import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.UIService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,9 +35,10 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class})
+@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class, ServiceProvider.class})
 public class MessageDelegateTests {
 
     private EventHub eventHub;
@@ -51,13 +55,15 @@ public class MessageDelegateTests {
     @Mock
     AndroidPlatformServices mockPlatformServices;
     @Mock
-    AndroidUIService mockAndroidUIService;
-    @Mock
     Application mockApplication;
     @Mock
     Context context;
     @Mock
     WebSettings mockWebSettings;
+    @Mock
+    ServiceProvider mockServiceProvider;
+    @Mock
+    UIService mockUIService;
 
     @Before
     public void setup() {
@@ -65,9 +71,11 @@ public class MessageDelegateTests {
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(Log.class);
+        PowerMockito.mockStatic(ServiceProvider.class);
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
-        when(mockPlatformServices.getUIService()).thenReturn(mockAndroidUIService);
+        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         when(mockApplication.getApplicationContext()).thenReturn(context);
 
         eventHub = new EventHub("testEventHub", mockPlatformServices);
@@ -124,7 +132,7 @@ public class MessageDelegateTests {
         messageDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
 
         // verify the ui service is called to show the url
-        verify(mockAndroidUIService, times(1)).showUrl(anyString());
+        verify(mockUIService, times(1)).showUrl(anyString());
     }
 
     @Test
@@ -133,7 +141,7 @@ public class MessageDelegateTests {
         messageDelegate.openUrl(mockAEPMessage, "");
 
         // verify no internal open url or ui service show url method is called
-        verify(mockAndroidUIService, times(0)).showUrl(anyString());
+        verify(mockUIService, times(0)).showUrl(anyString());
         verify(mockAEPMessage, times(0)).openUrl(anyString());
     }
 

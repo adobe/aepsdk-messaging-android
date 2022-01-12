@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="iam_types_array2">
+        <item>Korean character test</item>
+        <item>Cyrillic character test</item>
+        <item>Surrogate pair character test</item>
+        <item>Chinese character test</item>
+        <item>High ascii character test</item>
+        <item>Japanese 1+2 byte character test</item>
+        <item>Chinese 4 byte character test</item>
+        <item>Hebrew character test</item>
+        <item>I8N 4 byte character test</item>
         <item>Banner IAM</item>
         <item>Free shot fullscreen</item>
         <item>Ryan test no advanced settings</item>

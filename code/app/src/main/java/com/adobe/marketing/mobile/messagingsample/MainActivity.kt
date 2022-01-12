@@ -26,6 +26,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -52,21 +53,53 @@ class MainActivity : AppCompatActivity() {
             // Apply the adapter to the spinner
             spinner.adapter = adapter
         }
+        // spinner handling
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             // spinner handling
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                if (parent.getItemAtPosition(pos).equals("Banner IAM")) {
+                if (parent.getItemAtPosition(pos).equals("Korean character test")) {
                     triggerKey = "ryan"
-                    triggerValue = "banner"
-                } else if (parent.getItemAtPosition(pos).equals("Foo bar iam")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
+                    triggerValue = "korean"
+                } else if (parent.getItemAtPosition(pos).equals("Cyrillic character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "cyrillic"
+                } else if (parent.getItemAtPosition(pos).equals("Surrogate pair character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "surrogate"
+                } else if (parent.getItemAtPosition(pos).equals("Chinese character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "sctest"
+                } else if (parent.getItemAtPosition(pos).equals("High ascii character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "highascii"
+                } else if (parent.getItemAtPosition(pos)
+                        .equals("Japanese 1+2 byte character test")
+                ) {
+                    triggerKey = "ryan"
+                    triggerValue = "japanese"
+                } else if (parent.getItemAtPosition(pos).equals("Chinese 4 byte character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "chinese"
+                } else if (parent.getItemAtPosition(pos).equals("I8N 4 byte character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "4byte"
+                } else if (parent.getItemAtPosition(pos).equals("Hebrew character test")) {
+                    triggerKey = "ryan"
+                    triggerValue = "hebrew"
                 } else if (parent.getItemAtPosition(pos).equals("Ryan test no advanced settings")) {
                     triggerKey = "user"
                     triggerValue = "ryan"
-                } else if (parent.getItemAtPosition(pos).equals("Ryan test with advanced settings")) {
+                } else if (parent.getItemAtPosition(pos)
+                        .equals("Ryan test with advanced settings")
+                ) {
                     triggerKey = "ryan"
                     triggerValue = "test2"
+                } else if (parent.getItemAtPosition(pos).equals("Free shot fullscreen")) {
+                    triggerKey = "foo"
+                    triggerValue = "bar"
+                } else if (parent.getItemAtPosition(pos).equals("Banner IAM")) {
+                    triggerKey = "ryan"
+                    triggerValue = "banner"
                 }
             }
 
@@ -125,7 +158,12 @@ class MainActivity : AppCompatActivity() {
         val notificationIntent = Intent(this, NotificationBroadcastReceiver::class.java)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION_ID, 1)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION, notification)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
         val futureInMillis = SystemClock.elapsedRealtime() + delay
         val alarmManager = (getSystemService(Context.ALARM_SERVICE) as AlarmManager)
         alarmManager[AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis] = pendingIntent
@@ -141,11 +179,18 @@ class MainActivity : AppCompatActivity() {
         val actionReceiver = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra(FROM, "action")
-            Messaging.addPushTrackingDetails(this, "messageId", NotificationBroadcastReceiver.XDM_DATA)
+            Messaging.addPushTrackingDetails(
+                this,
+                "messageId",
+                NotificationBroadcastReceiver.XDM_DATA
+            )
         }
-        val pendingIntent: PendingIntent = PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
-        builder.addAction(R.drawable.ic_launcher_background, "buttonAction",
-            pendingIntent)
+        val pendingIntent: PendingIntent =
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
+        builder.addAction(
+            R.drawable.ic_launcher_background, "buttonAction",
+            pendingIntent
+        )
         return builder.build()
     }
 
@@ -164,12 +209,12 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class CustomDelegate: MessageDelegate() {
-    private var currentMessage: UIService.FullscreenMessage? = null
+class CustomDelegate : MessageDelegate() {
+    private var currentMessage: FullscreenMessage? = null
     var showMessages = true
 
-    override fun shouldShowMessage(fullscreenMessage: UIService.FullscreenMessage?): Boolean {
-        if(!showMessages) {
+    override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
+        if (!showMessages) {
             if (fullscreenMessage != null) {
                 this.currentMessage = fullscreenMessage
                 val message = (currentMessage?.settings as? AEPMessageSettings)?.parent as? Message
@@ -180,15 +225,15 @@ class CustomDelegate: MessageDelegate() {
         return showMessages
     }
 
-    override fun onShow(fullscreenMessage: UIService.FullscreenMessage?) {
+    override fun onShow(fullscreenMessage: FullscreenMessage?) {
         this.currentMessage = fullscreenMessage
     }
 
-    override fun onDismiss(fullscreenMessage: UIService.FullscreenMessage?) {
+    override fun onDismiss(fullscreenMessage: FullscreenMessage?) {
         this.currentMessage = fullscreenMessage
     }
 
-    fun getLastTriggeredMessage(): UIService.FullscreenMessage? {
+    fun getLastTriggeredMessage(): FullscreenMessage? {
         return currentMessage
     }
 }

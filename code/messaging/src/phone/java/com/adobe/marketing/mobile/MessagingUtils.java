@@ -13,6 +13,9 @@
 package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.UIService;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -262,22 +265,5 @@ class MessagingUtils {
         }
 
         return platformServices.getJsonUtilityService();
-    }
-
-    /**
-     * Returns the {@link UIService} instance.
-     *
-     * @return {@code UIService} or null if {@link PlatformServices} are unavailable
-     */
-    static UIService getUIService() {
-        final PlatformServices platformServices = MessagingUtils.getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getUIService -  Cannot get UIService, Platform services are not available.");
-            return null;
-        }
-
-        return platformServices.getUIService();
     }
 }

@@ -31,7 +31,7 @@ class MessagingApplication : Application() {
         UserProfile.registerExtension()
         Lifecycle.registerExtension()
         Signal.registerExtension()
-        Edge.registerExtension();
+        Edge.registerExtension()
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
@@ -48,8 +48,8 @@ class MessagingApplication : Application() {
         }
 
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful) {
+        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
                 // Syncing the push token with experience platform

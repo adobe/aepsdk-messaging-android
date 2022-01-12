@@ -15,13 +15,18 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.MessageSettings;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
     private final AEPMessage aepMessage;
-    private final UIService.FullscreenMessageDelegate customDelegate;
+    private final FullscreenMessageDelegate customDelegate;
 
     /**
      * Constructor.
@@ -71,7 +76,7 @@ public class Message extends MessageDelegate {
         }
 
         // message customization poc
-        final UIService.MessageSettings settings;
+        final MessageSettings settings;
         AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
         if (rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
             settings = addMessageSettings(messageSettingsBuilder, rawMessageSettings);
@@ -81,9 +86,9 @@ public class Message extends MessageDelegate {
 
         this.customDelegate = MobileCore.getFullscreenMessageDelegate();
         if (customDelegate != null) {
-            this.aepMessage = (AEPMessage) MessagingUtils.getUIService().createFullscreenMessage(html, customDelegate, false, settings);
+            this.aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, customDelegate, false, settings);
         } else {
-            this.aepMessage = (AEPMessage) MessagingUtils.getUIService().createFullscreenMessage(html, this, false, settings);
+            this.aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, false, settings);
         }
         this.aepMessage.setLocalAssetsMap(assetMap);
     }
@@ -135,15 +140,15 @@ public class Message extends MessageDelegate {
      * }
      * }
      */
-    private UIService.MessageSettings addMessageSettings(AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
+    private MessageSettings addMessageSettings(AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;
         String backdropColor;
         float backdropOpacity;
         float cornerRadius;
         boolean uiTakeover;
-        UIService.MessageAlignment verticalAlign, horizontalAlign;
-        UIService.MessageAnimation displayAnimation, dismissAnimation;
-        Map<UIService.MessageGesture, String> gestureStringMap = new HashMap<>();
+        MessageAlignment verticalAlign, horizontalAlign;
+        MessageAnimation displayAnimation, dismissAnimation;
+        Map<MessageGesture, String> gestureStringMap = new HashMap<>();
 
         if (rawSettings.get(MobileParametersKeys.WIDTH) == null) {
             width = 100;
@@ -158,9 +163,9 @@ public class Message extends MessageDelegate {
         }
 
         if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) == null) {
-            verticalAlign = UIService.MessageAlignment.CENTER;
+            verticalAlign = MessageAlignment.CENTER;
         } else {
-            verticalAlign = UIService.MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN)).toUpperCase());
+            verticalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN)).toUpperCase());
         }
 
         if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) == null) {
@@ -170,9 +175,9 @@ public class Message extends MessageDelegate {
         }
 
         if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) == null) {
-            horizontalAlign = UIService.MessageAlignment.CENTER;
+            horizontalAlign = MessageAlignment.CENTER;
         } else {
-            horizontalAlign = UIService.MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN)).toUpperCase());
+            horizontalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN)).toUpperCase());
         }
 
         if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) == null) {
@@ -182,15 +187,15 @@ public class Message extends MessageDelegate {
         }
 
         if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) == null) {
-            displayAnimation = UIService.MessageAnimation.NONE;
+            displayAnimation = MessageAnimation.NONE;
         } else {
-            displayAnimation = UIService.MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION)).toUpperCase());
+            displayAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION)).toUpperCase());
         }
 
         if (rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION) == null) {
-            dismissAnimation = UIService.MessageAnimation.NONE;
+            dismissAnimation = MessageAnimation.NONE;
         } else {
-            dismissAnimation = UIService.MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION)).toUpperCase());
+            dismissAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION)).toUpperCase());
         }
 
         if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) == null) {
@@ -223,7 +228,7 @@ public class Message extends MessageDelegate {
         final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(MobileParametersKeys.GESTURES);
         if (stringMap != null && !stringMap.isEmpty()) {
             for (Map.Entry<String, String> entry : stringMap.entrySet()) {
-                final UIService.MessageGesture gesture = UIService.MessageGesture.get(entry.getKey());
+                final MessageGesture gesture = MessageGesture.get(entry.getKey());
                 gestureStringMap.put(gesture, entry.getValue());
             }
         }

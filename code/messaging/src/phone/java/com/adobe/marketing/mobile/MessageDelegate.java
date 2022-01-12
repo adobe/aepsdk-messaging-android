@@ -18,6 +18,11 @@ import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.UIService;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MessageDelegate implements UIService.FullscreenMessageDelegate {
+public class MessageDelegate implements FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final static String AMPERSAND = "&";
     private final static String EXPECTED_JAVASCRIPT_PARAM = "js=";
@@ -64,7 +69,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
      *
      * @param link {@link String} containing the deeplink to load or url to be shown
      */
-    protected void openUrl(final UIService.FullscreenMessage message, final String link) {
+    protected void openUrl(final FullscreenMessage message, final String link) {
         if (StringUtils.isNullOrEmpty(link)) {
             Log.trace(LOG_TAG, "Will not open url, it is null or empty.");
             return;
@@ -76,7 +81,7 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
             return;
         }
         // otherwise open the url with the ui service
-        final UIService uiService = MessagingUtils.getUIService();
+        final UIService uiService = ServiceProvider.getInstance().getUIService();
 
         if (uiService == null || !uiService.showUrl(link)) {
             Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, link);
@@ -111,13 +116,13 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     // FullscreenMessageDelegate implementation
     // ============================================================================================
     @Override
-    public void onShow(final UIService.FullscreenMessage fullscreenMessage) {
+    public void onShow(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message shown.", SELF_TAG);
     }
 
     @Override
-    public void onDismiss(final UIService.FullscreenMessage fullscreenMessage) {
+    public void onDismiss(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message dismissed.", SELF_TAG);
         final AEPMessageSettings aepMessageSettings = (AEPMessageSettings) fullscreenMessage.getSettings();
@@ -126,19 +131,19 @@ public class MessageDelegate implements UIService.FullscreenMessageDelegate {
     }
 
     @Override
-    public boolean shouldShowMessage(final UIService.FullscreenMessage fullscreenMessage) {
+    public boolean shouldShowMessage(final FullscreenMessage fullscreenMessage) {
         return true;
     }
 
     /**
      * Invoked when a {@link AEPMessage} is attempting to load a URL.
      *
-     * @param fullscreenMessage the {@link UIService.FullscreenMessage} instance
+     * @param fullscreenMessage the {@link FullscreenMessage} instance
      * @param urlString         {@link String} containing the URL being loaded by the {@code AEPMessage}
      * @return true if the SDK wants to handle the URL
      */
     @Override
-    public boolean overrideUrlLoad(final UIService.FullscreenMessage fullscreenMessage, final String urlString) {
+    public boolean overrideUrlLoad(final FullscreenMessage fullscreenMessage, final String urlString) {
         Log.trace(LOG_TAG, "%s - Fullscreen overrideUrlLoad callback received with url (%s)", SELF_TAG, urlString);
 
         if (StringUtils.isNullOrEmpty(urlString)) {

@@ -27,6 +27,11 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.MessageSettings;
+import com.adobe.marketing.mobile.services.ui.UIService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +51,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalHandleRulesResponseContentTests {
     private final Map<String, Object> mobileParameters = new HashMap<String, Object>() {
         {
@@ -90,9 +95,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
     Bundle bundle;
     @Mock
     AEPMessage mockAEPMessage;
+    @Mock
+    ServiceProvider mockServiceProvider;
 
     private MessagingInternal messagingInternal;
-    private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
 
@@ -101,6 +107,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
+        PowerMockito.mockStatic(ServiceProvider.class);
         eventHub = new EventHub("testEventHub", mockPlatformServices);
         mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
@@ -116,10 +123,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockApplication.getPackageName()).thenReturn("mock_placement");
 
         // setup services mocks
-        platformServices = new AndroidPlatformServices();
-        jsonUtilityService = platformServices.getJsonUtilityService();
+        jsonUtilityService = new AndroidJsonUtility();
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
-        when(mockPlatformServices.getUIService()).thenReturn(mockUIService);
+        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
@@ -128,7 +135,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
         // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(UIService.FullscreenMessageDelegate.class), any(boolean.class), any(UIService.MessageSettings.class))).thenReturn(mockAEPMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
 
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
