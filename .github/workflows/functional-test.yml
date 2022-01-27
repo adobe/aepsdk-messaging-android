@@ -63,7 +63,7 @@ jobs:
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: ${{ matrix.api-level }}
-        target: ${{ matrix.target }}
+        target: default
         arch: x86
         profile: Nexus 6
         force-avd-creation: false
