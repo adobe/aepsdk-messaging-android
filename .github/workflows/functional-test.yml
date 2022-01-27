@@ -24,7 +24,7 @@ jobs:
 
     strategy:
       matrix:
-        api-level: [31] # multiple api versions can be added if desired
+        api-level: [29] # multiple api versions can be added if desired
         
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
