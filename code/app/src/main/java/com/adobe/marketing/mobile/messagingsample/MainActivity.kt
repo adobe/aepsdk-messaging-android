@@ -26,6 +26,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.services.ui.AEPMessage
+import com.adobe.marketing.mobile.services.ui.AEPMessageSettings
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -123,6 +125,61 @@ class MainActivity : AppCompatActivity() {
                 .setEventData(eventData)
                 .build()
             MobileCore.dispatchEvent(iamTrigger, null)
+        }
+
+        btnHistoricalEvent1.setOnClickListener {
+            val mask = arrayOf("firstEvent")
+            var eventData = HashMap<String, Any>()
+            eventData.put("firstEvent", "true")
+
+            val triggerEvent1 = Event.Builder(
+                "messaging event 1",
+                "iamtest", "iamtest", mask
+            )
+                .setEventData(eventData)
+                .build()
+            MobileCore.dispatchEvent(triggerEvent1, null)
+        }
+
+        btnHistoricalEvent2.setOnClickListener {
+            val mask = arrayOf("secondEvent")
+            var eventData = HashMap<String, Any>()
+            eventData.put("secondEvent", "true")
+
+            val triggerEvent2 = Event.Builder(
+                "messaging event 2",
+                "iamtest", "iamtest", mask
+            )
+                .setEventData(eventData)
+                .build()
+            MobileCore.dispatchEvent(triggerEvent2, null)
+        }
+
+        btnHistoricalEvent3.setOnClickListener {
+            val mask = arrayOf("thirdEvent")
+            var eventData = HashMap<String, Any>()
+            eventData.put("thirdEvent", "true")
+
+            val triggerEvent3 = Event.Builder(
+                "messaging event 3",
+                "iamtest", "iamtest", mask
+            )
+                .setEventData(eventData)
+                .build()
+            MobileCore.dispatchEvent(triggerEvent3, null)
+        }
+
+        btnCheckSequence.setOnClickListener {
+            var eventData = HashMap<String, Any>()
+            eventData.put("checkSequence", "true")
+
+            var checkSequenceEvent = Event.Builder(
+                "check sequence",
+                "iamtest", "iamtest"
+            )
+                .setEventData(eventData)
+                .build()
+            MobileCore.dispatchEvent(checkSequenceEvent, null)
         }
 
         allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -226,6 +283,8 @@ class CustomDelegate : MessageDelegate() {
     }
 
     override fun onShow(fullscreenMessage: FullscreenMessage?) {
+        var message: AEPMessage = this.currentMessage as AEPMessage
+        message
         this.currentMessage = fullscreenMessage
     }
 

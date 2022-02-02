@@ -1,0 +1,139 @@
+{"triggeredconsequence":{"id":"e56a8dbb-c5a4-4219-9563-0496e00b4083","detail":{"mobileParameters":{"verticalAlign":"center","horizontalInset":0,"dismissAnimation":"bottom","uiTakeover":true,"horizontalAlign":"center","verticalInset":0,"displayAnimation":"bottom","width":100,"height":100,"gestures":{}},"html":"<html>
+<head>
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			text-align: center;
+			width: 100%;
+			height: 100%;
+			font-family: adobe-clean, "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		}
+
+    h3 {
+			margin: .1rem auto;
+		}
+		p {
+			margin: 0;
+		}
+
+		.body {
+			display: flex;
+			flex-direction: column;
+			background-color: #FFF;
+			border-radius: 5px;
+			color: #333333;
+			width: 100vw;
+			height: 100vh;
+			text-align: center;
+			align-items: center;
+			background-size: 'cover';
+		}
+
+		.content {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			flex-direction: column;
+			position: relative;
+		}
+
+		a {
+			text-decoration: none;
+		}
+
+		.image {
+		  height: 1rem;
+		  flex-grow: 4;
+		  flex-shrink: 1;
+		  display: flex;
+		  justify-content: center;
+		  width: 90%;
+      flex-direction: column;
+      align-items: center;
+		}
+    .image img {
+      max-height: 100%;
+      max-width: 100%;
+    }
+
+		.text {
+			text-align: center;
+			line-height: 20px;
+			font-size: 14px;
+			color: #333333;
+			padding: 0 25px;
+			line-height: 1.25rem;
+			font-size: 0.875rem;
+		}
+		.title {
+			line-height: 1.3125rem;
+			font-size: 1.025rem;
+		}
+
+		.buttons {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			font-size: 1rem;
+			line-height: 1.3rem;
+			text-decoration: none;
+			text-align: center;
+			box-sizing: border-box;
+			padding: .8rem;
+			padding-top: .4rem;
+			gap: 0.3125rem;
+		}
+
+		.button {
+			flex-grow: 1;
+			background-color: #1473E6;
+			color: #FFFFFF;
+			border-radius: .25rem;
+			cursor: pointer;
+			padding: .3rem;
+			gap: .5rem;
+		}
+
+		.btnClose {
+			color: #000000;
+		}
+
+		.closeBtn {
+			align-self: flex-end;
+			width: 1.8rem;
+			height: 1.8rem;
+			margin-top: 1rem;
+			margin-right: .3rem;
+		}
+	</style>
+	<style type="text/css" id="editor-styles">
+[data-uuid="e69adbda-8cfc-4c51-bcab-f8b2fd314d8f"]  {
+  flex-direction: row !important;
+}
+</style>
+</head>
+
+<body>
+	<div class="body">
+    <div class="closeBtn" data-btn-style="plain" data-uuid="fbc580c2-94c1-43c8-a46b-f66bb8ca8554">
+  <a class="btnClose" href="adbinapp://cancel">
+    <svg xmlns="http://www.w3.org/2000/svg" height="18" viewbox="0 0 18 18" width="18" class="close">
+  <rect id="Canvas" fill="#ffffff" opacity="0" width="18" height="18" />
+  <path fill="currentColor" xmlns="http://www.w3.org/2000/svg" d="M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z" />
+</svg>
+  </a>
+</div><div class="image" data-uuid="88c0afd9-1e3d-4d52-900f-fa08a56ad5e2">
+<img src="https://www.adobe.com/adobe.png" alt="">
+</div><div class="text" data-uuid="e7e49562-a365-4d38-be0e-d69cba829cb4">
+<h3>In App for the dogs</h3>
+<p>For E2E testing!</p>
+</div><div data-uuid="e69adbda-8cfc-4c51-bcab-f8b2fd314d8f" class="buttons">
+  <a class="button" data-uuid="864bd990-fc7f-4b1a-8d45-069c58981eb2" href="adbinapp://dismiss">Dismiss</a>
+</div>
+	</div>
+
+
+</body></html>","_xdm":{"mixins":{"_experience":{"customerJourneyManagement":{"messageExecution":{"messageExecutionID":"dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime","messagePublicationID":"aafe8df1-9c30-496d-ba0c-4b300f8cbabb","messageID":"fb31245e-3382-4b3a-a15a-dcf11f463020","ajoCampaignVersionID":"38bd427b-f48e-4b3e-a4e1-03033b830d66","ajoCampaignID":"7a237b33-2648-4903-82d1-efa1aac7c60d"},"messageProfile":{"channel":{"_id":"https://ns.adobe.com/xdm/channels/inapp"}}}}}}},"type":"cjmiam"}}

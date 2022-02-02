@@ -13,9 +13,14 @@ package com.adobe.marketing.mobile;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A third party extension class aiding for assertion against dispatched events, shared state
@@ -136,6 +141,29 @@ class MonitorExtension extends Extension {
         if (expectedEvents.containsKey(eventSpec)) {
             expectedEvents.get(eventSpec).countDown();
         }
+    }
+
+    public static boolean waitForRulesToBeLoaded(final int expectedModuleRuleCount, final String moduleToWaitFor) {
+        int MAX_WAIT_TIME = 5000;
+        int WAIT_INCREMENT = 50;
+        int totalWaitTime = 0;
+        ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
+        while(moduleRules.size() != expectedModuleRuleCount && totalWaitTime <= MAX_WAIT_TIME) {
+            moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
+            totalWaitTime += WAIT_INCREMENT;
+            TestHelper.sleep(WAIT_INCREMENT);
+        }
+
+        Iterator iterator = moduleRules.keySet().iterator();
+        while(iterator.hasNext()) {
+            Module module = (Module) iterator.next();
+            if (module.getModuleName().equals(moduleToWaitFor)) {
+                // rules for module were loaded
+                return true;
+            }
+        }
+        // rule weren't loaded
+        return false;
     }
 
     /**

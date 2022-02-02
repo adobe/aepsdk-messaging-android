@@ -16,6 +16,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Mobile
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.AEPMessage;
+import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.*;

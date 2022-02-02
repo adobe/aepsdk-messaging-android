@@ -96,14 +96,6 @@ class MessagingInternal extends Extension {
             Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
         }
 
-        // initialize the EventHistory database
-        try {
-            androidEventHistory = new AndroidEventHistory(systemInfoService);
-            MobileCore.getCore().eventHub.setEventHistory(androidEventHistory);
-        } catch (final EventHistoryDatabaseCreationException e) {
-            Log.warning(LOG_TAG, "Exception occurred when creating event history: %s", e.getMessage());
-        }
-
         // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
         inAppNotificationHandler = new InAppNotificationHandler(this, messagingCacheUtilities);
         registerEventListeners(extensionApi);
@@ -400,15 +392,15 @@ class MessagingInternal extends Extension {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-                // validate the edge response event from Optimize then load any iam rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
+                // validate the edge response event from Optimize then load any iam rules present
                 final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
                     inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
                     messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
                 }
-                // handle rules response events containing message definitions
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
+                // handle rules response events containing message definitions
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
             }
             // event processed, remove it from the queue

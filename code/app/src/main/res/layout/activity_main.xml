@@ -49,4 +49,28 @@
         android:layout_height="wrap_content"
         android:text="clean event history" />
 
+    <Button
+        android:id="@+id/btnHistoricalEvent1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 1" />
+
+    <Button
+        android:id="@+id/btnHistoricalEvent2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 2" />
+
+    <Button
+        android:id="@+id/btnHistoricalEvent3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 3" />
+
+    <Button
+        android:id="@+id/btnCheckSequence"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Check sequence" />
+
 </LinearLayout>

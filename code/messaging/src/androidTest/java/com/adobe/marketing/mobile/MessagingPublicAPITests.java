@@ -23,6 +23,8 @@ import android.content.Intent;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.adobe.marketing.mobile.messaging.BuildConfig;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,7 +39,9 @@ import java.util.concurrent.CountDownLatch;
 
 @RunWith(AndroidJUnit4.class)
 public class MessagingPublicAPITests {
-
+    static {
+        BuildConfig.IS_E2E_TEST.set(false);
+    }
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
@@ -88,7 +92,7 @@ public class MessagingPublicAPITests {
         // Messaging.registerExtension() is called in the setup method
 
         // verify that the extension is registered with the correct version details
-        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(TestConstants.SharedStateName.EVENT_HUB, 1000));
+        Map<String, String> sharedStateMap = MessagingFunctionalTestUtils.flattenMap(getSharedStateFor(TestConstants.SharedStateName.EVENT_HUB, 1000));
         assertEquals(MessagingConstants.EXTENSION_VERSION, sharedStateMap.get("extensions.com.adobe.messaging.version"));
     }
 

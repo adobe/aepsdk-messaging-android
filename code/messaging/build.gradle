@@ -23,6 +23,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName rootProject.moduleVersion
+        // for e2e tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
@@ -187,7 +189,7 @@ dependencies {
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
 
     // Firebase sdk test implementation
-    testImplementation "com.google.firebase:firebase-messaging:21.1.0"
+    testImplementation 'com.google.firebase:firebase-messaging:21.1.0'
     testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
     testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
@@ -202,6 +204,9 @@ dependencies {
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     androidTestImplementation('com.adobe.marketing.mobile:edgeidentity:1.0.0') {
+        transitive = false
+    }
+    androidTestImplementation('com.adobe.marketing.mobile:edge:1.1.1') {
         transitive = false
     }
 }

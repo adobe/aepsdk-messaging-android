@@ -18,6 +18,8 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
+import com.adobe.marketing.mobile.messaging.BuildConfig;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -299,9 +301,17 @@ class InAppNotificationHandler {
             }
             activityId = applicationInfo.metaData.getString("activityId");
         }
+        // for E2E functional test use the specified placement and activity id
+        if (BuildConfig.IS_E2E_TEST.get()) {
+            placementId = "xcore:offer-placement:143f66555f80e367";
+            activityId = "xcore:offer-activity:143614fd23c501cf";
+        }
         // TODO: for manual testing, remove
         // activityId = "xcore:offer-activity:14090235e6b6757a";
+        // 4byte char testing
         // placementId = "xcore:offer-placement:142be72cd583bd40";
+        // sw demo
+        // placementId = "xcore:offer-placement:142426be131dce37";
     }
 
     /**

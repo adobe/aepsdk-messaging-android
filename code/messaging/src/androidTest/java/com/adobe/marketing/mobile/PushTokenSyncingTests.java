@@ -86,7 +86,7 @@ public class PushTokenSyncingTests {
         assertEquals(expectedEdgeEvent, edgeRequestEvents.get(0).getData().toString());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
+        Map<String, String> sharedStateMap = MessagingFunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertEquals("mockPushToken", pushToken);
     }
@@ -107,7 +107,7 @@ public class PushTokenSyncingTests {
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
+        Map<String, String> sharedStateMap = MessagingFunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
@@ -128,7 +128,7 @@ public class PushTokenSyncingTests {
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = FunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
+        Map<String, String> sharedStateMap = MessagingFunctionalTestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME, 1000));
         String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }

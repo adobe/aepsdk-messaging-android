@@ -1,0 +1,18 @@
+{
+    "experienceCloud.org" : "745F37C35E4B776E0A49421B@AdobeOrg",
+    "edge.environment" : "int",
+    "build.environment" : "dev",
+    "property.id" : "PR613030d1d59a45da8039d2ba1f3b70c1",
+    "edge.configId" : "c279367a-d0db-40e4-9ae8-6fa0488ecc1c",
+    "global.privacy" : "optedin",
+    "lifecycle.sessionTimeout" : 300,
+    "messaging.eventDataset" : "610ae80b3cbbc718dab06208",
+    "consent.default" : {
+        "consents" : {
+            "collect" : {
+                "val" : "y"
+            }
+        }
+    },
+    "rules.url" : "https:\/\/assets.adobedtm.com\/3149c49c3910\/cf7779260cdd\/launch-be72758aa82a-development-rules.zip"
+}
