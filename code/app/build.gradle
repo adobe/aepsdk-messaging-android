@@ -38,7 +38,7 @@ buildscript {
 }
 
 def adobeDependencies = [
-        //core       : "com.adobe.marketing.mobile:core:+",
+        core       : "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}",
         userProfile: "com.adobe.marketing.mobile:userprofile:+",
         edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
         lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",

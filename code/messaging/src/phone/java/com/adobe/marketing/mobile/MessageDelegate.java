@@ -20,9 +20,9 @@ import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
-import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
 import java.io.UnsupportedEncodingException;
@@ -127,7 +127,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message dismissed.", SELF_TAG);
-        final AEPMessageSettings aepMessageSettings = (AEPMessageSettings) fullscreenMessage.getSettings();
+        final MessageSettings aepMessageSettings = ((AEPMessage) fullscreenMessage).getSettings();
         final Message message = (Message) aepMessageSettings.getParent();
         message.dismiss();
     }
@@ -189,7 +189,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
         final String query = uri.getQuery();
         final Map<String, String> messageData = UrlUtilities.extractQueryParameters(query);
 
-        final AEPMessageSettings aepMessageSettings = (AEPMessageSettings) fullscreenMessage.getSettings();
+        final MessageSettings aepMessageSettings = ((AEPMessage) fullscreenMessage).getSettings();
         final Message message = (Message) aepMessageSettings.getParent();
 
         if (messageData != null && !messageData.isEmpty()) {

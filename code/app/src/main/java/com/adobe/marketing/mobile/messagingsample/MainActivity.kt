@@ -19,6 +19,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -26,6 +27,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.AEPMessage
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
@@ -40,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        MobileCore.setFullscreenMessageDelegate(customMessagingDelegate)
+        ServiceProvider.getInstance().messageDelegate = customMessagingDelegate
         customMessagingDelegate.autoTrack = true
 
         spinner = findViewById(R.id.iamTypeSpinner)
@@ -266,15 +268,15 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class CustomDelegate : MessageDelegate() {
+class CustomDelegate: MessageDelegate() {
     private var currentMessage: FullscreenMessage? = null
     var showMessages = true
 
     override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
-        if (!showMessages) {
-            if (fullscreenMessage != null) {
-                this.currentMessage = fullscreenMessage
-                val message = (currentMessage?.settings as? AEPMessageSettings)?.parent as? Message
+        if (fullscreenMessage != null) {
+            this.currentMessage = fullscreenMessage
+            if(!showMessages) {
+                val message = (currentMessage?.parent) as? Message
                 println("message was suppressed: ${message?.messageId}")
                 message?.track("message suppressed")
             }
@@ -283,8 +285,6 @@ class CustomDelegate : MessageDelegate() {
     }
 
     override fun onShow(fullscreenMessage: FullscreenMessage?) {
-        var message: AEPMessage = this.currentMessage as AEPMessage
-        message
         this.currentMessage = fullscreenMessage
     }
 

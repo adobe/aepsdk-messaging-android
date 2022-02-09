@@ -1,3 +1,2 @@
 configurations.maybeCreate("default")
-artifacts.add("default", file('android-core-library-phone-coreBundle-debug.aar'))
 artifacts.add("default", file('optimize-phone-debug.aar'))

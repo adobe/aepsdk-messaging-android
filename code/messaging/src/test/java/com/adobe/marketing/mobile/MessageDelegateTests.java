@@ -25,6 +25,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.AEPMessage;
+import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
 import org.junit.Before;
@@ -35,7 +37,6 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class, ServiceProvider.class})

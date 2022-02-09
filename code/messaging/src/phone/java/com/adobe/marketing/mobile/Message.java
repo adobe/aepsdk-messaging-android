@@ -86,7 +86,7 @@ public class Message extends MessageDelegate {
             settings = messageSettingsBuilder.build();
         }
 
-        this.customDelegate = MobileCore.getFullscreenMessageDelegate();
+        this.customDelegate = ServiceProvider.getInstance().getMessageDelegate();
         if (customDelegate != null) {
             this.aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, customDelegate, false, settings);
         } else {

@@ -22,8 +22,11 @@ import static org.mockito.Mockito.when;
 import android.app.Activity;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.AEPMessage;
+import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.MessageCreationException;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.internal.MessagesMonitor;
@@ -85,6 +88,7 @@ public class MessageTests {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
+        PowerMockito.mockStatic(ServiceProvider.class);
 
         Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
@@ -160,9 +164,9 @@ public class MessageTests {
 
     @Test
     public void test_messageShow_withShowMessageTrueInCustomDelegate() {
-        Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(message);
         // setup custom delegate, show message is true by default
         CustomDelegate customDelegate = new CustomDelegate();
+        ServiceProvider.getInstance().setMessageDelegate(customDelegate);
         // setup mocks
         try {
             aepMessage = new AEPMessage("html", customDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
@@ -391,7 +395,7 @@ public class MessageTests {
         @Override
         public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
             if (!showMessage) {
-                AEPMessageSettings settings = (AEPMessageSettings) fullscreenMessage.getSettings();
+                AEPMessageSettings settings = (AEPMessageSettings) ((AEPMessage) fullscreenMessage).getSettings();
                 Message message = (Message) settings.getParent();
                 message.track("suppressed");
             }
