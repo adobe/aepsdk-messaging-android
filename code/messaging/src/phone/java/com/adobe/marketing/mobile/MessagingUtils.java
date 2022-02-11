@@ -266,4 +266,11 @@ class MessagingUtils {
 
         return platformServices.getJsonUtilityService();
     }
+
+    static boolean isMapNullOrEmpty(final Map map) {
+        if (map == null || map.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
 }

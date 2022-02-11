@@ -80,7 +80,7 @@ public final class Messaging {
             Log.warning(LOG_TAG, "%s - Failed to add push tracking details as MessageId is null.", SELF_TAG);
             return false;
         }
-        if (data == null || data.isEmpty()) {
+        if (MessagingUtils.isMapNullOrEmpty(data)) {
             Log.warning(LOG_TAG, "%s - Failed to add push tracking details as data is null or empty.", SELF_TAG);
             return false;
         }

@@ -20,11 +20,16 @@ import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
-import com.adobe.marketing.mobile.services.ui.MessageSettings.*;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
+ */
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
     private final AEPMessage aepMessage;
@@ -47,7 +52,7 @@ public class Message extends MessageDelegate {
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
     public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
-        this.messagingInternal = parent;
+        messagingInternal = parent;
 
         final String consequenceType = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
 
@@ -57,13 +62,19 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
-        this.details = (Map) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-        if (details == null || details.isEmpty()) {
+        details = (Map) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        if (MessagingUtils.isMapNullOrEmpty(details)) {
             Log.debug(MessagingConstants.LOG_TAG,
                     "%s - Invalid consequence. Required field \"detail\" is null or empty.", SELF_TAG);
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
-        this.messageId = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
+
+        final Map xdm = (Map) details.get(MessagingConstants.TrackingKeys._XDM);
+        final Map mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
+        final Map experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+        final Map cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
+        final Map messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
+        messageId = MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
 
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);
@@ -77,7 +88,6 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
         }
 
-        // message customization poc
         final MessageSettings settings;
         AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
         if (rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
@@ -86,13 +96,13 @@ public class Message extends MessageDelegate {
             settings = messageSettingsBuilder.build();
         }
 
-        this.customDelegate = ServiceProvider.getInstance().getMessageDelegate();
+        customDelegate = ServiceProvider.getInstance().getMessageDelegate();
         if (customDelegate != null) {
-            this.aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, customDelegate, false, settings);
+            aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, customDelegate, false, settings);
         } else {
-            this.aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, false, settings);
+            aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, false, settings);
         }
-        this.aepMessage.setLocalAssetsMap(assetMap);
+        aepMessage.setLocalAssetsMap(assetMap);
     }
 
     // ui management

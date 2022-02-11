@@ -74,7 +74,7 @@ final class MessagingConsequenceSerializer implements VariantSerializer<Messagin
 
         final Map<String, Variant> consequenceMap = variant.optVariantMap(null);
 
-        if (consequenceMap == null || consequenceMap.isEmpty()) {
+        if (MessagingUtils.isMapNullOrEmpty(consequenceMap)) {
             throw new VariantSerializationFailedException("deserialize -  Consequence Map is null or empty.");
         }
 

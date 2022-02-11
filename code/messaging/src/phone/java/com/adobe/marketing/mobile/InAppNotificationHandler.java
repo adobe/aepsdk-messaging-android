@@ -14,11 +14,8 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
-import android.app.Application;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-
-import com.adobe.marketing.mobile.messaging.BuildConfig;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,6 +25,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
+ */
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
@@ -36,10 +36,9 @@ class InAppNotificationHandler {
     private final Map<String, String> assetMap = new HashMap<>();
     private final Module messagingModule;
     private final MessagingCacheUtilities cacheUtilities;
-    private String activityId;
-    private String placementId;
     // package private
     final MessagingInternal parent;
+    final OffersConfig offersConfig = new OffersConfig();
 
     /**
      * Constructor
@@ -57,7 +56,7 @@ class InAppNotificationHandler {
             Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
-                handleOfferNotificationPayload(cachedMessages, null);
+                handleOfferNotificationPayload(cachedMessages);
             }
         }
     }
@@ -66,17 +65,19 @@ class InAppNotificationHandler {
      * Generates and dispatches an event prompting the Optimize extension to fetch in-app messages.
      */
     void fetchMessages() {
-        // activity and placement are both required for message definition retrieval
-        getActivityAndPlacement(null);
-        if (StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(placementId)) {
-            Log.trace(LOG_TAG, "%s - Unable to retrieve message definitions - activity and placement ids are both required.", SELF_TAG);
-            return;
+        final HashMap<String, Object> decisionScope = new HashMap<>();
+        // if we have an activity and placement id present in the manifest use the id's to retrieve offers
+        if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
+            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
+            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForActivityAndPlacement());
+        } else { // otherwise use the application identifier
+            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to retrieve offers.", SELF_TAG, offersConfig.applicationId);
+            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForAppId());
         }
+
         // create event to be handled by the Optimize extension
         final HashMap<String, Object> optimizeData = new HashMap<>();
         final ArrayList<Map<String, Object>> decisionScopes = new ArrayList<>();
-        final HashMap<String, Object> decisionScope = new HashMap<>();
-        decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScope(activityId, placementId));
         decisionScopes.add(decisionScope);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
@@ -95,15 +96,32 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Takes an activity and placement and returns an encoded string in the format expected
+     * Takes the retrieved activity and placement id's and returns an encoded string in the format expected
      * by the Optimize extension for retrieving offers
      *
-     * @param activityId  {@code String} containing the activity id
-     * @param placementId {@code String} containing the placement id
-     * @return a base64 encoded JSON string to be used by the Optimize extension
+     * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
      */
-    private String getEncodedDecisionScope(final String activityId, final String placementId) {
-        final byte[] decisionScopeBytes = String.format("{\"activityId\":\"%s\",\"placementId\":\"%s\",\"itemCount\":%s}", activityId, placementId, MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT).getBytes(StandardCharsets.UTF_8);
+    private String getEncodedDecisionScopeForActivityAndPlacement() {
+        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\",\"%s\":\"%s\",\"itemCount\":%s}",
+                MessagingConstants.EventDataKeys.Optimize.ACTIVITY_ID,
+                offersConfig.activityId,
+                MessagingConstants.EventDataKeys.Optimize.PLACEMENT_ID,
+                offersConfig.placementId,
+                MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT)
+                .getBytes(StandardCharsets.UTF_8);
+
+        final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+        return new String(androidEncodingService.base64Encode(decisionScopeBytes));
+    }
+
+    /**
+     * Takes the retrieved application identifier and returns an encoded string in the format expected
+     * by the Optimize extension for retrieving offers
+     *
+     * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
+     */
+    private String getEncodedDecisionScopeForAppId() {
+        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\"}", MessagingConstants.EventDataKeys.Optimize.XDM_NAME, offersConfig.applicationId).getBytes(StandardCharsets.UTF_8);
 
         final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
         return new String(androidEncodingService.base64Encode(decisionScopeBytes));
@@ -113,42 +131,71 @@ class InAppNotificationHandler {
      * Converts the rules json present in the Edge response event payload into a list of rules then loads them in the {@link RulesEngine}.
      *
      * @param payload           An {@link Map<String, Variant>} containing the personalization decision payload retrieved from Offers
-     * @param edgeResponseEvent The {@link Event} which contained the personalization decision payload. This can be null if cached
-     *                          messages are being loaded.
      */
-    void handleOfferNotificationPayload(final Map<String, Variant> payload, final Event edgeResponseEvent) {
-        if (payload == null || payload.size() == 0) {
+    void handleOfferNotificationPayload(final Map<String, Variant> payload) {
+        if (MessagingUtils.isMapNullOrEmpty(payload)) {
             Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
             return;
         }
-        getActivityAndPlacement(edgeResponseEvent);
 
-        final Map<String, String> activity;
-        final Map<String, String> placement;
-        final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-        final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
-        try {
-            if (activityMap instanceof Variant) {
-                activity = ((Variant) activityMap).getStringMap();
-            } else {
-                activity = (Map<String, String>) activityMap;
+        // if we have an activity and placement id present in the manifest use the id's to validate retrieved offers
+        if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
+            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
+            final Map<String, String> activity;
+            final Map<String, String> placement;
+            final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+            final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+            try { // need to convert the payload map depending on the source of the offers (optimize response event or previously cached offers)
+                if (activityMap instanceof Variant) {
+                    activity = ((Variant) activityMap).getStringMap();
+                } else {
+                    activity = (Map<String, String>) activityMap;
+                }
+                if (placementMap instanceof Variant) {
+                    placement = ((Variant) placementMap).getStringMap();
+                } else {
+                    placement = (Map<String, String>) placementMap;
+                }
+            } catch (final VariantException e) {
+                Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
+                return;
             }
-            if (placementMap instanceof Variant) {
-                placement = ((Variant) placementMap).getStringMap();
-            } else {
-                placement = (Map<String, String>) placementMap;
+            final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
+            final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
+            Log.debug(LOG_TAG, "%s - Offers IAM payload contained activity id: (%s) and placement id: (%s)", SELF_TAG, offerActivityId, offerPlacementId);
+            if (!offerActivityId.equals(offersConfig.activityId) || !offerPlacementId.equals(offersConfig.placementId)) {
+                Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
+                return;
             }
-        } catch (final VariantException e) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
-            return;
+        } else { // otherwise use the application identifier to validate offers
+            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate offers.", SELF_TAG, offersConfig.applicationId);
+            final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+            String decisionScope;
+            try {
+                Object rawScope = payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE);
+                final byte[] encodedScope;
+                if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
+                    encodedScope = androidEncodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
+                } else {
+                    encodedScope = androidEncodingService.base64Decode((String) rawScope);
+                }
+                final JSONObject decisionScopeJson = new JSONObject(new String(encodedScope));
+                decisionScope = (String) decisionScopeJson.get(MessagingConstants.EventDataKeys.Optimize.XDM_NAME);
+            } catch (final VariantException variantException) {
+                Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, variantException.getMessage());
+                return;
+            } catch (final JSONException jsonException) {
+                Log.warning(LOG_TAG, "%s - Exception occurred when creating a JSON object from the encoded decision scope: %s", SELF_TAG, jsonException.getMessage());
+                return;
+            }
+
+            Log.debug(LOG_TAG, "%s - Offers IAM payload contained application identifier: (%s)", SELF_TAG, decisionScope);
+            if (!decisionScope.equals(offersConfig.applicationId)) {
+                Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved application identifier did not match the expected application identifier: (%s).", SELF_TAG, offersConfig.applicationId);
+                return;
+            }
         }
-        final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
-        final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
-        Log.debug(LOG_TAG, "%s - Retrieved activity id is: (%s), retrieved placement id is: (%s)", SELF_TAG, offerActivityId, offerPlacementId);
-        if (!offerActivityId.equals(activityId) || !offerPlacementId.equals(placementId)) {
-            Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", SELF_TAG, activityId, placementId);
-            return;
-        }
+
 
         List<HashMap<String, Variant>> items = new ArrayList<>();
         final Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
@@ -214,7 +261,7 @@ class InAppNotificationHandler {
      */
     void createInAppMessage(final Event rulesEvent) {
         final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
-        if (triggeredConsequence == null || triggeredConsequence.isEmpty()) {
+        if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
             Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
             return;
@@ -222,7 +269,7 @@ class InAppNotificationHandler {
 
         try {
             final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            if (details == null || details.isEmpty()) {
+            if (MessagingUtils.isMapNullOrEmpty(details)) {
                 Log.warning(LOG_TAG,
                         "%s - Unable to create an in-app message, the consequence details are null or empty", SELF_TAG);
                 return;
@@ -273,45 +320,6 @@ class InAppNotificationHandler {
                     "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());
             return null;
         }
-    }
-
-    private void getActivityAndPlacement(final Event eventToProcess) {
-        // placementId = package name
-        placementId = App.getApplication().getPackageName();
-        // activityId = IMS OrgID. If we have no event passed in to retrieve the activity id from, read activity id from the app manifest.
-        if (eventToProcess != null) {
-            final Map<String, Object> configSharedState = parent.getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
-                    eventToProcess, null);
-            if (configSharedState != null) {
-                Object edgeResponseActivityId = configSharedState.get(MessagingConstants.SharedState.Configuration.ORG_ID);
-                if (edgeResponseActivityId instanceof String) {
-                    activityId = (String) edgeResponseActivityId;
-                    Log.debug(LOG_TAG,
-                            "%s - Got activity id (%s) from event.", SELF_TAG, activityId);
-                }
-            }
-        } else {
-            ApplicationInfo applicationInfo = null;
-            try {
-                final Application application = App.getApplication();
-                applicationInfo = App.getApplication().getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
-            } catch (PackageManager.NameNotFoundException exception) {
-                Log.warning(LOG_TAG,
-                        "%s - An exception occurred when retrieving the manifest metadata: %s", SELF_TAG, exception.getLocalizedMessage());
-            }
-            activityId = applicationInfo.metaData.getString("activityId");
-        }
-        // for E2E functional test use the specified placement and activity id
-        if (BuildConfig.IS_E2E_TEST.get()) {
-            placementId = "xcore:offer-placement:143f66555f80e367";
-            activityId = "xcore:offer-activity:143614fd23c501cf";
-        }
-        // TODO: for manual testing, remove
-        // activityId = "xcore:offer-activity:14090235e6b6757a";
-        // 4byte char testing
-        // placementId = "xcore:offer-placement:142be72cd583bd40";
-        // sw demo
-        // placementId = "xcore:offer-placement:142426be131dce37";
     }
 
     /**

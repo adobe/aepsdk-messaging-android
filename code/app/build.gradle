@@ -21,9 +21,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    applicationVariants.all { variant ->
-        variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
-    }
 }
 
 buildscript {

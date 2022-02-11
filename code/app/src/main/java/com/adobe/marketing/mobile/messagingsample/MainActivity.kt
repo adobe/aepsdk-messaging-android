@@ -19,7 +19,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -28,8 +27,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.services.ServiceProvider
-import com.adobe.marketing.mobile.services.ui.AEPMessage
-import com.adobe.marketing.mobile.services.ui.AEPMessageSettings
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
 

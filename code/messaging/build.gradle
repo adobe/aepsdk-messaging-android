@@ -23,7 +23,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName rootProject.moduleVersion
-        // for e2e tests
+        // flag for e2e tests
         buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
@@ -201,12 +201,8 @@ dependencies {
     // where Objenesis 2 requires minimum Android API 26
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation('com.adobe.marketing.mobile:edgeidentity:1.0.0') {
-        transitive = false
-    }
-    androidTestImplementation('com.adobe.marketing.mobile:edge:1.1.1') {
-        transitive = false
-    }
+    androidTestImplementation('com.adobe.marketing.mobile:edgeidentity:1.0.0')
+    androidTestImplementation('com.adobe.marketing.mobile:edge:1.1.1')
 }
 
 afterEvaluate {

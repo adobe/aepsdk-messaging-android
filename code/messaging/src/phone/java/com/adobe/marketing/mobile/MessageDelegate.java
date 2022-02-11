@@ -33,6 +33,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class is the Messaging extension's internal implementation of the {@link FullscreenMessageDelegate}.
+ * Additionally, this class handles the dispatching of Experience Edge tracking events as well as opening URL's
+ * and loading any javascript code for the {@link Message} class.
+ */
 public class MessageDelegate implements FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final static String AMPERSAND = "&";

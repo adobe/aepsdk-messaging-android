@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.0.0";
+    static final String EXTENSION_VERSION = "1.0.1";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_NAME = "com.adobe.messaging.cache";
     static final String MESSAGES_CACHE_SUBDIRECTORY = "messages";
@@ -31,6 +31,8 @@ final class MessagingConstants {
         static final String MIXINS = "mixins";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
+        static final String MESSAGE_EXECUTION = "messageExecution";
+        static final String MESSAGE_EXECUTION_ID = "messageExecutionID";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +
                 "      \"channel\":{\n" +
@@ -46,6 +48,11 @@ final class MessagingConstants {
         static final String LAUNCHES_VALUE = "value";
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
+    }
+
+    static final class MANIFEST_METADATA_KEYS {
+        static final String ACTIVITY_ID = "activityId";
+        static final String PLACEMENT_ID = "placementId";
     }
 
     static final class JSON_VALUES {
@@ -83,11 +90,7 @@ final class MessagingConstants {
         static final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
-            static final String TRACK_INFO_KEY_MESSAGE_EXECUTION = "messageExecution";
             static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
-            static final String TRACK_INFO_KEY_MESSAGE_PUBLICATION_ID = "messagePublicationID";
-            static final String TRACK_INFO_KEY_AJO_CAMPAIGN_ID = "ajoCampaignID";
-            static final String TRACK_INFO_KEY_AJO_CAMPAIGN_VERSION_ID = "ajoCampaignVersionID";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
 
@@ -154,7 +157,11 @@ final class MessagingConstants {
             static final String PAYLOAD = "payload";
             static final String ACTIVITY = "activity";
             static final String PLACEMENT = "placement";
+            static final String ACTIVITY_ID = "activityId";
+            static final String PLACEMENT_ID = "placementId";
             static final String ITEMS = "items";
+            static final String XDM_NAME = "xdm:name";
+            static final String SCOPE = "scope";
 
             private Optimize() {
             }
@@ -182,13 +189,6 @@ final class MessagingConstants {
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {
-            }
-        }
-
-        static final class MessageTemplate {
-            static final String FULLSCREEN = "fullscreen";
-
-            private MessageTemplate() {
             }
         }
 
@@ -233,7 +233,6 @@ final class MessagingConstants {
     static final class EventSource {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
-        static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
     }
 
     static final class EventDataValues {
@@ -260,7 +259,6 @@ final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
-            static final String ORG_ID = "experienceCloud.org";
 
             private Configuration() {/* no-op */}
         }

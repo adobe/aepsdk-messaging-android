@@ -1,13 +1,3 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.adobe.marketing.mobile.messaging">
-
-    <application>
-        <meta-data
-            android:name="activityId"
-            android:value="xcore:offer-activity:13c2593fcbcfacbd" />
-        <meta-data
-            android:name="placementId"
-            android:value="xcore:offer-placement:142be72cd583bd40" />
-
-    </application>
 </manifest>

@@ -396,7 +396,7 @@ class MessagingInternal extends Extension {
                 // validate the edge response event from Optimize then load any iam rules present
                 final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
-                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0), eventToProcess);
+                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
                     messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
                 }
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {

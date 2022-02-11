@@ -35,6 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class contains functionality to cache the json message payload and any image asset URL's present in an
+ * AJO in-app message.
+ */
 class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
     private final int STREAM_WRITE_BUFFER_SIZE = 4096;
@@ -138,7 +142,7 @@ class MessagingCacheUtilities {
         // clean any existing cached files first
         clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
         // quick out if an empty message payload was received
-        if (messagePayload == null || messagePayload.isEmpty()) {
+        if (MessagingUtils.isMapNullOrEmpty(messagePayload)) {
             return;
         }
         Log.debug(LOG_TAG, "%s - Creating new cached message definitions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, MESSAGES_CACHE_SUBDIRECTORY));

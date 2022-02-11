@@ -29,7 +29,6 @@ public class ListenerMessagingRequestContent extends ExtensionListener {
 
     @Override
     public void hear(final Event event) {
-
         if (event == null || event.getEventData() == null) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null, ignoring the event.", SELF_TAG);
             return;

@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.TestHelper.getDispatchedEventsWith;
 import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
@@ -41,9 +42,6 @@ public class E2EFunctionalTests {
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
 
-    private static String activityIdBeingTested = "xcore:offer-activity:143614fd23c501cf";
-    private static String placementIdBeingTested = "xcore:offer-placement:143f66555f80e367";
-
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
     // --------------------------------------------------------------------------------------------
@@ -51,8 +49,6 @@ public class E2EFunctionalTests {
     public void setup() throws Exception {
         MessagingFunctionalTestUtils.cleanCache();
         MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
-        Map<String, Object> testConfig = MessagingFunctionalTestUtils.getMapFromFile("functionalTestConfigStage.json");
-        MobileCore.updateConfiguration(testConfig);
 
         Messaging.registerExtension();
         Optimize.registerExtension();
@@ -63,6 +59,14 @@ public class E2EFunctionalTests {
         MobileCore.start(new AdobeCallback() {
             @Override
             public void call(Object o) {
+                Map<String, Object> testConfig = MessagingFunctionalTestUtils.getMapFromFile("functionalTestConfigStage.json");
+                MobileCore.updateConfiguration(testConfig);
+                // wait for configuration to be set
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
                 latch.countDown();
             }
         });
@@ -101,12 +105,11 @@ public class E2EFunctionalTests {
         final Event optimizeRequestEvent = optimizeRequestEvents.get(0);
         assertEquals(expectedOptimizeEventData, optimizeRequestEvent.getData().toString());
 
-        // verify edge response content event
-        final List<Event> edgeResponseEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
-                EventSource.RESPONSE_CONTENT.getName());
-        assertEquals(1, edgeResponseEvents.size());
-        final Event edgeResponseEvent = edgeResponseEvents.get(0);
-        assertEquals(expectedMessagingEventData, messagingRequestEvent.getData().toString());
+        // verify edge personalization decision event
+        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+        assertEquals(2, edgePersonalizationDecisionsEvents.size()); // initial messages fetch + refreshInAppMessage api
+        final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
+        assertNotNull(edgePersonalizationDecisionEvent.getData().toString());
 
         // verify rules loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
