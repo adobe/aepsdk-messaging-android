@@ -16,6 +16,7 @@ import static com.adobe.marketing.mobile.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +38,7 @@ import com.adobe.marketing.mobile.optimize.Optimize;
 public class E2EFunctionalTests {
     static {
         BuildConfig.IS_E2E_TEST.set(true);
+        BuildConfig.IS_FUNCTIONAL_TEST.set(false);
     }
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
@@ -65,7 +67,7 @@ public class E2EFunctionalTests {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
+                    fail(interruptedException.getMessage());
                 }
                 latch.countDown();
             }
@@ -85,33 +87,33 @@ public class E2EFunctionalTests {
     public void testGetMessageDefinitionFromOptimize() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        final String expectedOptimizeEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTQzNjE0ZmQyM2M1MDFjZiIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjE0M2Y2NjU1NWY4MGUzNjciLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
+        final String expectedOptimizeEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTRiNTU2YzExZDRjMjQzMyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjE0MmFlMTBkMWQyZmQ4ODMiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
         // test
         Messaging.refreshInAppMessages();
         // wait for configuration + messaging rules to load
         assertTrue(MonitorExtension.waitForRulesToBeLoaded(2, "Messaging"));
 
-        // verify messaging request content event
+        // verify messaging request content event from refreshInAppMessages API call
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         final Event messagingRequestEvent = messagingRequestEvents.get(0);
         assertEquals(expectedMessagingEventData, messagingRequestEvent.getData().toString());
 
-        // verify optimize request content event
+        // verify optimize request content event, 2 events expected due to initial offers fetch + refreshInAppMessages api call
         final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.OPTIMIZE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(2, optimizeRequestEvents.size()); // initial IAM fetch + refreshInAppMessages call
+        assertEquals(2, optimizeRequestEvents.size());
         final Event optimizeRequestEvent = optimizeRequestEvents.get(0);
         assertEquals(expectedOptimizeEventData, optimizeRequestEvent.getData().toString());
 
-        // verify edge personalization decision event
+        // verify edge personalization decision event, 2 events expected due to initial offers fetch + refreshInAppMessages api call
         final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
         assertEquals(2, edgePersonalizationDecisionsEvents.size()); // initial messages fetch + refreshInAppMessage api
         final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
-        assertNotNull(edgePersonalizationDecisionEvent.getData().toString());
+        assertNotNull(edgePersonalizationDecisionEvent.getData());
 
-        // verify rules loaded into rules engine
+        // verify "test EQUALS e2e" messaging rule loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(2, moduleRules.size());
         final Iterator iterator = moduleRules.keySet().iterator();
@@ -121,8 +123,8 @@ public class E2EFunctionalTests {
                 ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule> messagingRules = (ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule>) moduleRules.get(module);
                 assertEquals(1, messagingRules.size());
                 com.adobe.marketing.mobile.Rule rule = messagingRules.element();
-                assertEquals("", rule.condition.toString());
-                assertEquals("", rule.consequenceEvents.get(0).getData().toString());
+                assertEquals("(test EQUALS e2e)", rule.condition.toString());
+                assertNotNull(rule.consequenceEvents.get(0).getData());
             }
         }
     }

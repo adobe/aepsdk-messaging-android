@@ -3,7 +3,7 @@
     "edge.environment" : "int",
     "build.environment" : "dev",
     "property.id" : "PR613030d1d59a45da8039d2ba1f3b70c1",
-    "edge.configId" : "c279367a-d0db-40e4-9ae8-6fa0488ecc1c",
+    "edge.configId" : "d9457e9f-cacc-4280-88f2-6c846e3f9531",
     "global.privacy" : "optedin",
     "lifecycle.sessionTimeout" : 300,
     "messaging.eventDataset" : "610ae80b3cbbc718dab06208",

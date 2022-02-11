@@ -41,6 +41,7 @@ import java.util.concurrent.CountDownLatch;
 public class MessagingPublicAPITests {
     static {
         BuildConfig.IS_E2E_TEST.set(false);
+        BuildConfig.IS_FUNCTIONAL_TEST.set(true);
     }
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
@@ -378,7 +379,8 @@ public class MessagingPublicAPITests {
     public void testRefreshInAppMessages() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTNjMjU5M2ZjYmNmYWNiZCIsInBsYWNlbWVudElkIjoiY29tLmFkb2JlLm1hcmtldGluZy5tb2JpbGUubWVzc2FnaW5nLnRlc3QiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
+        // activity = mock_activity, placement = mock_placement
+        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoibW9ja19hY3Rpdml0eSIsInBsYWNlbWVudElkIjoibW9ja19wbGFjZW1lbnQiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
         // test
         Messaging.refreshInAppMessages();
         TestHelper.sleep(500);

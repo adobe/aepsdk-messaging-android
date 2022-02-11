@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
+import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
@@ -250,6 +251,16 @@ class MessagingInternal extends Extension {
     @Override
     protected String getName() {
         return EXTENSION_NAME;
+    }
+
+    /**
+     * Overridden method of {@link Extension} class to provide a friendly extension name.
+     *
+     * @return A {@link String} friendly extension name for Messaging
+     */
+    @Override
+    protected String getFriendlyName() {
+        return FRIENDLY_EXTENSION_NAME;
     }
 
     /**

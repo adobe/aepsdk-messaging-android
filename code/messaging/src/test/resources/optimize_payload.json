@@ -1,6 +1,6 @@
 {
   "activity": {
-    "id": "xcore:offer-activity:13c2593fcbcfacbd",
+    "id": "mock_activity",
     "etag": "9"
   },
   "id": "57d8f990-734a-4d7b-a7e7-739b03753226",
@@ -21,7 +21,7 @@
     }
   ],
   "placement": {
-    "id": "com.adobe.marketing.mobile.messaging.test",
+    "id": "mock_placement",
     "etag": "1"
   }
 }

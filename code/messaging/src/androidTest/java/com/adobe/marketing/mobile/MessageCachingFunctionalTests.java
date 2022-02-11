@@ -42,6 +42,7 @@ import java.util.concurrent.CountDownLatch;
 public class MessageCachingFunctionalTests {
     static {
         BuildConfig.IS_E2E_TEST.set(false);
+        BuildConfig.IS_FUNCTIONAL_TEST.set(true);
     }
     private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
     private CacheManager cacheManager;
@@ -57,12 +58,6 @@ public class MessageCachingFunctionalTests {
     @Before
     public void setup() throws Exception {
         MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
-        HashMap<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("experienceCloud.org", "xcore:offer-activity:13c2593fcbcfacbd");
-            }
-        };
-        MobileCore.updateConfiguration(config);
         Messaging.registerExtension();
         com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
 

@@ -113,7 +113,7 @@ public class MessageTests {
 
         // setup xdm map
         channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
+        messageExecution.put("messageExecutionID", "123456789");
         messageExecution.put("messagePublicationID", "messagePublicationID");
         messageExecution.put("messageID", "messageID");
         messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");

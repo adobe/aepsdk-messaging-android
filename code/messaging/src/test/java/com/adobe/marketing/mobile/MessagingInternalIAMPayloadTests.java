@@ -112,9 +112,8 @@ public class MessagingInternalIAMPayloadTests {
         when(mockApplication.getPackageName()).thenReturn("mock_package_name");
         when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
         Whitebox.setInternalState(applicationInfo, "metaData", bundle);
-        when(bundle.getString(anyString())).thenReturn("mock_activity");
-        // setup placement id mocks
-        when(mockApplication.getPackageName()).thenReturn("mock_placement");
+        when(bundle.getString("activityId")).thenReturn("mock_activity");
+        when(bundle.getString("placementId")).thenReturn("mock_placement");
 
         // setup services mocks
         platformServices = new AndroidPlatformServices();

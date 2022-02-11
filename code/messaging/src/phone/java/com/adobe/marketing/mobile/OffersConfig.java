@@ -32,8 +32,15 @@ final class OffersConfig {
     OffersConfig() {
         // for E2E functional test use the specified placement and activity id
         if (BuildConfig.IS_E2E_TEST.get()) {
-            placementId = "xcore:offer-placement:143f66555f80e367";
-            activityId = "xcore:offer-activity:143614fd23c501cf";
+            placementId = "xcore:offer-placement:142ae10d1d2fd883";
+            activityId = "xcore:offer-activity:14b556c11d4c2433";
+            return;
+        }
+
+        // for other functional tests use the specified placement and activity id
+        if (BuildConfig.IS_FUNCTIONAL_TEST.get()) {
+            placementId = "mock_placement";
+            activityId = "mock_activity";
             return;
         }
 

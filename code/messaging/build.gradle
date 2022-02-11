@@ -25,6 +25,8 @@ android {
         versionName rootProject.moduleVersion
         // flag for e2e tests
         buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
+        // flag for functional tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
