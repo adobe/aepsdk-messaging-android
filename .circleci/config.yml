@@ -19,11 +19,11 @@ jobs:
       JVM_OPTS: -Xmx3200m
     steps:
       - checkout
+      # - run:
+      #     name: Build
+      #     command: make ci-build
       - run:
-          name: Build
-          command: make ci-build
-      - run:
-          name: Javadoc
+          name: Build then make Javadoc
           command: make ci-javadoc
       - store_artifacts:
           path: ci/javadoc/build/reports

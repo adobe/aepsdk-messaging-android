@@ -77,14 +77,18 @@ android {
     }
 }
 
+def buildConfigDir = "$buildDir/generated/source/buildConfig/phone/debug/com/adobe/marketing/mobile/messaging/"
 android.libraryVariants.all { variant ->
     tasks.withType(Javadoc) {
-        source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
+        source = [android.sourceSets.main.java.sourceFiles,
+                  android.sourceSets.phone.java.sourceFiles]
+        source += buildConfigDir
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-        doFirst { classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) + files("build/generated/source/buildConfig/phone/com/adobe/marketing/mobile/messaging") }
-
-        //exclude "**/BuildConfig.java"
+        doFirst {
+            classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+        }
+        // exclude "**/BuildConfig.java"
         exclude "**/R.java"
         options {
             links "https://developer.android.com/reference"

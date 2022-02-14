@@ -10,7 +10,7 @@ LIB_VERSION = $(shell cat $(ROOT_DIR)/code/gradle.properties | grep "moduleVersi
 SOURCE_FILE_DIR =  $(ROOT_DIR)/code/$(PROJECT_NAME)
 AAR_FILE_DIR =  $(ROOT_DIR)/code/$(PROJECT_NAME)/build/outputs/aar
 
-create-ci:
+create-ci: clean
 	(mkdir -p ci)
 
 clean:
@@ -36,7 +36,7 @@ ci-functional-test: create-ci
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) connectedPhoneDebugAndroidTest platformFunctionalTestJacocoReport)
 	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build ./ci/functional-test)
 
-ci-javadoc: create-ci
+ci-javadoc: ci-build
 	(mkdir -p ci/javadoc)
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) javadocPublic > ci/javadocPublic.log 2>&1)
 	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build ./ci/javadoc)
