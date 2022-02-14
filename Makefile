@@ -10,7 +10,7 @@ LIB_VERSION = $(shell cat $(ROOT_DIR)/code/gradle.properties | grep "moduleVersi
 SOURCE_FILE_DIR =  $(ROOT_DIR)/code/$(PROJECT_NAME)
 AAR_FILE_DIR =  $(ROOT_DIR)/code/$(PROJECT_NAME)/build/outputs/aar
 
-create-ci: clean
+create-ci:
 	(mkdir -p ci)
 
 clean:

@@ -249,7 +249,7 @@ class MessagingCacheUtilities {
     /**
      * Returns a {@link Map<String, String>} containing the remote asset mapped to it's cached location.
      *
-     * @return {@code Map<String, String} containing the remote URL mapped to the asset cache location
+     * @return {@code Map<String, String} containing a mapping of a remote image asset URL and it's cached location
      */
     Map<String, String> getAssetMap() {
         return assetMap;

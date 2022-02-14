@@ -52,6 +52,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
 
     /**
      * Dispatch tracking information via a Messaging request content event.
+     * @param interactionType {@code String} containing the interaction which occurred
      */
     public void track(final String interactionType) {
         if (StringUtils.isNullOrEmpty(interactionType)) {
