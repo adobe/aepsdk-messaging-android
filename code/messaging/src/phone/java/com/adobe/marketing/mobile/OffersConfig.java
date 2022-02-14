@@ -52,13 +52,18 @@ final class OffersConfig {
             Log.warning(LOG_TAG, "%s - An exception occurred when retrieving the manifest metadata: %s", SELF_TAG, exception.getLocalizedMessage());
         }
 
+        // use retrieved activity id and placement id if they are present in the manifest metadata
         if (applicationInfo != null) {
-            activityId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.ACTIVITY_ID);
-            placementId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.PLACEMENT_ID);
-            return;
+            final String retrievedActivityId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.ACTIVITY_ID);
+            final String retrievedPlacementId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.PLACEMENT_ID);
+            if (!StringUtils.isNullOrEmpty(retrievedActivityId) && !StringUtils.isNullOrEmpty(retrievedPlacementId)) {
+                activityId = retrievedActivityId;
+                placementId = retrievedPlacementId;
+                return;
+            }
         }
 
-        // use the application identifier if manifest metadata is not present
+        // otherwise use the application identifier if manifest metadata is not present
         applicationId = App.getAppContext().getPackageName();
 
         // TODO: for manual testing, remove

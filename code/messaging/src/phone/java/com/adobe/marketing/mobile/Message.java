@@ -47,10 +47,10 @@ public class Message extends MessageDelegate {
      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Variant>} containing details of the Message to be displayed</li>
      * </ul>
      *
-     * @param parent      {@link MessagingInternal} instance that created this Message
-     * @param consequence {@link Map} containing a {@code Message} defining payload
+     * @param parent             {@link MessagingInternal} instance that created this Message
+     * @param consequence        {@link Map} containing a {@code Message} defining payload
      * @param rawMessageSettings {@link Map} contating the raw message settings found in the "mobileParameters" present in the rule consequence
-     * @param assetMap {@link Map} containing a mapping of a remote image asset URL and it's cached location
+     * @param assetMap           {@link Map} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
     public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {

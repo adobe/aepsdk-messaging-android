@@ -11,10 +11,8 @@
  */
 
 package com.adobe.marketing.mobile;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.UIService;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -145,11 +143,11 @@ class MessagingUtils {
             for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
                 map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
             }
-            convertedValue = Variant.fromVariantMap((Map<String, Variant>) map);
+            convertedValue = Variant.fromVariantMap(map);
         } else if (value instanceof List) {
             final ArrayList<Variant> list = new ArrayList<>();
             for (final Object element : (List) value) {
-                list.add((Variant) getVariantValue(element));
+                list.add(getVariantValue(element));
             }
             convertedValue = Variant.fromVariantList(list);
         } else {
@@ -268,9 +266,6 @@ class MessagingUtils {
     }
 
     static boolean isMapNullOrEmpty(final Map map) {
-        if (map == null || map.isEmpty()) {
-            return true;
-        }
-        return false;
+        return map == null || map.isEmpty();
     }
 }

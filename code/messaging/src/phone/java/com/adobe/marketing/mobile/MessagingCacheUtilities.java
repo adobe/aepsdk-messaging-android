@@ -42,16 +42,16 @@ import java.util.Map;
 class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
     private final int STREAM_WRITE_BUFFER_SIZE = 4096;
-    private CacheManager cacheManager;
     private final SystemInfoService systemInfoService;
     private final NetworkService networkService;
     private final Map<String, String> assetMap = new HashMap<>();
+    private CacheManager cacheManager;
 
     MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService) throws MissingPlatformServicesException {
         this.systemInfoService = systemInfoService;
         this.networkService = networkService;
         if (networkService == null) {
-                throw new MissingPlatformServicesException("Network service implementation missing");
+            throw new MissingPlatformServicesException("Network service implementation missing");
         }
         cacheManager = new CacheManager(systemInfoService);
         createImageAssetsCacheDirectory();
@@ -59,6 +59,7 @@ class MessagingCacheUtilities {
     // ========================================================================================================
     // Message payload caching
     // ========================================================================================================
+
     /**
      * Determines if messages have been previously cached.
      *
@@ -201,6 +202,7 @@ class MessagingCacheUtilities {
     // ========================================================================================================
     // Image asset caching
     // ========================================================================================================
+
     /**
      * Caches the assets provided in the {@link java.util.List}.
      *
@@ -226,7 +228,7 @@ class MessagingCacheUtilities {
         // any new assets that have not been previously cached.
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
 
-        for (final String asset: assetsToRetain) {
+        for (final String asset : assetsToRetain) {
             try {
                 final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, IMAGES_CACHE_SUBDIRECTORY);
                 remoteDownloader.startDownload();
@@ -258,7 +260,7 @@ class MessagingCacheUtilities {
     /**
      * Returns a {@link RemoteDownloader} object for the provided {@code String} currentAssetUrl.
      *
-     * @param currentAssetUrl {@code String} containing the URL of the asset to be downloaded
+     * @param currentAssetUrl   {@code String} containing the URL of the asset to be downloaded
      * @param cacheSubDirectory {@code String} containing the subdirectory to store the cached asset
      * @return A {@code RemoteDownloader} configured with the {@code String} currentAssetUrl
      * @throws MissingPlatformServicesException when {@link NetworkService} or {@link SystemInfoService} are null

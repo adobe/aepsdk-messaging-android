@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 
 class ListenerHubSharedState extends ExtensionListener {
     private final static String SELF_TAG = "ListenerHubSharedState";
+
     /**
      * Constructor.
      *

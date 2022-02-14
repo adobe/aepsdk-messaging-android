@@ -13,7 +13,6 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
@@ -25,6 +24,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
 import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
