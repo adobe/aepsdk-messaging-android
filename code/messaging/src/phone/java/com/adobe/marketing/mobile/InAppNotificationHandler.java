@@ -130,7 +130,7 @@ class InAppNotificationHandler {
     /**
      * Converts the rules json present in the Edge response event payload into a list of rules then loads them in the {@link RulesEngine}.
      *
-     * @param payload           An {@link Map<String, Variant>} containing the personalization decision payload retrieved from Offers
+     * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Optimize extension.
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
@@ -276,7 +276,7 @@ class InAppNotificationHandler {
             }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
-            Message message = new Message(parent, triggeredConsequence, mobileParameters, cacheUtilities.getAssetMap());
+            final Message message = new Message(parent, triggeredConsequence, mobileParameters, cacheUtilities.getAssetMap());
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG,
