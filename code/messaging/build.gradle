@@ -82,9 +82,9 @@ android.libraryVariants.all { variant ->
         source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-        doFirst { classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) }
+        doFirst { classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) + files("build/generated/source/buildConfig/phone/com/adobe/marketing/mobile/messaging") }
 
-        exclude "**/BuildConfig.java"
+        //exclude "**/BuildConfig.java"
         exclude "**/R.java"
         options {
             links "https://developer.android.com/reference"
