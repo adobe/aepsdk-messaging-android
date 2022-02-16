@@ -213,7 +213,7 @@ public class MessagingInternalIAMPayloadTests {
     }
 
     @Test
-    public void test_refreshInAppMessages_Invoked() {
+    public void test_refreshInAppMessages_ConfiguredWithActivityAndPlacement_VerifyEncodedDecisionScope() {
         // setup
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         // trigger event
@@ -249,7 +249,7 @@ public class MessagingInternalIAMPayloadTests {
     }
 
     @Test
-    public void test_refreshInAppMessages_Invoked_NoActivityAndPlacementId() {
+    public void test_refreshInAppMessages_ConfiguredWithApplicationId_VerifyEncodedDecisionScope() {
         // setup
         when(bundle.getString("activityId")).thenReturn(null);
         when(bundle.getString("placementId")).thenReturn(null);
@@ -403,239 +403,6 @@ public class MessagingInternalIAMPayloadTests {
         assertEquals(2, loadedRules.size());
     }
 
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageId() {
-        // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
-        config.count = 1;
-        config.isMissingMessageId = true;
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing a valid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify 1 rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(1, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageType() {
-        // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
-        config.count = 1;
-        config.isMissingMessageType = true;
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing a valid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify 1 rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(1, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageDetail() {
-        // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
-        config.count = 1;
-        config.isMissingMessageDetail = true;
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing a valid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify 1 rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(1, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadIsEmpty() {
-        // setup
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        List<Map> payload = new ArrayList<>();
-        eventData.put("payload", payload);
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing an invalid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadIsNull() {
-        // setup
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", null);
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing an invalid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidActivityId() {
-        // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
-        config.count = 1;
-        config.invalidActivityId = true;
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing a valid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidPlacementId() {
-        // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
-        config.count = 1;
-        config.invalidPlacementId = true;
-        // trigger event
-        HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put("type", "personalization:decisions");
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
-
-        // Mocks
-        Event mockEvent = mock(Event.class);
-
-        // when mock event getType called return EDGE
-        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
-
-        // when mock event getSource called return PERSONALIZATION_DECISIONS
-        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-
-        // when get eventData called return event data containing a valid offers iam payload
-        when(mockEvent.getEventData()).thenReturn(eventData);
-
-        // test
-        messagingInternal.queueEvent(mockEvent);
-        messagingInternal.processEvents();
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
     // ========================================================================================
     // Offers rules payload processing, application id present
     // ========================================================================================
@@ -647,7 +414,7 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal = new MessagingInternal(mockExtensionApi);
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
-        config.useApplicationId = true;
+        config.isUsingApplicationId = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -686,7 +453,7 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal = new MessagingInternal(mockExtensionApi);
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
-        config.useApplicationId = true;
+        config.isUsingApplicationId = true;
         config.invalidApplicationId = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();

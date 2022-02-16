@@ -173,7 +173,7 @@ class InAppNotificationHandler {
             String decisionScope;
             try {
                 Object rawScope = payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE);
-                if (StringUtils.isNullOrEmpty(rawScope.toString())) {
+                if (rawScope == null || StringUtils.isNullOrEmpty(rawScope.toString())) {
                     Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
                     return;
                 }
@@ -185,10 +185,6 @@ class InAppNotificationHandler {
                 }
                 final String decodedScopeString = new String(decodedScope);
                 final JSONObject decisionScopeJson = new JSONObject(decodedScopeString);
-                if (decisionScopeJson == null || decisionScopeJson.length() == 0) {
-                    Log.warning(LOG_TAG, "%s - Unable to create a decision scope JSON from the decoded string (%s)", SELF_TAG, decodedScopeString);
-                    return;
-                }
                 decisionScope = (String) decisionScopeJson.get(MessagingConstants.EventDataKeys.Optimize.XDM_NAME);
             } catch (final VariantException variantException) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, variantException.getMessage());
