@@ -227,6 +227,14 @@ class MessagingUtils {
                 MessagingConstants.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(event.getSource());
     }
 
+    /**
+     * @param map A {@link Map} of any type.
+     * @return {@code boolean} indicating if the passed in {@code Map} is empty.
+     */
+    static boolean isMapNullOrEmpty(final Map map) {
+        return map == null || map.isEmpty();
+    }
+
     // ========================================================================================
     // PlatformServices getters
     // ========================================================================================
@@ -263,9 +271,5 @@ class MessagingUtils {
         }
 
         return platformServices.getJsonUtilityService();
-    }
-
-    static boolean isMapNullOrEmpty(final Map map) {
-        return map == null || map.isEmpty();
     }
 }
