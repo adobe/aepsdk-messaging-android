@@ -47,7 +47,7 @@ final class OffersConfig {
         ApplicationInfo applicationInfo = null;
         try {
             final Application application = App.getApplication();
-            applicationInfo = App.getApplication().getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
+            applicationInfo = application.getPackageManager().getApplicationInfo(application.getPackageName(), PackageManager.GET_META_DATA);
         } catch (PackageManager.NameNotFoundException exception) {
             Log.warning(LOG_TAG, "%s - An exception occurred when retrieving the manifest metadata: %s", SELF_TAG, exception.getLocalizedMessage());
         }

@@ -163,7 +163,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -179,8 +179,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
@@ -221,7 +221,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -237,8 +237,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
@@ -278,7 +278,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -294,8 +294,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
@@ -447,7 +447,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -463,8 +463,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
@@ -504,7 +504,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -520,8 +520,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
@@ -560,7 +560,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> experience = new HashMap<>();
         Map<String, Object> cjm = new HashMap<>();
         Map<String, Object> messageProfile = new HashMap<>();
         Map<String, Object> channel = new HashMap<>();
@@ -576,8 +576,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messageProfile.put("channel", channel);
         cjm.put("messageProfile", messageProfile);
         cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
+        experience.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experience);
         xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");

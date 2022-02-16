@@ -13,8 +13,6 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,11 +40,9 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,19 +52,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalIAMPayloadTests {
-
     private final Map<String, Object> mockConfigState = new HashMap<>();
     private final Map<String, Object> mockIdentityState = new HashMap<>();
     private final Map<String, Object> identityMap = new HashMap<>();
     private final Map<String, Object> ecidMap = new HashMap<>();
     private final List<Map> ids = new ArrayList<>();
-    private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
-    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
+    private final String testActivityAndPlacement = "{\"activityId\":\"mock_activity\",\"placementId\":\"mock_placement\",\"itemCount\":30}";
+    private final String testApplicationId = "{\"xdm:name\":\"mock_applicationId\"}";
+    private final String nonMatchingApplicationId = "{\"xdm:name\":\"non_matching_applicationId\"}";
+    private final String base64EncodedActivityAndPlacement = "eyJhY3Rpdml0eUlkIjoibW9ja19hY3Rpdml0eSIsInBsYWNlbWVudElkIjoibW9ja19wbGFjZW1lbnQiLCJpdGVtQ291bnQiOjMwfQ==";
+    private final String base64EncodedApplicationId = "eyJ4ZG06bmFtZSI6Im1vY2tfYXBwbGljYXRpb25JZCJ9";
+    private final String base64EncodedOtherApplicationId = "eyJ4ZG06bmFtZSI6Im5vbl9tYXRjaGluZ19hcHBsaWNhdGlvbklkIn0=";
     private MessagingInternal messagingInternal;
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
-    private CacheManager cacheManager;
+    private static int activityAndPlacementConfig = 0;
+    private static int applicationIdConfig = 1;
+    private MessagingCacheUtilities messagingCacheUtilities;
 
     // Mocks
     @Mock
@@ -76,7 +77,7 @@ public class MessagingInternalIAMPayloadTests {
     @Mock
     Application mockApplication;
     @Mock
-    Context context;
+    Context mockContext;
     @Mock
     Core mockCore;
     @Mock
@@ -107,9 +108,11 @@ public class MessagingInternalIAMPayloadTests {
 
         // setup activity id mocks
         when(App.getApplication()).thenReturn(mockApplication);
+        when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
-        when(mockApplication.getApplicationContext()).thenReturn(context);
-        when(mockApplication.getPackageName()).thenReturn("mock_package_name");
+        when(mockApplication.getApplicationContext()).thenReturn(mockContext);
+        when(mockApplication.getPackageName()).thenReturn("mock_applicationId");
+        when(mockContext.getPackageName()).thenReturn("mock_applicationId");
         when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
         Whitebox.setInternalState(applicationInfo, "metaData", bundle);
         when(bundle.getString("activityId")).thenReturn("mock_activity");
@@ -123,19 +126,15 @@ public class MessagingInternalIAMPayloadTests {
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
-        when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
-
-        // setup mock cache
-        final File mockCache = new File("mock_cache");
-        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-        cacheManager = new CacheManager(mockAndroidSystemInfoService);
-        // ensure cache is cleared before testing
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), IMAGES_CACHE_SUBDIRECTORY);
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), MESSAGES_CACHE_SUBDIRECTORY);
-
-        // write a image file from resources to the mock image asset cache
-        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
-        TestUtils.readInputStreamIntoFile(mockCachedImage, TestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
+        // mock for encoded/decoded activity and placement id
+        when(mockAndroidEncodingService.base64Encode(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
+        when(mockAndroidEncodingService.base64Decode(base64EncodedActivityAndPlacement)).thenReturn(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
+        // mock for encoded/decoded application id
+        when(mockAndroidEncodingService.base64Encode(testApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedApplicationId.getBytes(StandardCharsets.UTF_8));
+        when(mockAndroidEncodingService.base64Decode(base64EncodedApplicationId)).thenReturn(testApplicationId.getBytes(StandardCharsets.UTF_8));
+        // mock for encoded/decoded non matching application id
+        when(mockAndroidEncodingService.base64Encode(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedOtherApplicationId.getBytes(StandardCharsets.UTF_8));
+        when(mockAndroidEncodingService.base64Decode(base64EncodedOtherApplicationId)).thenReturn(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8));
 
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
@@ -151,6 +150,35 @@ public class MessagingInternalIAMPayloadTests {
         messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
+    @After
+    public void cleanup() throws MissingPlatformServicesException {
+        // use messaging cache utilities to clean the cache after each test
+        messagingCacheUtilities = new MessagingCacheUtilities(platformServices.getSystemInfoService(), platformServices.getNetworkService());
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
+    }
+
+    private EventData getExpectedEventData(int offersConfigType) {
+        EventData eventData = new EventData();
+        if (offersConfigType == activityAndPlacementConfig) {
+            List<Variant> decisionScopes = new ArrayList<>();
+            Map encodedScope = new HashMap<String, Variant>();
+            encodedScope.put("name", Variant.fromString(base64EncodedActivityAndPlacement));
+            decisionScopes.add(Variant.fromVariantMap(encodedScope));
+            VectorVariant decisionScope = VectorVariant.from(decisionScopes);
+            eventData.putVariant("requesttype", Variant.fromString("updatepropositions"));
+            eventData.putVariant("decisionscopes", decisionScope);
+        } else if (offersConfigType == applicationIdConfig) {
+            List<Variant> decisionScopes = new ArrayList<>();
+            Map encodedScope = new HashMap<String, Variant>();
+            encodedScope.put("name", Variant.fromString(base64EncodedApplicationId));
+            decisionScopes.add(Variant.fromVariantMap(encodedScope));
+            VectorVariant decisionScope = VectorVariant.from(decisionScopes);
+            eventData.putVariant("requesttype", Variant.fromString("updatepropositions"));
+            eventData.putVariant("decisionscopes", decisionScope);
+        }
+        return eventData;
+    }
+
     // ========================================================================================
     // IAM rules retrieval from Offers
     // ========================================================================================
@@ -159,7 +187,7 @@ public class MessagingInternalIAMPayloadTests {
         // setup
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         // expected dispatched event data
-        String refreshInAppMessagesEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"decisionScope\"}]}";
+        EventData expectedEventData = getExpectedEventData(activityAndPlacementConfig);
 
         // Mocks
         Event mockEvent = mock(Event.class);
@@ -181,7 +209,7 @@ public class MessagingInternalIAMPayloadTests {
         // verify event
         Event event = eventCaptor.getAllValues().get(0);
         assertNotNull(event.getData());
-        assertEquals(refreshInAppMessagesEventData, event.getData().toString());
+        assertEquals(expectedEventData, event.getData());
     }
 
     @Test
@@ -192,7 +220,46 @@ public class MessagingInternalIAMPayloadTests {
         EventData eventData = new EventData();
         eventData.putBoolean(REFRESH_MESSAGES, true);
         // expected dispatched event data
-        String refreshInAppMessagesEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"decisionScope\"}]}";
+        EventData expectedEventData = getExpectedEventData(activityAndPlacementConfig);
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+        // when mock event getType called return MESSAGING
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+
+        // when mock event getSource called return REQUEST_CONTENT
+        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
+
+        // when get eventData called return data with "REFRESH_MESSAGES, true"
+        when(mockEvent.getEventData()).thenReturn(eventData.toObjectMap());
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify dispatch event is called
+        // 2 events dispatched: Offers iam fetch event on initial launch and Offers iam fetch event when refresh in app messages event is received
+        PowerMockito.verifyStatic(MobileCore.class, times(2));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getAllValues().get(1);
+        assertNotNull(event.getData());
+        assertEquals(expectedEventData, event.getData());
+    }
+
+    @Test
+    public void test_refreshInAppMessages_Invoked_NoActivityAndPlacementId() {
+        // setup
+        when(bundle.getString("activityId")).thenReturn(null);
+        when(bundle.getString("placementId")).thenReturn(null);
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        // trigger event
+        EventData eventData = new EventData();
+        eventData.putBoolean(REFRESH_MESSAGES, true);
+        // expected dispatched event data
+        EventData expectedEventData = getExpectedEventData(applicationIdConfig);
 
         // Mocks
         Event mockEvent = mock(Event.class);
@@ -217,20 +284,22 @@ public class MessagingInternalIAMPayloadTests {
         // verify event
         Event event = eventCaptor.getAllValues().get(0);
         assertNotNull(event.getData());
-        assertEquals(refreshInAppMessagesEventData, event.getData().toString());
+        assertEquals(expectedEventData, event.getData());
     }
 
     // ========================================================================================
-    // Offers rules payload processing
+    // Offers rules payload processing, activity id and placement id present
     // ========================================================================================
     @Test
     public void test_handleEdgeResponseEvent_ValidOffersIAMPayloadPresent() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, false, false, false, false, false, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -259,11 +328,13 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_MultipleValidOffersIAMPayloadPresent() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 3;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(3, false, false, false, false, false, false, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -292,9 +363,16 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OneInvalidIAMPayloadPresent() {
         // setup
+        MessagePayloadConfig validPayloadConfig = new MessagePayloadConfig();
+        validPayloadConfig.count = 2;
+
+        MessagePayloadConfig invalidPayloadConfig = new MessagePayloadConfig();
+        invalidPayloadConfig.count = 1;
+        invalidPayloadConfig.isMissingRulesKey = true;
+
         // trigger event
-        List<Map> payload = TestUtils.generateMessagePayload(2, false, false, false, false, false, false, false);
-        List<Map> invalidPayload = TestUtils.generateMessagePayload(1, true, true, false, false, false, false, false);
+        List<Map> payload = TestUtils.generateMessagePayload(validPayloadConfig);
+        List<Map> invalidPayload = TestUtils.generateMessagePayload(invalidPayloadConfig);
         payload.addAll(invalidPayload);
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -328,11 +406,14 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageId() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.isMissingMessageId = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, true, false, false, false, false, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -359,11 +440,14 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageType() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.isMissingMessageType = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, false, true, false, false, false, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -390,11 +474,14 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OffersIAMPayloadMissingMessageDetail() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.isMissingMessageDetail = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, false, false, true, false, false, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -451,7 +538,7 @@ public class MessagingInternalIAMPayloadTests {
     }
 
     @Test
-    public void test_handleEdgeResponseEvent_OffersIAMPayloadJsonIsNull() {
+    public void test_handleEdgeResponseEvent_OffersIAMPayloadIsNull() {
         // setup
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
@@ -484,11 +571,14 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidActivityId() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.invalidActivityId = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, false, false, false, false, true, false));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -515,11 +605,14 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OffersIAMPayloadHasInvalidPlacementId() {
         // setup
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.invalidPlacementId = true;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(1, false, false, false, false, false, false, true));
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -541,5 +634,86 @@ public class MessagingInternalIAMPayloadTests {
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
         assertEquals(0, moduleRules.size());
+    }
+
+    // ========================================================================================
+    // Offers rules payload processing, application id present
+    // ========================================================================================
+    @Test
+    public void test_handleEdgeResponseEvent_OffersConfigUsingApplicationId_ValidOffersIAMPayloadPresent() {
+        // setup
+        when(bundle.getString("activityId")).thenReturn(null);
+        when(bundle.getString("placementId")).thenReturn(null);
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.useApplicationId = true;
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify rule loaded
+        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
+        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
+        ConcurrentLinkedQueue<Rule> loadedRules = rules.iterator().next();
+        assertEquals(1, loadedRules.size());
+    }
+
+    @Test
+    public void test_handleEdgeResponseEvent_OffersConfigUsingApplicationId_PayloadContainsNonMatchingApplicationId() {
+        // setup
+        when(bundle.getString("activityId")).thenReturn(null);
+        when(bundle.getString("placementId")).thenReturn(null);
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        MessagePayloadConfig config = new MessagePayloadConfig();
+        config.count = 1;
+        config.useApplicationId = true;
+        config.invalidApplicationId = true;
+        // trigger event
+        HashMap<String, Object> eventData = new HashMap<>();
+        eventData.put("type", "personalization:decisions");
+        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
+        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
+
+        // Mocks
+        Event mockEvent = mock(Event.class);
+
+        // when mock event getType called return EDGE
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.EDGE);
+
+        // when mock event getSource called return PERSONALIZATION_DECISIONS
+        when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
+
+        // when get eventData called return event data containing a valid offers iam payload
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify no rule loaded
+        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
+        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
+        assertEquals(0, rules.size());
     }
 }

@@ -68,7 +68,7 @@ class InAppNotificationHandler {
         final HashMap<String, Object> decisionScope = new HashMap<>();
         // if we have an activity and placement id present in the manifest use the id's to retrieve offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
-            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
+            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the app manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
             decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForActivityAndPlacement());
         } else { // otherwise use the application identifier
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to retrieve offers.", SELF_TAG, offersConfig.applicationId);
@@ -110,8 +110,8 @@ class InAppNotificationHandler {
                 MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT)
                 .getBytes(StandardCharsets.UTF_8);
 
-        final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
-        return new String(androidEncodingService.base64Encode(decisionScopeBytes));
+        final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+        return new String(encodingService.base64Encode(decisionScopeBytes));
     }
 
     /**
@@ -123,8 +123,8 @@ class InAppNotificationHandler {
     private String getEncodedDecisionScopeForAppId() {
         final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\"}", MessagingConstants.EventDataKeys.Optimize.XDM_NAME, offersConfig.applicationId).getBytes(StandardCharsets.UTF_8);
 
-        final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
-        return new String(androidEncodingService.base64Encode(decisionScopeBytes));
+        final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+        return new String(encodingService.base64Encode(decisionScopeBytes));
     }
 
     /**
@@ -133,11 +133,6 @@ class InAppNotificationHandler {
      * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Optimize extension.
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload) {
-        if (MessagingUtils.isMapNullOrEmpty(payload)) {
-            Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
-            return;
-        }
-
         // if we have an activity and placement id present in the manifest use the id's to validate retrieved offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
@@ -173,13 +168,22 @@ class InAppNotificationHandler {
             String decisionScope;
             try {
                 Object rawScope = payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE);
-                final byte[] encodedScope;
-                if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
-                    encodedScope = androidEncodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
-                } else {
-                    encodedScope = androidEncodingService.base64Decode((String) rawScope);
+                if (StringUtils.isNullOrEmpty(rawScope.toString())) {
+                    Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
+                    return;
                 }
-                final JSONObject decisionScopeJson = new JSONObject(new String(encodedScope));
+                final byte[] decodedScope;
+                if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
+                    decodedScope = androidEncodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
+                } else {
+                    decodedScope = androidEncodingService.base64Decode((String) rawScope);
+                }
+                final String decodedScopeString = new String(decodedScope);
+                final JSONObject decisionScopeJson = new JSONObject(decodedScopeString);
+                if (decisionScopeJson == null || decisionScopeJson.length() == 0) {
+                    Log.warning(LOG_TAG, "%s - Unable to create a decision scope JSON from the decoded string (%s)", SELF_TAG, decodedScopeString);
+                    return;
+                }
                 decisionScope = (String) decisionScopeJson.get(MessagingConstants.EventDataKeys.Optimize.XDM_NAME);
             } catch (final VariantException variantException) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, variantException.getMessage());
