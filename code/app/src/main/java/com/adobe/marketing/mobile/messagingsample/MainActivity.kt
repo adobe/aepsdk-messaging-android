@@ -32,7 +32,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.collections.Map
 
 class MainActivity : AppCompatActivity() {
     private val customMessagingDelegate = CustomDelegate()
