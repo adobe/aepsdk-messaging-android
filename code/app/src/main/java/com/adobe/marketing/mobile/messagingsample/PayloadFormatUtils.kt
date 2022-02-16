@@ -39,12 +39,12 @@ class PayloadFormatUtils {
     }
 
     /**
-     * Converts provided [org.json.JSONObject] into a [,][<] for any number of levels, which can be used as event data.
+     * Converts provided [org.json.JSONObject] into a [java.util.Map] for any number of levels, which can be used as event data.
      * This method is recursive.
      * The elements for which the conversion fails will be skipped.
      *
      * @param jsonObject to be converted
-     * @return [,][<] containing the elements from the provided json, null if `jsonObject` is null
+     * @return [java.util.Map] containing the elements from the provided json, null if `jsonObject` is null
      */
     @Throws(JSONException::class)
     fun toObjectMap(jsonObject: JSONObject?): Map<String, Any?>? {
