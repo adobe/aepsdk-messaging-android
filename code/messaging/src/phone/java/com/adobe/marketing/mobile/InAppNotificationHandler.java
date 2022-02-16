@@ -133,6 +133,11 @@ class InAppNotificationHandler {
      * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Optimize extension.
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload) {
+        if (MessagingUtils.isMapNullOrEmpty(payload)) {
+            Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
+            return;
+        }
+
         // if we have an activity and placement id present in the manifest use the id's to validate retrieved offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
