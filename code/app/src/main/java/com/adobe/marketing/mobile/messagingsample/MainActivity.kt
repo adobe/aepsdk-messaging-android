@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
-    private var payloadFormatUtil = PayloadFormatUtils()
+    private var payloadFormatUtil = IAMPayloadFormatUtils()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
