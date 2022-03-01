@@ -127,8 +127,6 @@ public class Message extends MessageDelegate {
         }
     }
 
-    // message customization poc
-
     /**
      * Sample Message payload:
      * "messageSetting": {

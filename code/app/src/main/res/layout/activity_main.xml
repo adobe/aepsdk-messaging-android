@@ -44,10 +44,10 @@
         android:text="Trigger Most Recent IAM" />
 
     <Button
-        android:id="@+id/btnCleanEventHistory"
+        android:id="@+id/btnRefreshInAppMessages"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="clean event history" />
+        android:text="refresh in app messages" />
 
     <Button
         android:id="@+id/btnHistoricalEvent1"

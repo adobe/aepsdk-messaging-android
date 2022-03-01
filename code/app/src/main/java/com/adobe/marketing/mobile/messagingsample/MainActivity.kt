@@ -31,6 +31,7 @@ import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
@@ -38,7 +39,35 @@ class MainActivity : AppCompatActivity() {
     private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
-    private var payloadFormatUtil = PayloadFormatUtils()
+    private var payloadFormatter = IAMPayloadFormatter()
+    private enum class i18NSpinnerValues(val value: String) {
+        KOREAN("Korean character test"),
+        CYRILLIC("Cyrillic character test"),
+        SURROGATE("Surrogate pair character test"),
+        CHINESE("Chinese character test"),
+        HIGH_ASCII("High ascii character test"),
+        JAPANESE("Japanese 1+2 byte character test"),
+        CHINESE_FOUR_BYTE("Chinese 4 byte character test"),
+        FOUR_BYTE("I8N 4 byte character test"),
+        HEBREW("Hebrew character test")
+    }
+    private enum class generatedIAMSpinnerValues(val value: String) {
+        BOTTOM_BANNER("Bottom Banner"),
+        CENTER_BANNER("Center Banner"),
+        CENTER_MODAL("Center Modal"),
+        TOP_BANNER("Top Banner"),
+        TOP_HALF("Top Half"),
+        BOTTOM_HALF("Bottom Half")
+    }
+    private enum class generatedIAMParams(val params: Array<Any>) {
+        BOTTOM_BANNER(arrayOf(10, 95, "bottom", 0, "center", 1, "bottom", "bottom", "FFFFFF", "116975", 0.10, 0.0, false)),
+        CENTER_BANNER(arrayOf(10, 100, "center", 0, "center", 10, "fade", "fade", "FFFFFF", "FFC300", 0.81, 0.0, false)),
+        CENTER_MODAL(arrayOf(75, 75, "center", 10, "center", 5, "fade", "fade", "ADD8E6", "3A3A3A", 0.8, 20.0, false)),
+        TOP_BANNER(arrayOf(15, 90, "top", 2, "center", 2, "top", "top", "FFFFFF", "913622", 0.75, 75.0, true)),
+        TOP_HALF(arrayOf(50, 100, "top", 0, "left", 0, "left", "right", "FFFFFF", "5E7072", 0.5, 90.0, true)),
+        BOTTOM_HALF(arrayOf(50, 100, "bottom", 0, "left", 0, "right", "left", "FFFFFF", "85B085", 0.90, 0.0, false))
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,144 +91,44 @@ class MainActivity : AppCompatActivity() {
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             // spinner handling
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                if (parent.getItemAtPosition(pos).equals("Korean character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "korean"
-                } else if (parent.getItemAtPosition(pos).equals("Cyrillic character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "cyrillic"
-                } else if (parent.getItemAtPosition(pos).equals("Surrogate pair character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "surrogate"
-                } else if (parent.getItemAtPosition(pos).equals("Chinese character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "sctest"
-                } else if (parent.getItemAtPosition(pos).equals("High ascii character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "highascii"
-                } else if (parent.getItemAtPosition(pos)
-                        .equals("Japanese 1+2 byte character test")
-                ) {
-                    triggerKey = "ryan"
-                    triggerValue = "japanese"
-                } else if (parent.getItemAtPosition(pos).equals("Chinese 4 byte character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "chinese"
-                } else if (parent.getItemAtPosition(pos).equals("I8N 4 byte character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "4byte"
-                } else if (parent.getItemAtPosition(pos).equals("Hebrew character test")) {
-                    triggerKey = "ryan"
-                    triggerValue = "hebrew"
-                } else if (parent.getItemAtPosition(pos).equals("Bottom Banner")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        10,
-                        95,
-                        "bottom",
-                        0,
-                        "center",
-                        1,
-                        "bottom",
-                        "bottom",
-                        "FFFFFF",
-                        "116975",
-                        0.10,
-                        0.0,
-                        false
+                triggerKey = "ryan"
+                triggerValue = ""
+                when (parent.getItemAtPosition(pos)) {
+                    i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
+                    i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
+                    i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
+                    i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
+                    i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
+                    i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
+                    i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
+                    i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
+                    i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
+                    else -> print("Testing locally generated IAM")
+                }
+                if (triggerValue.length > 0) {
+                    return
+                }
+
+                triggerKey = "foo"
+                triggerValue = "bar"
+                when (parent.getItemAtPosition(pos)) {
+                    generatedIAMSpinnerValues.BOTTOM_BANNER.value -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.BOTTOM_BANNER
                     )
-                } else if (parent.getItemAtPosition(pos)
-                        .equals("Center Banner")
-                ) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        10,
-                        100,
-                        "center",
-                        0,
-                        "center",
-                        10,
-                        "fade",
-                        "fade",
-                        "FFFFFF",
-                        "FFC300",
-                        0.81,
-                        0.0,
-                        false
+                    generatedIAMSpinnerValues.CENTER_BANNER -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.CENTER_BANNER
                     )
-                } else if (parent.getItemAtPosition(pos).equals("Center Modal")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        75,
-                        75,
-                        "center",
-                        10,
-                        "center",
-                        5,
-                        "fade",
-                        "fade",
-                        "ADD8E6",
-                        "3A3A3A",
-                        0.8,
-                        20.0,
-                        false
+                    generatedIAMSpinnerValues.CENTER_MODAL -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.CENTER_MODAL
                     )
-                } else if (parent.getItemAtPosition(pos).equals("Top Banner")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        15,
-                        90,
-                        "top",
-                        2,
-                        "center",
-                        2,
-                        "top",
-                        "top",
-                        "FFFFFF",
-                        "913622",
-                        0.75,
-                        75.0,
-                        true
+                    generatedIAMSpinnerValues.TOP_BANNER -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.TOP_BANNER
                     )
-                } else if (parent.getItemAtPosition(pos).equals("Top Half")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        50,
-                        100,
-                        "top",
-                        0,
-                        "left",
-                        0,
-                        "left",
-                        "right",
-                        "FFFFFF",
-                        "5E7072",
-                        0.5,
-                        90.0,
-                        true
+                    generatedIAMSpinnerValues.TOP_HALF -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.TOP_HALF
                     )
-                } else if (parent.getItemAtPosition(pos).equals("Bottom Half")) {
-                    triggerKey = "foo"
-                    triggerValue = "bar"
-                    generateAndDispatchEdgeResponseEvent(
-                        50,
-                        100,
-                        "bottom",
-                        0,
-                        "left",
-                        0,
-                        "right",
-                        "left",
-                        "FFFFFF",
-                        "85B085",
-                        0.90,
-                        0.0,
-                        false
+                    generatedIAMSpinnerValues.BOTTOM_HALF -> generateAndDispatchEdgeResponseEvent(
+                        generatedIAMParams.BOTTOM_HALF
                     )
                 }
             }
@@ -297,7 +226,7 @@ class MainActivity : AppCompatActivity() {
             ).show()
             customMessagingDelegate.getLastTriggeredMessage()?.show()
         }
-        btnCleanEventHistory.setOnClickListener {
+        btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
 
@@ -365,21 +294,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     // local optimize event generation for testing
-    fun generateAndDispatchEdgeResponseEvent(
-        height: Int,
-        width: Int,
-        vAlign: String,
-        vInset: Int,
-        hAlign: String,
-        hInset: Int,
-        displayAnimation: String,
-        dismissAnimation: String,
-        iamColor: String,
-        bdColor: String,
-        opacity: Double,
-        cornerRadius: Double,
-        uiTakeover: Boolean
-    ) {
+    private fun generateAndDispatchEdgeResponseEvent(generatedIAMParams: generatedIAMParams) {
+        // extract parameter values from generatedIAMParams enum
+        val height = generatedIAMParams.params[0]
+        val width = generatedIAMParams.params[1]
+        val vAlign = generatedIAMParams.params[2]
+        val vInset = generatedIAMParams.params[3]
+        val hAlign = generatedIAMParams.params[4]
+        val hInset = generatedIAMParams.params[5]
+        val displayAnimation = generatedIAMParams.params[6]
+        val dismissAnimation = generatedIAMParams.params[7]
+        val iamColor = generatedIAMParams.params[8]
+        val bdColor = generatedIAMParams.params[9]
+        val opacity = generatedIAMParams.params[10]
+        val cornerRadius = generatedIAMParams.params[11]
+        val uiTakeover = generatedIAMParams.params[12]
         // simulate edge response event containing offers
         val eventData = HashMap<String, Any>()
         eventData.put("type", "personalization:decisions")
@@ -413,7 +342,7 @@ class MainActivity : AppCompatActivity() {
                     "  }\n" +
                     "}"
         )
-        val convertedPayload = payloadFormatUtil.toObjectMap(payload)
+        val convertedPayload = payloadFormatter.toObjectMap(payload)
         var listPayload: ArrayList<Map<String, Any>> = ArrayList(1)
         listPayload.add(convertedPayload as Map<String, Any>)
         eventData.put("payload", listPayload)

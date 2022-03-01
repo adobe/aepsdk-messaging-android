@@ -15,7 +15,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class PayloadFormatUtils {
+class IAMPayloadFormatter {
     /**
      * Converts provided [org.json.JSONObject] into [java.util.Map] for any number of levels, which can be used as event data
      * This method is recursive.
