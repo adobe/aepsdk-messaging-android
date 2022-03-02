@@ -66,7 +66,7 @@ class NotificationService : FirebaseMessagingService() {
                     Intent(this@NotificationService, MainActivity::class.java).apply {
                         Messaging.addPushTrackingDetails(this, message.messageId, message.data)
                     },
-                    0
+                    PendingIntent.FLAG_UPDATE_CURRENT
                 )
             )
             setDeleteIntent(

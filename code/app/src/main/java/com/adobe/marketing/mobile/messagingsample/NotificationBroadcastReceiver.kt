@@ -29,7 +29,7 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
             val notificationChannel =
-                NotificationChannel("10001", "NOTIFICATION_CHANNEL_NAME", importance)
+                NotificationChannel("10001", "Messaging Sample Notification Channel", importance)
             notificationManager.createNotificationChannel(notificationChannel)
         }
         notification?.contentIntent =

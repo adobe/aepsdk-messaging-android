@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
-    private var payloadFormatter = IAMPayloadFormatter()
 
     private enum class i18NSpinnerValues(val value: String) {
         KOREAN("Korean character test"),
@@ -174,8 +173,8 @@ class MainActivity : AppCompatActivity() {
         customMessagingDelegate.autoTrack = true
 
         // setup ui interaction listeners
-        setupSpinnerItemSelectedListener()
         setupButtonClickListeners()
+        setupSpinnerItemSelectedListener()
         setupSwitchListeners()
 
         // handle push notification interactions
@@ -192,6 +191,8 @@ class MainActivity : AppCompatActivity() {
         btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
+
+        // triggerKey and triggerValue are set from the spinner item selected
         btnTriggerFullscreenIAM.setOnClickListener {
             val iamTrigger = Event.Builder("test", "iamtest", "iamtest").let {
                 val eventData: HashMap<String, Any?> = hashMapOf(triggerKey to triggerValue)
@@ -269,19 +270,19 @@ class MainActivity : AppCompatActivity() {
             // Apply the adapter to the spinner
             spinner.adapter = adapter
         }
-        // spinner handling
+        // spinner selection handling
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                // first check for i18n selections which are created then downloaded from AJO/Optimize
                 handleI18nSpinnerValues(parent, pos)
                 if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
                     return
                 }
+                // otherwise check if a locally generated IAM was selected
                 handleGeneratedIamValues(parent, pos)
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // no-op
-            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
@@ -438,7 +439,7 @@ class MainActivity : AppCompatActivity() {
                     "  }\n" +
                     "}"
         )
-        val convertedPayload = payloadFormatter.toObjectMap(payload)
+        val convertedPayload = PayloadFormatUtils.toObjectMap(payload)
         var listPayload: ArrayList<Map<String, Any>> = ArrayList(1)
         listPayload.add(convertedPayload as Map<String, Any>)
         val edgeResponseEvent = Event.Builder(
