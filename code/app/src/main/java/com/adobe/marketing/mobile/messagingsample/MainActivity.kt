@@ -32,7 +32,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
     private val customMessagingDelegate = CustomDelegate()
@@ -40,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private var triggerKey = "key"
     private var triggerValue = "value"
     private var payloadFormatter = IAMPayloadFormatter()
+
     private enum class i18NSpinnerValues(val value: String) {
         KOREAN("Korean character test"),
         CYRILLIC("Cyrillic character test"),
@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         FOUR_BYTE("I8N 4 byte character test"),
         HEBREW("Hebrew character test")
     }
+
     private enum class generatedIAMSpinnerValues(val value: String) {
         BOTTOM_BANNER("Bottom Banner"),
         CENTER_BANNER("Center Banner"),
@@ -59,13 +60,110 @@ class MainActivity : AppCompatActivity() {
         TOP_HALF("Top Half"),
         BOTTOM_HALF("Bottom Half")
     }
-    private enum class generatedIAMParams(val params: Array<Any>) {
-        BOTTOM_BANNER(arrayOf(10, 95, "bottom", 0, "center", 1, "bottom", "bottom", "FFFFFF", "116975", 0.10, 0.0, false)),
-        CENTER_BANNER(arrayOf(10, 100, "center", 0, "center", 10, "fade", "fade", "FFFFFF", "FFC300", 0.81, 0.0, false)),
-        CENTER_MODAL(arrayOf(75, 75, "center", 10, "center", 5, "fade", "fade", "ADD8E6", "3A3A3A", 0.8, 20.0, false)),
-        TOP_BANNER(arrayOf(15, 90, "top", 2, "center", 2, "top", "top", "FFFFFF", "913622", 0.75, 75.0, true)),
-        TOP_HALF(arrayOf(50, 100, "top", 0, "left", 0, "left", "right", "FFFFFF", "5E7072", 0.5, 90.0, true)),
-        BOTTOM_HALF(arrayOf(50, 100, "bottom", 0, "left", 0, "right", "left", "FFFFFF", "85B085", 0.90, 0.0, false))
+
+    private enum class generatedIAMParameters(val values: Array<Any>) {
+        BOTTOM_BANNER(
+            arrayOf(
+                10,
+                95,
+                "bottom",
+                0,
+                "center",
+                1,
+                "bottom",
+                "bottom",
+                "FFFFFF",
+                "116975",
+                0.10,
+                0.0,
+                false
+            )
+        ),
+        CENTER_BANNER(
+            arrayOf(
+                10,
+                100,
+                "center",
+                0,
+                "center",
+                10,
+                "fade",
+                "fade",
+                "FFFFFF",
+                "FFC300",
+                0.81,
+                0.0,
+                false
+            )
+        ),
+        CENTER_MODAL(
+            arrayOf(
+                75,
+                75,
+                "center",
+                10,
+                "center",
+                5,
+                "fade",
+                "fade",
+                "ADD8E6",
+                "3A3A3A",
+                0.8,
+                20.0,
+                false
+            )
+        ),
+        TOP_BANNER(
+            arrayOf(
+                15,
+                90,
+                "top",
+                2,
+                "center",
+                2,
+                "top",
+                "top",
+                "FFFFFF",
+                "913622",
+                0.75,
+                75.0,
+                true
+            )
+        ),
+        TOP_HALF(
+            arrayOf(
+                50,
+                100,
+                "top",
+                0,
+                "left",
+                0,
+                "left",
+                "right",
+                "FFFFFF",
+                "5E7072",
+                0.5,
+                90.0,
+                true
+            )
+        ),
+        BOTTOM_HALF(
+            arrayOf(
+                50,
+                100,
+                "bottom",
+                0,
+                "left",
+                0,
+                "right",
+                "left",
+                "FFFFFF",
+                "85B085",
+                0.90,
+                0.0,
+                false
+            )
+        )
     }
 
 
@@ -75,148 +173,74 @@ class MainActivity : AppCompatActivity() {
         ServiceProvider.getInstance().messageDelegate = customMessagingDelegate
         customMessagingDelegate.autoTrack = true
 
-        spinner = findViewById(R.id.iamTypeSpinner)
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.iam_types_array2,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            // Apply the adapter to the spinner
-            spinner.adapter = adapter
-        }
-        // spinner handling
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            // spinner handling
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                triggerKey = "ryan"
-                triggerValue = ""
-                when (parent.getItemAtPosition(pos)) {
-                    i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
-                    i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
-                    i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
-                    i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
-                    i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
-                    i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
-                    i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
-                    i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
-                    i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
-                    else -> print("Testing locally generated IAM")
-                }
-                if (triggerValue.length > 0) {
-                    return
-                }
+        // setup ui interaction listeners
+        setupSpinnerItemSelectedListener()
+        setupButtonClickListeners()
+        setupSwitchListeners()
 
-                triggerKey = "foo"
-                triggerValue = "bar"
-                when (parent.getItemAtPosition(pos)) {
-                    generatedIAMSpinnerValues.BOTTOM_BANNER.value -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.BOTTOM_BANNER
-                    )
-                    generatedIAMSpinnerValues.CENTER_BANNER -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.CENTER_BANNER
-                    )
-                    generatedIAMSpinnerValues.CENTER_MODAL -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.CENTER_MODAL
-                    )
-                    generatedIAMSpinnerValues.TOP_BANNER -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.TOP_BANNER
-                    )
-                    generatedIAMSpinnerValues.TOP_HALF -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.TOP_HALF
-                    )
-                    generatedIAMSpinnerValues.BOTTOM_HALF -> generateAndDispatchEdgeResponseEvent(
-                        generatedIAMParams.BOTTOM_HALF
-                    )
-                }
+        // handle push notification interactions
+        intent?.extras?.apply {
+            if (getString(FROM) == "action") {
+                Messaging.handleNotificationResponse(intent, true, "button")
+            } else {
+                Messaging.handleNotificationResponse(intent, true, null)
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // no-op
-            }
-
         }
+    }
 
+    private fun setupButtonClickListeners() {
         btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
         btnTriggerFullscreenIAM.setOnClickListener {
-            val eventData = HashMap<String, Any>()
-            eventData.put(triggerKey, triggerValue)
-
-            val iamTrigger = Event.Builder(
-                "test",
-                "iamtest", "iamtest"
-            )
-                .setEventData(eventData)
-                .build()
+            val iamTrigger = Event.Builder("test", "iamtest", "iamtest").let {
+                val eventData: HashMap<String, Any?> = hashMapOf(triggerKey to triggerValue)
+                it.setEventData(eventData)
+                it.build()
+            }
             MobileCore.dispatchEvent(iamTrigger, null)
         }
 
         btnHistoricalEvent1.setOnClickListener {
-            val mask = arrayOf("firstEvent")
-            var eventData = HashMap<String, Any>()
-            eventData.put("firstEvent", "true")
-
-            val triggerEvent1 = Event.Builder(
-                "messaging event 1",
-                "iamtest", "iamtest", mask
-            )
-                .setEventData(eventData)
-                .build()
+            val triggerEvent1 =
+                Event.Builder("messaging event 1", "iamtest", "iamtest", arrayOf("firstEvent"))
+                    .let {
+                        val eventData: HashMap<String, Any?> = hashMapOf("firstEvent" to "true")
+                        it.setEventData(eventData)
+                        it.build()
+                    }
             MobileCore.dispatchEvent(triggerEvent1, null)
         }
 
         btnHistoricalEvent2.setOnClickListener {
-            val mask = arrayOf("secondEvent")
-            var eventData = HashMap<String, Any>()
-            eventData.put("secondEvent", "true")
-
-            val triggerEvent2 = Event.Builder(
-                "messaging event 2",
-                "iamtest", "iamtest", mask
-            )
-                .setEventData(eventData)
-                .build()
+            val triggerEvent2 =
+                Event.Builder("messaging event 2", "iamtest", "iamtest", arrayOf("secondEvent"))
+                    .let {
+                        val eventData: HashMap<String, Any?> = hashMapOf("secondEvent" to "true")
+                        it.setEventData(eventData)
+                        it.build()
+                    }
             MobileCore.dispatchEvent(triggerEvent2, null)
         }
 
         btnHistoricalEvent3.setOnClickListener {
-            val mask = arrayOf("thirdEvent")
-            var eventData = HashMap<String, Any>()
-            eventData.put("thirdEvent", "true")
-
-            val triggerEvent3 = Event.Builder(
-                "messaging event 3",
-                "iamtest", "iamtest", mask
-            )
-                .setEventData(eventData)
-                .build()
+            val triggerEvent3 =
+                Event.Builder("messaging event 3", "iamtest", "iamtest", arrayOf("thirdEvent"))
+                    .let {
+                        val eventData: HashMap<String, Any?> = hashMapOf("thirdEvent" to "true")
+                        it.setEventData(eventData)
+                        it.build()
+                    }
             MobileCore.dispatchEvent(triggerEvent3, null)
         }
 
         btnCheckSequence.setOnClickListener {
-            var eventData = HashMap<String, Any>()
-            eventData.put("checkSequence", "true")
-
-            var checkSequenceEvent = Event.Builder(
-                "check sequence",
-                "iamtest", "iamtest"
-            )
-                .setEventData(eventData)
-                .build()
+            val checkSequenceEvent = Event.Builder("check sequence", "iamtest", "iamtest").let {
+                val eventData: HashMap<String, Any?> = hashMapOf("checkSequence" to "true")
+                it.setEventData(eventData)
+                it.build()
+            }
             MobileCore.dispatchEvent(checkSequenceEvent, null)
-        }
-
-        allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
-            val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
-            Toast.makeText(
-                this@MainActivity, message,
-                Toast.LENGTH_SHORT
-            ).show()
-            customMessagingDelegate.showMessages = isChecked
         }
 
         btnTriggerLastIAM.setOnClickListener {
@@ -226,16 +250,91 @@ class MainActivity : AppCompatActivity() {
             ).show()
             customMessagingDelegate.getLastTriggeredMessage()?.show()
         }
+
         btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
+    }
 
-        intent?.extras?.apply {
-            if (getString(FROM) == "action") {
-                Messaging.handleNotificationResponse(intent, true, "button")
-            } else {
-                Messaging.handleNotificationResponse(intent, true, null)
+    private fun setupSpinnerItemSelectedListener() {
+        spinner = findViewById(R.id.iamTypeSpinner)
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.iam_types_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
+        }
+        // spinner handling
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                handleI18nSpinnerValues(parent, pos)
+                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
+                    return
+                }
+                handleGeneratedIamValues(parent, pos)
             }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // no-op
+            }
+        }
+    }
+
+    private fun setupSwitchListeners() {
+        allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
+            Toast.makeText(
+                this@MainActivity, message,
+                Toast.LENGTH_SHORT
+            ).show()
+            customMessagingDelegate.showMessages = isChecked
+        }
+    }
+
+    private fun handleI18nSpinnerValues(parent: AdapterView<*>, pos: Int) {
+        triggerKey = "ryan"
+        triggerValue = ""
+        when (parent.getItemAtPosition(pos)) {
+            i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
+            i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
+            i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
+            i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
+            i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
+            i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
+            i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
+            i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
+            i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
+            else -> print("Testing locally generated IAM")
+        }
+    }
+
+    private fun handleGeneratedIamValues(parent: AdapterView<*>, pos: Int) {
+        triggerKey = "foo"
+        triggerValue = "bar"
+        when (parent.getItemAtPosition(pos)) {
+            generatedIAMSpinnerValues.BOTTOM_BANNER.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.BOTTOM_BANNER
+            )
+            generatedIAMSpinnerValues.CENTER_BANNER.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.CENTER_BANNER
+            )
+            generatedIAMSpinnerValues.CENTER_MODAL.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.CENTER_MODAL
+            )
+            generatedIAMSpinnerValues.TOP_BANNER.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.TOP_BANNER
+            )
+            generatedIAMSpinnerValues.TOP_HALF.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.TOP_HALF
+            )
+            generatedIAMSpinnerValues.BOTTOM_HALF.value -> generateAndDispatchEdgeResponseEvent(
+                generatedIAMParameters.BOTTOM_HALF
+            )
         }
     }
 
@@ -294,25 +393,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     // local optimize event generation for testing
-    private fun generateAndDispatchEdgeResponseEvent(generatedIAMParams: generatedIAMParams) {
+    private fun generateAndDispatchEdgeResponseEvent(generatedIAMParameters: generatedIAMParameters) {
         // extract parameter values from generatedIAMParams enum
-        val height = generatedIAMParams.params[0]
-        val width = generatedIAMParams.params[1]
-        val vAlign = generatedIAMParams.params[2]
-        val vInset = generatedIAMParams.params[3]
-        val hAlign = generatedIAMParams.params[4]
-        val hInset = generatedIAMParams.params[5]
-        val displayAnimation = generatedIAMParams.params[6]
-        val dismissAnimation = generatedIAMParams.params[7]
-        val iamColor = generatedIAMParams.params[8]
-        val bdColor = generatedIAMParams.params[9]
-        val opacity = generatedIAMParams.params[10]
-        val cornerRadius = generatedIAMParams.params[11]
-        val uiTakeover = generatedIAMParams.params[12]
+        val height = generatedIAMParameters.values[0]
+        val width = generatedIAMParameters.values[1]
+        val vAlign = generatedIAMParameters.values[2]
+        val vInset = generatedIAMParameters.values[3]
+        val hAlign = generatedIAMParameters.values[4]
+        val hInset = generatedIAMParameters.values[5]
+        val displayAnimation = generatedIAMParameters.values[6]
+        val dismissAnimation = generatedIAMParameters.values[7]
+        val iamColor = generatedIAMParameters.values[8]
+        val bdColor = generatedIAMParameters.values[9]
+        val opacity = generatedIAMParameters.values[10]
+        val cornerRadius = generatedIAMParameters.values[11]
+        val uiTakeover = generatedIAMParameters.values[12]
         // simulate edge response event containing offers
-        val eventData = HashMap<String, Any>()
-        eventData.put("type", "personalization:decisions")
-        eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B")
         val payload = JSONObject(
             "{\n" +
                     "  \"activity\": {\n" +
@@ -345,15 +441,20 @@ class MainActivity : AppCompatActivity() {
         val convertedPayload = payloadFormatter.toObjectMap(payload)
         var listPayload: ArrayList<Map<String, Any>> = ArrayList(1)
         listPayload.add(convertedPayload as Map<String, Any>)
-        eventData.put("payload", listPayload)
-        eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8")
-
         val edgeResponseEvent = Event.Builder(
             "AEP Response Event Handle",
-            "com.adobe.eventType.edge", "personalization:decisions"
-        )
-            .setEventData(eventData)
-            .build()
+            "com.adobe.eventType.edge",
+            "personalization:decisions"
+        ).let {
+            val eventData: HashMap<String, Any?> = hashMapOf(
+                "payload" to listPayload,
+                "requestId" to "D158979E-0506-4968-8031-17A6A8A87DA8",
+                "type" to "personalization:decisions",
+                "requestEventId" to "2E964037-E319-4D14-98B8-0682374E547B"
+            )
+            it.setEventData(eventData)
+            it.build()
+        }
         MobileCore.dispatchEvent(edgeResponseEvent, null)
     }
 }
@@ -363,9 +464,9 @@ class CustomDelegate : MessageDelegate() {
     var showMessages = true
 
     override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
-        if (fullscreenMessage != null) {
+        fullscreenMessage?.also {
             this.currentMessage = fullscreenMessage
-            if (!showMessages) {
+            showMessages.let {
                 val message = (currentMessage?.parent) as? Message
                 println("message was suppressed: ${message?.messageId}")
                 message?.track("message suppressed")
