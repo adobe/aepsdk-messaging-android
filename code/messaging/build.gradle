@@ -34,9 +34,7 @@ android {
 
     flavorDimensions "target"
     productFlavors {
-        phone {
-            dimension "target"
-        }
+        phone
     }
 
     buildTypes {
@@ -64,7 +62,7 @@ android {
     }
 
     sourceSets {
-        String sharedTestJavaDir = 'src/sharedTest/java'
+        final def sharedTestJavaDir = 'src/sharedTest/java'
 
         test {
             java.srcDirs += [sharedTestJavaDir]
@@ -77,12 +75,8 @@ android {
     }
 }
 
-def buildConfigDir = "$buildDir/generated/source/buildConfig/phone/debug/com/adobe/marketing/mobile/messaging/"
 android.libraryVariants.all { variant ->
     tasks.withType(Javadoc) {
-        source = [android.sourceSets.main.java.sourceFiles,
-                  android.sourceSets.phone.java.sourceFiles]
-        source += buildConfigDir
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
         doFirst {
@@ -115,7 +109,7 @@ def isReleaseBuild() {
     return hasProperty('release')
 }
 
-version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersion + "-SNAPSHOT"
+version = isReleaseBuild() ? moduleVersion : moduleVersion + "-SNAPSHOT"
 
 publishing {
     publications {
@@ -186,7 +180,7 @@ signing {
 
 
 dependencies {
-    implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
     implementation project(":messaging:aar")
 
     // Firebase sdk compile only
@@ -207,12 +201,8 @@ dependencies {
     // where Objenesis 2 requires minimum Android API 26
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation('com.adobe.marketing.mobile:edgeidentity:1.0.0')
-    androidTestImplementation('com.adobe.marketing.mobile:edge:1.1.1')
-}
-
-afterEvaluate {
-    generatePhoneReleaseBuildConfig.enabled = true
+    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
+    androidTestImplementation 'com.adobe.marketing.mobile:edge:1.1.1'
 }
 
 tasks.withType(Test) {
