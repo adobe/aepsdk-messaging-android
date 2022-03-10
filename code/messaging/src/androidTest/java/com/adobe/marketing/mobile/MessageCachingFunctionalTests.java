@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -28,10 +26,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,8 +38,6 @@ public class MessageCachingFunctionalTests {
         BuildConfig.IS_E2E_TEST.set(false);
         BuildConfig.IS_FUNCTIONAL_TEST.set(true);
     }
-    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
-    private CacheManager cacheManager;
 
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
@@ -76,19 +68,17 @@ public class MessageCachingFunctionalTests {
         final NetworkService networkService = MessagingUtils.getPlatformServices().getNetworkService();
         messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
 
-        cacheManager = new CacheManager(systemInfoService);
         // ensure cache is cleared before testing
         MessagingFunctionalTestUtils.cleanCache();
 
-        // write a image file from resources to the image asset cache
-        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
-        MessagingFunctionalTestUtils.readInputStreamIntoFile(mockCachedImage, MessagingFunctionalTestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
+        // write an image file from resources to the image asset cache
+        MessagingFunctionalTestUtils.addImageAssetToCache();
     }
 
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(TestConstants.MESSAGES_CACHE_SUBDIRECTORY);
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -107,9 +97,9 @@ public class MessageCachingFunctionalTests {
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(2, moduleRules.size()); // configuration + messaging
         final Iterator iterator = moduleRules.keySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Module module = (Module) iterator.next();
-            if(module.getModuleName().equals("Messaging")) {
+            if (module.getModuleName().equals("Messaging")) {
                 ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule> messagingRules = (ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule>) moduleRules.get(module);
                 assertEquals(1, messagingRules.size());
                 com.adobe.marketing.mobile.Rule rule = messagingRules.element();

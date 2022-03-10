@@ -54,7 +54,7 @@ public class MessageTests {
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
     private final Map<String, Object> consequence = new HashMap<>();
-    Map<String, Object> details = new HashMap<>();
+
     @Mock
     Core mockCore;
     @Mock
@@ -78,7 +78,9 @@ public class MessageTests {
     @Mock
     ServiceProvider mockServiceProvider;
     @Captor
-    ArgumentCaptor<Event> eventArgumentCaptor;
+    ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor;
+    @Captor
+    ArgumentCaptor<String> interactionArgumentCaptor;
     private Message message;
     private AEPMessage aepMessage;
     private EventHub eventHub;
@@ -141,12 +143,6 @@ public class MessageTests {
 
     @Test
     public void test_messageShow() {
-        // setup expected event
-        HashMap<String, Object> expectedData = new HashMap<>();
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "triggered");
-
         // test
         message.show();
 
@@ -154,12 +150,11 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        Event trackingEvent = eventArgumentCaptor.getValue();
-        assertEquals(trackingEvent.getEventData(), expectedData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals(null, interaction);
     }
 
     @Test
@@ -180,12 +175,6 @@ public class MessageTests {
             fail(e.getLocalizedMessage());
         }
 
-        // setup expected event
-        HashMap<String, Object> expectedData = new HashMap<>();
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "triggered");
-
         // set custom delegate in Message object
         Whitebox.setInternalState(message, "customDelegate", customDelegate);
 
@@ -196,12 +185,11 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        Event trackingEvent = eventArgumentCaptor.getValue();
-        assertEquals(expectedData, trackingEvent.getEventData());
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals(null, interaction);
     }
 
     @Test
@@ -223,46 +211,28 @@ public class MessageTests {
             fail(e.getLocalizedMessage());
         }
 
-        // setup expected events
-        HashMap<String, Object> expectedTriggeredEventData = new HashMap<>();
-        expectedTriggeredEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedTriggeredEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedTriggeredEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "triggered");
-
-        HashMap<String, Object> expectedSuppressedEventData = new HashMap<>();
-        expectedSuppressedEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedSuppressedEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedSuppressedEventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "suppressed");
-
         // test
         message.show();
 
         // expect 2 tracking events: triggered tracking + suppressed tracking
-        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        List<Event> capturedEvents = eventArgumentCaptor.getAllValues();
-        // verify triggered tracking event
-        Event triggeredTrackingEvent = capturedEvents.get(0);
-        assertEquals(triggeredTrackingEvent.getEventData(), expectedTriggeredEventData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, triggeredTrackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), triggeredTrackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), triggeredTrackingEvent.getSource());
+        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
+        List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
+        // verify display tracking event
+        MessagingEdgeEventType displayTrackingEvent = capturedEvents.get(0);
+        String interaction = capturedInteractions.get(0);
+        assertEquals(MessagingEdgeEventType.IN_APP_DISPLAY, displayTrackingEvent);
+        assertEquals(null, interaction);
 
-        // verify custom delegate tracking event
-        Event suppressedTrackingEvent = capturedEvents.get(1);
-        assertEquals(suppressedTrackingEvent.getEventData(), expectedSuppressedEventData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, suppressedTrackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), suppressedTrackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), suppressedTrackingEvent.getSource());
+        // verify custom delegate suppressed tracking event
+        MessagingEdgeEventType suppressedTrackingEvent = capturedEvents.get(1);
+        interaction = capturedInteractions.get(1);
+        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, suppressedTrackingEvent);
+        assertEquals("suppressed", interaction);
     }
 
     @Test
     public void test_messageDismiss() {
-        // setup expected event
-        HashMap<String, Object> expectedData = new HashMap<>();
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "dismissed");
-
         // test
         message.dismiss();
 
@@ -270,12 +240,11 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).dismiss();
 
         // verify dismissed tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        Event trackingEvent = eventArgumentCaptor.getValue();
-        assertEquals(trackingEvent.getEventData(), expectedData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
+        assertEquals(null, interaction);
     }
 
     @Test
@@ -308,36 +277,24 @@ public class MessageTests {
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         when(mockAEPMessageSettings.getParent()).thenReturn(message);
 
-        // setup expected events
-        HashMap<String, Object> expectedDeepLinkClickedTrackingData = new HashMap<>();
-        expectedDeepLinkClickedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedDeepLinkClickedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedDeepLinkClickedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "deeplinkclicked");
-
-        HashMap<String, Object> expectedDismissedTrackingData = new HashMap<>();
-        expectedDismissedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedDismissedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedDismissedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "dismissed");
-
         // test
         message.overrideUrlLoad(mockAEPMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
 
         // expect 2 events: deeplink click tracking + dismissed tracking
-        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        List<Event> capturedEvents = eventArgumentCaptor.getAllValues();
-        // verify triggered tracking event
-        Event triggeredTrackingEvent = capturedEvents.get(0);
-        assertEquals(triggeredTrackingEvent.getEventData(), expectedDeepLinkClickedTrackingData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, triggeredTrackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), triggeredTrackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), triggeredTrackingEvent.getSource());
+        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
+        List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
+        // verify interact tracking event
+        MessagingEdgeEventType displayTrackingEvent = capturedEvents.get(0);
+        String interaction = capturedInteractions.get(0);
+        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, displayTrackingEvent);
+        assertEquals("deeplinkclicked", interaction);
 
         // verify custom delegate tracking event
-        Event suppressedTrackingEvent = capturedEvents.get(1);
-        assertEquals(suppressedTrackingEvent.getEventData(), expectedDismissedTrackingData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, suppressedTrackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), suppressedTrackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), suppressedTrackingEvent.getSource());
+        MessagingEdgeEventType dismissTrackingEvent = capturedEvents.get(1);
+        interaction = capturedInteractions.get(1);
+        assertEquals(MessagingEdgeEventType.IN_APP_DISMISS, dismissTrackingEvent);
+        assertEquals(null, interaction);
 
         // verify showUrl called
         verify(mockUIService, times(1)).showUrl("https://adobe.com");
@@ -354,7 +311,7 @@ public class MessageTests {
         message.overrideUrlLoad(mockAEPMessage, "");
 
         // expect 0 events: deeplink click tracking + dismissed tracking
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
+        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
 
         // verify showUrl not called
         verify(mockUIService, times(0)).showUrl(anyString());
@@ -362,31 +319,25 @@ public class MessageTests {
 
     @Test
     public void test_messageTrack() {
-        // setup expected events
-        HashMap<String, Object> expectedTrackingData = new HashMap<>();
-        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, "123456789");
-        expectedTrackingData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock track");
-
         // test
-        message.track("mock track");
+        message.track("mock track", MessagingEdgeEventType.IN_APP_INTERACT);
 
         // verify mock tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(eventArgumentCaptor.capture(), any(Map.class));
-        Event trackingEvent = eventArgumentCaptor.getValue();
-        assertEquals(trackingEvent.getEventData(), expectedTrackingData);
-        assertEquals(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, trackingEvent.getName());
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), trackingEvent.getType());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), trackingEvent.getSource());
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        MessagingEdgeEventType displayTrackingEvent = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, displayTrackingEvent);
+        assertEquals("mock track", interaction);
     }
 
     @Test
-    public void test_messageTrackWithInvalidInteractionType() {
+    public void test_messageTrackWithMissingMessagingEdgeEventType() {
         // test
-        message.track("");
+        message.track(null, null);
 
-        // verify mock tracking event
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(any(Event.class), any(Map.class));
+        // verify no tracking event
+        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+
     }
 
     class CustomDelegate extends MessageDelegate {
@@ -397,7 +348,7 @@ public class MessageTests {
             if (!showMessage) {
                 AEPMessageSettings settings = (AEPMessageSettings) ((AEPMessage) fullscreenMessage).getSettings();
                 Message message = (Message) settings.getParent();
-                message.track("suppressed");
+                message.track("suppressed", MessagingEdgeEventType.IN_APP_INTERACT);
             }
             return showMessage;
         }

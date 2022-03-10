@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import android.app.Application;
@@ -29,9 +30,12 @@ import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -43,7 +47,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class MessageDelegateTests {
 
     private EventHub eventHub;
-    private final MessageDelegate messageDelegate = new MessageDelegate();
+    private MessageDelegate messageDelegate;
 
     @Mock
     Core mockCore;
@@ -65,9 +69,13 @@ public class MessageDelegateTests {
     ServiceProvider mockServiceProvider;
     @Mock
     UIService mockUIService;
+    @Mock
+    WebView mockWebView;
+    @Captor
+    ArgumentCaptor<ValueCallback<String>> valueCallbackArgumentCaptor;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -83,6 +91,11 @@ public class MessageDelegateTests {
         mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
+
+        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebView);
+        PowerMockito.when(mockWebView.getSettings()).thenReturn(mockWebSettings);
+
+        messageDelegate = new MessageDelegate();
     }
 
     @Test
@@ -147,16 +160,31 @@ public class MessageDelegateTests {
     }
 
     @Test
-    public void test_loadJavascript() throws Exception {
+    public void test_loadJavascript_WithScriptHandlersSet() {
         // setup
-        WebView mockWebview = Mockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebview);
-        PowerMockito.when(mockWebview.getSettings()).thenReturn(mockWebSettings);
+        messageDelegate.handleJavascriptMessage("test", new AdobeCallback<String>() {
+            @Override
+            public void call(String s) {
+                Assert.assertEquals("hello world", s);
+            }
+        });
+
         // test
-        messageDelegate.loadJavascript("function test(hello world) { print(arg); }");
+        messageDelegate.evaluateJavascript("function test(hello world) { print(arg); }");
 
         // verify evaluate javascript called
-        verify(mockWebview, times(1)).evaluateJavascript(anyString(), any(ValueCallback.class));
+        verify(mockWebView, times(1)).evaluateJavascript(anyString(), valueCallbackArgumentCaptor.capture());
+        ValueCallback<String> valueCallback = valueCallbackArgumentCaptor.getValue();
+        valueCallback.onReceiveValue("hello world");
+    }
+
+    @Test
+    public void test_loadJavascript_WithNoScriptHandlersSet() {
+        // test
+        messageDelegate.evaluateJavascript("function test(hello world) { print(arg); }");
+
+        // verify evaluate javascript called
+        verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
     }
 
     @Test
@@ -166,7 +194,7 @@ public class MessageDelegateTests {
         PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebview);
         PowerMockito.when(mockWebview.getSettings()).thenReturn(mockWebSettings);
         // test
-        messageDelegate.loadJavascript(null);
+        messageDelegate.evaluateJavascript(null);
 
         // verify evaluate javascript not called
         verify(mockWebview, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));

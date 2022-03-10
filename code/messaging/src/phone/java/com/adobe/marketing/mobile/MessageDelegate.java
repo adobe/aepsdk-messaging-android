@@ -48,29 +48,9 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     public boolean autoTrack = true;
     // internal properties
     MessagingInternal messagingInternal;
-    Map<String, Object> details;
-
-    /**
-     * Dispatch tracking information via a Messaging request content event.
-     *
-     * @param interactionType {@code String} containing the interaction which occurred
-     */
-    public void track(final String interactionType) {
-        if (StringUtils.isNullOrEmpty(interactionType)) {
-            Log.debug(LOG_TAG,
-                    "%s - Unable to record a message interaction - interaction string was null or empty.", SELF_TAG);
-            return;
-        }
-
-        final HashMap<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT);
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_EXECUTION_ID, messageId);
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, interactionType);
-
-        final Event event = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_MESSAGING_EVENT, MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT).setEventData(eventData).build();
-        Log.debug(LOG_TAG, "%s - Tracking interaction (%s) for message id %s", SELF_TAG, interactionType, messageId);
-        messagingInternal.handleInAppTrackingInfo(event, details);
-    }
+    WebView jsWebView;
+    Map<String, Object> details = new HashMap<>();
+    Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
 
     /**
      * Determines if the passed in {@code String} link is a deeplink. If not,
@@ -98,27 +78,36 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     }
 
     /**
-     * Attempts to run the provided javascript code
+     * Adds a {@link WebViewJavascriptInterface} for the provided message name to the javascript {@link WebView}.
      *
-     * @param javascript {@link String} containing javascript code to be executed
+     * @param name     {@link String} the name of the message being passed from javascript
+     * @param callback {@code AdobeCallback<String>} to be invoked when the javascript message payload is passed
      */
-    protected void loadJavascript(final String javascript) {
-        if (StringUtils.isNullOrEmpty(javascript)) {
-            Log.trace(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
+    public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback) {
+        if (StringUtils.isNullOrEmpty(name)) {
+            Log.trace(LOG_TAG, "Will not store the callback, no name was provided.");
             return;
         }
-        final WebView jsWebview = new WebView(MobileCore.getApplication().getApplicationContext());
-        final WebSettings settings = jsWebview.getSettings();
+        final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
+        final WebView jsWebView = new WebView(MobileCore.getApplication().getApplicationContext());
+        jsWebView.addJavascriptInterface(javascriptInterface, name);
+        final WebSettings settings = jsWebView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        this.jsWebView = jsWebView;
+        scriptHandlers.put(name, javascriptInterface);
+    }
 
-        jsWebview.evaluateJavascript(javascript, new ValueCallback<String>() {
-            @Override
-            public void onReceiveValue(String value) {
-                Log.debug(LOG_TAG, "Javascript callback: " + value);
-                jsWebview.destroy();
-            }
-        });
+    void evaluateJavascript(final String content) {
+        for (final Map.Entry<String, WebViewJavascriptInterface> entry : scriptHandlers.entrySet()) {
+            jsWebView.evaluateJavascript(content, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(final String value) {
+                    Log.trace(LOG_TAG, "Running javascript callback for %s.", entry.getKey());
+                    entry.getValue().run(value);
+                }
+            });
+        }
     }
 
     // ============================================================================================
@@ -207,7 +196,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
                 messagingInternal = message.messagingInternal;
                 messageId = message.messageId;
                 if (messagingInternal != null) {
-                    track(interaction);
+                    message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
             }
 
@@ -220,7 +209,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
             // handle optional javascript code to be executed
             final String javasscript = messageData.get(MessagingConstants.MESSAGING_SCHEME.JS);
             if (!StringUtils.isNullOrEmpty(javasscript)) {
-                loadJavascript(javasscript);
+                evaluateJavascript(javasscript);
             }
         }
 

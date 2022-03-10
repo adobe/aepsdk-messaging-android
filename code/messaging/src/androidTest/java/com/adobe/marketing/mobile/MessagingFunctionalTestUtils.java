@@ -10,10 +10,10 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.MessagingUtils.toMap;
 import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
+import static com.adobe.marketing.mobile.TestConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.TestConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.fail;
 
 import android.app.Application;
@@ -30,12 +30,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -43,6 +43,7 @@ import java.util.Map;
 
 public class MessagingFunctionalTestUtils {
     private static final String LOG_TAG = "MessagingFunctionalTestUtil";
+    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
     private static CacheManager cacheManager;
 
@@ -65,7 +66,7 @@ public class MessagingFunctionalTestUtils {
             addKeys("", new ObjectMapper().readTree(jsonObject.toString()), payloadMap);
             return payloadMap;
         } catch (IOException e) {
-            MobileCore.log(LoggingMode.ERROR, "FunctionalTestUtils", "Failed to parse JSON object to tree structure.");
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to parse JSON object to tree structure.");
         }
 
         return Collections.emptyMap();
@@ -106,61 +107,88 @@ public class MessagingFunctionalTestUtils {
         }
     }
 
-    static void dispatchEdgePersonalizationEventWithMessagePayload(final String name) {
+    /**
+     * Dispatches a simulated edge response event containing a message payload. The message payload
+     * is loaded from the resources directory using the passed in {@code String} as a filename.
+     *
+     * @param fileName the {@code String} name of a file located in the resource directory
+     */
+    static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
         final EventData eventData = new EventData();
         final List<Variant> items = new ArrayList<>();
-        items.add(Variant.fromVariantMap(getVariantMapFromFile(name)));
+        items.add(Variant.fromVariantMap(getVariantMapFromFile(fileName)));
         eventData.putVariant("payload", Variant.fromVariantList(items));
-        final Event event = new Event.Builder("edge response testing", MessagingConstants.EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+        final Event event = new Event.Builder("edge response testing", TestConstants.EventType.EDGE, TestConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setData(eventData)
                 .build();
         MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(ExtensionError extensionError) {
-                Log.debug(LOG_TAG, "exception occurred: %s", extensionError.getErrorName());
+                Log.debug(LOG_TAG, "exception occurred in dispatching edge personalization event: %s", extensionError.getErrorName());
             }
         });
     }
 
-    static Map<String, Variant> getVariantMapFromFile(final String name) {
+    /**
+     * Converts a file containing a JSON into a {@link Map<String, Variant>}.
+     *
+     * @param fileName the {@code String} name of a file located in the resource directory
+     * @return a {@code Map<String, Variant>} containing the JSON's contents
+     */
+    static Map<String, Variant> getVariantMapFromFile(final String fileName) {
         try {
-            final JSONObject json = new JSONObject(loadStringFromFile(name));
+            final JSONObject json = new JSONObject(loadStringFromFile(fileName));
             return toVariantMap(json);
         } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
+            Log.warning(LOG_TAG, "getVariantMapFromFile() - Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
             return null;
         }
     }
 
-    static Map<String, Object> getMapFromFile(final String name) {
+    /**
+     * Converts a file containing a JSON into a {@link Map<String, Object>}.
+     *
+     * @param fileName the {@code String} name of a file located in the resource directory
+     * @return a {@code Map<String, Object>} containing the file's contents
+     */
+    static Map<String, Object> getMapFromFile(final String fileName) {
         try {
-            final JSONObject json = new JSONObject(loadStringFromFile(name));
+            final JSONObject json = new JSONObject(loadStringFromFile(fileName));
             return toMap(json);
         } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
+            Log.warning(LOG_TAG, "getMapFromFile() - Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
             return null;
         }
     }
 
-    static String loadStringFromFile(final String name) {
+    /**
+     * Converts a file into a {@code String}.
+     *
+     * @param fileName the {@code String} name of a file located in the resource directory
+     * @return a {@code String} containing the file's contents
+     */
+    static String loadStringFromFile(final String fileName) {
+        final InputStream inputStream = MessagingFunctionalTestUtils.class.getClassLoader().getResourceAsStream(fileName);
         try {
-            final InputStream inputStream = MessagingFunctionalTestUtils.class.getClassLoader().getResourceAsStream(name);
             if (inputStream != null) {
                 final String streamContents = StringUtils.streamToString(inputStream);
-                inputStream.close();
                 return streamContents;
             } else {
                 return null;
             }
-        } catch (final FileNotFoundException fileNotFoundException) {
-            Log.warning(LOG_TAG, "Exception occurred when retrieving the cached message file: %s", fileNotFoundException.getMessage());
-            return null;
-        } catch (final IOException ioException) {
-            Log.warning(LOG_TAG, "Exception occurred when converting the cached message file to a string: %s", ioException.getMessage());
-            return null;
+        } finally {
+            try {
+                inputStream.close();
+            } catch (final IOException ioException) {
+                Log.warning(LOG_TAG, "Exception occurred when closing the input stream: %s", ioException.getMessage());
+                return null;
+            }
         }
     }
 
+    /**
+     * Cleans Messaging extension payload and image asset cache files.
+     */
     static void cleanCache() {
         final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
         try {
@@ -170,6 +198,71 @@ public class MessagingFunctionalTestUtils {
         }
         cacheManager.deleteFilesNotInList(new ArrayList<String>(), IMAGES_CACHE_SUBDIRECTORY);
         cacheManager.deleteFilesNotInList(new ArrayList<String>(), MESSAGES_CACHE_SUBDIRECTORY);
+    }
+
+    /**
+     * Adds a test image to the Messaging extension image asset cache.
+     */
+    static void addImageAssetToCache() {
+        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date());
+        writeInputStreamIntoFile(mockCachedImage, MessagingFunctionalTestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
+    }
+
+    /**
+     * Converts a file in the resources directory into an {@link InputStream}.
+     *
+     * @param name          the {@code String} filename of a file located in the resource directory
+     * @param fileExtension a {@code String} containing the file extension of the file
+     * @return a {@code InputStream} of the specified file
+     */
+    static InputStream convertResourceFileToInputStream(final String name, final String fileExtension) {
+        return MessagingFunctionalTestUtils.class.getClassLoader().getResourceAsStream(name + fileExtension);
+    }
+
+    /**
+     * Writes the contents of an {@link InputStream} into a file.
+     *
+     * @param cachedFile the {@code File} to be written to
+     * @param input      a {@code InputStream} containing the data to be written
+     * @return a {@code boolean} if the write to file was successful
+     */
+    static boolean writeInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
+        boolean result;
+
+        if (cachedFile == null || input == null) {
+            return false;
+        }
+
+        FileOutputStream output = null;
+
+        try {
+            output = new FileOutputStream(cachedFile, append);
+            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
+            int count;
+
+            while ((count = input.read(data)) != -1) {
+                output.write(data, 0, count);
+            }
+
+            result = true;
+        } catch (final IOException e) {
+            Log.error(LOG_TAG, "IOException while attempting to write to file (%s)", e);
+            return false;
+        } catch (final Exception e) {
+            Log.error(LOG_TAG, "Unexpected exception while attempting to write to file (%s)", e);
+            return false;
+        } finally {
+            try {
+                if (output != null) {
+                    output.close();
+                }
+
+            } catch (final Exception e) {
+                Log.error(LOG_TAG, "Unable to close the OutputStream (%s) ", e);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -230,48 +323,5 @@ public class MessagingFunctionalTestUtils {
         xdmMap.put("identityMap", identityMap);
 
         return xdmMap;
-    }
-
-    static InputStream convertResourceFileToInputStream(final String name, final String fileExtension) {
-        return MessagingFunctionalTestUtils.class.getClassLoader().getResourceAsStream(name + fileExtension);
-    }
-
-    static boolean readInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
-        boolean result;
-
-        if (cachedFile == null || input == null) {
-            return false;
-        }
-
-        FileOutputStream output = null;
-
-        try {
-            output = new FileOutputStream(cachedFile, append);
-            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
-            int count;
-
-            while ((count = input.read(data)) != -1) {
-                output.write(data, 0, count);
-            }
-
-            result = true;
-        } catch (final IOException e) {
-            Log.error(LOG_TAG, "IOException while attempting to write remote file (%s)", e);
-            return false;
-        } catch (final Exception e) {
-            Log.error(LOG_TAG, "Unexpected exception while attempting to write remote file (%s)", e);
-            return false;
-        } finally {
-            try {
-                if (output != null) {
-                    output.close();
-                }
-
-            } catch (final Exception e) {
-                Log.error(LOG_TAG, "Unable to close the OutputStream (%s) ", e);
-            }
-        }
-
-        return result;
     }
 }

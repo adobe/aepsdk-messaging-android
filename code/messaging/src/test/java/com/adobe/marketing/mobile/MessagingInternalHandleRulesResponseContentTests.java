@@ -26,6 +26,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
@@ -104,7 +106,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     private EventHub eventHub;
 
     @Before
-    public void setup() throws PackageManager.NameNotFoundException, URISyntaxException {
+    public void setup() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -112,6 +114,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         eventHub = new EventHub("testEventHub", mockPlatformServices);
         mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
+        when(MobileCore.getApplication()).thenReturn(mockApplication);
 
         // setup activity id mocks
         when(App.getApplication()).thenReturn(mockApplication);

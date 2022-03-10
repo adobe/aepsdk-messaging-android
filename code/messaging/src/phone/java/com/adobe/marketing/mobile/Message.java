@@ -107,11 +107,25 @@ public class Message extends MessageDelegate {
         aepMessage.setLocalAssetsMap(assetMap);
     }
 
+    /**
+     * Dispatch tracking information via a Messaging request content event.
+     *
+     * @param interaction {@code String} containing the interaction which occurred
+     */
+    public void track(final String interaction, final MessagingEdgeEventType eventType) {
+        if (eventType == null) {
+            Log.debug(LOG_TAG,
+                    "%s - Unable to record a message interaction, MessagingEdgeEventType was null.", SELF_TAG);
+            return;
+        }
+        messagingInternal.handleInAppTrackingInfo(eventType, interaction, this);
+    }
+
     // ui management
     public void show() {
         if (aepMessage != null) {
             if (autoTrack) {
-                track("triggered");
+                track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
             }
             aepMessage.show();
         }
@@ -120,7 +134,7 @@ public class Message extends MessageDelegate {
     public void dismiss() {
         if (aepMessage != null) {
             if (autoTrack) {
-                track("dismissed");
+                track(null, MessagingEdgeEventType.IN_APP_DISMISS);
             }
 
             aepMessage.dismiss();

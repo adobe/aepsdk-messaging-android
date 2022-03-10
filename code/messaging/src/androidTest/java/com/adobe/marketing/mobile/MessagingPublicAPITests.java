@@ -43,6 +43,7 @@ public class MessagingPublicAPITests {
         BuildConfig.IS_E2E_TEST.set(false);
         BuildConfig.IS_FUNCTIONAL_TEST.set(true);
     }
+
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
             .around(new TestHelper.RegisterMonitorExtensionRule());
@@ -106,7 +107,7 @@ public class MessagingPublicAPITests {
         Intent intent = new Intent();
         String messageId = "mock_message_id";
         Map<String, String> data = new HashMap<>();
-        data.put(MessagingConstants.TrackingKeys._XDM, "xdmjson");
+        data.put(TestConstants.TrackingKeys._XDM, "xdmjson");
 
         // test
         boolean updated = Messaging.addPushTrackingDetails(intent, messageId, data);
@@ -115,8 +116,8 @@ public class MessagingPublicAPITests {
         assertTrue(updated);
 
         // verify if the intent is updated with messageId and xdm data.
-        String actualMsgId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
-        String actualXdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        String actualMsgId = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String actualXdmData = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         assertEquals(messageId, actualMsgId);
         assertEquals("xdmjson", actualXdmData);
     }
@@ -134,8 +135,8 @@ public class MessagingPublicAPITests {
         assertFalse(updated);
 
         // verify if the intent is updated with messageId and xdm data.
-        String actualMsgId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
-        String actualXdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        String actualMsgId = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String actualXdmData = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         assertNull(actualMsgId);
         assertNull(actualXdmData);
     }
@@ -145,7 +146,7 @@ public class MessagingPublicAPITests {
         // Parameters
         Intent intent = new Intent();
         Map<String, String> data = new HashMap<>();
-        data.put(MessagingConstants.TrackingKeys._XDM, "xdmjson");
+        data.put(TestConstants.TrackingKeys._XDM, "xdmjson");
 
         // test
         boolean updated = Messaging.addPushTrackingDetails(intent, null, data);
@@ -154,8 +155,8 @@ public class MessagingPublicAPITests {
         assertFalse(updated);
 
         // verify if the intent is updated with messageId and xdm data.
-        String actualMsgId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
-        String actualXdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        String actualMsgId = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String actualXdmData = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         assertNull(actualMsgId);
         assertNull(actualXdmData);
     }
@@ -175,8 +176,8 @@ public class MessagingPublicAPITests {
         assertTrue(updated);
 
         // verify if the intent is updated with messageId and xdm data.
-        String actualMsgId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
-        String actualXdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        String actualMsgId = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String actualXdmData = intent.getStringExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         assertEquals(messageId, actualMsgId);
         assertNull(actualXdmData);
     }
@@ -185,7 +186,7 @@ public class MessagingPublicAPITests {
     public void testAddPushTrackingDetails_intentIsMissing() {
         String messageId = "mock_message_id";
         Map<String, String> data = new HashMap<>();
-        data.put(MessagingConstants.TrackingKeys._XDM, "xdmjson");
+        data.put(TestConstants.TrackingKeys._XDM, "xdmjson");
 
         // test
         boolean updated = Messaging.addPushTrackingDetails(null, messageId, data);
@@ -222,13 +223,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, mockCustomActionId);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getData().toString());
@@ -258,13 +259,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, null);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getData().toString());
@@ -276,12 +277,12 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(null, true, "customAction");
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, messagingRequestEvents.size());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, edgeRequestEvents.size());
     }
@@ -292,12 +293,12 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(new Intent(), true, "customAction");
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, messagingRequestEvents.size());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, edgeRequestEvents.size());
     }
@@ -306,7 +307,7 @@ public class MessagingPublicAPITests {
     public void testHandleNotificationResponse_noXdmData() throws InterruptedException {
         // Parameters
         Intent intent = new Intent();
-        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mockMessageId");
+        intent.putExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mockMessageId");
 
         // expected
         String expectedMessagingEventData = "{\"messageId\":\"mockMessageId\",\"eventType\":\"pushTracking.applicationOpened\",\"applicationOpened\":true,\"adobe_xdm\":null}";
@@ -316,13 +317,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, null);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, edgeRequestEvents.size());
     }
@@ -361,13 +362,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, mockCustomActionId);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, edgeRequestEvents.size());
     }
@@ -386,13 +387,13 @@ public class MessagingPublicAPITests {
         TestHelper.sleep(500);
 
         // verify messaging request content event
-        final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.MESSAGING,
+        final List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
         // verify optimize request content events (initial offers fetch on app launch and offers fetch from refreshInAppMessages API)
-        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.OPTIMIZE,
+        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.OPTIMIZE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(2, optimizeRequestEvents.size());
         assertEquals(expectedOffersEventData.trim(), optimizeRequestEvents.get(1).getData().toString());
@@ -403,8 +404,8 @@ public class MessagingPublicAPITests {
     // --------------------------------------------------------------------------------------------
     private Intent getResponseIntent() {
         Intent intent = new Intent();
-        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mockMessageId");
-        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, "{\n            \"cjm\" :{\n              \"_experience\": {\n                \"customerJourneyManagement\": {\n                  \"messageExecution\": {\n                    \"messageExecutionID\": \"16-Sept-postman\",\n                    \"messageID\": \"567\",\n                    \"journeyVersionID\": \"some-journeyVersionId\",\n                    \"journeyVersionInstanceID\": \"someJourneyVersionInstanceID\"\n                  }\n                }\n              }\n            }\n          }");
+        intent.putExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mockMessageId");
+        intent.putExtra(TestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, "{\n            \"cjm\" :{\n              \"_experience\": {\n                \"customerJourneyManagement\": {\n                  \"messageExecution\": {\n                    \"messageExecutionID\": \"16-Sept-postman\",\n                    \"messageID\": \"567\",\n                    \"journeyVersionID\": \"some-journeyVersionId\",\n                    \"journeyVersionInstanceID\": \"someJourneyVersionInstanceID\"\n                  }\n                }\n              }\n            }\n          }");
         return intent;
     }
 }

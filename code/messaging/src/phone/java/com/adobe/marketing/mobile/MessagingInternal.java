@@ -58,7 +58,6 @@ class MessagingInternal extends Extension {
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
     private MessagingCacheUtilities messagingCacheUtilities;
-    private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
     private boolean initialMessageFetchComplete = false;
 
@@ -516,34 +515,25 @@ class MessagingInternal extends Extension {
         });
     }
 
-    public void handleInAppTrackingInfo(final Event event, final Map<String, Object> messageDetails) {
+    public void handleInAppTrackingInfo(final MessagingEdgeEventType eventType, final String interaction, final Message message) {
         final String datasetId = messagingState.getExperienceEventDatasetId();
         if (StringUtils.isNullOrEmpty(datasetId)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
             return;
         }
 
-        if (messageDetails == null || messageDetails.isEmpty()) {
-            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the experience info is missing.", SELF_TAG);
-            return;
-        }
-
-        final EventData eventData = event.getData();
-        final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
-        final String trackingType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
-
         // Create XDM data with tracking data
         final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(_XDM);
+        final Map<String, Object> xdm = (Map<String, Object>) message.details.get(_XDM);
         final Map<String, Object> xdmMixinsMap = (Map<String, Object>) xdm.get(MIXINS);
         final Map<String, Object> experienceXdmMap = (Map<String, Object>) xdmMixinsMap.get(EXPERIENCE);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType.toString());
         xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceXdmMap);
 
         // add iam mixin information if this is an interact eventType
-        if (eventType.equals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT) && !StringUtils.isNullOrEmpty(trackingType)) {
+        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT) && !StringUtils.isNullOrEmpty(interaction)) {
             final Map<String, Object> actionMap = new HashMap<>();
-            actionMap.put(XDMDataKeys.ACTION, trackingType);
+            actionMap.put(XDMDataKeys.ACTION, interaction);
             xdmMap.put(XDMDataKeys.XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME, actionMap);
         }
 
@@ -561,7 +551,7 @@ class MessagingInternal extends Extension {
         // Create the mask for storing event history
         final String[] mask = {MessagingConstants.EventMask.XDM.EVENT_TYPE, MessagingConstants.EventMask.XDM.MESSAGE_EXECUTION_ID, MessagingConstants.EventMask.XDM.TRACKING_ACTION};
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IN_APP_INTERACTION_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
                 .setEventData(xdmData)
                 .build();
 

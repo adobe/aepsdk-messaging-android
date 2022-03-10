@@ -131,6 +131,11 @@ final class MessagingConstants {
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
 
+                static final class EventType {
+                    static final String OPENED = "push.opened";
+                    static final String INTERACT = "push.interact";
+                }
+
                 private PushNotificationDetailsDataKeys() {
                 }
             }
@@ -227,8 +232,7 @@ final class MessagingConstants {
         static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS = "Retrieve message definitions";
-        static final String MESSAGING_IAM_TRACKING_EDGE_EVENT = "In-app message tracking edge event";
-        static final String MESSAGING_IAM_TRACKING_MESSAGING_EVENT = "In-app message tracking messaging event";
+        static final String MESSAGING_IN_APP_INTERACTION_EVENT = "In App tracking edge event";
     }
 
     static final class EventSource {

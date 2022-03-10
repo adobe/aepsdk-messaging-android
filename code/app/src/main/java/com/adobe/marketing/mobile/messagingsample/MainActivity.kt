@@ -19,6 +19,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
+import android.webkit.ValueCallback
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -467,10 +468,18 @@ class CustomDelegate : MessageDelegate() {
     override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
         fullscreenMessage?.also {
             this.currentMessage = fullscreenMessage
+            val message = (currentMessage?.parent) as? Message
+
+            // in-line handling of javascript calls
+            message?.handleJavascriptMessage("magic") { content ->
+                print("magical handling of our content from js! content is: $content")
+                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+            }
+
+            // if we're not showing the message now, we can save it for later
             showMessages.let {
-                val message = (currentMessage?.parent) as? Message
                 println("message was suppressed: ${message?.messageId}")
-                message?.track("message suppressed")
+                message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
             }
         }
         return showMessages
