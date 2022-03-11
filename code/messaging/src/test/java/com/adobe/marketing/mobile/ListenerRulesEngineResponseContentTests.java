@@ -53,7 +53,7 @@ public class ListenerRulesEngineResponseContentTests {
 
         // test
         listenerRulesEngineResponseContent.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(1)).queueEvent(mockEvent);
@@ -68,7 +68,7 @@ public class ListenerRulesEngineResponseContentTests {
 
         // test
         listenerRulesEngineResponseContent.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);
@@ -85,7 +85,7 @@ public class ListenerRulesEngineResponseContentTests {
 
         // test
         listenerRulesEngineResponseContent.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);

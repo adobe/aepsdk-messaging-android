@@ -299,7 +299,7 @@ public class MessagingInternalIAMPayloadTests {
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("payload", MessagingTestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -334,7 +334,7 @@ public class MessagingInternalIAMPayloadTests {
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("payload", MessagingTestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -371,8 +371,8 @@ public class MessagingInternalIAMPayloadTests {
         invalidPayloadConfig.isMissingRulesKey = true;
 
         // trigger event
-        List<Map> payload = TestUtils.generateMessagePayload(validPayloadConfig);
-        List<Map> invalidPayload = TestUtils.generateMessagePayload(invalidPayloadConfig);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
+        List<Map> invalidPayload = MessagingTestUtils.generateMessagePayload(invalidPayloadConfig);
         payload.addAll(invalidPayload);
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
@@ -419,7 +419,7 @@ public class MessagingInternalIAMPayloadTests {
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("payload", MessagingTestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks
@@ -459,7 +459,7 @@ public class MessagingInternalIAMPayloadTests {
         HashMap<String, Object> eventData = new HashMap<>();
         eventData.put("type", "personalization:decisions");
         eventData.put("requestEventId", "2E964037-E319-4D14-98B8-0682374E547B");
-        eventData.put("payload", TestUtils.generateMessagePayload(config));
+        eventData.put("payload", MessagingTestUtils.generateMessagePayload(config));
         eventData.put("requestId", "D158979E-0506-4968-8031-17A6A8A87DA8");
 
         // Mocks

@@ -35,7 +35,7 @@ class InAppNotificationHandler {
     private final ArrayList<String> imageAssetList = new ArrayList<>();
     private final Map<String, String> assetMap = new HashMap<>();
     private final Module messagingModule;
-    private final MessagingCacheUtilities cacheUtilities;
+    private final MessagingCacheUtilities messagingCacheUtilities;
     // package private
     final MessagingInternal parent;
     final OffersConfig offersConfig = new OffersConfig();
@@ -47,7 +47,7 @@ class InAppNotificationHandler {
      */
     InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
-        this.cacheUtilities = messagingCacheUtilities;
+        this.messagingCacheUtilities = messagingCacheUtilities;
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
@@ -65,7 +65,7 @@ class InAppNotificationHandler {
      * Generates and dispatches an event prompting the Optimize extension to fetch in-app messages.
      */
     void fetchMessages() {
-        final HashMap<String, Object> decisionScope = new HashMap<>();
+        final Map<String, String> decisionScope = new HashMap<>();
         // if we have an activity and placement id present in the manifest use the id's to retrieve offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the app manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
@@ -76,20 +76,20 @@ class InAppNotificationHandler {
         }
 
         // create event to be handled by the Optimize extension
-        final HashMap<String, Object> optimizeData = new HashMap<>();
-        final ArrayList<Map<String, Object>> decisionScopes = new ArrayList<>();
+        final Map<String, Object> optimizeData = new HashMap<>();
+        final List<Map<String, String>> decisionScopes = new ArrayList<>();
         decisionScopes.add(decisionScope);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
 
-        final Event messageFetchEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS, MessagingConstants.EventType.OPTIMIZE, MessagingConstants.EventSource.REQUEST_CONTENT)
+        final Event messageFetchEvent = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS, MessagingConstants.EventType.OPTIMIZE, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setEventData(optimizeData)
                 .build();
 
         // send event
         MobileCore.dispatchEvent(messageFetchEvent, new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) {
+            public void error(final ExtensionError extensionError) {
                 Log.warning(LOG_TAG, "%s - Error in dispatching event for refreshing messages from Optimize.", SELF_TAG);
             }
         });
@@ -241,13 +241,13 @@ class InAppNotificationHandler {
                 // add the found assets to the imageAssetList so only current assets will be cached when the
                 // RemoteDownloader is used to download the image assets.
                 final String imageAsset = extractImageAssetFromJson(ruleJsonObject);
-                if (cacheUtilities.assetIsDownloadable(imageAsset)) {
+                if (messagingCacheUtilities.assetIsDownloadable(imageAsset)) {
                     imageAssetList.add(imageAsset);
                 }
             }
         }
         // download and cache image assets
-        cacheUtilities.cacheImageAssets(imageAssetList);
+        messagingCacheUtilities.cacheImageAssets(imageAssetList);
         // create Rule objects from the rule jsons and load them into the RulesEngine
         for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
@@ -281,7 +281,7 @@ class InAppNotificationHandler {
             }
             final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
-            final Message message = new Message(parent, triggeredConsequence, mobileParameters, cacheUtilities.getAssetMap());
+            final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetMap());
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG,

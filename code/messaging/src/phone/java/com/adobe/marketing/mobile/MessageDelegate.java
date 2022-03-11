@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -48,9 +50,11 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     public boolean autoTrack = true;
     // internal properties
     MessagingInternal messagingInternal;
-    WebView jsWebView;
     Map<String, Object> details = new HashMap<>();
-    Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    // private property
+    private static Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private static WebView jsWebView;
+    private Handler handler;
 
     /**
      * Determines if the passed in {@code String} link is a deeplink. If not,
@@ -88,14 +92,28 @@ public class MessageDelegate implements FullscreenMessageDelegate {
             Log.trace(LOG_TAG, "Will not store the callback, no name was provided.");
             return;
         }
-        final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
-        final WebView jsWebView = new WebView(MobileCore.getApplication().getApplicationContext());
-        jsWebView.addJavascriptInterface(javascriptInterface, name);
-        final WebSettings settings = jsWebView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
-        this.jsWebView = jsWebView;
-        scriptHandlers.put(name, javascriptInterface);
+
+        if(scriptHandlers.get(name) != null) {
+            Log.trace(LOG_TAG, "Will not create a new WebViewJavascriptInterface, the name is already in use.");
+            return;
+        }
+
+        // create webview for javascript evaluation if needed, otherwise just add a new js interface to the existing webview
+        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if (jsWebView == null) {
+                    Log.trace(LOG_TAG, "Created new WebView for javascript evaluation.");
+                    jsWebView = new WebView(MobileCore.getApplication().getApplicationContext());
+                    final WebSettings settings = jsWebView.getSettings();
+                    settings.setJavaScriptEnabled(true);
+                    settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                }
+                final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
+                jsWebView.addJavascriptInterface(javascriptInterface, name);
+                scriptHandlers.put(name, javascriptInterface);
+            }
+        });
     }
 
     void evaluateJavascript(final String content) {

@@ -165,7 +165,7 @@ public class InAppNotificationHandlerTests {
         // setup
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -182,7 +182,7 @@ public class InAppNotificationHandlerTests {
         // setup
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 3;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
       
         // test
        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -202,8 +202,8 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig invalidPayloadConfig = new MessagePayloadConfig();
         invalidPayloadConfig.count = 1;
         invalidPayloadConfig.isMissingRulesKey = true;
-        List<Map> payload = TestUtils.generateMessagePayload(validPayloadConfig);
-        List<Map> invalidPayload = TestUtils.generateMessagePayload(invalidPayloadConfig);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
+        List<Map> invalidPayload = MessagingTestUtils.generateMessagePayload(invalidPayloadConfig);
         payload.addAll(invalidPayload);
         
         // test
@@ -222,7 +222,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.isMissingMessageId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -238,7 +238,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.isMissingMessageType = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -254,7 +254,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.isMissingMessageDetail = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -270,7 +270,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.hasEmptyPayload = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -296,7 +296,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.invalidActivityId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -312,7 +312,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.invalidPlacementId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -336,7 +336,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -360,7 +360,7 @@ public class InAppNotificationHandlerTests {
         config.count = 1;
         config.isUsingApplicationId = true;
         config.invalidApplicationId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -384,7 +384,7 @@ public class InAppNotificationHandlerTests {
         config.isUsingApplicationId = true;
         config.hasNoScopeInPayload = true;
 
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
@@ -403,7 +403,7 @@ public class InAppNotificationHandlerTests {
         // setup
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 
         // test
@@ -421,7 +421,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.invalidActivityId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 
         // test
@@ -439,7 +439,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.invalidPlacementId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 
         // test
@@ -461,7 +461,7 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 
         // test
@@ -484,7 +484,7 @@ public class InAppNotificationHandlerTests {
         config.count = 1;
         config.isUsingApplicationId = true;
         config.invalidApplicationId = true;
-        List<Map> payload = TestUtils.generateMessagePayload(config);
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 
         // test

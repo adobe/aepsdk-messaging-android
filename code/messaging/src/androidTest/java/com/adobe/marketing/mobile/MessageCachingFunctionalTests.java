@@ -49,7 +49,7 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
         Messaging.registerExtension();
         com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
 
@@ -69,16 +69,16 @@ public class MessageCachingFunctionalTests {
         messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
 
         // ensure cache is cleared before testing
-        MessagingFunctionalTestUtils.cleanCache();
+        MessagingTestUtils.cleanCache();
 
         // write an image file from resources to the image asset cache
-        MessagingFunctionalTestUtils.addImageAssetToCache();
+        MessagingTestUtils.addImageAssetToCache();
     }
 
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(TestConstants.MESSAGES_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY);
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -88,9 +88,9 @@ public class MessageCachingFunctionalTests {
     @Test
     public void testMessageCaching_ReceivedMessagePayload() {
         final String expectedCondition = "((foo EQUALS bar))";
-        final String expectedConsequence = MessagingFunctionalTestUtils.loadStringFromFile("expected_consequence_data.txt");
+        final String expectedConsequence = MessagingTestUtils.loadStringFromFile("expected_consequence_data.txt");
         // dispatch edge response event containing a messaging payload
-        MessagingFunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
         // wait for event and rules processing
         TestHelper.sleep(500);
         // verify rule payload was loaded into rules engine
@@ -110,13 +110,13 @@ public class MessageCachingFunctionalTests {
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.areMessagesCached());
         final Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
-        assertEquals(cachedMessages, MessagingFunctionalTestUtils.getVariantMapFromFile("optimize_payload.json"));
+        assertEquals(cachedMessages, MessagingTestUtils.getVariantMapFromFile("optimize_payload.json"));
     }
 
     @Test
     public void testMessageCaching_ReceivedInvalidMessagePayload() {
         // dispatch edge response event containing a messaging payload
-        MessagingFunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
         // wait for event and rules processing
         TestHelper.sleep(500);
         // verify rule payload was not loaded into rules engine

@@ -16,7 +16,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.doAnswer;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import android.app.Application;
@@ -38,9 +37,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class, ServiceProvider.class})
@@ -71,11 +76,14 @@ public class MessageDelegateTests {
     UIService mockUIService;
     @Mock
     WebView mockWebView;
+    @Mock
+    MessagingInternal mockMessagingInternal;
     @Captor
     ArgumentCaptor<ValueCallback<String>> valueCallbackArgumentCaptor;
 
     @Before
     public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -92,8 +100,10 @@ public class MessageDelegateTests {
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
 
+        mockWebView = PowerMockito.mock(WebView.class);
         PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebView);
-        PowerMockito.when(mockWebView.getSettings()).thenReturn(mockWebSettings);
+        when(mockWebView.getSettings()).thenReturn(mockWebSettings);
+        when(mockMessagingInternal.getExecutor()).thenReturn(Executors.newSingleThreadExecutor());
 
         messageDelegate = new MessageDelegate();
     }
@@ -162,16 +172,21 @@ public class MessageDelegateTests {
     @Test
     public void test_loadJavascript_WithScriptHandlersSet() {
         // setup
-        messageDelegate.handleJavascriptMessage("test", new AdobeCallback<String>() {
+        AdobeCallback<String> callback = new AdobeCallback<String>() {
             @Override
             public void call(String s) {
                 Assert.assertEquals("hello world", s);
             }
-        });
+        };
+        // set js webview
+        Whitebox.setInternalState(MessageDelegate.class, "jsWebView", new WebView(context));
+        // set scriptHandlers map
+        Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+        scriptHandlers.put("test", new WebViewJavascriptInterface(callback));
+        Whitebox.setInternalState(MessageDelegate.class, "scriptHandlers", scriptHandlers);
 
         // test
         messageDelegate.evaluateJavascript("function test(hello world) { print(arg); }");
-
         // verify evaluate javascript called
         verify(mockWebView, times(1)).evaluateJavascript(anyString(), valueCallbackArgumentCaptor.capture());
         ValueCallback<String> valueCallback = valueCallbackArgumentCaptor.getValue();

@@ -53,8 +53,8 @@ public class MessagePayloadCachingTests {
     @Test
     public void testGetCachedMessages() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = TestUtils.getMapFromFile("show_once");
-        final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("show_once.json").toURI());
+        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("show_once.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
         final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
@@ -89,7 +89,7 @@ public class MessagePayloadCachingTests {
     @Test
     public void testGetCachedMessages_WhenCacheMessageIsInvalid() throws URISyntaxException {
         // setup
-        final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("invalid.json").toURI());
+        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("invalid.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
         final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
@@ -102,8 +102,8 @@ public class MessagePayloadCachingTests {
     @Test
     public void testCacheMessagePayload() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = TestUtils.getMapFromFile("show_once");
-        final File cachedMessageLocation = new File(TestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
+        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final File cachedMessageLocation = new File(MessagingTestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
         when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);

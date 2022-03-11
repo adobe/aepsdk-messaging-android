@@ -209,11 +209,11 @@ public class TestHelper {
      * @throws InterruptedException
      */
     public static Map<String, Object> getSharedStateFor(final String stateOwner, int timeout) throws InterruptedException {
-        Event event = new Event.Builder("Get Shared State Request", TestConstants.EventType.MONITOR,
-                TestConstants.EventSource.SHARED_STATE_REQUEST)
+        Event event = new Event.Builder("Get Shared State Request", MessagingTestConstants.EventType.MONITOR,
+                MessagingTestConstants.EventSource.SHARED_STATE_REQUEST)
                 .setEventData(new HashMap<String, Object>() {
                     {
-                        put(TestConstants.EventDataKey.STATE_OWNER, stateOwner);
+                        put(MessagingTestConstants.EventDataKey.STATE_OWNER, stateOwner);
                     }
                 })
                 .build();

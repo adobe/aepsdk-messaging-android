@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;

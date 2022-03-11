@@ -49,8 +49,8 @@ public class E2EFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingFunctionalTestUtils.cleanCache();
-        MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
+        MessagingTestUtils.cleanCache();
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
 
         Messaging.registerExtension();
         Optimize.registerExtension();
@@ -61,7 +61,7 @@ public class E2EFunctionalTests {
         MobileCore.start(new AdobeCallback() {
             @Override
             public void call(Object o) {
-                Map<String, Object> testConfig = MessagingFunctionalTestUtils.getMapFromFile("functionalTestConfigStage.json");
+                Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
                 MobileCore.updateConfiguration(testConfig);
                 // wait for configuration to be set
                 try {
@@ -95,21 +95,21 @@ public class E2EFunctionalTests {
         assertTrue(MonitorExtension.waitForRulesToBeLoaded(2, "Messaging"));
 
         // verify messaging request content event from refreshInAppMessages API call
-        final List<Event> messagingRequestEvents = getDispatchedEventsWith(TestConstants.EventType.MESSAGING,
+        final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, messagingRequestEvents.size());
         final Event messagingRequestEvent = messagingRequestEvents.get(0);
         assertEquals(expectedMessagingEventData, messagingRequestEvent.getData().toString());
 
         // verify optimize request content event, 2 events expected due to initial offers fetch + refreshInAppMessages api call
-        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(TestConstants.EventType.OPTIMIZE,
+        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.OPTIMIZE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(2, optimizeRequestEvents.size());
         final Event optimizeRequestEvent = optimizeRequestEvents.get(0);
         assertEquals(expectedOptimizeEventData, optimizeRequestEvent.getData().toString());
 
         // verify edge personalization decision event, 2 events expected due to initial offers fetch + refreshInAppMessages api call
-        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(TestConstants.EventType.EDGE, TestConstants.EventSource.PERSONALIZATION_DECISIONS);
+        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS);
         assertEquals(2, edgePersonalizationDecisionsEvents.size()); // initial messages fetch + refreshInAppMessage api
         final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
         assertNotNull(edgePersonalizationDecisionEvent.getData());
