@@ -14,14 +14,14 @@ package com.adobe.marketing.mobile;
 /**
  * Exception indicating that a required field is missing from the payload definition for a {@code InAppNotification} object.
  */
-class MessageRequiredFieldMissingException extends Exception {
+final class MessageRequiredFieldMissingException extends Exception {
 
     /**
      * Constructor.
      *
      * @param message {@link String} containing the message for the new exception
      */
-    protected MessageRequiredFieldMissingException(final String message) {
+    MessageRequiredFieldMissingException(final String message) {
         super(message);
     }
 }

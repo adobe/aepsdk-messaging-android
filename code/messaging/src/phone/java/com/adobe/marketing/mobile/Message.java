@@ -15,6 +15,8 @@ package com.adobe.marketing.mobile;
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import android.webkit.WebView;
+
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
@@ -33,7 +35,7 @@ import java.util.Map;
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
     private final AEPMessage aepMessage;
-    private final FullscreenMessageDelegate customDelegate;
+    private final FullscreenMessageDelegate fullscreenMessageDelegate;
 
     /**
      * Constructor.
@@ -42,44 +44,38 @@ public class Message extends MessageDelegate {
      * <p>
      * The consequence {@code Map} for a {@code Message} is required to have valid values for the following fields:
      * <ul>
-     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@link String} containing the message ID</li>
+     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
-     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Variant>} containing details of the Message to be displayed</li>
+     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
      * </ul>
      *
      * @param parent             {@link MessagingInternal} instance that created this Message
-     * @param consequence        {@link Map} containing a {@code Message} defining payload
-     * @param rawMessageSettings {@link Map} contating the raw message settings found in the "mobileParameters" present in the rule consequence
-     * @param assetMap           {@link Map} containing a mapping of a remote image asset URL and it's cached location
+     * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
+     * @param rawMessageSettings {@code Map<String, Object>} contating the raw message settings found in the "mobileParameters" present in the rule consequence
+     * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingInternal parent, final Map consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+    public Message(final MessagingInternal parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
         messagingInternal = parent;
 
         final String consequenceType = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
 
         if (!MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
-            Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"type\" is (%s) should be of type (cjmiam).", SELF_TAG,
-                    consequenceType);
+            Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", SELF_TAG,
+                    consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
-        details = (Map) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        details = (Map<String, Object>) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
         if (MessagingUtils.isMapNullOrEmpty(details)) {
             Log.debug(MessagingConstants.LOG_TAG,
-                    "%s - Invalid consequence. Required field \"detail\" is null or empty.", SELF_TAG);
+                    "%s - Invalid consequence (%s). Required field \"detail\" is null or empty.", SELF_TAG, consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        final Map xdm = (Map) details.get(MessagingConstants.TrackingKeys._XDM);
-        final Map mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
-        final Map experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
-        final Map cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
-        final Map messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
-        messageId = MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
-
+        messageId = getMessageId(details);
         if (StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(LOG_TAG, "%s - Invalid consequence. Required field \"id\" is null or empty.", SELF_TAG);
+            Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"id\" is null or empty.", SELF_TAG, consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
@@ -92,19 +88,30 @@ public class Message extends MessageDelegate {
 
         final MessageSettings settings;
         AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
-        if (rawMessageSettings != null && !rawMessageSettings.isEmpty()) {
+        if (!MessagingUtils.isMapNullOrEmpty(rawMessageSettings)) {
             settings = addMessageSettings(messageSettingsBuilder, rawMessageSettings);
         } else {
             settings = messageSettingsBuilder.build();
         }
 
-        customDelegate = ServiceProvider.getInstance().getMessageDelegate();
-        if (customDelegate != null) {
-            aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, customDelegate, false, settings);
-        } else {
-            aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, false, settings);
-        }
+        fullscreenMessageDelegate = ServiceProvider.getInstance().getMessageDelegate() != null ? ServiceProvider.getInstance().getMessageDelegate() : this;
+        aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, fullscreenMessageDelegate, false, settings);
         aepMessage.setLocalAssetsMap(assetMap);
+    }
+
+    /**
+     * Gets the message id {@code String} contained in the message execution payload.
+     *
+     * @param messageDetails {@code Map<String, Object>} containing the message details
+     * @return {@code String} containing the message id or null if none was found
+     */
+    private String getMessageId(Map<String, Object> messageDetails) {
+        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(MessagingConstants.TrackingKeys._XDM);
+        final Map<String, Object> mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map<String, Object>) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
+        final Map<String, Object> experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map<String, Object>) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+        final Map<String, Object> cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map<String, Object>) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
+        final Map<String, Object> messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map<String, Object>) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
+        return MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
     }
 
     /**
@@ -166,7 +173,7 @@ public class Message extends MessageDelegate {
      * }
      * }
      */
-    private MessageSettings addMessageSettings(AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
+    private MessageSettings addMessageSettings(final AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;
         String backdropColor;
         float backdropOpacity;
@@ -174,88 +181,88 @@ public class Message extends MessageDelegate {
         boolean uiTakeover;
         MessageAlignment verticalAlign, horizontalAlign;
         MessageAnimation displayAnimation, dismissAnimation;
-        Map<MessageGesture, String> gestureStringMap = new HashMap<>();
+        Map<MessageGesture, String> gestureMap = new HashMap<>();
 
-        if (rawSettings.get(MobileParametersKeys.WIDTH) == null) {
+        if (rawSettings.get(MobileParametersKeys.WIDTH) != null) {
+            width = (int) rawSettings.get(MobileParametersKeys.WIDTH);
+        } else {
             width = 100;
-        } else {
-            width = Integer.parseInt(rawSettings.get(MobileParametersKeys.WIDTH).toString());
         }
 
-        if (rawSettings.get(MobileParametersKeys.HEIGHT) == null) {
+        if (rawSettings.get(MobileParametersKeys.HEIGHT) != null) {
+            height = (int) rawSettings.get(MobileParametersKeys.HEIGHT);
+        } else {
             height = 100;
-        } else {
-            height = Integer.parseInt(rawSettings.get(MobileParametersKeys.HEIGHT).toString());
         }
 
-        if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) == null) {
-            verticalAlign = MessageAlignment.CENTER;
-        } else {
+        if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) != null) {
             verticalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN)).toUpperCase());
+        } else {
+            verticalAlign = MessageAlignment.CENTER;
         }
 
-        if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) == null) {
+        if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) != null) {
+            verticalInset = (int) rawSettings.get(MobileParametersKeys.VERTICAL_INSET);
+        } else {
             verticalInset = 0;
-        } else {
-            verticalInset = Integer.parseInt(rawSettings.get(MobileParametersKeys.VERTICAL_INSET).toString());
         }
 
-        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) == null) {
-            horizontalAlign = MessageAlignment.CENTER;
-        } else {
+        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) != null) {
             horizontalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN)).toUpperCase());
+        } else {
+            horizontalAlign = MessageAlignment.CENTER;
         }
 
-        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) == null) {
+        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) != null) {
+            horizontalInset = (int) rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET);
+        } else {
             horizontalInset = 0;
-        } else {
-            horizontalInset = Integer.parseInt(rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET).toString());
         }
 
-        if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) == null) {
-            displayAnimation = MessageAnimation.NONE;
-        } else {
+        if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) != null) {
             displayAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION)).toUpperCase());
+        } else {
+            displayAnimation = MessageAnimation.NONE;
         }
 
-        if (rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION) == null) {
-            dismissAnimation = MessageAnimation.NONE;
-        } else {
+        if (rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION) != null) {
             dismissAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION)).toUpperCase());
+        } else {
+            dismissAnimation = MessageAnimation.NONE;
         }
 
-        if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) == null) {
-            backdropColor = "#FFFFFF";
-        } else {
+        if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) != null) {
             backdropColor = (String) rawSettings.get(MobileParametersKeys.BACKDROP_COLOR);
+        } else {
+            backdropColor = "#FFFFFF";
         }
 
-        if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) == null) {
-            backdropOpacity = 0.0f;
-        } else {
+        if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) != null) {
             final double opacity = ((Double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY));
             backdropOpacity = (float) opacity;
+        } else {
+            backdropOpacity = 0.0f;
         }
 
-        if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) == null) {
-            cornerRadius = 0.0f;
-        } else {
-            final int radius = ((Integer) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
+        if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) != null) {
+            final double radius = ((Double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
             cornerRadius = (float) radius;
+        } else {
+            cornerRadius = 0.0f;
         }
 
-        if (rawSettings.get(MobileParametersKeys.UI_TAKEOVER) == null) {
-            uiTakeover = true;
+        if (rawSettings.get(MobileParametersKeys.UI_TAKEOVER) != null) {
+            uiTakeover = (boolean) rawSettings.get(MobileParametersKeys.UI_TAKEOVER);
         } else {
-            uiTakeover = Boolean.getBoolean(rawSettings.get(MobileParametersKeys.UI_TAKEOVER).toString());
+            uiTakeover = true;
         }
 
         // we need to convert key strings present in the gestures map to MessageGesture enum keys
         final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(MobileParametersKeys.GESTURES);
-        if (stringMap != null && !stringMap.isEmpty()) {
-            for (Map.Entry<String, String> entry : stringMap.entrySet()) {
+        if (!MessagingUtils.isMapNullOrEmpty(stringMap)) {
+            for (final Map.Entry<String, String> entry : stringMap.entrySet()) {
                 final MessageGesture gesture = MessageGesture.get(entry.getKey());
-                gestureStringMap.put(gesture, entry.getValue());
+                gestureMap.put(gesture, entry.getValue());
             }
         }
 
@@ -271,7 +278,7 @@ public class Message extends MessageDelegate {
                 .setBackdropOpacity(backdropOpacity)
                 .setCornerRadius(cornerRadius)
                 .setUiTakeover(uiTakeover)
-                .setGestures(gestureStringMap)
+                .setGestures(gestureMap)
                 .build();
     }
 }

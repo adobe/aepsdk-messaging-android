@@ -13,21 +13,20 @@
 package com.adobe.marketing.mobile;
 
 public enum MessagingEdgeEventType {
-    IN_APP_DISMISS(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS),
-    IN_APP_INTERACT(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT),
-    IN_APP_TRIGGER(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER),
-    IN_APP_DISPLAY(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY),
-    PUSH_APPLICATION_OPENED(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED),
-    PUSH_CUSTOM_ACTION(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.INTERACT);
+    IN_APP_DISMISS(0),
+    IN_APP_INTERACT(1),
+    IN_APP_TRIGGER(2),
+    IN_APP_DISPLAY(3),
+    PUSH_APPLICATION_OPENED(4),
+    PUSH_CUSTOM_ACTION(5);
 
-    private final String value;
+    final int value;
 
-    MessagingEdgeEventType(String value) {
+    MessagingEdgeEventType(int value){
         this.value = value;
     }
 
-    @Override
-    public String toString() {
+    public int getValue() {
         return value;
     }
 }

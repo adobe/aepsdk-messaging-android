@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
-    /* JSON - Map conversion helpers */
+    /* JSON conversion helpers */
 
     /**
      * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
@@ -271,5 +271,36 @@ class MessagingUtils {
         }
 
         return platformServices.getJsonUtilityService();
+    }
+
+    // ========================================================================================
+    // Event Dispatching
+    // ========================================================================================
+    /**
+     * Dispatches an event with the given parameters.
+     *
+     * @param eventName a {@code String} containing the name of the event to be dispatched
+     * @param eventType a {@code String} containing the type of the event to be dispatched
+     * @param eventSource a {@code String} containing the source of the event to be dispatched
+     * @param data a {@link Map} containing the data of the event to be dispatched
+     * @param mask a {@link String[]} containing an optional event mask
+     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
+     */
+    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String[] mask, final String errorMessage) {
+        final Event event = new Event.Builder(eventName, eventType, eventSource, mask)
+                    .setEventData(data)
+                    .build();
+
+        // send event
+        MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
+            @Override
+            public void error(final ExtensionError extensionError) {
+                Log.warning(LOG_TAG, "sendEvent - %s: %s", errorMessage, extensionError);
+            }
+        });
+    }
+
+    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
+       sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
     }
 }

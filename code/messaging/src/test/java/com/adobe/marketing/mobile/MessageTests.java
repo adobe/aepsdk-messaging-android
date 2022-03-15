@@ -176,7 +176,7 @@ public class MessageTests {
         }
 
         // set custom delegate in Message object
-        Whitebox.setInternalState(message, "customDelegate", customDelegate);
+        Whitebox.setInternalState(message, "fullscreenMessageDelegate", customDelegate);
 
         // test
         message.show();

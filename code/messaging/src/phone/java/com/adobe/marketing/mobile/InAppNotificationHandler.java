@@ -69,10 +69,10 @@ class InAppNotificationHandler {
         // if we have an activity and placement id present in the manifest use the id's to retrieve offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the app manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
-            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForActivityAndPlacement());
+            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForActivityAndPlacement(offersConfig.activityId, offersConfig.placementId));
         } else { // otherwise use the application identifier
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to retrieve offers.", SELF_TAG, offersConfig.applicationId);
-            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForAppId());
+            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForAppId(offersConfig.applicationId));
         }
 
         // create event to be handled by the Optimize extension
@@ -82,31 +82,28 @@ class InAppNotificationHandler {
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
         optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
 
-        final Event messageFetchEvent = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS, MessagingConstants.EventType.OPTIMIZE, MessagingConstants.EventSource.REQUEST_CONTENT)
-                .setEventData(optimizeData)
-                .build();
-
         // send event
-        MobileCore.dispatchEvent(messageFetchEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(final ExtensionError extensionError) {
-                Log.warning(LOG_TAG, "%s - Error in dispatching event for refreshing messages from Optimize.", SELF_TAG);
-            }
-        });
+        MessagingUtils.sendEvent(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
+                MessagingConstants.EventType.OPTIMIZE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                optimizeData,
+                MessagingConstants.EventDispatchErrors.OPTIMIZE_OFFER_RETRIEVAL_ERROR);
     }
 
     /**
-     * Takes the retrieved activity and placement id's and returns an encoded string in the format expected
+     * Takes the retrieved activity and placement id's and returns a base54 encoded JSON string in the format expected
      * by the Optimize extension for retrieving offers
      *
+     * @param activityId  a {@code String} containing the activity id
+     * @param placementId a {@code String} containing the placement id
      * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
      */
-    private String getEncodedDecisionScopeForActivityAndPlacement() {
+    static String getEncodedDecisionScopeForActivityAndPlacement(final String activityId, final String placementId) {
         final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\",\"%s\":\"%s\",\"itemCount\":%s}",
                 MessagingConstants.EventDataKeys.Optimize.ACTIVITY_ID,
-                offersConfig.activityId,
+                activityId,
                 MessagingConstants.EventDataKeys.Optimize.PLACEMENT_ID,
-                offersConfig.placementId,
+                placementId,
                 MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT)
                 .getBytes(StandardCharsets.UTF_8);
 
@@ -115,20 +112,22 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Takes the retrieved application identifier and returns an encoded string in the format expected
+     * Takes the retrieved application identifier and returns a base64 encoded JSON string in the format expected
      * by the Optimize extension for retrieving offers
      *
+     * @param applicationId a {@code String} containing the application id
      * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
      */
-    private String getEncodedDecisionScopeForAppId() {
-        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\"}", MessagingConstants.EventDataKeys.Optimize.XDM_NAME, offersConfig.applicationId).getBytes(StandardCharsets.UTF_8);
+    static String getEncodedDecisionScopeForAppId(final String applicationId) {
+        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\"}", MessagingConstants.EventDataKeys.Optimize.XDM_NAME, applicationId).getBytes(StandardCharsets.UTF_8);
 
         final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
         return new String(encodingService.base64Encode(decisionScopeBytes));
     }
 
     /**
-     * Converts the rules json present in the Edge response event payload into a list of rules then loads them in the {@link RulesEngine}.
+     * Handles the Offers notification payload by extracting the rules json objects present in the Edge response event payload
+     * into a list of {@code Map} objects. The valid rule json objects are then registered in the {@link RulesEngine}.
      *
      * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Optimize extension.
      */
@@ -146,15 +145,17 @@ class InAppNotificationHandler {
             final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
             final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
             try { // need to convert the payload map depending on the source of the offers (optimize response event or previously cached offers)
+                activity = new HashMap<>();
                 if (activityMap instanceof Variant) {
-                    activity = ((Variant) activityMap).getStringMap();
+                    activity.putAll(((Variant) activityMap).getStringMap());
                 } else {
-                    activity = (Map<String, String>) activityMap;
+                    activity.putAll((Map<String, String>) activityMap);
                 }
+                placement = new HashMap<>();
                 if (placementMap instanceof Variant) {
-                    placement = ((Variant) placementMap).getStringMap();
+                    placement.putAll(((Variant) placementMap).getStringMap());
                 } else {
-                    placement = (Map<String, String>) placementMap;
+                    placement.putAll((Map<String, String>) placementMap);
                 }
             } catch (final VariantException e) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
@@ -169,7 +170,7 @@ class InAppNotificationHandler {
             }
         } else { // otherwise use the application identifier to validate offers
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate offers.", SELF_TAG, offersConfig.applicationId);
-            final AndroidEncodingService androidEncodingService = (AndroidEncodingService) MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
+            final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
             String decisionScope;
             try {
                 Object rawScope = payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE);
@@ -179,9 +180,9 @@ class InAppNotificationHandler {
                 }
                 final byte[] decodedScope;
                 if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
-                    decodedScope = androidEncodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
+                    decodedScope = encodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
                 } else {
-                    decodedScope = androidEncodingService.base64Decode((String) rawScope);
+                    decodedScope = encodingService.base64Decode((String) rawScope);
                 }
                 final String decodedScopeString = new String(decodedScope);
                 final JSONObject decisionScopeJson = new JSONObject(decodedScopeString);
@@ -201,34 +202,45 @@ class InAppNotificationHandler {
             }
         }
 
-
-        List<HashMap<String, Variant>> items = new ArrayList<>();
+        // extract the items from the offers payload then attempt to register the contained rules
+        List<Map<String, Variant>> items = new ArrayList<>();
         final Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
         if (itemsList instanceof Variant) {
             final List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
             for (final Object element : variantList) {
                 final MapVariant mapVariant = (MapVariant) element;
-                items.add((HashMap<String, Variant>) mapVariant.getVariantMap());
+                items.add(mapVariant.getVariantMap());
             }
         } else {
-            items = (List<HashMap<String, Variant>>) itemsList;
+            items = (List<Map<String, Variant>>) itemsList;
         }
 
-        final ArrayList<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
-        final ArrayList<Rule> parsedRules = new ArrayList<>();
+        registerRules(items);
+    }
+
+    /**
+     * Validates each {@link Rule} in the items {@code List} then adds all valid rules to the {@link RulesEngine}.
+     * Any image assets found are cached using the {@link MessagingCacheUtilities}.
+     *
+     * @param items a {@link List<Map<String, Variant>>} containing a rule payload.
+     */
+    private void registerRules(final List<Map<String, Variant>> items) {
+        final List<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
+        final List<Rule> parsedRules = new ArrayList<>();
         // Loop through each rule in the payload and collect the rule json's present.
         // Additionally, extract the image assets and build the asset list for asset caching.
         for (final Map<String, Variant> currentItem : items) {
             final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
             final Map<String, String> data;
             try {
+                data = new HashMap<>();
                 if (dataObject instanceof Variant) {
-                    data = ((Variant) dataObject).getStringMap();
+                    data.putAll(((Variant) dataObject).getStringMap());
                 } else {
-                    data = (Map<String, String>) dataObject;
+                    data.putAll((Map<String, String>) dataObject);
                 }
             } catch (final VariantException e) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when converting s VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
+                Log.warning(LOG_TAG, "%s - Exception occurred when converting VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
                 return;
             }
             final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
@@ -236,18 +248,13 @@ class InAppNotificationHandler {
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
-
-                // Parse the "img src" from each html payload in the current rule being processed then
-                // add the found assets to the imageAssetList so only current assets will be cached when the
-                // RemoteDownloader is used to download the image assets.
-                final String imageAsset = extractImageAssetFromJson(ruleJsonObject);
-                if (messagingCacheUtilities.assetIsDownloadable(imageAsset)) {
-                    imageAssetList.add(imageAsset);
-                }
+                parseImageAssetsFromRuleJson(ruleJsonObject);
             }
         }
-        // download and cache image assets
+
+        // download and cache image assets after all items are processed
         messagingCacheUtilities.cacheImageAssets(imageAssetList);
+
         // create Rule objects from the rule jsons and load them into the RulesEngine
         for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
@@ -255,8 +262,22 @@ class InAppNotificationHandler {
                 parsedRules.add(parsedRule);
             }
         }
-        Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %s rules", SELF_TAG, parsedRules.size());
+        Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %d rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
+    }
+
+    /**
+     * Parses the "img src" from each html payload in the passed in {@link JsonUtilityService.JSONObject}
+     * then adds the found assets to the imageAssetList {@code List} so only current assets will be cached when the
+     * {@link RemoteDownloader} is used to download image assets.
+     *
+     * @param ruleJsonObject a {@code JsonUtilityService.JSONObject} containing a rule payload.
+     */
+    private void parseImageAssetsFromRuleJson(final JsonUtilityService.JSONObject ruleJsonObject) {
+        final String imageAssetUrl = extractImageAssetFromJson(ruleJsonObject);
+        if (messagingCacheUtilities.assetIsDownloadable(imageAssetUrl)) {
+            imageAssetList.add(imageAssetUrl);
+        }
     }
 
     /**
@@ -265,7 +286,7 @@ class InAppNotificationHandler {
      * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
      */
     void createInAppMessage(final Event rulesEvent) {
-        final Map triggeredConsequence = (Map) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
         if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
             Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
@@ -273,13 +294,13 @@ class InAppNotificationHandler {
         }
 
         try {
-            final Map details = (Map) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             if (MessagingUtils.isMapNullOrEmpty(details)) {
                 Log.warning(LOG_TAG,
                         "%s - Unable to create an in-app message, the consequence details are null or empty", SELF_TAG);
                 return;
             }
-            final Map mobileParameters = (Map) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
+            final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
             final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetMap());
             message.show();
@@ -292,19 +313,19 @@ class InAppNotificationHandler {
     /**
      * Extracts the image asset url as a {@code String} from the given in-app message payload.
      *
-     * @param ruleJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
+     * @param payloadJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
      * @return {@code String} containing the image asset url.
      */
-    private String extractImageAssetFromJson(final JsonUtilityService.JSONObject ruleJson) {
-        if (ruleJson == null || ruleJson.length() <= 0) {
+    private String extractImageAssetFromJson(final JsonUtilityService.JSONObject payloadJson) {
+        if (payloadJson == null || payloadJson.length() <= 0) {
             Log.warning(LOG_TAG,
                     "%s - Unable to extract the image asset, the provided json is null or empty.");
             return null;
         }
         try {
-            final JsonUtilityService.JSONArray rulesJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-            final JsonUtilityService.JSONObject json = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
-            final JsonUtilityService.JSONArray consequenceJsonArray = json.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            final JsonUtilityService.JSONArray rulesJsonArray = payloadJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
+            final JsonUtilityService.JSONObject ruleJson = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
+            final JsonUtilityService.JSONArray consequenceJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
             final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
             final JsonUtilityService.JSONObject detail = consequence.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             final String html = detail.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
@@ -317,9 +338,9 @@ class InAppNotificationHandler {
                 return null;
             }
             // matcher.group{4} will contain the image asset url
-            final String imageAsset = matcher.group(4);
-            Log.trace(LOG_TAG, "Found image asset in html: %s", imageAsset);
-            return imageAsset;
+            final String imageAssetUrl = matcher.group(4);
+            Log.trace(LOG_TAG, "Found image asset in html: %s", imageAssetUrl);
+            return imageAssetUrl;
         } catch (final JsonException jsonException) {
             Log.warning(LOG_TAG,
                     "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());

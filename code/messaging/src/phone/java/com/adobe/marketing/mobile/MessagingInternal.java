@@ -25,8 +25,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
 import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.FCM;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.COLLECT;
@@ -449,15 +449,11 @@ class MessagingInternal extends Extension {
         getApi().setSharedEventState(map, event, errorCallback);
 
         // Send an edge event with profile data as event data
-        final Event profileEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(eventData)
-                .build();
-        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
-            }
-        });
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                eventData,
+                MessagingConstants.EventDispatchErrors.PUSH_PROFILE_UPDATE_ERROR);
     }
 
     public void handleTrackingInfo(final Event event) {
@@ -503,16 +499,12 @@ class MessagingInternal extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), null)
-                .setEventData(xdmData)
-                .build();
-
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
+        // dispatch push tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                MessagingConstants.EventDispatchErrors.PUSH_TRACKING_ERROR);
     }
 
     public void handleInAppTrackingInfo(final MessagingEdgeEventType eventType, final String interaction, final Message message) {
@@ -551,16 +543,13 @@ class MessagingInternal extends Extension {
         // Create the mask for storing event history
         final String[] mask = {MessagingConstants.EventMask.XDM.EVENT_TYPE, MessagingConstants.EventMask.XDM.MESSAGE_EXECUTION_ID, MessagingConstants.EventMask.XDM.TRACKING_ACTION};
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IN_APP_INTERACTION_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
-                .setEventData(xdmData)
-                .build();
-
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
+        // dispatch in-app tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.IAM_INTERACTION_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                mask,
+                MessagingConstants.EventDispatchErrors.IN_APP_TRACKING_ERROR);
     }
 
     public void processHubSharedState(Event event) {

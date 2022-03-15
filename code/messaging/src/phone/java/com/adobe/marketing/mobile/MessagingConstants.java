@@ -51,17 +51,17 @@ final class MessagingConstants {
         static final String COLLECT = "collect";
     }
 
-    final class MANIFEST_METADATA_KEYS {
+    final class ManifestMetadataKeys {
         static final String ACTIVITY_ID = "activityId";
         static final String PLACEMENT_ID = "placementId";
     }
 
-    final class JSON_VALUES {
+    final class JsonValues {
         static final String FCM = "fcm";
         static final String ECID = "ECID";
     }
 
-    final class MESSAGING_SCHEME {
+    final class MessagingScheme {
         static final String ADOBE_INAPP = "adbinapp";
         static final String PATH_CANCEL = "cancel";
         static final String PATH_CONFIRM = "confirm";
@@ -141,14 +141,14 @@ final class MessagingConstants {
             }
 
             final class IAMDetailsDataKeys {
-                private IAMDetailsDataKeys() {
-                }
-
                 final class EventType {
                     static final String DISMISS = "inapp.dismiss";
                     static final String INTERACT = "inapp.interact";
                     static final String TRIGGER = "inapp.trigger";
                     static final String DISPLAY = "inapp.display";
+                }
+
+                private IAMDetailsDataKeys() {
                 }
             }
         }
@@ -228,16 +228,23 @@ final class MessagingConstants {
     }
 
     final class EventName {
-        static final String MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-        static final String MESSAGING_PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
-        static final String MESSAGING_PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
-        static final String RETRIEVE_MESSAGE_DEFINITIONS = "Retrieve message definitions";
-        static final String MESSAGING_IN_APP_INTERACTION_EVENT = "In App tracking edge event";
+        static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+        static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        static final String RETRIEVE_MESSAGE_DEFINITIONS_EVENT = "Retrieve message definitions";
+        static final String IAM_INTERACTION_EVENT = "In App tracking edge event";
     }
 
     final class EventSource {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+    }
+
+    final class EventDispatchErrors {
+        static final String OPTIMIZE_OFFER_RETRIEVAL_ERROR = "Error in dispatching event for refreshing messages from Optimize";
+        static final String PUSH_PROFILE_UPDATE_ERROR = "Error in dispatching event for updating the push profile details";
+        static final String PUSH_TRACKING_ERROR = "Error in dispatching event for push notification tracking";
+        static final String IN_APP_TRACKING_ERROR = "Error in dispatching event for in-app notification tracking";
     }
 
     final class EventDataValues {

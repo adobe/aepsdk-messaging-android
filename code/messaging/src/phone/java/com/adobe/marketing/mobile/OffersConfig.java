@@ -54,8 +54,8 @@ final class OffersConfig {
 
         // use retrieved activity id and placement id if they are present in the manifest metadata
         if (applicationInfo.metaData != null) {
-            final String retrievedActivityId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.ACTIVITY_ID);
-            final String retrievedPlacementId = applicationInfo.metaData.getString(MessagingConstants.MANIFEST_METADATA_KEYS.PLACEMENT_ID);
+            final String retrievedActivityId = applicationInfo.metaData.getString(MessagingConstants.ManifestMetadataKeys.ACTIVITY_ID);
+            final String retrievedPlacementId = applicationInfo.metaData.getString(MessagingConstants.ManifestMetadataKeys.PLACEMENT_ID);
             if (!StringUtils.isNullOrEmpty(retrievedActivityId) && !StringUtils.isNullOrEmpty(retrievedPlacementId)) {
                 activityId = retrievedActivityId;
                 placementId = retrievedPlacementId;

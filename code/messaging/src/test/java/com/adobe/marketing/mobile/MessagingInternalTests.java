@@ -377,7 +377,7 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, event.getName());
+        assertEquals(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT, event.getName());
         assertEquals(MessagingConstants.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
         assertEquals(expectedEventData, event.getData().toString());
