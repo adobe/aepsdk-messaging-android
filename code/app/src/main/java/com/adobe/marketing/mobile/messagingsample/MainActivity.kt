@@ -471,9 +471,8 @@ class CustomDelegate : MessageDelegate() {
             val message = (currentMessage?.parent) as? Message
 
             // in-line handling of javascript calls
-            message?.handleJavascriptMessage("test") { content ->
-                print("content is: $content")
-                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+            message?.handleJavascriptMessage("magic") { content ->
+                println("magical handling of our content from js! content is: $content")
             }
 
             // if we're not showing the message now, we can save it for later

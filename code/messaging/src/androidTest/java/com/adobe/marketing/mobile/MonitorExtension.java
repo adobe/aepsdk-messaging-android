@@ -141,7 +141,7 @@ class MonitorExtension extends Extension {
     }
 
     public static boolean waitForRulesToBeLoaded(final int expectedModuleRuleCount, final String moduleToWaitFor) {
-        int MAX_WAIT_TIME = 10000;
+        int MAX_WAIT_TIME = 5000;
         int WAIT_INCREMENT = 50;
         int totalWaitTime = 0;
         ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();

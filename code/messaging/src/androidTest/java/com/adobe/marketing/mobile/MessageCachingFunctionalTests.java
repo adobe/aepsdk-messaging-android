@@ -92,7 +92,7 @@ public class MessageCachingFunctionalTests {
         // dispatch edge response event containing a messaging payload
         MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
         // wait for event and rules processing
-        TestHelper.sleep(500);
+        MonitorExtension.waitForRulesToBeLoaded(2, "Messaging");
         // verify rule payload was loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(2, moduleRules.size()); // configuration + messaging
@@ -118,7 +118,7 @@ public class MessageCachingFunctionalTests {
         // dispatch edge response event containing a messaging payload
         MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
         // wait for event and rules processing
-        TestHelper.sleep(500);
+        MonitorExtension.waitForRulesToBeLoaded(2, "Messaging");
         // verify rule payload was not loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(1, moduleRules.size()); // configuration only
