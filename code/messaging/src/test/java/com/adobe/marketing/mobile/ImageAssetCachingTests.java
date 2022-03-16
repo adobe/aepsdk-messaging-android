@@ -64,13 +64,21 @@ public class ImageAssetCachingTests {
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, MissingPlatformServicesException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupPlatformServicesMocks();
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
+    }
 
+    void setupPlatformServicesMocks() {
         // setup services mocks
         Mockito.when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         Mockito.when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
@@ -80,7 +88,7 @@ public class ImageAssetCachingTests {
         Mockito.when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
     }
 
-    @Test (expected = MissingPlatformServicesException.class)
+    @Test(expected = MissingPlatformServicesException.class)
     public void testCreateMessagingCacheUtilities_nullCacheManager() throws MissingPlatformServicesException {
         // test
         messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, null);
@@ -94,7 +102,7 @@ public class ImageAssetCachingTests {
         messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, mockCacheManager);
         ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
-        final ArrayList<String> imageAssets = new ArrayList<>();
+        final List<String> imageAssets = new ArrayList<>();
         imageAssets.add(IMAGE_URL);
         imageAssets.add(IMAGE_URL2);
         // test
@@ -116,20 +124,20 @@ public class ImageAssetCachingTests {
         messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, mockCacheManager);
         ArgumentCaptor<List> assetListCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
-        final ArrayList<String> imageAssets = new ArrayList<>();
+        final List<String> imageAssets = new ArrayList<>();
         // test
         messagingCacheUtilities.cacheImageAssets(imageAssets);
         // verify cache manager deleteFilesNotInList called
         verify(mockCacheManager, times(1)).deleteFilesNotInList(assetListCaptor.capture(), anyString());
         assertEquals(0, assetListCaptor.getValue().size());
-        // verify 0 network requests made containing the remote downloader in the callback
+        // verify 0 network requests made
         verify(mockNetworkService, times(0)).connectUrlAsync(anyString(),
                 any(NetworkService.HttpCommand.class),
-                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
+                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), any(NetworkService.Callback.class));
     }
 
     @Test(expected = MissingPlatformServicesException.class)
-    public void testCacheImageAssets_NetworkServiceNotAvailable() throws MissingPlatformServicesException {
+    public void testCacheImageAssets_SystemInfoServiceNotAvailable() throws MissingPlatformServicesException {
         // test
         messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, null, mockCacheManager);
         // verify messaging cache utilities object wasn't created
@@ -137,7 +145,7 @@ public class ImageAssetCachingTests {
     }
 
     @Test(expected = MissingPlatformServicesException.class)
-    public void testCacheImageAssets_SystemInfoServiceNotAvailable() throws MissingPlatformServicesException {
+    public void testCacheImageAssets_NetworkServiceNotAvailable() throws MissingPlatformServicesException {
         // test
         messagingCacheUtilities = new MessagingCacheUtilities(null, mockNetworkService, mockCacheManager);
         // verify messaging cache utilities object wasn't created

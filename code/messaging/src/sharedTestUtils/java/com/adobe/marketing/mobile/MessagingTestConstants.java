@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 Adobe. All rights reserved.
+  Copyright 2022 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -20,7 +20,7 @@ public class MessagingTestConstants {
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
-    public final class EventType {
+    public static final class EventType {
         public static final String MONITOR = "com.adobe.functional.eventType.monitor";
         public static final String MESSAGING = "com.adobe.eventType.messaging";
         public static final String EDGE = "com.adobe.eventType.edge";
@@ -30,7 +30,18 @@ public class MessagingTestConstants {
         }
     }
 
-    public final class EventSource {
+    public static final class EventName {
+        public static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+        public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        public static final String RETRIEVE_MESSAGE_DEFINITIONS_EVENT = "Retrieve message definitions";
+        public static final String IAM_INTERACTION_EVENT = "In App tracking edge event";
+
+        private EventName() {
+        }
+    }
+
+    public static final class EventSource {
         // Used by Monitor Extension
         public static final String XDM_SHARED_STATE_REQUEST = "com.adobe.eventSource.xdmsharedStateRequest";
         public static final String XDM_SHARED_STATE_RESPONSE = "com.adobe.eventSource.xdmsharedStateResponse";
@@ -38,19 +49,20 @@ public class MessagingTestConstants {
         public static final String SHARED_STATE_RESPONSE = "com.adobe.eventSource.sharedStateResponse";
         public static final String UNREGISTER = "com.adobe.eventSource.unregister";
         public static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
+        static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
 
         private EventSource() {
         }
     }
 
-    public final class EventDataKey {
+    public static final class EventDataKey {
         public static final String STATE_OWNER = "stateowner";
 
         private EventDataKey() {
         }
     }
 
-    public final class SharedStateName {
+    public static final class SharedStateName {
         public static final String EVENT_HUB = "com.adobe.module.eventhub";
         public static final String EDGE_IDENTITY = "com.adobe.module.identity";
 
@@ -58,7 +70,7 @@ public class MessagingTestConstants {
         }
     }
 
-    public final class TrackingKeys {
+    public static final class TrackingKeys {
         public static final String _XDM = "_xdm";
         public static final String XDM = "xdm";
         public static final String META = "meta";
@@ -85,17 +97,17 @@ public class MessagingTestConstants {
         public static final String COLLECT = "collect";
     }
 
-    public final class EventDataKeys {
+    public static final class EventDataKeys {
         public static final String STATE_OWNER = "stateowner";
 
-        public final class Identity {
+        public static final class Identity {
             public static final String PUSH_IDENTIFIER = "pushidentifier";
 
             private Identity() {
             }
         }
 
-        public final class Messaging {
+        public static final class Messaging {
             public static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             public static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
             public static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
@@ -112,7 +124,7 @@ public class MessagingTestConstants {
             private Messaging() {
             }
 
-            public final class XDMDataKeys {
+            public static final class XDMDataKeys {
                 public static final String XDM_DATA_ACTION_ID = "actionID";
                 public static final String XDM_DATA_CUSTOM_ACTION = "customAction";
                 public static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
@@ -126,7 +138,7 @@ public class MessagingTestConstants {
                 }
             }
 
-            public final class PushNotificationDetailsDataKeys {
+            public static final class PushNotificationDetailsDataKeys {
                 public static final String DATA = "data";
                 public static final String PUSH_NOTIFICATION_DETAILS = "pushNotificationDetails";
                 public static final String IDENTITY = "identity";
@@ -142,42 +154,68 @@ public class MessagingTestConstants {
                 }
             }
 
-            public final class IAMDetailsDataKeys {
-                public final class EventType {
+            public static final class IAMDetailsDataKeys {
+                public static final class EventType {
                     public static final String DISMISS = "inapp.dismiss";
                     public static final String INTERACT = "inapp.interact";
                     public static final String TRIGGER = "inapp.trigger";
                     public static final String DISPLAY = "inapp.display";
                 }
 
-                private IAMDetailsDataKeys() {}
+                private IAMDetailsDataKeys() {
+                }
+            }
+        }
+
+        final class MobileParametersKeys {
+            static final String MOBILE_PARAMETERS = "mobileParameters";
+            static final String SCHEMA_VERSION = "schemaVersion";
+            static final String WIDTH = "width";
+            static final String HEIGHT = "height";
+            static final String VERTICAL_ALIGN = "verticalAlign";
+            static final String VERTICAL_INSET = "verticalInset";
+            static final String HORIZONTAL_ALIGN = "horizontalAlign";
+            static final String HORIZONTAL_INSET = "horizontalInset";
+            static final String UI_TAKEOVER = "uiTakeover";
+            static final String DISPLAY_ANIMATION = "displayAnimation";
+            static final String DISMISS_ANIMATION = "dismissAnimation";
+            static final String BACKDROP_COLOR = "backdropColor";
+            static final String BACKDROP_OPACITY = "backdropOpacity";
+            static final String CORNER_RADIUS = "cornerRadius";
+            static final String GESTURES = "gestures";
+            static final String BODY = "body";
+
+            private MobileParametersKeys() {
             }
         }
     }
 
-    public final class SharedState {
-        public final class Configuration {
+    public static final class SharedState {
+        public static final class Configuration {
             public static final String EXTENSION_NAME = "com.adobe.module.configuration";
 
             // Messaging
             public static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
 
-            private Configuration() {/* no-op */}
+            private Configuration() {
+            }
         }
 
-        public final class EdgeIdentity {
+        public static final class EdgeIdentity {
             public static final String EXTENSION_NAME = "com.adobe.edge.identity";
             public static final String IDENTITY_MAP = "identityMap";
             public static final String ECID = "ECID";
             public static final String ID = "id";
 
-            private EdgeIdentity() {/* no-op */}
+            private EdgeIdentity() {
+            }
         }
 
-        public final class Messaging {
+        public static final class Messaging {
             public static final String PUSH_IDENTIFIER = "pushidentifier";
         }
 
-        private SharedState() {}
+        private SharedState() {
+        }
     }
 }

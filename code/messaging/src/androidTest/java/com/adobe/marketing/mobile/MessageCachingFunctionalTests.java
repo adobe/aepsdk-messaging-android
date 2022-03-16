@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -57,6 +58,14 @@ public class MessageCachingFunctionalTests {
         MobileCore.start(new AdobeCallback() {
             @Override
             public void call(Object o) {
+                Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
+                MobileCore.updateConfiguration(testConfig);
+                // wait for configuration to be set
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    fail(interruptedException.getMessage());
+                }
                 latch.countDown();
             }
         });

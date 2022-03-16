@@ -95,14 +95,27 @@ public class InAppNotificationHandlerTests {
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, InterruptedException, MissingPlatformServicesException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupActivityAndPlacementIdMocks();
+        setupPlatformServicesMocks();
+        setupEncodingServiceMocks();
+        setupSharedStateMocks();
+
+        messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
+        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
+    }
 
-        // setup activity id mocks
+    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
         when(App.getApplication()).thenReturn(mockApplication);
         when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
@@ -113,8 +126,9 @@ public class InAppNotificationHandlerTests {
         Whitebox.setInternalState(applicationInfo, "metaData", bundle);
         when(bundle.getString("activityId")).thenReturn("mock_activity");
         when(bundle.getString("placementId")).thenReturn("mock_placement");
+    }
 
-        // setup services mocks
+    void setupPlatformServicesMocks() {
         platformServices = new AndroidPlatformServices();
         jsonUtilityService = platformServices.getJsonUtilityService();
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
@@ -122,6 +136,12 @@ public class InAppNotificationHandlerTests {
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        // setup mock cache file
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
+    }
+
+    void setupEncodingServiceMocks() {
         // mock for encoded/decoded activity and placement id
         when(mockAndroidEncodingService.base64Encode(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
         when(mockAndroidEncodingService.base64Decode(base64EncodedActivityAndPlacement)).thenReturn(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
@@ -131,7 +151,9 @@ public class InAppNotificationHandlerTests {
         // mock for encoded/decoded non matching application id
         when(mockAndroidEncodingService.base64Encode(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedOtherApplicationId.getBytes(StandardCharsets.UTF_8));
         when(mockAndroidEncodingService.base64Decode(base64EncodedOtherApplicationId)).thenReturn(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8));
+    }
 
+    void setupSharedStateMocks() {
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
         mockConfigState.put(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "mock_dataset_id");
@@ -142,13 +164,6 @@ public class InAppNotificationHandlerTests {
         ids.add(ecidMap);
         identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, ids);
         mockIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
-
-        // setup mock cache file
-        final File mockCache = new File("mock_cache");
-        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-
-        messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
-        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
     }
 
     @After
@@ -183,9 +198,9 @@ public class InAppNotificationHandlerTests {
         MessagePayloadConfig config = new MessagePayloadConfig();
         config.count = 3;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-      
+
         // test
-       inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
 
         // verify 3 rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -205,7 +220,7 @@ public class InAppNotificationHandlerTests {
         List<Map> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
         List<Map> invalidPayload = MessagingTestUtils.generateMessagePayload(invalidPayloadConfig);
         payload.addAll(invalidPayload);
-        
+
         // test
         inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
 

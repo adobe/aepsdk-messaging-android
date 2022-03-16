@@ -10,7 +10,7 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+import static com.adobe.marketing.mobile.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -98,15 +98,15 @@ public class MessagingTests {
         String mockMessageId = "mockMessageId";
         String mockXDMData = "mockXDMData";
         Map<String, String> mockDataMap = new HashMap<>();
-        mockDataMap.put(MessagingConstants.TrackingKeys._XDM, mockXDMData);
+        mockDataMap.put(MessagingTestConstants.TrackingKeys._XDM, mockXDMData);
 
         // test
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
 
         // verify
         Assert.assertTrue(done);
-        verify(mockIntent, times(1)).putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, mockMessageId);
-        verify(mockIntent, times(1)).putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockXDMData);
+        verify(mockIntent, times(1)).putExtra(MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, mockMessageId);
+        verify(mockIntent, times(1)).putExtra(MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockXDMData);
     }
 
     @Test
@@ -138,7 +138,7 @@ public class MessagingTests {
         String mockMessageId = "";
         String mockXDMData = "mockXDMData";
         Map<String, String> mockDataMap = new HashMap<>();
-        mockDataMap.put(MessagingConstants.TrackingKeys._XDM, mockXDMData);
+        mockDataMap.put(MessagingTestConstants.TrackingKeys._XDM, mockXDMData);
 
         // test
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
@@ -170,7 +170,7 @@ public class MessagingTests {
             PowerMockito.whenNew(Intent.class)
                     .withNoArguments().thenReturn(mockIntent);
         } catch (Exception e) {
-            com.adobe.marketing.mobile.Log.debug("MessagingTest", "Intent exception");
+            Log.debug("MessagingTest", "Intent exception");
         }
 
         when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
@@ -188,11 +188,11 @@ public class MessagingTests {
         Event event = eventCaptor.getValue();
         EventData eventData = event.getData();
         assertNotNull(eventData);
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         try {
             assertEquals(eventData.getString2(TRACK_INFO_KEY_ACTION_ID), mockActionId);
         } catch (VariantException e) {
-            com.adobe.marketing.mobile.Log.debug("MessagingTest", "getString2 variant exception, error : %s", e.getMessage());
+            Log.debug("MessagingTest", "getString2 variant exception, error : %s", e.getMessage());
         }
     }
 
@@ -206,7 +206,7 @@ public class MessagingTests {
             PowerMockito.whenNew(Intent.class)
                     .withNoArguments().thenReturn(mockIntent);
         } catch (Exception e) {
-            com.adobe.marketing.mobile.Log.debug("MessagingTest", "Intent exception");
+            Log.debug("MessagingTest", "Intent exception");
         }
 
         when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
@@ -231,7 +231,7 @@ public class MessagingTests {
             PowerMockito.whenNew(Intent.class)
                     .withNoArguments().thenReturn(mockIntent);
         } catch (Exception e) {
-            com.adobe.marketing.mobile.Log.debug("MessagingTest", "Intent exception");
+            Log.debug("MessagingTest", "Intent exception");
         }
 
         when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
@@ -264,8 +264,8 @@ public class MessagingTests {
         Event event = eventCaptor.getValue();
         EventData eventData = event.getData();
         assertNotNull(eventData);
-        assertEquals(MessagingConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
-        assertEquals(MessagingConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
-        assertEquals(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT.toLowerCase(), event.getName().toLowerCase());
+        assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
+        assertEquals(MessagingTestConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT.toLowerCase(), event.getName().toLowerCase());
     }
 }

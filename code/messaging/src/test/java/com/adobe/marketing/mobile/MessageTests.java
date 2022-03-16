@@ -87,6 +87,20 @@ public class MessageTests {
 
     @Before
     public void setup() {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupDetailsAndConsequenceMaps(setupXdmMap());
+
+        try {
+            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+        } catch (MessageRequiredFieldMissingException e) {
+            fail(e.getLocalizedMessage());
+        }
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -100,11 +114,9 @@ public class MessageTests {
         Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         Mockito.when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
+    }
 
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
-
-        Map<String, Object> details = new HashMap<>();
+    Map<String, Object> setupXdmMap() {
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
         Map<String, Object> experiance = new HashMap<>();
@@ -126,19 +138,19 @@ public class MessageTests {
         experiance.put("customerJourneyManagement", cjm);
         mixins.put("_experience", experiance);
         xdm.put("mixins", mixins);
+        return xdm;
+    }
 
+    Map<String, Object> setupDetailsAndConsequenceMaps(Map<String, Object> xdmMap) {
+        Map<String, Object> details = new HashMap<>();
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
-        } catch (MessageRequiredFieldMissingException e) {
-            fail(e.getLocalizedMessage());
-        }
+        return details;
     }
 
     @Test
@@ -160,11 +172,11 @@ public class MessageTests {
     @Test
     public void test_messageShow_withShowMessageTrueInCustomDelegate() {
         // setup custom delegate, show message is true by default
-        CustomDelegate customDelegate = new CustomDelegate();
-        ServiceProvider.getInstance().setMessageDelegate(customDelegate);
+        CustomMessageDelegate customMessageDelegate = new CustomMessageDelegate();
+        ServiceProvider.getInstance().setMessageDelegate(customMessageDelegate);
         // setup mocks
         try {
-            aepMessage = new AEPMessage("html", customDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
+            aepMessage = new AEPMessage("html", customMessageDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
         }
@@ -176,7 +188,7 @@ public class MessageTests {
         }
 
         // set custom delegate in Message object
-        Whitebox.setInternalState(message, "fullscreenMessageDelegate", customDelegate);
+        Whitebox.setInternalState(message, "fullscreenMessageDelegate", customMessageDelegate);
 
         // test
         message.show();
@@ -196,11 +208,11 @@ public class MessageTests {
     public void test_messageShow_withShowMessageFalseInCustomDelegate() {
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(message);
         // setup custom delegate
-        CustomDelegate customDelegate = new CustomDelegate();
-        customDelegate.setShowMessage(false);
+        CustomMessageDelegate customMessageDelegate = new CustomMessageDelegate();
+        customMessageDelegate.setShowMessage(false);
         // setup mocks
         try {
-            aepMessage = new AEPMessage("html", customDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
+            aepMessage = new AEPMessage("html", customMessageDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
         }
@@ -340,7 +352,7 @@ public class MessageTests {
 
     }
 
-    class CustomDelegate extends MessageDelegate {
+    class CustomMessageDelegate extends MessageDelegate {
         private boolean showMessage = true;
 
         @Override

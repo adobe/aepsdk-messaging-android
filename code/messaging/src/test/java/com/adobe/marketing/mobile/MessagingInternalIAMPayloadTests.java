@@ -99,14 +99,26 @@ public class MessagingInternalIAMPayloadTests {
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, InterruptedException, MissingPlatformServicesException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupActivityAndPlacementIdMocks();
+        setupPlatformServicesMocks();
+        setupEncodingServiceMocks();
+        setupSharedStateMocks();
+
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
+    }
 
-        // setup activity id mocks
+    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
         when(App.getApplication()).thenReturn(mockApplication);
         when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
@@ -117,8 +129,9 @@ public class MessagingInternalIAMPayloadTests {
         Whitebox.setInternalState(applicationInfo, "metaData", bundle);
         when(bundle.getString("activityId")).thenReturn("mock_activity");
         when(bundle.getString("placementId")).thenReturn("mock_placement");
+    }
 
-        // setup services mocks
+    void setupPlatformServicesMocks() {
         platformServices = new AndroidPlatformServices();
         jsonUtilityService = platformServices.getJsonUtilityService();
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
@@ -126,6 +139,9 @@ public class MessagingInternalIAMPayloadTests {
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+    }
+
+    void setupEncodingServiceMocks() {
         // mock for encoded/decoded activity and placement id
         when(mockAndroidEncodingService.base64Encode(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
         when(mockAndroidEncodingService.base64Decode(base64EncodedActivityAndPlacement)).thenReturn(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
@@ -135,7 +151,9 @@ public class MessagingInternalIAMPayloadTests {
         // mock for encoded/decoded non matching application id
         when(mockAndroidEncodingService.base64Encode(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedOtherApplicationId.getBytes(StandardCharsets.UTF_8));
         when(mockAndroidEncodingService.base64Decode(base64EncodedOtherApplicationId)).thenReturn(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8));
+    }
 
+    void setupSharedStateMocks() {
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
         mockConfigState.put(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "mock_dataset_id");
@@ -146,8 +164,6 @@ public class MessagingInternalIAMPayloadTests {
         ids.add(ecidMap);
         identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, ids);
         mockIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
-
-        messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
     @After

@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
 public class ListenerIdentityRequestContentTests {
-    private final int EXECUTOR_TIMEOUT = 5;
+    private final int EXECUTOR_TIMEOUT = 5; // in seconds
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     @Mock
     MessagingInternal mockMessagingInternal;

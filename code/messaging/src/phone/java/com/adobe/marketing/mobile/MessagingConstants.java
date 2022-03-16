@@ -67,7 +67,7 @@ final class MessagingConstants {
         static final String PATH_CONFIRM = "confirm";
         static final String PATH_DISMISS = "dismiss";
         static final String INTERACTION = "interaction";
-        static final String DEEPLINK = "deeplink";
+        static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
         static final String JS = "js";
     }
@@ -272,7 +272,8 @@ final class MessagingConstants {
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
 
-            private Configuration() {/* no-op */}
+            private Configuration() {
+            }
         }
 
         final class EdgeIdentity {
@@ -281,7 +282,8 @@ final class MessagingConstants {
             static final String ECID = "ECID";
             static final String ID = "id";
 
-            private EdgeIdentity() {/* no-op */}
+            private EdgeIdentity() {
+            }
         }
 
         final class Messaging {
@@ -310,7 +312,8 @@ final class MessagingConstants {
             static final String WEBURL = "WEBURL";
             static final String DISMISS = "DISMISS";
 
-            private ActionButtonType() {/* no-op */}
+            private ActionButtonType() {
+            }
         }
 
         final class NotificationPriorities {

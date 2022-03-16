@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -34,10 +35,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -79,33 +80,36 @@ public class MessageDelegateTests {
     @Mock
     MessagingInternal mockMessagingInternal;
     @Captor
-    ArgumentCaptor<ValueCallback<String>> valueCallbackArgumentCaptor;
+    ArgumentCaptor<String> urlStringCaptor;
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+
+        messageDelegate = new MessageDelegate();
+    }
+
+    void setupMocks() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(Log.class);
         PowerMockito.mockStatic(ServiceProvider.class);
+
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         when(mockApplication.getApplicationContext()).thenReturn(context);
-
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
-
         mockWebView = PowerMockito.mock(WebView.class);
         PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebView);
         when(mockWebView.getSettings()).thenReturn(mockWebSettings);
         when(mockMessagingInternal.getExecutor()).thenReturn(Executors.newSingleThreadExecutor());
-
-        messageDelegate = new MessageDelegate();
     }
 
     @Test
@@ -147,7 +151,8 @@ public class MessageDelegateTests {
         messageDelegate.openUrl(mockAEPMessage, "adb_deeplink://signup");
 
         // verify the internal open url method is called
-        verify(mockAEPMessage, times(1)).openUrl(anyString());
+        verify(mockAEPMessage, times(1)).openUrl(urlStringCaptor.capture());
+        assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
     }
 
     @Test
@@ -156,13 +161,14 @@ public class MessageDelegateTests {
         messageDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
 
         // verify the ui service is called to show the url
-        verify(mockUIService, times(1)).showUrl(anyString());
+        verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
+        assertEquals("https://www.adobe.com", urlStringCaptor.getValue());
     }
 
     @Test
     public void test_openUrlWithInvalidLink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "");
+        messageDelegate.openUrl(mockAEPMessage, "htp://www.adobe.com");
 
         // verify no internal open url or ui service show url method is called
         verify(mockUIService, times(0)).showUrl(anyString());
@@ -186,20 +192,18 @@ public class MessageDelegateTests {
         Whitebox.setInternalState(MessageDelegate.class, "scriptHandlers", scriptHandlers);
 
         // test
-        messageDelegate.evaluateJavascript("function test(hello world) { print(arg); }");
+        messageDelegate.evaluateJavascript("(function test(hello world) { return(arg); })()");
         // verify evaluate javascript called
-        verify(mockWebView, times(1)).evaluateJavascript(anyString(), valueCallbackArgumentCaptor.capture());
-        ValueCallback<String> valueCallback = valueCallbackArgumentCaptor.getValue();
-        valueCallback.onReceiveValue("hello world");
+        verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
     }
 
     @Test
     public void test_loadJavascript_WithNoScriptHandlersSet() {
         // test
-        messageDelegate.evaluateJavascript("function test(hello world) { print(arg); }");
+        messageDelegate.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
         // verify evaluate javascript called
-        verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
+        verify(mockWebView, times(0)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
     }
 
     @Test

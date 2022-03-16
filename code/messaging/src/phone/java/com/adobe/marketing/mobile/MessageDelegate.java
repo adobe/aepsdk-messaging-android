@@ -43,7 +43,6 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
     private final String JAVASCRIPT_QUERY_KEY = "js";
-    private final String ADOBE_DEEPLINK = "adb_deeplink";
     // public properties
     public String messageId;
     public boolean autoTrack = true;
@@ -62,16 +61,23 @@ public class MessageDelegate implements FullscreenMessageDelegate {
      */
     protected void openUrl(final FullscreenMessage message, final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
-            Log.trace(LOG_TAG, "Will not open url, it is null or empty.");
+            Log.debug(LOG_TAG, "Will not open URL, it is null or empty.");
             return;
         }
+
         // if we have a deeplink, open the url via an intent
-        if (url.contains(ADOBE_DEEPLINK)) {
+        if (url.contains(MessagingConstants.MessagingScheme.DEEPLINK)) {
             Log.debug(LOG_TAG, "%s - Opening deeplink (%s).", SELF_TAG, url);
             message.openUrl(url);
             return;
         }
-        // otherwise open the url with the ui service
+
+        // otherwise check if it is a valid url. if so, open the url with the ui service.
+        if (!StringUtils.stringIsUrl(url)) {
+            Log.debug(LOG_TAG, "URL is invalid: %s", url);
+            return;
+        }
+
         final UIService uiService = ServiceProvider.getInstance().getUIService();
 
         if (uiService == null || !uiService.showUrl(url)) {

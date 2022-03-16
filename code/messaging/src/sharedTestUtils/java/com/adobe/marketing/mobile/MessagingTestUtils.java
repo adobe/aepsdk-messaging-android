@@ -10,25 +10,25 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingUtils.toMap;
-import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
 import static com.adobe.marketing.mobile.MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingUtils.toMap;
+import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
 import static org.junit.Assert.fail;
 
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.Assert;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Assert;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MessagingTestUtils {
     private static final String LOG_TAG = "MessagingTestUtils";
-    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
+    private static final String REMOTE_URL = "https://www.adobe.com/adobe.png";
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
     private static CacheManager cacheManager;
 
@@ -203,8 +203,8 @@ public class MessagingTestUtils {
         } catch (final MissingPlatformServicesException exception) {
             Log.warning(LOG_TAG, "Error clearing cache: %s", exception.getMessage());
         }
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), IMAGES_CACHE_SUBDIRECTORY);
-        cacheManager.deleteFilesNotInList(new ArrayList<String>(), MESSAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(null, IMAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(null, MESSAGES_CACHE_SUBDIRECTORY);
     }
 
     /**
@@ -228,28 +228,35 @@ public class MessagingTestUtils {
     /**
      * Writes the contents of an {@link InputStream} into a file.
      *
-     * @param cachedFile the {@code File} to be written to
-     * @param input      a {@code InputStream} containing the data to be written
+     * @param cachedFile  the {@code File} to be written to
+     * @param inputStream a {@code InputStream} containing the data to be written
      * @return a {@code boolean} if the write to file was successful
      */
-    static boolean writeInputStreamIntoFile(final File cachedFile, final InputStream input, final boolean append) {
+    static boolean writeInputStreamIntoFile(final File cachedFile, final InputStream inputStream, final boolean append) {
         boolean result = false;
 
-        if (cachedFile == null || input == null) {
+        if (cachedFile == null || inputStream == null) {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (final IOException ioException) {
+                    Log.debug(LOG_TAG, "Exception occurred when closing input stream: %s", ioException.getMessage());
+                }
+            }
             return result;
         }
 
-        FileOutputStream output = null;
+        FileOutputStream outputStream = null;
 
         try {
-            output = new FileOutputStream(cachedFile, append);
+            outputStream = new FileOutputStream(cachedFile, append);
             final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
             int count;
 
-            while ((count = input.read(data)) != -1) {
-                output.write(data, 0, count);
+            while ((count = inputStream.read(data)) != -1) {
+                outputStream.write(data, 0, count);
+                outputStream.flush();
             }
-            output.flush();
             result = true;
         } catch (final IOException e) {
             Log.error(LOG_TAG, "IOException while attempting to write to file (%s)", e);
@@ -257,8 +264,8 @@ public class MessagingTestUtils {
             Log.error(LOG_TAG, "Unexpected exception while attempting to write to file (%s)", e);
         } finally {
             try {
-                if (output != null) {
-                    output.close();
+                if (outputStream != null) {
+                    outputStream.close();
                 }
 
             } catch (final Exception e) {
@@ -283,9 +290,9 @@ public class MessagingTestUtils {
     /**
      * Helper method to update the {@link SharedPreferences} data.
      *
-     * @param datastore the name of the datastore to be updated
-     * @param key       the persisted data key that has to be updated
-     * @param value     the new value
+     * @param datastore   the name of the datastore to be updated
+     * @param key         the persisted data key that has to be updated
+     * @param value       the new value
      * @param application the current test application
      */
     public static void updatePersistence(final String datastore, final String key, final String value, final Application application) {
@@ -339,7 +346,7 @@ public class MessagingTestUtils {
         try {
             future.get(executorTime, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Assert.fail(String.format("Executor took longer than %s (sec)", executorTime));
+            Assert.fail(String.format("Executor took longer than %d (sec)", executorTime));
         }
     }
 
@@ -401,19 +408,4 @@ public class MessagingTestUtils {
         }
         return payload;
     }
-}
-
-class MessagePayloadConfig {
-    public int count = 0;
-    public boolean isMissingRulesKey = false;
-    public boolean isMissingMessageId = false;
-    public boolean isMissingMessageType = false;
-    public boolean isMissingMessageDetail = false;
-    public boolean hasHtmlPayloadMissing = false;
-    public boolean invalidActivityId = false;
-    public boolean invalidPlacementId = false;
-    public boolean isUsingApplicationId = false;
-    public boolean invalidApplicationId = false;
-    public boolean hasEmptyPayload = false;
-    public boolean hasNoScopeInPayload = false;
 }
