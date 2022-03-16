@@ -238,7 +238,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
         final Map<String, String> queryParams = UrlUtilities.extractQueryParameters(queryTokens[1]);
         final StringBuilder processedUrlStringBuilder = new StringBuilder(queryTokens[0]);
         try {
-           final String javascript = queryParams.get(JAVASCRIPT_QUERY_KEY);
+            final String javascript = queryParams.get(JAVASCRIPT_QUERY_KEY);
             if (StringUtils.isNullOrEmpty(javascript)) {
                 return null;
             }

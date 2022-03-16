@@ -22,7 +22,9 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.internal.matchers.Null;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -46,8 +48,7 @@ public class MessagePayloadCachingTests {
 
     @Before
     public void setup() throws MissingPlatformServicesException {
-        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
-        messagingCacheUtilities.setCacheManager(mockCacheManager);
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, mockCacheManager);
     }
 
     @Test
@@ -108,7 +109,7 @@ public class MessagePayloadCachingTests {
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
         // verify createNewCacheFile called
         verify(mockCacheManager, times(1)).createNewCacheFile(anyString(), anyString(), any(Date.class));
     }
@@ -120,7 +121,7 @@ public class MessagePayloadCachingTests {
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
         // verify createNewCacheFile not called
         verify(mockCacheManager, times(0)).createNewCacheFile(anyString(), anyString(), any(Date.class));
     }
@@ -130,6 +131,6 @@ public class MessagePayloadCachingTests {
         // test
         messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
     }
 }

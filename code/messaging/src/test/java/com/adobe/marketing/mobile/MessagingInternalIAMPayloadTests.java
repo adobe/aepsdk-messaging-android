@@ -153,7 +153,7 @@ public class MessagingInternalIAMPayloadTests {
     @After
     public void cleanup() throws MissingPlatformServicesException {
         // use messaging cache utilities to clean the cache after each test
-        messagingCacheUtilities = new MessagingCacheUtilities(platformServices.getSystemInfoService(), platformServices.getNetworkService());
+        messagingCacheUtilities = new MessagingCacheUtilities(platformServices.getSystemInfoService(), platformServices.getNetworkService(), new CacheManager(platformServices.getSystemInfoService()));
         messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
     }
 

@@ -12,11 +12,9 @@
 
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
-import android.webkit.WebView;
-
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;

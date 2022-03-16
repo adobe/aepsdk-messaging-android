@@ -22,7 +22,7 @@ public enum MessagingEdgeEventType {
 
     final int value;
 
-    MessagingEdgeEventType(int value){
+    MessagingEdgeEventType(final int value) {
         this.value = value;
     }
 

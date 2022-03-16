@@ -66,7 +66,8 @@ public class MessageCachingFunctionalTests {
         // setup messaging caching
         final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
         final NetworkService networkService = MessagingUtils.getPlatformServices().getNetworkService();
-        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+        final CacheManager cacheManager = new CacheManager(systemInfoService);
+        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService, cacheManager);
 
         // ensure cache is cleared before testing
         MessagingTestUtils.cleanCache();
@@ -92,7 +93,7 @@ public class MessageCachingFunctionalTests {
         // dispatch edge response event containing a messaging payload
         MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
         // wait for event and rules processing
-        MonitorExtension.waitForRulesToBeLoaded(2, "Messaging");
+        TestHelper.sleep(1000);
         // verify rule payload was loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(2, moduleRules.size()); // configuration + messaging
@@ -118,7 +119,7 @@ public class MessageCachingFunctionalTests {
         // dispatch edge response event containing a messaging payload
         MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
         // wait for event and rules processing
-        MonitorExtension.waitForRulesToBeLoaded(2, "Messaging");
+        TestHelper.sleep(1000);
         // verify rule payload was not loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(1, moduleRules.size()); // configuration only

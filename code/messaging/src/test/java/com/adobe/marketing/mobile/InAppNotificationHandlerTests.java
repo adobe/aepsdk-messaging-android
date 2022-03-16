@@ -147,7 +147,7 @@ public class InAppNotificationHandlerTests {
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
-        messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService);
+        messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
     }
 

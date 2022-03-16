@@ -106,13 +106,13 @@ final class MessagingConstants {
             }
 
             final class XDMDataKeys {
-                static final String XDM_DATA_ACTION_ID = "actionID";
-                static final String XDM_DATA_CUSTOM_ACTION = "customAction";
-                static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
-                static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
-                static final String XDM_DATA_EVENT_TYPE = "eventType";
-                static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
-                static final String XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME = "inappMessageTracking";
+                static final String ACTION_ID = "actionID";
+                static final String CUSTOM_ACTION = "customAction";
+                static final String PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
+                static final String PUSH_PROVIDER = "pushProvider";
+                static final String EVENT_TYPE = "eventType";
+                static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME = "inappMessageTracking";
                 static final String ACTION = "action";
 
                 private XDMDataKeys() {

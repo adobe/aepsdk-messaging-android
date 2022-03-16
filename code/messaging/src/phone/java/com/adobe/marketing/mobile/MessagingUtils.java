@@ -37,6 +37,7 @@ class MessagingUtils {
      */
     static Map<String, Object> toMap(final JSONObject jsonObject) throws JSONException {
         if (jsonObject == null) {
+            Log.debug(LOG_TAG, "toMap - will not convert to map, the passed in json is null.");
             return null;
         }
 
@@ -63,6 +64,7 @@ class MessagingUtils {
      */
     static Map<String, Variant> toVariantMap(final JSONObject jsonObject) throws JSONException {
         if (jsonObject == null) {
+            Log.debug(LOG_TAG, "toVariantMap - will not convert to variant map, the passed in json is null.");
             return null;
         }
 
@@ -88,6 +90,7 @@ class MessagingUtils {
      */
     static List<Object> toList(final JSONArray jsonArray) throws JSONException {
         if (jsonArray == null) {
+            Log.debug(LOG_TAG, "toList - will not convert to list, the passed in json array is null.");
             return null;
         }
 
@@ -139,13 +142,13 @@ class MessagingUtils {
         } else if (value instanceof Long) {
             convertedValue = LongVariant.fromLong((long) value);
         } else if (value instanceof Map) {
-            final HashMap<String, Variant> map = new HashMap<>();
+            final Map<String, Variant> map = new HashMap<>();
             for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
                 map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
             }
             convertedValue = Variant.fromVariantMap(map);
         } else if (value instanceof List) {
-            final ArrayList<Variant> list = new ArrayList<>();
+            final List<Variant> list = new ArrayList<>();
             for (final Object element : (List) value) {
                 list.add(getVariantValue(element));
             }
@@ -250,7 +253,6 @@ class MessagingUtils {
         if (platformServices == null) {
             Log.debug(LOG_TAG,
                     "getPlatformServices - Platform services are not available.");
-            return null;
         }
 
         return platformServices;
@@ -270,26 +272,33 @@ class MessagingUtils {
             return null;
         }
 
-        return platformServices.getJsonUtilityService();
+        final JsonUtilityService jsonUtilityService = platformServices.getJsonUtilityService();
+        if (jsonUtilityService == null) {
+            Log.debug(LOG_TAG,
+                    "getJsonUtilityService - JsonUtility services are not available.");
+        }
+
+        return jsonUtilityService;
     }
 
     // ========================================================================================
     // Event Dispatching
     // ========================================================================================
+
     /**
      * Dispatches an event with the given parameters.
      *
-     * @param eventName a {@code String} containing the name of the event to be dispatched
-     * @param eventType a {@code String} containing the type of the event to be dispatched
-     * @param eventSource a {@code String} containing the source of the event to be dispatched
-     * @param data a {@link Map} containing the data of the event to be dispatched
-     * @param mask a {@link String[]} containing an optional event mask
+     * @param eventName    a {@code String} containing the name of the event to be dispatched
+     * @param eventType    a {@code String} containing the type of the event to be dispatched
+     * @param eventSource  a {@code String} containing the source of the event to be dispatched
+     * @param data         a {@link Map} containing the data of the event to be dispatched
+     * @param mask         a {@link String[]} containing an optional event mask
      * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
      */
     static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String[] mask, final String errorMessage) {
         final Event event = new Event.Builder(eventName, eventType, eventSource, mask)
-                    .setEventData(data)
-                    .build();
+                .setEventData(data)
+                .build();
 
         // send event
         MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
@@ -301,6 +310,6 @@ class MessagingUtils {
     }
 
     static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
-       sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
+        sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
     }
 }

@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,18 +46,21 @@ final class MessagingCacheUtilities {
     private final SystemInfoService systemInfoService;
     private final NetworkService networkService;
     private final Map<String, String> assetMap = new HashMap<>();
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
-    MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService) throws MissingPlatformServicesException {
-        this.systemInfoService = systemInfoService;
-        this.networkService = networkService;
+    MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService, final CacheManager cacheManager) throws MissingPlatformServicesException {
         if (networkService == null) {
             throw new MissingPlatformServicesException("Network service implementation missing");
         }
         if (systemInfoService == null) {
             throw new MissingPlatformServicesException("System info service implementation missing");
         }
-        cacheManager = new CacheManager(systemInfoService);
+        if (cacheManager == null) {
+            throw new MissingPlatformServicesException("Cache Manager implementation missing");
+        }
+        this.systemInfoService = systemInfoService;
+        this.networkService = networkService;
+        this.cacheManager = cacheManager;
         createImageAssetsCacheDirectory();
     }
     // ========================================================================================================
@@ -137,7 +139,7 @@ final class MessagingCacheUtilities {
         } else if (object instanceof Iterable) {
             JSONArray jsonArray = new JSONArray();
             final Iterator iterator = ((Iterable<?>) object).iterator();
-            while(iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 jsonArray.put(toJSON(iterator.next()));
             }
             return jsonArray;
@@ -174,34 +176,35 @@ final class MessagingCacheUtilities {
      * <p>
      * The content of the inputStream is appended to an existing file if the boolean is set as true.
      *
-     * @param cachedFile {@code File} to which the content has to be written
+     * @param cachedFile  {@code File} to which the content has to be written
      * @param inputStream The {@code InputStream} to be written to the cache
-     * @param append     true, if you want to append the input stream to the existing file content
+     * @param append      true, if you want to append the input stream to the existing file content
      * @return {@code boolean} containing true if the {@code InputStream} has been successfully written into the file, false otherwise
      */
     private boolean writeInputStreamIntoFile(final File cachedFile, final InputStream inputStream, final boolean append) {
         if (cachedFile == null || inputStream == null) {
-            Log.error(LOG_TAG, "%s - Failed to write inputstream to the cache. The cachedFile or inputStream is null.", SELF_TAG);
+            Log.error(LOG_TAG, "%s - Failed to write InputStream to the cache. The cachedFile or inputStream is null.", SELF_TAG);
             return false;
         }
 
-        FileOutputStream output = null;
+        FileOutputStream outputStream = null;
 
         try {
-            output = new FileOutputStream(cachedFile, append);
+            outputStream = new FileOutputStream(cachedFile, append);
             final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
             int count;
 
             while ((count = inputStream.read(data)) != -1) {
-                output.write(data, 0, count);
+                outputStream.write(data, 0, count);
             }
+            outputStream.flush();
         } catch (final IOException e) {
             Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
             return false;
         } finally {
             try {
-                if (output != null) {
-                    output.close();
+                if (outputStream != null) {
+                    outputStream.close();
                 }
             } catch (final IOException e) {
                 Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", SELF_TAG, e);
@@ -218,20 +221,21 @@ final class MessagingCacheUtilities {
     /**
      * Caches the assets provided in the {@link java.util.List}.
      *
-     * @param assetsCollection a {@link List<String>} containing asset url's to be cached.
+     * @param assetsUrls a {@link List<String>} containing asset URL's to be cached.
      */
-    void cacheImageAssets(final List<String> assetsCollection) {
+    void cacheImageAssets(final List<String> assetsUrls) {
         if (cacheManager == null) {
             Log.trace(LOG_TAG, "%s - Failed to cache asset, the cache manager is not available.", SELF_TAG);
             return;
         }
 
-        final ArrayList<String> assetsToRetain = new ArrayList<>();
+        final List<String> assetsToRetain = new ArrayList<>();
 
-        if (assetsCollection != null && !assetsCollection.isEmpty()) {
-            for (final String imageAsset : assetsCollection) {
-                if (assetIsDownloadable(imageAsset) && !assetsToRetain.contains(imageAsset)) {
-                    assetsToRetain.add(imageAsset);
+        // validate asset URL's and remove duplicates
+        if (assetsUrls != null && !assetsUrls.isEmpty()) {
+            for (final String imageAssetUrl : assetsUrls) {
+                if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
+                    assetsToRetain.add(imageAssetUrl);
                 }
             }
         }
@@ -240,12 +244,12 @@ final class MessagingCacheUtilities {
         // any new assets that have not been previously cached.
         cacheManager.deleteFilesNotInList(assetsToRetain, IMAGES_CACHE_SUBDIRECTORY);
 
-        for (final String asset : assetsToRetain) {
+        for (final String assetUrl : assetsToRetain) {
             try {
-                final RemoteDownloader remoteDownloader = getRemoteDownloader(asset, IMAGES_CACHE_SUBDIRECTORY);
+                final RemoteDownloader remoteDownloader = getRemoteDownloader(assetUrl, IMAGES_CACHE_SUBDIRECTORY);
                 remoteDownloader.startDownload();
             } catch (final MissingPlatformServicesException exception) {
-                Log.warning(LOG_TAG, "%s - Failed to cache asset: %s, the platform services were not available.", SELF_TAG, asset);
+                Log.warning(LOG_TAG, "%s - Failed to cache asset: %s, the platform services were not available.", SELF_TAG, assetUrl);
             }
         }
     }
@@ -257,7 +261,7 @@ final class MessagingCacheUtilities {
      * @return {@code boolean} indicating whether the provided asset is downloadable
      */
     boolean assetIsDownloadable(final String assetPath) {
-        return StringUtils.stringIsUrl(assetPath) && (assetPath.startsWith("http") || assetPath.startsWith("https"));
+        return StringUtils.stringIsUrl(assetPath) && (assetPath.startsWith("http"));
     }
 
     /**
@@ -265,7 +269,7 @@ final class MessagingCacheUtilities {
      *
      * @return {@code Map<String, String} containing a mapping of a remote image asset URL and it's cached location
      */
-    Map<String, String> getAssetMap() {
+    Map<String, String> getAssetsMap() {
         return assetMap;
     }
 
@@ -286,7 +290,7 @@ final class MessagingCacheUtilities {
                 // If the download fails, use the remote url when displaying the message. Another attempt to cache the remote
                 // image asset will be made on the next app launch.
                 if (downloadedFile != null) {
-                    Log.trace(LOG_TAG, "%s - %s has been downloaded or was previously cached.", SELF_TAG, currentAssetUrl);
+                    Log.trace(LOG_TAG, "%s - (%s) has been downloaded or was previously cached at: (%s)", SELF_TAG, currentAssetUrl, downloadedFile.getPath());
                     assetMap.put(currentAssetUrl, downloadedFile.getAbsolutePath());
                 } else {
                     Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, currentAssetUrl);
@@ -305,12 +309,7 @@ final class MessagingCacheUtilities {
         final File assetDir = new File(systemInfoService.getApplicationCacheDir() + File.separator + IMAGES_CACHE_SUBDIRECTORY);
 
         if (!assetDir.exists() && !assetDir.mkdirs()) {
-            Log.warning(LOG_TAG, "%s - Unable to create directory for caching image assets", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - Unable to create directory at (%s) for caching image assets", SELF_TAG, assetDir.getAbsolutePath());
         }
-    }
-
-    // for unit tests
-    protected void setCacheManager(final CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
     }
 }

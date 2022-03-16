@@ -302,7 +302,7 @@ class InAppNotificationHandler {
             }
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
-            final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetMap());
+            final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG,
