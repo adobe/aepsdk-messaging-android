@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import android.webkit.ValueCallback
+import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -462,16 +463,26 @@ class MainActivity : AppCompatActivity() {
 
 class CustomDelegate : MessageDelegate() {
     private var currentMessage: FullscreenMessage? = null
+    private var webview: WebView? = null
     var showMessages = true
 
     override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
+        // access to the whole message from the parent
         fullscreenMessage?.also {
             this.currentMessage = fullscreenMessage
             val message = (currentMessage?.parent) as? Message
+            webview = message?.view
 
             // in-line handling of javascript calls
             message?.handleJavascriptMessage("magic") { content ->
                 println("magical handling of our content from js! content is: $content")
+                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+            }
+
+            message?.view?.evaluateJavascript("startTimer();") { content ->
+                if (content != null) {
+                    // do something with the content
+                }
             }
 
             // if we're not showing the message now, we can save it for later
