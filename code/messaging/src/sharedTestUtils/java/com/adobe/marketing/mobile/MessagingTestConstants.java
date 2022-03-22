@@ -150,6 +150,11 @@ public class MessagingTestConstants {
                 public static final String PLATFORM = "platform";
                 public static final String DENY_LISTED = "denylisted";
 
+                public static final class EventType {
+                    static final String OPENED = "pushTracking.applicationOpened";
+                    static final String CUSTOM_ACTION = "pushTracking.customAction";
+                }
+
                 private PushNotificationDetailsDataKeys() {
                 }
             }

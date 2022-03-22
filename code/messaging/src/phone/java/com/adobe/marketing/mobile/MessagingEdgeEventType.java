@@ -29,4 +29,24 @@ public enum MessagingEdgeEventType {
     public int getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        switch (this) {
+            case IN_APP_DISMISS:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS;
+            case IN_APP_INTERACT:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT;
+            case IN_APP_TRIGGER:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER;
+            case IN_APP_DISPLAY:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY;
+            case PUSH_APPLICATION_OPENED:
+                return MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED;
+            case PUSH_CUSTOM_ACTION:
+                return MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION;
+            default:
+                return super.toString();
+        }
+    }
 }

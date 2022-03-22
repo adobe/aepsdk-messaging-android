@@ -132,8 +132,8 @@ final class MessagingConstants {
                 static final String DENY_LISTED = "denylisted";
 
                 final class EventType {
-                    static final String OPENED = "push.opened";
-                    static final String INTERACT = "push.interact";
+                    static final String OPENED = "pushTracking.applicationOpened";
+                    static final String CUSTOM_ACTION = "pushTracking.customAction";
                 }
 
                 private PushNotificationDetailsDataKeys() {
