@@ -28,7 +28,6 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
         Optimize.registerExtension()
         Identity.registerExtension()
-        Lifecycle.registerExtension()
         Edge.registerExtension()
 
         MobileCore.start {

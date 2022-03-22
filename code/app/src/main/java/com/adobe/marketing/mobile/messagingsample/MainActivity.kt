@@ -171,7 +171,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         ServiceProvider.getInstance().messageDelegate = customMessagingDelegate
-        customMessagingDelegate.autoTrack = true
 
         // setup ui interaction listeners
         setupButtonClickListeners()
@@ -477,7 +476,7 @@ class CustomDelegate : MessageDelegate() {
 
             // if we're not showing the message now, we can save it for later
             showMessages.let {
-                println("message was suppressed: ${message?.messageId}")
+                println("message was suppressed: ${message?.id}")
                 message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
             }
         }

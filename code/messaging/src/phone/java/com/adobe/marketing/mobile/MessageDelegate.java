@@ -14,11 +14,6 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
-import android.os.Handler;
-import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
@@ -43,15 +38,9 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
     private final String JAVASCRIPT_QUERY_KEY = "js";
-    // public properties
-    public String messageId;
-    public boolean autoTrack = true;
     // internal properties
     MessagingInternal messagingInternal;
     Map<String, Object> details = new HashMap<>();
-    // private property
-    private static final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private static WebView jsWebView;
 
     /**
      * Determines if the passed in {@code String} link is a deeplink. If not,
@@ -85,58 +74,6 @@ public class MessageDelegate implements FullscreenMessageDelegate {
         }
     }
 
-    /**
-     * Adds a {@link WebViewJavascriptInterface} for the provided message name to the javascript {@link WebView}.
-     *
-     * @param name     {@link String} the name of the message being passed from javascript
-     * @param callback {@code AdobeCallback<String>} to be invoked when the javascript message payload is passed
-     */
-    public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback) {
-        if (StringUtils.isNullOrEmpty(name)) {
-            Log.trace(LOG_TAG, "Will not store the callback, no name was provided.");
-            return;
-        }
-
-        if (scriptHandlers.get(name) != null) {
-            Log.trace(LOG_TAG, "Will not create a new WebViewJavascriptInterface, the name is already in use.");
-            return;
-        }
-
-        // create webview for javascript evaluation if needed, otherwise just add a new js interface to the existing webview
-        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (jsWebView == null) {
-                    Log.trace(LOG_TAG, "Created new WebView for javascript evaluation.");
-                    jsWebView = new WebView(MobileCore.getApplication().getApplicationContext());
-                    final WebSettings settings = jsWebView.getSettings();
-                    settings.setJavaScriptEnabled(true);
-                    settings.setJavaScriptCanOpenWindowsAutomatically(true);
-                }
-                final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
-                jsWebView.addJavascriptInterface(javascriptInterface, name);
-                scriptHandlers.put(name, javascriptInterface);
-            }
-        });
-    }
-
-    void evaluateJavascript(final String content) {
-        if (StringUtils.isNullOrEmpty(content)) {
-            Log.debug(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
-            return;
-        }
-
-        for (final Map.Entry<String, WebViewJavascriptInterface> entry : scriptHandlers.entrySet()) {
-            jsWebView.evaluateJavascript(content, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(final String value) {
-                    Log.debug(LOG_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
-                    entry.getValue().run(value);
-                }
-            });
-        }
-    }
-
     // ============================================================================================
     // FullscreenMessageDelegate implementation
     // ============================================================================================
@@ -152,7 +89,7 @@ public class MessageDelegate implements FullscreenMessageDelegate {
                 "%s - Fullscreen message dismissed.", SELF_TAG);
         final MessageSettings aepMessageSettings = ((AEPMessage) fullscreenMessage).getSettings();
         final Message message = (Message) aepMessageSettings.getParent();
-        message.dismiss();
+        message.dismiss(false);
     }
 
     @Override
@@ -212,7 +149,6 @@ public class MessageDelegate implements FullscreenMessageDelegate {
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingInternal class available for tracking
                 messagingInternal = message.messagingInternal;
-                messageId = message.messageId;
                 if (messagingInternal != null) {
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
@@ -227,13 +163,13 @@ public class MessageDelegate implements FullscreenMessageDelegate {
             // handle optional javascript code to be executed
             final String javascript = messageData.get(MessagingConstants.MessagingScheme.JS);
             if (!StringUtils.isNullOrEmpty(javascript)) {
-                evaluateJavascript(javascript);
+                ((Message) (fullscreenMessage.getParent())).evaluateJavascript(javascript);
             }
         }
 
         final String host = uri.getHost();
         if ((host.equals(MessagingConstants.MessagingScheme.PATH_DISMISS)) || (host.equals(MessagingConstants.MessagingScheme.PATH_CANCEL))) {
-            message.dismiss();
+            message.dismiss(true);
         }
 
         return true;

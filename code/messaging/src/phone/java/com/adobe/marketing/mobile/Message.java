@@ -14,6 +14,11 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import android.os.Handler;
+import android.webkit.ValueCallback;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
@@ -32,13 +37,19 @@ import java.util.Map;
  */
 public class Message extends MessageDelegate {
     private final static String SELF_TAG = "Message";
+    // public properties
+    public String id;
+    public boolean autoTrack = true;
+    public WebView view;
+    // private properties
     private final AEPMessage aepMessage;
     private final FullscreenMessageDelegate fullscreenMessageDelegate;
+    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
 
     /**
      * Constructor.
      * <p>
-     * Every {@link Message} requires a {@link #messageId}, and must be of type "cjmiam".
+     * Every {@link Message} requires a {@link #id}, and must be of type "cjmiam".
      * <p>
      * The consequence {@code Map} for a {@code Message} is required to have valid values for the following fields:
      * <ul>
@@ -71,8 +82,8 @@ public class Message extends MessageDelegate {
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        messageId = getMessageId(details);
-        if (StringUtils.isNullOrEmpty(messageId)) {
+        id = getMessageId(details);
+        if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"id\" is null or empty.", SELF_TAG, consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
@@ -116,6 +127,7 @@ public class Message extends MessageDelegate {
      * Dispatch tracking information via a Messaging request content event.
      *
      * @param interaction {@code String} containing the interaction which occurred
+     * @param eventType {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (eventType == null) {
@@ -124,6 +136,63 @@ public class Message extends MessageDelegate {
             return;
         }
         messagingInternal.handleInAppTrackingInfo(eventType, interaction, this);
+    }
+
+    /**
+     * Adds a {@link WebViewJavascriptInterface} for the provided message name to the javascript {@link WebView}.
+     *
+     * @param name     {@link String} the name of the message being passed from javascript
+     * @param callback {@code AdobeCallback<String>} to be invoked when the javascript message payload is passed
+     */
+    public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback) {
+        if (StringUtils.isNullOrEmpty(name)) {
+            Log.trace(LOG_TAG, "Will not store the callback, no name was provided.");
+            return;
+        }
+
+        if (scriptHandlers.get(name) != null) {
+            Log.trace(LOG_TAG, "Will not create a new WebViewJavascriptInterface, the name is already in use.");
+            return;
+        }
+
+        // create webview for javascript evaluation if needed, otherwise just add a new js interface to the existing webview
+        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if (view == null) {
+                    Log.trace(LOG_TAG, "Created new WebView for javascript evaluation.");
+                    view = new WebView(MobileCore.getApplication().getApplicationContext());
+                    final WebSettings settings = view.getSettings();
+                    settings.setJavaScriptEnabled(true);
+                    settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                }
+                final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
+                view.addJavascriptInterface(javascriptInterface, name);
+                scriptHandlers.put(name, javascriptInterface);
+            }
+        });
+    }
+
+    void evaluateJavascript(final String content) {
+        if (StringUtils.isNullOrEmpty(content)) {
+            Log.debug(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
+            return;
+        }
+
+        if (scriptHandlers == null || scriptHandlers.isEmpty()) {
+            Log.debug(LOG_TAG, "Will not evaluate javascript, no script handlers have been set.");
+            return;
+        }
+
+        for (final Map.Entry<String, WebViewJavascriptInterface> entry : scriptHandlers.entrySet()) {
+            view.evaluateJavascript(content, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(final String value) {
+                    Log.debug(LOG_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
+                    entry.getValue().run(value);
+                }
+            });
+        }
     }
 
     // ui management
@@ -136,9 +205,9 @@ public class Message extends MessageDelegate {
         }
     }
 
-    public void dismiss() {
+    public void dismiss(final boolean suppressAutoTrack) {
         if (aepMessage != null) {
-            if (autoTrack) {
+            if (autoTrack && !suppressAutoTrack) {
                 track(null, MessagingEdgeEventType.IN_APP_DISMISS);
             }
 

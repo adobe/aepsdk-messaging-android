@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,8 +77,6 @@ public class MessageDelegateTests {
     @Mock
     UIService mockUIService;
     @Mock
-    WebView mockWebView;
-    @Mock
     MessagingInternal mockMessagingInternal;
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
@@ -106,9 +105,6 @@ public class MessageDelegateTests {
         when(mockApplication.getApplicationContext()).thenReturn(context);
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
-        mockWebView = PowerMockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebView);
-        when(mockWebView.getSettings()).thenReturn(mockWebSettings);
         when(mockMessagingInternal.getExecutor()).thenReturn(Executors.newSingleThreadExecutor());
     }
 
@@ -132,7 +128,7 @@ public class MessageDelegateTests {
         Log.debug(anyString(), anyString(), any());
 
         // verify Message.dismiss() called 1 time
-        verify(mockMessage, times(1)).dismiss();
+        verify(mockMessage, times(1)).dismiss(anyBoolean());
     }
 
     @Test
@@ -173,49 +169,5 @@ public class MessageDelegateTests {
         // verify no internal open url or ui service show url method is called
         verify(mockUIService, times(0)).showUrl(anyString());
         verify(mockAEPMessage, times(0)).openUrl(anyString());
-    }
-
-    @Test
-    public void test_loadJavascript_WithScriptHandlersSet() {
-        // setup
-        AdobeCallback<String> callback = new AdobeCallback<String>() {
-            @Override
-            public void call(String s) {
-                Assert.assertEquals("hello world", s);
-            }
-        };
-        // set js webview
-        Whitebox.setInternalState(MessageDelegate.class, "jsWebView", new WebView(context));
-        // set scriptHandlers map
-        Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-        scriptHandlers.put("test", new WebViewJavascriptInterface(callback));
-        Whitebox.setInternalState(MessageDelegate.class, "scriptHandlers", scriptHandlers);
-
-        // test
-        messageDelegate.evaluateJavascript("(function test(hello world) { return(arg); })()");
-        // verify evaluate javascript called
-        verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
-    }
-
-    @Test
-    public void test_loadJavascript_WithNoScriptHandlersSet() {
-        // test
-        messageDelegate.evaluateJavascript("(function test(hello world) { return(arg); })()");
-
-        // verify evaluate javascript called
-        verify(mockWebView, times(0)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
-    }
-
-    @Test
-    public void test_loadJavascriptWhenJavascriptIsNull() throws Exception {
-        // setup
-        WebView mockWebview = Mockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebview);
-        PowerMockito.when(mockWebview.getSettings()).thenReturn(mockWebSettings);
-        // test
-        messageDelegate.evaluateJavascript(null);
-
-        // verify evaluate javascript not called
-        verify(mockWebview, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
     }
 }
