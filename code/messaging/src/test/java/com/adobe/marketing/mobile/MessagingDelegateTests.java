@@ -22,39 +22,30 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import android.app.Application;
 import android.content.Context;
-import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class, ServiceProvider.class})
-public class MessageDelegateTests {
+@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessagingDelegate.class, ServiceProvider.class})
+public class MessagingDelegateTests {
 
     private EventHub eventHub;
-    private MessageDelegate messageDelegate;
+    private MessagingDelegate messagingDelegate;
 
     @Mock
     Core mockCore;
@@ -71,8 +62,6 @@ public class MessageDelegateTests {
     @Mock
     Context context;
     @Mock
-    WebSettings mockWebSettings;
-    @Mock
     ServiceProvider mockServiceProvider;
     @Mock
     UIService mockUIService;
@@ -88,7 +77,7 @@ public class MessageDelegateTests {
 
         setupMocks();
 
-        messageDelegate = new MessageDelegate();
+        messagingDelegate = new MessagingDelegate();
     }
 
     void setupMocks() throws Exception {
@@ -111,7 +100,7 @@ public class MessageDelegateTests {
     @Test
     public void test_onMessageShow() {
         // test
-        messageDelegate.onShow(mockAEPMessage);
+        messagingDelegate.onShow(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -121,7 +110,7 @@ public class MessageDelegateTests {
     @Test
     public void test_onMessageDismiss() {
         // test
-        messageDelegate.onDismiss(mockAEPMessage);
+        messagingDelegate.onDismiss(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -134,7 +123,7 @@ public class MessageDelegateTests {
     @Test
     public void test_onMessageShowFailure() {
         // test
-        messageDelegate.onShowFailure();
+        messagingDelegate.onShowFailure();
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -144,7 +133,7 @@ public class MessageDelegateTests {
     @Test
     public void test_openUrlWithAdbDeeplink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "adb_deeplink://signup");
+        messagingDelegate.openUrl(mockAEPMessage, "adb_deeplink://signup");
 
         // verify the internal open url method is called
         verify(mockAEPMessage, times(1)).openUrl(urlStringCaptor.capture());
@@ -154,7 +143,7 @@ public class MessageDelegateTests {
     @Test
     public void test_openUrlWithWebLink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
+        messagingDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
 
         // verify the ui service is called to show the url
         verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
@@ -164,7 +153,7 @@ public class MessageDelegateTests {
     @Test
     public void test_openUrlWithInvalidLink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "htp://www.adobe.com");
+        messagingDelegate.openUrl(mockAEPMessage, "htp://www.adobe.com");
 
         // verify no internal open url or ui service show url method is called
         verify(mockUIService, times(0)).showUrl(anyString());

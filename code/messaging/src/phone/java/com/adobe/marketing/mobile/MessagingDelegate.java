@@ -34,7 +34,7 @@ import java.util.Map;
  * Additionally, this class handles the dispatching of Experience Edge tracking events as well as opening URL's
  * and loading any javascript code for the {@link Message} class.
  */
-public class MessageDelegate implements FullscreenMessageDelegate {
+public class MessagingDelegate implements FullscreenMessageDelegate {
     private final static String SELF_TAG = "MessageDelegate";
     private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
     private final String JAVASCRIPT_QUERY_KEY = "js";

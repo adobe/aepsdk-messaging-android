@@ -19,7 +19,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import android.webkit.ValueCallback
 import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -461,7 +460,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class CustomDelegate : MessageDelegate() {
+class CustomDelegate : MessagingDelegate() {
     private var currentMessage: FullscreenMessage? = null
     private var webview: WebView? = null
     var showMessages = true

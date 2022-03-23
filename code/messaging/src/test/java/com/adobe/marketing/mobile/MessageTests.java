@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
-import android.content.Context;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -185,7 +184,7 @@ public class MessageTests {
     @Test
     public void test_messageShow_withShowMessageTrueInCustomDelegate() {
         // setup custom delegate, show message is true by default
-        CustomMessageDelegate customMessageDelegate = new CustomMessageDelegate();
+        CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
         ServiceProvider.getInstance().setMessageDelegate(customMessageDelegate);
         // setup mocks
         try {
@@ -221,7 +220,7 @@ public class MessageTests {
     public void test_messageShow_withShowMessageFalseInCustomDelegate() {
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(message);
         // setup custom delegate
-        CustomMessageDelegate customMessageDelegate = new CustomMessageDelegate();
+        CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
         customMessageDelegate.setShowMessage(false);
         // setup mocks
         try {
@@ -426,7 +425,7 @@ public class MessageTests {
         verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
     }
 
-    class CustomMessageDelegate extends MessageDelegate {
+    class CustomMessagingDelegate extends MessagingDelegate {
         private boolean showMessage = true;
 
         @Override

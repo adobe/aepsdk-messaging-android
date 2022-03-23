@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
  */
-public class Message extends MessageDelegate {
+public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
     // public properties
     public String id;
