@@ -109,25 +109,10 @@ public class Message extends MessageDelegate {
     }
 
     /**
-     * Gets the message id {@code String} contained in the message execution payload.
-     *
-     * @param messageDetails {@code Map<String, Object>} containing the message details
-     * @return {@code String} containing the message id or null if none was found
-     */
-    private String getMessageId(Map<String, Object> messageDetails) {
-        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(MessagingConstants.TrackingKeys._XDM);
-        final Map<String, Object> mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map<String, Object>) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
-        final Map<String, Object> experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map<String, Object>) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
-        final Map<String, Object> cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map<String, Object>) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
-        final Map<String, Object> messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map<String, Object>) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
-        return MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
-    }
-
-    /**
      * Dispatch tracking information via a Messaging request content event.
      *
      * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
+     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (eventType == null) {
@@ -347,5 +332,20 @@ public class Message extends MessageDelegate {
                 .setUiTakeover(uiTakeover)
                 .setGestures(gestureMap)
                 .build();
+    }
+
+    /**
+     * Gets the message id {@code String} contained in the message execution payload.
+     *
+     * @param messageDetails {@code Map<String, Object>} containing the message details
+     * @return {@code String} containing the message id or null if none was found
+     */
+    private String getMessageId(Map<String, Object> messageDetails) {
+        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(MessagingConstants.TrackingKeys._XDM);
+        final Map<String, Object> mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map<String, Object>) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
+        final Map<String, Object> experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map<String, Object>) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+        final Map<String, Object> cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map<String, Object>) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
+        final Map<String, Object> messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map<String, Object>) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
+        return MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
     }
 }

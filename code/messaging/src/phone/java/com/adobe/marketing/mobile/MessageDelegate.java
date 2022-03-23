@@ -42,47 +42,26 @@ public class MessageDelegate implements FullscreenMessageDelegate {
     MessagingInternal messagingInternal;
     Map<String, Object> details = new HashMap<>();
 
-    /**
-     * Determines if the passed in {@code String} link is a deeplink. If not,
-     * the {@link UIService} is used to load the link.
-     *
-     * @param url {@link String} containing the deeplink to load or url to be shown
-     */
-    protected void openUrl(final FullscreenMessage message, final String url) {
-        if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(LOG_TAG, "Will not open URL, it is null or empty.");
-            return;
-        }
-
-        // if we have a deeplink, open the url via an intent
-        if (url.contains(MessagingConstants.MessagingScheme.DEEPLINK)) {
-            Log.debug(LOG_TAG, "%s - Opening deeplink (%s).", SELF_TAG, url);
-            message.openUrl(url);
-            return;
-        }
-
-        // otherwise check if it is a valid url. if so, open the url with the ui service.
-        if (!StringUtils.stringIsUrl(url)) {
-            Log.debug(LOG_TAG, "URL is invalid: %s", url);
-            return;
-        }
-
-        final UIService uiService = ServiceProvider.getInstance().getUIService();
-
-        if (uiService == null || !uiService.showUrl(url)) {
-            Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, url);
-        }
-    }
-
     // ============================================================================================
     // FullscreenMessageDelegate implementation
     // ============================================================================================
+
+    /**
+     * Invoked when the in-app message is displayed.
+     *
+     * @param fullscreenMessage the {@link FullscreenMessage} being displayed
+     */
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message shown.", SELF_TAG);
     }
 
+    /**
+     * Invoked when the in-app message is dismissed.
+     *
+     * @param fullscreenMessage the {@link FullscreenMessage} being dismissed
+     */
     @Override
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
@@ -92,9 +71,23 @@ public class MessageDelegate implements FullscreenMessageDelegate {
         message.dismiss(false);
     }
 
+    /**
+     * Used to determine if the in-app message should be shown.
+     *
+     * @param fullscreenMessage the {@link FullscreenMessage} that is about to get displayed
+     */
     @Override
     public boolean shouldShowMessage(final FullscreenMessage fullscreenMessage) {
         return true;
+    }
+
+    /**
+     * Invoked when the in-app message failed to be displayed.
+     */
+    @Override
+    public void onShowFailure() {
+        Log.debug(LOG_TAG,
+                "%s - Fullscreen message failed to show.", SELF_TAG);
     }
 
     /**
@@ -175,6 +168,42 @@ public class MessageDelegate implements FullscreenMessageDelegate {
         return true;
     }
 
+    // ============================================================================================
+    // Helper functions
+    // ============================================================================================
+
+    /**
+     * Determines if the passed in {@code String} link is a deeplink. If not,
+     * the {@link UIService} is used to load the link.
+     *
+     * @param url {@link String} containing the deeplink to load or url to be shown
+     */
+    protected void openUrl(final FullscreenMessage message, final String url) {
+        if (StringUtils.isNullOrEmpty(url)) {
+            Log.debug(LOG_TAG, "Will not open URL, it is null or empty.");
+            return;
+        }
+
+        // if we have a deeplink, open the url via an intent
+        if (url.contains(MessagingConstants.MessagingScheme.DEEPLINK)) {
+            Log.debug(LOG_TAG, "%s - Opening deeplink (%s).", SELF_TAG, url);
+            message.openUrl(url);
+            return;
+        }
+
+        // otherwise check if it is a valid url. if so, open the url with the ui service.
+        if (!StringUtils.stringIsUrl(url)) {
+            Log.debug(LOG_TAG, "URL is invalid: %s", url);
+            return;
+        }
+
+        final UIService uiService = ServiceProvider.getInstance().getUIService();
+
+        if (uiService == null || !uiService.showUrl(url)) {
+            Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, url);
+        }
+    }
+
     private String encodeJavascript(final String urlString) {
         final String[] queryTokens = urlString.split("\\?");
         final Map<String, String> queryParams = UrlUtilities.extractQueryParameters(queryTokens[1]);
@@ -202,11 +231,5 @@ public class MessageDelegate implements FullscreenMessageDelegate {
             Log.debug(LOG_TAG, "%s - Invalid encoding type (%s), javascript will be ignored.", SELF_TAG, StandardCharsets.UTF_8);
         }
         return processedUrlStringBuilder.toString();
-    }
-
-    @Override
-    public void onShowFailure() {
-        Log.debug(LOG_TAG,
-                "%s - Fullscreen message failed to show.", SELF_TAG);
     }
 }
