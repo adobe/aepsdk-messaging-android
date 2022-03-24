@@ -31,6 +31,8 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
@@ -40,11 +42,12 @@ public class Message extends MessagingDelegate {
     // public properties
     public String id;
     public boolean autoTrack = true;
-    public WebView view;
+    public WebView view = createWebView();
     // private properties
     private final AEPMessage aepMessage;
     private final FullscreenMessageDelegate fullscreenMessageDelegate;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private Handler webViewHandler;
 
     /**
      * Constructor.
@@ -141,16 +144,9 @@ public class Message extends MessagingDelegate {
         }
 
         // create webview for javascript evaluation if needed, otherwise just add a new js interface to the existing webview
-        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
+        webViewHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (view == null) {
-                    Log.trace(LOG_TAG, "Created new WebView for javascript evaluation.");
-                    view = new WebView(MobileCore.getApplication().getApplicationContext());
-                    final WebSettings settings = view.getSettings();
-                    settings.setJavaScriptEnabled(true);
-                    settings.setJavaScriptCanOpenWindowsAutomatically(true);
-                }
                 final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
                 view.addJavascriptInterface(javascriptInterface, name);
                 scriptHandlers.put(name, javascriptInterface);
@@ -158,6 +154,14 @@ public class Message extends MessagingDelegate {
         });
     }
 
+    /**
+     * Evaluates the passed in {@code String} content containing javascript code by calling
+     * {@link WebView#evaluateJavascript(String, ValueCallback)} in the created {@code WebView}.
+     * Any output from the executed javascript code will be returned in an {@link AdobeCallback}
+     * previously set in a call to {@link #handleJavascriptMessage(String, AdobeCallback)}.
+     *
+     * @param content {@code String} containing the javascript code to be executed
+     */
     void evaluateJavascript(final String content) {
         if (StringUtils.isNullOrEmpty(content)) {
             Log.debug(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
@@ -198,6 +202,33 @@ public class Message extends MessagingDelegate {
 
             aepMessage.dismiss();
         }
+    }
+
+    /**
+     * Creates a {@link WebView} for handling javascript code.
+     *
+     * @return the created {@code WebView}
+     */
+    private WebView createWebView() {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final WebView[] webView = new WebView[1];
+        webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
+        webViewHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                webView[0] = new WebView(MobileCore.getApplication().getApplicationContext());
+                final WebSettings settings = webView[0].getSettings();
+                settings.setJavaScriptEnabled(true);
+                settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await(2, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            Log.debug(LOG_TAG, "Exception occurred while waiting for WebView to be created: (%e)", e.getMessage());
+        }
+        return webView[0];
     }
 
     /**
