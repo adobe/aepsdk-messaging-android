@@ -44,8 +44,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,11 +54,11 @@ import java.util.Map;
 public class MessagingInternalHandleRulesResponseContentTests {
     private final Map<String, Object> mobileParameters = new HashMap<String, Object>() {
         {
-            put(MessagingConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
-            put(MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");
-            put(MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
-            put(MessagingConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "bottom");
-            put(MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
+            put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
+            put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");
+            put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
+            put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "bottom");
+            put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
         }
     };
     private final Map<String, Object> mockConfigState = new HashMap<>();
@@ -68,7 +66,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
     private final Map<String, Object> identityMap = new HashMap<>();
     private final Map<String, Object> ecidMap = new HashMap<>();
     private final List<Map> ids = new ArrayList<>();
-    private final byte[] base64EncodedBytes = "decisionScope".getBytes(StandardCharsets.UTF_8);
+    private final byte[] base64EncodedBytes = "ZGVjaXNpb25TY29wZQ==".getBytes(); // base64 encoded "decisionScope"
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -104,15 +102,46 @@ public class MessagingInternalHandleRulesResponseContentTests {
     private EventHub eventHub;
 
     @Before
-    public void setup() throws PackageManager.NameNotFoundException, URISyntaxException {
+    public void setup() throws Exception {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupPlatformServicesMocks();
+        setupAcitivtyAndPlacementIdMocks();
+        setupSharedStateMocks();
+
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        MobileCore.setApplication(App.getApplication());
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(ServiceProvider.class);
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
+        when(MobileCore.getApplication()).thenReturn(mockApplication);
+    }
 
+    void setupPlatformServicesMocks() {
+        jsonUtilityService = new AndroidJsonUtility();
+        when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
+        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
+        when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
+
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
+
+        // setup createFullscreenMessage mock
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
+    }
+
+    void setupAcitivtyAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
         // setup activity id mocks
         when(App.getApplication()).thenReturn(mockApplication);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
@@ -122,22 +151,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(bundle.getString(anyString())).thenReturn("mock_activity");
         // setup placement id mocks
         when(mockApplication.getPackageName()).thenReturn("mock_placement");
+    }
 
-        // setup services mocks
-        jsonUtilityService = new AndroidJsonUtility();
-        when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
-        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
-        when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
-        when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
-        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
-        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
-        when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
-        final File mockCache = new File("mock_cache");
-        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-
-        // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
-
+    void setupSharedStateMocks() {
         // setup configuration shared state mock
         when(mockExtensionApi.getSharedEventState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), any(ExtensionErrorCallback.class))).thenReturn(mockConfigState);
         mockConfigState.put(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "mock_dataset_id");
@@ -148,9 +164,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
         ids.add(ecidMap);
         identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, ids);
         mockIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
-
-        messagingInternal = new MessagingInternal(mockExtensionApi);
-        MobileCore.setApplication(App.getApplication());
     }
 
     // ========================================================================================

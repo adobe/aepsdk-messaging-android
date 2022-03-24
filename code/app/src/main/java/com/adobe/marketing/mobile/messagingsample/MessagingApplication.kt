@@ -28,9 +28,6 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
         Optimize.registerExtension()
         Identity.registerExtension()
-        UserProfile.registerExtension()
-        Lifecycle.registerExtension()
-        Signal.registerExtension()
         Edge.registerExtension()
 
         MobileCore.start {
@@ -38,12 +35,13 @@ class MessagingApplication : Application() {
             MobileCore.configureWithAppID("3149c49c3910/cf7779260cdd/launch-be72758aa82a-development")
             MobileCore.lifecycleStart(null)
             // update config to use cjmstage for int integration
-            val cjmStageConfig = HashMap<String, Any>()
-            cjmStageConfig["edge.environment"] = "int"
-            cjmStageConfig["experienceCloud.org"] = "745F37C35E4B776E0A49421B@AdobeOrg"
-            cjmStageConfig["edge.configId"] = "d9457e9f-cacc-4280-88f2-6c846e3f9531"
-            //cjmStageConfig["edge.configId"] = "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
-            cjmStageConfig["messaging.eventDataset"] = "610ae80b3cbbc718dab06208"
+            val cjmStageConfig: HashMap<String, Any> = hashMapOf(
+                "edge.environment" to "int",
+                "experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
+                "edge.configId" to "d9457e9f-cacc-4280-88f2-6c846e3f9531",
+                //"edge.configId" to "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
+                "messaging.eventDataset" to "610ae80b3cbbc718dab06208"
+            )
             MobileCore.updateConfiguration(cjmStageConfig)
         }
 

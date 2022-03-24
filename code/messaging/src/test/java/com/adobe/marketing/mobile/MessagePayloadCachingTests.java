@@ -22,6 +22,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -46,15 +47,14 @@ public class MessagePayloadCachingTests {
 
     @Before
     public void setup() throws MissingPlatformServicesException {
-        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService);
-        messagingCacheUtilities.setCacheManager(mockCacheManager);
+        messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, mockCacheManager);
     }
 
     @Test
     public void testGetCachedMessages() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = TestUtils.getMapFromFile("show_once");
-        final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("show_once.json").toURI());
+        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("show_once.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
         final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
@@ -89,7 +89,7 @@ public class MessagePayloadCachingTests {
     @Test
     public void testGetCachedMessages_WhenCacheMessageIsInvalid() throws URISyntaxException {
         // setup
-        final File cachedFile = new File(TestUtils.class.getClassLoader().getResource("invalid.json").toURI());
+        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("invalid.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
         final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
@@ -102,13 +102,13 @@ public class MessagePayloadCachingTests {
     @Test
     public void testCacheMessagePayload() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = TestUtils.getMapFromFile("show_once");
-        final File cachedMessageLocation = new File(TestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
+        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final File cachedMessageLocation = new File(MessagingTestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
         when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
         // verify createNewCacheFile called
         verify(mockCacheManager, times(1)).createNewCacheFile(anyString(), anyString(), any(Date.class));
     }
@@ -120,7 +120,7 @@ public class MessagePayloadCachingTests {
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
         // verify createNewCacheFile not called
         verify(mockCacheManager, times(0)).createNewCacheFile(anyString(), anyString(), any(Date.class));
     }
@@ -130,6 +130,6 @@ public class MessagePayloadCachingTests {
         // test
         messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
         // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(any(List.class), anyString(), anyBoolean());
+        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
     }
 }

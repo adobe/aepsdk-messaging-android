@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
 public class ListenerHubSharedStateTests {
-    private final int EXECUTOR_TIMEOUT = 5;
+    private final int EXECUTOR_TIMEOUT = 5; // in seconds
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     @Mock
     MessagingInternal mockMessagingInternal;
@@ -52,7 +52,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(1)).processHubSharedState(mockEvent);
@@ -66,7 +66,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);
@@ -82,7 +82,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);

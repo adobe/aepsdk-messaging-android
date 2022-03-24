@@ -139,7 +139,7 @@ public final class Messaging {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        final Event messagingEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT,
+        final Event messagingEvent = new Event.Builder(MessagingConstants.EventName.PUSH_NOTIFICATION_INTERACTION_EVENT,
                 MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setData(eventData)
                 .build();
@@ -158,7 +158,7 @@ public final class Messaging {
         final EventData eventData = new EventData();
         eventData.putBoolean(REFRESH_MESSAGES, true);
 
-        final Event refreshMessageEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_RETRIEVE_MESSAGE_DEFINITIONS,
+        final Event refreshMessageEvent = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
                 MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setData(eventData)
                 .build();

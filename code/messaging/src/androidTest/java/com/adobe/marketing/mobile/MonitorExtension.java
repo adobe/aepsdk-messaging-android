@@ -18,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A third party extension class aiding for assertion against dispatched events, shared state
@@ -60,8 +57,8 @@ class MonitorExtension extends Extension {
      * Unregister the Monitor Extension from the EventHub.
      */
     public static void unregisterExtension() {
-        Event event = new Event.Builder("Unregister Monitor Extension Request", TestConstants.EventType.MONITOR,
-                TestConstants.EventSource.UNREGISTER)
+        Event event = new Event.Builder("Unregister Monitor Extension Request", MessagingTestConstants.EventType.MONITOR,
+                MessagingTestConstants.EventSource.UNREGISTER)
                 .build();
         MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
             @Override
@@ -115,12 +112,12 @@ class MonitorExtension extends Extension {
      * @param event
      */
     public void wildcardProcessor(final Event event) {
-        if (TestConstants.EventType.MONITOR.equalsIgnoreCase(event.getType())) {
-            if (TestConstants.EventSource.SHARED_STATE_REQUEST.equalsIgnoreCase(event.getSource())) {
+        if (MessagingTestConstants.EventType.MONITOR.equalsIgnoreCase(event.getType())) {
+            if (MessagingTestConstants.EventSource.SHARED_STATE_REQUEST.equalsIgnoreCase(event.getSource())) {
                 processSharedStateRequest(event);
-            } else if (TestConstants.EventSource.XDM_SHARED_STATE_REQUEST.equalsIgnoreCase(event.getSource())) {
+            } else if (MessagingTestConstants.EventSource.XDM_SHARED_STATE_REQUEST.equalsIgnoreCase(event.getSource())) {
                 processXDMSharedStateRequest(event);
-            } else if (TestConstants.EventSource.UNREGISTER.equalsIgnoreCase(event.getSource())) {
+            } else if (MessagingTestConstants.EventSource.UNREGISTER.equalsIgnoreCase(event.getSource())) {
                 processUnregisterRequest(event);
             }
 
@@ -144,18 +141,18 @@ class MonitorExtension extends Extension {
     }
 
     public static boolean waitForRulesToBeLoaded(final int expectedModuleRuleCount, final String moduleToWaitFor) {
-        int MAX_WAIT_TIME = 10000;
+        int MAX_WAIT_TIME = 5000;
         int WAIT_INCREMENT = 50;
         int totalWaitTime = 0;
         ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
-        while(moduleRules.size() != expectedModuleRuleCount && totalWaitTime <= MAX_WAIT_TIME) {
+        while (moduleRules.size() != expectedModuleRuleCount && totalWaitTime <= MAX_WAIT_TIME) {
             moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
             totalWaitTime += WAIT_INCREMENT;
             TestHelper.sleep(WAIT_INCREMENT);
         }
 
         Iterator iterator = moduleRules.keySet().iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Module module = (Module) iterator.next();
             if (module.getModuleName().equals(moduleToWaitFor)) {
                 // rules for module were loaded
@@ -189,7 +186,7 @@ class MonitorExtension extends Extension {
             return;
         }
 
-        String stateOwner = eventData.optString(TestConstants.EventDataKey.STATE_OWNER, null);
+        String stateOwner = eventData.optString(MessagingTestConstants.EventDataKey.STATE_OWNER, null);
 
         if (stateOwner == null) {
             return;
@@ -197,8 +194,8 @@ class MonitorExtension extends Extension {
 
         EventData sharedState = getApi().getXDMSharedEventState(stateOwner, event);
 
-        Event responseEvent = new Event.Builder("Get Shared State Response", TestConstants.EventType.MONITOR,
-                TestConstants.EventSource.XDM_SHARED_STATE_RESPONSE)
+        Event responseEvent = new Event.Builder("Get Shared State Response", MessagingTestConstants.EventType.MONITOR,
+                MessagingTestConstants.EventSource.XDM_SHARED_STATE_RESPONSE)
                 .setEventData(sharedState == null ? null : sharedState.toObjectMap())
                 .setPairID(event.getResponsePairID())
                 .build();
@@ -219,7 +216,7 @@ class MonitorExtension extends Extension {
             return;
         }
 
-        String stateOwner = eventData.optString(TestConstants.EventDataKey.STATE_OWNER, null);
+        String stateOwner = eventData.optString(MessagingTestConstants.EventDataKey.STATE_OWNER, null);
 
         if (stateOwner == null) {
             return;
@@ -227,8 +224,8 @@ class MonitorExtension extends Extension {
 
         EventData sharedState = getApi().getSharedEventState(stateOwner, event);
 
-        Event responseEvent = new Event.Builder("Get Shared State Response", TestConstants.EventType.MONITOR,
-                TestConstants.EventSource.SHARED_STATE_RESPONSE)
+        Event responseEvent = new Event.Builder("Get Shared State Response", MessagingTestConstants.EventType.MONITOR,
+                MessagingTestConstants.EventSource.SHARED_STATE_RESPONSE)
                 .setEventData(sharedState == null ? null : sharedState.toObjectMap())
                 .setPairID(event.getResponsePairID())
                 .build();

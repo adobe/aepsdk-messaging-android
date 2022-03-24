@@ -15,89 +15,89 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-class IAMPayloadFormatUtils {
-    /**
-     * Converts provided [org.json.JSONObject] into [java.util.Map] for any number of levels, which can be used as event data
-     * This method is recursive.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonObject to be converted
-     * @return [java.util.Map] containing the elements from the provided json, null if `jsonObject` is null
-     */
-    @Throws(JSONException::class)
-    fun toMap(jsonObject: JSONObject?): Map<String, Any?>? {
-        if (jsonObject == null) {
-            return null
+class PayloadFormatUtils {
+    class PayloadFormatUtils private constructor() {}
+    companion object {
+        /**
+         * Converts provided [org.json.JSONObject] into [java.util.Map] for any number of levels, which can be used as event data
+         * This method is recursive.
+         * The elements for which the conversion fails will be skipped.
+         *
+         * @param jsonObject to be converted
+         * @return [java.util.Map] containing the elements from the provided json, null if `jsonObject` is null
+         */
+        @Throws(JSONException::class)
+        fun toMap(jsonObject: JSONObject?): Map<String, Any?>? {
+            return jsonObject?.let {
+                val jsonAsMap: MutableMap<String, Any?> = HashMap()
+                val keysIterator = jsonObject.keys() ?: return null
+                while (keysIterator.hasNext()) {
+                    val nextKey = keysIterator.next()
+                    jsonAsMap[nextKey] = fromJson(jsonObject[nextKey])
+                }
+                return jsonAsMap
+            }
         }
-        val jsonAsMap: MutableMap<String, Any?> = HashMap()
-        val keysIterator = jsonObject.keys() ?: return null
-        while (keysIterator.hasNext()) {
-            val nextKey = keysIterator.next()
-            jsonAsMap[nextKey] = fromJson(jsonObject[nextKey])
-        }
-        return jsonAsMap
-    }
 
-    /**
-     * Converts provided [org.json.JSONObject] into a [java.util.Map] for any number of levels, which can be used as event data.
-     * This method is recursive.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonObject to be converted
-     * @return [java.util.Map] containing the elements from the provided json, null if `jsonObject` is null
-     */
-    @Throws(JSONException::class)
-    fun toObjectMap(jsonObject: JSONObject?): Map<String, Any?>? {
-        if (jsonObject == null) {
-            return null
+        /**
+         * Converts provided [org.json.JSONObject] into a [java.util.Map] for any number of levels, which can be used as event data.
+         * This method is recursive.
+         * The elements for which the conversion fails will be skipped.
+         *
+         * @param jsonObject to be converted
+         * @return [java.util.Map] containing the elements from the provided json, null if `jsonObject` is null
+         */
+        @Throws(JSONException::class)
+        fun toObjectMap(jsonObject: JSONObject?): Map<String, Any?>? {
+            return jsonObject?.let {
+                val jsonAsObjectMap: MutableMap<String, Any?> = HashMap()
+                val keysIterator = jsonObject.keys()
+                while (keysIterator.hasNext()) {
+                    val nextKey = keysIterator.next()
+                    val value = fromJson(jsonObject[nextKey])
+                    jsonAsObjectMap[nextKey] = value
+                }
+                return jsonAsObjectMap
+            }
         }
-        val jsonAsObjectMap: MutableMap<String, Any?> = HashMap()
-        val keysIterator = jsonObject.keys()
-        while (keysIterator.hasNext()) {
-            val nextKey = keysIterator.next()
-            val value = fromJson(jsonObject[nextKey])
-            jsonAsObjectMap[nextKey] = value
-        }
-        return jsonAsObjectMap
-    }
 
-    /**
-     * Converts provided [JSONArray] into [List] for any number of levels which can be used as event data
-     * This method is recursive.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonArray to be converted
-     * @return [List] containing the elements from the provided json, null if `jsonArray` is null
-     */
-    @Throws(JSONException::class)
-    fun toList(jsonArray: JSONArray?): List<Any?>? {
-        if (jsonArray == null) {
-            return null
+        /**
+         * Converts provided [JSONArray] into [List] for any number of levels which can be used as event data
+         * This method is recursive.
+         * The elements for which the conversion fails will be skipped.
+         *
+         * @param jsonArray to be converted
+         * @return [List] containing the elements from the provided json, null if `jsonArray` is null
+         */
+        @Throws(JSONException::class)
+        fun toList(jsonArray: JSONArray?): List<Any?>? {
+            return jsonArray?.let {
+                val jsonArrayAsList: MutableList<Any?> = ArrayList()
+                val size = jsonArray.length()
+                for (i in 0 until size) {
+                    jsonArrayAsList.add(fromJson(jsonArray[i]))
+                }
+                return jsonArrayAsList
+            }
         }
-        val jsonArrayAsList: MutableList<Any?> = ArrayList()
-        val size = jsonArray.length()
-        for (i in 0 until size) {
-            jsonArrayAsList.add(fromJson(jsonArray[i]))
-        }
-        return jsonArrayAsList
-    }
 
-    /**
-     * Converts provided [JSONObject] to a [Map] or [JSONArray] into a [List].
-     *
-     * @param json to be converted
-     * @return [Object] converted from the provided json object.
-     */
-    @Throws(JSONException::class)
-    private fun fromJson(json: Any): Any? {
-        return if (json === JSONObject.NULL) {
-            null
-        } else if (json is JSONObject) {
-            toMap(json)
-        } else if (json is JSONArray) {
-            toList(json)
-        } else {
-            json
+        /**
+         * Converts provided [JSONObject] to a [Map] or [JSONArray] into a [List].
+         *
+         * @param json to be converted
+         * @return [Object] converted from the provided json object.
+         */
+        @Throws(JSONException::class)
+        private fun fromJson(json: Any): Any? {
+            return if (json === JSONObject.NULL) {
+                null
+            } else if (json is JSONObject) {
+                toMap(json)
+            } else if (json is JSONArray) {
+                toList(json)
+            } else {
+                json
+            }
         }
     }
 }

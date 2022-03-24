@@ -25,8 +25,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
 import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.FCM;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.COLLECT;
@@ -46,6 +46,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -58,7 +59,6 @@ class MessagingInternal extends Extension {
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
     private MessagingCacheUtilities messagingCacheUtilities;
-    private AndroidEventHistory androidEventHistory;
     private ExecutorService executorService;
     private boolean initialMessageFetchComplete = false;
 
@@ -89,10 +89,16 @@ class MessagingInternal extends Extension {
         final PlatformServices platformServices = MessagingUtils.getPlatformServices();
         final SystemInfoService systemInfoService = platformServices.getSystemInfoService();
         final NetworkService networkService = platformServices.getNetworkService();
+        CacheManager cacheManager = null;
+        try {
+            cacheManager = new CacheManager(systemInfoService);
+        } catch (final MissingPlatformServicesException exception) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the cache manager: %s", exception.getMessage());
+        }
 
         // initialize the Messaging Caching functionality
         try {
-            messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+            messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService, cacheManager);
         } catch (final MissingPlatformServicesException e) {
             Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
         }
@@ -158,14 +164,14 @@ class MessagingInternal extends Extension {
         final Map<String, Object> customActionMap = new HashMap<>();
 
         if (actionId != null) {
-            customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
-            trackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
+            customActionMap.put(XDMDataKeys.ACTION_ID, actionId);
+            trackingMap.put(XDMDataKeys.CUSTOM_ACTION, customActionMap);
         }
 
-        trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
-        trackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING_MIXIN_NAME, trackingMap);
+        trackingMap.put(XDMDataKeys.PUSH_PROVIDER, FCM);
+        trackingMap.put(XDMDataKeys.PUSH_PROVIDER_MESSAGE_ID, messageId);
+        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.PUSH_NOTIFICATION_TRACKING_MIXIN_NAME, trackingMap);
 
         return xdmMap;
     }
@@ -364,14 +370,14 @@ class MessagingInternal extends Extension {
                     eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (configSharedState == null || configSharedState.isEmpty()) {
+            if (MessagingUtils.isMapNullOrEmpty(configSharedState)) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (edgeIdentitySharedState == null || edgeIdentitySharedState.isEmpty()) {
+            if (MessagingUtils.isMapNullOrEmpty(edgeIdentitySharedState)) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
@@ -405,7 +411,7 @@ class MessagingInternal extends Extension {
                 handleTrackingInfo(eventToProcess);
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
                 // validate the edge response event from Optimize then load any iam rules present
-                final ArrayList<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+                final List<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
                     inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
                     messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
@@ -450,15 +456,11 @@ class MessagingInternal extends Extension {
         getApi().setSharedEventState(map, event, errorCallback);
 
         // Send an edge event with profile data as event data
-        final Event profileEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(eventData)
-                .build();
-        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
-            }
-        });
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                eventData,
+                MessagingConstants.EventDispatchErrors.PUSH_PROFILE_UPDATE_ERROR);
     }
 
     public void handleTrackingInfo(final Event event) {
@@ -480,7 +482,7 @@ class MessagingInternal extends Extension {
         }
 
         final String datasetId = messagingState.getExperienceEventDatasetId();
-        if (datasetId == null || datasetId.isEmpty()) {
+        if (StringUtils.isNullOrEmpty(datasetId)) {
             Log.warning(LOG_TAG, "%s - Unable to record a message interaction, configuration information is not available.", SELF_TAG);
             return;
         }
@@ -504,47 +506,34 @@ class MessagingInternal extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), null)
-                .setEventData(xdmData)
-                .build();
-
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
+        // dispatch push tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                MessagingConstants.EventDispatchErrors.PUSH_TRACKING_ERROR);
     }
 
-    public void handleInAppTrackingInfo(final Event event, final Map<String, Object> messageDetails) {
+    public void handleInAppTrackingInfo(final MessagingEdgeEventType eventType, final String interaction, final Message message) {
         final String datasetId = messagingState.getExperienceEventDatasetId();
         if (StringUtils.isNullOrEmpty(datasetId)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
             return;
         }
 
-        if (messageDetails == null || messageDetails.isEmpty()) {
-            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the experience info is missing.", SELF_TAG);
-            return;
-        }
-
-        final EventData eventData = event.getData();
-        final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
-        final String trackingType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
-
         // Create XDM data with tracking data
         final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(_XDM);
+        final Map<String, Object> xdm = (Map<String, Object>) message.details.get(_XDM);
         final Map<String, Object> xdmMixinsMap = (Map<String, Object>) xdm.get(MIXINS);
         final Map<String, Object> experienceXdmMap = (Map<String, Object>) xdmMixinsMap.get(EXPERIENCE);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType.toString());
         xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceXdmMap);
 
         // add iam mixin information if this is an interact eventType
-        if (eventType.equals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT) && !StringUtils.isNullOrEmpty(trackingType)) {
+        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT) && !StringUtils.isNullOrEmpty(interaction)) {
             final Map<String, Object> actionMap = new HashMap<>();
-            actionMap.put(XDMDataKeys.ACTION, trackingType);
-            xdmMap.put(XDMDataKeys.XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME, actionMap);
+            actionMap.put(XDMDataKeys.ACTION, interaction);
+            xdmMap.put(XDMDataKeys.IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME, actionMap);
         }
 
         // Create the Meta Map
@@ -561,16 +550,13 @@ class MessagingInternal extends Extension {
         // Create the mask for storing event history
         final String[] mask = {MessagingConstants.EventMask.XDM.EVENT_TYPE, MessagingConstants.EventMask.XDM.MESSAGE_EXECUTION_ID, MessagingConstants.EventMask.XDM.TRACKING_ACTION};
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_IAM_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName(), mask)
-                .setEventData(xdmData)
-                .build();
-
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
+        // dispatch in-app tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.IAM_INTERACTION_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                mask,
+                MessagingConstants.EventDispatchErrors.IN_APP_TRACKING_ERROR);
     }
 
     public void processHubSharedState(Event event) {
@@ -629,10 +615,5 @@ class MessagingInternal extends Extension {
         }
 
         return stateOwnerName.equals(stateOwner);
-    }
-
-    // for unit tests
-    protected MessagingCacheUtilities getMessagingCaching() {
-        return messagingCacheUtilities;
     }
 }

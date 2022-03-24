@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
 public class ListenerOffersPersonalizationDecisionsTests {
-    private final int EXECUTOR_TIMEOUT = 5;
+    private final int EXECUTOR_TIMEOUT = 5; // in seconds
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     @Mock
     MessagingInternal mockMessagingInternal;
@@ -53,7 +53,7 @@ public class ListenerOffersPersonalizationDecisionsTests {
 
         // test
         listenerOffersPersonalizationDecisions.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(1)).queueEvent(mockEvent);
@@ -68,7 +68,7 @@ public class ListenerOffersPersonalizationDecisionsTests {
 
         // test
         listenerOffersPersonalizationDecisions.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);
@@ -85,7 +85,7 @@ public class ListenerOffersPersonalizationDecisionsTests {
 
         // test
         listenerOffersPersonalizationDecisions.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).queueEvent(mockEvent);

@@ -32,7 +32,7 @@ jobs:
           command: make ci-unit-test
       # code coverage
       - run:
-          name: Upload Code Coverage Report
+          name: Upload Unit Test Code Coverage Report
           command: |
             curl -s https://codecov.io/bash > codecov;
             VERSION=$(grep 'VERSION=\"[0-9\.]*\"' codecov | cut -d'"' -f2);
@@ -62,7 +62,7 @@ jobs:
           test-command: make ci-functional-test
       # code coverage
       - run:
-          name: Upload Code Coverage Report
+          name: Upload Functional Test Code Coverage Report
           command: |
             curl -s https://codecov.io/bash > codecov;
             VERSION=$(grep 'VERSION=\"[0-9\.]*\"' codecov | cut -d'"' -f2);

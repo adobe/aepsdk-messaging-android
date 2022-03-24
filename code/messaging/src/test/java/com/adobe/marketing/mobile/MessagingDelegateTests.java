@@ -11,7 +11,9 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,9 +22,6 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import android.app.Application;
 import android.content.Context;
-import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
@@ -32,18 +31,21 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.concurrent.Executors;
+
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessageDelegate.class, ServiceProvider.class})
-public class MessageDelegateTests {
+@PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessagingDelegate.class, ServiceProvider.class})
+public class MessagingDelegateTests {
 
     private EventHub eventHub;
-    private final MessageDelegate messageDelegate = new MessageDelegate();
+    private MessagingDelegate messagingDelegate;
 
     @Mock
     Core mockCore;
@@ -60,35 +62,45 @@ public class MessageDelegateTests {
     @Mock
     Context context;
     @Mock
-    WebSettings mockWebSettings;
-    @Mock
     ServiceProvider mockServiceProvider;
     @Mock
     UIService mockUIService;
+    @Mock
+    MessagingInternal mockMessagingInternal;
+    @Captor
+    ArgumentCaptor<String> urlStringCaptor;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+
+        messagingDelegate = new MessagingDelegate();
+    }
+
+    void setupMocks() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(Log.class);
         PowerMockito.mockStatic(ServiceProvider.class);
+
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         when(mockApplication.getApplicationContext()).thenReturn(context);
-
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
+        when(mockMessagingInternal.getExecutor()).thenReturn(Executors.newSingleThreadExecutor());
     }
 
     @Test
     public void test_onMessageShow() {
         // test
-        messageDelegate.onShow(mockAEPMessage);
+        messagingDelegate.onShow(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -98,20 +110,20 @@ public class MessageDelegateTests {
     @Test
     public void test_onMessageDismiss() {
         // test
-        messageDelegate.onDismiss(mockAEPMessage);
+        messagingDelegate.onDismiss(mockAEPMessage);
 
         // verify Log.debug called
         verifyStatic(Log.class);
         Log.debug(anyString(), anyString(), any());
 
         // verify Message.dismiss() called 1 time
-        verify(mockMessage, times(1)).dismiss();
+        verify(mockMessage, times(1)).dismiss(anyBoolean());
     }
 
     @Test
     public void test_onMessageShowFailure() {
         // test
-        messageDelegate.onShowFailure();
+        messagingDelegate.onShowFailure();
 
         // verify Log.debug called
         verifyStatic(Log.class);
@@ -121,54 +133,30 @@ public class MessageDelegateTests {
     @Test
     public void test_openUrlWithAdbDeeplink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "adb_deeplink://signup");
+        messagingDelegate.openUrl(mockAEPMessage, "adb_deeplink://signup");
 
         // verify the internal open url method is called
-        verify(mockAEPMessage, times(1)).openUrl(anyString());
+        verify(mockAEPMessage, times(1)).openUrl(urlStringCaptor.capture());
+        assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
     }
 
     @Test
     public void test_openUrlWithWebLink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
+        messagingDelegate.openUrl(mockAEPMessage, "https://www.adobe.com");
 
         // verify the ui service is called to show the url
-        verify(mockUIService, times(1)).showUrl(anyString());
+        verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
+        assertEquals("https://www.adobe.com", urlStringCaptor.getValue());
     }
 
     @Test
     public void test_openUrlWithInvalidLink() {
         // test
-        messageDelegate.openUrl(mockAEPMessage, "");
+        messagingDelegate.openUrl(mockAEPMessage, "htp://www.adobe.com");
 
         // verify no internal open url or ui service show url method is called
         verify(mockUIService, times(0)).showUrl(anyString());
         verify(mockAEPMessage, times(0)).openUrl(anyString());
-    }
-
-    @Test
-    public void test_loadJavascript() throws Exception {
-        // setup
-        WebView mockWebview = Mockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebview);
-        PowerMockito.when(mockWebview.getSettings()).thenReturn(mockWebSettings);
-        // test
-        messageDelegate.loadJavascript("function test(hello world) { print(arg); }");
-
-        // verify evaluate javascript called
-        verify(mockWebview, times(1)).evaluateJavascript(anyString(), any(ValueCallback.class));
-    }
-
-    @Test
-    public void test_loadJavascriptWhenJavascriptIsNull() throws Exception {
-        // setup
-        WebView mockWebview = Mockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebview);
-        PowerMockito.when(mockWebview.getSettings()).thenReturn(mockWebSettings);
-        // test
-        messageDelegate.loadJavascript(null);
-
-        // verify evaluate javascript not called
-        verify(mockWebview, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
     }
 }

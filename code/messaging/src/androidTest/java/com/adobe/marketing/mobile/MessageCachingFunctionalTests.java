@@ -11,11 +11,10 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -28,10 +27,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,8 +39,6 @@ public class MessageCachingFunctionalTests {
         BuildConfig.IS_E2E_TEST.set(false);
         BuildConfig.IS_FUNCTIONAL_TEST.set(true);
     }
-    private final static String REMOTE_URL = "https://www.adobe.com/adobe.png";
-    private CacheManager cacheManager;
 
     @Rule
     public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
@@ -57,7 +50,7 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingFunctionalTestUtils.setEdgeIdentityPersistence(MessagingFunctionalTestUtils.createIdentityMap("ECID", "mockECID"));
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
         Messaging.registerExtension();
         com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
 
@@ -65,6 +58,14 @@ public class MessageCachingFunctionalTests {
         MobileCore.start(new AdobeCallback() {
             @Override
             public void call(Object o) {
+                Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
+                MobileCore.updateConfiguration(testConfig);
+                // wait for configuration to be set
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    fail(interruptedException.getMessage());
+                }
                 latch.countDown();
             }
         });
@@ -74,21 +75,20 @@ public class MessageCachingFunctionalTests {
         // setup messaging caching
         final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
         final NetworkService networkService = MessagingUtils.getPlatformServices().getNetworkService();
-        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService);
+        final CacheManager cacheManager = new CacheManager(systemInfoService);
+        messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService, cacheManager);
 
-        cacheManager = new CacheManager(systemInfoService);
         // ensure cache is cleared before testing
-        MessagingFunctionalTestUtils.cleanCache();
+        MessagingTestUtils.cleanCache();
 
-        // write a image file from resources to the image asset cache
-        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date(System.currentTimeMillis()));
-        MessagingFunctionalTestUtils.readInputStreamIntoFile(mockCachedImage, MessagingFunctionalTestUtils.convertResourceFileToInputStream("adobe", ".png"), false);
+        // write an image file from resources to the image asset cache
+        MessagingTestUtils.addImageAssetToCache();
     }
 
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY);
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -98,18 +98,18 @@ public class MessageCachingFunctionalTests {
     @Test
     public void testMessageCaching_ReceivedMessagePayload() {
         final String expectedCondition = "((foo EQUALS bar))";
-        final String expectedConsequence = MessagingFunctionalTestUtils.loadStringFromFile("expected_consequence_data.txt");
+        final String expectedConsequence = MessagingTestUtils.loadStringFromFile("expected_consequence_data.txt");
         // dispatch edge response event containing a messaging payload
-        MessagingFunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
         // wait for event and rules processing
-        TestHelper.sleep(500);
+        TestHelper.sleep(1000);
         // verify rule payload was loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(2, moduleRules.size()); // configuration + messaging
         final Iterator iterator = moduleRules.keySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             Module module = (Module) iterator.next();
-            if(module.getModuleName().equals("Messaging")) {
+            if (module.getModuleName().equals("Messaging")) {
                 ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule> messagingRules = (ConcurrentLinkedQueue<com.adobe.marketing.mobile.Rule>) moduleRules.get(module);
                 assertEquals(1, messagingRules.size());
                 com.adobe.marketing.mobile.Rule rule = messagingRules.element();
@@ -120,15 +120,15 @@ public class MessageCachingFunctionalTests {
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.areMessagesCached());
         final Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
-        assertEquals(cachedMessages, MessagingFunctionalTestUtils.getVariantMapFromFile("optimize_payload.json"));
+        assertEquals(cachedMessages, MessagingTestUtils.getVariantMapFromFile("optimize_payload.json"));
     }
 
     @Test
     public void testMessageCaching_ReceivedInvalidMessagePayload() {
         // dispatch edge response event containing a messaging payload
-        MessagingFunctionalTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("invalid.json");
         // wait for event and rules processing
-        TestHelper.sleep(500);
+        TestHelper.sleep(1000);
         // verify rule payload was not loaded into rules engine
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(1, moduleRules.size()); // configuration only

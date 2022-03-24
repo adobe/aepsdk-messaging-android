@@ -87,18 +87,32 @@ public class MessagingInternalTests {
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupPlatformServicesMocks();
+        setupActivityAndPlacementIdMocks();
+
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
+        when(MobileCore.getCore()).thenReturn(mockCore);
+    }
+
+    void setupPlatformServicesMocks() {
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(mockAndroidJsonUtility);
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
-        when(MobileCore.getCore()).thenReturn(mockCore);
+    }
 
+    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
         // activity id mocks
         when(App.getApplication()).thenReturn(mockApplication);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
@@ -108,8 +122,6 @@ public class MessagingInternalTests {
         when(bundle.getString(anyString())).thenReturn("mock_activity");
         // placement id mocks
         when(mockApplication.getPackageName()).thenReturn("mock_placement");
-
-        messagingInternal = new MessagingInternal(mockExtensionApi);
     }
 
     // ========================================================================================
@@ -377,7 +389,7 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, event.getName());
+        assertEquals(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT, event.getName());
         assertEquals(MessagingConstants.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
         assertEquals(expectedEventData, event.getData().toString());
