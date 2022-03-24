@@ -17,6 +17,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Looper
 import android.os.SystemClock
 import android.view.View
 import android.webkit.WebView
@@ -461,47 +462,49 @@ class MainActivity : AppCompatActivity() {
 }
 
 class CustomDelegate : MessagingDelegate() {
-    private var currentMessage: FullscreenMessage? = null
+    private var currentMessage: Message? = null
     private var webview: WebView? = null
     var showMessages = true
 
     override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
         // access to the whole message from the parent
         fullscreenMessage?.also {
-            this.currentMessage = fullscreenMessage
-            val message = (currentMessage?.parent) as? Message
-            webview = message?.view
+            this.currentMessage = (fullscreenMessage.parent) as? Message
+            webview = currentMessage?.view
 
             // in-line handling of javascript calls
-            message?.handleJavascriptMessage("magic") { content ->
+            currentMessage?.handleJavascriptMessage("magic") { content ->
                 println("magical handling of our content from js! content is: $content")
-                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
 
-            message?.view?.evaluateJavascript("startTimer();") { content ->
-                if (content != null) {
-                    // do something with the content
+            // must be run on the ui thread
+            webview?.post {
+                webview?.evaluateJavascript("startTimer();") { content ->
+                    if (content != null) {
+                        // do something with the content
+                    }
                 }
             }
 
             // if we're not showing the message now, we can save it for later
             showMessages.let {
-                println("message was suppressed: ${message?.id}")
-                message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
+                println("message was suppressed: ${currentMessage?.id}")
+                currentMessage?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
             }
         }
         return showMessages
     }
 
     override fun onShow(fullscreenMessage: FullscreenMessage?) {
-        this.currentMessage = fullscreenMessage
+        this.currentMessage = fullscreenMessage?.parent as Message?
     }
 
     override fun onDismiss(fullscreenMessage: FullscreenMessage?) {
-        this.currentMessage = fullscreenMessage
+        this.currentMessage = fullscreenMessage?.parent as Message?
     }
 
-    fun getLastTriggeredMessage(): FullscreenMessage? {
+    fun getLastTriggeredMessage(): Message? {
         return currentMessage
     }
 }
