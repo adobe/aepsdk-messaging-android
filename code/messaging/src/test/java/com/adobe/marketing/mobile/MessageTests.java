@@ -20,6 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
+import android.app.Application;
+import android.os.Looper;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -86,6 +88,10 @@ public class MessageTests {
     WebView mockWebView;
     @Mock
     WebSettings mockWebSettings;
+    @Mock
+    Application mockApplication;
+    @Mock
+    Looper mockLooper;
     @Captor
     ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor;
     @Captor
@@ -117,6 +123,8 @@ public class MessageTests {
 
         Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
+        Mockito.when(MobileCore.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getMainLooper()).thenReturn(mockLooper);
         when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
