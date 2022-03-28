@@ -224,7 +224,7 @@ public class Message extends MessagingDelegate {
             }
         });
         try {
-            latch.await(2, TimeUnit.SECONDS);
+            latch.await(500, TimeUnit.MILLISECONDS);
         } catch (final InterruptedException e) {
             Log.debug(LOG_TAG, "Exception occurred while waiting for WebView to be created: (%e)", e.getMessage());
         }
