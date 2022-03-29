@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,7 +134,8 @@ class InAppNotificationHandler {
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
-            Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
+            messagingCacheUtilities.clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
             return;
         }
 
@@ -214,6 +216,9 @@ class InAppNotificationHandler {
         } else {
             items = (List<Map<String, Variant>>) itemsList;
         }
+
+        // save the payload to the messaging cache
+        messagingCacheUtilities.cacheRetrievedMessages(payload);
 
         registerRules(items);
     }

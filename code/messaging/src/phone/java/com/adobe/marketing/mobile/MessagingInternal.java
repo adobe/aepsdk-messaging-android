@@ -414,7 +414,6 @@ class MessagingInternal extends Extension {
                 final List<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
                     inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
-                    messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
                 }
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 // handle rules response events containing message definitions
