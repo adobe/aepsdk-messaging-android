@@ -52,7 +52,7 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalHandleRulesResponseContentTests {
-    private final Map<String, Object> mobileParameters = new HashMap<String, Object>() {
+    private final Map<String, Object> mobileParameters = new HashMap() {
         {
             put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
             put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");

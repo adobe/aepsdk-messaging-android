@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile;
 
-public class MessagePayloadConfig {
+public class MessageTestConfig {
     public int count = 0;
     public boolean isMissingRulesKey = false;
     public boolean isMissingMessageId = false;

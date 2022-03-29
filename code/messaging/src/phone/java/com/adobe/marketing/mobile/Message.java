@@ -212,7 +212,9 @@ public class Message extends MessagingDelegate {
     private WebView createWebView() {
         final CountDownLatch latch = new CountDownLatch(1);
         final WebView[] webView = new WebView[1];
-        webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
+        if (webViewHandler == null) {
+            webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
+        }
         webViewHandler.post(new Runnable() {
             @Override
             public void run() {
