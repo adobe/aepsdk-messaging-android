@@ -15,11 +15,13 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +141,7 @@ class InAppNotificationHandler {
             return;
         }
 
-        // if we have an activity and placement id present in the manifest use the id's to validate retrieved offers
+        // if we have an activity and placement id present in the manifest use these id's to validate retrieved offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
             final Map<String, String> activity;
@@ -253,12 +255,10 @@ class InAppNotificationHandler {
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
-                parseImageAssetsFromRuleJson(ruleJsonObject);
+                // cache any image assets present in the consequence details image assets array
+                cacheImageAssetsFromPayload(ruleJsonObject);
             }
         }
-
-        // download and cache image assets after all items are processed
-        messagingCacheUtilities.cacheImageAssets(imageAssetList);
 
         // create Rule objects from the rule jsons and load them into the RulesEngine
         for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
@@ -269,20 +269,6 @@ class InAppNotificationHandler {
         }
         Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %d rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
-    }
-
-    /**
-     * Parses the "img src" from each html payload in the passed in {@link JsonUtilityService.JSONObject}
-     * then adds the found assets to the imageAssetList {@code List} so only current assets will be cached when the
-     * {@link RemoteDownloader} is used to download image assets.
-     *
-     * @param ruleJsonObject a {@code JsonUtilityService.JSONObject} containing a rule payload.
-     */
-    private void parseImageAssetsFromRuleJson(final JsonUtilityService.JSONObject ruleJsonObject) {
-        final String imageAssetUrl = extractImageAssetFromJson(ruleJsonObject);
-        if (messagingCacheUtilities.assetIsDownloadable(imageAssetUrl)) {
-            imageAssetList.add(imageAssetUrl);
-        }
     }
 
     /**
@@ -313,6 +299,31 @@ class InAppNotificationHandler {
             Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, an exception occurred during creation: %s", SELF_TAG, exception.getLocalizedMessage());
         }
+    }
+
+    /**
+     * Cache any asset URL's present in the {@link RuleConsequence} detail {@link JSONObject}.
+     *
+     * @param ruleJsonObject A {@link Rule} JSON object containing an in-app message definition.
+     */
+    private void cacheImageAssetsFromPayload(JsonUtilityService.JSONObject ruleJsonObject) {
+        List<String> remoteAssetsList = new ArrayList<>();
+        try {
+            final JSONArray rulesArray = new JSONArray(ruleJsonObject.getString(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY));
+            final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            final JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            if (remoteAssets.length() != 0 ) {
+                for (final Object object : MessagingUtils.toList(remoteAssets)) {
+                    remoteAssetsList.add(object.toString());
+                }
+            }
+        } catch (final JSONException | JsonException jsonException) {
+            Log.warning(LOG_TAG,
+                    "%s - An exception occurred retrieving the remoteAssets array from the rule json payload: %s", SELF_TAG, jsonException.getLocalizedMessage());
+            return;
+        }
+        messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
     }
 
     /**
