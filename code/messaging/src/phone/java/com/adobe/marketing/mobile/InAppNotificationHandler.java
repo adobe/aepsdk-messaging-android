@@ -21,12 +21,9 @@ import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
@@ -252,7 +249,7 @@ class InAppNotificationHandler {
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
-                // cache any image assets present in the consequence details image assets array
+                // cache any image assets present in the current rule json's image assets array
                 cacheImageAssetsFromPayload(ruleJsonObject);
             }
         }
@@ -303,7 +300,7 @@ class InAppNotificationHandler {
      *
      * @param ruleJsonObject A {@link Rule} JSON object containing an in-app message definition.
      */
-    private void cacheImageAssetsFromPayload(JsonUtilityService.JSONObject ruleJsonObject) {
+    private void cacheImageAssetsFromPayload(final JsonUtilityService.JSONObject ruleJsonObject) {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
             final JSONArray rulesArray = new JSONArray(ruleJsonObject.getString(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY));
@@ -312,7 +309,12 @@ class InAppNotificationHandler {
             final JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
             if (remoteAssets.length() != 0 ) {
                 for (final Object object : MessagingUtils.toList(remoteAssets)) {
-                    remoteAssetsList.add(object.toString());
+                    final String imageAssetUrl = object.toString();
+                    if (StringUtils.stringIsUrl(imageAssetUrl)) {
+                        Log.debug(LOG_TAG,
+                                "%s - Image asset to be cached (%s) ", SELF_TAG, imageAssetUrl);
+                        remoteAssetsList.add(imageAssetUrl);
+                    }
                 }
             }
         } catch (final JSONException | JsonException jsonException) {
