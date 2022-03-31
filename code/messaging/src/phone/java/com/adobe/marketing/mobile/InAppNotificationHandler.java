@@ -13,7 +13,9 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,8 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
@@ -31,9 +31,6 @@ import java.util.regex.Pattern;
 class InAppNotificationHandler {
     // private vars
     private final static String SELF_TAG = "InAppNotificationHandler";
-    private final static String IMAGE_SRC_PATTERN = "(<img\\b|(?!^)\\G)[^>]*?\\b(src)=([\"']?)([^>]*?)\\3";
-    private final ArrayList<String> imageAssetList = new ArrayList<>();
-    private final Map<String, String> assetMap = new HashMap<>();
     private final Module messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
     // package private
@@ -133,11 +130,12 @@ class InAppNotificationHandler {
      */
     void handleOfferNotificationPayload(final Map<String, Variant> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
-            Log.warning(LOG_TAG, "%s - Aborting handling of the Offers IAM payload because it is null or empty.", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
+            messagingCacheUtilities.clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
             return;
         }
 
-        // if we have an activity and placement id present in the manifest use the id's to validate retrieved offers
+        // if we have an activity and placement id present in the manifest use these id's to validate retrieved offers
         if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
             final Map<String, String> activity;
@@ -215,6 +213,9 @@ class InAppNotificationHandler {
             items = (List<Map<String, Variant>>) itemsList;
         }
 
+        // save the payload to the messaging cache
+        messagingCacheUtilities.cacheRetrievedMessages(payload);
+
         registerRules(items);
     }
 
@@ -248,12 +249,10 @@ class InAppNotificationHandler {
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
-                parseImageAssetsFromRuleJson(ruleJsonObject);
+                // cache any image assets present in the current rule json's image assets array
+                cacheImageAssetsFromPayload(ruleJsonObject);
             }
         }
-
-        // download and cache image assets after all items are processed
-        messagingCacheUtilities.cacheImageAssets(imageAssetList);
 
         // create Rule objects from the rule jsons and load them into the RulesEngine
         for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
@@ -264,20 +263,6 @@ class InAppNotificationHandler {
         }
         Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %d rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
-    }
-
-    /**
-     * Parses the "img src" from each html payload in the passed in {@link JsonUtilityService.JSONObject}
-     * then adds the found assets to the imageAssetList {@code List} so only current assets will be cached when the
-     * {@link RemoteDownloader} is used to download image assets.
-     *
-     * @param ruleJsonObject a {@code JsonUtilityService.JSONObject} containing a rule payload.
-     */
-    private void parseImageAssetsFromRuleJson(final JsonUtilityService.JSONObject ruleJsonObject) {
-        final String imageAssetUrl = extractImageAssetFromJson(ruleJsonObject);
-        if (messagingCacheUtilities.assetIsDownloadable(imageAssetUrl)) {
-            imageAssetList.add(imageAssetUrl);
-        }
     }
 
     /**
@@ -311,41 +296,33 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Extracts the image asset url as a {@code String} from the given in-app message payload.
+     * Cache any asset URL's present in the {@link RuleConsequence} detail {@link JSONObject}.
      *
-     * @param payloadJson A {@link JsonUtilityService.JSONObject} containing an in-app message payload.
-     * @return {@code String} containing the image asset url.
+     * @param ruleJsonObject A {@link Rule} JSON object containing an in-app message definition.
      */
-    private String extractImageAssetFromJson(final JsonUtilityService.JSONObject payloadJson) {
-        if (payloadJson == null || payloadJson.length() <= 0) {
-            Log.warning(LOG_TAG,
-                    "%s - Unable to extract the image asset, the provided json is null or empty.");
-            return null;
-        }
+    private void cacheImageAssetsFromPayload(final JsonUtilityService.JSONObject ruleJsonObject) {
+        List<String> remoteAssetsList = new ArrayList<>();
         try {
-            final JsonUtilityService.JSONArray rulesJsonArray = payloadJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-            final JsonUtilityService.JSONObject ruleJson = (JsonUtilityService.JSONObject) rulesJsonArray.get(0);
-            final JsonUtilityService.JSONArray consequenceJsonArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
-            final JsonUtilityService.JSONObject consequence = (JsonUtilityService.JSONObject) consequenceJsonArray.get(0);
-            final JsonUtilityService.JSONObject detail = consequence.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            final String html = detail.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
-            final Pattern pattern = Pattern.compile(IMAGE_SRC_PATTERN);
-            final Matcher matcher = pattern.matcher(html);
-            matcher.find();
-            // matcher.group(1) will contain "<img" if a match was found
-            if (matcher.group(1).isEmpty()) {
-                Log.trace(LOG_TAG, "No image asset found in html.");
-                return null;
+            final JSONArray rulesArray = new JSONArray(ruleJsonObject.getString(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY));
+            final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            final JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            if (remoteAssets.length() != 0 ) {
+                for (final Object object : MessagingUtils.toList(remoteAssets)) {
+                    final String imageAssetUrl = object.toString();
+                    if (StringUtils.stringIsUrl(imageAssetUrl)) {
+                        Log.debug(LOG_TAG,
+                                "%s - Image asset to be cached (%s) ", SELF_TAG, imageAssetUrl);
+                        remoteAssetsList.add(imageAssetUrl);
+                    }
+                }
             }
-            // matcher.group{4} will contain the image asset url
-            final String imageAssetUrl = matcher.group(4);
-            Log.trace(LOG_TAG, "Found image asset in html: %s", imageAssetUrl);
-            return imageAssetUrl;
-        } catch (final JsonException jsonException) {
+        } catch (final JSONException | JsonException jsonException) {
             Log.warning(LOG_TAG,
-                    "%s - An exception occurred during image asset extraction: %s", SELF_TAG, jsonException.getMessage());
-            return null;
+                    "%s - An exception occurred retrieving the remoteAssets array from the rule json payload: %s", SELF_TAG, jsonException.getLocalizedMessage());
+            return;
         }
+        messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
     }
 
     /**
