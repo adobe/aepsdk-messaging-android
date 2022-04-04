@@ -23,16 +23,18 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName rootProject.moduleVersion
+        // flag for e2e tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
+        // flag for functional tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
     }
 
     flavorDimensions "target"
-    productFlavors{
-        phone {
-            dimension "target"
-        }
+    productFlavors {
+        phone
     }
 
     buildTypes {
@@ -54,16 +56,34 @@ android {
         sourceCompatibility rootProject.ext.sourceCompatibility
         targetCompatibility rootProject.ext.targetCompatibility
     }
+
+    libraryVariants.all { variant ->
+        variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+
+    sourceSets {
+        final def sharedTestUtilJavaDir = 'src/sharedTestUtils/java'
+        final def resourceDir = 'src/test/resources'
+
+        test {
+            java.srcDirs += [sharedTestUtilJavaDir]
+            resources.srcDirs += [resourceDir]
+        }
+
+        androidTest {
+            java.srcDirs += [sharedTestUtilJavaDir]
+            resources.srcDirs += [resourceDir]
+        }
+    }
 }
 
 android.libraryVariants.all { variant ->
     tasks.withType(Javadoc) {
-        source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-        doFirst{classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)}
-
-        exclude "**/BuildConfig.java"
+        doFirst {
+            classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+        }
         exclude "**/R.java"
         options {
             links "https://developer.android.com/reference"
@@ -90,7 +110,7 @@ def isReleaseBuild() {
     return hasProperty('release')
 }
 
-version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersion+"-SNAPSHOT"
+version = isReleaseBuild() ? moduleVersion : moduleVersion + "-SNAPSHOT"
 
 publishing {
     publications {
@@ -145,9 +165,9 @@ publishing {
     }
 }
 
-ext."signing.gnupg.executable"="gpg"
-ext."signing.gnupg.keyName"=System.getenv("GPG_KEY_ID")
-ext."signing.gnupg.passphrase"=System.getenv("GPG_PASSPHRASE")
+ext."signing.gnupg.executable" = "gpg"
+ext."signing.gnupg.keyName" = System.getenv("GPG_KEY_ID")
+ext."signing.gnupg.passphrase" = System.getenv("GPG_PASSPHRASE")
 
 signing {
     useGpgCmd()
@@ -157,42 +177,6 @@ signing {
         }
     }
     sign publishing.publications
-}
-
-
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
-
-    // Firebase sdk compile only
-    compileOnly "com.google.firebase:firebase-messaging:21.1.0"
-
-    // Firebase sdk test implementation
-    testImplementation "com.google.firebase:firebase-messaging:21.1.0"
-    testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
-    testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
-    testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
-    testImplementation 'org.json:json:20180813'
-
-    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    // Using older version of PowerMock as it supports minimum Android API < 26
-    // the root issue appears to be a dependency with Objenesis in Mockito-Core
-    // where Objenesis 2 requires minimum Android API 26
-    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
-    androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
-}
-
-afterEvaluate {
-    generatePhoneReleaseBuildConfig.enabled = false
-}
-
-tasks.withType(Test) {
-    testLogging {
-        showStandardStreams = true
-    }
 }
 
 task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
@@ -205,7 +189,7 @@ task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebug
     executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
 
     reports {
-        xml.enabled false
+        xml.enabled true
         csv.enabled false
         html.enabled true
     }
@@ -226,5 +210,37 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
         xml.enabled true
         csv.enabled false
         html.enabled true
+    }
+}
+
+dependencies {
+    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
+    implementation project(":messaging:aar")
+
+    // Firebase sdk compile only
+    compileOnly "com.google.firebase:firebase-messaging:21.1.0"
+
+    // Firebase sdk test implementation
+    testImplementation 'com.google.firebase:firebase-messaging:21.1.0'
+    testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
+    testImplementation 'org.json:json:20180813'
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    // Using older version of PowerMock as it supports minimum Android API < 26
+    // the root issue appears to be a dependency with Objenesis in Mockito-Core
+    // where Objenesis 2 requires minimum Android API 26
+    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
+    androidTestImplementation 'com.adobe.marketing.mobile:edge:1.1.1'
+}
+
+tasks.withType(Test) {
+    testLogging {
+        showStandardStreams = true
     }
 }

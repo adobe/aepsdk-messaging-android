@@ -28,8 +28,6 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 public class MessagingPushPayloadTests {
-    private MessagingPushPayload payload;
-
     private final String mockTitle = "mockTitle";
     private final String mockBody = "mockBody";
     private final String mockSound = "mockSound";
@@ -41,6 +39,7 @@ public class MessagingPushPayloadTests {
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
     private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
+    private MessagingPushPayload payload;
     private Map<String, String> mockData;
 
     @Before

@@ -9,19 +9,8 @@
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
 */
+
 package com.adobe.marketing.mobile;
-
-import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
@@ -35,8 +24,9 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
-import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
+import static com.adobe.marketing.mobile.MessagingConstants.FRIENDLY_EXTENSION_NAME;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.JsonValues.FCM;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.COLLECT;
@@ -47,6 +37,20 @@ import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys._XDM;
+
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class MessagingInternal extends Extension {
     private final String SELF_TAG = "MessagingInternal";
@@ -54,7 +58,9 @@ class MessagingInternal extends Extension {
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
+    private MessagingCacheUtilities messagingCacheUtilities;
     private ExecutorService executorService;
+    private boolean initialMessageFetchComplete = false;
 
     /**
      * Constructor.
@@ -80,10 +86,28 @@ class MessagingInternal extends Extension {
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
 
-        inAppNotificationHandler = new InAppNotificationHandler();
+        final PlatformServices platformServices = MessagingUtils.getPlatformServices();
+        final SystemInfoService systemInfoService = platformServices.getSystemInfoService();
+        final NetworkService networkService = platformServices.getNetworkService();
+        CacheManager cacheManager = null;
+        try {
+            cacheManager = new CacheManager(systemInfoService);
+        } catch (final MissingPlatformServicesException exception) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the cache manager: %s", exception.getMessage());
+        }
+
+        // initialize the Messaging Caching functionality
+        try {
+            messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService, cacheManager);
+        } catch (final MissingPlatformServicesException e) {
+            Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
+        }
+
+        // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
+        inAppNotificationHandler = new InAppNotificationHandler(this, messagingCacheUtilities);
         registerEventListeners(extensionApi);
 
-        // Init the messaging state
+        // initialize the messaging state
         messagingState = new MessagingState();
     }
 
@@ -136,17 +160,19 @@ class MessagingInternal extends Extension {
      */
     private static Map<String, Object> getXdmData(final String eventType, final String messageId, final String actionId) {
         final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
+        final Map<String, Object> trackingMap = new HashMap<>();
         final Map<String, Object> customActionMap = new HashMap<>();
 
         if (actionId != null) {
-            customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
-            pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
+            customActionMap.put(XDMDataKeys.ACTION_ID, actionId);
+            trackingMap.put(XDMDataKeys.CUSTOM_ACTION, customActionMap);
         }
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
+
+        trackingMap.put(XDMDataKeys.PUSH_PROVIDER, FCM);
+        trackingMap.put(XDMDataKeys.PUSH_PROVIDER_MESSAGE_ID, messageId);
+        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.PUSH_NOTIFICATION_TRACKING_MIXIN_NAME, trackingMap);
+
         return xdmMap;
     }
 
@@ -234,6 +260,16 @@ class MessagingInternal extends Extension {
     }
 
     /**
+     * Overridden method of {@link Extension} class to provide a friendly extension name.
+     *
+     * @return A {@link String} friendly extension name for Messaging
+     */
+    @Override
+    protected String getFriendlyName() {
+        return FRIENDLY_EXTENSION_NAME;
+    }
+
+    /**
      * Overridden method of {@link Extension} class to provide the extension version.
      *
      * @return A {@link String} representing the extension version
@@ -270,9 +306,6 @@ class MessagingInternal extends Extension {
 
         Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstants.EXTENSION_VERSION);
-
-        // fetch messages from offers
-        inAppNotificationHandler.fetchMessages();
     }
 
     /**
@@ -337,21 +370,14 @@ class MessagingInternal extends Extension {
                     eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (configSharedState == null) {
+            if (MessagingUtils.isMapNullOrEmpty(configSharedState)) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
-            // validate fetch messages event then refresh in-app messages from offers
-            if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
-                inAppNotificationHandler.fetchMessages();
-                eventQueue.poll();
-                return;
-            }
-
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-            if (edgeIdentitySharedState == null) {
+            if (MessagingUtils.isMapNullOrEmpty(edgeIdentitySharedState)) {
                 Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
@@ -360,7 +386,19 @@ class MessagingInternal extends Extension {
             // Set the messaging state
             messagingState.setState(configSharedState, edgeIdentitySharedState);
 
-            if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
+            // fetch messages from offers on initial launch once we have configuration and identity state set
+            if (messagingState.isReadyForEvents()
+                    && !initialMessageFetchComplete) {
+                inAppNotificationHandler.fetchMessages();
+                initialMessageFetchComplete = true;
+            }
+
+            // validate fetch messages event then refresh in-app messages from offers
+            if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
+                if (messagingState.isConfigStateSet()) {
+                    inAppNotificationHandler.fetchMessages();
+                }
+            } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
             } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
@@ -371,11 +409,14 @@ class MessagingInternal extends Extension {
                 }
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
-                // validate the edge response event from Offers then load any rules present
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
-                inAppNotificationHandler.handleOfferNotificationPayload(eventToProcess);
-                // handle rules response events containing message definitions
+                // validate the edge response event from Optimize then load any iam rules present
+                final List<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+                if (payload != null && payload.size() > 0) {
+                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+                }
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
+                // handle rules response events containing message definitions
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
             }
             // event processed, remove it from the queue
@@ -414,15 +455,11 @@ class MessagingInternal extends Extension {
         getApi().setSharedEventState(map, event, errorCallback);
 
         // Send an edge event with profile data as event data
-        final Event profileEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(eventData)
-                .build();
-        MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for updating the push profile details", SELF_TAG);
-            }
-        });
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                eventData,
+                MessagingConstants.EventDispatchErrors.PUSH_PROFILE_UPDATE_ERROR);
     }
 
     public void handleTrackingInfo(final Event event) {
@@ -443,9 +480,9 @@ class MessagingInternal extends Extension {
             return;
         }
 
-        String datasetId = messagingState.getExperienceEventDatasetId();
-        if (datasetId == null || datasetId.isEmpty()) {
-            Log.warning(LOG_TAG, "%s - Failed to track push notification interaction, experience event datasetId is null or empty", SELF_TAG);
+        final String datasetId = messagingState.getExperienceEventDatasetId();
+        if (StringUtils.isNullOrEmpty(datasetId)) {
+            Log.warning(LOG_TAG, "%s - Unable to record a message interaction, configuration information is not available.", SELF_TAG);
             return;
         }
 
@@ -468,16 +505,57 @@ class MessagingInternal extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
-                .setEventData(xdmData)
-                .build();
+        // dispatch push tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                MessagingConstants.EventDispatchErrors.PUSH_TRACKING_ERROR);
+    }
 
-        MobileCore.dispatchEvent(trackEvent, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.error(LOG_TAG, "%s - Error in dispatching event for tracking", SELF_TAG);
-            }
-        });
+    public void handleInAppTrackingInfo(final MessagingEdgeEventType eventType, final String interaction, final Message message) {
+        final String datasetId = messagingState.getExperienceEventDatasetId();
+        if (StringUtils.isNullOrEmpty(datasetId)) {
+            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, configuration information is not available.", SELF_TAG);
+            return;
+        }
+
+        // Create XDM data with tracking data
+        final Map<String, Object> xdmMap = new HashMap<>();
+        final Map<String, Object> xdm = (Map<String, Object>) message.details.get(_XDM);
+        final Map<String, Object> xdmMixinsMap = (Map<String, Object>) xdm.get(MIXINS);
+        final Map<String, Object> experienceXdmMap = (Map<String, Object>) xdmMixinsMap.get(EXPERIENCE);
+        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType.toString());
+        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceXdmMap);
+
+        // add iam mixin information if this is an interact eventType
+        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT) && !StringUtils.isNullOrEmpty(interaction)) {
+            final Map<String, Object> actionMap = new HashMap<>();
+            actionMap.put(XDMDataKeys.ACTION, interaction);
+            xdmMap.put(XDMDataKeys.IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME, actionMap);
+        }
+
+        // Create the Meta Map
+        final Map<String, Object> metaMap = new HashMap<>();
+        final Map<String, Object> collectMap = new HashMap<>();
+        collectMap.put(DATASET_ID, datasetId);
+        metaMap.put(COLLECT, collectMap);
+
+        // Create xdm edge event data
+        final Map<String, Object> xdmData = new HashMap<>();
+        xdmData.put(XDM, xdmMap);
+        xdmData.put(META, metaMap);
+
+        // Create the mask for storing event history
+        final String[] mask = {MessagingConstants.EventMask.XDM.EVENT_TYPE, MessagingConstants.EventMask.XDM.MESSAGE_EXECUTION_ID, MessagingConstants.EventMask.XDM.TRACKING_ACTION};
+
+        // dispatch in-app tracking event
+        MessagingUtils.sendEvent(MessagingConstants.EventName.IAM_INTERACTION_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                xdmData,
+                mask,
+                MessagingConstants.EventDispatchErrors.IN_APP_TRACKING_ERROR);
     }
 
     public void processHubSharedState(Event event) {

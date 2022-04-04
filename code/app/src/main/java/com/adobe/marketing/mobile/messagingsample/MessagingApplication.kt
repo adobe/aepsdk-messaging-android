@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
+import com.adobe.marketing.mobile.optimize.Optimize
 import com.google.firebase.iid.FirebaseInstanceId
 
 class MessagingApplication : Application() {
@@ -25,20 +26,28 @@ class MessagingApplication : Application() {
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
         Messaging.registerExtension()
+        Optimize.registerExtension()
         Identity.registerExtension()
-        UserProfile.registerExtension()
-        Lifecycle.registerExtension()
-        Signal.registerExtension()
-        Edge.registerExtension();
+        Edge.registerExtension()
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("<appId>")
-            MobileCore.lifecycleStart(null);
+            MobileCore.configureWithAppID("3149c49c3910/cf7779260cdd/launch-be72758aa82a-development")
+            MobileCore.lifecycleStart(null)
+            // update config to use cjmstage for int integration
+            val cjmStageConfig: HashMap<String, Any> = hashMapOf(
+                "edge.environment" to "int",
+                "experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
+                "edge.configId" to "d9457e9f-cacc-4280-88f2-6c846e3f9531",
+                //"edge.configId" to "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
+                "messaging.eventDataset" to "610ae80b3cbbc718dab06208"
+            )
+            MobileCore.updateConfiguration(cjmStageConfig)
         }
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener{ task ->
-            if(task.isSuccessful) {
+
+        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
                 val token = task.result?.token ?: ""
                 print("MessagingApplication Firebase token :: $token")
                 // Syncing the push token with experience platform

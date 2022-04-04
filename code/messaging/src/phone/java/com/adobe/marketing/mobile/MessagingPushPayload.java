@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 
+import com.adobe.marketing.mobile.internal.utility.StringUtils;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
@@ -179,7 +180,7 @@ public class MessagingPushPayload {
     }
 
     private ActionType getActionTypeFromString(final String type) {
-        if (type == null || type.isEmpty()) {
+        if (StringUtils.isNullOrEmpty(type)) {
             return ActionType.NONE;
         }
 

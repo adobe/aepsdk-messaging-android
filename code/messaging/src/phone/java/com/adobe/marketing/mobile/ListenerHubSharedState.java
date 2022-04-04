@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile;
 
 class ListenerHubSharedState extends ExtensionListener {
-
     private final static String SELF_TAG = "ListenerHubSharedState";
 
     /**
@@ -25,7 +24,6 @@ class ListenerHubSharedState extends ExtensionListener {
     ListenerHubSharedState(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
-
 
     /**
      * Method that gets called when event with event type {@link EventType#HUB}

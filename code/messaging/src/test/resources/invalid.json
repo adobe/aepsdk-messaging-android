@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      invalid
+    },
+    {
+      "condition": {
+        "type": "group",
+        "definition": {
+          "logic": "and",
+          "conditions": [
+            {
+              "definition": {
+                "key": "contextdata.abc",
+                "matcher": "eq",
+                "values": [
+                  "true"
+                ]
+              },
+              "type": "matcher"
+            },
+            {
+              "type": "historical",
+              "definition": {
+                "events": [
+                  {
+                    "xdm.eventType": "inapp.display",
+                    "xdm._experience.customerJourneyManagement.messageExecution.messageExecutionID": "123456789"
+                  }
+                ],
+                "to": 1733599999999,
+                "from": 1633549434045,
+                "searchType": "any",
+                "matcher": "lt",
+                "value": 1
+              }
+            }
+          ]
+        }
+      },
+      "consequences": [
+        {
+          "id": "341800180",
+          "type": "cjmiam",
+          "detail": {
+            "remoteAssets": [],
+            "_xdm": {
+              "mixins": {
+                "_experience": {
+                  "customerJourneyManagement": {
+                    "messageExecution": {
+                      "messageExecutionID": "123456789",
+                      "messageID": "567",
+                      "journeyVersionID": "",
+                      "journeyVersionInstanceId": ""
+                    }
+                  }
+                }
+              }
+            },
+            "mobileParameters": {
+              "schemaVersion": "1.0",
+              "width": 80,
+              "height": 50,
+              "verticalAlign": "center",
+              "verticalInset": 0,
+              "horizontalAlign": "center",
+              "horizontalInset": 0,
+              "uiTakeover": true,
+              "backdropColor": "000000",
+              "backdropOpacity": 0.5,
+              "cornerRadius": 15,
+              "displayAnimation": "left",
+              "dismissAnimation": "right",
+              "gestures": {
+                "swipeRight": "adbinapp://dismiss/?interaction=positive",
+                "swipeLeft": "adbinapp://dismiss/?interaction=negative"
+              }
+            },
+            "html": "<html><head><meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1.0\\\"><style>html, body { margin: 0;padding: 0;text-align: center;width: 100%;height: 100%;font-family: adobe-clean, \\\"Source Sans Pro\\\", -apple-system, BlinkMacSystemFont, \\\"Segoe UI\\\", Roboto, sans-serif;}.body {display: flex;flex-direction: column;background-color: #FFF;border-radius: 5px;color: #333333;width: 100vw;height: 100vh;text-align: center;align-items: center;background-size: 'cover';}.content {width: 100%;height: 100%;display: flex;justify-content: center;flex-direction: column;position: relative;}a {text-decoration: none;}.image {height: 1rem;flex-grow: 4;flex-shrink: 1;display: flex;justify-content: center;width: 90%;flex-direction: column;align-items: center;}.image img {max-height: 100%;max-width: 100%;}.text {text-align: center;line-height: 20px;font-size: 14px;color: #333333;padding: 0 25px;line-height: 1.25rem;font-size: 0.875rem;}.title {line-height: 1.3125rem;font-size: 1.025rem;}.buttons {width: 100%;display: flex;flex-direction: column;font-size: 1rem;line-height: 1.3rem;text-decoration: none;text-align: center;box-sizing: border-box;padding: .8rem;padding-top: .4rem;gap: 0.3125rem;}.button {flex-grow: 1;background-color: #1473E6;color: #FFFFFF;border-radius: .25rem;cursor: pointer;padding: .3rem;gap: .5rem;}.btnClose {color: #000000;}.closeBtn {align-self: flex-end;color: #000000;width: 1.8rem;height: 1.8rem;margin-top: 1rem;margin-right: .3rem;}</style><style type=\\\"text/css\\\" id=\\\"editor-styles\\\">[data-uuid=\\\"92bdbef0-eb32-48d3-b27f-7c0fba796b5c\\\"]  {flex-direction: row !important;}[data-uuid=\\\"92bdbef0-eb32-48d3-b27f-7c0fba796b5c\\\"] [data-uuid=\\\"99931ca2-eb8b-4f0b-b43c-8048d6fce07d\\\"] {color: rgba(0, 0, 0, 1);background-color: rgba(214, 244, 255, 1);}</style></head><body><div class=\\\"body\\\"><div class=\\\"closeBtn\\\" data-btn-style=\\\"plain\\\" data-uuid=\\\"8ae601d7-436d-47be-8238-cdbc23033574\\\"><a class=\\\"btnClose\\\" href=\\\"adbinapp://dismiss\\\"><svg xmlns=\\\"http://www.w3.org/2000/svg\\\" height=\\\"18\\\" viewBox=\\\"0 0 18 18\\\" width=\\\"18\\\" class=\\\"close\\\"><rect id=\\\"Canvas\\\" fill=\\\"#ffffff\\\" opacity=\\\"0\\\" width=\\\"18\\\" height=\\\"18\\\"/><path fill=\\\"currentColor\\\" xmlns=\\\"http://www.w3.org/2000/svg\\\" d=\\\"M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z\\\" /></svg></a></div><div class=\\\"image\\\" data-uuid=\\\"b898e788-a595-44f0-bfce-3036fbd3b6b9\\\"><img src=\\\"vhv.rs/dpng/d/544-5447193_adobe-logo-png-adobe-logo-high-res-transparent.png\\\" data-medialibrary-id=\\\"\\\" data-mediarepo-id=\\\"\\\" alt=\\\"\\\" /></div><div class=\\\"text\\\" data-uuid=\\\"90086eda-93dd-4278-b2f7-f61ede6666a7\\\"><h3>Steve is testing IAM</h3><p>Yay Adobe!</p></div><div data-uuid=\\\"92bdbef0-eb32-48d3-b27f-7c0fba796b5c\\\" class=\\\"buttons\\\"><a class=\\\"button\\\" data-uuid=\\\"99931ca2-eb8b-4f0b-b43c-8048d6fce07d\\\" href=\\\"adbinapp://dismiss/?interaction=happy\\\">happy!</a><a class=\\\"button\\\" data-uuid=\\\"9539372b-faa8-4cde-8259-632d7db41d3b\\\" href=\\\"adbinapp://dismiss/?interaction=joy\\\">joy!</a></div></div></body></html>",
+            "template": "fullscreen"
+          }
+        }
+      ]
+    }
+  ]
+}

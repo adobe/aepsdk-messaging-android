@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#C5C5CA"
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".MainActivity">
@@ -19,9 +20,57 @@
         android:text="Get Local Notification" />
 
     <Button
-        android:id="@+id/btnTriggerIAM"
+        android:id="@+id/btnTriggerFullscreenIAM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Trigger IAM" />
+
+    <Spinner
+        android:id="@+id/iamTypeSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Switch
+        android:id="@+id/allowIAMSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="Allow IAM" />
+
+    <Button
+        android:id="@+id/btnTriggerLastIAM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trigger Most Recent IAM" />
+
+    <Button
+        android:id="@+id/btnRefreshInAppMessages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="refresh in app messages" />
+
+    <Button
+        android:id="@+id/btnHistoricalEvent1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 1" />
+
+    <Button
+        android:id="@+id/btnHistoricalEvent2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 2" />
+
+    <Button
+        android:id="@+id/btnHistoricalEvent3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Historical Event 3" />
+
+    <Button
+        android:id="@+id/btnCheckSequence"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Check sequence" />
 
 </LinearLayout>
