@@ -13,10 +13,8 @@ package com.adobe.marketing.mobile.messagingsample
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
 
-class PayloadFormatUtils {
-    class PayloadFormatUtils private constructor() {}
+class PayloadFormatUtils private constructor() {
     companion object {
         /**
          * Converts provided [org.json.JSONObject] into [java.util.Map] for any number of levels, which can be used as event data

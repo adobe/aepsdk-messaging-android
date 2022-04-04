@@ -323,14 +323,14 @@ public class Message extends MessagingDelegate {
         }
 
         if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) != null) {
-            final double opacity = ((Double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY));
+            final double opacity = ((double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY));
             backdropOpacity = (float) opacity;
         } else {
             backdropOpacity = 0.0f;
         }
 
         if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) != null) {
-            final double radius = ((Double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
+            final double radius = ((double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
             cornerRadius = (float) radius;
         } else {
             cornerRadius = 0.0f;
