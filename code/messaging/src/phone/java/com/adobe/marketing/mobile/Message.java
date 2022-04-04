@@ -147,9 +147,11 @@ public class Message extends MessagingDelegate {
         webViewHandler.post(new Runnable() {
             @Override
             public void run() {
-                final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
-                view.addJavascriptInterface(javascriptInterface, name);
-                scriptHandlers.put(name, javascriptInterface);
+                if (view != null) {
+                    final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
+                    view.addJavascriptInterface(javascriptInterface, name);
+                    scriptHandlers.put(name, javascriptInterface);
+                }
             }
         });
     }
@@ -224,7 +226,7 @@ public class Message extends MessagingDelegate {
             }
         });
         try {
-            latch.await(500, TimeUnit.MILLISECONDS);
+            latch.await(1000, TimeUnit.MILLISECONDS);
         } catch (final InterruptedException e) {
             Log.debug(LOG_TAG, "Exception occurred while waiting for WebView to be created: (%e)", e.getMessage());
         }
