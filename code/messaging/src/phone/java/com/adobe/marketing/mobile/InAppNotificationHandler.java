@@ -140,28 +140,44 @@ class InAppNotificationHandler {
             Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
             final Map<String, String> activity;
             final Map<String, String> placement;
-            final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-            if (MessagingUtils.isMapNullOrEmpty((Map) activityMap)) {
-                Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
-                return;
-            }
-            final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
-            if (MessagingUtils.isMapNullOrEmpty((Map) placementMap)) {
-                Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
+            final Object activityObject = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+            final Object placementObject = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+            if (activityObject == null || placementObject == null) {
+                Log.trace(LOG_TAG, "%s - Activity or placement was not found in the payload, aborting payload handling.", SELF_TAG);
                 return;
             }
             try { // need to convert the payload map depending on the source of the offers (optimize response event or previously cached offers)
                 activity = new HashMap<>();
-                if (activityMap instanceof Variant) {
-                    activity.putAll(((Variant) activityMap).getStringMap());
+                if (activityObject instanceof Variant) {
+                    final Variant variantActivityMap = (Variant) activityObject;
+                    if (MessagingUtils.isMapNullOrEmpty(variantActivityMap.getStringMap())) {
+                        Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
+                        return;
+                    }
+                    activity.putAll(variantActivityMap.getStringMap());
                 } else {
-                    activity.putAll((Map<String, String>) activityMap);
+                    final Map<String, String> activityMap = (Map<String, String>) activityObject;
+                    if (MessagingUtils.isMapNullOrEmpty(activityMap)) {
+                        Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
+                        return;
+                    }
+                    activity.putAll(activityMap);
                 }
                 placement = new HashMap<>();
-                if (placementMap instanceof Variant) {
-                    placement.putAll(((Variant) placementMap).getStringMap());
+                if (placementObject instanceof Variant) {
+                    final Variant variantPlacementMap = (Variant) placementObject;
+                    if (MessagingUtils.isMapNullOrEmpty(variantPlacementMap.getStringMap())) {
+                        Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
+                        return;
+                    }
+                    placement.putAll(variantPlacementMap.getStringMap());
                 } else {
-                    placement.putAll((Map<String, String>) placementMap);
+                    final Map<String, String> placementMap = (Map<String, String>) placementObject;
+                    if (MessagingUtils.isMapNullOrEmpty(placementMap)) {
+                        Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
+                        return;
+                    }
+                    placement.putAll(placementMap);
                 }
             } catch (final VariantException e) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
@@ -315,7 +331,7 @@ class InAppNotificationHandler {
             final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
             final JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
             final JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
-            if (remoteAssets.length() != 0 ) {
+            if (remoteAssets.length() != 0) {
                 for (final Object object : MessagingUtils.toList(remoteAssets)) {
                     final String imageAssetUrl = object.toString();
                     if (StringUtils.stringIsUrl(imageAssetUrl)) {
