@@ -255,13 +255,13 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Determine whether the provided {@code String} assetPath is downloadable.
+     * Determine whether the provided {@code String} asset URL is downloadable.
      *
-     * @param assetPath {@code String} containing the asset path to check
+     * @param assetUrl {@code String} containing the asset url to check
      * @return {@code boolean} indicating whether the provided asset is downloadable
      */
-    boolean assetIsDownloadable(final String assetPath) {
-        return StringUtils.stringIsUrl(assetPath) && (assetPath.startsWith("http"));
+    boolean assetIsDownloadable(final String assetUrl) {
+        return StringUtils.stringIsUrl(assetUrl) && (assetUrl.startsWith("http"));
     }
 
     /**
