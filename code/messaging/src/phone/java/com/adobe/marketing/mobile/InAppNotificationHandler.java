@@ -141,7 +141,15 @@ class InAppNotificationHandler {
             final Map<String, String> activity;
             final Map<String, String> placement;
             final Object activityMap = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
+            if (MessagingUtils.isMapNullOrEmpty((Map) activityMap)) {
+                Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
+                return;
+            }
             final Object placementMap = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
+            if (MessagingUtils.isMapNullOrEmpty((Map) placementMap)) {
+                Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
+                return;
+            }
             try { // need to convert the payload map depending on the source of the offers (optimize response event or previously cached offers)
                 activity = new HashMap<>();
                 if (activityMap instanceof Variant) {
