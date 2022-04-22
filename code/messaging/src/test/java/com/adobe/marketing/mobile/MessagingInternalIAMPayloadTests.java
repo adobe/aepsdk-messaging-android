@@ -309,7 +309,7 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_ValidOffersIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
@@ -344,7 +344,7 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_MultipleValidOffersIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 3;
         // trigger event
         HashMap<String, Object> eventData = new HashMap<>();
@@ -379,10 +379,10 @@ public class MessagingInternalIAMPayloadTests {
     @Test
     public void test_handleEdgeResponseEvent_OneInvalidIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig validPayloadConfig = new MessagePayloadConfig();
+        MessageTestConfig validPayloadConfig = new MessageTestConfig();
         validPayloadConfig.count = 2;
 
-        MessagePayloadConfig invalidPayloadConfig = new MessagePayloadConfig();
+        MessageTestConfig invalidPayloadConfig = new MessageTestConfig();
         invalidPayloadConfig.count = 1;
         invalidPayloadConfig.isMissingRulesKey = true;
 
@@ -428,7 +428,7 @@ public class MessagingInternalIAMPayloadTests {
         when(bundle.getString("activityId")).thenReturn(null);
         when(bundle.getString("placementId")).thenReturn(null);
         messagingInternal = new MessagingInternal(mockExtensionApi);
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         // trigger event
@@ -467,7 +467,7 @@ public class MessagingInternalIAMPayloadTests {
         when(bundle.getString("activityId")).thenReturn(null);
         when(bundle.getString("placementId")).thenReturn(null);
         messagingInternal = new MessagingInternal(mockExtensionApi);
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         config.invalidApplicationId = true;

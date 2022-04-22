@@ -12,6 +12,7 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingUtils.getJsonUtilityService;
 import static com.adobe.marketing.mobile.MessagingUtils.toMap;
 import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
 import static org.junit.Assert.fail;
@@ -350,7 +351,7 @@ public class MessagingTestUtils {
         }
     }
 
-    static List<Map> generateMessagePayload(final MessagePayloadConfig config) {
+    static List<Map> generateMessagePayload(final MessageTestConfig config) {
         if (config.count <= 0) {
             return null;
         }

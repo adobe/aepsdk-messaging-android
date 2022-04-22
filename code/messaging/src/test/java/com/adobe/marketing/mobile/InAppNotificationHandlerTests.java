@@ -178,7 +178,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_ValidOffersIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
@@ -195,7 +195,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_MultipleValidOffersIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 3;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
@@ -212,9 +212,9 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OneInvalidIAMPayloadPresent() {
         // setup
-        MessagePayloadConfig validPayloadConfig = new MessagePayloadConfig();
+        MessageTestConfig validPayloadConfig = new MessageTestConfig();
         validPayloadConfig.count = 2;
-        MessagePayloadConfig invalidPayloadConfig = new MessagePayloadConfig();
+        MessageTestConfig invalidPayloadConfig = new MessageTestConfig();
         invalidPayloadConfig.count = 1;
         invalidPayloadConfig.isMissingRulesKey = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
@@ -234,7 +234,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageId() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -250,7 +250,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageType() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageType = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -266,7 +266,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageDetail() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageDetail = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -282,7 +282,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadIsEmpty() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.hasEmptyPayload = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -308,7 +308,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadHasInvalidActivityId() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.invalidActivityId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -324,7 +324,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_handleOfferNotificationPayload_OffersIAMPayloadHasInvalidPlacementId() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.invalidPlacementId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -348,7 +348,7 @@ public class InAppNotificationHandlerTests {
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
 
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -371,7 +371,7 @@ public class InAppNotificationHandlerTests {
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
 
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         config.invalidApplicationId = true;
@@ -394,7 +394,7 @@ public class InAppNotificationHandlerTests {
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
 
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         config.hasNoScopeInPayload = true;
@@ -416,7 +416,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_ValidPayload() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
@@ -433,7 +433,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_nonMatchingActivityId() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.invalidActivityId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -451,7 +451,7 @@ public class InAppNotificationHandlerTests {
     @Test
     public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_nonMatchingPlacementId() {
         // setup
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.invalidPlacementId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -473,7 +473,7 @@ public class InAppNotificationHandlerTests {
         when(bundle.getString("placementId")).thenReturn(null);
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
 
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -495,7 +495,7 @@ public class InAppNotificationHandlerTests {
         when(bundle.getString("placementId")).thenReturn(null);
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
 
-        MessagePayloadConfig config = new MessagePayloadConfig();
+        MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isUsingApplicationId = true;
         config.invalidApplicationId = true;

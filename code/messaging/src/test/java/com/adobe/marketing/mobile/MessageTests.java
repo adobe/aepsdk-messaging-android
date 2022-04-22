@@ -12,15 +12,20 @@
 package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
+import android.os.Handler;
 import android.os.Looper;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
@@ -32,6 +37,9 @@ import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.MessageCreationException;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.internal.MessagesMonitor;
 import com.adobe.marketing.mobile.internal.context.App;
@@ -45,11 +53,15 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +71,22 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, App.class, MessagingState.class, ServiceProvider.class})
 public class MessageTests {
+    class CustomMessagingDelegate extends MessagingDelegate {
+        private boolean showMessage = true;
 
+        @Override
+        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
+            if (!showMessage) {
+                Message message = (Message) fullscreenMessage.getParent();
+                message.track("suppressed", MessagingEdgeEventType.IN_APP_INTERACT);
+            }
+            return showMessage;
+        }
+
+        public void setShowMessage(boolean showMessage) {
+            this.showMessage = showMessage;
+        }
+    }
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
     private final Map<String, Object> consequence = new HashMap<>();
 
@@ -95,6 +122,8 @@ public class MessageTests {
     Application mockApplication;
     @Mock
     Looper mockLooper;
+    @Mock
+    Handler mockHandler;
     @Captor
     ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor;
     @Captor
@@ -109,7 +138,7 @@ public class MessageTests {
         mockCore.eventHub = eventHub;
 
         setupMocks();
-        setupDetailsAndConsequenceMaps(setupXdmMap());
+        setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
 
         try {
             message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
@@ -135,12 +164,9 @@ public class MessageTests {
         Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         Mockito.when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
-        mockWebView = PowerMockito.mock(WebView.class);
-        PowerMockito.whenNew(WebView.class).withAnyArguments().thenReturn(mockWebView);
-        when(mockWebView.getSettings()).thenReturn(mockWebSettings);
     }
 
-    Map<String, Object> setupXdmMap() {
+    Map<String, Object> setupXdmMap(MessageTestConfig config) {
         Map<String, Object> mixins = new HashMap<>();
         Map<String, Object> xdm = new HashMap<>();
         Map<String, Object> experiance = new HashMap<>();
@@ -151,7 +177,9 @@ public class MessageTests {
 
         // setup xdm map
         channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "123456789");
+        if (!config.isMissingMessageId) {
+            messageExecution.put("messageExecutionID", "123456789");
+        }
         messageExecution.put("messagePublicationID", "messagePublicationID");
         messageExecution.put("messageID", "messageID");
         messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
@@ -167,16 +195,142 @@ public class MessageTests {
 
     Map<String, Object> setupDetailsAndConsequenceMaps(Map<String, Object> xdmMap) {
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        return details;
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
+        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        return consequence;
     }
 
+    MessageSettings getMessageSettings(Map<String, Object> rawSettings) {
+        MessageSettings messageSettings = null;
+        AEPMessageSettings.Builder builder = new AEPMessageSettings.Builder(this);
+        Method addMessageSettings = Whitebox.getMethod(Message.class, "addMessageSettings", AEPMessageSettings.Builder.class, Map.class);
+        try {
+            addMessageSettings.setAccessible(true);
+            messageSettings = (MessageSettings) addMessageSettings.invoke(message, builder, rawSettings);
+        } catch (InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
+            fail(e.getMessage());
+        }
+        return messageSettings;
+    }
+
+    // ========================================================================================
+    // Message constructor tests
+    // ========================================================================================
+    @Test
+    public void test_messageConstructor() throws MessageRequiredFieldMissingException {
+        // test
+        message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+
+        // verify
+        assertNotNull(message);
+    }
+
+    @Test (expected = MessageRequiredFieldMissingException.class)
+    public void test_messageConstructor_MissingDetails() throws MessageRequiredFieldMissingException {
+        // setup
+        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
+        consequenceMap.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        // test
+        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
+    }
+
+    @Test (expected = MessageRequiredFieldMissingException.class)
+    public void test_messageConstructor_MissingMessageExecutionId() throws MessageRequiredFieldMissingException {
+        // setup
+        MessageTestConfig config = new MessageTestConfig();
+        config.isMissingMessageId = true;
+        Map<String, Object> xdmMap = setupXdmMap(config);
+        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(xdmMap);
+        // test
+        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
+    }
+
+    @Test
+    public void test_addMessageSettings_NullMessageSettingsGivesDefaultValues() {
+        // test
+        MessageSettings settings = getMessageSettings(Collections.EMPTY_MAP);
+
+        // verify
+        assertEquals("#FFFFFF", settings.getBackdropColor());
+        assertEquals(MessageAnimation.NONE, settings.getDisplayAnimation());
+        assertEquals(0, settings.getVerticalInset());
+        assertEquals(0, settings.getCornerRadius(), 0.1f);
+        assertEquals(100, settings.getHeight());
+        assertEquals(100, settings.getWidth());
+        assertEquals(MessageAlignment.CENTER, settings.getVerticalAlign());
+        assertEquals(MessageAlignment.CENTER, settings.getHorizontalAlign());
+        assertEquals(0, settings.getHorizontalInset());
+        assertEquals(MessageAnimation.NONE, settings.getDismissAnimation());
+        assertEquals(true, settings.getUITakeover());
+        assertEquals(Collections.EMPTY_MAP, settings.getGestures());
+    }
+
+    @Test
+    public void test_addMessageSettings_MessageSettingsContainsNonDefaultValues() {
+        // setup
+        final Map<String, String> gestureStringMap = new HashMap() {
+            {
+                put("backgroundTap", "center");
+                put("swipeDown", "bottom");
+                put("swipeLeft", "left");
+                put("swipeRight", "right");
+                put("swipeUp", "top");
+            }
+        };
+        Map<String, Object> messageSettings = new HashMap() {
+            {
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.BACKDROP_COLOR, "#FF5733");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.BACKDROP_OPACITY, 0.5);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.DISPLAY_ANIMATION, "none");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_INSET, 10);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.CORNER_RADIUS, 0.25);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.HEIGHT, 70);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.WIDTH, 80);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "top");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_ALIGN, "left");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "fade");
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, false);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.GESTURES, gestureStringMap);
+            }
+        };
+
+        // test
+        MessageSettings settings = getMessageSettings(messageSettings);
+
+        // verify
+        assertEquals("#FF5733", settings.getBackdropColor());
+        assertEquals(MessageAnimation.NONE, settings.getDisplayAnimation());
+        assertEquals(10, settings.getVerticalInset());
+        assertEquals(0.25f, settings.getCornerRadius(), 0.1f);
+        assertEquals(70, settings.getHeight());
+        assertEquals(80, settings.getWidth());
+        assertEquals(MessageAlignment.TOP, settings.getVerticalAlign());
+        assertEquals(MessageAlignment.LEFT, settings.getHorizontalAlign());
+        assertEquals(0, settings.getHorizontalInset());
+        assertEquals(MessageAnimation.FADE, settings.getDismissAnimation());
+        assertEquals(false, settings.getUITakeover());
+        Map<MessageGesture, String>  expectedGestureStringMap = new HashMap() {
+            {
+                put(MessageGesture.BACKGROUND_TAP, "center");
+                put(MessageGesture.SWIPE_DOWN, "bottom");
+                put(MessageGesture.SWIPE_LEFT, "left");
+                put(MessageGesture.SWIPE_RIGHT, "right");
+                put(MessageGesture.SWIPE_UP, "top");
+            }
+        };
+        assertEquals(expectedGestureStringMap, settings.getGestures());
+    }
+
+    // ========================================================================================
+    // Message show and dismiss tests
+    // ========================================================================================
     @Test
     public void test_messageShow() {
         // test
@@ -275,6 +429,9 @@ public class MessageTests {
         verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
     }
 
+    // ========================================================================================
+    // Message overrideUrlLoad tests
+    // ========================================================================================
     @Test
     public void test_overrideUrlLoad() {
         // setup
@@ -316,6 +473,9 @@ public class MessageTests {
         verify(mockUIService, times(0)).showUrl(anyString());
     }
 
+    // ========================================================================================
+    // Message track tests
+    // ========================================================================================
     @Test
     public void test_messageTrack() {
         // test
@@ -339,8 +499,102 @@ public class MessageTests {
 
     }
 
+    // ========================================================================================
+    // Message javascript handling and loading tests
+    // ========================================================================================
     @Test
-    public void test_loadJavascript_WithScriptHandlersSet() {
+    public void test_handleJavascript() throws Exception {
+        // setup
+        Whitebox.setInternalState(message, "webViewHandler", mockHandler);
+        AdobeCallback<String> callback = new AdobeCallback<String>() {
+            @Override
+            public void call(String s) {
+                Assert.assertEquals("hello world", s);
+            }
+        };
+        // set js webview
+        message.view = mockWebView;
+
+        // test
+        message.handleJavascriptMessage("test", callback);
+        message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+        // verify evaluate javascript called
+        verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
+    }
+
+    @Test
+    public void test_handleJavascript_withNoCallback() throws Exception {
+        // setup
+        Whitebox.setInternalState(message, "webViewHandler", mockHandler);
+        // set js webview
+        message.view = mockWebView;
+
+        // test
+        message.handleJavascriptMessage("test", null);
+        message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+        // verify adobe callback in the script handler is null
+        Map<String, Object> scriptHandlers = Whitebox.getInternalState(message, "scriptHandlers");
+        WebViewJavascriptInterface webViewJavascriptInterface = (WebViewJavascriptInterface) scriptHandlers.get("test");
+        AdobeCallback<String> callback = Whitebox.getInternalState(webViewJavascriptInterface, "callback");
+        assertNull(callback);
+        // verify evaluate javascript called
+        verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
+    }
+
+    @Test
+    public void test_handleJavascript_withNoMessageName() throws Exception {
+        // setup
+        Whitebox.setInternalState(message, "webViewHandler", mockHandler);
+        AdobeCallback<String> callback = new AdobeCallback<String>() {
+            @Override
+            public void call(String s) {
+                Assert.assertEquals("hello world", s);
+            }
+        };
+        // set js webview
+        message.view = mockWebView;
+
+        // test
+        message.handleJavascriptMessage(null, callback);
+        message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+        // verify evaluate javascript not called
+        verify(mockWebView, times(0)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
+    }
+
+    @Test
+    public void test_handleJavascript_withDuplicateMessageNames_thenOnlyOneWebViewJavascriptInterfaceCreated() throws Exception {
+        // setup
+        Whitebox.setInternalState(message, "webViewHandler", mockHandler);
+        AdobeCallback<String> callback = new AdobeCallback<String>() {
+            @Override
+            public void call(String s) {
+                Assert.assertEquals("hello world", s);
+            }
+        };
+        AdobeCallback<String> callback2 = new AdobeCallback<String>() {
+            @Override
+            public void call(String s) {
+                Assert.assertEquals("hello world", s);
+            }
+        };
+        // set js webview
+        message.view = mockWebView;
+
+        // test
+        message.handleJavascriptMessage("test", callback);
+        message.handleJavascriptMessage("test", callback2);
+        message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+        // verify only one WebViewJavascriptInterface created
+        Map<String, Object> scriptHandlers = Whitebox.getInternalState(message, "scriptHandlers");
+        assertEquals(1, scriptHandlers.size());
+        WebViewJavascriptInterface webViewJavascriptInterface = (WebViewJavascriptInterface) scriptHandlers.get("test");
+        assertEquals(callback, Whitebox.getInternalState(webViewJavascriptInterface, "callback"));
+        // verify evaluate javascript called
+        verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
+    }
+
+    @Test
+    public void test_loadJavascript_WithScriptHandlersSet() throws Exception {
         // setup
         AdobeCallback<String> callback = new AdobeCallback<String>() {
             @Override
@@ -353,7 +607,6 @@ public class MessageTests {
         Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
         scriptHandlers.put("test", new WebViewJavascriptInterface(callback));
         Whitebox.setInternalState(message, "scriptHandlers", scriptHandlers);
-
         // test
         message.evaluateJavascript("(function test(hello world) { return(arg); })()");
         // verify evaluate javascript called
@@ -372,7 +625,7 @@ public class MessageTests {
     }
 
     @Test
-    public void test_loadJavascriptWhenJavascriptIsNull() {
+    public void test_loadJavascriptWhenJavascriptIsNull() throws Exception {
         // setup
         AdobeCallback<String> callback = new AdobeCallback<String>() {
             @Override
@@ -390,23 +643,5 @@ public class MessageTests {
 
         // verify evaluate javascript not called
         verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
-    }
-
-    class CustomMessagingDelegate extends MessagingDelegate {
-        private boolean showMessage = true;
-
-        @Override
-        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-            if (!showMessage) {
-                AEPMessageSettings settings = (AEPMessageSettings) ((AEPMessage) fullscreenMessage).getSettings();
-                Message message = (Message) settings.getParent();
-                message.track("suppressed", MessagingEdgeEventType.IN_APP_INTERACT);
-            }
-            return showMessage;
-        }
-
-        public void setShowMessage(boolean showMessage) {
-            this.showMessage = showMessage;
-        }
     }
 }
