@@ -24,11 +24,9 @@ import static org.mockito.Mockito.when;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -41,7 +39,6 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.UIService;
-import com.adobe.marketing.mobile.services.ui.internal.MessagesMonitor;
 import com.adobe.marketing.mobile.internal.context.App;
 
 import org.junit.Assert;
@@ -97,8 +94,6 @@ public class MessageTests {
     @Mock
     App mockApp;
     @Mock
-    MessagesMonitor mockMessagesMonitor;
-    @Mock
     AndroidPlatformServices mockPlatformServices;
     @Mock
     UIService mockUIService;
@@ -116,8 +111,6 @@ public class MessageTests {
     ServiceProvider mockServiceProvider;
     @Mock
     WebView mockWebView;
-    @Mock
-    WebSettings mockWebSettings;
     @Mock
     Application mockApplication;
     @Mock
@@ -160,6 +153,15 @@ public class MessageTests {
         Mockito.when(mockApplication.getMainLooper()).thenReturn(mockLooper);
         Mockito.when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
+        // Actually run the runnable - mocking the handler.post()
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Runnable r = invocation.getArgument(0);
+                r.run();
+                return null;
+            }
+        }).when(mockHandler).post(any(Runnable.class));
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
         Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
@@ -512,8 +514,7 @@ public class MessageTests {
                 Assert.assertEquals("hello world", s);
             }
         };
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
 
         // test
         message.handleJavascriptMessage("test", callback);
@@ -526,8 +527,7 @@ public class MessageTests {
     public void test_handleJavascript_withNoCallback() throws Exception {
         // setup
         Whitebox.setInternalState(message, "webViewHandler", mockHandler);
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
 
         // test
         message.handleJavascriptMessage("test", null);
@@ -551,8 +551,7 @@ public class MessageTests {
                 Assert.assertEquals("hello world", s);
             }
         };
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
 
         // test
         message.handleJavascriptMessage(null, callback);
@@ -577,8 +576,7 @@ public class MessageTests {
                 Assert.assertEquals("hello world", s);
             }
         };
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
 
         // test
         message.handleJavascriptMessage("test", callback);

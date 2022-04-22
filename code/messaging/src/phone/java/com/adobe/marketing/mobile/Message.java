@@ -43,6 +43,7 @@ public class Message extends MessagingDelegate {
     private WebView webView;
     private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
 
     /**
      * Constructor.
@@ -141,7 +142,7 @@ public class Message extends MessagingDelegate {
         }
 
         // add a new js interface to the iam webview
-        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
+        webViewHandler.post(new Runnable() {
             @Override
             public void run() {
                 // retrieve the webview created for the iam
