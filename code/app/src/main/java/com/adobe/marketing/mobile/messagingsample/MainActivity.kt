@@ -467,7 +467,7 @@ class CustomDelegate : MessagingDelegate() {
         // access to the whole message from the parent
         fullscreenMessage?.also {
             this.currentMessage = (fullscreenMessage.parent) as? Message
-            webview = currentMessage?.view
+            webview = currentMessage?.webView
 
             // in-line handling of javascript calls
             currentMessage?.handleJavascriptMessage("magic") { content ->

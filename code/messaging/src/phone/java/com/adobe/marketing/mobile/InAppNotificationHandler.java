@@ -228,7 +228,12 @@ class InAppNotificationHandler {
         List<Map<String, Variant>> items = new ArrayList<>();
         final Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
         if (itemsList instanceof Variant) {
-            final List<Variant> variantList = ((VectorVariant) itemsList).getVariantList();
+            List<Variant> variantList = new ArrayList<>();
+            try {
+                variantList = ((VectorVariant) itemsList).getVariantList();
+            } catch (final Exception exception) {
+                Log.debug(LOG_TAG, "%s - Exception occurred when extracting rules from the Optimize payload: (%s)", SELF_TAG, exception.getMessage());
+            }
             for (final Object element : variantList) {
                 final MapVariant mapVariant = (MapVariant) element;
                 items.add(mapVariant.getVariantMap());

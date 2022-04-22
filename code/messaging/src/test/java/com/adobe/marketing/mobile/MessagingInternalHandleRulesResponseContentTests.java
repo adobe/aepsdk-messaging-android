@@ -52,7 +52,7 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalHandleRulesResponseContentTests {
-    private final Map<String, Object> mobileParameters = new HashMap<String, Object>() {
+    private final Map<String, Object> mobileParameters = new HashMap() {
         {
             put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
             put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center");
@@ -138,7 +138,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
         // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
     }
 
     void setupAcitivtyAndPlacementIdMocks() throws PackageManager.NameNotFoundException {

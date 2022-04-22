@@ -172,6 +172,25 @@ public class MessagingTestConstants {
             }
         }
 
+        public static final class RulesEngine {
+            public static final String JSON_KEY = "rules";
+            public static final String JSON_CONDITION_KEY = "condition";
+            public static final String JSON_CONSEQUENCES_KEY = "consequences";
+            public static final String MESSAGE_CONSEQUENCE_ID = "id";
+            public static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            public static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_XDM = "_xdm";
+            public static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+
+            private RulesEngine() {
+            }
+        }
+
         final class MobileParametersKeys {
             static final String MOBILE_PARAMETERS = "mobileParameters";
             static final String SCHEMA_VERSION = "schemaVersion";
