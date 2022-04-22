@@ -16,14 +16,13 @@ import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.os.Handler;
 import android.webkit.ValueCallback;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
-import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
@@ -31,8 +30,6 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
@@ -42,12 +39,10 @@ public class Message extends MessagingDelegate {
     // public properties
     public String id;
     public boolean autoTrack = true;
-    public WebView view = createWebView();
     // private properties
-    private final AEPMessage aepMessage;
-    private final FullscreenMessageDelegate fullscreenMessageDelegate;
+    private WebView webView;
+    private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private Handler webViewHandler;
 
     /**
      * Constructor.
@@ -106,9 +101,11 @@ public class Message extends MessagingDelegate {
             settings = messageSettingsBuilder.build();
         }
 
-        fullscreenMessageDelegate = ServiceProvider.getInstance().getMessageDelegate() != null ? ServiceProvider.getInstance().getMessageDelegate() : this;
-        aepMessage = (AEPMessage) ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, fullscreenMessageDelegate, false, settings);
-        aepMessage.setLocalAssetsMap(assetMap);
+        // set the internal Messaging delegate if a custom Messaging delegate is not being used
+        if (ServiceProvider.getInstance().getMessageDelegate() == null) {
+            ServiceProvider.getInstance().setMessageDelegate(this);
+        }
+        aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, settings, assetMap);
     }
 
     /**
@@ -143,17 +140,35 @@ public class Message extends MessagingDelegate {
             return;
         }
 
-        // create webview for javascript evaluation if needed, otherwise just add a new js interface to the existing webview
-        webViewHandler.post(new Runnable() {
+        // add a new js interface to the iam webview
+        new Handler(MobileCore.getApplication().getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if (view != null) {
-                    final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
-                    view.addJavascriptInterface(javascriptInterface, name);
-                    scriptHandlers.put(name, javascriptInterface);
+                // retrieve the webview created for the iam
+                getWebView();
+
+                if (webView == null) {
+                    Log.debug(LOG_TAG, "Will not add a javascript interface, the MessageWebView is null.");
+                    return;
                 }
+
+                final WebViewJavascriptInterface javascriptInterface = new WebViewJavascriptInterface(callback);
+                webView.addJavascriptInterface(javascriptInterface, name);
+                scriptHandlers.put(name, javascriptInterface);
             }
         });
+    }
+
+    /**
+     * Returns the {@link WebView} to allow manual integration of the in-app message.
+     *
+     * @return a {@code WebView} containing the Messaging extension in-app message
+     */
+    public WebView getWebView() {
+        if (webView == null) {
+            webView = ((AEPMessage) aepMessage).getWebView();
+        }
+        return webView;
     }
 
     /**
@@ -175,8 +190,13 @@ public class Message extends MessagingDelegate {
             return;
         }
 
+        if (webView == null) {
+            Log.debug(LOG_TAG, "Will not evaluate javascript, the MessageWebView is null.");
+            return;
+        }
+
         for (final Map.Entry<String, WebViewJavascriptInterface> entry : scriptHandlers.entrySet()) {
-            view.evaluateJavascript(content, new ValueCallback<String>() {
+            webView.evaluateJavascript(content, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(final String value) {
                     Log.debug(LOG_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
@@ -204,33 +224,6 @@ public class Message extends MessagingDelegate {
 
             aepMessage.dismiss();
         }
-    }
-
-    /**
-     * Creates a {@link WebView} for handling javascript code.
-     *
-     * @return the created {@code WebView}
-     */
-    private WebView createWebView() {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final WebView[] webView = new WebView[1];
-        webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
-        webViewHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                webView[0] = new WebView(MobileCore.getApplication().getApplicationContext());
-                final WebSettings settings = webView[0].getSettings();
-                settings.setJavaScriptEnabled(true);
-                settings.setJavaScriptCanOpenWindowsAutomatically(true);
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await(1000, TimeUnit.MILLISECONDS);
-        } catch (final InterruptedException e) {
-            Log.debug(LOG_TAG, "Exception occurred while waiting for WebView to be created: (%e)", e.getMessage());
-        }
-        return webView[0];
     }
 
     /**

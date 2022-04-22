@@ -138,7 +138,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
 
         // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
     }
 
     void setupAcitivtyAndPlacementIdMocks() throws PackageManager.NameNotFoundException {

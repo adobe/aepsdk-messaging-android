@@ -30,11 +30,11 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
-import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageCreationException;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.internal.MessagesMonitor;
+import com.adobe.marketing.mobile.internal.context.App;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,6 +51,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,8 @@ public class MessageTests {
     Core mockCore;
     @Mock
     Activity mockActivity;
+    @Mock
+    App mockApp;
     @Mock
     MessagesMonitor mockMessagesMonitor;
     @Mock
@@ -121,13 +124,14 @@ public class MessageTests {
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(ServiceProvider.class);
 
-        Mockito.when(App.getCurrentActivity()).thenReturn(mockActivity);
+        Mockito.when(mockApp.getCurrentActivity()).thenReturn(mockActivity);
+        Mockito.when(App.getInstance()).thenReturn(mockApp);
         Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
         Mockito.when(MobileCore.getApplication()).thenReturn(mockApplication);
-        when(mockApplication.getMainLooper()).thenReturn(mockLooper);
-        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        Mockito.when(mockApplication.getMainLooper()).thenReturn(mockLooper);
+        Mockito.when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
         Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         Mockito.when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
@@ -193,22 +197,7 @@ public class MessageTests {
     public void test_messageShow_withShowMessageTrueInCustomDelegate() {
         // setup custom delegate, show message is true by default
         CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
-        ServiceProvider.getInstance().setMessageDelegate(customMessageDelegate);
-        // setup mocks
-        try {
-            aepMessage = new AEPMessage("html", customMessageDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
-        } catch (MessageCreationException e) {
-            fail(e.getLocalizedMessage());
-        }
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(mockAEPMessage);
-        try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
-        } catch (MessageRequiredFieldMissingException e) {
-            fail(e.getLocalizedMessage());
-        }
-
-        // set custom delegate in Message object
-        Whitebox.setInternalState(message, "fullscreenMessageDelegate", customMessageDelegate);
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
 
         // test
         message.show();
@@ -230,13 +219,14 @@ public class MessageTests {
         // setup custom delegate
         CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
         customMessageDelegate.setShowMessage(false);
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
         // setup mocks
         try {
-            aepMessage = new AEPMessage("html", customMessageDelegate, false, mockMessagesMonitor, mockAEPMessageSettings);
+            aepMessage = new AEPMessage("html", mockAEPMessageSettings, Collections.<String, String>emptyMap());
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
         }
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(aepMessage);
+        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(aepMessage);
         try {
             message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
@@ -246,21 +236,15 @@ public class MessageTests {
         // test
         message.show();
 
-        // expect 2 tracking events: triggered tracking + suppressed tracking
-        verify(mockMessagingInternal, times(2)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        // expect 1 tracking event: triggered tracking
+        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
         List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
         List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
-        // verify display tracking event
+        // verify triggered tracking event
         MessagingEdgeEventType displayTrackingEvent = capturedEvents.get(0);
         String interaction = capturedInteractions.get(0);
         assertEquals(MessagingEdgeEventType.IN_APP_DISPLAY, displayTrackingEvent);
         assertEquals(null, interaction);
-
-        // verify custom delegate suppressed tracking event
-        MessagingEdgeEventType suppressedTrackingEvent = capturedEvents.get(1);
-        interaction = capturedInteractions.get(1);
-        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, suppressedTrackingEvent);
-        assertEquals("suppressed", interaction);
     }
 
     @Test
@@ -289,29 +273,6 @@ public class MessageTests {
 
         // verify no dismissed tracking event
         verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
-    }
-
-    @Test
-    public void test_messageShowFailure() {
-        // setup mocks
-        when(mockMessagesMonitor.isDisplayed()).thenReturn(true);
-        try {
-            aepMessage = new AEPMessage("html", mockMessage, false, mockMessagesMonitor, mockAEPMessageSettings);
-        } catch (MessageCreationException e) {
-            fail(e.getLocalizedMessage());
-        }
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(FullscreenMessageDelegate.class), any(boolean.class), any(MessageSettings.class))).thenReturn(aepMessage);
-        try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
-        } catch (MessageRequiredFieldMissingException e) {
-            fail(e.getLocalizedMessage());
-        }
-
-        // test
-        message.show();
-
-        // verify onShowFailure called
-        verify(mockMessage, times(1)).onShowFailure();
     }
 
     @Test
@@ -387,8 +348,7 @@ public class MessageTests {
                 Assert.assertEquals("hello world", s);
             }
         };
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
         // set scriptHandlers map
         Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
         scriptHandlers.put("test", new WebViewJavascriptInterface(callback));
@@ -402,8 +362,8 @@ public class MessageTests {
 
     @Test
     public void test_loadJavascript_WithNoScriptHandlersSet() {
-        // set js webview
-        message.view = mockWebView;
+        // setup
+        Whitebox.setInternalState(message, "webView", mockWebView);
         // test
         message.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
@@ -420,8 +380,7 @@ public class MessageTests {
                 Assert.assertEquals("hello world", s);
             }
         };
-        // set js webview
-        message.view = mockWebView;
+        Whitebox.setInternalState(message, "webView", mockWebView);
         // set scriptHandlers map
         Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
         scriptHandlers.put("test", new WebViewJavascriptInterface(callback));

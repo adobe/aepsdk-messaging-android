@@ -242,9 +242,9 @@ class MessagingInternal extends Extension {
             } else {
                 Log.warning(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, required keys are missing.");
             }
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
-        } catch (ClassCastException e) {
+        } catch (final ClassCastException e) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
     }
