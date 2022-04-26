@@ -164,7 +164,7 @@ public final class Messaging {
      * Sets the notification factory which will be used by {@link MessagingPushNotificationHandler} to create the push notification
      * @param factory
      */
-    public static void setPushNotificationFactory(IMessagingPushNotificationFactory factory) {
+    public static void setPushNotificationFactory(final IMessagingPushNotificationFactory factory) {
         if (factory == null) {
             // log
             return;
@@ -173,10 +173,10 @@ public final class Messaging {
     }
 
     /**
-     * Sets the image downloader which will be used for downloading large icon and images for notification
+     * Sets the image downloader which will be used for downloading large icon and images for notifications
      * @param downloader
      */
-    public static void setPushImageDownloader(IMessagingImageDownloader downloader) {
+    public static void setPushImageDownloader(final IMessagingImageDownloader downloader) {
         if (downloader == null) {
             // log
             return;
@@ -184,7 +184,7 @@ public final class Messaging {
         imageDownloader = downloader;
     }
 
-    public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage) {
+    public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage, final boolean shouldHandleTracking) {
         if (remoteMessage == null) {
             // Log remote message is null
             return false;
@@ -204,7 +204,7 @@ public final class Messaging {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                MessagingPushNotificationHandler.handlePushNotification(appContext, notificationId, messageId, payload, notificationFactory);
+                MessagingPushNotificationHandler.handlePushNotification(appContext, notificationId, messageId, payload, notificationFactory, shouldHandleTracking);
             }
         }).start();
 

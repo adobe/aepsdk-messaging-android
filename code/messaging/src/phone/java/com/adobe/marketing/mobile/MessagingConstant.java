@@ -161,6 +161,7 @@ final class MessagingConstant {
         static final String ACTION_TYPE = "adb_a_type";
         static final String ACTION_URI = "adb_uri";
         static final String ACTION_BUTTONS = "adb_act";
+        static final String HANDLE_NOTIFICATION_TRACKING_KEY = "handleNotificationTracking";
         static final class ActionButtonType {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";

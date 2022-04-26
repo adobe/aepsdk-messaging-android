@@ -159,7 +159,9 @@ public class MessagingPushPayload {
 
         try {
             String count = data.get(MessagingConstant.PushNotificationPayload.NOTIFICATION_COUNT);
-            this.badgeCount = Integer.parseInt(count);
+            if (!StringUtils.isNullOrEmpty(count)) {
+                this.badgeCount = Integer.parseInt(count);
+            }
         } catch (NumberFormatException e) {
             Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
         }

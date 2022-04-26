@@ -89,7 +89,7 @@ class MessagingUtils {
         return jsonArrayAsList;
     }
 
-    static String getChannelId(Context context, MessagingPushPayload payload) {
+    static String getChannelId(final Context context, final MessagingPushPayload payload) {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (payload == null || payload.getChannelId() == null || payload.getChannelId().isEmpty()) {
@@ -112,8 +112,9 @@ class MessagingUtils {
         return MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
     }
 
-    static PendingIntent getPendingIntentForAction(Context context, MessagingPushPayload payload, String messageId, String action) {
+    static PendingIntent getPendingIntentForAction(final Context context, final MessagingPushPayload payload, final String messageId, final String action, final boolean shouldHandleTracking) {
         Bundle extras = getBundleFromMap(payload.getData());
+        extras.putBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
         Intent intent = new Intent(context, MessagingPushReceiver.class);
         intent.setAction(action);
         intent.putExtras(extras);
@@ -122,7 +123,7 @@ class MessagingUtils {
         return PendingIntent.getBroadcast(context, MessagingConstant.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
     }
 
-    static int getDefaultSmallIconRes(Context context) {
+    static int getDefaultSmallIconRes(final Context context) {
         String packageName = context.getPackageName();
         try {
             return context.getPackageManager().getApplicationInfo(packageName, 0).icon;
@@ -132,7 +133,7 @@ class MessagingUtils {
         return MessagingPushNotificationFactory.INVALID_SMALL_ICON_RES_ID;
     }
 
-    static Bitmap getLargeIcon(Context context, MessagingPushPayload payload) {
+    static Bitmap getLargeIcon(final Context context, final MessagingPushPayload payload) {
         String iconUrl = payload.getIcon();
         IMessagingImageDownloader downloader = Messaging.getImageDownloader();
         if (downloader == null) {
@@ -142,12 +143,22 @@ class MessagingUtils {
         return downloader.getBitmapFromUrl(context, iconUrl);
     }
 
-    static Uri getSoundUri(Context context, String fileName) {
+    static Bitmap getNotificationImage(final Context context, final MessagingPushPayload payload) {
+        String imageUrl = payload.getImageUrl();
+        IMessagingImageDownloader downloader = Messaging.getImageDownloader();
+        if (downloader == null) {
+            // log that messaging extension is not registered
+            return null;
+        }
+        return downloader.getBitmapFromUrl(context, imageUrl);
+    }
+
+    static Uri getSoundUri(final Context context, final String fileName) {
         int resID = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
         return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/" + resID);
     }
 
-    static void addAction(Context context, MessagingPushPayload.ActionButton button, MessagingPushPayload payload, Notification.Builder notificationBuilder, String messageId) {
+    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId) {
         Bundle extras = getBundleFromMap(payload.getData());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LABEL, button.getLabel());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LINK, button.getLink());
@@ -164,7 +175,7 @@ class MessagingUtils {
         }
     }
 
-    private static void createDefaultNotificationChannel(Context context, NotificationManager notificationManager, MessagingPushPayload payload) {
+    private static void createDefaultNotificationChannel(final Context context, final NotificationManager notificationManager, final MessagingPushPayload payload) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager.getNotificationChannel(MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID) == null) {
                 int importance = NotificationManager.IMPORTANCE_DEFAULT;
@@ -179,11 +190,11 @@ class MessagingUtils {
     }
 
     // Need to be implemented - to map priority to importance for version >= O
-    private static void setImportance(Context context, NotificationChannel channel, String priority) {
-        // todo
+    private static void setImportance(final Context context, final NotificationChannel channel, final String priority) {
+
     }
 
-    private static void setSound(Context context, NotificationChannel channel, String fileName) {
+    private static void setSound(final Context context, final NotificationChannel channel, final String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return;
         }
@@ -196,7 +207,7 @@ class MessagingUtils {
         }
     }
 
-    private static Bundle getBundleFromMap(Map<String, String> dataMap) {
+    private static Bundle getBundleFromMap(final Map<String, String> dataMap) {
         Bundle bundle = new Bundle();
         if (dataMap == null || dataMap.isEmpty()) {
             return bundle;
@@ -207,7 +218,7 @@ class MessagingUtils {
         return bundle;
     }
 
-    private static Object fromJson(Object json) throws JSONException {
+    private static Object fromJson(final Object json) throws JSONException {
         if (json == JSONObject.NULL) {
             return null;
         } else if (json instanceof JSONObject) {
