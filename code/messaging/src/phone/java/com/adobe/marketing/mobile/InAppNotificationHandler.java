@@ -41,6 +41,7 @@ class InAppNotificationHandler {
      * Constructor
      *
      * @param parent {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param messagingCacheUtilities {@link MessagingCacheUtilities} instance to use for caching in-app message rule jsons and image assets
      */
     InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
