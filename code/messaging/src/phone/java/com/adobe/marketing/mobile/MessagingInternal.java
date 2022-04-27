@@ -11,12 +11,6 @@
 */
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -42,19 +36,24 @@ import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.XDM;
 
+import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class MessagingInternal extends Extension implements MessagingEventsHandler {
     private final String SELF_TAG = "MessagingInternal";
-    private ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final MessagingState messagingState;
-    private ExecutorService executorService;
     private final Object executorMutex = new Object();
+    private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
+    private ExecutorService executorService;
 
     /**
      * Constructor.
@@ -79,6 +78,142 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
         // Init the messaging state
         messagingState = new MessagingState();
+    }
+
+    /**
+     * Get profile data with token
+     *
+     * @param token push token which needs to be synced
+     * @param ecid  experience cloud id of the device
+     * @return {@link Map} of profile data in the correct format with token
+     */
+    private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
+        if (ecid == null) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null.");
+            return null;
+        }
+
+        final Map<String, String> namespace = new HashMap<>();
+        namespace.put(CODE, ECID);
+
+        final Map<String, Object> identity = new HashMap<>();
+        identity.put(NAMESPACE, namespace);
+        identity.put(ID, ecid);
+
+        final ArrayList<Map<String, Object>> pushNotificationDetailsArray = new ArrayList<>();
+        final Map<String, Object> pushNotificationDetailsData = new HashMap<>();
+        pushNotificationDetailsData.put(IDENTITY, identity);
+        pushNotificationDetailsData.put(APP_ID, App.getApplication().getPackageName());
+        pushNotificationDetailsData.put(TOKEN, token);
+        pushNotificationDetailsData.put(PLATFORM, FCM);
+        pushNotificationDetailsData.put(DENY_LISTED, false);
+
+        pushNotificationDetailsArray.add(pushNotificationDetailsData);
+
+        final Map<String, Object> data = new HashMap<>();
+        data.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(DATA, data);
+
+        return eventData;
+    }
+
+    /**
+     * Builds the xdmMap with the tracking information provided by the customer in eventData.
+     *
+     * @param eventType String eventType can be either applicationOpened or customAction
+     * @param messageId String messageId for the push notification provided by the customer
+     * @param actionId  String indicating the actionId of the action taken by the user on the push notification
+     * @return {@link Map} object containing the xdm formatted data
+     */
+    private static Map<String, Object> getXdmData(final String eventType, final String messageId, final String actionId) {
+        final Map<String, Object> xdmMap = new HashMap<>();
+        final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
+        final Map<String, Object> customActionMap = new HashMap<>();
+
+        if (actionId != null) {
+            customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
+            pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
+        }
+        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
+        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
+        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
+        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
+        return xdmMap;
+    }
+
+    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> xdmMap) {
+        final Map<String, Object> applicationMap = new HashMap<>();
+        final Map<String, Object> launchesMap = new HashMap<>();
+        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
+        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
+        xdmMap.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
+    }
+
+    /**
+     * Adding XDM specific data to tracking information.
+     *
+     * @param eventData eventData which contains the xdm data forwarded by the customer.
+     * @param xdmMap    xdmMap map which is updated.
+     */
+    private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
+        // Extract the xdm adobe data string from the event data.
+        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
+        if (adobe == null) {
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
+            return;
+        }
+
+        try {
+            // Convert the adobe string to json object
+            final JSONObject xdmJson = new JSONObject(adobe);
+            final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
+
+            if (xdmMapObject == null) {
+                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
+                return;
+            }
+
+            Map<String, Object> mixins = null;
+
+            // Check for if the json has the required keys
+            if (xdmMapObject.containsKey(CJM) && xdmMapObject.get(CJM) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(CJM);
+            }
+
+            if (xdmMapObject.containsKey(MIXINS) && xdmMapObject.get(MIXINS) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(MIXINS);
+            }
+
+            if (mixins == null) {
+                Log.debug(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, Missing xdm data.");
+                return;
+            }
+
+            xdmMap.putAll(mixins);
+
+            // Check if the xdm data provided by the customer is using cjm for tracking
+            // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
+            if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
+                Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
+                if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
+                    Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+                    // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
+                    final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
+                    cjm.putAll(MessagingUtils.toMap(jObject));
+
+                    experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
+                    xdmMap.put(EXPERIENCE, experience);
+                }
+            } else {
+                Log.warning(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, required keys are missing.");
+            }
+        } catch (JSONException e) {
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+        } catch (ClassCastException e) {
+            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
+        }
     }
 
     /**
@@ -336,141 +471,6 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         }
     }
 
-    /**
-     * Get profile data with token
-     * @param token push token which needs to be synced
-     * @param ecid experience cloud id of the device
-     * @return {@link Map} of profile data in the correct format with token
-     */
-    private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
-        if (ecid == null) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null.");
-            return null;
-        }
-
-        final Map<String, String> namespace = new HashMap<>();
-        namespace.put(CODE, ECID);
-
-        final Map<String, Object> identity = new HashMap<>();
-        identity.put(NAMESPACE, namespace);
-        identity.put(ID, ecid);
-
-        final ArrayList<Map<String, Object>> pushNotificationDetailsArray = new ArrayList<>();
-        final Map<String, Object> pushNotificationDetailsData = new HashMap<>();
-        pushNotificationDetailsData.put(IDENTITY, identity);
-        pushNotificationDetailsData.put(APP_ID, App.getApplication().getPackageName());
-        pushNotificationDetailsData.put(TOKEN, token);
-        pushNotificationDetailsData.put(PLATFORM, FCM);
-        pushNotificationDetailsData.put(DENY_LISTED, false);
-
-        pushNotificationDetailsArray.add(pushNotificationDetailsData);
-
-        final Map<String, Object> data = new HashMap<>();
-        data.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
-
-        final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(DATA, data);
-
-        return eventData;
-    }
-
-    /**
-     * Builds the xdmMap with the tracking information provided by the customer in eventData.
-     *
-     * @param eventType String eventType can be either applicationOpened or customAction
-     * @param messageId String messageId for the push notification provided by the customer
-     * @param actionId  String indicating the actionId of the action taken by the user on the push notification
-     * @return {@link Map} object containing the xdm formatted data
-     */
-    private static Map<String, Object> getXdmData(final String eventType, final String messageId, final String actionId) {
-        final Map<String, Object> xdmMap = new HashMap<>();
-        final Map<String, Object> pushNotificationTrackingMap = new HashMap<>();
-        final Map<String, Object> customActionMap = new HashMap<>();
-
-        if (actionId != null) {
-            customActionMap.put(XDMDataKeys.XDM_DATA_ACTION_ID, actionId);
-            pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_CUSTOM_ACTION, customActionMap);
-        }
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER_MESSAGE_ID, messageId);
-        pushNotificationTrackingMap.put(XDMDataKeys.XDM_DATA_PUSH_PROVIDER, FCM);
-        xdmMap.put(XDMDataKeys.XDM_DATA_EVENT_TYPE, eventType);
-        xdmMap.put(XDMDataKeys.XDM_DATA_PUSH_NOTIFICATION_TRACKING, pushNotificationTrackingMap);
-        return xdmMap;
-    }
-
-    private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> xdmMap) {
-        final Map<String, Object> applicationMap = new HashMap<>();
-        final Map<String, Object> launchesMap = new HashMap<>();
-        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
-        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
-        xdmMap.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
-    }
-
-    /**
-     * Adding XDM specific data to tracking information.
-     *
-     * @param eventData eventData which contains the xdm data forwarded by the customer.
-     * @param xdmMap    xdmMap map which is updated.
-     */
-    private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
-        // Extract the xdm adobe data string from the event data.
-        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
-        if (adobe == null) {
-            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
-            return;
-        }
-
-        try {
-            // Convert the adobe string to json object
-            final JSONObject xdmJson = new JSONObject(adobe);
-            final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
-            
-            if (xdmMapObject == null) {
-                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
-                return;
-            }
-
-            Map<String, Object> mixins = null;
-
-            // Check for if the json has the required keys
-            if (xdmMapObject.containsKey(CJM) && xdmMapObject.get(CJM) instanceof Map) {
-                mixins = (Map<String, Object>) xdmMapObject.get(CJM);
-            }
-
-            if (xdmMapObject.containsKey(MIXINS) && xdmMapObject.get(MIXINS) instanceof Map) {
-                mixins = (Map<String, Object>) xdmMapObject.get(MIXINS);
-            }
-
-            if (mixins == null) {
-                Log.debug(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, Missing xdm data.");
-                return;
-            }
-
-            xdmMap.putAll(mixins);
-
-            // Check if the xdm data provided by the customer is using cjm for tracking
-            // Check if both {@link MessagingConstant#EXPERIENCE} and {@link MessagingConstant#CUSTOMER_JOURNEY_MANAGEMENT} exists
-            if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
-                Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
-                if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
-                    Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
-                    // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
-                    final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
-                    cjm.putAll(MessagingUtils.toMap(jObject));
-
-                    experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
-                    xdmMap.put(EXPERIENCE, experience);
-                }
-            } else {
-                Log.warning(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, required keys are missing.");
-            }
-        } catch (JSONException e) {
-            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
-        } catch (ClassCastException e) {
-            Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
-        }
-    }
-
     // ========================================================================================
     // Getters for private members
     // ========================================================================================
@@ -503,7 +503,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * Checks if the provided {@code event} is a shared state update event for {@code stateOwnerName}
      *
      * @param stateOwnerName the shared state owner name; should not be null
-     * @param event current event to check; should not be null
+     * @param event          current event to check; should not be null
      * @return {@code boolean} indicating if it is the shared state update for the provided {@code stateOwnerName}
      */
     private boolean isSharedStateUpdateFor(final String stateOwnerName, final Event event) {

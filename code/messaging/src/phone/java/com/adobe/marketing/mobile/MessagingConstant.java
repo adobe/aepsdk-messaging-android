@@ -17,7 +17,8 @@ final class MessagingConstant {
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
-    private MessagingConstant() {}
+    private MessagingConstant() {
+    }
 
     static final class TrackingKeys {
         static final String _XDM = "_xdm";
@@ -81,7 +82,8 @@ final class MessagingConstant {
                 static final String XDM_DATA_EVENT_TYPE = "eventType";
                 static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING = "pushNotificationTracking";
 
-                private XDMDataKeys() {}
+                private XDMDataKeys() {
+                }
             }
 
             static final class PushNotificationDetailsDataKeys {
@@ -96,7 +98,8 @@ final class MessagingConstant {
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
 
-                private PushNotificationDetailsDataKeys() {}
+                private PushNotificationDetailsDataKeys() {
+                }
             }
         }
     }
@@ -146,10 +149,7 @@ final class MessagingConstant {
     }
 
     static final class PushNotificationPayload {
-        private PushNotificationPayload() {}
-
         static final String ADB = "adb_";
-
         static final String TITLE = "adb_title";
         static final String BODY = "adb_body";
         static final String SOUND = "adb_sound";
@@ -162,6 +162,10 @@ final class MessagingConstant {
         static final String ACTION_URI = "adb_uri";
         static final String ACTION_BUTTONS = "adb_act";
         static final String HANDLE_NOTIFICATION_TRACKING_KEY = "handleNotificationTracking";
+
+        private PushNotificationPayload() {
+        }
+
         static final class ActionButtonType {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
@@ -169,6 +173,7 @@ final class MessagingConstant {
 
             private ActionButtonType() {/* no-op */}
         }
+
         static final class NotificationPriorities {
             static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
             static final String PRIORITY_MIN = "PRIORITY_MIN";
@@ -176,6 +181,7 @@ final class MessagingConstant {
             static final String PRIORITY_HIGH = "PRIORITY_HIGH";
             static final String PRIORITY_MAX = "PRIORITY_MAX";
         }
+
         static final class ActionButtons {
             static final String LABEL = "label";
             static final String URI = "uri";

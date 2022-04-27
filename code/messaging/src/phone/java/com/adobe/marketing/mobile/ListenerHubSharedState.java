@@ -28,6 +28,7 @@ class ListenerHubSharedState extends ExtensionListener {
      * Method that gets called when event with event type {@link EventType#HUB}
      * and with event source {@link EventSource#SHARED_STATE} is dispatched through eventHub.
      * <p>
+     *
      * @param event the hub shared state change {@link Event} to be processed
      */
     @Override
