@@ -41,7 +41,8 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
     companion object {
         const val NOTIFICATION_ID = "notification-id"
         const val NOTIFICATION = "notification"
-        val XDM_DATA = mapOf("_xdm" to "{\n        \"cjm\": {\n          \"_experience\": {\n            \"customerJourneyManagement\": {\n              \"messageExecution\": {\n                \"messageExecutionID\": \"16-Sept-postman\",\n                \"messageID\": \"567111\",\n                \"journeyVersionID\": \"some-journeyVersionId\",\n                \"journeyVersionInstanceID\": \"someJourneyVersionInstanceID\"\n              }\n            }\n          }\n        }\n      }")
+        val XDM_DATA =
+            mapOf("_xdm" to "{\n        \"cjm\": {\n          \"_experience\": {\n            \"customerJourneyManagement\": {\n              \"messageExecution\": {\n                \"messageExecutionID\": \"16-Sept-postman\",\n                \"messageID\": \"567111\",\n                \"journeyVersionID\": \"some-journeyVersionId\",\n                \"journeyVersionInstanceID\": \"someJourneyVersionInstanceID\"\n              }\n            }\n          }\n        }\n      }")
         private const val TAG = "NotificationBroadcast"
     }
 }

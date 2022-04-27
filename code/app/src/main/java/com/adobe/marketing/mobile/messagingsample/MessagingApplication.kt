@@ -23,14 +23,12 @@ class MessagingApplication : Application() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
-        com.adobe.marketing.mobile.Identity.registerExtension();
-        Edge.registerExtension();
-        Assurance.registerExtension();
-        Lifecycle.registerExtension();
-        Signal.registerExtension();
-        UserProfile.registerExtension();
-        Messaging.registerExtension()
+        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension()
+        Edge.registerExtension()
+        Assurance.registerExtension()
+        Lifecycle.registerExtension()
+        Signal.registerExtension()
+        UserProfile.registerExtension()
 
         MobileCore.start {
             MobileCore.configureWithAppID("{Your App Id}")
