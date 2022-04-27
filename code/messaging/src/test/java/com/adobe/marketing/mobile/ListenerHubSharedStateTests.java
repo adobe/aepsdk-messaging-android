@@ -11,6 +11,10 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,22 +25,16 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
 public class ListenerHubSharedStateTests {
+    private final int EXECUTOR_TIMEOUT = 5; // in seconds
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     @Mock
     MessagingInternal mockMessagingInternal;
-
     @Mock
     ExtensionApi mockExtensionApi;
-
     private ListenerHubSharedState listenerHubSharedState;
-    private int EXECUTOR_TIMEOUT = 5;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
@@ -54,7 +52,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(1)).processHubSharedState(mockEvent);
@@ -68,7 +66,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);
@@ -84,7 +82,7 @@ public class ListenerHubSharedStateTests {
 
         // test
         listenerHubSharedState.hear(mockEvent);
-        TestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
+        MessagingTestUtils.waitForExecutor(executor, EXECUTOR_TIMEOUT);
 
         // verify
         verify(mockMessagingInternal, times(0)).processHubSharedState(mockEvent);

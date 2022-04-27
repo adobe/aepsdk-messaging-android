@@ -11,7 +11,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.1.0-beta-1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,16 +35,14 @@ buildscript {
 }
 
 def adobeDependencies = [
-        core       : "com.adobe.marketing.mobile:core:+",
-        userProfile: "com.adobe.marketing.mobile:userprofile:+",
-        edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
-        lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",
-        signal     : "com.adobe.marketing.mobile:signal:+",
-        edge       : "com.adobe.marketing.mobile:edge:1.1.0"
+        core        : "com.adobe.marketing.mobile:core:${mavenCoreVersion}",
+        edgeidentity: "com.adobe.marketing.mobile:edgeidentity:+",
+        lifecycle   : "com.adobe.marketing.mobile:lifecycle:+",
+        edge        : "com.adobe.marketing.mobile:edge:1.1.1"
 ]
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":messaging:aar")
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.firebase:firebase-messaging:21.1.0'
 

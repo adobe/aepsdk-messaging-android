@@ -11,13 +11,13 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
+
 import java.util.List;
 import java.util.Map;
-
-import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ECID;
-import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ID;
-import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 /**
  * MessagingState is used to store configuration and identity information
@@ -29,7 +29,6 @@ final class MessagingState {
 
     // Messaging properties
     private String experienceEventDatasetId;
-
 
     void setState(final Map<String, Object> configState, final Map<String, Object> edgeIdentityState) {
         setConfigState(configState);
@@ -67,7 +66,7 @@ final class MessagingState {
                     }
                 }
             } catch (ClassCastException e) {
-                Log.debug(MessagingConstant.LOG_TAG, "%s - Exception while trying to get the ecid. Error -> %s", SELF_TAG, e.getMessage());
+                Log.debug(MessagingConstants.LOG_TAG, "%s - Exception while trying to get the ecid. Error -> %s", SELF_TAG, e.getMessage());
             }
         }
     }
@@ -78,5 +77,13 @@ final class MessagingState {
 
     String getExperienceEventDatasetId() {
         return experienceEventDatasetId;
+    }
+
+    boolean isReadyForEvents() {
+        return isConfigStateSet() && !StringUtils.isNullOrEmpty(ecid);
+    }
+
+    boolean isConfigStateSet() {
+        return !StringUtils.isNullOrEmpty(experienceEventDatasetId);
     }
 }

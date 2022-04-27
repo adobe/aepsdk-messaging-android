@@ -15,7 +15,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.MobileCore
 
 class NotificationDeleteReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {

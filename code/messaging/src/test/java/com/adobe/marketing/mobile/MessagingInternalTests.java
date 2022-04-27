@@ -12,28 +12,10 @@
 
 package com.adobe.marketing.mobile;
 
-import android.app.Application;
-import android.content.Context;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -41,11 +23,35 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+
+import org.json.JSONException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalTests {
-
-    private MessagingInternal messagingInternal;
 
     // Mocks
     @Mock
@@ -57,21 +63,106 @@ public class MessagingInternalTests {
     @Mock
     Map<String, Object> mockEdgeIdentityData;
     @Mock
-    EventData mockEdgeIdentityEventData;
-    @Mock
     ConcurrentLinkedQueue<Event> mockEventQueue;
     @Mock
     Application mockApplication;
     @Mock
     Context context;
+    @Mock
+    Core mockCore;
+    @Mock
+    AndroidPlatformServices mockPlatformServices;
+    @Mock
+    AndroidSystemInfoService mockAndroidSystemInfoService;
+    @Mock
+    AndroidNetworkService mockAndroidNetworkService;
+    @Mock
+    AndroidJsonUtility mockAndroidJsonUtility;
+    @Mock
+    PackageManager packageManager;
+    @Mock
+    ApplicationInfo applicationInfo;
+    @Mock
+    Bundle bundle;
+    @Mock
+    Message mockMessage;
+    private MessagingInternal messagingInternal;
+    private EventHub eventHub;
+    private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
 
     @Before
-    public void setup() {
+    public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupPlatformServicesMocks();
+        setupActivityAndPlacementIdMocks();
+
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+    }
+
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
-        Mockito.when(App.getAppContext()).thenReturn(context);
-        messagingInternal = new MessagingInternal(mockExtensionApi);
+        when(MobileCore.getCore()).thenReturn(mockCore);
+    }
+
+    void setupPlatformServicesMocks() {
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        when(mockPlatformServices.getJsonUtilityService()).thenReturn(mockAndroidJsonUtility);
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
+    }
+
+    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
+        // activity id mocks
+        when(App.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getPackageManager()).thenReturn(packageManager);
+        when(mockApplication.getApplicationContext()).thenReturn(context);
+        when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
+        Whitebox.setInternalState(applicationInfo, "metaData", bundle);
+        when(bundle.getString(anyString())).thenReturn("mock_activity");
+        // placement id mocks
+        when(mockApplication.getPackageName()).thenReturn("mock_placement");
+    }
+
+    static Map<String, Object> setupXdmMap(MessageTestConfig config) {
+        Map<String, Object> mixins = new HashMap<>();
+        Map<String, Object> xdm = new HashMap<>();
+        Map<String, Object> experiance = new HashMap<>();
+        Map<String, Object> cjm = new HashMap<>();
+        Map<String, Object> messageProfile = new HashMap<>();
+        Map<String, Object> channel = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // setup xdm map
+        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
+        if (!config.isMissingMessageId) {
+            messageExecution.put("messageExecutionID", "123456789");
+        }
+        messageExecution.put("messagePublicationID", "messagePublicationID");
+        messageExecution.put("messageID", "messageID");
+        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
+        messageExecution.put("ajoCampaignID", "ajoCampaignID");
+        messageProfile.put("channel", channel);
+        cjm.put("messageProfile", messageProfile);
+        cjm.put("messageExecution", messageExecution);
+        experiance.put("customerJourneyManagement", cjm);
+        mixins.put("_experience", experiance);
+        xdm.put("mixins", mixins);
+        return xdm;
+    }
+
+    static Map<String, Object> setupDetailsMaps(Map<String, Object> xdmMap) {
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
+        return details;
     }
 
     // ========================================================================================
@@ -79,8 +170,10 @@ public class MessagingInternalTests {
     // ========================================================================================
     @Test
     public void test_Constructor() {
-        // verify 4 listeners are registered
-        verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstant.EventType.MESSAGING),
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        // verify 5 listeners are registered
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING),
                 eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
@@ -88,6 +181,12 @@ public class MessagingInternalTests {
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.HUB.getName()),
                 eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstants.EventType.EDGE),
+                eq(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerOffersPersonalizationDecisions.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerRulesEngineResponseContent.class), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -97,7 +196,7 @@ public class MessagingInternalTests {
     public void test_getName() {
         // test
         String moduleName = messagingInternal.getName();
-        assertEquals("getName should return the correct module name", MessagingConstant.EXTENSION_NAME, moduleName);
+        assertEquals("getName should return the correct module name", MessagingConstants.EXTENSION_NAME, moduleName);
     }
 
     // ========================================================================================
@@ -107,7 +206,7 @@ public class MessagingInternalTests {
     public void test_getVersion() {
         // test
         String moduleVersion = messagingInternal.getVersion();
-        assertEquals("getVesion should return the correct module version", MessagingConstant.EXTENSION_VERSION,
+        assertEquals("getVesion should return the correct module version", MessagingConstants.EXTENSION_VERSION,
                 moduleVersion);
     }
 
@@ -141,7 +240,7 @@ public class MessagingInternalTests {
     public void test_processHubSharedState() {
         //Mocks
         EventData data = new EventData();
-        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME);
+        data.putString(MessagingConstants.EventDataKeys.STATE_OWNER, MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME);
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
 
         // private mocks
@@ -149,16 +248,16 @@ public class MessagingInternalTests {
 
         // Test
         messagingInternal.processHubSharedState(mockEvent);
-        
+
         // Verify
         verify(mockEventQueue, times(1)).isEmpty();
     }
-    
+
     @Test
     public void test_processHubSharedState_NoMatchingStateOwner() {
         //Mocks
         EventData data = new EventData();
-        data.putString(MessagingConstant.EventDataKeys.STATE_OWNER, "somerandomstateowner");
+        data.putString(MessagingConstants.EventDataKeys.STATE_OWNER, "somerandomstateowner");
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").setData(data).build();
 
         // private mocks
@@ -179,7 +278,8 @@ public class MessagingInternalTests {
         // Mocks
         ExtensionErrorCallback<ExtensionError> mockCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) { }
+            public void error(ExtensionError extensionError) {
+            }
         };
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
 
@@ -187,8 +287,8 @@ public class MessagingInternalTests {
         messagingInternal.processEvents();
 
         // verify
-        verify(mockExtensionApi, times(0)).getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, mockEvent, mockCallback);
-        verify(mockExtensionApi, times(0)).getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, mockEvent, mockCallback);
+        verify(mockExtensionApi, times(0)).getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, mockEvent, mockCallback);
+        verify(mockExtensionApi, times(0)).getXDMSharedEventState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, mockEvent, mockCallback);
     }
 
     @Test
@@ -216,13 +316,16 @@ public class MessagingInternalTests {
         // verify
         verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockEvent, times(2)).getType();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        verify(mockEvent, times(5)).getType();
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 
     @Test
     public void test_processEvents_with_genericIdentityEvent() {
         // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
         Event mockEvent = mock(Event.class);
 
         // when mock event getType called return GENERIC_IDENTITY
@@ -231,7 +334,7 @@ public class MessagingInternalTests {
         // when mock event getSource called return REQUEST_CONTENT
         when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
 
-        when(mockEvent.getEventData()).thenReturn(null);
+        when(mockEvent.getEventData()).thenReturn(eventData);
 
         // when configState containsKey return true
         when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
@@ -247,24 +350,27 @@ public class MessagingInternalTests {
         // verify
         verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockEvent, times(1)).getType();
+        verify(mockEvent, times(2)).getType();
         verify(mockEvent, times(1)).getSource();
-        verify(mockEvent, times(1)).getEventData();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        verify(mockEvent, times(4)).getEventData();
+        assertEquals(0, messagingInternal.getEventQueue().size());
     }
 
     @Test
     public void test_processEvents_with_messagingEventType() {
         // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
         Event mockEvent = mock(Event.class);
 
         // when mock event getType called return MESSAGING
-        when(mockEvent.getType()).thenReturn(MessagingConstant.EventType.MESSAGING);
+        when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
 
         // when mock event getSource called return REQUEST_CONTENT
         when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT.getName());
 
-        when(mockEvent.getEventData()).thenReturn(null);
+        when(mockEvent.getEventData()).thenReturn(eventData);
 
         // when configState containsKey return true
         when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
@@ -281,10 +387,67 @@ public class MessagingInternalTests {
         // verify
         verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
-        verify(mockEvent, times(2)).getType();
-        verify(mockEvent, times(1)).getSource();
+        verify(mockEvent, times(3)).getType();
+        verify(mockEvent, times(2)).getSource();
         verify(mockEvent, times(1)).getData();
-        assertEquals(messagingInternal.getEventQueue().size(), 0);
+        assertEquals(0, messagingInternal.getEventQueue().size());
+    }
+
+    @Test
+    public void test_processEvents_whenConfigSharedState_notPresent() {
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
+        Event mockEvent = mock(Event.class);
+
+        // when getSharedEventState return mock config
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(Collections.EMPTY_MAP);
+
+        when(mockExtensionApi.getXDMSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockEdgeIdentityData);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify event not processed
+        verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockEvent, times(0)).getType();
+        assertEquals(1, messagingInternal.getEventQueue().size());
+    }
+
+    public void test_processEvents_whenIdentitySharedState_notPresent() {
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("somekey", "somedata");
+
+        Event mockEvent = mock(Event.class);
+
+        // when getSharedEventState return mock config
+        when(mockExtensionApi.getSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(mockConfigData);
+
+        when(mockExtensionApi.getXDMSharedEventState(anyString(), any(Event.class),
+                any(ExtensionErrorCallback.class))).thenReturn(Collections.EMPTY_MAP);
+
+        // test
+        messagingInternal.queueEvent(mockEvent);
+        messagingInternal.processEvents();
+
+        // verify event not processed
+        verify(mockExtensionApi, times(1)).getSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockExtensionApi, times(1)).getXDMSharedEventState(anyString(), any(Event.class), any(ExtensionErrorCallback.class));
+        verify(mockEvent, times(0)).getType();
+        assertEquals(1, messagingInternal.getEventQueue().size());
     }
 
     // ========================================================================================
@@ -293,13 +456,13 @@ public class MessagingInternalTests {
     @Test
     public void test_handlePushToken() {
         // expected
-        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mock_ecid\"},\"appID\":\"mock_package\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
+        final String expectedEventData = "{\"data\":{\"pushNotificationDetails\":[{\"denylisted\":false,\"identity\":{\"namespace\":{\"code\":\"ECID\"},\"id\":\"mock_ecid\"},\"appID\":\"mock_placement\",\"platform\":\"fcm\",\"token\":\"mock_push_token\"}]}}";
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_push_token");
+        eventData.put(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_push_token");
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
         String mockECID = "mock_ecid";
 
@@ -311,20 +474,21 @@ public class MessagingInternalTests {
 
         // when App.getApplication().getPackageName() return mock packageName
         when(App.getApplication()).thenReturn(mockApplication);
-        when(mockApplication.getPackageName()).thenReturn("mock_package");
+        when(mockApplication.getPackageName()).thenReturn("mock_placement");
 
         //test
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 1 event dispatched: edge event with push profile data
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, event.getName());
-        assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT, event.getName());
+        assertEquals(MessagingConstants.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         assertEquals(EventSource.REQUEST_CONTENT.getName(), event.getSource());
         assertEquals(expectedEventData, event.getData().toString());
 
@@ -349,8 +513,6 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
-        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
@@ -359,7 +521,7 @@ public class MessagingInternalTests {
         // Mocks
         String mockECID = "mock_ecid";
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "");
+        eventData.put(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, "");
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
@@ -372,8 +534,6 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
-        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
@@ -382,7 +542,7 @@ public class MessagingInternalTests {
         // Mocks
         String mockECID = null;
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_token");
+        eventData.put(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, "mock_token");
         Event mockEvent = mock(Event.class);
 
         // when
@@ -398,8 +558,6 @@ public class MessagingInternalTests {
         messagingInternal.handlePushToken(mockEvent);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, times(0));
-        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
         verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
@@ -418,11 +576,11 @@ public class MessagingInternalTests {
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
-        Event mockEvent = new Event.Builder("event1", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
@@ -433,7 +591,8 @@ public class MessagingInternalTests {
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 1 event dispatched: edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -454,10 +613,10 @@ public class MessagingInternalTests {
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
-        Event mockEvent = new Event.Builder("event1", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
@@ -468,7 +627,8 @@ public class MessagingInternalTests {
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 1 event dispatched: edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -478,7 +638,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleTrackingInfo_when_mixinsData() {
+    public void test_handleTrackingInfo_when_mixinsDataPresent() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         final String expectedEventData = "{\"xdm\":{\"pushNotificationTracking\":{\"customAction\":{\"actionID\":\"mock_actionId\"},\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":0}},\"eventType\":\"mock_eventType\",\"_experience\":{\"customerJourneyManagement\":{\"pushChannelContext\":{\"platform\":\"fcm\"},\"messageExecution\":{\"messageExecutionID\":\"16-Sept-postman\",\"journeyVersionInstanceId\":\"someJourneyVersionInstanceId\",\"messageID\":\"567\",\"journeyVersionID\":\"some-journeyVersionId\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/push\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
         final String mockCJMData = "{\n" +
@@ -498,12 +658,12 @@ public class MessagingInternalTests {
 
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
-        Event mockEvent = new Event.Builder("event1", MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -516,13 +676,14 @@ public class MessagingInternalTests {
         // verify
         verify(messagingState, times(1)).getExperienceEventDatasetId();
 
-        PowerMockito.verifyStatic(MobileCore.class);
+        // 1 event dispatched: edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(MessagingConstant.EventType.EDGE.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingConstants.EventType.EDGE.toLowerCase(), event.getEventType().getName());
         // Verify _experience exist
         assertEquals(expectedEventData, event.getData().toString());
     }
@@ -550,27 +711,87 @@ public class MessagingInternalTests {
     public void test_handleTrackingInfo_when_eventTypeIsNull() {
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
         Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
         //test
         messagingInternal.handleTrackingInfo(mockEvent);
 
-        // verify
         // verify
         verify(messagingState, times(0)).getExperienceEventDatasetId();
     }
 
     @Test
     public void test_handleTrackingInfo_when_MessageIdIsNull() {
+        final String mockCJMData = "{\n" +
+                "        \"mixins\" :{\n" +
+                "          \"_experience\": {\n" +
+                "            \"customerJourneyManagement\": {\n" +
+                "              \"messageExecution\": {\n" +
+                "                \"messageExecutionID\": \"16-Sept-postman\",\n" +
+                "                \"messageID\": \"567\",\n" +
+                "                \"journeyVersionID\": \"some-journeyVersionId\",\n" +
+                "                \"journeyVersionInstanceId\": \"someJourneyVersionInstanceId\"\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }";
+
         // Mocks
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
-        eventData.put(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
-        Event mockEvent = new Event.Builder("event1", EventType.GENERIC_DATA.getName(), EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleTrackingInfo(mockEvent);
+
+        // verify
+        verify(messagingState, times(0)).getExperienceEventDatasetId();
+    }
+
+    @Test
+    public void test_handleTrackingInfo_when_ExperienceEventDatasetIsEmpty() {
+        // setup
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("");
+        // Mocks
+        final String mockCJMData = "{\n" +
+                "        \"mixins\" :{\n" +
+                "          \"_experience\": {\n" +
+                "            \"customerJourneyManagement\": {\n" +
+                "              \"messageExecution\": {\n" +
+                "                \"messageExecutionID\": \"16-Sept-postman\",\n" +
+                "                \"messageID\": \"567\",\n" +
+                "                \"journeyVersionID\": \"some-journeyVersionId\",\n" +
+                "                \"journeyVersionInstanceId\": \"someJourneyVersionInstanceId\"\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }";
+
+        // Mocks
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+        Event mockEvent = new Event.Builder("event1", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName()).setEventData(eventData).build();
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -579,7 +800,168 @@ public class MessagingInternalTests {
         messagingInternal.handleTrackingInfo(mockEvent);
 
         // verify
-        verify(messagingState, times(0)).getExperienceEventDatasetId();
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // 0 events dispatched: edge event with tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+    }
+
+    // ========================================================================================
+    // handleInAppTrackingInfo
+    // ========================================================================================
+    @Test
+    public void test_handleInAppTrackingInfo_InAppInteractTracking() {
+        // setup
+        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        // expected
+        final String expectedEventData = "{\"xdm\":{\"inappMessageTracking\":{\"action\":\"confirm\"},\"eventType\":\"inapp.interact\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // Mocks
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_INTERACT, "confirm", mockMessage);
+
+        // verify experience event dataset id
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // verify dispatch event is called
+        // 1 event dispatched: edge event with in app interact event tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(expectedEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test_handleInAppTrackingInfo_InAppInteractTracking_WhenDatasetIdIsNull() {
+        // setup
+        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        // expected
+        final String expectedEventData = "{\"xdm\":{\"inappMessageTracking\":{\"action\":\"confirm\"},\"eventType\":\"inapp.interact\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // Mocks
+        when(messagingState.getExperienceEventDatasetId()).thenReturn(null);
+
+        //test
+        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_INTERACT, "confirm", mockMessage);
+
+        // verify experience event dataset id
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // verify dispatch event is not called
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
+    }
+
+    @Test
+    public void test_handleInAppTrackingInfo_InAppDismissTracking() {
+        // setup
+        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        // expected
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.dismiss\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // Mocks
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_DISMISS, null, mockMessage);
+
+        // verify experience event dataset id
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // verify dispatch event is called
+        // 1 event dispatched: edge event with in app dismiss event tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(expectedEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test_handleInAppTrackingInfo_InAppDisplayTracking() {
+        // setup
+        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        // expected
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.display\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // Mocks
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_DISPLAY, null, mockMessage);
+
+        // verify experience event dataset id
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // verify dispatch event is called
+        // 1 event dispatched: edge event with in app display event tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(expectedEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test_handleInAppTrackingInfo_InAppTriggeredTracking() {
+        // setup
+        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        // expected
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.trigger\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+        // Mocks
+        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
+
+        //test
+        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_TRIGGER, null, mockMessage);
+
+        // verify experience event dataset id
+        verify(messagingState, times(1)).getExperienceEventDatasetId();
+
+        // verify dispatch event is called
+        // 1 event dispatched: edge event with in app trigger event tracking info
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        assertNotNull(event.getData());
+        assertEquals(expectedEventData, event.getData().toString());
     }
 
     // ========================================================================================

@@ -28,8 +28,6 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 public class MessagingPushPayloadTests {
-    private MessagingPushPayload payload;
-
     private final String mockTitle = "mockTitle";
     private final String mockBody = "mockBody";
     private final String mockSound = "mockSound";
@@ -41,6 +39,7 @@ public class MessagingPushPayloadTests {
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
     private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
+    private MessagingPushPayload payload;
     private Map<String, String> mockData;
 
     @Before
@@ -94,17 +93,17 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     private Map<String, String> getMockData() {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingConstant.PushNotificationPayload.TITLE, mockTitle);
-        mockData.put(MessagingConstant.PushNotificationPayload.BODY, mockBody);
-        mockData.put(MessagingConstant.PushNotificationPayload.SOUND, mockSound);
-        mockData.put(MessagingConstant.PushNotificationPayload.NOTIFICATION_COUNT, mockBadgeCount);
-        mockData.put(MessagingConstant.PushNotificationPayload.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingConstant.PushNotificationPayload.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingConstant.PushNotificationPayload.ICON, mockIcon);
-        mockData.put(MessagingConstant.PushNotificationPayload.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_URI, mockActionUri);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
+        mockData.put(MessagingConstants.PushNotificationPayload.TITLE, mockTitle);
+        mockData.put(MessagingConstants.PushNotificationPayload.BODY, mockBody);
+        mockData.put(MessagingConstants.PushNotificationPayload.SOUND, mockSound);
+        mockData.put(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT, mockBadgeCount);
+        mockData.put(MessagingConstants.PushNotificationPayload.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingConstants.PushNotificationPayload.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingConstants.PushNotificationPayload.ICON, mockIcon);
+        mockData.put(MessagingConstants.PushNotificationPayload.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingConstants.PushNotificationPayload.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingConstants.PushNotificationPayload.ACTION_URI, mockActionUri);
+        mockData.put(MessagingConstants.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
         return mockData;
     }
 }

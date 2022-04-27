@@ -16,19 +16,22 @@ interface MessagingEventsHandler {
 
     /**
      * Handles sending push token
+     *
      * @param event Identity Request content event which contains the push token.
      */
-    void handlePushToken(final Event event);
+    void handlePushToken(Event event);
 
     /**
      * Handles sending push notification tracking information
+     *
      * @param event Messaging Request Content event which contains the push notification tracking information
      */
-    void handleTrackingInfo(final Event event);
+    void handleTrackingInfo(Event event);
 
     /**
-     * Processes the Hub Shared State to check if configuration and edge identity states are updated. 
+     * Processes the Hub Shared State to check if configuration and edge identity states are updated.
+     *
      * @param event Hub Shared State event
      */
-    void processHubSharedState(final Event event);
+    void processHubSharedState(Event event);
 }

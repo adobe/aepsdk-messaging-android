@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile;
 
 class ListenerHubSharedState extends ExtensionListener {
+    private final static String SELF_TAG = "ListenerHubSharedState";
+
     /**
      * Constructor.
      *
@@ -23,26 +25,23 @@ class ListenerHubSharedState extends ExtensionListener {
         super(extensionApi, type, source);
     }
 
-
     /**
      * Method that gets called when event with event type {@link EventType#HUB}
      * and with event source {@link EventSource#SHARED_STATE} is dispatched through eventHub.
      * <p>
+     *
      * @param event the hub shared state change {@link Event} to be processed
      */
     @Override
     public void hear(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
-                    "ListenerHubSharedState - Event / EventData is null. Ignoring the event.");
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null, ignoring the event.", SELF_TAG);
             return;
         }
 
         final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
-
         if (parentExtension == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
-                    "ListenerHubSharedState - The parent extension, associated with this listener is null, ignoring the event.");
+            Log.debug(MessagingConstants.LOG_TAG, "%s - The parent extension associated with this listener is null, ignoring the event.", SELF_TAG);
             return;
         }
 

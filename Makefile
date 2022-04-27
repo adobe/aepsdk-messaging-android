@@ -28,7 +28,7 @@ ci-build: create-ci
 ci-unit-test: create-ci
 	(mkdir -p ci/unit-test)
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) platformUnitTestJacocoReport)
-	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build ./ci/unit-test/)
+	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build/reports/jacoco/platformUnitTestJacocoReport ./ci/unit-test/)
 
 ci-functional-test: create-ci
 	(mkdir -p ci/functional-test)
@@ -36,7 +36,7 @@ ci-functional-test: create-ci
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) connectedPhoneDebugAndroidTest platformFunctionalTestJacocoReport)
 	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build ./ci/functional-test)
 
-ci-javadoc: create-ci
+ci-javadoc: ci-build
 	(mkdir -p ci/javadoc)
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) javadocPublic > ci/javadocPublic.log 2>&1)
 	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build ./ci/javadoc)
