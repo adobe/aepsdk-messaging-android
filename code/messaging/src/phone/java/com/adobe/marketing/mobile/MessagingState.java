@@ -11,13 +11,13 @@
 
 package com.adobe.marketing.mobile;
 
-import java.util.List;
-import java.util.Map;
-
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * MessagingState is used to store configuration and identity information

@@ -11,22 +11,30 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+
 import android.app.Notification;
 import android.content.Context;
 import android.os.Build;
 
 import java.util.List;
 
-
+/**
+ * The Messaging extension implementation of {@link IMessagingPushNotificationFactory}.
+ */
 class MessagingPushNotificationFactory implements IMessagingPushNotificationFactory {
-
     public static final int INVALID_SMALL_ICON_RES_ID = -1;
-
+    private static final String SELF_TAG = "MessagingPushNotificationFactory";
     private static volatile MessagingPushNotificationFactory singletonInstance = null;
 
     private MessagingPushNotificationFactory() {
     }
 
+    /**
+     * Singleton method to get the {@link MessagingPushNotificationFactory} instance.
+     *
+     * @return the {@code MessagingPushNotificationFactory} singleton
+     */
     public static MessagingPushNotificationFactory getInstance() {
         if (singletonInstance == null) {
             synchronized (MessagingPushNotificationFactory.class) {
@@ -38,17 +46,26 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         return singletonInstance;
     }
 
+    /**
+     * Creates a push notification from the given {@link MessagingPushPayload}.
+     *
+     * @param context              The application {@link Context}
+     * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+     * @param messageId            a {@code String} containing the message id
+     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @return the created {@link Notification}
+     */
     @Override
     public Notification create(final Context context, final MessagingPushPayload payload, final String messageId, final boolean shouldHandleTracking) {
         // Setting the channel id
-        String channelId = MessagingUtils.getChannelId(context, payload);
-        Notification.Builder notificationBuilder = new Notification.Builder(context);
+        final String channelId = MessagingUtils.getChannelId(context, payload);
+        final Notification.Builder notificationBuilder = new Notification.Builder(context);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationBuilder.setChannelId(channelId);
         }
         // Setting the default small icon
         if (!setDefaultSmallIcon(context, notificationBuilder)) {
-            // Log error failed to set the default icon
+            Log.warning(LOG_TAG, "%s - Failed to set the default small icon.", SELF_TAG);
             return null;
         }
         // Setting the title
@@ -70,9 +87,9 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         // Setting sound based on the android sdk version
         setSound(context, payload.getSound(), notificationBuilder);
         // Setting the action buttons
-        List<MessagingPushPayload.ActionButton> buttons = payload.getActionButtons();
+        final List<MessagingPushPayload.ActionButton> buttons = payload.getActionButtons();
         if (buttons != null && !buttons.isEmpty()) {
-            for (MessagingPushPayload.ActionButton button: buttons) {
+            for (final MessagingPushPayload.ActionButton button : buttons) {
                 MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId);
             }
         }
@@ -80,8 +97,16 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         return notificationBuilder.build();
     }
 
+    /**
+     * Sets the notification sound to be used. If no bundled sound filename is provided then the default system sound is used.
+     *
+     * @param context             The application {@link Context}
+     * @param fileName            the {@code String} containing the name of the bundled sound file to use when this notification is displayed
+     * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
+     */
     private void setSound(final Context context, final String fileName, final Notification.Builder notificationBuilder) {
-        if (fileName == null || fileName.isEmpty()) {
+        if (StringUtils.isNullOrEmpty(fileName)) {
+            Log.debug(LOG_TAG, "%s - No custom sound specified, using the default notification sound.", SELF_TAG);
             notificationBuilder.setDefaults(Notification.DEFAULT_SOUND);
             return;
         }
@@ -89,20 +114,27 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 notificationBuilder.setSound(MessagingUtils.getSoundUri(context, fileName));
             }
-        } catch (Exception e) {
-            // log exception
+        } catch (final Exception e) {
+            Log.debug(LOG_TAG, "%s - Exception occurred when setting notification sound: %s.", SELF_TAG, e.getMessage());
             notificationBuilder.setDefaults(Notification.DEFAULT_SOUND);
         }
     }
 
-    private boolean setDefaultSmallIcon(final Context context, final Notification.Builder builder) {
+    /**
+     * Sets the small icon to be shown in the status bar and within the notification.
+     *
+     * @param context             The application {@link Context}
+     * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
+     * @return a {@code boolean} containing true if the icon was set, false otherwise
+     */
+    private boolean setDefaultSmallIcon(final Context context, final Notification.Builder notificationBuilder) {
         // Use the launcher icon as the default small icon.
         int smallIcon = MessagingUtils.getDefaultSmallIconRes(context);
         if (smallIcon == INVALID_SMALL_ICON_RES_ID) {
-            // log
+            Log.warning(LOG_TAG, "%s - Invalid small icon found.", SELF_TAG);
             return false;
         }
-        builder.setSmallIcon(smallIcon);
+        notificationBuilder.setSmallIcon(smallIcon);
         return true;
     }
 }

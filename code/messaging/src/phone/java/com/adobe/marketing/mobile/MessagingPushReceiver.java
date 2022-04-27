@@ -13,32 +13,34 @@ package com.adobe.marketing.mobile;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.os.Bundle;
 
-import java.util.List;
-
+/**
+ * This class is used to handle push notification interactions.
+ */
 public class MessagingPushReceiver extends BroadcastReceiver {
-    private static String LOG_TAG = "MessagingPushReceiver";
+    private static final String LOG_TAG = "MessagingPushReceiver";
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        if(context == null || intent == null) {
-            Log.warning(LOG_TAG, "onReceive() - Intent or Context null, ignoring this broadcast message");
+        if (context == null || intent == null) {
+            Log.debug(LOG_TAG, "onReceive() - Intent or Context null, ignoring this broadcast message");
             return;
         }
         PushActionHandlingRunnable runnable = new PushActionHandlingRunnable(context, intent);
         new Thread(runnable).start();
     }
 
+    /**
+     * {@link Runnable} to handle the processing of push notification interactions.
+     */
     static class PushActionHandlingRunnable implements Runnable {
-        Context context;
-        Intent intent;
-        PushActionHandlingRunnable(Context context, Intent intent) {
+        final Context context;
+        final Intent intent;
+
+        PushActionHandlingRunnable(final Context context, final Intent intent) {
             this.context = context;
             this.intent = intent;
         }
@@ -48,45 +50,32 @@ public class MessagingPushReceiver extends BroadcastReceiver {
             handleAction();
         }
 
+        /**
+         * Broadcasts the push notification interaction information to the app for normal push notifications.
+         * If the {@link Intent} extras has the HANDLE_NOTIFICATION_TRACKING_KEY flag set to true then the push interaction tracking will be handled by the Messaging extension.
+         */
         void handleAction() {
             // Check if its a push display notification or silent notification
-            String action = intent.getAction();
+            final String action = intent.getAction();
 
-
-            if(StringUtils.isNullOrEmpty(action)) {
-                Log.warning(LOG_TAG,"handleAction() - Empty/Null action. Not processing this broadcast message");
+            if (StringUtils.isNullOrEmpty(action)) {
+                Log.warning(LOG_TAG, "handleAction() - Empty/Null action. Not processing this broadcast message");
                 return;
             }
 
-            sendBroadcasts(context, intent, action);
-        }
-
-        private void sendBroadcasts(final Context context, final Intent intent, final String action) {
-            final String packageName = context.getPackageName();
-            final String broadcastingAction = packageName + "_" + action;
-            final Intent sendIntent = new Intent();
-            final Bundle extras = intent.getExtras();
-            sendIntent.setAction(broadcastingAction);
-            sendIntent.putExtras(extras);
-            final List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(sendIntent, 0);
-            if (receivers.isEmpty()) {
-                // log error no component
-            } else {
-                for (ResolveInfo receiver : receivers) {
-                    Intent broadcastIntent = new Intent(sendIntent);
-                    String classInfo = receiver.activityInfo.name;
-                    ComponentName name = new ComponentName(packageName, classInfo);
-                    broadcastIntent.setComponent(name);
-                    context.sendBroadcast(broadcastIntent);
-                }
-            }
-
-            // if shouldHandleTracking is true in the extras then send the push notification tracking
-            if (extras.getBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
+            MessagingUtils.sendBroadcasts(context, intent, action);
+            // if shouldHandleTracking is true in the intent extras then handle the push notification interaction tracking
+            if (intent.getExtras().getBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
                 handlePushInteraction(context, intent);
             }
         }
 
+        /**
+         * Sends the push interaction tracking information via the {@link Messaging#handleNotificationResponse(Intent, boolean, String)} API.
+         *
+         * @param context The application {@link Context}
+         * @param intent  the {@link Intent} from the broadcast push notification interaction
+         */
         private void handlePushInteraction(final Context context, final Intent intent) {
             // if the push notification was deleted just send the interaction tracking request
             if (intent.getAction().equals(MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_DELETED)) {
@@ -100,7 +89,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                 try {
                     pendingIntent.send();
                 } catch (final PendingIntent.CanceledException e) {
-                    Log.warning(LOG_TAG,"openApplication() - exception occured when sending pending intent: %s", e.getMessage());
+                    Log.warning(LOG_TAG, "openApplication() - exception occured when sending pending intent: %s", e.getMessage());
                 }
             }
         }

@@ -14,6 +14,16 @@ package com.adobe.marketing.mobile;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+/**
+ * Interface defining a Messaging extension image downloader object.
+ */
 public interface IMessagingImageDownloader {
+    /**
+     * Downloads the image asset referenced in the image URL {@code String}.
+     *
+     * @param context  The application {@link Context}
+     * @param imageUrl a {@code String} containing the image asset to be downloaded
+     * @return the {@link Bitmap} created from the downloaded image asset
+     */
     Bitmap getBitmapFromUrl(Context context, String imageUrl);
 }

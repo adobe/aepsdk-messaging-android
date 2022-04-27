@@ -14,6 +14,18 @@ package com.adobe.marketing.mobile;
 import android.app.Notification;
 import android.content.Context;
 
+/**
+ * Interface defining a Messaging extension push notification factory object.
+ */
 public interface IMessagingPushNotificationFactory {
+    /**
+     * Creates a push notification from the given {@link MessagingPushPayload}.
+     *
+     * @param context              The application {@link Context}
+     * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+     * @param messageId            a {@code String} containing the message id
+     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @return the created {@link Notification}
+     */
     Notification create(Context context, MessagingPushPayload payload, String messageId, boolean shouldHandleTracking);
 }

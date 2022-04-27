@@ -13,6 +13,8 @@
 package com.adobe.marketing.mobile;
 
 import android.app.Notification;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -25,12 +27,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class is used to create push notification payload object from remote message.
+ * This class is used to create a push notification payload object from a received remote message.
+ * It implements {@link Parcelable} interface so the {@link MessagingPushPayload} can be broadcast back to the parent application.
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
-public class MessagingPushPayload {
-    private static final String  SELF_TAG = "MessagingPushPayload";
+public class MessagingPushPayload implements Parcelable {
+    public static final Creator<MessagingPushPayload> CREATOR = new Creator<MessagingPushPayload>() {
+        @Override
+        public MessagingPushPayload createFromParcel(final Parcel in) {
+            return new MessagingPushPayload(in);
+        }
 
+        @Override
+        public MessagingPushPayload[] newArray(final int size) {
+            return new MessagingPushPayload[size];
+        }
+    };
+    private static final String SELF_TAG = "MessagingPushPayload";
     private String title;
     private String body;
     private String sound;
@@ -46,8 +59,9 @@ public class MessagingPushPayload {
 
     /**
      * Constructor
-     *
+     * <p>
      * Provides the MessagingPushPayload object
+     *
      * @param message {@link RemoteMessage} object received from {@link com.google.firebase.messaging.FirebaseMessagingService}
      */
     public MessagingPushPayload(final RemoteMessage message) {
@@ -64,8 +78,9 @@ public class MessagingPushPayload {
 
     /**
      * Constructor
-     *
+     * <p>
      * Provides the MessagingPushPayload object
+     *
      * @param data {@link Map} map which indicates the data part of {@link RemoteMessage}
      */
     public MessagingPushPayload(final Map<String, String> data) {
@@ -73,7 +88,25 @@ public class MessagingPushPayload {
     }
 
     /**
+     * Parcelable Constructor
+     *
+     * @param in {@link Parcel} retrieved from an {@link android.content.Intent}
+     */
+    protected MessagingPushPayload(final Parcel in) {
+        title = in.readString();
+        body = in.readString();
+        sound = in.readString();
+        badgeCount = in.readInt();
+        notificationPriority = in.readInt();
+        channelId = in.readString();
+        icon = in.readString();
+        imageUrl = in.readString();
+        actionUri = in.readString();
+    }
+
+    /**
      * Check whether the remote message is origination from AEP
+     *
      * @return boolean value indicating whether the remote message is origination from AEP
      */
     public boolean isAEPPushMessage() {
@@ -133,6 +166,7 @@ public class MessagingPushPayload {
 
     /**
      * Returns list of action buttons which provides label, action type and action link
+     *
      * @return List of {@link ActionButton}
      */
     public List<ActionButton> getActionButtons() {
@@ -175,16 +209,21 @@ public class MessagingPushPayload {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
         switch (priority) {
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_MIN: return Notification.PRIORITY_MIN;
+                    .PRIORITY_MIN:
+                return Notification.PRIORITY_MIN;
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_LOW: return Notification.PRIORITY_LOW;
+                    .PRIORITY_LOW:
+                return Notification.PRIORITY_LOW;
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_HIGH: return Notification.PRIORITY_HIGH;
+                    .PRIORITY_HIGH:
+                return Notification.PRIORITY_HIGH;
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_MAX: return Notification.PRIORITY_MAX;
+                    .PRIORITY_MAX:
+                return Notification.PRIORITY_MAX;
             case MessagingConstant.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_DEFAULT:
-            default: return Notification.PRIORITY_DEFAULT;
+            default:
+                return Notification.PRIORITY_DEFAULT;
         }
     }
 
@@ -194,9 +233,12 @@ public class MessagingPushPayload {
         }
 
         switch (type) {
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.WEBURL: return ActionType.WEBURL;
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.DISMISS: return ActionType.DISMISS;
+            case MessagingConstant.PushNotificationPayload.ActionButtonType.DEEPLINK:
+                return ActionType.DEEPLINK;
+            case MessagingConstant.PushNotificationPayload.ActionButtonType.WEBURL:
+                return ActionType.WEBURL;
+            case MessagingConstant.PushNotificationPayload.ActionButtonType.DISMISS:
+                return ActionType.DISMISS;
         }
 
         return ActionType.NONE;
@@ -210,7 +252,7 @@ public class MessagingPushPayload {
         List<ActionButton> actionButtonList = new ArrayList<>(3);
         try {
             JSONArray jsonArray = new JSONArray(actionButtons);
-            for (int i=0; i < jsonArray.length(); i++) {
+            for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 ActionButton button = getActionButton(jsonObject);
                 if (button == null) continue;
@@ -240,11 +282,45 @@ public class MessagingPushPayload {
         }
     }
 
+    @Override
+    public int describeContents() {
+        // a bitmask indicating the set of special object types marshaled by this Parcelable object instance. value should be 0 or CONTENTS_FILE_DESCRIPTOR
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel parcel, final int flags) {
+        // flags var is unused
+        parcel.writeString(title);
+        parcel.writeString(body);
+        parcel.writeString(sound);
+        parcel.writeInt(badgeCount);
+        parcel.writeInt(notificationPriority);
+        parcel.writeString(channelId);
+        parcel.writeString(icon);
+        parcel.writeString(imageUrl);
+        parcel.writeString(actionUri);
+    }
+
     /**
      * Enum to denote the type of action
      */
     public enum ActionType {
         DEEPLINK, WEBURL, DISMISS, NONE
+    }
+
+    public static class ACTION_BUTTON_KEY {
+        public final static String LABEL = "adb_action_label";
+        public final static String LINK = "adb_action_link";
+        public final static String TYPE = "adb_action_type";
+    }
+
+    public static final class ACTION_KEY {
+        public static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
+        public static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
+        public static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
+        public static final String ACTION_NORMAL_NOTIFICATION_CREATED = "adb_action_notification_created";
+        public static final String ACTION_SILENT_NOTIFICATION_CREATED = "adb_action_silent_notification_created";
     }
 
     /**
@@ -272,17 +348,5 @@ public class MessagingPushPayload {
         public ActionType getType() {
             return type;
         }
-    }
-
-    public static class ACTION_BUTTON_KEY {
-        public final static String LABEL = "adb_action_label";
-        public final static String LINK = "adb_action_link";
-        public final static String TYPE = "adb_action_type";
-    }
-
-    public static final class ACTION_KEY {
-        public static final String ACTION_NOTIFICATION_CLICKED = "adb_action_notification_clicked";
-        public static final String ACTION_NOTIFICATION_DELETED = "adb_action_notification_deleted";
-        public static final String ACTION_BUTTON_CLICKED = "adb_action_button_clicked";
     }
 }

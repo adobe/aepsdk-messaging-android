@@ -16,10 +16,12 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -113,9 +115,9 @@ class MessagingUtils {
     }
 
     static PendingIntent getPendingIntentForAction(final Context context, final MessagingPushPayload payload, final String messageId, final String action, final boolean shouldHandleTracking) {
-        Bundle extras = getBundleFromMap(payload.getData());
+        final Bundle extras = getBundleFromMap(payload.getData());
         extras.putBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
-        Intent intent = new Intent(context, MessagingPushReceiver.class);
+        final Intent intent = new Intent(context, MessagingPushReceiver.class);
         intent.setAction(action);
         intent.putExtras(extras);
         // Adding CJM specific details
@@ -172,6 +174,26 @@ class MessagingUtils {
         Notification.Action action = new Notification.Action(0, button.getLabel(), pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             notificationBuilder.addAction(action);
+        }
+    }
+
+    static void sendBroadcasts(final Context context, final Intent intent, final String action) {
+        final String packageName = context.getPackageName();
+        final String broadcastingAction = packageName + "_" + action;
+        final Intent sendIntent = new Intent();
+        sendIntent.setAction(broadcastingAction);
+        sendIntent.putExtras(intent.getExtras());
+        final List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(sendIntent, 0);
+        if (receivers.isEmpty()) {
+            // log error no component
+        } else {
+            for (ResolveInfo receiver : receivers) {
+                Intent broadcastIntent = new Intent(sendIntent);
+                String classInfo = receiver.activityInfo.name;
+                ComponentName name = new ComponentName(packageName, classInfo);
+                broadcastIntent.setComponent(name);
+                context.sendBroadcast(broadcastIntent);
+            }
         }
     }
 

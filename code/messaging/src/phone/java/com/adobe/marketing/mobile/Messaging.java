@@ -12,13 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import android.content.Context;
-import android.content.Intent;
-
-import com.google.firebase.messaging.RemoteMessage;
-
-import java.util.Map;
-
 import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
@@ -29,13 +22,21 @@ import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT
 import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
 
+import android.content.Context;
+import android.content.Intent;
+
+import com.google.firebase.messaging.RemoteMessage;
+
+import java.util.Map;
+
 public final class Messaging {
     private static final String SELF_TAG = "Messaging";
 
     private static volatile IMessagingPushNotificationFactory notificationFactory;
     private static volatile IMessagingImageDownloader imageDownloader;
 
-    private Messaging() {}
+    private Messaging() {
+    }
 
     /**
      * Returns the current version of the Messaging extension.
@@ -52,8 +53,8 @@ public final class Messaging {
      * This will allow the extension to send and receive events to and from the SDK.
      */
     public static void registerExtension() {
-        if(MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
-             Log.warning(LOG_TAG, "%s - Unable to register Messaging SDK since MobileCore is not initialized properly.", SELF_TAG);
+        if (MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
+            Log.warning(LOG_TAG, "%s - Unable to register Messaging SDK since MobileCore is not initialized properly.", SELF_TAG);
         }
 
         // Sets the notification factory to default MessagingPushNotificationFactory singleton instance
@@ -72,12 +73,12 @@ public final class Messaging {
 
     /**
      * Extracts and update the intent with xdm data and message id from data payload.
-     *
+     * <p>
      * This method needs to be called with the intent before the notification is created.
      *
-     * @param intent Intent which needs to be updated with xdm data and messageId
+     * @param intent    Intent which needs to be updated with xdm data and messageId
      * @param messageId String : message id from RemoteMessage which is received in FirebaseMessagingService#onMessageReceived
-     * @param data Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
+     * @param data      Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
      * @return boolean value indicating whether the intent was update with push tracking details (messageId and xdm data).
      */
     public static boolean addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data) {
@@ -111,9 +112,9 @@ public final class Messaging {
     /**
      * Sends the push notification interactions as an experience event to Adobe Experience Edge.
      *
-     * @param intent object which contains the tracking and xdm information.
+     * @param intent            object which contains the tracking and xdm information.
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
-     * @param customActionId String value of the custom action (e.g button id on the notification) which was clicked.
+     * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
      */
     public static void handleNotificationResponse(final Intent intent, final boolean applicationOpened, final String customActionId) {
         if (intent == null) {
@@ -162,6 +163,7 @@ public final class Messaging {
 
     /**
      * Sets the notification factory which will be used by {@link MessagingPushNotificationHandler} to create the push notification
+     *
      * @param factory
      */
     public static void setPushNotificationFactory(final IMessagingPushNotificationFactory factory) {
@@ -174,6 +176,7 @@ public final class Messaging {
 
     /**
      * Sets the image downloader which will be used for downloading large icon and images for notifications
+     *
      * @param downloader
      */
     public static void setPushImageDownloader(final IMessagingImageDownloader downloader) {

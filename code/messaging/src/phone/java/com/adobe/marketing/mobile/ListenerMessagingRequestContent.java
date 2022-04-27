@@ -17,10 +17,12 @@ package com.adobe.marketing.mobile;
  *
  * <p>
  * Monitor Messaging Request content events for sending push notification tracking information.
+ *
  * @see MessagingInternal
  */
 public class ListenerMessagingRequestContent extends ExtensionListener {
-    private final String  SELF_TAG = "ListenerMessagingRequestContent";
+    private final String SELF_TAG = "ListenerMessagingRequestContent";
+
     ListenerMessagingRequestContent(final ExtensionApi extensionApi, final String type, final String source) {
         super(extensionApi, type, source);
     }
