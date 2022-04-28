@@ -16,10 +16,16 @@ import android.content.Intent
 import android.util.Log
 import com.adobe.marketing.mobile.MessagingPushPayload
 
+/**
+ * Listens for broadcasts sent from the Messaging extension
+ */
 class NotificationBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action
         val packageName = context?.packageName
+        // these values are broadcast when a silent push notification is handled by the Messaging extension
+        var pushPayload: MessagingPushPayload?
+        var messageId: String?
 
         action?.also { action ->
             packageName?.also { packageName ->
@@ -32,6 +38,14 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
                     }
                     "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED}" -> {
                         Log.d(TAG, "${packageName}_adb_action_button_clicked")
+                    }
+                    "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_NORMAL_NOTIFICATION_CREATED}" -> {
+                        Log.d(TAG, "${packageName}_adb_action_notification_created")
+                    }
+                    "${packageName}_${MessagingPushPayload.ACTION_KEY.ACTION_SILENT_NOTIFICATION_CREATED}" -> {
+                        Log.d(TAG, "${packageName}_adb_action_silent_notification_created")
+                        pushPayload = intent.extras?.getParcelable("pushPayload")
+                        messageId = intent.extras?.getString("messageId")
                     }
                 }
             }

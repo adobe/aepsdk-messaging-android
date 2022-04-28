@@ -73,7 +73,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
         /**
          * Sends the push interaction tracking information via the {@link Messaging#handleNotificationResponse(Intent, boolean, String)} API.
          *
-         * @param context The application {@link Context}
+         * @param context the application {@link Context}
          * @param intent  the {@link Intent} from the broadcast push notification interaction
          */
         private void handlePushInteraction(final Context context, final Intent intent) {

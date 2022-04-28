@@ -49,7 +49,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     /**
      * Creates a push notification from the given {@link MessagingPushPayload}.
      *
-     * @param context              The application {@link Context}
+     * @param context              the application {@link Context}
      * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
      * @param messageId            a {@code String} containing the message id
      * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
@@ -73,7 +73,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         // Setting the summary
         notificationBuilder.setContentText(payload.getBody());
         // Setting the large icon
-        notificationBuilder.setLargeIcon(MessagingUtils.getLargeIcon(context, payload));
+        notificationBuilder.setLargeIcon(MessagingUtils.getImageAsset(context, payload.getIcon()));
         // Setting the pending content intent for the notification
         notificationBuilder.setContentIntent(MessagingUtils.getPendingIntentForAction(context, payload, messageId, MessagingPushPayload.ACTION_KEY.ACTION_NOTIFICATION_CLICKED, shouldHandleTracking));
         // Setting the pending delete intent for the notification
@@ -83,7 +83,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         // Setting badge count
         notificationBuilder.setNumber(payload.getBadgeCount());
         // Setting big picture style if an image url is present
-        notificationBuilder.setStyle(new Notification.BigPictureStyle().bigPicture(MessagingUtils.getNotificationImage(context, payload)));
+        notificationBuilder.setStyle(new Notification.BigPictureStyle().bigPicture(MessagingUtils.getImageAsset(context, payload.getImageUrl())));
         // Setting sound based on the android sdk version
         setSound(context, payload.getSound(), notificationBuilder);
         // Setting the action buttons
@@ -100,7 +100,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     /**
      * Sets the notification sound to be used. If no bundled sound filename is provided then the default system sound is used.
      *
-     * @param context             The application {@link Context}
+     * @param context             the application {@link Context}
      * @param fileName            the {@code String} containing the name of the bundled sound file to use when this notification is displayed
      * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
      */
@@ -123,7 +123,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     /**
      * Sets the small icon to be shown in the status bar and within the notification.
      *
-     * @param context             The application {@link Context}
+     * @param context             the application {@link Context}
      * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
      * @return a {@code boolean} containing true if the icon was set, false otherwise
      */

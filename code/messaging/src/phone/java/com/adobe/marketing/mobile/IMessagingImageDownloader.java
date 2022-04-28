@@ -21,7 +21,7 @@ public interface IMessagingImageDownloader {
     /**
      * Downloads the image asset referenced in the image URL {@code String}.
      *
-     * @param context  The application {@link Context}
+     * @param context  the application {@link Context}
      * @param imageUrl a {@code String} containing the image asset to be downloaded
      * @return the {@link Bitmap} created from the downloaded image asset
      */

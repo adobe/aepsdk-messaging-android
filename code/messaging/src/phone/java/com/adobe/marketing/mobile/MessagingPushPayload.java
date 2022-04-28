@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,17 +33,6 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload implements Parcelable {
-    public static final Creator<MessagingPushPayload> CREATOR = new Creator<MessagingPushPayload>() {
-        @Override
-        public MessagingPushPayload createFromParcel(final Parcel in) {
-            return new MessagingPushPayload(in);
-        }
-
-        @Override
-        public MessagingPushPayload[] newArray(final int size) {
-            return new MessagingPushPayload[size];
-        }
-    };
     private static final String SELF_TAG = "MessagingPushPayload";
     private String title;
     private String body;
@@ -87,6 +77,8 @@ public class MessagingPushPayload implements Parcelable {
         init(data);
     }
 
+    // Parcelable implementation for MessagingPushPayload
+
     /**
      * Parcelable Constructor
      *
@@ -102,7 +94,46 @@ public class MessagingPushPayload implements Parcelable {
         icon = in.readString();
         imageUrl = in.readString();
         actionUri = in.readString();
+        actionType = ActionType.valueOf(in.readString());
+        in.readList(actionButtons, ActionButton.class.getClassLoader());
+        data = (HashMap<String, String>) in.readSerializable();
     }
+
+    public static final Creator<MessagingPushPayload> CREATOR = new Creator<MessagingPushPayload>() {
+        @Override
+        public MessagingPushPayload createFromParcel(final Parcel in) {
+            return new MessagingPushPayload(in);
+        }
+
+        @Override
+        public MessagingPushPayload[] newArray(final int size) {
+            return new MessagingPushPayload[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        // a bitmask indicating the set of special object types marshaled by this Parcelable object instance. value should be 0 or CONTENTS_FILE_DESCRIPTOR
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel parcel, final int flags) {
+        // flags var is unused
+        parcel.writeString(title);
+        parcel.writeString(body);
+        parcel.writeString(sound);
+        parcel.writeInt(badgeCount);
+        parcel.writeInt(notificationPriority);
+        parcel.writeString(channelId);
+        parcel.writeString(icon);
+        parcel.writeString(imageUrl);
+        parcel.writeString(actionUri);
+        parcel.writeString(actionType.name());
+        parcel.writeList(actionButtons);
+        parcel.writeSerializable(new HashMap<>(data));
+    }
+    // end of Parcelable implementation for MessagingPushPayload
 
     /**
      * Check whether the remote message is origination from AEP
@@ -282,26 +313,6 @@ public class MessagingPushPayload implements Parcelable {
         }
     }
 
-    @Override
-    public int describeContents() {
-        // a bitmask indicating the set of special object types marshaled by this Parcelable object instance. value should be 0 or CONTENTS_FILE_DESCRIPTOR
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(final Parcel parcel, final int flags) {
-        // flags var is unused
-        parcel.writeString(title);
-        parcel.writeString(body);
-        parcel.writeString(sound);
-        parcel.writeInt(badgeCount);
-        parcel.writeInt(notificationPriority);
-        parcel.writeString(channelId);
-        parcel.writeString(icon);
-        parcel.writeString(imageUrl);
-        parcel.writeString(actionUri);
-    }
-
     /**
      * Enum to denote the type of action
      */
@@ -326,7 +337,7 @@ public class MessagingPushPayload implements Parcelable {
     /**
      * Class representing the action button with label, link and type
      */
-    public class ActionButton {
+    public static class ActionButton implements Parcelable {
         private final String label;
         private final String link;
         private final ActionType type;
@@ -334,8 +345,48 @@ public class MessagingPushPayload implements Parcelable {
         public ActionButton(final String label, final String link, final String type) {
             this.label = label;
             this.link = link;
-            this.type = getActionTypeFromString(type);
+            this.type = ActionType.valueOf(type);
         }
+
+        // Parcelable implementation for ActionButton
+
+        /**
+         * Parcelable Constructor
+         *
+         * @param in {@link Parcel} retrieved from an {@link android.content.Intent}
+         */
+        protected ActionButton(final Parcel in) {
+            label = in.readString();
+            link = in.readString();
+            type = ActionType.valueOf(in.readString());
+        }
+
+        public static final Creator<ActionButton> CREATOR = new Creator<ActionButton>() {
+            @Override
+            public ActionButton createFromParcel(final Parcel in) {
+                return new ActionButton(in);
+            }
+
+            @Override
+            public ActionButton[] newArray(final int size) {
+                return new ActionButton[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+            // a bitmask indicating the set of special object types marshaled by this Parcelable object instance. value should be 0 or CONTENTS_FILE_DESCRIPTOR
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(final Parcel parcel, final int flags) {
+            // flags var is unused
+            parcel.writeString(label);
+            parcel.writeString(link);
+            parcel.writeString(type.name());
+        }
+        // end of Parcelable implementation for ActionButton
 
         public String getLabel() {
             return label;

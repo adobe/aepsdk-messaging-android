@@ -25,11 +25,13 @@ import androidx.core.app.NotificationManagerCompat;
  */
 class MessagingPushNotificationHandler {
     private static final String SELF_TAG = "MessagingPushNotificationHandler";
+    private static final String MESSAGE_ID = "messageId";
+    private static final String PUSH_PAYLOAD = "pushPayload";
 
     /**
      * Creates a silent or normal notification and schedules the created notification with the {@link android.app.NotificationManager}.
      *
-     * @param applicationContext   The application {@link Context}
+     * @param applicationContext   the application {@link Context}
      * @param notificationId       {@code int} id to be used when scheduling the notification
      * @param messageId            a {@code String} containing the message id
      * @param payload              the {@link MessagingPushPayload} containing the data payload from AJO
@@ -49,7 +51,7 @@ class MessagingPushNotificationHandler {
     /**
      * Handle the creation of normal (non-silent) push notifications. The push notification creation information will be broadcast to the app if the notification was created successfully.
      *
-     * @param applicationContext   The application {@link Context}
+     * @param applicationContext   the application {@link Context}
      * @param notificationId       {@code int} id to be used when scheduling the notification
      * @param messageId            a {@code String} containing the message id
      * @param payload              the {@link MessagingPushPayload} containing the data payload from AJO
@@ -58,7 +60,7 @@ class MessagingPushNotificationHandler {
      */
     private static void handleNormalPushNotification(final Context applicationContext, final int notificationId, final String messageId, final MessagingPushPayload payload, final IMessagingPushNotificationFactory factory, final boolean shouldHandleTracking) {
         if (factory == null) {
-            Log.warning(LOG_TAG, "%s - The MessagingPushNotificationFactory instance is null. Ensure that the Messaging extension is registered or if using a custom MessagingPushNotificationFactory, ensure that a valid MessagingPushNotificationFactory is set.", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - The MessagingPushNotificationFactory instance is null. Ensure that the Messaging extension has been registered or if using a custom MessagingPushNotificationFactory, ensure that a valid MessagingPushNotificationFactory is set.", SELF_TAG);
             return;
         }
         final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(applicationContext);
@@ -78,7 +80,7 @@ class MessagingPushNotificationHandler {
     /**
      * Broadcasts the push notification creation information to the app if a silent notification was present in the {@link MessagingPushPayload} from AJO.
      *
-     * @param applicationContext The application {@link Context}
+     * @param applicationContext the application {@link Context}
      * @param messageId          a {@code String} containing the message id
      * @param payload            the {@link MessagingPushPayload} containing the data payload from AJO
      */
@@ -90,7 +92,7 @@ class MessagingPushNotificationHandler {
     /**
      * Broadcasts the push notification creation information to the app.
      *
-     * @param applicationContext The application {@link Context}
+     * @param applicationContext the application {@link Context}
      * @param messageId          a {@code String} containing the message id
      * @param payload            the {@link MessagingPushPayload} containing the data payload from AJO
      * @param notificationType   a {@code String} containing the action to be set when sending the broadcast
@@ -99,8 +101,11 @@ class MessagingPushNotificationHandler {
         final PackageManager pm = applicationContext.getPackageManager();
         final Intent launchIntent = pm.getLaunchIntentForPackage(applicationContext.getPackageName());
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        launchIntent.putExtra("messageId", messageId);
-        launchIntent.putExtra("pushPayload", payload);
+        // include the push payload for silent push notification broadcasts
+        if (payload.isSilentPushMessage()) {
+            launchIntent.putExtra(MESSAGE_ID, messageId);
+            launchIntent.putExtra(PUSH_PAYLOAD, payload);
+        }
         if (notificationType.equals(MessagingPushPayload.ACTION_KEY.ACTION_NORMAL_NOTIFICATION_CREATED)) {
             MessagingUtils.sendBroadcasts(applicationContext, launchIntent, MessagingPushPayload.ACTION_KEY.ACTION_NORMAL_NOTIFICATION_CREATED);
         } else if (notificationType.equals(MessagingPushPayload.ACTION_KEY.ACTION_SILENT_NOTIFICATION_CREATED)) {

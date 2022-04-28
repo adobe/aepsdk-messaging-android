@@ -69,7 +69,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
      * Downloads the asset then caches it in memory.
      * TODO: Store the image asset in the disk cache added in the feature/iam branch
      *
-     * @param context  The application {@link Context}
+     * @param context  the application {@link Context}
      * @param imageUrl a {@code String} containing the image asset to be downloaded
      * @return the {@link Bitmap} created from the downloaded image asset
      */
