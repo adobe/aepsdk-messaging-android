@@ -34,7 +34,7 @@ class ListenerHubSharedState extends ExtensionListener {
     @Override
     public void hear(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "ListenerHubSharedState - Event / EventData is null. Ignoring the event.");
             return;
         }
@@ -42,7 +42,7 @@ class ListenerHubSharedState extends ExtensionListener {
         final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
 
         if (parentExtension == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "ListenerHubSharedState - The parent extension, associated with this listener is null, ignoring the event.");
             return;
         }

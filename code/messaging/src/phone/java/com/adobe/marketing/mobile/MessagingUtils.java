@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -105,7 +105,7 @@ class MessagingUtils {
 
         if (payload == null || payload.getChannelId() == null || payload.getChannelId().isEmpty()) {
             createDefaultNotificationChannel(context, notificationManager, payload);
-            return MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
+            return MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -120,7 +120,7 @@ class MessagingUtils {
             }
         }
 
-        return MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
+        return MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
     }
 
     /**
@@ -135,13 +135,13 @@ class MessagingUtils {
      */
     static PendingIntent getPendingIntentForAction(final Context context, final MessagingPushPayload payload, final String messageId, final String action, final boolean shouldHandleTracking) {
         final Bundle extras = getBundleFromMap(payload.getData());
-        extras.putBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
+        extras.putBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
         final Intent intent = new Intent(context, MessagingPushReceiver.class);
         intent.setAction(action);
         intent.putExtras(extras);
         // Adding CJM specific details
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
-        return PendingIntent.getBroadcast(context, MessagingConstant.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
+        return PendingIntent.getBroadcast(context, MessagingConstants.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
     }
 
     /**
@@ -207,7 +207,7 @@ class MessagingUtils {
         intent.putExtras(extras);
         // Adding CJM specific details
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstant.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstants.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
         final Notification.Action action = new Notification.Action(0, button.getLabel(), pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             notificationBuilder.addAction(action);
@@ -262,12 +262,12 @@ class MessagingUtils {
      */
     private static void createDefaultNotificationChannel(final Context context, final NotificationManager notificationManager, final MessagingPushPayload payload) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID) == null) {
+            if (notificationManager.getNotificationChannel(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID) == null) {
                 final int importance = getImportance(payload.getNotificationPriority(), notificationManager);
-                final NotificationChannel channel = new NotificationChannel(MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID,
-                        MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_NAME,
+                final NotificationChannel channel = new NotificationChannel(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID,
+                        MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_NAME,
                         importance);
-                channel.setDescription(MessagingConstant.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_DESCRIPTION);
+                channel.setDescription(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_DESCRIPTION);
                 setSound(context, channel, payload.getSound());
                 notificationManager.createNotificationChannel(channel);
             }

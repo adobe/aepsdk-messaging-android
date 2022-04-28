@@ -11,32 +11,32 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_NAME;
-import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.ECID;
-import static com.adobe.marketing.mobile.MessagingConstant.JSON_VALUES.FCM;
-import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CJM;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.COLLECT;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.DATASET_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.EXPERIENCE;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MESSAGE_PROFILE_JSON;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.META;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.MIXINS;
-import static com.adobe.marketing.mobile.MessagingConstant.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
+import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.ECID;
+import static com.adobe.marketing.mobile.MessagingConstants.JSON_VALUES.FCM;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CJM;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.COLLECT;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.DATASET_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.EXPERIENCE;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
 
-import com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.XDMDataKeys;
+import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,7 +64,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * <ul>
      *     <li> {@link ListenerHubSharedState} listening to event with eventType {@link EventType#HUB}
      *      *     and EventSource {@link EventSource#SHARED_STATE}</li>
-     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstant.EventType#MESSAGING}
+     *     <li> {@link ListenerMessagingRequestContent} listening to event with eventType {@link MessagingConstants.EventType#MESSAGING}
      *     and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> {@link ListenerIdentityRequestContent} listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	 *  and EventSource {@link EventSource#REQUEST_CONTENT}</li>
@@ -146,9 +146,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     private static void addApplicationData(final boolean applicationOpened, final Map<String, Object> xdmMap) {
         final Map<String, Object> applicationMap = new HashMap<>();
         final Map<String, Object> launchesMap = new HashMap<>();
-        launchesMap.put(MessagingConstant.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
-        applicationMap.put(MessagingConstant.TrackingKeys.LAUNCHES, launchesMap);
-        xdmMap.put(MessagingConstant.TrackingKeys.APPLICATION, applicationMap);
+        launchesMap.put(MessagingConstants.TrackingKeys.LAUNCHES_VALUE, applicationOpened ? 1 : 0);
+        applicationMap.put(MessagingConstants.TrackingKeys.LAUNCHES, launchesMap);
+        xdmMap.put(MessagingConstants.TrackingKeys.APPLICATION, applicationMap);
     }
 
     /**
@@ -159,7 +159,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
-        final String adobe = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
+        final String adobe = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
         if (adobe == null) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;
@@ -250,17 +250,17 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
-                Log.error(MessagingConstant.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
-                        SELF_TAG, MessagingConstant.EventType.MESSAGING, MessagingConstant.EXTENSION_VERSION, extensionError.toString());
+                Log.error(MessagingConstants.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
+                        SELF_TAG, MessagingConstants.EventType.MESSAGING, MessagingConstants.EXTENSION_VERSION, extensionError.toString());
             }
         };
 
         extensionApi.registerEventListener(EventType.HUB.getName(), EventSource.SHARED_STATE.getName(), ListenerHubSharedState.class, listenerErrorCallback);
-        extensionApi.registerEventListener(MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
+        extensionApi.registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
 
-        Log.debug(MessagingConstant.LOG_TAG, "%s - Registering Messaging extension - version %s",
-                SELF_TAG, MessagingConstant.EXTENSION_VERSION);
+        Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
+                SELF_TAG, MessagingConstants.EXTENSION_VERSION);
     }
 
     /**
@@ -292,7 +292,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             Event eventToProcess = eventQueue.peek();
 
             if (eventToProcess == null) {
-                Log.debug(MessagingConstant.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
+                Log.debug(MessagingConstants.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
                 return;
             }
 
@@ -300,7 +300,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
-                        Log.warning(MessagingConstant.LOG_TAG,
+                        Log.warning(MessagingConstants.LOG_TAG,
                                 String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
                                         extensionError.getErrorName()));
                     }
@@ -311,29 +311,29 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
-                        Log.warning(MessagingConstant.LOG_TAG,
+                        Log.warning(MessagingConstants.LOG_TAG,
                                 String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
                                         extensionError.getErrorName()));
                     }
                 }
             };
 
-            final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstant.SharedState.Configuration.EXTENSION_NAME,
+            final Map<String, Object> configSharedState = getApi().getSharedEventState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME,
                     eventToProcess, configurationErrorCallback);
 
-            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME,
+            final Map<String, Object> edgeIdentitySharedState = getApi().getXDMSharedEventState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME,
                     eventToProcess, edgeIdentityErrorCallback);
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
-                Log.warning(MessagingConstant.LOG_TAG,
+                Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (edgeIdentitySharedState == null) {
-                Log.warning(MessagingConstant.LOG_TAG,
+                Log.warning(MessagingConstants.LOG_TAG,
                         "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
             }
@@ -346,11 +346,11 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
-            } else if (MessagingConstant.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
+            } else if (MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(eventToProcess.getType()) &&
                     EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(eventToProcess.getSource())) {
 
                 // Need experience event dataset id for sending the push token
-                if (!configSharedState.containsKey(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
+                if (!configSharedState.containsKey(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
                     Log.warning(LOG_TAG, "%s - Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.", SELF_TAG);
                     return;
                 }
@@ -371,7 +371,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             return;
         }
 
-        final String pushToken = (String) event.getEventData().get(MessagingConstant.EventDataKeys.Identity.PUSH_IDENTIFIER);
+        final String pushToken = (String) event.getEventData().get(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER);
 
         if (pushToken == null || pushToken.isEmpty()) {
             MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to sync push token, token is null or empty.");
@@ -387,16 +387,16 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         ExtensionErrorCallback<ExtensionError> errorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
-                Log.warning(MessagingConstant.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
+                Log.warning(MessagingConstants.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
                         extensionError.getErrorName()));
             }
         };
         Map<String, Object> map = new HashMap<>();
-        map.put(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        map.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
         getApi().setSharedEventState(map, event, errorCallback);
 
         // Send an edge event with profile data as event data
-        final Event profileEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        final Event profileEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_PROFILE_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setEventData(eventData)
                 .build();
         MobileCore.dispatchEvent(profileEvent, new ExtensionErrorCallback<ExtensionError>() {
@@ -411,17 +411,17 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     public void handleTrackingInfo(final Event event) {
         final EventData eventData = event.getData();
         if (eventData == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
             return;
         }
-        final String eventType = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
-        final String messageId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
-        final boolean isApplicationOpened = eventData.optBoolean(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
-        final String actionId = eventData.optString(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
+        final String eventType = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+        final String messageId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+        final boolean isApplicationOpened = eventData.optBoolean(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
+        final String actionId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.", SELF_TAG);
             return;
         }
@@ -451,7 +451,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        final Event trackEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstant.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
+        final Event trackEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_TRACKING_EDGE_EVENT, MessagingConstants.EventType.EDGE, EventSource.REQUEST_CONTENT.getName())
                 .setEventData(xdmData)
                 .build();
 
@@ -465,8 +465,8 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
     @Override
     public void processHubSharedState(Event event) {
-        if (isSharedStateUpdateFor(MessagingConstant.SharedState.Configuration.EXTENSION_NAME, event) ||
-                isSharedStateUpdateFor(MessagingConstant.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
+        if (isSharedStateUpdateFor(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event) ||
+                isSharedStateUpdateFor(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
             processEvents();
         }
     }
@@ -514,7 +514,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         String stateOwner;
 
         try {
-            stateOwner = (String) event.getEventData().get(MessagingConstant.EventDataKeys.STATE_OWNER);
+            stateOwner = (String) event.getEventData().get(MessagingConstants.EventDataKeys.STATE_OWNER);
         } catch (ClassCastException e) {
             return false;
         }

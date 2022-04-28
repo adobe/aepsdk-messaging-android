@@ -11,13 +11,13 @@
  */
 package com.adobe.marketing.mobile;
 
-final class MessagingConstant {
+final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
     static final String EXTENSION_VERSION = "1.0.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
-    private MessagingConstant() {
+    private MessagingConstants() {
     }
 
     static final class TrackingKeys {

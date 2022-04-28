@@ -56,11 +56,11 @@ public class MessagingPushPayload implements Parcelable {
      */
     public MessagingPushPayload(final RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message is null", SELF_TAG);
+            Log.error(MessagingConstants.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message is null", SELF_TAG);
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is empty", SELF_TAG);
+            Log.error(MessagingConstants.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is empty", SELF_TAG);
             return;
         }
         init(message.getData());
@@ -142,10 +142,10 @@ public class MessagingPushPayload implements Parcelable {
      */
     public boolean isAEPPushMessage() {
         if (data == null || data.isEmpty()) {
-            Log.error(MessagingConstant.LOG_TAG, "%s - Returning false as remote message data payload is empty", SELF_TAG);
+            Log.error(MessagingConstants.LOG_TAG, "%s - Returning false as remote message data payload is empty", SELF_TAG);
             return false;
         }
-        return "true".equals(data.get(MessagingConstant.PushNotificationPayload.ADB));
+        return "true".equals(data.get(MessagingConstants.PushNotificationPayload.ADB));
     }
 
     public boolean isSilentPushMessage() {
@@ -211,47 +211,47 @@ public class MessagingPushPayload implements Parcelable {
     private void init(final Map<String, String> data) {
         this.data = data;
         if (data == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "Payload extraction failed because data provided is null");
+            Log.debug(MessagingConstants.LOG_TAG, "Payload extraction failed because data provided is null");
             return;
         }
-        this.title = data.get(MessagingConstant.PushNotificationPayload.TITLE);
-        this.body = data.get(MessagingConstant.PushNotificationPayload.BODY);
-        this.sound = data.get(MessagingConstant.PushNotificationPayload.SOUND);
-        this.channelId = data.get(MessagingConstant.PushNotificationPayload.CHANNEL_ID);
-        this.icon = data.get(MessagingConstant.PushNotificationPayload.ICON);
-        this.actionUri = data.get(MessagingConstant.PushNotificationPayload.ACTION_URI);
-        this.imageUrl = data.get(MessagingConstant.PushNotificationPayload.IMAGE_URL);
+        this.title = data.get(MessagingConstants.PushNotificationPayload.TITLE);
+        this.body = data.get(MessagingConstants.PushNotificationPayload.BODY);
+        this.sound = data.get(MessagingConstants.PushNotificationPayload.SOUND);
+        this.channelId = data.get(MessagingConstants.PushNotificationPayload.CHANNEL_ID);
+        this.icon = data.get(MessagingConstants.PushNotificationPayload.ICON);
+        this.actionUri = data.get(MessagingConstants.PushNotificationPayload.ACTION_URI);
+        this.imageUrl = data.get(MessagingConstants.PushNotificationPayload.IMAGE_URL);
 
         try {
-            String count = data.get(MessagingConstant.PushNotificationPayload.NOTIFICATION_COUNT);
+            String count = data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT);
             if (!StringUtils.isNullOrEmpty(count)) {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
         }
 
-        this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstant.PushNotificationPayload.NOTIFICATION_PRIORITY));
-        this.actionType = getActionTypeFromString(data.get(MessagingConstant.PushNotificationPayload.ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS));
+        this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_PRIORITY));
+        this.actionType = getActionTypeFromString(data.get(MessagingConstants.PushNotificationPayload.ACTION_TYPE));
+        this.actionButtons = getActionButtonsFromString(data.get(MessagingConstants.PushNotificationPayload.ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
         switch (priority) {
-            case MessagingConstant.PushNotificationPayload.NotificationPriorities
+            case MessagingConstants.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_MIN:
                 return Notification.PRIORITY_MIN;
-            case MessagingConstant.PushNotificationPayload.NotificationPriorities
+            case MessagingConstants.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_LOW:
                 return Notification.PRIORITY_LOW;
-            case MessagingConstant.PushNotificationPayload.NotificationPriorities
+            case MessagingConstants.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_HIGH:
                 return Notification.PRIORITY_HIGH;
-            case MessagingConstant.PushNotificationPayload.NotificationPriorities
+            case MessagingConstants.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_MAX:
                 return Notification.PRIORITY_MAX;
-            case MessagingConstant.PushNotificationPayload.NotificationPriorities
+            case MessagingConstants.PushNotificationPayload.NotificationPriorities
                     .PRIORITY_DEFAULT:
             default:
                 return Notification.PRIORITY_DEFAULT;
@@ -264,11 +264,11 @@ public class MessagingPushPayload implements Parcelable {
         }
 
         switch (type) {
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.DEEPLINK:
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.DEEPLINK:
                 return ActionType.DEEPLINK;
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.WEBURL:
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL:
                 return ActionType.WEBURL;
-            case MessagingConstant.PushNotificationPayload.ActionButtonType.DISMISS:
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.DISMISS:
                 return ActionType.DISMISS;
         }
 
@@ -277,7 +277,7 @@ public class MessagingPushPayload implements Parcelable {
 
     private List<ActionButton> getActionButtonsFromString(final String actionButtons) {
         if (actionButtons == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : actionButtons is null", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : actionButtons is null", SELF_TAG);
             return null;
         }
         List<ActionButton> actionButtonList = new ArrayList<>(3);
@@ -290,7 +290,7 @@ public class MessagingPushPayload implements Parcelable {
                 actionButtonList.add(button);
             }
         } catch (JSONException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
         return actionButtonList;
@@ -298,17 +298,17 @@ public class MessagingPushPayload implements Parcelable {
 
     private ActionButton getActionButton(final JSONObject jsonObject) {
         try {
-            String label = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.LABEL);
+            String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {
-                Log.debug(MessagingConstant.LOG_TAG, "%s - Label is empty", SELF_TAG);
+                Log.debug(MessagingConstants.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
-            String uri = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
-            String type = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE);
+            String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
+            String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
 
             return new ActionButton(label, uri, type);
         } catch (JSONException e) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
     }

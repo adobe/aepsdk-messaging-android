@@ -65,7 +65,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
 
             MessagingUtils.sendBroadcasts(context, intent, action);
             // if shouldHandleTracking is true in the intent extras then handle the push notification interaction tracking
-            if (intent.getExtras().getBoolean(MessagingConstant.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
+            if (intent.getExtras().getBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
                 handlePushInteraction(context, intent);
             }
         }

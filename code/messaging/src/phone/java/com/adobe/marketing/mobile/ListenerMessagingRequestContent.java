@@ -13,7 +13,7 @@
 package com.adobe.marketing.mobile;
 
 /**
- * Listens for {@link MessagingConstant.EventType#MESSAGING}, {@link EventSource#REQUEST_CONTENT} events.
+ * Listens for {@link MessagingConstants.EventType#MESSAGING}, {@link EventSource#REQUEST_CONTENT} events.
  *
  * <p>
  * Monitor Messaging Request content events for sending push notification tracking information.
@@ -31,7 +31,7 @@ public class ListenerMessagingRequestContent extends ExtensionListener {
     public void hear(final Event event) {
 
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
             return;
         }
 

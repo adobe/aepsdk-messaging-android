@@ -42,7 +42,7 @@ public class ListenerMessagingRequestContentTests {
     @Before
     public void beforeEach() {
         listenerMessagingRequestContent = new ListenerMessagingRequestContent(mockExtensionApi,
-                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
+                MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
     }
@@ -65,7 +65,7 @@ public class ListenerMessagingRequestContentTests {
     @Test
     public void testHear_WithNullEventData() {
         // setup
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName()).setData(null).build();
 
         // test
@@ -81,7 +81,7 @@ public class ListenerMessagingRequestContentTests {
     public void testHear_WithNullParentExtension() {
         // setup
         EventData eventData = new EventData();
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName()).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);
 

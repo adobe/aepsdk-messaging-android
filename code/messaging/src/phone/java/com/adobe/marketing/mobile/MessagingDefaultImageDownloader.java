@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.content.Context;
 import android.graphics.Bitmap;

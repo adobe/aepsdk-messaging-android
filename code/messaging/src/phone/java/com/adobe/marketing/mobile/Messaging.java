@@ -12,15 +12,15 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstant.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
-import static com.adobe.marketing.mobile.MessagingConstant.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
-import static com.adobe.marketing.mobile.MessagingConstant.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.content.Context;
 import android.content.Intent;
@@ -96,12 +96,12 @@ public final class Messaging {
         }
 
         // Adding message id as extras in intent
-        intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
-        final String xdmData = data.get(MessagingConstant.TrackingKeys._XDM);
+        final String xdmData = data.get(MessagingConstants.TrackingKeys._XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
-            intent.putExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
+            intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
             Log.warning(LOG_TAG, "%s - Xdm data is not added as push tracking details to the intent, Xdm data is null or empty", SELF_TAG);
         }
@@ -121,18 +121,18 @@ public final class Messaging {
             Log.warning(LOG_TAG, "%s - Failed to track notification interactions, intent provided is null", SELF_TAG);
             return;
         }
-        String messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
         if (messageId == null) {
             // Check if the message Id is in the intent with the key TRACK_INFO_KEY_GOOGLE_MESSAGE_ID which comes through google directly
             // This happens when FirebaseMessagingService#onMessageReceived is not called.
-            messageId = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
+            messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (messageId == null) {
                 Log.warning(LOG_TAG, "%s - Failed to track notification interactions, message id provided is null", SELF_TAG);
                 return;
             }
         }
 
-        final String xdmData = intent.getStringExtra(MessagingConstant.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        final String xdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
         if (xdmData == null) {
             Log.warning(LOG_TAG, "%s - XDM data provided is null", SELF_TAG);
         }
@@ -149,8 +149,8 @@ public final class Messaging {
             eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        final Event messagingEvent = new Event.Builder(MessagingConstant.EventName.MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT,
-                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
+        final Event messagingEvent = new Event.Builder(MessagingConstants.EventName.MESSAGING_PUSH_NOTIFICATION_INTERACTION_EVENT,
+                MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName())
                 .setData(eventData)
                 .build();
         MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
