@@ -168,7 +168,7 @@ public final class Messaging {
      */
     public static void setPushNotificationFactory(final IMessagingPushNotificationFactory factory) {
         if (factory == null) {
-            // log
+            Log.warning(LOG_TAG, "%s - The provided MessagingPushNotificationFactory is null", SELF_TAG);
             return;
         }
         notificationFactory = factory;
@@ -181,7 +181,7 @@ public final class Messaging {
      */
     public static void setPushImageDownloader(final IMessagingImageDownloader downloader) {
         if (downloader == null) {
-            // log
+            Log.warning(LOG_TAG, "%s - The provided MessagingImageDownloader is null", SELF_TAG);
             return;
         }
         imageDownloader = downloader;
@@ -189,18 +189,18 @@ public final class Messaging {
 
     public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage, final boolean shouldHandleTracking) {
         if (remoteMessage == null) {
-            // Log remote message is null
+            Log.warning(LOG_TAG, "%s - The RemoteMessage is null", SELF_TAG);
             return false;
         }
 
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
 
         if (!payload.isAEPPushMessage()) {
-            // Log not aep message
+            Log.debug(LOG_TAG, "%s - The provided RemoteMessage is not an AJO notification.", SELF_TAG);
             return false;
         }
 
-        final Context appContext = MobileCore.getApplication().getApplicationContext();
+        final Context appContext = App.getAppContext();
         final int notificationId = (int) System.currentTimeMillis();
         final String messageId = remoteMessage.getMessageId();
 
@@ -213,6 +213,8 @@ public final class Messaging {
 
         return true;
     }
+
+    static IMessagingPushNotificationFactory getPushNotificationFactory() { return notificationFactory; }
 
     static IMessagingImageDownloader getImageDownloader() {
         return imageDownloader;
