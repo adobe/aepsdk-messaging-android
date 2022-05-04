@@ -38,11 +38,12 @@ def adobeDependencies = [
         core        : "com.adobe.marketing.mobile:core:${mavenCoreVersion}",
         edgeidentity: "com.adobe.marketing.mobile:edgeidentity:+",
         lifecycle   : "com.adobe.marketing.mobile:lifecycle:+",
-        edge        : "com.adobe.marketing.mobile:edge:1.1.1"
+        edge        : "com.adobe.marketing.mobile:edge:1.1.1",
+        optimize    : "com.adobe.marketing.mobile:optimize:1.0.0-SNAPSHOT",
+        assurance   : "com.adobe.marketing.mobile:assurance:+"
 ]
 
 dependencies {
-    implementation project(":messaging:aar")
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.firebase:firebase-messaging:21.1.0'
 
