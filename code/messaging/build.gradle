@@ -215,7 +215,6 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 
 dependencies {
     implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
-    implementation project(":messaging:aar")
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
@@ -237,6 +236,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
     androidTestImplementation 'com.adobe.marketing.mobile:edge:1.1.1'
+    implementation 'com.adobe.marketing.mobile:optimize:1.0.0-SNAPSHOT'
 }
 
 tasks.withType(Test) {
