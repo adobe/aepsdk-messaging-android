@@ -39,7 +39,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
         final int cacheSize = maxMemory / 8;
         cache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
-            protected int sizeOf(String key, Bitmap value) {
+            protected int sizeOf(final String key, final Bitmap value) {
                 if (value != null) {
                     return value.getAllocationByteCount() / 1024; //size of bitmap in KB.
                 }
@@ -80,7 +80,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
             return null;
         }
 
-        if (StringUtils.stringIsUrl(imageUrl)) {
+        if (!StringUtils.stringIsUrl(imageUrl)) {
             Log.debug(LOG_TAG, "%s - Unable to download the image asset, the provided URL is invalid.", SELF_TAG);
             return null;
         }
