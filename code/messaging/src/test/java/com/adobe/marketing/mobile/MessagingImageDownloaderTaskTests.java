@@ -13,14 +13,12 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -29,7 +27,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.Future;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BitmapFactory.class, MessagingImageDownloaderTask.class})

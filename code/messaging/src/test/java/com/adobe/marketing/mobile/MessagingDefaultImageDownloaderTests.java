@@ -43,6 +43,10 @@ public class MessagingDefaultImageDownloaderTests {
     Context mockContext;
     @Mock
     Future<Bitmap> mockBitmapFuture;
+    @Mock
+    Bitmap mockBitmap;
+    @Mock
+    ExecutorService mockExecutorService;
 
     @Before
     public void before() {
@@ -53,8 +57,6 @@ public class MessagingDefaultImageDownloaderTests {
     public void test_getBitmapForUrl() {
         // setup
         String imageUrl = "https://www.adobe.com/image.jpg";
-        Bitmap mockBitmap = Mockito.mock(Bitmap.class);
-        ExecutorService mockExecutorService = Mockito.mock(ExecutorService.class);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -80,8 +82,6 @@ public class MessagingDefaultImageDownloaderTests {
     public void test_getBitmapForUrl_ImagePreviouslyCached() {
         // setup
         String imageUrl = "https://www.adobe.com/image.jpg";
-        Bitmap mockBitmap = Mockito.mock(Bitmap.class);
-        ExecutorService mockExecutorService = Mockito.mock(ExecutorService.class);
         LruCache<String, Bitmap> mockCache = Mockito.mock(LruCache.class);
         when(mockCache.get(imageUrl)).thenReturn(mockBitmap);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "cache", mockCache);
@@ -110,8 +110,6 @@ public class MessagingDefaultImageDownloaderTests {
     public void test_getBitmapForUrl_InvalidUrl() {
         // setup
         String imageUrl = "image.jpg";
-        Bitmap mockBitmap = Mockito.mock(Bitmap.class);
-        ExecutorService mockExecutorService = Mockito.mock(ExecutorService.class);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -137,8 +135,6 @@ public class MessagingDefaultImageDownloaderTests {
     public void test_getBitmapForUrl_EmptyUrl() {
         // setup
         String imageUrl = "";
-        Bitmap mockBitmap = Mockito.mock(Bitmap.class);
-        ExecutorService mockExecutorService = Mockito.mock(ExecutorService.class);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);

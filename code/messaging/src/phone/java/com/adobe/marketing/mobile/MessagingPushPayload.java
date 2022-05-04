@@ -223,11 +223,11 @@ public class MessagingPushPayload implements Parcelable {
         this.imageUrl = data.get(MessagingConstants.PushNotificationPayload.IMAGE_URL);
 
         try {
-            String count = data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT);
+            final String count = data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT);
             if (!StringUtils.isNullOrEmpty(count)) {
                 this.badgeCount = Integer.parseInt(count);
             }
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
         }
 
@@ -280,16 +280,16 @@ public class MessagingPushPayload implements Parcelable {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : actionButtons is null", SELF_TAG);
             return null;
         }
-        List<ActionButton> actionButtonList = new ArrayList<>(3);
+        final List<ActionButton> actionButtonList = new ArrayList<>(3);
         try {
-            JSONArray jsonArray = new JSONArray(actionButtons);
+            final JSONArray jsonArray = new JSONArray(actionButtons);
             for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                ActionButton button = getActionButton(jsonObject);
+                final JSONObject jsonObject = jsonArray.getJSONObject(i);
+                final ActionButton button = getActionButton(jsonObject);
                 if (button == null) continue;
                 actionButtonList.add(button);
             }
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
@@ -298,16 +298,16 @@ public class MessagingPushPayload implements Parcelable {
 
     private ActionButton getActionButton(final JSONObject jsonObject) {
         try {
-            String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
+            final String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {
                 Log.debug(MessagingConstants.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
-            String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
-            String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
+            final String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
+            final String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
 
             return new ActionButton(label, uri, type);
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
