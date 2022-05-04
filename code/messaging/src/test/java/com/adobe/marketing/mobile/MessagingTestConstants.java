@@ -247,4 +247,55 @@ public class MessagingTestConstants {
         private SharedState() {
         }
     }
+
+    static final class PushNotificationPayload {
+        static final String ADB = "adb_";
+        static final String TITLE = "adb_title";
+        static final String BODY = "adb_body";
+        static final String SOUND = "adb_sound";
+        static final String NOTIFICATION_COUNT = "adb_n_count";
+        static final String NOTIFICATION_PRIORITY = "adb_n_priority";
+        static final String CHANNEL_ID = "adb_channel_id";
+        static final String ICON = "adb_icon";
+        static final String IMAGE_URL = "adb_image";
+        static final String ACTION_TYPE = "adb_a_type";
+        static final String ACTION_URI = "adb_uri";
+        static final String ACTION_BUTTONS = "adb_act";
+        static final String HANDLE_NOTIFICATION_TRACKING_KEY = "handleNotificationTracking";
+
+        private PushNotificationPayload() {
+        }
+
+        static final class ActionButtonType {
+            static final String DEEPLINK = "DEEPLINK";
+            static final String WEBURL = "WEBURL";
+            static final String DISMISS = "DISMISS";
+
+            private ActionButtonType() {/* no-op */}
+        }
+
+        static final class NotificationPriorities {
+            static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
+            static final String PRIORITY_MIN = "PRIORITY_MIN";
+            static final String PRIORITY_LOW = "PRIORITY_LOW";
+            static final String PRIORITY_HIGH = "PRIORITY_HIGH";
+            static final String PRIORITY_MAX = "PRIORITY_MAX";
+        }
+
+        static final class ActionButtons {
+            static final String LABEL = "label";
+            static final String URI = "uri";
+            static final String TYPE = "type";
+        }
+
+        static final class DEFAULTS {
+            static final String DEFAULT_CHANNEL_ID = "adb_default_channel_id";
+            static final String DEFAULT_CHANNEL_NAME = "General";
+            static final String DEFAULT_CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        }
+
+        static final class REQUEST_CODES {
+            static final int PUSH_INTENT_REQUEST_CODE = 1000;
+        }
+    }
 }
