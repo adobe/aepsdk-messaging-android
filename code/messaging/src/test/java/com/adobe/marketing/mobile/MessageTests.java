@@ -291,7 +291,7 @@ public class MessageTests {
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.BACKDROP_OPACITY, 0.5);
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.DISPLAY_ANIMATION, "none");
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_INSET, 10);
-                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.CORNER_RADIUS, 0.25);
+                put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.CORNER_RADIUS, 25);
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.HEIGHT, 70);
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.WIDTH, 80);
                 put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "top");
@@ -310,7 +310,7 @@ public class MessageTests {
         assertEquals("#FF5733", settings.getBackdropColor());
         assertEquals(MessageAnimation.NONE, settings.getDisplayAnimation());
         assertEquals(10, settings.getVerticalInset());
-        assertEquals(0.25f, settings.getCornerRadius(), 0.1f);
+        assertEquals(25.0f, settings.getCornerRadius(), 0.1f);
         assertEquals(70, settings.getHeight());
         assertEquals(80, settings.getWidth());
         assertEquals(MessageAlignment.TOP, settings.getVerticalAlign());
