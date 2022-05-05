@@ -324,8 +324,8 @@ public class Message extends MessagingDelegate {
         }
 
         if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) != null) {
-            final double radius = ((double) rawSettings.get(MobileParametersKeys.CORNER_RADIUS));
-            cornerRadius = (float) radius;
+            final Integer radius = (Integer) rawSettings.get(MobileParametersKeys.CORNER_RADIUS);
+            cornerRadius = radius.floatValue();
         } else {
             cornerRadius = 0.0f;
         }
