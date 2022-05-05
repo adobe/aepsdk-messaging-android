@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                         "FFFFFF",
                         "116975",
                         0.10,
-                        0.0,
+                        0,
                         false
                 )
         ),
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                         "FFFFFF",
                         "FFC300",
                         0.81,
-                        0.0,
+                        0,
                         false
                 )
         ),
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
                         "ADD8E6",
                         "3A3A3A",
                         0.8,
-                        20.0,
+                        20,
                         false
                 )
         ),
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                         "FFFFFF",
                         "913622",
                         0.75,
-                        75.0,
+                        75,
                         true
                 )
         ),
@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                         "FFFFFF",
                         "5E7072",
                         0.5,
-                        90.0,
+                        90,
                         true
                 )
         ),
@@ -158,7 +158,7 @@ class MainActivity : AppCompatActivity() {
                         "FFFFFF",
                         "85B085",
                         0.90,
-                        0.0,
+                        0,
                         false
                 )
         )
