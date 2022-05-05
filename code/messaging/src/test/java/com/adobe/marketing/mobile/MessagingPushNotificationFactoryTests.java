@@ -38,6 +38,8 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingPushNotificationFactory.class, Notification.Builder.class})
 public class MessagingPushNotificationFactoryTests {
+    private static String MESSAGE_ID = "messageId";
+    private static String PACKAGE_NAME = "testPackage";
     MessagingPushNotificationFactory messagingPushNotificationFactory;
     List<MessagingPushPayload.ActionButton> actionButtons = new ArrayList<MessagingPushPayload.ActionButton>(3) {
         {
@@ -84,7 +86,7 @@ public class MessagingPushNotificationFactoryTests {
     @Test
     public void test_create(){
         // setup
-        Mockito.when(context.getPackageName()).thenReturn("testPackage");
+        Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
         Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);
         mockApplicationInfo.icon = 1;
         try {
@@ -96,7 +98,7 @@ public class MessagingPushNotificationFactoryTests {
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), "messageId", false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
 
         // verify
         assertEquals(mockNotification, notification);
@@ -105,7 +107,7 @@ public class MessagingPushNotificationFactoryTests {
     @Test
     public void test_create_invalidSmallIconResId(){
         // setup
-        Mockito.when(context.getPackageName()).thenReturn("testPackage");
+        Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
         Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);
         // -1 is an invalid small icon resource id
         mockApplicationInfo.icon = -1;
@@ -118,7 +120,7 @@ public class MessagingPushNotificationFactoryTests {
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), "messageId", false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
 
         // verify
         assertNull(notification);

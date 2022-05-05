@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 @RunWith(PowerMockRunner.class)
 public class MessagingDefaultImageDownloaderTests {
+    private static String IMAGE_URL = "https://www.adobe.com/image.jpg";
     MessagingDefaultImageDownloader messagingDefaultImageDownloader;
 
     @Mock
@@ -56,7 +57,6 @@ public class MessagingDefaultImageDownloaderTests {
     @Test
     public void test_getBitmapForUrl() {
         // setup
-        String imageUrl = "https://www.adobe.com/image.jpg";
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -66,7 +66,7 @@ public class MessagingDefaultImageDownloaderTests {
         when(mockExecutorService.submit(any(Callable.class))).thenReturn(mockBitmapFuture);
 
         // test
-        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, imageUrl);
+        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
 
         // verify
         verify(mockExecutorService, times(1)).submit(any(Callable.class));
@@ -81,9 +81,8 @@ public class MessagingDefaultImageDownloaderTests {
     @Test
     public void test_getBitmapForUrl_ImagePreviouslyCached() {
         // setup
-        String imageUrl = "https://www.adobe.com/image.jpg";
         LruCache<String, Bitmap> mockCache = Mockito.mock(LruCache.class);
-        when(mockCache.get(imageUrl)).thenReturn(mockBitmap);
+        when(mockCache.get(IMAGE_URL)).thenReturn(mockBitmap);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "cache", mockCache);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
@@ -94,7 +93,7 @@ public class MessagingDefaultImageDownloaderTests {
         when(mockExecutorService.submit(any(Callable.class))).thenReturn(mockBitmapFuture);
 
         // test
-        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, imageUrl);
+        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
 
         // verify
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
@@ -109,7 +108,7 @@ public class MessagingDefaultImageDownloaderTests {
     @Test
     public void test_getBitmapForUrl_InvalidUrl() {
         // setup
-        String imageUrl = "image.jpg";
+        String invalidImageUrl = "image.jpg";
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -119,7 +118,7 @@ public class MessagingDefaultImageDownloaderTests {
         when(mockExecutorService.submit(any(Callable.class))).thenReturn(mockBitmapFuture);
 
         // test
-        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, imageUrl);
+        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, invalidImageUrl);
 
         // verify
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
@@ -134,7 +133,7 @@ public class MessagingDefaultImageDownloaderTests {
     @Test
     public void test_getBitmapForUrl_EmptyUrl() {
         // setup
-        String imageUrl = "";
+        String emptyImageUrl = "";
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -144,7 +143,7 @@ public class MessagingDefaultImageDownloaderTests {
         when(mockExecutorService.submit(any(Callable.class))).thenReturn(mockBitmapFuture);
 
         // test
-        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, imageUrl);
+        Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, emptyImageUrl);
 
         // verify
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
