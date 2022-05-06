@@ -45,10 +45,11 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingPushNotificationHandler.class, NotificationManagerCompat.class, MessagingUtils.class})
 public class MessagingPushNotificationHandlerTests {
-    private static int NOTIFICATION_ID = 1;
-    private static String MESSAGE_ID = "messageId";
-    private static String PUSH_PAYLOAD = "pushPayload";
-    private static String ACTIVITY_NAME = "testActivity";
+    private static final int NOTIFICATION_ID = 1;
+    private static final String MESSAGE_ID = "messageId";
+    private static final String PUSH_PAYLOAD = "pushPayload";
+    private static final String ACTIVITY_NAME = "testActivity";
+    private static final String PACKAGE_NAME = "testPackage";
     NotificationManagerCompat mockNotificationManagerCompat;
 
     List<MessagingPushPayload.ActionButton> actionButtons = new ArrayList<MessagingPushPayload.ActionButton>(3) {
@@ -123,7 +124,7 @@ public class MessagingPushNotificationHandlerTests {
         }
         Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyBoolean())).thenReturn(mockNotification);
 
-        // setup broadcast receivers for testing
+        // setup broadcast receivers and package manager for testing
         testResolveInfo = new ResolveInfo();
         ActivityInfo testActivityInfo = new ActivityInfo();
         testActivityInfo.name = ACTIVITY_NAME;
@@ -133,22 +134,21 @@ public class MessagingPushNotificationHandlerTests {
                 add(testResolveInfo);
             }
         };
-    }
-
-    @Test
-    public void test_handlePushNotification_nullNotification(){
-        // setup
-        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyBoolean())).thenReturn(null);
-        Mockito.when(context.getPackageName()).thenReturn("testPackage");
-        mockApplicationInfo.icon = 1;
         try {
             Mockito.when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
-            Mockito.when(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockLaunchIntent);
-            Mockito.when(mockPackageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(receivers);
         } catch (Exception e) {
             fail(e.getMessage());
         }
+        Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
+        Mockito.when(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockLaunchIntent);
+        Mockito.when(mockPackageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(receivers);
+    }
+
+    @Test
+    public void test_handlePushNotification_nullNotification() {
+        // setup
+        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyBoolean())).thenReturn(null);
         MessagingPushPayload pushPayload = new MessagingPushPayload(normalNotificationMessageData);
 
         // test
@@ -162,24 +162,14 @@ public class MessagingPushNotificationHandlerTests {
     }
 
     @Test
-    public void test_handlePushNotification_normalNotification(){
+    public void test_handlePushNotification_normalNotification() {
         // setup
-        Mockito.when(context.getPackageName()).thenReturn("testPackage");
-        mockApplicationInfo.icon = 1;
-        try {
-            Mockito.when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
-            Mockito.when(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockLaunchIntent);
-            Mockito.when(mockPackageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(receivers);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
         MessagingPushPayload pushPayload = new MessagingPushPayload(normalNotificationMessageData);
 
         // test
         MessagingPushNotificationHandler.handlePushNotification(context, NOTIFICATION_ID, MESSAGE_ID, pushPayload, mockMessagingPushNotificationFactory, false);
 
-        // verify notification manager notify called, launch intent does not contain the push payload, and the broadcast sent
+        // verify notification manager notify called, launch intent does not contain the push payload, and the broadcast was sent
         verify(mockNotificationManagerCompat, times(1)).notify(NOTIFICATION_ID, mockNotification);
         verify(mockLaunchIntent, times(0)).putExtra(MESSAGE_ID, MESSAGE_ID);
         verify(mockLaunchIntent, times(0)).putExtra(PUSH_PAYLOAD, pushPayload);
@@ -187,24 +177,14 @@ public class MessagingPushNotificationHandlerTests {
     }
 
     @Test
-    public void test_handlePushNotification_silentNotification(){
+    public void test_handlePushNotification_silentNotification() {
         // setup
-        Mockito.when(context.getPackageName()).thenReturn("testPackage");
-        mockApplicationInfo.icon = 1;
-        try {
-            Mockito.when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
-            Mockito.when(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockLaunchIntent);
-            Mockito.when(mockPackageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(receivers);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-        Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
         MessagingPushPayload pushPayload = new MessagingPushPayload(silentNotificationMessageData);
 
         // test
         MessagingPushNotificationHandler.handlePushNotification(context, NOTIFICATION_ID, MESSAGE_ID, pushPayload, mockMessagingPushNotificationFactory, false);
 
-        // verify notification manager notify not called, launch intent does contain the push payload, and the broadcast sent
+        // verify notification manager notify not called, launch intent does contain the push payload, and the broadcast was sent
         verify(mockNotificationManagerCompat, times(0)).notify(NOTIFICATION_ID, mockNotification);
         verify(mockLaunchIntent, times(1)).putExtra(MESSAGE_ID, MESSAGE_ID);
         verify(mockLaunchIntent, times(1)).putExtra(PUSH_PAYLOAD, pushPayload);

@@ -55,7 +55,7 @@ public class MessagingStateTests {
         //mocks
         EventData mockConfigEventData = getMockConfigEventData();
         EventData mockIdentityEventData = getMockEdgeIdentityEventData();
-        
+
         // test
         messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
 

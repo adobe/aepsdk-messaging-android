@@ -39,7 +39,7 @@ public class MessagingImageDownloaderTaskTests {
     }
 
     @Test
-    public void test_download() throws Exception{
+    public void test_download() throws Exception {
         // setup
         String imageUrl = "https://www.adobe.com/image.jpg";
 

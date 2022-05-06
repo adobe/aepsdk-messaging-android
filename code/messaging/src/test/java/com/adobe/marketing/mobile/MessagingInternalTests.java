@@ -12,6 +12,16 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import android.app.Application;
 import android.content.Context;
 
@@ -30,15 +40,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
@@ -148,11 +149,11 @@ public class MessagingInternalTests {
 
         // Test
         messagingInternal.processHubSharedState(mockEvent);
-        
+
         // Verify
         verify(mockEventQueue, times(1)).isEmpty();
     }
-    
+
     @Test
     public void test_processHubSharedState_NoMatchingStateOwner() {
         //Mocks
@@ -178,7 +179,8 @@ public class MessagingInternalTests {
         // Mocks
         ExtensionErrorCallback<ExtensionError> mockCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
-            public void error(ExtensionError extensionError) { }
+            public void error(ExtensionError extensionError) {
+            }
         };
         Event mockEvent = new Event.Builder("event 2", "eventType", "eventSource").build();
 

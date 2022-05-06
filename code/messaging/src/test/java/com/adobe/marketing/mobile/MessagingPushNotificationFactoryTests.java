@@ -38,8 +38,8 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingPushNotificationFactory.class, Notification.Builder.class})
 public class MessagingPushNotificationFactoryTests {
-    private static String MESSAGE_ID = "messageId";
-    private static String PACKAGE_NAME = "testPackage";
+    private static final String MESSAGE_ID = "messageId";
+    private static final String PACKAGE_NAME = "testPackage";
     MessagingPushNotificationFactory messagingPushNotificationFactory;
     List<MessagingPushPayload.ActionButton> actionButtons = new ArrayList<MessagingPushPayload.ActionButton>(3) {
         {
@@ -84,7 +84,7 @@ public class MessagingPushNotificationFactoryTests {
     }
 
     @Test
-    public void test_create(){
+    public void test_create() {
         // setup
         Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
         Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);
@@ -105,7 +105,7 @@ public class MessagingPushNotificationFactoryTests {
     }
 
     @Test
-    public void test_create_invalidSmallIconResId(){
+    public void test_create_invalidSmallIconResId() {
         // setup
         Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
         Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);

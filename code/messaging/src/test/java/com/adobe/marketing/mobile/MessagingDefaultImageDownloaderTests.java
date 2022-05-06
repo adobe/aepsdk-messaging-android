@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
 
 @RunWith(PowerMockRunner.class)
 public class MessagingDefaultImageDownloaderTests {
-    private static String IMAGE_URL = "https://www.adobe.com/image.jpg";
+    private static final String IMAGE_URL = "https://www.adobe.com/image.jpg";
     MessagingDefaultImageDownloader messagingDefaultImageDownloader;
 
     @Mock
@@ -67,6 +67,11 @@ public class MessagingDefaultImageDownloaderTests {
 
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
+        try {
+            Thread.sleep(100);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
 
         // verify
         verify(mockExecutorService, times(1)).submit(any(Callable.class));
