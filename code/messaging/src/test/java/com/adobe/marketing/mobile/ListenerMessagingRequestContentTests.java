@@ -12,6 +12,10 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,10 +25,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
@@ -36,13 +36,13 @@ public class ListenerMessagingRequestContentTests {
     ExtensionApi mockExtensionApi;
 
     private ListenerMessagingRequestContent listenerMessagingRequestContent;
-    private int EXECUTOR_TIMEOUT = 5;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final int EXECUTOR_TIMEOUT = 5;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {
         listenerMessagingRequestContent = new ListenerMessagingRequestContent(mockExtensionApi,
-                MessagingConstant.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
+                MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName());
         when(mockMessagingInternal.getExecutor()).thenReturn(executor);
         when(mockExtensionApi.getExtension()).thenReturn(mockMessagingInternal);
     }
@@ -65,7 +65,7 @@ public class ListenerMessagingRequestContentTests {
     @Test
     public void testHear_WithNullEventData() {
         // setup
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName()).setData(null).build();
 
         // test
@@ -81,7 +81,7 @@ public class ListenerMessagingRequestContentTests {
     public void testHear_WithNullParentExtension() {
         // setup
         EventData eventData = new EventData();
-        Event mockEvent = new Event.Builder("testEvent", MessagingConstant.EventType.MESSAGING,
+        Event mockEvent = new Event.Builder("testEvent", MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName()).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);
 

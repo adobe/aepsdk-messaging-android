@@ -14,11 +14,10 @@ package com.adobe.marketing.mobile.messagingsample
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.MobileCore
 
 class NotificationDeleteReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        Messaging.handleNotificationResponse(intent, false, "delete")
+        // if tracking is not being handled by the AEPMessaging extension then the notification delete tracking should be handled here
+        // Messaging.handleNotificationResponse(intent, false, "delete")
     }
 }

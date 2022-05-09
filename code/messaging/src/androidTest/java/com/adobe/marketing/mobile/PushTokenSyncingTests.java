@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile;
 
-import android.content.Intent;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Before;
@@ -82,14 +80,14 @@ public class PushTokenSyncingTests {
         assertEquals(1, genericIdentityEvents.size());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstant.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEvent, edgeRequestEvents.get(0).getData().toString());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstant.EXTENSION_NAME,1000));
-        String pushToken = sharedStateMap.get(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER);
+        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertEquals("mockPushToken", pushToken);
     }
 
@@ -104,13 +102,13 @@ public class PushTokenSyncingTests {
         assertEquals(1, genericIdentityEvents.size());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstant.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstant.EXTENSION_NAME,1000));
-        String pushToken = sharedStateMap.get(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER);
+        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
 
@@ -125,13 +123,13 @@ public class PushTokenSyncingTests {
         assertEquals(1, genericIdentityEvents.size());
 
         // verify edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstant.EventType.EDGE,
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstant.EXTENSION_NAME,1000));
-        String pushToken = sharedStateMap.get(MessagingConstant.SharedState.Messaging.PUSH_IDENTIFIER);
+        Map<String, String> sharedStateMap = TestUtils.flattenMap(getSharedStateFor(MessagingConstants.EXTENSION_NAME,1000));
+        String pushToken = sharedStateMap.get(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
 }

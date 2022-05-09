@@ -12,8 +12,11 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
+import android.widget.Toast
 import com.adobe.marketing.mobile.*
-import com.google.firebase.iid.FirebaseInstanceId
+import com.adobe.marketing.mobile.edge.identity.Identity
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
 
@@ -23,13 +26,12 @@ class MessagingApplication : Application() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
-        com.adobe.marketing.mobile.Identity.registerExtension();
-        Edge.registerExtension();
-        Assurance.registerExtension();
-        Lifecycle.registerExtension();
-        Signal.registerExtension();
-        UserProfile.registerExtension();
+        Identity.registerExtension()
+        Edge.registerExtension()
+        Assurance.registerExtension()
+        Lifecycle.registerExtension()
+        Signal.registerExtension()
+        UserProfile.registerExtension()
         Messaging.registerExtension()
 
         MobileCore.start {
@@ -37,13 +39,17 @@ class MessagingApplication : Application() {
             MobileCore.lifecycleStart(null)
         }
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (task.isSuccessful) {
-                val token = task.result?.token ?: ""
-                print("MessagingApplication Firebase token :: $token")
+                // Get new FCM registration token
+                val token = task.result
+                print("MessagingApplication Firebase token :: ${token}")
                 // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
+                // Log and toast
+                val msg = "FCM token received: ${token}"
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
             }
-        }
+        })
     }
 }

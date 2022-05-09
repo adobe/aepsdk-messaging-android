@@ -12,6 +12,10 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,10 +25,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MessagingInternal.class, ExtensionApi.class})
@@ -36,8 +36,8 @@ public class ListenerIdentityRequestContentTests {
     ExtensionApi mockExtensionApi;
 
     private ListenerIdentityRequestContent listenerIdentityRequestContent;
-    private int EXECUTOR_TIMEOUT = 5;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final int EXECUTOR_TIMEOUT = 5;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Before
     public void beforeEach() {

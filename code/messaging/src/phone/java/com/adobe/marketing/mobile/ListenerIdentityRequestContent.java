@@ -30,7 +30,7 @@ public class ListenerIdentityRequestContent extends ExtensionListener {
     public void hear(final Event event) {
 
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, "%s - Event or Event data is null.", SELF_TAG);
             return;
         }
 

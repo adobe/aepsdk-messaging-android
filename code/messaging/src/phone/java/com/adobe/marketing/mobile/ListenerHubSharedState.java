@@ -28,12 +28,13 @@ class ListenerHubSharedState extends ExtensionListener {
      * Method that gets called when event with event type {@link EventType#HUB}
      * and with event source {@link EventSource#SHARED_STATE} is dispatched through eventHub.
      * <p>
+     *
      * @param event the hub shared state change {@link Event} to be processed
      */
     @Override
     public void hear(final Event event) {
         if (event == null || event.getEventData() == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "ListenerHubSharedState - Event / EventData is null. Ignoring the event.");
             return;
         }
@@ -41,7 +42,7 @@ class ListenerHubSharedState extends ExtensionListener {
         final MessagingInternal parentExtension = (MessagingInternal) super.getParentExtension();
 
         if (parentExtension == null) {
-            Log.debug(MessagingConstant.LOG_TAG,
+            Log.debug(MessagingConstants.LOG_TAG,
                     "ListenerHubSharedState - The parent extension, associated with this listener is null, ignoring the event.");
             return;
         }

@@ -16,12 +16,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.utils.Asserts;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,7 +55,7 @@ public class MessagingStateTests {
         //mocks
         EventData mockConfigEventData = getMockConfigEventData();
         EventData mockIdentityEventData = getMockEdgeIdentityEventData();
-        
+
         // test
         messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
 
@@ -70,7 +65,7 @@ public class MessagingStateTests {
 
     private EventData getMockConfigEventData() {
         EventData configEventData = new EventData();
-        configEventData.putString(MessagingConstant.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
+        configEventData.putString(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
         return configEventData;
     }
 
@@ -78,9 +73,9 @@ public class MessagingStateTests {
         EventData identityEventData = new EventData();
         Map<String, Variant> identityMap = new HashMap<>();
         List<Variant> ecids = new ArrayList<>();
-        ecids.add(Variant.fromStringMap(Collections.singletonMap(MessagingConstant.SharedState.EdgeIdentity.ID, MOCK_VID)));
-        identityMap.put(MessagingConstant.SharedState.EdgeIdentity.ECID, Variant.fromVariantList(ecids));
-        identityEventData.putVariantMap(MessagingConstant.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+        ecids.add(Variant.fromStringMap(Collections.singletonMap(MessagingConstants.SharedState.EdgeIdentity.ID, MOCK_VID)));
+        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, Variant.fromVariantList(ecids));
+        identityEventData.putVariantMap(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
         return identityEventData;
     }
 }

@@ -45,7 +45,8 @@ def adobeDependencies = [
         edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
         lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",
         signal     : "com.adobe.marketing.mobile:signal:+",
-        edge       : "com.adobe.marketing.mobile:edge:1.1.0"
+        edge       : "com.adobe.marketing.mobile:edge:1.1.0",
+        assurance  : "com.adobe.marketing.mobile:assurance:+"
 ]
 
 dependencies {

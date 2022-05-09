@@ -33,11 +33,12 @@ class MainActivity : AppCompatActivity() {
         btn_getLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
+        // if tracking is not being handled by the AEPMessaging extension then the notification clicked tracking should be handled here
         intent?.extras?.apply {
             if (getString(FROM) == "action") {
-                Messaging.handleNotificationResponse(intent, true, "button")
+                // Messaging.handleNotificationResponse(intent, true, "button")
             } else {
-                Messaging.handleNotificationResponse(intent, true, null)
+                // Messaging.handleNotificationResponse(intent, true, null)
             }
         }
     }
@@ -46,7 +47,12 @@ class MainActivity : AppCompatActivity() {
         val notificationIntent = Intent(this, NotificationBroadcastReceiver::class.java)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION_ID, 1)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION, notification)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
         val futureInMillis = SystemClock.elapsedRealtime() + delay
         val alarmManager = (getSystemService(Context.ALARM_SERVICE) as AlarmManager)
         alarmManager[AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis] = pendingIntent
@@ -62,11 +68,18 @@ class MainActivity : AppCompatActivity() {
         val actionReceiver = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra(FROM, "action")
-            Messaging.addPushTrackingDetails(this, "messageId", NotificationBroadcastReceiver.XDM_DATA)
+            Messaging.addPushTrackingDetails(
+                this,
+                "messageId",
+                NotificationBroadcastReceiver.XDM_DATA
+            )
         }
-        val pendingIntent: PendingIntent = PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
-        builder.addAction(R.drawable.ic_launcher_background, "buttonAction",
-                pendingIntent)
+        val pendingIntent: PendingIntent =
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
+        builder.addAction(
+            R.drawable.ic_launcher_background, "buttonAction",
+            pendingIntent
+        )
         return builder.build()
     }
 
