@@ -18,6 +18,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
@@ -96,12 +97,12 @@ public final class Messaging {
         }
 
         // Adding message id as extras in intent
-        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        intent.putExtra(TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
         final String xdmData = data.get(MessagingConstants.TrackingKeys._XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
-            intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
+            intent.putExtra(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
             Log.warning(LOG_TAG, "%s - Xdm data is not added as push tracking details to the intent, Xdm data is null or empty", SELF_TAG);
         }
@@ -121,18 +122,18 @@ public final class Messaging {
             Log.warning(LOG_TAG, "%s - Failed to track notification interactions, intent provided is null", SELF_TAG);
             return;
         }
-        String messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
         if (messageId == null) {
             // Check if the message Id is in the intent with the key TRACK_INFO_KEY_GOOGLE_MESSAGE_ID which comes through google directly
             // This happens when FirebaseMessagingService#onMessageReceived is not called.
-            messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
+            messageId = intent.getStringExtra(TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (messageId == null) {
                 Log.warning(LOG_TAG, "%s - Failed to track notification interactions, message id provided is null", SELF_TAG);
                 return;
             }
         }
 
-        final String xdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
         if (xdmData == null) {
             Log.warning(LOG_TAG, "%s - XDM data provided is null", SELF_TAG);
         }
@@ -175,7 +176,7 @@ public final class Messaging {
     }
 
     /**
-     * Sets the image downloader which will be used for downloading large icon and images for notifications
+     * Sets the image downloader which will be used for downloading large icons and images for notifications
      *
      * @param downloader
      */

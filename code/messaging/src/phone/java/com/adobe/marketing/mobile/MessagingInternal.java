@@ -250,7 +250,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         ExtensionErrorCallback<ExtensionError> listenerErrorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
-                Log.error(MessagingConstants.LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
+                Log.error(LOG_TAG, "%s - Error in registering %s event : Extension version - %s : Error %s",
                         SELF_TAG, MessagingConstants.EventType.MESSAGING, MessagingConstants.EXTENSION_VERSION, extensionError.toString());
             }
         };
@@ -259,7 +259,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         extensionApi.registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT.getName(), ListenerMessagingRequestContent.class, listenerErrorCallback);
         extensionApi.registerEventListener(EventType.GENERIC_IDENTITY.getName(), EventSource.REQUEST_CONTENT.getName(), ListenerIdentityRequestContent.class, listenerErrorCallback);
 
-        Log.debug(MessagingConstants.LOG_TAG, "%s - Registering Messaging extension - version %s",
+        Log.debug(LOG_TAG, "%s - Registering Messaging extension - version %s",
                 SELF_TAG, MessagingConstants.EXTENSION_VERSION);
     }
 
@@ -292,7 +292,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             Event eventToProcess = eventQueue.peek();
 
             if (eventToProcess == null) {
-                Log.debug(MessagingConstants.LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
+                Log.debug(LOG_TAG, "%s - Unable to process event, Event received is null.", SELF_TAG);
                 return;
             }
 
@@ -300,7 +300,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
-                        Log.warning(MessagingConstants.LOG_TAG,
+                        Log.warning(LOG_TAG,
                                 String.format("MessagingInternal : Could not process event, an error occurred while retrieving configuration shared state: %s",
                                         extensionError.getErrorName()));
                     }
@@ -311,7 +311,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
                 @Override
                 public void error(final ExtensionError extensionError) {
                     if (extensionError != null) {
-                        Log.warning(MessagingConstants.LOG_TAG,
+                        Log.warning(LOG_TAG,
                                 String.format("MessagingInternal : Could not process event, an error occurred while retrieving edge identity shared state: %s",
                                         extensionError.getErrorName()));
                     }
@@ -326,14 +326,14 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
 
             // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (configSharedState == null) {
-                Log.warning(MessagingConstants.LOG_TAG,
+                Log.warning(LOG_TAG,
                         "%s : Could not process event, configuration shared state is pending", SELF_TAG);
                 return;
             }
 
             // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
             if (edgeIdentitySharedState == null) {
-                Log.warning(MessagingConstants.LOG_TAG,
+                Log.warning(LOG_TAG,
                         "%s : Could not process event, identity shared state is pending", SELF_TAG);
                 return;
             }
@@ -387,7 +387,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         ExtensionErrorCallback<ExtensionError> errorCallback = new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
-                Log.warning(MessagingConstants.LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
+                Log.warning(LOG_TAG, String.format("An error occurred while setting the push token in the shared state %s",
                         extensionError.getErrorName()));
             }
         };
@@ -411,7 +411,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
     public void handleTrackingInfo(final Event event) {
         final EventData eventData = event.getData();
         if (eventData == null) {
-            Log.debug(MessagingConstants.LOG_TAG,
+            Log.debug(LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventData is null.", SELF_TAG);
             return;
         }
@@ -421,7 +421,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
         final String actionId = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(MessagingConstants.LOG_TAG,
+            Log.debug(LOG_TAG,
                     "%s - handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.", SELF_TAG);
             return;
         }
