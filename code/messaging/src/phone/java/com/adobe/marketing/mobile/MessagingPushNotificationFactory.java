@@ -91,9 +91,12 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         final List<MessagingPushPayload.ActionButton> buttons = payload.getActionButtons();
         if (buttons != null && !buttons.isEmpty()) {
             for (final MessagingPushPayload.ActionButton button : buttons) {
-                MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId, notificationId);
+                MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId, notificationId, shouldHandleTracking);
             }
         }
+
+        // Setting auto cancel flag to true to remove the message after it is interacted with
+        notificationBuilder.setAutoCancel(true);
 
         return notificationBuilder.build();
     }

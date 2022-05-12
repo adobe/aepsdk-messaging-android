@@ -76,7 +76,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
             }
 
             MessagingUtils.sendBroadcasts(context, intent, action);
-            // if shouldHandleTracking is true in the intent extras then handle the push notification interaction tracking
+            // if shouldHandleTracking is true in the intent extras then handle the push notification interaction tracking (clicked, deleted, button clicked)
             if (intent.getExtras().getBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
                 Log.debug(LOG_TAG, "handleAction() - Handling notification interaction tracking.");
                 handlePushInteraction();
@@ -95,21 +95,26 @@ public class MessagingPushReceiver extends BroadcastReceiver {
             final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
             final Bundle extras = intent.getExtras();
             final String actionType = extras.getString(ACTION_BUTTON_TYPE_KEY);
-            final int notificationId = extras.getInt(NOTIFICATION_ID);
 
+            final String url = extras.getString(ACTION_BUTTON_LINK_KEY);
             switch (actionType) {
                 case ActionButtonType.WEBURL:
-                case ActionButtonType.DEEPLINK:
-                    final String url = extras.getString(ACTION_BUTTON_LINK_KEY);
                     Log.debug(LOG_TAG, "handleNotificationButtonPress() - showing url (%s) using UIService.", url);
                     if (!StringUtils.isNullOrEmpty(url)) {
                         MobileCore.getCore().eventHub.getPlatformServices().getUIService().showUrl(url);
                     }
                     break;
+                case ActionButtonType.DEEPLINK:
+                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - triggering deeplink (%s) using DeeplinkService.", url);
+                    MobileCore.getCore().eventHub.getPlatformServices().getDeepLinkService().triggerDeepLink(url);
+                    break;
                 case ActionButtonType.DISMISS:
                 default:
                     break;
             }
+
+            // TODO: currently dismisses the message on button press, add developer customization here by defining an interface for custom handling of button presses
+            final int notificationId = extras.getInt(NOTIFICATION_ID);
             Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
             notificationManager.cancel(notificationId);
         }

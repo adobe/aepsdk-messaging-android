@@ -26,20 +26,22 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
+    val griffonSessionUrl = "{Your Session URL}"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Assurance.startSession("{Your Session URL}")
+        Assurance.startSession(griffonSessionUrl)
         btn_getLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
         // if tracking is not being handled by the AEPMessaging extension then the notification clicked tracking should be handled here
+        // additionally, handle the deeplink triggered from a notification interaction here
         intent?.extras?.apply {
-            if (getString(FROM) == "action") {
-                // Messaging.handleNotificationResponse(intent, true, "button")
-            } else {
-                // Messaging.handleNotificationResponse(intent, true, null)
-            }
+//            if (getString(FROM) == "action") {
+//                 Messaging.handleNotificationResponse(intent, true, "button")
+//            } else {
+//                 Messaging.handleNotificationResponse(intent, true, null)
+//            }
         }
     }
 

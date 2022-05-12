@@ -191,22 +191,28 @@ class MessagingUtils {
     /**
      * Prepares a {@link Notification.Action} to be performed when a {@link Notification} button is pressed.
      *
-     * @param context             the application {@link Context}
-     * @param button              the {@link MessagingPushPayload.ActionButton} which triggers the {@code Notification.Action}
-     * @param payload             the {@code MessagingPushPayload} containing the data payload from AJO
-     * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
-     * @param messageId           the {@code String} message id
-     * @param notificationId      {@code int} used when scheduling the notification
+     * @param context              the application {@link Context}
+     * @param button               the {@link MessagingPushPayload.ActionButton} which triggers the {@code Notification.Action}
+     * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+     * @param notificationBuilder  the {@link Notification.Builder} object currently being used to build the notification
+     * @param messageId            the {@code String} message id
+     * @param notificationId       {@code int} used when scheduling the notification
+     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
      */
-    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId, final int notificationId) {
+    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId, final int notificationId, final boolean shouldHandleTracking) {
+        // setup bundle extras to be sent with the intent
         final Bundle extras = getBundleFromMap(payload.getData());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LABEL, button.getLabel());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LINK, button.getLink());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.TYPE, button.getType().name());
         extras.putInt(MessagingConstants.PushNotificationPayload.NOTIFICATION_ID, notificationId);
+        extras.putBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
+
+        // create the intent and add the bundle
         final Intent intent = new Intent(context, MessagingPushReceiver.class);
         intent.setAction(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         intent.putExtras(extras);
+
         // Adding CJM specific details
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstants.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);

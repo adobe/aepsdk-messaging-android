@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
+    val appId = "{Your App Id}"
 
     override fun onCreate() {
         super.onCreate()
@@ -35,7 +36,7 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
 
         MobileCore.start {
-            MobileCore.configureWithAppID("{Your App Id}")
+            MobileCore.configureWithAppID(appId)
             MobileCore.lifecycleStart(null)
         }
 

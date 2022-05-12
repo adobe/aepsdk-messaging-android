@@ -88,6 +88,8 @@ public class MessagingPushReceiverTests {
     @Mock
     AndroidUIService mockAndroidUIService;
     @Mock
+    DeepLinkService mockDeepLinkService;
+    @Mock
     NotificationManagerCompat mockNotificationManagerCompat;
 
     @Before
@@ -96,6 +98,7 @@ public class MessagingPushReceiverTests {
         mockCore.eventHub = eventHub;
         MobileCore.setCore(mockCore);
         Mockito.when(mockPlatformServices.getUIService()).thenReturn(mockAndroidUIService);
+        Mockito.when(mockPlatformServices.getDeepLinkService()).thenReturn(mockDeepLinkService);
         PowerMockito.mockStatic(Messaging.class);
         PowerMockito.mockStatic(PendingIntent.class);
         try {
@@ -312,8 +315,8 @@ public class MessagingPushReceiverTests {
         verify(mockSendIntent, times(1)).setAction(action);
         verify(mockBroadcastIntent, times(1)).setComponent(component);
         verify(context, times(1)).sendBroadcast(mockBroadcastIntent);
-        // verify deeplink is attempted to be opened via the ui service
-        verify(mockAndroidUIService, times(1)).showUrl(testDeeplink);
+        // verify deeplink is attempted to be opened via the deeplink service
+        verify(mockDeepLinkService, times(1)).triggerDeepLink(testDeeplink);
         // verify message dismissed
         verify(mockNotificationManagerCompat, times(1)).cancel(TEST_NOTIFICATION_ID);
     }
