@@ -52,11 +52,12 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
      * @param context              the application {@link Context}
      * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
      * @param messageId            a {@code String} containing the message id
+     * @param notificationId       {@code int} id used when the notification was scheduled
      * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
      * @return the created {@link Notification}
      */
     @Override
-    public Notification create(final Context context, final MessagingPushPayload payload, final String messageId, final boolean shouldHandleTracking) {
+    public Notification create(final Context context, final MessagingPushPayload payload, final String messageId, final int notificationId, final boolean shouldHandleTracking) {
         // Setting the channel id
         final String channelId = MessagingUtils.getChannelId(context, payload);
         final Notification.Builder notificationBuilder = new Notification.Builder(context);
@@ -90,7 +91,7 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
         final List<MessagingPushPayload.ActionButton> buttons = payload.getActionButtons();
         if (buttons != null && !buttons.isEmpty()) {
             for (final MessagingPushPayload.ActionButton button : buttons) {
-                MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId);
+                MessagingUtils.addAction(context, button, payload, notificationBuilder, messageId, notificationId);
             }
         }
 

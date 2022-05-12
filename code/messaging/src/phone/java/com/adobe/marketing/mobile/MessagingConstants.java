@@ -162,6 +162,7 @@ final class MessagingConstants {
         static final String ACTION_URI = "adb_uri";
         static final String ACTION_BUTTONS = "adb_act";
         static final String HANDLE_NOTIFICATION_TRACKING_KEY = "handleNotificationTracking";
+        static final String NOTIFICATION_ID = "notificationId";
 
         private PushNotificationPayload() {
         }

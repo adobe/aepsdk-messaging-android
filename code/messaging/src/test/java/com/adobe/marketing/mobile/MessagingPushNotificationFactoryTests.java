@@ -98,7 +98,7 @@ public class MessagingPushNotificationFactoryTests {
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, 1, false);
 
         // verify
         assertEquals(mockNotification, notification);
@@ -120,7 +120,7 @@ public class MessagingPushNotificationFactoryTests {
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, 1, false);
 
         // verify
         assertNull(notification);

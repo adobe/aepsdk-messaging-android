@@ -77,7 +77,7 @@ public class MessagingTests {
     // interface implementations for testing
     class TestPushNotificationFactory implements IMessagingPushNotificationFactory {
         @Override
-        public Notification create(Context context, MessagingPushPayload payload, String messageId, boolean shouldHandleTracking) {
+        public Notification create(Context context, MessagingPushPayload payload, String messageId, int notificationId, boolean shouldHandleTracking) {
             return null;
         }
     }

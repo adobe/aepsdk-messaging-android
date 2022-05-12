@@ -17,8 +17,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
@@ -215,7 +215,9 @@ public final class Messaging {
         return true;
     }
 
-    static IMessagingPushNotificationFactory getPushNotificationFactory() { return notificationFactory; }
+    static IMessagingPushNotificationFactory getPushNotificationFactory() {
+        return notificationFactory;
+    }
 
     static IMessagingImageDownloader getImageDownloader() {
         return imageDownloader;

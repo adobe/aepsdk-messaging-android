@@ -196,12 +196,14 @@ class MessagingUtils {
      * @param payload             the {@code MessagingPushPayload} containing the data payload from AJO
      * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
      * @param messageId           the {@code String} message id
+     * @param notificationId      {@code int} used when scheduling the notification
      */
-    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId) {
+    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId, final int notificationId) {
         final Bundle extras = getBundleFromMap(payload.getData());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LABEL, button.getLabel());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LINK, button.getLink());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.TYPE, button.getType().name());
+        extras.putInt(MessagingConstants.PushNotificationPayload.NOTIFICATION_ID, notificationId);
         final Intent intent = new Intent(context, MessagingPushReceiver.class);
         intent.setAction(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         intent.putExtras(extras);
@@ -238,7 +240,10 @@ class MessagingUtils {
         final String broadcastingAction = packageName + "_" + action;
         final Intent sendIntent = new Intent();
         sendIntent.setAction(broadcastingAction);
-        sendIntent.putExtras(intent.getExtras());
+        final Bundle extras = intent.getExtras();
+        if (extras != null) {
+            sendIntent.putExtras(intent.getExtras());
+        }
         final List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(sendIntent, 0);
         if (receivers.isEmpty()) {
             Log.warning(LOG_TAG, "Will not broadcast an intent for action (%s), no BroadcastReceivers were found.", broadcastingAction);
