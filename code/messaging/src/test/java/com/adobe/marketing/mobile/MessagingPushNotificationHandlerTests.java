@@ -56,7 +56,7 @@ public class MessagingPushNotificationHandlerTests {
         {
             add(new MessagingPushPayload.ActionButton("button1", "https://www.adobe.com/1", "WEBURL"));
             add(new MessagingPushPayload.ActionButton("button2", "testapp://main", "DEEPLINK"));
-            add(new MessagingPushPayload.ActionButton("button3", "https://www.adobe.com/2", "DISMISS"));
+            add(new MessagingPushPayload.ActionButton("button3", null, "OPENAPP"));
         }
     };
     String actionButtonString = TestUtils.convertActionButtonListToJsonArray(actionButtons).toString();

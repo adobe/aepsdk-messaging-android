@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 class MessagingUtils {
     /* JSON - Map conversion helpers */
@@ -214,8 +215,10 @@ class MessagingUtils {
         intent.putExtras(extras);
 
         // Adding CJM specific details
+        // Use a random request code when creating the Pending Intent to make each one unique
+        final int requestCode = new Random().nextInt();
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstants.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT);
         final Notification.Action action = new Notification.Action(0, button.getLabel(), pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             notificationBuilder.addAction(action);

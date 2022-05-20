@@ -59,7 +59,7 @@ import java.util.Map;
 public class MessagingTests {
     Map<String, String> remoteMessageData = new HashMap<String, String>() {
         {
-            put(MessagingTestConstants.PushNotificationPayload.ADB, "true");
+            put(MessagingConstants.PushNotificationPayload.XDM, "mockXdmData");
             put(MessagingTestConstants.PushNotificationPayload.TITLE, "mockTitle");
             put(MessagingTestConstants.PushNotificationPayload.BODY, "mockBody");
             put(MessagingTestConstants.PushNotificationPayload.SOUND, "mockSound");

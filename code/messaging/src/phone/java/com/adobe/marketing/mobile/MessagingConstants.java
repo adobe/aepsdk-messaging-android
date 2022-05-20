@@ -149,7 +149,7 @@ final class MessagingConstants {
     }
 
     static final class PushNotificationPayload {
-        static final String ADB = "adb_";
+        static final String XDM = "_xdm";
         static final String TITLE = "adb_title";
         static final String BODY = "adb_body";
         static final String SOUND = "adb_sound";
@@ -170,7 +170,7 @@ final class MessagingConstants {
         static final class ActionButtonType {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
-            static final String DISMISS = "DISMISS";
+            static final String OPENAPP = "OPENAPP";
 
             private ActionButtonType() {/* no-op */}
         }

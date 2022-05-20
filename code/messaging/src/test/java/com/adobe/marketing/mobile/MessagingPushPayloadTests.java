@@ -40,7 +40,7 @@ public class MessagingPushPayloadTests {
     private final String mockImageUrl = "mockImageUrl";
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
-    private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
+    private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"open app\",\n\"uri\" : \"\",\n \"type\" : \"OPENAPP\"\n}\n]";
     private Map<String, String> mockData;
 
     @Before

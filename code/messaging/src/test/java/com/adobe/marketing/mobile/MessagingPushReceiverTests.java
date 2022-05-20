@@ -164,7 +164,7 @@ public class MessagingPushReceiverTests {
         PowerMockito.verifyStatic(Messaging.class, times(1));
         Messaging.handleNotificationResponse(eq(mockBroadcastIntent), eq(NOTIFICATION_INTERACTED), eq(CUSTOM_ACTION));
         PowerMockito.verifyStatic(PendingIntent.class, times(1));
-        PendingIntent.getActivity(eq(context), eq(0), eq(mockLaunchIntent), eq(PendingIntent.FLAG_ONE_SHOT));
+        PendingIntent.getActivity(eq(context), eq(0), eq(mockLaunchIntent), anyInt());
         verify(mockPendingIntent, times(1)).send();
     }
 
@@ -346,12 +346,12 @@ public class MessagingPushReceiverTests {
     }
 
     @Test
-    public void test_onReceive_notificationButtonPressedWithActionDismiss() {
+    public void test_onReceive_notificationButtonPressedWithActionOpenApp() {
         // setup test intent and extras
         String action = String.format("%s_%s", PACKAGE_NAME, MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         Mockito.when(mockBroadcastIntent.getAction()).thenReturn(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         Mockito.when(mockExtras.getInt(MessagingTestConstants.PushNotificationPayload.NOTIFICATION_ID)).thenReturn(TEST_NOTIFICATION_ID);
-        Mockito.when(mockExtras.getString(ACTION_BUTTON_TYPE_KEY)).thenReturn(MessagingPushPayload.ActionType.DISMISS.toString());
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_TYPE_KEY)).thenReturn(MessagingPushPayload.ActionType.OPENAPP.toString());
 
         // test
         messagingPushReceiver.onReceive(context, mockBroadcastIntent);
@@ -360,6 +360,8 @@ public class MessagingPushReceiverTests {
         verify(mockSendIntent, times(1)).setAction(action);
         verify(mockBroadcastIntent, times(1)).setComponent(component);
         verify(context, times(1)).sendBroadcast(mockBroadcastIntent);
+        // verify launch intent started
+        verify(context, times(1)).startActivity(any(Intent.class));
         // verify message dismissed
         verify(mockNotificationManagerCompat, times(1)).cancel(TEST_NOTIFICATION_ID);
     }

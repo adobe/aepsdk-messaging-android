@@ -136,7 +136,7 @@ public class MessagingPushPayload implements Parcelable {
     // end of Parcelable implementation for MessagingPushPayload
 
     /**
-     * Check whether the remote message is origination from AEP
+     * Check whether the remote message originated from AEP
      *
      * @return boolean value indicating whether the remote message is origination from AEP
      */
@@ -145,7 +145,7 @@ public class MessagingPushPayload implements Parcelable {
             Log.error(MessagingConstants.LOG_TAG, "%s - Returning false as remote message data payload is empty", SELF_TAG);
             return false;
         }
-        return "true".equals(data.get(MessagingConstants.PushNotificationPayload.ADB));
+        return data.get(MessagingConstants.PushNotificationPayload.XDM) != null;
     }
 
     public boolean isSilentPushMessage() {
@@ -268,8 +268,8 @@ public class MessagingPushPayload implements Parcelable {
                 return ActionType.DEEPLINK;
             case MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL:
                 return ActionType.WEBURL;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.DISMISS:
-                return ActionType.DISMISS;
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.OPENAPP:
+                return ActionType.OPENAPP;
         }
 
         return ActionType.NONE;
@@ -303,8 +303,11 @@ public class MessagingPushPayload implements Parcelable {
                 Log.debug(MessagingConstants.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
-            final String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
+            String uri = null;
             final String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
+            if (type.equals(MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL) || type.equals(MessagingConstants.PushNotificationPayload.ActionButtonType.DEEPLINK)) {
+                uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
+            }
 
             return new ActionButton(label, uri, type);
         } catch (final JSONException e) {
@@ -317,7 +320,7 @@ public class MessagingPushPayload implements Parcelable {
      * Enum to denote the type of action
      */
     public enum ActionType {
-        DEEPLINK, WEBURL, DISMISS, NONE
+        DEEPLINK, WEBURL, OPENAPP, NONE
     }
 
     public static class ACTION_BUTTON_KEY {

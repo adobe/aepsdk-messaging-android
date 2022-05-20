@@ -108,12 +108,16 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                     Log.debug(LOG_TAG, "handleNotificationButtonPress() - triggering deeplink (%s) using DeeplinkService.", url);
                     MobileCore.getCore().eventHub.getPlatformServices().getDeepLinkService().triggerDeepLink(url);
                     break;
-                case ActionButtonType.DISMISS:
+                case ActionButtonType.OPENAPP:
                 default:
+                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - opening the app.", url);
+                    final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                    if (launchIntent != null) {
+                        context.startActivity(launchIntent);
+                    }
                     break;
             }
 
-            // TODO: currently dismisses the message on button press, add developer customization here by defining an interface for custom handling of button presses
             final int notificationId = extras.getInt(NOTIFICATION_ID);
             Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
             notificationManager.cancel(notificationId);
@@ -131,7 +135,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                 final PackageManager pm = context.getPackageManager();
                 final Intent launchIntent = pm.getLaunchIntentForPackage(context.getPackageName());
                 launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_ONE_SHOT);
+                final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                 try {
                     pendingIntent.send();
                 } catch (final PendingIntent.CanceledException e) {
