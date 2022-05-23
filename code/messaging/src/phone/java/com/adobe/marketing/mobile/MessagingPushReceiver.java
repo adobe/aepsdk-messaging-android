@@ -19,6 +19,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.core.app.NotificationManagerCompat;
@@ -97,6 +98,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
             final String actionType = extras.getString(ACTION_BUTTON_TYPE_KEY);
 
             final String url = extras.getString(ACTION_BUTTON_LINK_KEY);
+            final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             switch (actionType) {
                 case ActionButtonType.WEBURL:
                     Log.debug(LOG_TAG, "handleNotificationButtonPress() - showing url (%s) using UIService.", url);
@@ -105,16 +107,14 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                     }
                     break;
                 case ActionButtonType.DEEPLINK:
-                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - triggering deeplink (%s) using DeeplinkService.", url);
-                    MobileCore.getCore().eventHub.getPlatformServices().getDeepLinkService().triggerDeepLink(url);
+                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - sending deeplink (%s) to the app for handling.", url);
+                    launchIntent.setData(Uri.parse(url));
+                    context.startActivity(launchIntent);
                     break;
                 case ActionButtonType.OPENAPP:
                 default:
                     Log.debug(LOG_TAG, "handleNotificationButtonPress() - opening the app.", url);
-                    final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-                    if (launchIntent != null) {
-                        context.startActivity(launchIntent);
-                    }
+                    context.startActivity(launchIntent);
                     break;
             }
 
