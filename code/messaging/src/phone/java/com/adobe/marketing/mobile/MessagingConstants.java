@@ -189,10 +189,15 @@ final class MessagingConstants {
             static final String TYPE = "type";
         }
 
-        static final class DEFAULTS {
-            static final String DEFAULT_CHANNEL_ID = "adb_default_channel_id";
-            static final String DEFAULT_CHANNEL_NAME = "General";
-            static final String DEFAULT_CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        static final class DEFAULT {
+            static final String CHANNEL_ID = "adb_default_channel_id";
+            static final String CHANNEL_NAME = "General";
+            static final String CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        }
+
+        static final class CUSTOM {
+            static final String CHANNEL_NAME = "ADB_Messaging";
+            static final String CHANNEL_DESCRIPTION = "Custom channel for all notifications.";
         }
 
         static final class REQUEST_CODES {

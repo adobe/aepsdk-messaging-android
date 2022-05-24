@@ -27,8 +27,8 @@ import androidx.core.app.NotificationManagerCompat;
 /**
  * This class is used to handle push notification interactions.
  */
-public class MessagingPushReceiver extends BroadcastReceiver {
-    private static final String LOG_TAG = "MessagingPushReceiver";
+public class MessagingPushInteractionHandler extends BroadcastReceiver {
+    private static final String LOG_TAG = "MessagingPushInteractionHandler";
     private static final String ACTION_BUTTON_TYPE_KEY = "adb_action_type";
     private static final String ACTION_BUTTON_LINK_KEY = "adb_action_link";
 
@@ -97,6 +97,12 @@ public class MessagingPushReceiver extends BroadcastReceiver {
             final Bundle extras = intent.getExtras();
             final String actionType = extras.getString(ACTION_BUTTON_TYPE_KEY);
 
+            // dismiss the message
+            final int notificationId = extras.getInt(NOTIFICATION_ID);
+            Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
+            notificationManager.cancel(notificationId);
+
+            // handle the button press
             final String url = extras.getString(ACTION_BUTTON_LINK_KEY);
             final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             switch (actionType) {
@@ -107,7 +113,7 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                     }
                     break;
                 case ActionButtonType.DEEPLINK:
-                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - sending deeplink (%s) to the app for handling.", url);
+                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - opening the app with deeplink (%s).", url);
                     launchIntent.setData(Uri.parse(url));
                     context.startActivity(launchIntent);
                     break;
@@ -117,10 +123,6 @@ public class MessagingPushReceiver extends BroadcastReceiver {
                     context.startActivity(launchIntent);
                     break;
             }
-
-            final int notificationId = extras.getInt(NOTIFICATION_ID);
-            Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
-            notificationManager.cancel(notificationId);
         }
 
         /**

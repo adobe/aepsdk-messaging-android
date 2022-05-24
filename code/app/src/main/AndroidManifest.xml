@@ -56,6 +56,11 @@
             android:name=".NotificationDeleteReceiver"
             android:exported="false" >
         </receiver>
+<!--        messaging extension handler for push notification interactions-->
+        <receiver
+            android:name="com.adobe.marketing.mobile.MessagingPushInteractionHandler"
+            android:exported="false" >
+        </receiver>
     </application>
 
 </manifest>
