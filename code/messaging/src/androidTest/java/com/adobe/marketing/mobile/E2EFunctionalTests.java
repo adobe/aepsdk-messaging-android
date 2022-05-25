@@ -24,6 +24,7 @@ import com.adobe.marketing.mobile.optimize.Optimize;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -83,7 +84,9 @@ public class E2EFunctionalTests {
         // clear loaded rules
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
-    
+
+    // TODO: re-enable when network issues with edge-int.adobedc.net are resolved
+    @Ignore
     @Test
     public void testGetMessageDefinitionFromOptimize() throws InterruptedException {
         // setup
