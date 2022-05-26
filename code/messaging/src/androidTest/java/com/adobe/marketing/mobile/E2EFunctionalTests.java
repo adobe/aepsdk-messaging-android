@@ -85,8 +85,6 @@ public class E2EFunctionalTests {
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
-    // TODO: re-enable when network issues with edge-int.adobedc.net are resolved
-    @Ignore
     @Test
     public void testGetMessageDefinitionFromOptimize() throws InterruptedException {
         // setup
