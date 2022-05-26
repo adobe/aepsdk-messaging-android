@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.1.0-beta-1";
+    static final String EXTENSION_VERSION = "1.2.0-beta-1";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_NAME = "com.adobe.messaging.cache";
