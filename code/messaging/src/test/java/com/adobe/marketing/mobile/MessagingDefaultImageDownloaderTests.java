@@ -68,7 +68,7 @@ public class MessagingDefaultImageDownloaderTests {
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
         try {
-            Thread.sleep(500);
+            Thread.sleep(5000);
         } catch (Exception e) {
             fail(e.getMessage());
         }
