@@ -16,6 +16,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatActivity
@@ -26,22 +27,33 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
-    val griffonSessionUrl = "{Your Session URL}"
+    val assuranceSessionUrl = "{Your Session URL}"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Assurance.startSession(griffonSessionUrl)
+        Assurance.startSession(assuranceSessionUrl)
         btn_getLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
-        // if tracking is not being handled by the AEPMessaging extension then the notification clicked tracking should be handled here
-        // additionally, handle the deeplink triggered from a notification interaction here
+        // Events to handle based on the contents of the received Intent:
+        // 1. AEPMessaging extension push interaction tracking if the extension is not handling tracking. See #1 below.
+        // 2. A deeplink triggered from a notification button press present in the intent data. See #2 below.
+
         intent?.extras?.apply {
-//            if (getString(FROM) == "action") {
-//                 Messaging.handleNotificationResponse(intent, true, "button")
-//            } else {
-//                 Messaging.handleNotificationResponse(intent, true, null)
-//            }
+            // event #1: handle tracking
+            //if (getString(FROM) == "action") {
+            //     Messaging.handleNotificationResponse(intent, true, "button")
+            //} else {
+            //     Messaging.handleNotificationResponse(intent, true, null)
+            //}
+        }
+
+        intent?.data?.apply {
+            //  event #2: handle deeplink
+            val deeplink = intent?.data as Uri
+            if (deeplink.scheme.equals("push-test")) {
+                // handle deeplink
+            }
         }
     }
 

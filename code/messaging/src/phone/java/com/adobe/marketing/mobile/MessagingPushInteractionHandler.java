@@ -102,6 +102,9 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
             Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
             notificationManager.cancel(notificationId);
 
+            // broadcast an intent with an action to collapse the notification drawer
+            context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+
             // handle the button press
             final String url = extras.getString(ACTION_BUTTON_LINK_KEY);
             final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
