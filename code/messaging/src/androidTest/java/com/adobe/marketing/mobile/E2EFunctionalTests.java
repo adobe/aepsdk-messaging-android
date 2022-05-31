@@ -52,7 +52,7 @@ public class E2EFunctionalTests {
     @Before
     public void setup() throws Exception {
         MessagingTestUtils.cleanCache();
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "80195814545200720557089495418993853789"), TestHelper.defaultApplication);
 
         Messaging.registerExtension();
         Optimize.registerExtension();
