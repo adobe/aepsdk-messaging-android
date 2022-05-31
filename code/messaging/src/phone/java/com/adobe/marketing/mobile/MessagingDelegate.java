@@ -66,9 +66,6 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
         Log.debug(LOG_TAG,
                 "%s - Fullscreen message dismissed.", SELF_TAG);
-        final MessageSettings aepMessageSettings = ((AEPMessage) fullscreenMessage).getSettings();
-        final Message message = (Message) aepMessageSettings.getParent();
-        message.dismiss(false);
     }
 
     /**

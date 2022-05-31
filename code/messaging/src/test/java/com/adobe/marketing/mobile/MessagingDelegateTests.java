@@ -115,9 +115,6 @@ public class MessagingDelegateTests {
         // verify Log.debug called
         verifyStatic(Log.class);
         Log.debug(anyString(), anyString(), any());
-
-        // verify Message.dismiss() called 1 time
-        verify(mockMessage, times(1)).dismiss(anyBoolean());
     }
 
     @Test
