@@ -1,6 +1,6 @@
 # AEPMessaging 1.1.0 Push Notification Improvements
 
-AEPMessaging 1.1.0 introduces AEPMessaging handled push notification creation and tracking. The new functionality provides a convenient way to display and track notification interactions with an AJO created push notification. The steps below will serve as a guide to enabling the new functionaity provided in AEPMessaging 1.1.0.
+AEPMessaging 1.1.0 introduces AEPMessaging handled push notification creation and tracking. The new functionality provides a convenient way to display and track notification interactions with an AJO created push notification. The steps below will serve as a guide to enabling the new functionality provided in AEPMessaging 1.1.0.
 
 {% hint style="info" %}
 
@@ -39,11 +39,11 @@ Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver]
   </receiver>
 ```
 
-The intent filters within the first receiver above can be added to an existing mainfest-declared `BroadcastReceiver` to listen for any notification events sent by the  AEPMessaging extension when it is handling push notification creation. The `MessagingPushInteractionHandler` receiver must be added if the AEPMessaging extension is handling push interaction tracking.
+The intent filters within the first receiver above can be added to an existing manifest-declared `BroadcastReceiver` to listen for any notification events sent by the  AEPMessaging extension when it is handling push notification creation. The `MessagingPushInteractionHandler` receiver must be added if the AEPMessaging extension is handling push interaction tracking.
 
 #### Step 2: Call the new AEPMessaging push notification creation API
 
-In your App's class which extends `FirebaseMessagingService`, pass the data payload and a boolean (signaling if tracking should be handled) to the new `handlePushNotificationWithRemoteMessage` API:
+In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the remote message received from firebase cloud messaging. Additionally, a boolean which signals if tracking should be handled by the Messaging extension is required when invoking the API.
 
 ```java
 public void onMessageReceived(RemoteMessage message) {

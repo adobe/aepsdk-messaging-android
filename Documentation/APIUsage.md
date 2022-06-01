@@ -61,9 +61,39 @@ To do this, add the following code where you have access to `intent` after the u
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
 ```
+## AEPMessaging 1.1.0 Push Notification Improvements
 
-## Added in AEPMessaging 1.1.0 
+### Messaging extension push notification creation
 
-### Messaging extension handled push notification creation
+In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the remote message received from firebase cloud messaging (FCM). Additionally, a boolean which signals if tracking should be handled by the Messaging extension is required when invoking the API.
 
-###  
+| Key                  | dataType      | Description                                                  |
+| -------------------- | ------------- | ------------------------------------------------------------ |
+| remoteMessage        | RemoteMessage | Remote message received from FCM containing an AJO push data notification |
+| shouldHandleTracking | boolean       | Signals if the Messaging extension should handle push notification tracking |
+
+```java
+public void onMessageReceived(RemoteMessage message) {
+  super.onMessageReceived(message);
+  Messaging.handlePushNotificationWithRemoteMessage(message, true);
+}
+```
+
+### Push notification creation customization
+
+The Messaging extension defines two interfaces which can be implemented to customize the Messaging extension's creation of push notifications as well as customize the downloading of push notification image assets.
+
+##### Setting a custom push notification factory
+
+```java
+// customFactory is an instance of a class which implements IMessagingPushNotificationFactory
+Messaging.setPushNotificationFactory(customFactory);
+```
+
+##### Setting a custom push image downloader
+
+```java
+// customImageDownloader is an instance of a class which implements IMessagingImageDownloader
+Messaging.setPushImageDownloader(customImageDownloader);
+```
+
