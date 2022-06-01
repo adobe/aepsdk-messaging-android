@@ -1,6 +1,7 @@
-#  Setting up AEPMessaging SDK
+#  Setting up the AEPMessaging SDK
 
 #### Import messaging extension in the Application class:
+
 ```java
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;

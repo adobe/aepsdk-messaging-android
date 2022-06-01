@@ -61,3 +61,9 @@ To do this, add the following code where you have access to `intent` after the u
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
 ```
+
+## Added in AEPMessaging 1.1.0 
+
+### Messaging extension handled push notification creation
+
+###  
