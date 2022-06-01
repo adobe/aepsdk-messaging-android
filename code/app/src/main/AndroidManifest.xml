@@ -32,6 +32,7 @@
             </intent-filter>
         </activity>
 
+        <!--firebase messaging service-->
         <service
             android:name=".NotificationService"
             android:enabled="true"
@@ -41,6 +42,13 @@
             </intent-filter>
         </service>
 
+        <!--app handled push notification delete broadcast receiver-->
+        <receiver
+            android:name=".NotificationDeleteReceiver"
+            android:exported="false" >
+        </receiver>
+
+        <!--messaging extension handled push notification broadcast receiver-->
         <receiver
             android:name=".NotificationBroadcastReceiver"
             android:exported="false">
@@ -52,11 +60,8 @@
                 <action android:name="${applicationId}_adb_action_silent_notification_created" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name=".NotificationDeleteReceiver"
-            android:exported="false" >
-        </receiver>
-<!--        messaging extension handler for push notification interactions-->
+
+        <!--messaging extension handled push notification interactions broadcast receiver-->
         <receiver
             android:name="com.adobe.marketing.mobile.MessagingPushInteractionHandler"
             android:exported="false" >
