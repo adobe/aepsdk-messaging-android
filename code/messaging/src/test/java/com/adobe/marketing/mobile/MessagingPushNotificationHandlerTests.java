@@ -56,7 +56,7 @@ public class MessagingPushNotificationHandlerTests {
         {
             add(new MessagingPushPayload.ActionButton("button1", "https://www.adobe.com/1", "WEBURL"));
             add(new MessagingPushPayload.ActionButton("button2", "testapp://main", "DEEPLINK"));
-            add(new MessagingPushPayload.ActionButton("button3", "https://www.adobe.com/2", "DISMISS"));
+            add(new MessagingPushPayload.ActionButton("button3", null, "OPENAPP"));
         }
     };
     String actionButtonString = TestUtils.convertActionButtonListToJsonArray(actionButtons).toString();
@@ -122,7 +122,7 @@ public class MessagingPushNotificationHandlerTests {
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyBoolean())).thenReturn(mockNotification);
+        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyInt(), anyBoolean())).thenReturn(mockNotification);
 
         // setup broadcast receivers and package manager for testing
         testResolveInfo = new ResolveInfo();
@@ -148,7 +148,7 @@ public class MessagingPushNotificationHandlerTests {
     @Test
     public void test_handlePushNotification_nullNotification() {
         // setup
-        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyBoolean())).thenReturn(null);
+        Mockito.when(mockMessagingPushNotificationFactory.create(any(Context.class), any(MessagingPushPayload.class), anyString(), anyInt(), anyBoolean())).thenReturn(null);
         MessagingPushPayload pushPayload = new MessagingPushPayload(normalNotificationMessageData);
 
         // test

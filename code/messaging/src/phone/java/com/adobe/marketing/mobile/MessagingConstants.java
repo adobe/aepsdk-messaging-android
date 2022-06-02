@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.0.0";
+    static final String EXTENSION_VERSION = "1.1.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
     private MessagingConstants() {
@@ -149,7 +149,7 @@ final class MessagingConstants {
     }
 
     static final class PushNotificationPayload {
-        static final String ADB = "adb_";
+        static final String XDM = "_xdm";
         static final String TITLE = "adb_title";
         static final String BODY = "adb_body";
         static final String SOUND = "adb_sound";
@@ -162,6 +162,7 @@ final class MessagingConstants {
         static final String ACTION_URI = "adb_uri";
         static final String ACTION_BUTTONS = "adb_act";
         static final String HANDLE_NOTIFICATION_TRACKING_KEY = "handleNotificationTracking";
+        static final String NOTIFICATION_ID = "notificationId";
 
         private PushNotificationPayload() {
         }
@@ -169,7 +170,7 @@ final class MessagingConstants {
         static final class ActionButtonType {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
-            static final String DISMISS = "DISMISS";
+            static final String OPENAPP = "OPENAPP";
 
             private ActionButtonType() {/* no-op */}
         }
@@ -188,10 +189,15 @@ final class MessagingConstants {
             static final String TYPE = "type";
         }
 
-        static final class DEFAULTS {
-            static final String DEFAULT_CHANNEL_ID = "adb_default_channel_id";
-            static final String DEFAULT_CHANNEL_NAME = "General";
-            static final String DEFAULT_CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        static final class DEFAULT {
+            static final String CHANNEL_ID = "adb_default_channel_id";
+            static final String CHANNEL_NAME = "General";
+            static final String CHANNEL_DESCRIPTION = "Default channel for all notifications.";
+        }
+
+        static final class CUSTOM {
+            static final String CHANNEL_NAME = "ADB_Messaging";
+            static final String CHANNEL_DESCRIPTION = "Custom channel for all notifications.";
         }
 
         static final class REQUEST_CODES {

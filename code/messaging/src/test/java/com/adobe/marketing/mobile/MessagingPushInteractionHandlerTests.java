@@ -27,7 +27,10 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.core.app.NotificationManagerCompat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,16 +48,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Messaging.class, MessagingUtils.class, MessagingPushReceiver.class, PendingIntent.class})
-public class MessagingPushReceiverTests {
+@PrepareForTest({Messaging.class, MessagingUtils.class, MessagingPushInteractionHandler.class, PendingIntent.class, NotificationManagerCompat.class})
+public class MessagingPushInteractionHandlerTests {
+    private EventHub eventHub;
     private static final String MESSAGE_ID = "messageId";
     private static final String XDM = "someXdmData";
     private static final String PACKAGE_NAME = "testPackage";
     private static final String ACTIVITY_NAME = "testActivity";
     private static final String CUSTOM_ACTION = "someAction";
+    private static final String ACTION_BUTTON_TYPE_KEY = "adb_action_type";
+    private static final String ACTION_BUTTON_LINK_KEY = "adb_action_link";
+    private static final String TEST_DEEPLINK = "deeplink://mainActivity?key=value";
+    private static final Uri TEST_DEEPLINK_URI = Uri.parse(TEST_DEEPLINK);
+    private static final int TEST_NOTIFICATION_ID = 123;
     private static final boolean NOTIFICATION_INTERACTED = true;
     private static final boolean NOTIFICATION_DELETED = false;
-    MessagingPushReceiver messagingPushReceiver = new MessagingPushReceiver();
+    MessagingPushInteractionHandler messagingPushInteractionHandler = new MessagingPushInteractionHandler();
     ResolveInfo testResolveInfo = new ResolveInfo();
     List<ResolveInfo> receivers;
     ComponentName component;
@@ -75,15 +84,31 @@ public class MessagingPushReceiverTests {
     PackageManager mockPackageManager;
     @Mock
     Thread mockThread;
+    @Mock
+    Core mockCore;
+    @Mock
+    AndroidPlatformServices mockPlatformServices;
+    @Mock
+    AndroidUIService mockAndroidUIService;
+    @Mock
+    DeepLinkService mockDeepLinkService;
+    @Mock
+    NotificationManagerCompat mockNotificationManagerCompat;
 
     @Before
     public void before() {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+        MobileCore.setCore(mockCore);
+        Mockito.when(mockPlatformServices.getUIService()).thenReturn(mockAndroidUIService);
+        Mockito.when(mockPlatformServices.getDeepLinkService()).thenReturn(mockDeepLinkService);
         PowerMockito.mockStatic(Messaging.class);
         PowerMockito.mockStatic(PendingIntent.class);
         try {
             PowerMockito.whenNew(Thread.class).withAnyArguments().thenReturn(mockThread);
             PowerMockito.whenNew(Intent.class).withNoArguments().thenReturn(mockSendIntent);
             PowerMockito.whenNew(Intent.class).withArguments(mockSendIntent).thenReturn(mockBroadcastIntent);
+            PowerMockito.whenNew(NotificationManagerCompat.class).withAnyArguments().thenReturn(mockNotificationManagerCompat);
             PowerMockito.when(PendingIntent.getActivity(any(Context.class), anyInt(), any(Intent.class), anyInt())).thenReturn(mockPendingIntent);
         } catch (Exception e) {
             fail(e.getMessage());
@@ -92,7 +117,7 @@ public class MessagingPushReceiverTests {
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                Runnable r = new MessagingPushReceiver.PushActionHandlingRunnable(context, mockBroadcastIntent);
+                Runnable r = new MessagingPushInteractionHandler.PushActionHandlingRunnable(context, mockBroadcastIntent);
                 r.run();
                 return null;
             }
@@ -111,6 +136,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
         Mockito.when(mockPackageManager.queryBroadcastReceivers(any(Intent.class), anyInt())).thenReturn(receivers);
         Mockito.when(mockPackageManager.getLaunchIntentForPackage(anyString())).thenReturn(mockLaunchIntent);
+        Mockito.when(mockLaunchIntent.getData()).thenReturn(TEST_DEEPLINK_URI);
         // setup test intents
         Mockito.when(mockBroadcastIntent.getAction()).thenReturn(CUSTOM_ACTION);
         Mockito.when(mockBroadcastIntent.getExtras()).thenReturn(mockExtras);
@@ -132,7 +158,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(true);
 
         // test
-        messagingPushReceiver.onReceive(context, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
 
         // verify broadcast with the action is sent
         verify(mockSendIntent, times(1)).setAction(action);
@@ -142,7 +168,7 @@ public class MessagingPushReceiverTests {
         PowerMockito.verifyStatic(Messaging.class, times(1));
         Messaging.handleNotificationResponse(eq(mockBroadcastIntent), eq(NOTIFICATION_INTERACTED), eq(CUSTOM_ACTION));
         PowerMockito.verifyStatic(PendingIntent.class, times(1));
-        PendingIntent.getActivity(eq(context), eq(0), eq(mockLaunchIntent), eq(PendingIntent.FLAG_ONE_SHOT));
+        PendingIntent.getActivity(eq(context), eq(0), eq(mockLaunchIntent), anyInt());
         verify(mockPendingIntent, times(1)).send();
     }
 
@@ -153,7 +179,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(false);
 
         // test
-        messagingPushReceiver.onReceive(context, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
 
         // verify broadcast with the action is sent
         verify(mockSendIntent, times(1)).setAction(action);
@@ -174,7 +200,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(true);
 
         // test
-        messagingPushReceiver.onReceive(null, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(null, mockBroadcastIntent);
 
         // verify broadcast with the action is not sent
         verify(mockSendIntent, times(0)).setAction(action);
@@ -195,7 +221,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(true);
 
         // test
-        messagingPushReceiver.onReceive(context, null);
+        messagingPushInteractionHandler.onReceive(context, null);
 
         // verify broadcast with the action is not sent
         verify(mockSendIntent, times(0)).setAction(action);
@@ -216,7 +242,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(true);
 
         // test
-        messagingPushReceiver.onReceive(context, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
 
         // verify broadcast with the action is not sent
         verify(mockSendIntent, times(0)).setAction(anyString());
@@ -238,7 +264,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(true);
 
         // test
-        messagingPushReceiver.onReceive(context, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
 
         // verify broadcast with the action is sent
         verify(mockSendIntent, times(1)).setAction(action);
@@ -261,7 +287,7 @@ public class MessagingPushReceiverTests {
         Mockito.when(mockExtras.getBoolean(MessagingTestConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)).thenReturn(false);
 
         // test
-        messagingPushReceiver.onReceive(context, mockBroadcastIntent);
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
 
         // verify broadcast with the action is sent
         verify(mockSendIntent, times(1)).setAction(action);
@@ -273,5 +299,74 @@ public class MessagingPushReceiverTests {
         PowerMockito.verifyStatic(PendingIntent.class, times(0));
         PendingIntent.getActivity(ArgumentMatchers.<Context>any(), anyInt(), ArgumentMatchers.<Intent>any(), anyInt());
         verify(mockPendingIntent, times(0)).send();
+    }
+
+    @Test
+    public void test_onReceive_notificationButtonPressedWithActionDeeplink() {
+        // setup test intent and extras
+        String action = String.format("%s_%s", PACKAGE_NAME, MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockBroadcastIntent.getAction()).thenReturn(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockExtras.getInt(MessagingTestConstants.PushNotificationPayload.NOTIFICATION_ID)).thenReturn(TEST_NOTIFICATION_ID);
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_TYPE_KEY)).thenReturn(MessagingPushPayload.ActionType.DEEPLINK.toString());
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_LINK_KEY)).thenReturn(TEST_DEEPLINK);
+
+        // test
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
+
+        // verify broadcast with the action is sent
+        verify(mockSendIntent, times(1)).setAction(action);
+        verify(mockBroadcastIntent, times(1)).setComponent(component);
+        verify(context, times(1)).sendBroadcast(mockBroadcastIntent);
+        // verify launch intent started
+        verify(context, times(1)).startActivity(mockLaunchIntent);
+        // verify deeplink added to the launch intent
+        verify(mockLaunchIntent, times(1)).setData(TEST_DEEPLINK_URI);
+        // verify message dismissed
+        verify(mockNotificationManagerCompat, times(1)).cancel(TEST_NOTIFICATION_ID);
+    }
+
+    @Test
+    public void test_onReceive_notificationButtonPressedWithActionWebUrl() {
+        // setup
+        String testWebUrl = "https://www.adobe.com";
+        // setup test intent and extras
+        String action = String.format("%s_%s", PACKAGE_NAME, MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockBroadcastIntent.getAction()).thenReturn(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockExtras.getInt(MessagingTestConstants.PushNotificationPayload.NOTIFICATION_ID)).thenReturn(TEST_NOTIFICATION_ID);
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_TYPE_KEY)).thenReturn(MessagingPushPayload.ActionType.WEBURL.toString());
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_LINK_KEY)).thenReturn(testWebUrl);
+
+        // test
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
+
+        // verify broadcast with the action is sent
+        verify(mockSendIntent, times(1)).setAction(action);
+        verify(mockBroadcastIntent, times(1)).setComponent(component);
+        verify(context, times(1)).sendBroadcast(mockBroadcastIntent);
+        // verify web url is attempted to be opened via the ui service
+        verify(mockAndroidUIService, times(1)).showUrl(testWebUrl);
+        // verify message dismissed
+        verify(mockNotificationManagerCompat, times(1)).cancel(TEST_NOTIFICATION_ID);
+    }
+
+    @Test
+    public void test_onReceive_notificationButtonPressedWithActionOpenApp() {
+        // setup test intent and extras
+        String action = String.format("%s_%s", PACKAGE_NAME, MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockBroadcastIntent.getAction()).thenReturn(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
+        Mockito.when(mockExtras.getInt(MessagingTestConstants.PushNotificationPayload.NOTIFICATION_ID)).thenReturn(TEST_NOTIFICATION_ID);
+        Mockito.when(mockExtras.getString(ACTION_BUTTON_TYPE_KEY)).thenReturn(MessagingPushPayload.ActionType.OPENAPP.toString());
+
+        // test
+        messagingPushInteractionHandler.onReceive(context, mockBroadcastIntent);
+
+        // verify broadcast with the action is sent
+        verify(mockSendIntent, times(1)).setAction(action);
+        verify(mockBroadcastIntent, times(1)).setComponent(component);
+        verify(context, times(1)).sendBroadcast(mockBroadcastIntent);
+        // verify launch intent started
+        verify(context, times(1)).startActivity(mockLaunchIntent);
+        // verify message dismissed
+        verify(mockNotificationManagerCompat, times(1)).cancel(TEST_NOTIFICATION_ID);
     }
 }

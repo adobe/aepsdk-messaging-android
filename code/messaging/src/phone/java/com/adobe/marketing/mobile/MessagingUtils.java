@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 class MessagingUtils {
     /* JSON - Map conversion helpers */
@@ -103,24 +104,22 @@ class MessagingUtils {
     static String getChannelId(final Context context, final MessagingPushPayload payload) {
         final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (payload == null || payload.getChannelId() == null || payload.getChannelId().isEmpty()) {
+        if (payload == null || StringUtils.isNullOrEmpty(payload.getChannelId())) {
             createDefaultNotificationChannel(context, notificationManager, payload);
-            return MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
+            return MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID;
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return payload.getChannelId();
-        }
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(payload.getChannelId()) != null) {
-                return payload.getChannelId();
-            } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (notificationManager.getNotificationChannel(payload.getChannelId()) == null) {
+                createCustomNotificationChannel(context, notificationManager, payload);
+            } else if (StringUtils.isNullOrEmpty(payload.getChannelId())) {
+                // only create a default channel if no channel id is specified in the push payload
                 createDefaultNotificationChannel(context, notificationManager, payload);
             }
+            return payload.getChannelId() != null ? payload.getChannelId() : MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID;
         }
 
-        return MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID;
+        return MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID;
     }
 
     /**
@@ -136,7 +135,7 @@ class MessagingUtils {
     static PendingIntent getPendingIntentForAction(final Context context, final MessagingPushPayload payload, final String messageId, final String action, final boolean shouldHandleTracking) {
         final Bundle extras = getBundleFromMap(payload.getData());
         extras.putBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
-        final Intent intent = new Intent(context, MessagingPushReceiver.class);
+        final Intent intent = new Intent(context, MessagingPushInteractionHandler.class);
         intent.setAction(action);
         intent.putExtras(extras);
         // Adding CJM specific details
@@ -191,23 +190,33 @@ class MessagingUtils {
     /**
      * Prepares a {@link Notification.Action} to be performed when a {@link Notification} button is pressed.
      *
-     * @param context             the application {@link Context}
-     * @param button              the {@link MessagingPushPayload.ActionButton} which triggers the {@code Notification.Action}
-     * @param payload             the {@code MessagingPushPayload} containing the data payload from AJO
-     * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
-     * @param messageId           the {@code String} message id
+     * @param context              the application {@link Context}
+     * @param button               the {@link MessagingPushPayload.ActionButton} which triggers the {@code Notification.Action}
+     * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+     * @param notificationBuilder  the {@link Notification.Builder} object currently being used to build the notification
+     * @param messageId            the {@code String} message id
+     * @param notificationId       {@code int} used when scheduling the notification
+     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
      */
-    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId) {
+    static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId, final int notificationId, final boolean shouldHandleTracking) {
+        // setup bundle extras to be sent with the intent
         final Bundle extras = getBundleFromMap(payload.getData());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LABEL, button.getLabel());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.LINK, button.getLink());
         extras.putString(MessagingPushPayload.ACTION_BUTTON_KEY.TYPE, button.getType().name());
-        final Intent intent = new Intent(context, MessagingPushReceiver.class);
+        extras.putInt(MessagingConstants.PushNotificationPayload.NOTIFICATION_ID, notificationId);
+        extras.putBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, shouldHandleTracking);
+
+        // create the intent and add the bundle
+        final Intent intent = new Intent(context, MessagingPushInteractionHandler.class);
         intent.setAction(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED);
         intent.putExtras(extras);
+
         // Adding CJM specific details
+        // Use a random request code when creating the Pending Intent to make each one unique
+        final int requestCode = new Random().nextInt();
         Messaging.addPushTrackingDetails(intent, messageId, payload.getData());
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, MessagingConstants.PushNotificationPayload.REQUEST_CODES.PUSH_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_ONE_SHOT);
         final Notification.Action action = new Notification.Action(0, button.getLabel(), pendingIntent);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             notificationBuilder.addAction(action);
@@ -238,7 +247,10 @@ class MessagingUtils {
         final String broadcastingAction = packageName + "_" + action;
         final Intent sendIntent = new Intent();
         sendIntent.setAction(broadcastingAction);
-        sendIntent.putExtras(intent.getExtras());
+        final Bundle extras = intent.getExtras();
+        if (extras != null) {
+            sendIntent.putExtras(intent.getExtras());
+        }
         final List<ResolveInfo> receivers = context.getPackageManager().queryBroadcastReceivers(sendIntent, 0);
         if (receivers.isEmpty()) {
             Log.warning(LOG_TAG, "Will not broadcast an intent for action (%s), no BroadcastReceivers were found.", broadcastingAction);
@@ -262,12 +274,53 @@ class MessagingUtils {
      */
     private static void createDefaultNotificationChannel(final Context context, final NotificationManager notificationManager, final MessagingPushPayload payload) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID) == null) {
+            if (notificationManager.getNotificationChannel(MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID) == null) {
+                buildChannel(MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_NAME,
+                        MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID,
+                        MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_DESCRIPTION,
+                        context,
+                        notificationManager,
+                        payload);
+            }
+        }
+    }
+
+    /**
+     * Creates a custom notification channel with the channel name specified in the {@link MessagingPushPayload}.
+     *
+     * @param context             the application {@link Context}
+     * @param notificationManager the {@link NotificationManager} instance
+     * @param payload             the {@code MessagingPushPayload} containing the data payload from AJO
+     */
+    private static void createCustomNotificationChannel(final Context context, final NotificationManager notificationManager, final MessagingPushPayload payload) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (notificationManager.getNotificationChannel(payload.getChannelId()) == null) {
+                buildChannel(MessagingConstants.PushNotificationPayload.CUSTOM.CHANNEL_NAME,
+                        payload.getChannelId(),
+                        MessagingConstants.PushNotificationPayload.CUSTOM.CHANNEL_DESCRIPTION,
+                        context,
+                        notificationManager,
+                        payload);
+            }
+        }
+    }
+
+    /**
+     * Creates a notification channel with the given name, id, and description.
+     *
+     * @param name                a {@code String} containing the name of the notification channel to be created
+     * @param id                  a {@code String} containing the id of the notification channel to be created
+     * @param description         a {@code String} containing the description of the notification channel to be created
+     * @param context             the application {@link Context}
+     * @param notificationManager the {@link NotificationManager} instance
+     * @param payload             the {@code MessagingPushPayload} containing the data payload from AJO
+     */
+    private static void buildChannel(final String name, final String id, final String description, final Context context, final NotificationManager notificationManager, final MessagingPushPayload payload) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (notificationManager.getNotificationChannel(id) == null) {
                 final int importance = getImportance(payload.getNotificationPriority(), notificationManager);
-                final NotificationChannel channel = new NotificationChannel(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID,
-                        MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_NAME,
-                        importance);
-                channel.setDescription(MessagingConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_DESCRIPTION);
+                final NotificationChannel channel = new NotificationChannel(id, name, importance);
+                channel.setDescription(description);
                 setSound(context, channel, payload.getSound());
                 notificationManager.createNotificationChannel(channel);
             }

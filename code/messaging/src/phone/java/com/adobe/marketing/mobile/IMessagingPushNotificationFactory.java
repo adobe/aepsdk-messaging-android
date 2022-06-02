@@ -24,8 +24,9 @@ public interface IMessagingPushNotificationFactory {
      * @param context              the application {@link Context}
      * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
      * @param messageId            a {@code String} containing the message id
+     * @param notificationId       {@code int} id used when the notification was scheduled
      * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
      * @return the created {@link Notification}
      */
-    Notification create(Context context, MessagingPushPayload payload, String messageId, boolean shouldHandleTracking);
+    Notification create(Context context, MessagingPushPayload payload, String messageId, int notificationId, boolean shouldHandleTracking);
 }

@@ -59,7 +59,7 @@ import java.util.Map;
 public class MessagingTests {
     Map<String, String> remoteMessageData = new HashMap<String, String>() {
         {
-            put(MessagingTestConstants.PushNotificationPayload.ADB, "true");
+            put(MessagingConstants.PushNotificationPayload.XDM, "mockXdmData");
             put(MessagingTestConstants.PushNotificationPayload.TITLE, "mockTitle");
             put(MessagingTestConstants.PushNotificationPayload.BODY, "mockBody");
             put(MessagingTestConstants.PushNotificationPayload.SOUND, "mockSound");
@@ -77,7 +77,7 @@ public class MessagingTests {
     // interface implementations for testing
     class TestPushNotificationFactory implements IMessagingPushNotificationFactory {
         @Override
-        public Notification create(Context context, MessagingPushPayload payload, String messageId, boolean shouldHandleTracking) {
+        public Notification create(Context context, MessagingPushPayload payload, String messageId, int notificationId, boolean shouldHandleTracking) {
             return null;
         }
     }

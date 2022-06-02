@@ -57,6 +57,9 @@ public class MessagingDefaultImageDownloaderTests {
     @Test
     public void test_getBitmapForUrl() {
         // setup
+        LruCache<String, Bitmap> mockCache = Mockito.mock(LruCache.class);
+        when(mockCache.get(IMAGE_URL)).thenReturn(null);
+        Whitebox.setInternalState(messagingDefaultImageDownloader, "cache", mockCache);
         Whitebox.setInternalState(messagingDefaultImageDownloader, "executorService", mockExecutorService);
         try {
             when(mockBitmapFuture.get()).thenReturn(mockBitmap);
@@ -68,7 +71,7 @@ public class MessagingDefaultImageDownloaderTests {
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
         try {
-            Thread.sleep(100);
+            Thread.sleep(5000);
         } catch (Exception e) {
             fail(e.getMessage());
         }

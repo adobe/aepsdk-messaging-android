@@ -65,7 +65,7 @@ class MessagingPushNotificationHandler {
         }
         final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(applicationContext);
         // Use the payload data to create notification
-        final Notification notification = factory.create(applicationContext, payload, messageId, shouldHandleTracking);
+        final Notification notification = factory.create(applicationContext, payload, messageId, notificationId, shouldHandleTracking);
         if (notification == null) {
             Log.warning(LOG_TAG, "%s - Failed to create a notification for message with id (%s).", SELF_TAG, messageId);
             return;

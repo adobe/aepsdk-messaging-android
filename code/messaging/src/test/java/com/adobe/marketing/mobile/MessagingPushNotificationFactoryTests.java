@@ -15,17 +15,21 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
+import android.os.Build;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -36,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({MessagingPushNotificationFactory.class, Notification.Builder.class})
+@PrepareForTest({MessagingPushNotificationFactory.class, Notification.Builder.class, Build.class, MessagingUtils.class, AudioAttributes.class})
 public class MessagingPushNotificationFactoryTests {
     private static final String MESSAGE_ID = "messageId";
     private static final String PACKAGE_NAME = "testPackage";
@@ -45,7 +49,7 @@ public class MessagingPushNotificationFactoryTests {
         {
             add(new MessagingPushPayload.ActionButton("button1", "https://www.adobe.com/1", "WEBURL"));
             add(new MessagingPushPayload.ActionButton("button2", "testapp://main", "DEEPLINK"));
-            add(new MessagingPushPayload.ActionButton("button3", "https://www.adobe.com/2", "DISMISS"));
+            add(new MessagingPushPayload.ActionButton("button3", null, "OPENAPP"));
         }
     };
     String actionButtonString = TestUtils.convertActionButtonListToJsonArray(actionButtons).toString();
@@ -65,6 +69,9 @@ public class MessagingPushNotificationFactoryTests {
             put(MessagingTestConstants.PushNotificationPayload.ACTION_BUTTONS, actionButtonString);
         }
     };
+    NotificationChannel defaultNotificationChannel = new NotificationChannel(MessagingTestConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_ID,
+            MessagingTestConstants.PushNotificationPayload.DEFAULTS.DEFAULT_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_DEFAULT);
 
     @Mock
     Context context;
@@ -76,29 +83,33 @@ public class MessagingPushNotificationFactoryTests {
     Notification.Builder mockNotificationBuilder;
     @Mock
     Notification mockNotification;
+    @Mock
+    NotificationManager mockNotificationManager;
 
     @Before
-    public void before() {
+    public void before() throws Exception {
         PowerMockito.mockStatic(Notification.Builder.class);
+        when(context.getSystemService(Context.NOTIFICATION_SERVICE)).thenReturn(mockNotificationManager);
+        PowerMockito.whenNew(NotificationChannel.class).withAnyArguments().thenReturn(defaultNotificationChannel);
         messagingPushNotificationFactory = MessagingPushNotificationFactory.getInstance();
     }
 
     @Test
     public void test_create() {
         // setup
-        Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
-        Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);
+        when(context.getPackageName()).thenReturn(PACKAGE_NAME);
+        when(mockNotificationBuilder.build()).thenReturn(mockNotification);
         mockApplicationInfo.icon = 1;
         try {
-            Mockito.when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
+            when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
             PowerMockito.whenNew(Notification.Builder.class).withAnyArguments().thenReturn(mockNotificationBuilder);
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
+        when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, 1, false);
 
         // verify
         assertEquals(mockNotification, notification);
@@ -107,20 +118,20 @@ public class MessagingPushNotificationFactoryTests {
     @Test
     public void test_create_invalidSmallIconResId() {
         // setup
-        Mockito.when(context.getPackageName()).thenReturn(PACKAGE_NAME);
-        Mockito.when(mockNotificationBuilder.build()).thenReturn(mockNotification);
+        when(context.getPackageName()).thenReturn(PACKAGE_NAME);
+        when(mockNotificationBuilder.build()).thenReturn(mockNotification);
         // -1 is an invalid small icon resource id
         mockApplicationInfo.icon = -1;
         try {
-            Mockito.when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
+            when(mockPackageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(mockApplicationInfo);
             PowerMockito.whenNew(Notification.Builder.class).withAnyArguments().thenReturn(mockNotificationBuilder);
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        Mockito.when(context.getPackageManager()).thenReturn(mockPackageManager);
+        when(context.getPackageManager()).thenReturn(mockPackageManager);
 
         // test
-        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, false);
+        Notification notification = messagingPushNotificationFactory.create(context, new MessagingPushPayload(remoteMessageData), MESSAGE_ID, 1, false);
 
         // verify
         assertNull(notification);

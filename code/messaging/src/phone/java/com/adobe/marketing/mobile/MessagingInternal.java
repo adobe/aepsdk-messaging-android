@@ -171,7 +171,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
 
             if (xdmMapObject == null) {
-                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map faileds.");
+                Log.warning(LOG_TAG, "Failed to send adobe data with the tracking data, adobe xdm data conversion to map failed.");
                 return;
             }
 
@@ -187,7 +187,7 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             }
 
             if (mixins == null) {
-                Log.debug(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, Missing xdm data.");
+                Log.debug(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, missing xdm data.");
                 return;
             }
 

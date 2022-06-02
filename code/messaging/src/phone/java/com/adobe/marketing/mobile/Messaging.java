@@ -17,8 +17,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
@@ -165,7 +165,7 @@ public final class Messaging {
     /**
      * Sets the notification factory which will be used by {@link MessagingPushNotificationHandler} to create the push notification
      *
-     * @param factory
+     * @param factory {@link IMessagingPushNotificationFactory} to be used for creating the push notification
      */
     public static void setPushNotificationFactory(final IMessagingPushNotificationFactory factory) {
         if (factory == null) {
@@ -178,7 +178,7 @@ public final class Messaging {
     /**
      * Sets the image downloader which will be used for downloading large icons and images for notifications
      *
-     * @param downloader
+     * @param downloader {@link IMessagingImageDownloader} to be used for downloading the push notification image assets
      */
     public static void setPushImageDownloader(final IMessagingImageDownloader downloader) {
         if (downloader == null) {
@@ -188,6 +188,13 @@ public final class Messaging {
         imageDownloader = downloader;
     }
 
+    /**
+     * Creates a {@link android.app.Notification} and schedules it with the {@link android.app.NotificationManager}
+     * when a {@link RemoteMessage} containing an AJO push notification data payload is provided.
+     *
+     * @param remoteMessage        {@code RemoteMessage} object received from FCM containing an AJO data payload
+     * @param shouldHandleTracking {@code boolean} value signaling if tracking should be handled by the {@code Messaging} extension.
+     */
     public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage, final boolean shouldHandleTracking) {
         if (remoteMessage == null) {
             Log.warning(LOG_TAG, "%s - The RemoteMessage is null", SELF_TAG);
@@ -215,8 +222,20 @@ public final class Messaging {
         return true;
     }
 
-    static IMessagingPushNotificationFactory getPushNotificationFactory() { return notificationFactory; }
+    /**
+     * Returns the current push notification factory.
+     *
+     * @return the set {@link IMessagingPushNotificationFactory} instance
+     */
+    static IMessagingPushNotificationFactory getPushNotificationFactory() {
+        return notificationFactory;
+    }
 
+    /**
+     * Returns the current push notification image downloader.
+     *
+     * @return the set {@link IMessagingImageDownloader} instance
+     */
     static IMessagingImageDownloader getImageDownloader() {
         return imageDownloader;
     }
