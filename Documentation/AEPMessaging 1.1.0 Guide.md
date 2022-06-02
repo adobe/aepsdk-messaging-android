@@ -1,22 +1,18 @@
-# AEPMessaging 1.1.0 Push Notification Improvements
+# AEPMessaging 1.1.0: Push Notification Improvements
 
-AEPMessaging 1.1.0 introduces AEPMessaging handled push notification creation and tracking. The new functionality provides a convenient way to display and track notification interactions with an AJO created push notification. The steps below will serve as a guide to enabling the new functionality provided in AEPMessaging 1.1.0.
+AEPMessaging 1.1.0 introduces AEPMessaging handled push notification creation and tracking. This new functionality provides a convenient way to display and track interactions with Adobe Journey Optimizer (AJO) created push notifications. The steps below will serve as a guide to enabling the new features provided in AEPMessaging 1.1.0.
 
-{% hint style="info" %}
+> Note: The usage of these features are optional and no code changes are required if not using them.
 
-The usage of these features are optional and no code changes are required if not using them. 
+When using AEPMessaging handled push notification interaction tracking, the AEPMessaging extension must also be used to create the push notification. To provide some additional flexibility in this scenario, two public interfaces are provided which allow a custom push notification factory (`IMessagingPushNotificationFactory`) or a custom notification image downloader (`IMessagingImageDownloader`) instance to be set. After these interfaces are implemented on the app side, they can be set via the new `setPushNotificationFactory` and `setPushImageDownloader` API.
 
-{% hint style="info" %}
+> Note:  If the AEPMessaging extension will be used to handle push notification interactions, ensure that your custom push notification factory sets a `PendingIntent` object for the content intent (`notificationBuilder.setContentIntent()`), delete intent (`notificationBuilder.setDeleteIntent()`), or button(s) when creating a push notification.
 
-Push notification creation must be handled by the AEPMessaging extension if the AEPMessaging will be handling push notification interaction tracking. To provide some additional flexibility in this scenario, two public interfaces are provided which allow custom push notification factory (`IMessagingPushNotificationFactory`) and notification image downloading (`IMessagingImageDownloader`) instances. After these interfaces are implemented on the app side, they can be set via the new `setPushNotificationFactory` and `setPushImageDownloader` API.
+##### To get started with the AEPMessaging 1.1.0 push notification features follow these steps:
 
-{% hint style="warning" %}
+#### Step 1: Add the AEPMessaging receivers in the App manifest
 
-Ensure that your custom push notification factory correctly sets a `PendingIntent` object for each content intent, delete intent, or button when creating a push notification if the AEPMessaging extension will be used to handle push notification interactions.
-
-#### Step 1: Adding the AEPMessaging receivers in the App manifest
-
-Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver](https://developer.android.com/guide/components/broadcasts#manifest-declared-receivers) inside the application tag:
+Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver](https://developer.android.com/guide/components/broadcasts#manifest-declared-receivers) inside the application tag to subscribe to broadcast actions sent by the AEPMessaging extension. A second manifest-declared receiver must be added to listen for notification interactions if AEPMessaging handled push notification interaction tracking will be used:
 
 ```groovy
  <!--messaging extension handled push notification broadcast receiver-->
@@ -39,11 +35,11 @@ Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver]
   </receiver>
 ```
 
-The intent filters within the first receiver above can be added to an existing manifest-declared `BroadcastReceiver` to listen for any notification events sent by the  AEPMessaging extension when it is handling push notification creation. The `MessagingPushInteractionHandler` receiver must be added if the AEPMessaging extension is handling push interaction tracking.
+>  Note: The intent filters within the first receiver can be added to an existing manifest-declared `BroadcastReceiver` to listen for any notification events sent by the  AEPMessaging extension.
 
 #### Step 2: Call the new AEPMessaging push notification creation API
 
-In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the remote message received from firebase cloud messaging. Additionally, a boolean which signals if tracking should be handled by the Messaging extension is required when invoking the API.
+In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the `RemoteMessage` received from Firebase Cloud Messaging. Additionally, a boolean flag enabling AEPMessaging push notification interaction tracking is required when invoking the API.
 
 ```java
 public void onMessageReceived(RemoteMessage message) {
@@ -64,29 +60,31 @@ public void onReceive(Context context, Intent intent) {
   // these values are broadcast when a silent push notification is handled by the Messaging extension
   MessagingPushPayload pushPayload = null;
   String messageId = null;
-  
-  if (action != null) {
-    if (packageName != null) {
-      if (action.equals(packageName + "_adb_action_notification_clicked")) {
-        Log.d("NotificationBroadcast", action);
-      } else if (action.equals(packageName + "_adb_action_notification_deleted")) {
-        Log.d("NotificationBroadcast", packageName + "_adb_action_notification_deleted");
-      } else if (action.equals(packageName + "_adb_action_button_clicked")) {
-        Log.d("NotificationBroadcast", packageName + "_adb_action_button_clicked");
-      } else if (action.equals(packageName + "_adb_action_notification_created")) {
-        Log.d("NotificationBroadcast", packageName + "_adb_action_notification_created");
-      } else if (action.equals(packageName + "_adb_action_silent_notification_created")) {
-        Log.d("NotificationBroadcast", packageName + "_adb_action_silent_notification_created");
-        Bundle extras = intent.getExtras();
-        if (extras != null) {
-          pushPayload = (MessagingPushPayload) extras.getParcelable("pushPayload");
-          messageId = extras.getString("messageId");
-         }
+
+  if (action != null && packageName != null) {
+    if (action.equals(packageName + "_adb_action_notification_clicked")) {
+      Log.d("NotificationBroadcast", action);
+    } else if (action.equals(packageName + "_adb_action_notification_deleted")) {
+      Log.d("NotificationBroadcast", packageName + "_adb_action_notification_deleted");
+    } else if (action.equals(packageName + "_adb_action_button_clicked")) {
+      Log.d("NotificationBroadcast", packageName + "_adb_action_button_clicked");
+    } else if (action.equals(packageName + "_adb_action_notification_created")) {
+      Log.d("NotificationBroadcast", packageName + "_adb_action_notification_created");
+    } else if (action.equals(packageName + "_adb_action_silent_notification_created")) {
+      Log.d("NotificationBroadcast", packageName + "_adb_action_silent_notification_created");
+      Bundle extras = intent.getExtras();
+      if (extras != null) {
+        pushPayload = (MessagingPushPayload) extras.getParcelable("pushPayload");
+        messageId = extras.getString("messageId");
       }
     }
   }
 }
 ```
 
+To confirm that the `BroadcastReceiver` is correctly receiving broadcasted actions, verify that the logging above is displayed in the `adb` debug logs:
 
-
+```
+D/NotificationBroadcast: com.adobe.marketing.mobile.messagingsample.push_adb_action_silent_notification_created
+D/NotificationBroadcast: com.adobe.marketing.mobile.messagingsample.push_adb_action_notification_created
+```

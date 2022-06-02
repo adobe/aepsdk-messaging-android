@@ -65,12 +65,12 @@ Messaging.handleNotificationResponse(intent, false, <actionId>);
 
 ### Messaging extension push notification creation
 
-In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the remote message received from firebase cloud messaging (FCM). Additionally, a boolean which signals if tracking should be handled by the Messaging extension is required when invoking the API.
+In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the `RemoteMessage` received from Firebase Cloud Messaging. Additionally, a boolean flag enabling AEPMessaging push notification interaction tracking is required when invoking the API.
 
 | Key                  | dataType      | Description                                                  |
 | -------------------- | ------------- | ------------------------------------------------------------ |
 | remoteMessage        | RemoteMessage | Remote message received from FCM containing an AJO push data notification |
-| shouldHandleTracking | boolean       | Signals if the Messaging extension should handle push notification tracking |
+| shouldHandleTracking | boolean       | If true the Messaging extension should handle push notification tracking |
 
 ```java
 public void onMessageReceived(RemoteMessage message) {
@@ -82,6 +82,40 @@ public void onMessageReceived(RemoteMessage message) {
 ### Push notification creation customization
 
 The Messaging extension defines two interfaces (`IMessagingPushNotificationFactory` and `IMessagingImageDownloader`) which can be implemented to customize the Messaging extension's creation of push notifications as well as customize the downloading of push notification image assets. Alongside these interfaces, two setters have been added to set custom instances of these interfaces within the Messaging extension:
+
+##### IMessagingPushNotificationFactory interface
+
+```java
+public interface IMessagingPushNotificationFactory {
+  /**
+   * Creates a push notification from the given {@link MessagingPushPayload}.
+   *
+   * @param context              the application {@link Context}
+   * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+   * @param messageId            a {@code String} containing the message id
+   * @param notificationId       {@code int} id used when the notification was scheduled
+   * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+   * @return the created {@link Notification}
+   */
+   Notification create(Context context, MessagingPushPayload payload, String messageId, int notificationId,
+                       boolean shouldHandleTracking);
+}
+```
+
+##### IMessagingImageDownloader interface
+
+```java
+public interface IMessagingImageDownloader {
+  /**
+   * Downloads the image asset referenced in the image URL {@code String}.
+   *
+   * @param context  the application {@link Context}
+   * @param imageUrl a {@code String} containing the image asset to be downloaded
+   * @return the {@link Bitmap} created from the downloaded image asset
+   */
+   Bitmap getBitmapFromUrl(Context context, String imageUrl);
+}
+```
 
 ##### Setting a custom push notification factory
 
