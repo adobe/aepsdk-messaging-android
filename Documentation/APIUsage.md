@@ -81,7 +81,7 @@ public void onMessageReceived(RemoteMessage message) {
 
 ### Push notification creation customization
 
-The Messaging extension defines two interfaces which can be implemented to customize the Messaging extension's creation of push notifications as well as customize the downloading of push notification image assets.
+The Messaging extension defines two interfaces (`IMessagingPushNotificationFactory` and `IMessagingImageDownloader`) which can be implemented to customize the Messaging extension's creation of push notifications as well as customize the downloading of push notification image assets. Alongside these interfaces, two setters have been added to set custom instances of these interfaces within the Messaging extension:
 
 ##### Setting a custom push notification factory
 
