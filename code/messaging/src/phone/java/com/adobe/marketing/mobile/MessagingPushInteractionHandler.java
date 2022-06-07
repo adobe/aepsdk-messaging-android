@@ -60,13 +60,13 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
         }
 
         /**
-         * Handles any actions present in the received {@link Intent}.
-         * If a notification button press occurred, the specified action is performed within {@link #handleNotificationButtonPress()}.
+         * Handles any actions present in the received {@code Intent}.
+         * If a notification button press occurred, the specified action is performed within {@code #handleNotificationButtonPress()}.
          * If a notification interaction occurred (for example notification clicked or deleted), this function will broadcast the
          * notification interaction information to the app.
          * <p>
          * Notification interactions may contain an additional boolean extra named HANDLE_NOTIFICATION_TRACKING_KEY.
-         * If this flag set to true, the push interaction tracking will be handled by {@link #handlePushInteraction()}.
+         * If this flag set to true, the push interaction tracking will be handled by {@code #handlePushInteraction()}.
          */
         void handleAction() {
             final String action = intent.getAction();
@@ -129,7 +129,7 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
         }
 
         /**
-         * Sends the push interaction tracking information via the {@link Messaging#handleNotificationResponse(Intent, boolean, String)} API.
+         * Sends the push interaction tracking information via the {@code Messaging#handleNotificationResponse(Intent, boolean, String)} API.
          */
         private void handlePushInteraction() {
             // if the push notification was deleted just send the interaction tracking request

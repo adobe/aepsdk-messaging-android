@@ -163,7 +163,7 @@ public final class Messaging {
     }
 
     /**
-     * Sets the notification factory which will be used by {@link MessagingPushNotificationHandler} to create the push notification
+     * Sets the notification factory which will be used by {@code MessagingPushNotificationHandler} to create the push notification
      *
      * @param factory {@link IMessagingPushNotificationFactory} to be used for creating the push notification
      */

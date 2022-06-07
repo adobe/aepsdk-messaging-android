@@ -31,9 +31,9 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     }
 
     /**
-     * Singleton method to get the {@link MessagingPushNotificationFactory} instance.
+     * Singleton method to get the {@code MessagingPushNotificationFactory} instance.
      *
-     * @return the {@code MessagingPushNotificationFactory} singleton
+     * @return the {@link MessagingPushNotificationFactory} singleton
      */
     public static MessagingPushNotificationFactory getInstance() {
         if (singletonInstance == null) {
@@ -47,13 +47,13 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
     }
 
     /**
-     * Creates a push notification from the given {@link MessagingPushPayload}.
+     * Creates a push notification from the given {@code MessagingPushPayload}.
      *
      * @param context              the application {@link Context}
-     * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
+     * @param payload              the {@link MessagingPushPayload} containing the data payload from AJO
      * @param messageId            a {@code String} containing the message id
      * @param notificationId       {@code int} id used when the notification was scheduled
-     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @param shouldHandleTracking {@code boolean} if true the Messaging extension will handle notification interaction tracking
      * @return the created {@link Notification}
      */
     @Override

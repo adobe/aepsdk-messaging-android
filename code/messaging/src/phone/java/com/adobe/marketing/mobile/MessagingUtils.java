@@ -129,7 +129,7 @@ class MessagingUtils {
      * @param payload              the {@code MessagingPushPayload} containing the data payload from AJO
      * @param messageId            the {@code String} message id
      * @param action               a {@code String} containing the notification interaction which occurred
-     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @param shouldHandleTracking {@code boolean} if true the Messaging extension will handle notification interaction tracking
      * @return {@code PendingIntent} for recording {@link Notification} interactions
      */
     static PendingIntent getPendingIntentForAction(final Context context, final MessagingPushPayload payload, final String messageId, final String action, final boolean shouldHandleTracking) {
@@ -196,7 +196,7 @@ class MessagingUtils {
      * @param notificationBuilder  the {@link Notification.Builder} object currently being used to build the notification
      * @param messageId            the {@code String} message id
      * @param notificationId       {@code int} used when scheduling the notification
-     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @param shouldHandleTracking {@code boolean} if true the Messaging extension will handle notification interaction tracking
      */
     static void addAction(final Context context, final MessagingPushPayload.ActionButton button, final MessagingPushPayload payload, final Notification.Builder notificationBuilder, final String messageId, final int notificationId, final boolean shouldHandleTracking) {
         // setup bundle extras to be sent with the intent

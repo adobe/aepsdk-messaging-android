@@ -25,5 +25,5 @@ public interface IMessagingImageDownloader {
      * @param imageUrl a {@code String} containing the image asset to be downloaded
      * @return the {@link Bitmap} created from the downloaded image asset
      */
-    Bitmap getBitmapFromUrl(Context context, String imageUrl);
+    Bitmap getBitmapFromUrl(final Context context, final String imageUrl);
 }

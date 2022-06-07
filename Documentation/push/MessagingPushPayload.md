@@ -59,8 +59,8 @@ Provides the icon to be displayed in the push notification.
     public String getIcon()
 ```
 
-### Get image url
-Provides the image url to be shown in the push notification.
+### Get image URL
+Provides the image URL to be shown in the push notification.
 ```java
     public String getImageUrl()
 ```
