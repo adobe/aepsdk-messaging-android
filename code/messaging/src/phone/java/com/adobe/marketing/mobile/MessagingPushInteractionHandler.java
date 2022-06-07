@@ -72,19 +72,19 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
             final String action = intent.getAction();
 
             if (StringUtils.isNullOrEmpty(action)) {
-                Log.warning(LOG_TAG, "handleAction() - Empty/Null action. Not processing this broadcast message.");
+                Log.debug(LOG_TAG, "handleAction() - Empty/Null action. Not processing this broadcast message.");
                 return;
             }
 
             MessagingUtils.sendBroadcasts(context, intent, action);
             // if shouldHandleTracking is true in the intent extras then handle the push notification interaction tracking (clicked, deleted, button clicked)
             if (intent.getExtras().getBoolean(MessagingConstants.PushNotificationPayload.HANDLE_NOTIFICATION_TRACKING_KEY, false)) {
-                Log.debug(LOG_TAG, "handleAction() - Handling notification interaction tracking.");
+                Log.trace(LOG_TAG, "handleAction() - Handling notification interaction tracking.");
                 handlePushInteraction();
             }
             // handle button presses
             if (action.equals(MessagingPushPayload.ACTION_KEY.ACTION_BUTTON_CLICKED)) {
-                Log.debug(LOG_TAG, "handleAction() - Notification button pressed with action (%s).", action);
+                Log.trace(LOG_TAG, "handleAction() - Notification button pressed with action (%s).", action);
                 handleNotificationButtonPress();
             }
         }
@@ -99,7 +99,7 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
 
             // dismiss the message
             final int notificationId = extras.getInt(NOTIFICATION_ID);
-            Log.debug(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
+            Log.trace(LOG_TAG, "handleNotificationButtonPress() - Dismissing the message.");
             notificationManager.cancel(notificationId);
 
             // broadcast an intent with an action to collapse the notification drawer
@@ -110,19 +110,19 @@ public class MessagingPushInteractionHandler extends BroadcastReceiver {
             final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             switch (actionType) {
                 case ActionButtonType.WEBURL:
-                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - showing url (%s) using UIService.", url);
+                    Log.trace(LOG_TAG, "handleNotificationButtonPress() - showing url (%s) using UIService.", url);
                     if (!StringUtils.isNullOrEmpty(url)) {
                         MobileCore.getCore().eventHub.getPlatformServices().getUIService().showUrl(url);
                     }
                     break;
                 case ActionButtonType.DEEPLINK:
-                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - opening the app with deeplink (%s).", url);
+                    Log.trace(LOG_TAG, "handleNotificationButtonPress() - opening the app with deeplink (%s).", url);
                     launchIntent.setData(Uri.parse(url));
                     context.startActivity(launchIntent);
                     break;
                 case ActionButtonType.OPENAPP:
                 default:
-                    Log.debug(LOG_TAG, "handleNotificationButtonPress() - opening the app.", url);
+                    Log.trace(LOG_TAG, "handleNotificationButtonPress() - opening the app.", url);
                     context.startActivity(launchIntent);
                     break;
             }

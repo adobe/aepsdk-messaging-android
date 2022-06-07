@@ -109,11 +109,7 @@ class MessagingUtils {
             return MessagingConstants.PushNotificationPayload.DEFAULT.CHANNEL_ID;
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return payload.getChannelId();
-        }
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (notificationManager.getNotificationChannel(payload.getChannelId()) == null) {
                 createCustomNotificationChannel(context, notificationManager, payload);
             } else if (StringUtils.isNullOrEmpty(payload.getChannelId())) {
