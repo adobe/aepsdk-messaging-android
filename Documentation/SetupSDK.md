@@ -1,4 +1,4 @@
-#  Setting up the AEPMessaging SDK
+#  Setting up the Messaging SDK
 
 #### Import the Messaging extension in the Application class:
 
