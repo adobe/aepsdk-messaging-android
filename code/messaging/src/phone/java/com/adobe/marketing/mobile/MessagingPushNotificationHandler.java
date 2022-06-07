@@ -29,14 +29,14 @@ class MessagingPushNotificationHandler {
     private static final String PUSH_PAYLOAD = "pushPayload";
 
     /**
-     * Creates a silent or normal notification and schedules the created notification with the {@link android.app.NotificationManager}.
+     * Creates a silent or normal notification and schedules the created notification with the {@code android.app.NotificationManager}.
      *
      * @param applicationContext   the application {@link Context}
      * @param notificationId       {@code int} id to be used when scheduling the notification
      * @param messageId            a {@code String} containing the message id
      * @param payload              the {@link MessagingPushPayload} containing the data payload from AJO
      * @param factory              the {@link IMessagingPushNotificationFactory} instance to use for creating the notification
-     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @param shouldHandleTracking {@code boolean} if true the Messaging extension will handle notification interaction tracking
      */
     static void handlePushNotification(final Context applicationContext, final int notificationId, final String messageId, final MessagingPushPayload payload, final IMessagingPushNotificationFactory factory, final boolean shouldHandleTracking) {
         if (payload.isSilentPushMessage()) {
@@ -56,7 +56,7 @@ class MessagingPushNotificationHandler {
      * @param messageId            a {@code String} containing the message id
      * @param payload              the {@link MessagingPushPayload} containing the data payload from AJO
      * @param factory              the {@link IMessagingPushNotificationFactory} instance to use for creating the notification
-     * @param shouldHandleTracking {@code boolean} if true the AEPMessaging extension will handle notification interaction tracking
+     * @param shouldHandleTracking {@code boolean} if true the Messaging extension will handle notification interaction tracking
      */
     private static void handleNormalPushNotification(final Context applicationContext, final int notificationId, final String messageId, final MessagingPushPayload payload, final IMessagingPushNotificationFactory factory, final boolean shouldHandleTracking) {
         if (factory == null) {
@@ -78,7 +78,7 @@ class MessagingPushNotificationHandler {
 
 
     /**
-     * Broadcasts the push notification creation information to the app if a silent notification was present in the {@link MessagingPushPayload} from AJO.
+     * Broadcasts the push notification creation information to the app if a silent notification was present in the {@code MessagingPushPayload} from AJO.
      *
      * @param applicationContext the application {@link Context}
      * @param messageId          a {@code String} containing the message id

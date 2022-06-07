@@ -138,7 +138,7 @@ public class MessagingPushPayload implements Parcelable {
     /**
      * Check whether the remote message originated from AEP
      *
-     * @return boolean value indicating whether the remote message is origination from AEP
+     * @return boolean value indicating whether the remote message originated from AEP
      */
     public boolean isAEPPushMessage() {
         if (data == null || data.isEmpty()) {

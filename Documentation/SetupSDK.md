@@ -1,6 +1,7 @@
-#  Setting up AEPMessaging SDK
+#  Setting up the Messaging SDK
 
-#### Import messaging extension in the Application class:
+#### Import the Messaging extension in the Application class:
+
 ```java
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
@@ -9,7 +10,7 @@ import com.adobe.marketing.mobile.edge.identity.Identity;
 ```
 
 #### Registering the extension
-Register the messaging extensions and configure the SDK with the launch application identifier. To do this, add the following code to the Application class's `onCreate()` method:
+Register the Adobe extensions and configure the Adobe SDK with the launch application identifier. To do this, add the following code to the Application class's `onCreate()` method:
 
 ```java
 @Override
