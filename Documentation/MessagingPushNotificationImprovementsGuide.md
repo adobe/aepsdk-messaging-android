@@ -17,20 +17,20 @@ Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver]
 ```groovy
  <!--messaging extension handled push notification broadcast receiver-->
    <receiver
-			android:name=".NotificationBroadcastReceiver"
-			android:exported="false">
-      <intent-filter>
-        <action android:name="${applicationId}_adb_action_notification_clicked" />
-        <action android:name="${applicationId}_adb_action_button_clicked" />
-        <action android:name="${applicationId}_adb_action_notification_deleted" />
-        <action android:name="${applicationId}_adb_action_notification_created" />
-        <action android:name="${applicationId}_adb_action_silent_notification_created" />
-      </intent-filter>
+   	android:name=".NotificationBroadcastReceiver"
+	android:exported="false">
+	   <intent-filter>
+	      <action android:name="${applicationId}_adb_action_notification_clicked" />
+              <action android:name="${applicationId}_adb_action_button_clicked" />
+              <action android:name="${applicationId}_adb_action_notification_deleted" />
+              <action android:name="${applicationId}_adb_action_notification_created" />
+              <action android:name="${applicationId}_adb_action_silent_notification_created" />
+            </intent-filter>
    </receiver>
 
 <!--messaging extension handled push notification interactions broadcast receiver-->
    <receiver
-			android:name="com.adobe.marketing.mobile.MessagingPushInteractionHandler"
+      android:name="com.adobe.marketing.mobile.MessagingPushInteractionHandler"
       android:exported="false" >
    </receiver>
 ```
