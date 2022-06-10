@@ -196,18 +196,12 @@ public final class Messaging {
      * @param shouldHandleTracking {@code boolean} value signaling if tracking should be handled by the {@code Messaging} extension.
      */
     public static boolean handlePushNotificationWithRemoteMessage(final RemoteMessage remoteMessage, final boolean shouldHandleTracking) {
-        if (remoteMessage == null) {
-            Log.warning(LOG_TAG, "%s - The RemoteMessage is null", SELF_TAG);
+        if (remoteMessage == null || remoteMessage.getData().isEmpty()) {
+            Log.warning(LOG_TAG, "%s - The RemoteMessage or remote message data is null", SELF_TAG);
             return false;
         }
 
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-
-        if (!payload.isAEPPushMessage()) {
-            Log.debug(LOG_TAG, "%s - The provided RemoteMessage is not an AJO notification.", SELF_TAG);
-            return false;
-        }
-
         final Context appContext = App.getAppContext();
         final int notificationId = (int) System.currentTimeMillis();
         final String messageId = remoteMessage.getMessageId();
