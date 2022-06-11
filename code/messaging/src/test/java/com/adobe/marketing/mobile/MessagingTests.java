@@ -57,6 +57,7 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({MobileCore.class, Intent.class, App.class})
 public class MessagingTests {
+    private EventHub eventHub;
     Map<String, String> remoteMessageData = new HashMap<String, String>() {
         {
             put(MessagingConstants.PushNotificationPayload.XDM, "mockXdmData");
@@ -91,9 +92,17 @@ public class MessagingTests {
     }
 
     @Mock
+    Core mockCore;
+    @Mock
     Intent mockIntent;
     @Mock
     Context context;
+    @Mock
+    AndroidPlatformServices mockPlatformServices;
+    @Mock
+    AndroidSystemInfoService mockAndroidSystemInfoService;
+    @Mock
+    AndroidNetworkService mockAndroidNetworkService;
 
     @Before
     public void before() {
@@ -101,6 +110,12 @@ public class MessagingTests {
         PowerMockito.mockStatic(App.class);
         Whitebox.setInternalState(Messaging.class, "notificationFactory", (IMessagingPushNotificationFactory) null);
         Whitebox.setInternalState(Messaging.class, "imageDownloader", (IMessagingImageDownloader) null);
+        // setup services and core mocks
+        Mockito.when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        Mockito.when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+        Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
     }
 
     // ========================================================================================

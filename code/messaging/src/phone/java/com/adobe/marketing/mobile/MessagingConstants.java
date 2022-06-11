@@ -16,6 +16,7 @@ final class MessagingConstants {
     static final String LOG_TAG = "Messaging";
     static final String EXTENSION_VERSION = "1.1.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String IMAGES_CACHE_SUBDIRECTORY = "images";
 
     private MessagingConstants() {
     }

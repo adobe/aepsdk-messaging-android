@@ -12,11 +12,14 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.LruCache;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+
+import java.io.File;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,25 +31,24 @@ import java.util.concurrent.Future;
 class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
     private static final String SELF_TAG = "MessagingDefaultImageDownloader";
     private static volatile MessagingDefaultImageDownloader singletonInstance = null;
-    private final LruCache<String, Bitmap> cache;
     private final ExecutorService executorService;
+    private final PlatformServices platformServices;
+    private final SystemInfoService systemInfoService;
+    private CacheManager cacheManager;
 
     /**
      * Constructor.
      */
     private MessagingDefaultImageDownloader() {
-        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-        final int cacheSize = maxMemory / 8;
-        cache = new LruCache<String, Bitmap>(cacheSize) {
-            @Override
-            protected int sizeOf(final String key, final Bitmap value) {
-                if (value != null) {
-                    return value.getAllocationByteCount() / 1024; //size of bitmap in KB.
-                }
-                return 0;
-            }
-        };
+        platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+        systemInfoService = platformServices.getSystemInfoService();
+        try {
+            cacheManager = new CacheManager(systemInfoService);
+        } catch (final MissingPlatformServicesException exception) {
+            Log.warning(LOG_TAG, "%s - Cache Manager implementation missing", SELF_TAG);
+        }
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        createImageAssetsCacheDirectory();
     }
 
     /**
@@ -67,7 +69,6 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
 
     /**
      * Downloads the asset then caches it in memory.
-     * TODO: Store the image asset in the disk cache added in the feature/iam branch
      *
      * @param context  the application {@link Context}
      * @param imageUrl a {@code String} containing the image asset to be downloaded
@@ -85,42 +86,30 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
             return null;
         }
 
-        Bitmap bitmap = getBitmapFromMemCache(imageUrl);
+        Bitmap bitmap = MessagingUtils.getBitmapFromFile(cacheManager.getFileForCachedURL(imageUrl, IMAGES_CACHE_SUBDIRECTORY, false));
         if (bitmap != null) {
             return bitmap;
         }
 
-        final Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl));
+        final Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl, platformServices));
         try {
             bitmap = bitmapFuture.get();
-            if (bitmap != null) {
-                addBitmapToMemCache(imageUrl, bitmap);
-            }
-        } catch (final ExecutionException | InterruptedException e) {
-            Log.warning(LOG_TAG, "%s - Failed to download the image, exception occurred: %s", SELF_TAG, e.getMessage());
+        } catch (final ExecutionException | InterruptedException exception) {
+            Log.warning(LOG_TAG, "%s - Failed to download the image asset from (%s), exception occurred: %s", SELF_TAG, imageUrl, exception.getMessage());
         }
         return bitmap;
     }
 
     /**
-     * Stores the provided {@link Bitmap} in the cache.
-     *
-     * @param key    The {@code String} key to use for caching the {@code Bitmap}
-     * @param bitmap a {@code Bitmap} to be cached
+     * Creates the "images" cache directory for the {@link Messaging} extension.
+     * <p>
+     * This method checks if the cache directory already exists in which case no new directory is created for assets.
      */
-    private void addBitmapToMemCache(String key, Bitmap bitmap) {
-        if (getBitmapFromMemCache(key) == null) {
-            cache.put(key, bitmap);
-        }
-    }
+    private void createImageAssetsCacheDirectory() {
+        final File assetDir = new File(systemInfoService.getApplicationCacheDir() + File.separator + IMAGES_CACHE_SUBDIRECTORY);
 
-    /**
-     * Retrieves a cached {@link Bitmap} from the cache.
-     *
-     * @param key The {@code String} key to use for retrieving the {@code Bitmap}
-     * @return {@code Bitmap} retrieved from the cache
-     */
-    private Bitmap getBitmapFromMemCache(String key) {
-        return cache.get(key);
+        if (!assetDir.exists() && !assetDir.mkdirs()) {
+            Log.warning(LOG_TAG, "%s - Unable to create directory at (%s) for caching image assets", SELF_TAG, assetDir.getAbsolutePath());
+        }
     }
 }

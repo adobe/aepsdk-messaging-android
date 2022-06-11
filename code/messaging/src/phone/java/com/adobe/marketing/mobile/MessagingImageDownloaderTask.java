@@ -11,15 +11,15 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.File;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A {@link Callable} used to perform the downloading of the image asset.
@@ -27,14 +27,18 @@ import java.util.concurrent.Callable;
 class MessagingImageDownloaderTask implements Callable<Bitmap> {
     private static final String SELF_TAG = "MessagingImageDownloaderTask";
     private final String url;
+    private final NetworkService networkService;
+    private final SystemInfoService systemInfoService;
 
     /**
      * Constructor.
      *
      * @param url {@code String} containing the image asset url to be downloaded
      */
-    MessagingImageDownloaderTask(final String url) {
+    MessagingImageDownloaderTask(final String url, final PlatformServices platformServices) {
         this.url = url;
+        this.networkService = platformServices.getNetworkService();
+        this.systemInfoService = platformServices.getSystemInfoService();
     }
 
     /**
@@ -48,26 +52,40 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
     }
 
     /**
-     * Download the image asset and converts it to a {@link Bitmap}.
+     * Download the image asset using the {@link RemoteDownloader} and convert it to a {@link Bitmap}. Downloaded image assets are
+     * stored in the Message extension cache directory.
      *
      * @param url {@code String} containing the image asset url to be downloaded
      * @return the downloaded image asset as a {@link Bitmap}
      */
     private Bitmap download(final String url) {
-        Bitmap bitmap = null;
-        HttpURLConnection connection = null;
+        RemoteDownloader remoteDownloader;
+        final Bitmap[] bitmap = new Bitmap[1];
+        final CountDownLatch latch = new CountDownLatch(1);
         try {
-            final URL imageUrl = new URL(url);
-            connection = (HttpURLConnection) imageUrl.openConnection();
-            bitmap = BitmapFactory.decodeStream(connection.getInputStream());
-        } catch (final IOException e) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when downloading the image: %s", SELF_TAG, e.getMessage());
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            remoteDownloader = new RemoteDownloader(networkService, systemInfoService, url, IMAGES_CACHE_SUBDIRECTORY) {
+                @Override
+                protected void onDownloadComplete(final File downloadedFile) {
+                    if (downloadedFile != null) {
+                        Log.trace(LOG_TAG, "%s - (%s) has been downloaded or was previously cached at: (%s)", SELF_TAG, url, downloadedFile.getPath());
+                        bitmap[0] = MessagingUtils.getBitmapFromFile(downloadedFile);
+                        latch.countDown();
+                    } else {
+                        Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, url);
+                    }
+                }
+            };
+        } catch (final MissingPlatformServicesException exception) {
+            Log.warning(LOG_TAG, "%s - Failed to download the image asset: %s, the platform services were not available.", SELF_TAG, url);
+            return null;
         }
-
-        return bitmap;
+        remoteDownloader.startDownload();
+        try {
+            latch.await(2000, TimeUnit.MILLISECONDS);
+        } catch (final InterruptedException exception) {
+            Log.warning(LOG_TAG, "%s - Exception occurred when downloading (%s): %s", SELF_TAG, url, exception);
+            return null;
+        }
+        return bitmap[0];
     }
 }

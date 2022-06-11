@@ -5,12 +5,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class TestUtils {
+    private static final String LOG_TAG = "TestUtils";
+    private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
     static void waitForExecutor(ExecutorService executor, int executorTime) {
         Future<?> future = executor.submit(new Runnable() {
             @Override
@@ -41,5 +47,37 @@ public class TestUtils {
             jsonArray.put(jsonObject);
         }
         return jsonArray;
+    }
+
+    static boolean writeInputStreamIntoFile(final File cachedFile, final InputStream inputStream, final boolean append) {
+        if (cachedFile == null || inputStream == null) {
+            Log.error(LOG_TAG, "%s - Failed to write InputStream to the cache. The cachedFile or inputStream is null.");
+            return false;
+        }
+
+        FileOutputStream outputStream = null;
+
+        try {
+            outputStream = new FileOutputStream(cachedFile, append);
+            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
+            int count;
+
+            while ((count = inputStream.read(data)) != -1) {
+                outputStream.write(data, 0, count);
+            }
+            outputStream.flush();
+        } catch (final IOException e) {
+            Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", e);
+            return false;
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (final IOException e) {
+                Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", e);
+            }
+        }
+        return true;
     }
 }

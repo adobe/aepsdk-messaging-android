@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
@@ -34,6 +35,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -263,6 +268,26 @@ class MessagingUtils {
                 context.sendBroadcast(broadcastIntent);
             }
         }
+    }
+
+    /**
+     * Converts the image file into a {@code Bitmap}.
+     *
+     * @param imageFile the image {@link File} to be converted
+     * @return {@link Bitmap} created from the given {@code File}
+     */
+    static Bitmap getBitmapFromFile(final File imageFile) {
+        InputStream inputStream;
+        if (imageFile == null) {
+            return null;
+        }
+        try {
+            inputStream = new FileInputStream(imageFile);
+        } catch (final FileNotFoundException exception) {
+            Log.warning(LOG_TAG, "%s - (%s) cannot be found.", imageFile.getPath());
+            return null;
+        }
+        return BitmapFactory.decodeStream(inputStream);
     }
 
     /**
