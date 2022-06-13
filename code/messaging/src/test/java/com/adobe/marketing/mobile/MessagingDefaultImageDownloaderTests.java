@@ -116,13 +116,14 @@ public class MessagingDefaultImageDownloaderTests {
             fail(e.getMessage());
         }
 
-        // verify
+        // verify image downloader sends request to download the image
         verify(mockExecutorService, times(1)).submit(any(Callable.class));
         try {
             verify(mockBitmapFuture, times(1)).get();
         } catch (InterruptedException | ExecutionException e) {
             fail(e.getMessage());
         }
+        // verify the downloaded bitmap is returned
         assertEquals(mockBitmap, bitmap);
     }
 
@@ -145,13 +146,14 @@ public class MessagingDefaultImageDownloaderTests {
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, IMAGE_URL);
 
-        // verify
+        // verify image downloader does not send a request to download the image
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
         try {
             verify(mockBitmapFuture, times(0)).get();
         } catch (InterruptedException | ExecutionException e) {
             fail(e.getMessage());
         }
+        // verify the cached bitmap is returned
         assertEquals(mockBitmap, bitmap);
     }
 
@@ -170,13 +172,14 @@ public class MessagingDefaultImageDownloaderTests {
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, invalidImageUrl);
 
-        // verify
+        // verify image downloader does not send a request to download the image
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
         try {
             verify(mockBitmapFuture, times(0)).get();
         } catch (InterruptedException | ExecutionException e) {
             fail(e.getMessage());
         }
+        // verify no bitmap returned
         assertNull(bitmap);
     }
 
@@ -195,13 +198,14 @@ public class MessagingDefaultImageDownloaderTests {
         // test
         Bitmap bitmap = messagingDefaultImageDownloader.getBitmapFromUrl(mockContext, emptyImageUrl);
 
-        // verify
+        // verify image downloader does not send a request to download the image
         verify(mockExecutorService, times(0)).submit(any(Callable.class));
         try {
             verify(mockBitmapFuture, times(0)).get();
         } catch (InterruptedException | ExecutionException e) {
             fail(e.getMessage());
         }
+        // verify no bitmap returned
         assertNull(bitmap);
     }
 }

@@ -48,17 +48,17 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
      */
     @Override
     public Bitmap call() {
-        return download(url);
+        return download();
     }
 
     /**
-     * Download the image asset using the {@link RemoteDownloader} and convert it to a {@link Bitmap}. Downloaded image assets are
-     * stored in the Message extension cache directory.
+     * Download the image asset using the {@code RemoteDownloader} and convert it to a {@code Bitmap}. Downloaded image assets are
+     * stored in the Message extension cache directory. A {@code CountDownLatch} is used to make the download synchronous as the downloaded
+     * image will be used immediately in a displayed push notification.
      *
-     * @param url {@code String} containing the image asset url to be downloaded
      * @return the downloaded image asset as a {@link Bitmap}
      */
-    private Bitmap download(final String url) {
+    private Bitmap download() {
         RemoteDownloader remoteDownloader;
         final Bitmap[] bitmap = new Bitmap[1];
         final CountDownLatch latch = new CountDownLatch(1);
@@ -67,16 +67,15 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
                 @Override
                 protected void onDownloadComplete(final File downloadedFile) {
                     if (downloadedFile != null) {
-                        Log.trace(LOG_TAG, "%s - (%s) has been downloaded or was previously cached at: (%s)", SELF_TAG, url, downloadedFile.getPath());
                         bitmap[0] = MessagingUtils.getBitmapFromFile(downloadedFile);
                         latch.countDown();
                     } else {
-                        Log.debug(LOG_TAG, "%s - Failed to download asset from %s.", SELF_TAG, url);
+                        Log.debug(LOG_TAG, "%s - Failed to download asset from (%s).", SELF_TAG, url);
                     }
                 }
             };
         } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "%s - Failed to download the image asset: %s, the platform services were not available.", SELF_TAG, url);
+            Log.warning(LOG_TAG, "%s - Failed to download the image asset: (%s), the platform services were not available.", SELF_TAG, url);
             return null;
         }
         remoteDownloader.startDownload();

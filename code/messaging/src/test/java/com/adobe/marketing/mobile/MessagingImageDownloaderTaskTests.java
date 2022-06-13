@@ -95,7 +95,7 @@ public class MessagingImageDownloaderTaskTests {
                 ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
         assertEquals(RemoteDownloader.class, callbackCaptor.getValue().getClass().getEnclosingClass());
         callbackCaptor.getValue().call(mockHttpConnection);
-        // verify cache file was created from the downloaded image asset
+        // verify cache file and bitmap was created from the downloaded image asset
         File cachedFile = cacheManager.getFileForCachedURL(IMAGE_URL, "images", true);
         assertEquals(mockBitmap, MessagingUtils.getBitmapFromFile(cachedFile));
     }

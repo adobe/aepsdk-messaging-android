@@ -17,8 +17,6 @@ import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRE
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import com.adobe.marketing.mobile.services.ServiceProvider;
-
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +28,7 @@ import java.util.concurrent.Future;
  */
 class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
     private static final String SELF_TAG = "MessagingDefaultImageDownloader";
+    private static final int THREAD_POOL_SIZE = 1;
     private static volatile MessagingDefaultImageDownloader singletonInstance = null;
     private final ExecutorService executorService;
     private final PlatformServices platformServices;
@@ -45,16 +44,16 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
         try {
             cacheManager = new CacheManager(systemInfoService);
         } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "%s - Cache Manager implementation missing", SELF_TAG);
+            Log.warning(LOG_TAG, "%s - CacheManager implementation missing: (%s)", SELF_TAG, exception.getMessage());
         }
-        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         createImageAssetsCacheDirectory();
     }
 
     /**
-     * Singleton method to get the {@link MessagingDefaultImageDownloader} instance.
+     * Singleton method to get the {@code MessagingDefaultImageDownloader} instance.
      *
-     * @return the {@code MessagingDefaultImageDownloader} singleton
+     * @return the {@link MessagingDefaultImageDownloader} singleton
      */
     public static MessagingDefaultImageDownloader getInstance() {
         if (singletonInstance == null) {
@@ -68,7 +67,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
     }
 
     /**
-     * Downloads the asset then caches it in memory.
+     * Downloads the asset then caches it in the Messaging extension cache directory.
      *
      * @param context  the application {@link Context}
      * @param imageUrl a {@code String} containing the image asset to be downloaded
@@ -88,6 +87,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
 
         Bitmap bitmap = MessagingUtils.getBitmapFromFile(cacheManager.getFileForCachedURL(imageUrl, IMAGES_CACHE_SUBDIRECTORY, false));
         if (bitmap != null) {
+            Log.debug(LOG_TAG, "%s - Found cached image asset for (%s).", SELF_TAG, imageUrl);
             return bitmap;
         }
 
@@ -101,7 +101,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
     }
 
     /**
-     * Creates the "images" cache directory for the {@link Messaging} extension.
+     * Creates the "images" cache directory for the {@code Messaging} extension.
      * <p>
      * This method checks if the cache directory already exists in which case no new directory is created for assets.
      */
