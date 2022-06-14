@@ -108,7 +108,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
      * @param key    The {@code String} key to use for caching the {@code Bitmap}
      * @param bitmap a {@code Bitmap} to be cached
      */
-    private void addBitmapToMemCache(String key, Bitmap bitmap) {
+    private void addBitmapToMemCache(final String key, final Bitmap bitmap) {
         if (getBitmapFromMemCache(key) == null) {
             cache.put(key, bitmap);
         }
@@ -120,7 +120,7 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
      * @param key The {@code String} key to use for retrieving the {@code Bitmap}
      * @return {@code Bitmap} retrieved from the cache
      */
-    private Bitmap getBitmapFromMemCache(String key) {
+    private Bitmap getBitmapFromMemCache(final String key) {
         return cache.get(key);
     }
 }

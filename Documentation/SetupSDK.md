@@ -10,7 +10,7 @@ import com.adobe.marketing.mobile.edge.identity.Identity;
 ```
 
 #### Registering the extension
-Register the Adobe extensions and configure the Adobe SDK with the launch application identifier. To do this, add the following code to the Application class's `onCreate()` method:
+Register the Adobe Mobile SDK extensions and configure the SDK using the Environment File Id obtained from your property on Data Collection UI. To do this, add the following code to the Application class's `onCreate()` method:
 
 ```java
 @Override

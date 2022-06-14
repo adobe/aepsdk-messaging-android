@@ -183,8 +183,8 @@ class MessagingUtils {
      * @return {@code Uri} containing the local location of an audio file o use for a displayed {@code Notification}
      */
     static Uri getSoundUri(final Context context, final String fileName) {
-        final int resID = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
-        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/" + resID);
+        final int resId = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
+        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/" + resId);
     }
 
     /**

@@ -58,6 +58,10 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
      */
     @Override
     public Notification create(final Context context, final MessagingPushPayload payload, final String messageId, final int notificationId, final boolean shouldHandleTracking) {
+        if (payload == null) {
+            Log.warning(LOG_TAG, "%s - The MessagingPushPayload is null, aborting notification creation.", SELF_TAG);
+            return null;
+        }
         // Setting the channel id
         final String channelId = MessagingUtils.getChannelId(context, payload);
         final Notification.Builder notificationBuilder = new Notification.Builder(context);
@@ -109,6 +113,11 @@ class MessagingPushNotificationFactory implements IMessagingPushNotificationFact
      * @param notificationBuilder the {@link Notification.Builder} object currently being used to build the notification
      */
     private void setSound(final Context context, final String fileName, final Notification.Builder notificationBuilder) {
+        if (notificationBuilder == null) {
+            Log.debug(LOG_TAG, "%s - Null Notification.Builder provided, cannot set a sound for the notification.", SELF_TAG);
+            return;
+        }
+
         if (StringUtils.isNullOrEmpty(fileName)) {
             Log.debug(LOG_TAG, "%s - No custom sound specified, using the default notification sound.", SELF_TAG);
             notificationBuilder.setDefaults(Notification.DEFAULT_SOUND);

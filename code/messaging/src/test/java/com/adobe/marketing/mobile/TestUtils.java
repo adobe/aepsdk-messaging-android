@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class TestUtils {
-    static void waitForExecutor(ExecutorService executor, int executorTime) {
+    static void waitForExecutor(final ExecutorService executor, final int executorTime) {
         Future<?> future = executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -26,7 +26,7 @@ public class TestUtils {
         }
     }
 
-    static JSONArray convertActionButtonListToJsonArray(List<MessagingPushPayload.ActionButton> list) {
+    static JSONArray convertActionButtonListToJsonArray(final List<MessagingPushPayload.ActionButton> list) {
         JSONArray jsonArray = new JSONArray();
         for (MessagingPushPayload.ActionButton button : list) {
             JSONObject jsonObject = new JSONObject();
