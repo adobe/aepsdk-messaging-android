@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class TestUtils {
     private static final String LOG_TAG = "TestUtils";
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
-    static void waitForExecutor(ExecutorService executor, int executorTime) {
+    static void waitForExecutor(final ExecutorService executor, final int executorTime) {
         Future<?> future = executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -32,7 +32,7 @@ public class TestUtils {
         }
     }
 
-    static JSONArray convertActionButtonListToJsonArray(List<MessagingPushPayload.ActionButton> list) {
+    static JSONArray convertActionButtonListToJsonArray(final List<MessagingPushPayload.ActionButton> list) {
         JSONArray jsonArray = new JSONArray();
         for (MessagingPushPayload.ActionButton button : list) {
             JSONObject jsonObject = new JSONObject();

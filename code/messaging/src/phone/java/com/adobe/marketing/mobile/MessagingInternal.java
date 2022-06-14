@@ -88,8 +88,13 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      * @return {@link Map} of profile data in the correct format with token
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
-        if (ecid == null) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null.");
+        if (StringUtils.isNullOrEmpty(ecid)) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null or empty.");
+            return null;
+        }
+
+        if (StringUtils.isNullOrEmpty(token)) {
+            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - the push token is null or empty.");
             return null;
         }
 
@@ -159,15 +164,15 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
      */
     private static void addXDMData(final EventData eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
-        final String adobe = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
-        if (adobe == null) {
+        final String adobeXdm = eventData.optString(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, null);
+        if (adobeXdm == null) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe xdm data is null.");
             return;
         }
 
         try {
             // Convert the adobe string to json object
-            final JSONObject xdmJson = new JSONObject(adobe);
+            final JSONObject xdmJson = new JSONObject(adobeXdm);
             final Map<String, Object> xdmMapObject = MessagingUtils.toMap(xdmJson);
 
             if (xdmMapObject == null) {
@@ -209,9 +214,9 @@ class MessagingInternal extends Extension implements MessagingEventsHandler {
             } else {
                 Log.warning(LOG_TAG, "MessagingInternal - Failed to send cjm xdm data with the tracking, required keys are missing.");
             }
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
-        } catch (ClassCastException e) {
+        } catch (final ClassCastException e) {
             Log.warning(LOG_TAG, "MessagingInternal - Failed to send adobe data with the tracking data, adobe data is malformed : %s", e.getMessage());
         }
     }

@@ -8,9 +8,9 @@ When using Messaging handled push notification interaction tracking, the Messagi
 
 > Note:  If the Messaging extension will be used to handle push notification interactions, ensure that your custom push notification factory sets a `PendingIntent` object for the content intent (`notificationBuilder.setContentIntent()`), delete intent (`notificationBuilder.setDeleteIntent()`), or button(s) when creating a push notification.
 
-##### To get started with the Messaging 1.1.0 push notification features follow these steps:
+To get started with the Messaging 1.1.0 push notification features follow these steps:
 
-#### Step 1: Add the Messaging receivers in the App manifest
+#### Add the Messaging receivers in the App manifest
 
 Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver](https://developer.android.com/guide/components/broadcasts#manifest-declared-receivers) inside the application tag to subscribe to broadcast actions sent by the Messaging extension. A second manifest-declared receiver must be added to listen for notification interactions if Messaging handled push notification interaction tracking will be used:
 
@@ -37,7 +37,7 @@ Within your App's `AndroidManifest.xml` file, add a [manifest-declared receiver]
 
 >  Note: The intent filters within the first receiver can be added to an existing manifest-declared `BroadcastReceiver` to listen for any notification events sent by the  Messaging extension.
 
-#### Step 2: Call the new Messaging push notification creation API
+#### Call the new Messaging push notification creation API
 
 In the `FirebaseMessagingService#onMessageReceived` function of your app, invoke `handlePushNotificationWithRemoteMessage` with the `RemoteMessage` received from Firebase Cloud Messaging. Additionally, a boolean flag enabling Messaging push notification interaction tracking is required when invoking the API.
 
@@ -49,7 +49,7 @@ public void onMessageReceived(RemoteMessage message) {
 }
 ```
 
-#### Step 3: Add/Update a Broadcast Receiver object to listen for Messaging created push notification broadcasts
+#### Add/Update a Broadcast Receiver object to listen for Messaging created push notification broadcasts
 
 The Messaging extension will broadcast events on normal notification creation, silent notification creation, notification deletion, notification click, or notification button presses. A `BroadcastReceiver` [must be declared in the AndroidManifest.xml](#Step 1: Adding the Messaging receivers in the App manifest) and a class subclassing `BroadcastReceiver` must be added to handle the broadcasted events:
 
