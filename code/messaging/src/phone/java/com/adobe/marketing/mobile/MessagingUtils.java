@@ -277,8 +277,9 @@ class MessagingUtils {
      * @return {@link Bitmap} created from the given {@code File}
      */
     static Bitmap getBitmapFromFile(final File imageFile) {
-        InputStream inputStream;
+        final InputStream inputStream;
         if (imageFile == null) {
+            Log.debug(LOG_TAG, "%s - Cannot convert to bitmap, null image file received.");
             return null;
         }
         try {

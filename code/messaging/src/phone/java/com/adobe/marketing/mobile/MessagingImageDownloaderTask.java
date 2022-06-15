@@ -18,8 +18,6 @@ import android.graphics.Bitmap;
 
 import java.io.File;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A {@link Callable} used to perform the downloading of the image asset.
@@ -34,9 +32,14 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
      * Constructor.
      *
      * @param url {@code String} containing the image asset url to be downloaded
+     * @throws {@link MissingPlatformServicesException} if any of the {@link PlatformServices} dependencies are null
      */
-    MessagingImageDownloaderTask(final String url, final PlatformServices platformServices) {
+    MessagingImageDownloaderTask(final String url, final PlatformServices platformServices) throws MissingPlatformServicesException {
         this.url = url;
+        if (platformServices == null) {
+            Log.debug(LOG_TAG, "%s - Unable to start a MessagingImageDownloaderTask, the platform services are null.", SELF_TAG);
+            throw new MissingPlatformServicesException("Platform services were not found!");
+        }
         this.networkService = platformServices.getNetworkService();
         this.systemInfoService = platformServices.getSystemInfoService();
     }
@@ -45,46 +48,30 @@ class MessagingImageDownloaderTask implements Callable<Bitmap> {
      * Return the result of the image asset download task.
      *
      * @return the downloaded image asset as a {@link Bitmap}
+     * @throws {@link MissingPlatformServicesException}
      */
     @Override
-    public Bitmap call() {
+    public Bitmap call() throws MissingPlatformServicesException {
         return download();
     }
 
     /**
      * Download the image asset using the {@code RemoteDownloader} and convert it to a {@code Bitmap}. Downloaded image assets are
-     * stored in the Message extension cache directory. A {@code CountDownLatch} is used to make the download synchronous as the downloaded
-     * image will be used immediately in a displayed push notification.
+     * stored in the Message extension cache directory.
      *
      * @return the downloaded image asset as a {@link Bitmap}
+     * @throws {@link MissingPlatformServicesException} if the {@link NetworkService} or {@link SystemInfoService} are null
      */
-    private Bitmap download() {
-        RemoteDownloader remoteDownloader;
-        final Bitmap[] bitmap = new Bitmap[1];
-        final CountDownLatch latch = new CountDownLatch(1);
-        try {
-            remoteDownloader = new RemoteDownloader(networkService, systemInfoService, url, IMAGES_CACHE_SUBDIRECTORY) {
-                @Override
-                protected void onDownloadComplete(final File downloadedFile) {
-                    if (downloadedFile != null) {
-                        bitmap[0] = MessagingUtils.getBitmapFromFile(downloadedFile);
-                        latch.countDown();
-                    } else {
-                        Log.debug(LOG_TAG, "%s - Failed to download asset from (%s).", SELF_TAG, url);
-                    }
-                }
-            };
-        } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "%s - Failed to download the image asset: (%s), the platform services were not available.", SELF_TAG, url);
-            return null;
+    private Bitmap download() throws MissingPlatformServicesException {
+        final RemoteDownloader remoteDownloader;
+        Bitmap bitmap = null;
+        remoteDownloader = new RemoteDownloader(networkService, systemInfoService, url, IMAGES_CACHE_SUBDIRECTORY);
+        final File downloadedFile = remoteDownloader.startDownloadSync();
+        if (downloadedFile != null) {
+            bitmap = MessagingUtils.getBitmapFromFile(downloadedFile);
+        } else {
+            Log.debug(LOG_TAG, "%s - Failed to download asset from (%s).", SELF_TAG, url);
         }
-        remoteDownloader.startDownload();
-        try {
-            latch.await(2000, TimeUnit.MILLISECONDS);
-        } catch (final InterruptedException exception) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when downloading (%s): %s", SELF_TAG, url, exception);
-            return null;
-        }
-        return bitmap[0];
+        return bitmap;
     }
 }

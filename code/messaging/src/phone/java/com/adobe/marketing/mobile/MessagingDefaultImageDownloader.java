@@ -11,8 +11,8 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -30,16 +30,21 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
     private static final String SELF_TAG = "MessagingDefaultImageDownloader";
     private static final int THREAD_POOL_SIZE = 1;
     private static volatile MessagingDefaultImageDownloader singletonInstance = null;
-    private final ExecutorService executorService;
-    private final PlatformServices platformServices;
-    private final SystemInfoService systemInfoService;
+    private ExecutorService executorService;
+    private PlatformServices platformServices;
+    private SystemInfoService systemInfoService;
     private CacheManager cacheManager;
 
     /**
      * Constructor.
      */
     private MessagingDefaultImageDownloader() {
-        platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+        final Core core = MobileCore.getCore();
+        if (core == null) {
+            Log.debug(LOG_TAG, "%s - Unable to create a MessagingDefaultImageDownloader, the Core instance is null.", SELF_TAG);
+            return;
+        }
+        platformServices = core.eventHub.getPlatformServices();
         systemInfoService = platformServices.getSystemInfoService();
         try {
             cacheManager = new CacheManager(systemInfoService);
@@ -91,10 +96,10 @@ class MessagingDefaultImageDownloader implements IMessagingImageDownloader {
             return bitmap;
         }
 
-        final Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl, platformServices));
         try {
+            final Future<Bitmap> bitmapFuture = executorService.submit(new MessagingImageDownloaderTask(imageUrl, platformServices));
             bitmap = bitmapFuture.get();
-        } catch (final ExecutionException | InterruptedException exception) {
+        } catch (final MissingPlatformServicesException | ExecutionException | InterruptedException exception) {
             Log.warning(LOG_TAG, "%s - Failed to download the image asset from (%s), exception occurred: %s", SELF_TAG, imageUrl, exception.getMessage());
         }
         return bitmap;

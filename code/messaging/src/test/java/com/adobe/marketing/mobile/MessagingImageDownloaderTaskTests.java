@@ -12,19 +12,16 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
@@ -34,10 +31,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({BitmapFactory.class, MessagingImageDownloaderTask.class, RemoteDownloader.class})
+@PrepareForTest({MessagingImageDownloaderTask.class, RemoteDownloader.class, MessagingUtils.class})
 public class MessagingImageDownloaderTaskTests {
     MessagingImageDownloaderTask messagingImageDownloaderTask;
     String IMAGE_URL = "https://www.adobe.com/image.jpg";
@@ -52,20 +48,26 @@ public class MessagingImageDownloaderTaskTests {
     SystemInfoService mockSystemInfoService;
     @Mock
     NetworkService.HttpConnection mockHttpConnection;
+    @Mock
+    RemoteDownloader mockRemoteDownloader;
+    @Mock
+    File mockFile;
+    @Mock
+    Bitmap mockBitmap;
 
     @Before
     public void before() throws Exception {
-        PowerMockito.mockStatic(BitmapFactory.class);
+        // setup messaging utils mocks
+        PowerMockito.mockStatic(MessagingUtils.class);
+        when(MessagingUtils.getBitmapFromFile(any(File.class))).thenReturn(mockBitmap);
         // setup services mocks
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockSystemInfoService);
         Mockito.when(mockPlatformServices.getNetworkService()).thenReturn(mockNetworkService);
-
         // setup mock cache
         cacheManager = new CacheManager(mockSystemInfoService);
         final File mockCache = new File("mock_cache");
         when(mockSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
         PowerMockito.whenNew(CacheManager.class).withAnyArguments().thenReturn(cacheManager);
-
         // setup mocks
         when(mockHttpConnection.getResponseCode()).thenReturn(200);
         when(mockHttpConnection.getResponsePropertyValue("ETag")).thenReturn("etag");
@@ -79,24 +81,47 @@ public class MessagingImageDownloaderTaskTests {
     }
 
     @Test
-    public void test_download() {
+    public void test_download() throws Exception {
+        // setup remote downloader and file mocks
+        when(mockRemoteDownloader.startDownloadSync()).thenReturn(mockFile);
+        PowerMockito.whenNew(RemoteDownloader.class).withAnyArguments().thenReturn(mockRemoteDownloader);
         // setup
-        ArgumentCaptor<NetworkService.Callback> callbackCaptor = ArgumentCaptor.forClass(NetworkService.Callback.class);
         InputStream inputStream = MessagingImageDownloaderTaskTests.class.getClassLoader().getResourceAsStream("experience_cloud.png");
-        Mockito.when(mockHttpConnection.getInputStream()).thenReturn(inputStream);
-        Bitmap mockBitmap = Mockito.mock(Bitmap.class);
-        PowerMockito.when(BitmapFactory.decodeStream(any(InputStream.class))).thenReturn(mockBitmap);
+        when(mockHttpConnection.getInputStream()).thenReturn(inputStream);
         messagingImageDownloaderTask = new MessagingImageDownloaderTask(IMAGE_URL, mockPlatformServices);
         // test
-       messagingImageDownloaderTask.call();
-        // verify 1 network request made containing the remote downloader in the callback
-        Mockito.verify(mockNetworkService, Mockito.times(1)).connectUrlAsync(anyString(),
-                any(NetworkService.HttpCommand.class),
-                ArgumentMatchers.<byte[]>isNull(), ArgumentMatchers.<Map<String, String>>isNull(), anyInt(), anyInt(), callbackCaptor.capture());
-        assertEquals(RemoteDownloader.class, callbackCaptor.getValue().getClass().getEnclosingClass());
-        callbackCaptor.getValue().call(mockHttpConnection);
-        // verify cache file and bitmap was created from the downloaded image asset
-        File cachedFile = cacheManager.getFileForCachedURL(IMAGE_URL, "images", true);
-        assertEquals(mockBitmap, MessagingUtils.getBitmapFromFile(cachedFile));
+        Bitmap bitmap = messagingImageDownloaderTask.call();
+        // verify 1 startDownloadSync called
+        verify(mockRemoteDownloader, times(1)).startDownloadSync();
+        // verify messagingImageDownloaderTask downloaded file
+        assertEquals(mockBitmap, bitmap);
+    }
+
+    @Test
+    public void test_download_EmptyURL() throws MissingPlatformServicesException {
+        // setup
+        InputStream inputStream = MessagingImageDownloaderTaskTests.class.getClassLoader().getResourceAsStream("experience_cloud.png");
+        when(mockHttpConnection.getInputStream()).thenReturn(inputStream);
+        messagingImageDownloaderTask = new MessagingImageDownloaderTask("", mockPlatformServices);
+        // test
+        Bitmap bitmap = messagingImageDownloaderTask.call();
+        // verify no startDownloadSync called
+        verify(mockRemoteDownloader, times(0)).startDownloadSync();
+        // verify messagingImageDownloaderTask did not download file
+        assertEquals(null, bitmap);
+    }
+
+    @Test (expected = MissingPlatformServicesException.class)
+    public void test_download_NullPlatformServices() throws Exception {
+        // setup
+        InputStream inputStream = MessagingImageDownloaderTaskTests.class.getClassLoader().getResourceAsStream("experience_cloud.png");
+        when(mockHttpConnection.getInputStream()).thenReturn(inputStream);
+        messagingImageDownloaderTask = new MessagingImageDownloaderTask(IMAGE_URL, null);
+        // test
+        Bitmap bitmap = messagingImageDownloaderTask.call();
+        // verify no startDownloadSync called
+        verify(mockRemoteDownloader, times(0)).startDownloadSync();
+        // verify messagingImageDownloaderTask did not download file
+        assertEquals(null, bitmap);
     }
 }
