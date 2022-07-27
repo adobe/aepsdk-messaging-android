@@ -75,3 +75,5 @@ sdk-build
 code/messaging/mock_cache/*
 # jacoco generated file
 code/messaging/jacoco.exec
+
+.vscode/

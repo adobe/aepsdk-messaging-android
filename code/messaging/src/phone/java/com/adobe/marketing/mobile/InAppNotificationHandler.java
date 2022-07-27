@@ -201,13 +201,12 @@ class InAppNotificationHandler {
                     Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
                     return;
                 }
-                final byte[] decodedScope;
+                String decodedScopeString;
                 if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
-                    decodedScope = encodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString());
+                    decodedScopeString = new String(encodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString()));
                 } else {
-                    decodedScope = encodingService.base64Decode((String) rawScope);
+                    decodedScopeString = new String(encodingService.base64Decode((String) rawScope));
                 }
-                final String decodedScopeString = new String(decodedScope);
                 final JSONObject decisionScopeJson = new JSONObject(decodedScopeString);
                 decisionScope = (String) decisionScopeJson.get(MessagingConstants.EventDataKeys.Optimize.XDM_NAME);
             } catch (final VariantException variantException) {
@@ -215,6 +214,9 @@ class InAppNotificationHandler {
                 return;
             } catch (final JSONException jsonException) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when creating a JSON object from the encoded decision scope: %s", SELF_TAG, jsonException.getMessage());
+                return;
+            } catch (final NullPointerException nullPointerException) {
+                Log.warning(LOG_TAG, "%s - NullPointerException caught while trying to decode decision scope: %s", SELF_TAG, nullPointerException.getMessage());
                 return;
             }
 
