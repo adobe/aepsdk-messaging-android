@@ -201,7 +201,7 @@ class InAppNotificationHandler {
                     Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
                     return;
                 }
-                String decodedScopeString;
+                final String decodedScopeString;
                 if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
                     decodedScopeString = new String(encodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString()));
                 } else {
