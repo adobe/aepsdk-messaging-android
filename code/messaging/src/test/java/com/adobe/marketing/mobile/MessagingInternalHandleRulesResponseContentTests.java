@@ -29,6 +29,7 @@ import android.os.Bundle;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
+import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
@@ -96,6 +97,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
     AEPMessage mockAEPMessage;
     @Mock
     ServiceProvider mockServiceProvider;
+    @Mock
+    MessagingDelegate mockMessagingDelegate;
 
     private MessagingInternal messagingInternal;
     private JsonUtilityService jsonUtilityService;
@@ -108,7 +111,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         setupMocks();
         setupPlatformServicesMocks();
-        setupAcitivtyAndPlacementIdMocks();
+        setupActivityAndPlacementIdMocks();
         setupSharedStateMocks();
 
         messagingInternal = new MessagingInternal(mockExtensionApi);
@@ -129,6 +132,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockPlatformServices.getJsonUtilityService()).thenReturn(jsonUtilityService);
         when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(mockMessagingDelegate);
+        when(mockMessagingDelegate.shouldShowMessage(any(FullscreenMessage.class))).thenReturn(true);
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
@@ -141,7 +146,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
     }
 
-    void setupAcitivtyAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
+    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
         // setup activity id mocks
         when(App.getApplication()).thenReturn(mockApplication);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);

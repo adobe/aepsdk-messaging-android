@@ -75,7 +75,7 @@ public class MessageTests {
         public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
             if (!showMessage) {
                 Message message = (Message) fullscreenMessage.getParent();
-                message.track("suppressed", MessagingEdgeEventType.IN_APP_INTERACT);
+                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
             }
             return showMessage;
         }
@@ -109,6 +109,8 @@ public class MessageTests {
     MessagingInternal mockMessagingInternal;
     @Mock
     ServiceProvider mockServiceProvider;
+    @Mock
+    MessagingDelegate mockMessagingDelegate;
     @Mock
     WebView mockWebView;
     @Mock
@@ -146,12 +148,14 @@ public class MessageTests {
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(ServiceProvider.class);
 
-        Mockito.when(mockApp.getCurrentActivity()).thenReturn(mockActivity);
-        Mockito.when(App.getInstance()).thenReturn(mockApp);
-        Mockito.when(MobileCore.getCore()).thenReturn(mockCore);
-        Mockito.when(MobileCore.getApplication()).thenReturn(mockApplication);
-        Mockito.when(mockApplication.getMainLooper()).thenReturn(mockLooper);
-        Mockito.when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        when(mockApp.getCurrentActivity()).thenReturn(mockActivity);
+        when(App.getInstance()).thenReturn(mockApp);
+        when(MobileCore.getCore()).thenReturn(mockCore);
+        when(MobileCore.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getMainLooper()).thenReturn(mockLooper);
+        when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(mockMessagingDelegate);
+        when(mockMessagingDelegate.shouldShowMessage(any(FullscreenMessage.class))).thenReturn(true);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
         // Actually run the runnable - mocking the handler.post()
         doAnswer(new Answer() {
@@ -162,10 +166,10 @@ public class MessageTests {
                 return null;
             }
         }).when(mockHandler).post(any(Runnable.class));
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
-        Mockito.when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
-        Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
-        Mockito.when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
+        when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
+        when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
+        when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
+        when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
     }
 
     Map<String, Object> setupXdmMap(MessageTestConfig config) {
@@ -371,7 +375,7 @@ public class MessageTests {
 
     @Test
     public void test_messageShow_withShowMessageFalseInCustomDelegate() {
-        Mockito.when(mockAEPMessageSettings.getParent()).thenReturn(message);
+        when(mockAEPMessageSettings.getParent()).thenReturn(message);
         // setup custom delegate
         CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
         customMessageDelegate.setShowMessage(false);
@@ -382,7 +386,7 @@ public class MessageTests {
         } catch (MessageCreationException e) {
             fail(e.getLocalizedMessage());
         }
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(aepMessage);
+        when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(aepMessage);
         try {
             message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
         } catch (MessageRequiredFieldMissingException e) {
@@ -392,15 +396,15 @@ public class MessageTests {
         // test
         message.show();
 
-        // expect 1 tracking event: triggered tracking
+        // expect 1 tracking event: custom delegate suppressed message tracking
         verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
         List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
         List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
-        // verify triggered tracking event
+        // verify custom delegate suppressed message tracking event
         MessagingEdgeEventType displayTrackingEvent = capturedEvents.get(0);
         String interaction = capturedInteractions.get(0);
         assertEquals(MessagingEdgeEventType.IN_APP_DISPLAY, displayTrackingEvent);
-        assertEquals(null, interaction);
+        assertEquals("suppressed", interaction);
     }
 
     @Test
