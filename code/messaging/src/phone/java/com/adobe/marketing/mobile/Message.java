@@ -210,6 +210,12 @@ public class Message extends MessagingDelegate {
     // ui management
     public void show() {
         if (aepMessage != null) {
+            // check if messages should be displayed before attempting to show one
+            if (!(ServiceProvider.getInstance().getMessageDelegate()).shouldShowMessage(aepMessage)) {
+                Log.debug(LOG_TAG,
+                        "%s - Message couldn't be displayed, MessagingDelegate#shouldShowMessage states the message should not be displayed.", SELF_TAG);
+                return;
+            }
             if (autoTrack) {
                 track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
             }
