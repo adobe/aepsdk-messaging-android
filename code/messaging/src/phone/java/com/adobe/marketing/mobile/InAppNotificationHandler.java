@@ -12,6 +12,15 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ITEMS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PERSONALIZATION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.QUERY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 
@@ -19,7 +28,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,18 +37,15 @@ import java.util.Map;
  * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
  */
 class InAppNotificationHandler {
-    // private vars
+    final MessagingInternal parent;
     private final static String SELF_TAG = "InAppNotificationHandler";
     private final Module messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
-    // package private
-    final MessagingInternal parent;
-    final OffersConfig offersConfig = new OffersConfig();
 
     /**
      * Constructor
      *
-     * @param parent {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param parent                  {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
      * @param messagingCacheUtilities {@link MessagingCacheUtilities} instance to use for caching in-app message rule jsons and image assets
      */
     InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
@@ -51,199 +56,84 @@ class InAppNotificationHandler {
         };
         // load cached rules (if any) when InAppNotificationHandler is instantiated
         if (messagingCacheUtilities != null && messagingCacheUtilities.areMessagesCached()) {
-            Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
+            Map<String, Object> cachedMessages = messagingCacheUtilities.getCachedMessages();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
-                handleOfferNotificationPayload(cachedMessages);
+                handlePersonalizationPayload(cachedMessages);
             }
         }
     }
 
     /**
-     * Generates and dispatches an event prompting the Optimize extension to fetch in-app messages.
+     * Generates and dispatches an event prompting the Edge extension to fetch in-app messages.
+     * The app surface used in the request is generated using the application id of the app.
+     * If the application id is unavailable, calling this method will do nothing.
      */
     void fetchMessages() {
-        final Map<String, String> decisionScope = new HashMap<>();
-        // if we have an activity and placement id present in the manifest use the id's to retrieve offers
-        if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
-            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the app manifest. Using these identifiers to retrieve offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
-            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForActivityAndPlacement(offersConfig.activityId, offersConfig.placementId));
-        } else { // otherwise use the application identifier
-            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to retrieve offers.", SELF_TAG, offersConfig.applicationId);
-            decisionScope.put(MessagingConstants.EventDataKeys.Optimize.NAME, getEncodedDecisionScopeForAppId(offersConfig.applicationId));
+        final String appSurface = App.getAppContext().getPackageName();
+        if (StringUtils.isNullOrEmpty(appSurface)) {
+            Log.warning(LOG_TAG, "%s - Unable to retrieve in-app messages - unable to retrieve the application id.", SELF_TAG);
+            return;
         }
 
-        // create event to be handled by the Optimize extension
-        final Map<String, Object> optimizeData = new HashMap<>();
-        final List<Map<String, String>> decisionScopes = new ArrayList<>();
-        decisionScopes.add(decisionScope);
-        optimizeData.put(MessagingConstants.EventDataKeys.Optimize.REQUEST_TYPE, MessagingConstants.EventDataKeys.Values.Optimize.UPDATE_PROPOSITIONS);
-        optimizeData.put(MessagingConstants.EventDataKeys.Optimize.DECISION_SCOPES, decisionScopes);
+        // create event to be handled by the Edge extension
+        final Map<String, Object> eventData = new HashMap<>();
+        final Map<String, Object> messageRequestData = new HashMap<>();
+        final Map<String, Object> personalizationData = new HashMap<>();
+        final List<String> surfaceData = new ArrayList<>();
+        surfaceData.add(SURFACE_BASE + appSurface);
+        personalizationData.put(SURFACES, surfaceData);
+        messageRequestData.put(PERSONALIZATION, personalizationData);
+        eventData.put(QUERY, messageRequestData);
+
+        // add xdm request type
+        final Map<String, Object> xdmData = new HashMap<String, Object>() {
+            {
+                put(EVENT_TYPE, PERSONALIZATION_REQUEST);
+            }
+        };
+        eventData.put(XDM, xdmData);
+
 
         // send event
+        Log.debug(LOG_TAG, "%s - Dispatching edge event to fetch in-app messages.", SELF_TAG);
         MessagingUtils.sendEvent(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
-                MessagingConstants.EventType.OPTIMIZE,
+                MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
-                optimizeData,
-                MessagingConstants.EventDispatchErrors.OPTIMIZE_OFFER_RETRIEVAL_ERROR);
+                eventData,
+                MessagingConstants.EventDispatchErrors.PERSONALIZATION_REQUEST_ERROR);
     }
 
     /**
-     * Takes the retrieved activity and placement id's and returns a base54 encoded JSON string in the format expected
-     * by the Optimize extension for retrieving offers
-     *
-     * @param activityId  a {@code String} containing the activity id
-     * @param placementId a {@code String} containing the placement id
-     * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
-     */
-    static String getEncodedDecisionScopeForActivityAndPlacement(final String activityId, final String placementId) {
-        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\",\"%s\":\"%s\",\"itemCount\":%s}",
-                MessagingConstants.EventDataKeys.Optimize.ACTIVITY_ID,
-                activityId,
-                MessagingConstants.EventDataKeys.Optimize.PLACEMENT_ID,
-                placementId,
-                MessagingConstants.DefaultValues.Optimize.MAX_ITEM_COUNT)
-                .getBytes(StandardCharsets.UTF_8);
-
-        final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
-        return new String(encodingService.base64Encode(decisionScopeBytes));
-    }
-
-    /**
-     * Takes the retrieved application identifier and returns a base64 encoded JSON string in the format expected
-     * by the Optimize extension for retrieving offers
-     *
-     * @param applicationId a {@code String} containing the application id
-     * @return a base64 encoded JSON string to be used by the Optimize extension for retrieving offers
-     */
-    static String getEncodedDecisionScopeForAppId(final String applicationId) {
-        final byte[] decisionScopeBytes = String.format("{\"%s\":\"%s\"}", MessagingConstants.EventDataKeys.Optimize.XDM_NAME, applicationId).getBytes(StandardCharsets.UTF_8);
-
-        final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
-        return new String(encodingService.base64Encode(decisionScopeBytes));
-    }
-
-    /**
-     * Handles the Offers notification payload by extracting the rules json objects present in the Edge response event payload
+     * Handles the notification payload by extracting the rules json objects present in the Edge response event payload
      * into a list of {@code Map} objects. The valid rule json objects are then registered in the {@link RulesEngine}.
      *
-     * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Optimize extension.
+     * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Edge extension.
      */
-    void handleOfferNotificationPayload(final Map<String, Variant> payload) {
+    void handlePersonalizationPayload(final Map<String, Object> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
             Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
             messagingCacheUtilities.clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
             return;
         }
+        final String appSurface = App.getAppContext().getPackageName();
+        Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
 
-        // if we have an activity and placement id present in the manifest use these id's to validate retrieved offers
-        if (!StringUtils.isNullOrEmpty(offersConfig.activityId) && !StringUtils.isNullOrEmpty(offersConfig.placementId)) {
-            Log.trace(LOG_TAG, "%s - Activity id (%s) and placement id (%s) were found in the manifest. Using these identifiers to validate offers.", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
-            final Map<String, String> activity;
-            final Map<String, String> placement;
-            final Object activityObject = payload.get(MessagingConstants.EventDataKeys.Optimize.ACTIVITY);
-            final Object placementObject = payload.get(MessagingConstants.EventDataKeys.Optimize.PLACEMENT);
-            if (activityObject == null || placementObject == null) {
-                Log.trace(LOG_TAG, "%s - Activity or placement was not found in the payload, aborting payload handling.", SELF_TAG);
-                return;
-            }
-            try { // need to convert the payload map depending on the source of the offers (optimize response event or previously cached offers)
-                activity = new HashMap<>();
-                if (activityObject instanceof Variant) {
-                    final Variant variantActivityMap = (Variant) activityObject;
-                    if (MessagingUtils.isMapNullOrEmpty(variantActivityMap.getStringMap())) {
-                        Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
-                        return;
-                    }
-                    activity.putAll(variantActivityMap.getStringMap());
-                } else {
-                    final Map<String, String> activityMap = (Map<String, String>) activityObject;
-                    if (MessagingUtils.isMapNullOrEmpty(activityMap)) {
-                        Log.trace(LOG_TAG, "%s - Activity map was empty, aborting payload handling.", SELF_TAG);
-                        return;
-                    }
-                    activity.putAll(activityMap);
-                }
-                placement = new HashMap<>();
-                if (placementObject instanceof Variant) {
-                    final Variant variantPlacementMap = (Variant) placementObject;
-                    if (MessagingUtils.isMapNullOrEmpty(variantPlacementMap.getStringMap())) {
-                        Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
-                        return;
-                    }
-                    placement.putAll(variantPlacementMap.getStringMap());
-                } else {
-                    final Map<String, String> placementMap = (Map<String, String>) placementObject;
-                    if (MessagingUtils.isMapNullOrEmpty(placementMap)) {
-                        Log.trace(LOG_TAG, "%s - Placement map was empty, aborting payload handling.", SELF_TAG);
-                        return;
-                    }
-                    placement.putAll(placementMap);
-                }
-            } catch (final VariantException e) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
-                return;
-            }
-            final String offerActivityId = activity.get(MessagingConstants.EventDataKeys.Optimize.ID);
-            final String offerPlacementId = placement.get(MessagingConstants.EventDataKeys.Optimize.ID);
-            Log.debug(LOG_TAG, "%s - Offers IAM payload contained activity id: (%s) and placement id: (%s)", SELF_TAG, offerActivityId, offerPlacementId);
-            if (!offerActivityId.equals(offersConfig.activityId) || !offerPlacementId.equals(offersConfig.placementId)) {
-                Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved activity or placement id does not match the expected activity id: (%s) or expected placement id: (%s).", SELF_TAG, offersConfig.activityId, offersConfig.placementId);
-                return;
-            }
-        } else { // otherwise use the application identifier to validate offers
-            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate offers.", SELF_TAG, offersConfig.applicationId);
-            final EncodingService encodingService = MobileCore.getCore().eventHub.getPlatformServices().getEncodingService();
-            String decisionScope;
-            try {
-                Object rawScope = payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE);
-                if (rawScope == null || StringUtils.isNullOrEmpty(rawScope.toString())) {
-                    Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
-                    return;
-                }
-                final String decodedScopeString;
-                if (rawScope instanceof Variant) { // need to convert the scope Json depending on the source of the offers (optimize response event or previously cached offers)
-                    decodedScopeString = new String(encodingService.base64Decode(payload.get(MessagingConstants.EventDataKeys.Optimize.SCOPE).convertToString()));
-                } else {
-                    decodedScopeString = new String(encodingService.base64Decode((String) rawScope));
-                }
-                final JSONObject decisionScopeJson = new JSONObject(decodedScopeString);
-                decisionScope = (String) decisionScopeJson.get(MessagingConstants.EventDataKeys.Optimize.XDM_NAME);
-            } catch (final VariantException variantException) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when converting a VariantMap to StringMap: %s", SELF_TAG, variantException.getMessage());
-                return;
-            } catch (final JSONException jsonException) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when creating a JSON object from the encoded decision scope: %s", SELF_TAG, jsonException.getMessage());
-                return;
-            } catch (final NullPointerException nullPointerException) {
-                Log.warning(LOG_TAG, "%s - NullPointerException caught while trying to decode decision scope: %s", SELF_TAG, nullPointerException.getMessage());
-                return;
-            }
+        final String scope = (String) payload.get(SCOPE);
+        if (StringUtils.isNullOrEmpty(scope)) {
+            Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
+            return;
+        }
 
-            Log.debug(LOG_TAG, "%s - Offers IAM payload contained application identifier: (%s)", SELF_TAG, decisionScope);
-            if (!decisionScope.equals(offersConfig.applicationId)) {
-                Log.debug(LOG_TAG, "%s - ignoring Offers IAM payload, the retrieved application identifier did not match the expected application identifier: (%s).", SELF_TAG, offersConfig.applicationId);
-                return;
-            }
+        // check that app surface is present in the payload before processing any in-app message rules present
+        Log.debug(LOG_TAG, "%s - IAM payload contained the app surface: (%s)", SELF_TAG, scope);
+        if (!scope.equals(SURFACE_BASE + appSurface)) {
+            Log.debug(LOG_TAG, "%s - the retrieved application identifier did not match the app surface present in the IAM payload: (%s).", SELF_TAG, appSurface);
+            return;
         }
 
         // extract the items from the offers payload then attempt to register the contained rules
-        List<Map<String, Variant>> items = new ArrayList<>();
-        final Object itemsList = payload.get(MessagingConstants.EventDataKeys.Optimize.ITEMS);
-        if (itemsList instanceof Variant) {
-            List<Variant> variantList = new ArrayList<>();
-            try {
-                variantList = ((VectorVariant) itemsList).getVariantList();
-            } catch (final Exception exception) {
-                Log.debug(LOG_TAG, "%s - Exception occurred when extracting rules from the Optimize payload: (%s)", SELF_TAG, exception.getMessage());
-            }
-            for (final Object element : variantList) {
-                final MapVariant mapVariant = (MapVariant) element;
-                items.add(mapVariant.getVariantMap());
-            }
-        } else {
-            items = (List<Map<String, Variant>>) itemsList;
-        }
+        List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get(ITEMS);
 
         // save the payload to the messaging cache
         messagingCacheUtilities.cacheRetrievedMessages(payload);
@@ -255,28 +145,18 @@ class InAppNotificationHandler {
      * Validates each {@link Rule} in the items {@code List} then adds all valid rules to the {@link RulesEngine}.
      * Any image assets found are cached using the {@link MessagingCacheUtilities}.
      *
-     * @param items a {@link List<Map<String, Variant>>} containing a rule payload.
+     * @param items a {@link List<Map<String, Object>>} containing a rule payload.
      */
-    private void registerRules(final List<Map<String, Variant>> items) {
+    private void registerRules(final List<Map<String, Object>> items) {
         final List<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
         final List<Rule> parsedRules = new ArrayList<>();
         // Loop through each rule in the payload and collect the rule json's present.
         // Additionally, extract the image assets and build the asset list for asset caching.
-        for (final Map<String, Variant> currentItem : items) {
-            final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Optimize.DATA);
-            final Map<String, String> data;
-            try {
-                data = new HashMap<>();
-                if (dataObject instanceof Variant) {
-                    data.putAll(((Variant) dataObject).getStringMap());
-                } else {
-                    data.putAll((Map<String, String>) dataObject);
-                }
-            } catch (final VariantException e) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when converting VariantMap to StringMap: %s", SELF_TAG, e.getMessage());
-                return;
-            }
-            final String ruleJson = data.get(MessagingConstants.EventDataKeys.Optimize.CONTENT);
+        for (final Map<String, Object> currentItem : items) {
+            final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Personalization.DATA);
+            final Map<String, String> data = new HashMap<>();
+            data.putAll((Map<String, String>) dataObject);
+            final String ruleJson = data.get(MessagingConstants.EventDataKeys.Personalization.CONTENT);
             final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {

@@ -91,7 +91,7 @@ final class MessagingCacheUtilities {
      *
      * @return a {@code Map<String, Variant>} containing the message payloads.
      */
-    Map<String, Variant> getCachedMessages() {
+    Map<String, Object> getCachedMessages() {
         final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, MESSAGES_CACHE_SUBDIRECTORY, false);
         if (cachedMessageFile == null) {
             Log.debug(LOG_TAG, "%s - Unable to find a cached message.", SELF_TAG);
@@ -103,7 +103,7 @@ final class MessagingCacheUtilities {
             fileInputStream = new FileInputStream(cachedMessageFile);
             final String streamContents = StringUtils.streamToString(fileInputStream);
             final JSONObject cachedMessagePayload = new JSONObject(streamContents);
-            return MessagingUtils.toVariantMap(cachedMessagePayload);
+            return MessagingUtils.toMap(cachedMessagePayload);
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, "%s - Exception occurred when retrieving the cached message file: %s", SELF_TAG, fileNotFoundException.getMessage());
             return null;
@@ -123,37 +123,11 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     * Caches the {@link Map <String, Object>} message payload.
      *
-     * @param object to be converted to jSON
-     * @return {@link Object} containing a json object or json array
+     * @param messagePayload the {@code Map<String, Object>} containing the message payload to be cached.
      */
-    protected Object toJSON(final Object object) throws JSONException {
-        if (object instanceof HashMap) {
-            JSONObject jsonObject = new JSONObject();
-            final Map map = (HashMap) object;
-            for (final Object key : map.keySet()) {
-                jsonObject.put(key.toString(), toJSON(map.get(key)));
-            }
-            return jsonObject;
-        } else if (object instanceof Iterable) {
-            JSONArray jsonArray = new JSONArray();
-            final Iterator iterator = ((Iterable<?>) object).iterator();
-            while (iterator.hasNext()) {
-                jsonArray.put(toJSON(iterator.next()));
-            }
-            return jsonArray;
-        } else {
-            return object;
-        }
-    }
-
-    /**
-     * Caches the {@link Map <String, Variant>} message payload.
-     *
-     * @param messagePayload the {@code Map<String, Variant>} containing the message payload to be cached.
-     */
-    void cacheRetrievedMessages(final Map<String, Variant> messagePayload) {
+    void cacheRetrievedMessages(final Map<String, Object> messagePayload) {
         // clean any existing cached files first
         clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
         // quick out if an empty message payload was received
@@ -164,7 +138,7 @@ final class MessagingCacheUtilities {
         final File cachedMessages = cacheManager.createNewCacheFile(CACHE_NAME, MESSAGES_CACHE_SUBDIRECTORY, new Date());
         try {
             // convert the message payload to JSON then cache the JSON as a string
-            final Object json = toJSON(messagePayload);
+            final Object json = MessagingUtils.toJSON(messagePayload);
             writeInputStreamIntoFile(cachedMessages, new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)), false);
         } catch (final JSONException e) {
             Log.error(LOG_TAG, "%s - JSONException while attempting to create JSON from ArrayList payload: (%s)", SELF_TAG, e);

@@ -105,6 +105,32 @@ class MessagingUtils {
     }
 
     /**
+     * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     *
+     * @param object to be converted to jSON
+     * @return {@link Object} containing a json object or json array
+     */
+    static Object toJSON(final Object object) throws JSONException {
+        if (object instanceof HashMap) {
+            JSONObject jsonObject = new JSONObject();
+            final Map map = (HashMap) object;
+            for (final Object key : map.keySet()) {
+                jsonObject.put(key.toString(), toJSON(map.get(key)));
+            }
+            return jsonObject;
+        } else if (object instanceof Iterable) {
+            JSONArray jsonArray = new JSONArray();
+            final Iterator iterator = ((Iterable<?>) object).iterator();
+            while (iterator.hasNext()) {
+                jsonArray.put(toJSON(iterator.next()));
+            }
+            return jsonArray;
+        } else {
+            return object;
+        }
+    }
+
+    /**
      * Converts provided {@link JSONObject} to a {@link Map} or {@link JSONArray} into a {@link List}.
      *
      * @param json to be converted

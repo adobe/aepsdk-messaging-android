@@ -18,7 +18,7 @@ final class MessagingConstants {
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_NAME = "com.adobe.messaging.cache";
-    static final String MESSAGES_CACHE_SUBDIRECTORY = "messages";
+    static final String MESSAGES_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
 
     private MessagingConstants() {
@@ -34,6 +34,7 @@ final class MessagingConstants {
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
         static final String MESSAGE_EXECUTION = "messageExecution";
         static final String MESSAGE_EXECUTION_ID = "messageExecutionID";
+        static final String MESSAGE_ID = "messageID";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +
                 "      \"channel\":{\n" +
@@ -51,11 +52,6 @@ final class MessagingConstants {
         static final String COLLECT = "collect";
     }
 
-    final class ManifestMetadataKeys {
-        static final String ACTIVITY_ID = "activityId";
-        static final String PLACEMENT_ID = "placementId";
-    }
-
     final class JsonValues {
         static final String FCM = "fcm";
         static final String ECID = "ECID";
@@ -70,12 +66,6 @@ final class MessagingConstants {
         static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
         static final String JS = "js";
-    }
-
-    final class DefaultValues {
-        final class Optimize {
-            static final int MAX_ITEM_COUNT = 30;
-        }
     }
 
     final class EventDataKeys {
@@ -106,6 +96,7 @@ final class MessagingConstants {
             }
 
             final class XDMDataKeys {
+                static final String XDM = "xdm";
                 static final String ACTION_ID = "actionID";
                 static final String CUSTOM_ACTION = "customAction";
                 static final String PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
@@ -136,16 +127,20 @@ final class MessagingConstants {
                     static final String CUSTOM_ACTION = "pushTracking.customAction";
                 }
 
-                private PushNotificationDetailsDataKeys() {
+                private PushNotificationDetailsDataKeys () {
                 }
             }
 
             final class IAMDetailsDataKeys {
+                static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
+                static final String SURFACE_BASE = "mobileapp://";
+
                 final class EventType {
                     static final String DISMISS = "inapp.dismiss";
                     static final String INTERACT = "inapp.interact";
                     static final String TRIGGER = "inapp.trigger";
                     static final String DISPLAY = "inapp.display";
+                    static final String PERSONALIZATION_REQUEST = "personalization.request";
                 }
 
                 private IAMDetailsDataKeys() {
@@ -153,29 +148,21 @@ final class MessagingConstants {
             }
         }
 
-        final class Optimize {
-            static final String REQUEST_TYPE = "requesttype";
-            static final String DECISION_SCOPES = "decisionscopes";
-            static final String NAME = "name";
-            static final String ID = "id";
+        final class Personalization {
+            static final String PERSONALIZATION = "personalization";
+            static final String CHARACTERISTICS = "characteristics";
+            static final String CJM_EVENT = "cjmEvent";
+            static final String PAYLOAD = "payload";
+            static final String ITEMS = "items";
             static final String DATA = "data";
             static final String CONTENT = "content";
-            static final String PAYLOAD = "payload";
-            static final String ACTIVITY = "activity";
-            static final String PLACEMENT = "placement";
-            static final String ACTIVITY_ID = "activityId";
-            static final String PLACEMENT_ID = "placementId";
-            static final String ITEMS = "items";
-            static final String XDM_NAME = "xdm:name";
+            static final String ID = "id";
             static final String SCOPE = "scope";
+            static final String SCOPE_DETAILS = "scopeDetails";
+            static final String QUERY = "query";
+            static final String SURFACES = "surfaces";
 
-            private Optimize() {
-            }
-        }
-
-        final class Values {
-            final class Optimize {
-                static final String UPDATE_PROPOSITIONS = "updatepropositions";
+            private Personalization() {
             }
         }
 
@@ -224,7 +211,6 @@ final class MessagingConstants {
     final class EventType {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
-        static final String OPTIMIZE = "com.adobe.eventType.optimize";
     }
 
     final class EventName {
@@ -241,10 +227,10 @@ final class MessagingConstants {
     }
 
     final class EventDispatchErrors {
-        static final String OPTIMIZE_OFFER_RETRIEVAL_ERROR = "Error in dispatching event for refreshing messages from Optimize";
         static final String PUSH_PROFILE_UPDATE_ERROR = "Error in dispatching event for updating the push profile details";
         static final String PUSH_TRACKING_ERROR = "Error in dispatching event for push notification tracking";
         static final String IN_APP_TRACKING_ERROR = "Error in dispatching event for in-app notification tracking";
+        static final String PERSONALIZATION_REQUEST_ERROR = "Error in dispatching event to fetch in-app messages";
     }
 
     final class EventDataValues {

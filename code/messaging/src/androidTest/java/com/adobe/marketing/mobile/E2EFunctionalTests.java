@@ -20,7 +20,6 @@ import static org.junit.Assert.fail;
 
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.messaging.BuildConfig;
-import com.adobe.marketing.mobile.optimize.Optimize;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +54,6 @@ public class E2EFunctionalTests {
         MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "80195814545200720557089495418993853789"), TestHelper.defaultApplication);
 
         Messaging.registerExtension();
-        Optimize.registerExtension();
         Identity.registerExtension();
         Edge.registerExtension();
 

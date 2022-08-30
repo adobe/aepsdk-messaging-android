@@ -410,10 +410,10 @@ class MessagingInternal extends Extension {
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
-                // validate the edge response event from Optimize then load any iam rules present
-                final List<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+                // validate the edge response event then load any iam rules present
+                final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Personalization.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
-                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+                    inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
                 }
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 // handle rules response events containing message definitions
