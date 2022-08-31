@@ -122,12 +122,12 @@ final class MessagingConstants {
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
 
+                private PushNotificationDetailsDataKeys() {
+                }
+
                 final class EventType {
                     static final String OPENED = "pushTracking.applicationOpened";
                     static final String CUSTOM_ACTION = "pushTracking.customAction";
-                }
-
-                private PushNotificationDetailsDataKeys () {
                 }
             }
 
@@ -135,15 +135,15 @@ final class MessagingConstants {
                 static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
                 static final String SURFACE_BASE = "mobileapp://";
 
+                private IAMDetailsDataKeys() {
+                }
+
                 final class EventType {
                     static final String DISMISS = "inapp.dismiss";
                     static final String INTERACT = "inapp.interact";
                     static final String TRIGGER = "inapp.trigger";
                     static final String DISPLAY = "inapp.display";
                     static final String PERSONALIZATION_REQUEST = "personalization.request";
-                }
-
-                private IAMDetailsDataKeys() {
                 }
             }
         }

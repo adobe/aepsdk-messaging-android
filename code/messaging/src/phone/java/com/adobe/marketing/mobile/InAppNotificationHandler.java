@@ -37,8 +37,8 @@ import java.util.Map;
  * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
  */
 class InAppNotificationHandler {
-    final MessagingInternal parent;
     private final static String SELF_TAG = "InAppNotificationHandler";
+    final MessagingInternal parent;
     private final Module messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
 

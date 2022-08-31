@@ -14,16 +14,12 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
 
 import org.junit.After;
 import org.junit.Before;
@@ -33,10 +29,8 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,23 +42,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class InAppNotificationHandlerTests {
+    private static final String mockAppId = "mock_applicationId";
     private final Map<String, Object> mockConfigState = new HashMap<>();
     private final Map<String, Object> mockIdentityState = new HashMap<>();
     private final Map<String, Object> identityMap = new HashMap<>();
     private final Map<String, Object> ecidMap = new HashMap<>();
     private final List<Map> ids = new ArrayList<>();
-    private final String testActivityAndPlacement = "{\"activityId\":\"mock_activity\",\"placementId\":\"mock_placement\",\"itemCount\":30}";
-    private final String testApplicationId = "{\"xdm:name\":\"mock_applicationId\"}";
-    private final String nonMatchingApplicationId = "{\"xdm:name\":\"non_matching_applicationId\"}";
-    private final String base64EncodedActivityAndPlacement = "eyJhY3Rpdml0eUlkIjoibW9ja19hY3Rpdml0eSIsInBsYWNlbWVudElkIjoibW9ja19wbGFjZW1lbnQiLCJpdGVtQ291bnQiOjMwfQ==";
-    private final String base64EncodedApplicationId = "eyJ4ZG06bmFtZSI6Im1vY2tfYXBwbGljYXRpb25JZCJ9";
-    private final String base64EncodedOtherApplicationId = "eyJ4ZG06bmFtZSI6Im5vbl9tYXRjaGluZ19hcHBsaWNhdGlvbklkIn0=";
-    private AndroidPlatformServices platformServices;
-    private JsonUtilityService jsonUtilityService;
-    private EventHub eventHub;
-    private MessagingCacheUtilities messagingCacheUtilities;
-    private InAppNotificationHandler inAppNotificationHandler;
-
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -87,11 +70,12 @@ public class InAppNotificationHandlerTests {
     @Mock
     PackageManager packageManager;
     @Mock
-    ApplicationInfo applicationInfo;
-    @Mock
-    Bundle bundle;
-    @Mock
     MessagingInternal mockMessagingInternal;
+    private AndroidPlatformServices platformServices;
+    private JsonUtilityService jsonUtilityService;
+    private EventHub eventHub;
+    private MessagingCacheUtilities messagingCacheUtilities;
+    private InAppNotificationHandler inAppNotificationHandler;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, InterruptedException, MissingPlatformServicesException {
@@ -99,9 +83,8 @@ public class InAppNotificationHandlerTests {
         mockCore.eventHub = eventHub;
 
         setupMocks();
-        setupActivityAndPlacementIdMocks();
+        setupApplicationIdMocks();
         setupPlatformServicesMocks();
-        setupEncodingServiceMocks();
         setupSharedStateMocks();
 
         messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
@@ -115,17 +98,13 @@ public class InAppNotificationHandlerTests {
         when(MobileCore.getCore()).thenReturn(mockCore);
     }
 
-    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
+    void setupApplicationIdMocks() {
         when(App.getApplication()).thenReturn(mockApplication);
         when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
         when(mockApplication.getApplicationContext()).thenReturn(mockContext);
-        when(mockApplication.getPackageName()).thenReturn("mock_applicationId");
-        when(mockContext.getPackageName()).thenReturn("mock_applicationId");
-        when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
-        Whitebox.setInternalState(applicationInfo, "metaData", bundle);
-        when(bundle.getString("activityId")).thenReturn("mock_activity");
-        when(bundle.getString("placementId")).thenReturn("mock_placement");
+        when(mockApplication.getPackageName()).thenReturn(mockAppId);
+        when(mockContext.getPackageName()).thenReturn(mockAppId);
     }
 
     void setupPlatformServicesMocks() {
@@ -139,18 +118,6 @@ public class InAppNotificationHandlerTests {
         // setup mock cache file
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-    }
-
-    void setupEncodingServiceMocks() {
-        // mock for encoded/decoded activity and placement id
-        when(mockAndroidEncodingService.base64Encode(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
-        when(mockAndroidEncodingService.base64Decode(base64EncodedActivityAndPlacement)).thenReturn(testActivityAndPlacement.getBytes(StandardCharsets.UTF_8));
-        // mock for encoded/decoded application id
-        when(mockAndroidEncodingService.base64Encode(testApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedApplicationId.getBytes(StandardCharsets.UTF_8));
-        when(mockAndroidEncodingService.base64Decode(base64EncodedApplicationId)).thenReturn(testApplicationId.getBytes(StandardCharsets.UTF_8));
-        // mock for encoded/decoded non matching application id
-        when(mockAndroidEncodingService.base64Encode(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8))).thenReturn(base64EncodedOtherApplicationId.getBytes(StandardCharsets.UTF_8));
-        when(mockAndroidEncodingService.base64Decode(base64EncodedOtherApplicationId)).thenReturn(nonMatchingApplicationId.getBytes(StandardCharsets.UTF_8));
     }
 
     void setupSharedStateMocks() {
@@ -173,17 +140,17 @@ public class InAppNotificationHandlerTests {
     }
 
     // ========================================================================================
-    // handleOfferNotificationPayload, activity id and placement id present
+    // handlePersonalizationPayload, activity id and placement id present
     // ========================================================================================
     @Test
-    public void test_handleOfferNotificationPayload_ValidOffersIAMPayloadPresent() {
+    public void test_handlePersonalizationPayload_ValidIAMPayloadPresent() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -193,14 +160,14 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_MultipleValidOffersIAMPayloadPresent() {
+    public void test_handlePersonalizationPayload_MultipleValidIAMPayloadPresent() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 3;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify 3 rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -210,7 +177,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OneInvalidIAMPayloadPresent() {
+    public void test_handlePersonalizationPayload_OneInvalidIAMPayloadPresent() {
         // setup
         MessageTestConfig validPayloadConfig = new MessageTestConfig();
         validPayloadConfig.count = 2;
@@ -222,7 +189,7 @@ public class InAppNotificationHandlerTests {
         payload.addAll(invalidPayload);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify 2 rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -232,7 +199,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageId() {
+    public void test_handlePersonalizationPayload_IAMPayloadMissingMessageId() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -240,7 +207,7 @@ public class InAppNotificationHandlerTests {
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -248,7 +215,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageType() {
+    public void test_handlePersonalizationPayload_IAMPayloadMissingMessageType() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -256,7 +223,7 @@ public class InAppNotificationHandlerTests {
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -264,7 +231,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadMissingMessageDetail() {
+    public void test_handlePersonalizationPayload_IAMPayloadMissingMessageDetail() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -272,7 +239,7 @@ public class InAppNotificationHandlerTests {
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -280,7 +247,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadIsEmpty() {
+    public void test_handlePersonalizationPayload_IAMPayloadIsEmpty() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -288,7 +255,7 @@ public class InAppNotificationHandlerTests {
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -296,41 +263,9 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadIsNull() {
+    public void test_handlePersonalizationPayload_IAMPayloadIsNull() {
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(null);
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadHasInvalidActivityId() {
-        // setup
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.invalidActivityId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-
-        // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
-
-        // verify no rules loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        assertEquals(0, moduleRules.size());
-    }
-
-    @Test
-    public void test_handleOfferNotificationPayload_OffersIAMPayloadHasInvalidPlacementId() {
-        // setup
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.invalidPlacementId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-
-        // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(null);
 
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -338,47 +273,22 @@ public class InAppNotificationHandlerTests {
     }
 
     // ========================================================================================
-    // handleOfferNotificationPayload, application id present
+    // handlePersonalizationPayload
     // ========================================================================================
     @Test
-    public void test_handleOfferNotificationPayload_OffersConfigUsingApplicationId_ValidOffersIAMPayloadPresent() {
+    public void test_handlePersonalizationPayload_PayloadContainsNonMatchingScope() {
         // setup
-        when(bundle.getString("activityId")).thenReturn(null);
-        when(bundle.getString("placementId")).thenReturn(null);
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        config.isUsingApplicationId = true;
+        config.noValidAppSurfaceInPayload = true;
+        config.nonMatchingAppSurfaceInPayload = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
-
-        // verify rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
-        ConcurrentLinkedQueue<Rule> loadedRules = rules.iterator().next();
-        assertEquals(1, loadedRules.size());
-    }
-
-    @Test
-    public void test_handleOfferNotificationPayload_OffersConfigUsingApplicationId_PayloadContainsNonMatchingApplicationId() {
-        // setup
-        when(bundle.getString("activityId")).thenReturn(null);
-        when(bundle.getString("placementId")).thenReturn(null);
-        mockMessagingInternal = new MessagingInternal(mockExtensionApi);
-        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.isUsingApplicationId = true;
-        config.invalidApplicationId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-
-        // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify no rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -387,22 +297,19 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleOfferNotificationPayload_OffersConfigUsingApplicationId_PayloadMissingScope() {
+    public void test_handlePersonalizationPayload_PayloadMissingScope() {
         // setup
-        when(bundle.getString("activityId")).thenReturn(null);
-        when(bundle.getString("placementId")).thenReturn(null);
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        config.isUsingApplicationId = true;
-        config.hasNoScopeInPayload = true;
+        config.noValidAppSurfaceInPayload = true;
 
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
 
         // test
-        inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
 
         // verify no rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -414,7 +321,7 @@ public class InAppNotificationHandlerTests {
     // inAppNotificationHandler load cached messages on instantiation
     // ========================================================================================
     @Test
-    public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_ValidPayload() {
+    public void test_cachedMessagePayload_ValidPayload() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -431,74 +338,14 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_nonMatchingActivityId() {
+    public void test_cachedMessagePayload_nonMatchingScope() {
         // setup
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.invalidActivityId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
-
-        // test
-        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-
-        // verify no rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
-        assertEquals(0, rules.size());
-    }
-
-    @Test
-    public void test_cachedMessagePayload_OffersConfigUsingActivityAndPlacement_nonMatchingPlacementId() {
-        // setup
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.invalidPlacementId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
-
-        // test
-        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-
-        // verify no rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
-        assertEquals(0, rules.size());
-    }
-
-    @Test
-    public void test_cachedMessagePayload_OffersConfigUsingApplicationId_ValidPayload() {
-        // setup
-        when(bundle.getString("activityId")).thenReturn(null);
-        when(bundle.getString("placementId")).thenReturn(null);
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        config.isUsingApplicationId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
-
-        // test
-        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-
-        // verify 1 rule loaded
-        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
-        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
-        assertEquals(1, rules.size());
-    }
-
-    @Test
-    public void test_cachedMessagePayload_OffersConfigUsingApplicationId_nonMatchingApplicationId() {
-        // setup
-        when(bundle.getString("activityId")).thenReturn(null);
-        when(bundle.getString("placementId")).thenReturn(null);
-        mockMessagingInternal = new MessagingInternal(mockExtensionApi);
-
-        MessageTestConfig config = new MessageTestConfig();
-        config.count = 1;
-        config.isUsingApplicationId = true;
-        config.invalidApplicationId = true;
+        config.noValidAppSurfaceInPayload = true;
+        config.nonMatchingAppSurfaceInPayload = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
         messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
 

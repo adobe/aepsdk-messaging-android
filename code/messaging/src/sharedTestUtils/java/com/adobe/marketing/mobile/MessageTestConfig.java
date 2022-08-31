@@ -18,10 +18,7 @@ public class MessageTestConfig {
     public boolean isMissingMessageType = false;
     public boolean isMissingMessageDetail = false;
     public boolean hasHtmlPayloadMissing = false;
-    public boolean invalidActivityId = false;
-    public boolean invalidPlacementId = false;
-    public boolean isUsingApplicationId = false;
-    public boolean invalidApplicationId = false;
+    public boolean nonMatchingAppSurfaceInPayload = false;
     public boolean hasEmptyPayload = false;
-    public boolean hasNoScopeInPayload = false;
+    public boolean noValidAppSurfaceInPayload = false;
 }

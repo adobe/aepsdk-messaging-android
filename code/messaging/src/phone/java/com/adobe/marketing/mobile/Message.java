@@ -36,14 +36,14 @@ import java.util.Map;
  */
 public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
+    private final FullscreenMessage aepMessage;
+    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
     // public properties
     public String id;
     public boolean autoTrack = true;
     // private properties
     private WebView webView;
-    private final FullscreenMessage aepMessage;
-    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
 
     /**
      * Constructor.

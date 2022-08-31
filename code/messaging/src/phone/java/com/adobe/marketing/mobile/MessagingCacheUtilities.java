@@ -17,7 +17,6 @@ import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRE
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 

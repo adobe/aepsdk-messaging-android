@@ -53,11 +53,11 @@ public class MessagePayloadCachingTests {
     @Test
     public void testGetCachedMessages() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final Map<String, Object> payload = MessagingTestUtils.getMapFromFile("show_once.json");
         final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("show_once.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
+        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify payload retrieved
@@ -67,7 +67,7 @@ public class MessagePayloadCachingTests {
     @Test
     public void testGetCachedMessages_WhenNoMessageCached() {
         // test
-        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
+        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -79,7 +79,7 @@ public class MessagePayloadCachingTests {
         // setup
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(null);
         // test
-        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
+        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -92,7 +92,7 @@ public class MessagePayloadCachingTests {
         final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("invalid.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Variant> retrievedPayload = messagingCacheUtilities.getCachedMessages();
+        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedMessages();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -102,7 +102,7 @@ public class MessagePayloadCachingTests {
     @Test
     public void testCacheMessagePayload() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = MessagingTestUtils.getVariantMapFromFile("show_once.json");
+        final Map<String, Object> payload = MessagingTestUtils.getMapFromFile("show_once.json");
         final File cachedMessageLocation = new File(MessagingTestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
         when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
         // test
@@ -116,7 +116,7 @@ public class MessagePayloadCachingTests {
     @Test
     public void testCacheMessagePayload_WhenPayloadIsNull() throws URISyntaxException {
         // setup
-        final Map<String, Variant> payload = null;
+        final Map<String, Object> payload = null;
         // test
         messagingCacheUtilities.cacheRetrievedMessages(payload);
         // verify deleteFilesNotInList called

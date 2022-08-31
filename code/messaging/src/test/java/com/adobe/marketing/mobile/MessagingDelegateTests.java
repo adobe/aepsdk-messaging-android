@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,9 +43,6 @@ import java.util.concurrent.Executors;
 @PrepareForTest({Log.class, MobileCore.class, Event.class, App.class, MessagingDelegate.class, ServiceProvider.class})
 public class MessagingDelegateTests {
 
-    private EventHub eventHub;
-    private MessagingDelegate messagingDelegate;
-
     @Mock
     Core mockCore;
     @Mock
@@ -69,6 +65,8 @@ public class MessagingDelegateTests {
     MessagingInternal mockMessagingInternal;
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
+    private EventHub eventHub;
+    private MessagingDelegate messagingDelegate;
 
     @Before
     public void setup() throws Exception {
