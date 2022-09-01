@@ -1,3 +1,2 @@
-include ':app', ':messaging'
-include(':messaging:aar')
+include ':app', ':messaging', ':messagingtestutils'
 rootProject.name='messaging-sdk'

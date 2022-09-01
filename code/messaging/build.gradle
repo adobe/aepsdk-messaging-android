@@ -30,6 +30,7 @@ android {
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
+        multiDexEnabled true
     }
 
     flavorDimensions "target"
@@ -39,7 +40,7 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled true
+            testCoverageEnabled false
             debuggable true
         }
         release {
@@ -59,21 +60,6 @@ android {
 
     libraryVariants.all { variant ->
         variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
-    }
-
-    sourceSets {
-        final def sharedTestUtilJavaDir = 'src/sharedTestUtils/java'
-        final def resourceDir = 'src/test/resources'
-
-        test {
-            java.srcDirs += [sharedTestUtilJavaDir]
-            resources.srcDirs += [resourceDir]
-        }
-
-        androidTest {
-            java.srcDirs += [sharedTestUtilJavaDir]
-            resources.srcDirs += [resourceDir]
-        }
     }
 }
 
@@ -236,7 +222,12 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
     androidTestImplementation 'com.adobe.marketing.mobile:edge:1.1.1'
-    testImplementation project(path: ':messaging')
+
+    // add dependencies for functional and unit tests
+    testImplementation project(':messagingtestutils')
+    androidTestImplementation project(':messagingtestutils')
+    testImplementation project(':messaging')
+    androidTestImplementation project(':messaging')
 }
 
 tasks.withType(Test) {

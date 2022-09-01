@@ -10,12 +10,6 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingUtils.toMap;
-import static com.adobe.marketing.mobile.MessagingUtils.toVariantMap;
-import static org.junit.Assert.fail;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,9 +20,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
+import org.junit.Assert;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assert;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -120,7 +116,7 @@ public class MessagingTestUtils {
      *
      * @param fileName the {@code String} name of a file located in the resource directory
      */
-    static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
+    public static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
         final EventData eventData = new EventData();
         final List<Variant> items = new ArrayList<>();
         items.add(Variant.fromVariantMap(getVariantMapFromFile(fileName)));
@@ -174,7 +170,7 @@ public class MessagingTestUtils {
      * @param fileName the {@code String} name of a file located in the resource directory
      * @return a {@code String} containing the file's contents
      */
-    static String loadStringFromFile(final String fileName) {
+    public static String loadStringFromFile(final String fileName) {
         final InputStream inputStream = convertResourceFileToInputStream(fileName);
         try {
             if (inputStream != null) {
@@ -197,21 +193,21 @@ public class MessagingTestUtils {
      * Cleans Messaging extension payload and image asset cache files.
      */
     static void cleanCache() {
-        final SystemInfoService systemInfoService = MessagingUtils.getPlatformServices().getSystemInfoService();
+        final SystemInfoService systemInfoService = MessagingTestUtils.getPlatformServices().getSystemInfoService();
         try {
             cacheManager = new CacheManager(systemInfoService);
         } catch (final MissingPlatformServicesException exception) {
             Log.warning(LOG_TAG, "Error clearing cache: %s", exception.getMessage());
         }
-        cacheManager.deleteFilesNotInList(null, IMAGES_CACHE_SUBDIRECTORY);
-        cacheManager.deleteFilesNotInList(null, MESSAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(null, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY);
+        cacheManager.deleteFilesNotInList(null, MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
     }
 
     /**
      * Adds a test image to the Messaging extension image asset cache.
      */
     static void addImageAssetToCache() {
-        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, IMAGES_CACHE_SUBDIRECTORY, new Date());
+        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY, new Date());
         writeInputStreamIntoFile(mockCachedImage, convertResourceFileToInputStream("adobe.png"), false);
     }
 
@@ -297,19 +293,19 @@ public class MessagingTestUtils {
      */
     public static void updatePersistence(final String datastore, final String key, final String value, final Application application) {
         if (application == null) {
-            fail("Unable to updatePersistence by TestPersistenceHelper. Application is null, fast failing the test case.");
+            Assert.fail("Unable to updatePersistence by TestPersistenceHelper. Application is null, fast failing the test case.");
         }
 
         final Context context = application.getApplicationContext();
 
         if (context == null) {
-            fail("Unable to updatePersistence by TestPersistenceHelper. Context is null, fast failing the test case.");
+            Assert.fail("Unable to updatePersistence by TestPersistenceHelper. Context is null, fast failing the test case.");
         }
 
         SharedPreferences sharedPreferences = context.getSharedPreferences(datastore, Context.MODE_PRIVATE);
 
         if (sharedPreferences == null) {
-            fail("Unable to updatePersistence by TestPersistenceHelper. sharedPreferences is null, fast failing the test case.");
+            Assert.fail("Unable to updatePersistence by TestPersistenceHelper. sharedPreferences is null, fast failing the test case.");
         }
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -389,5 +385,208 @@ public class MessagingTestUtils {
             payload.add(messagePayload);
         }
         return payload;
+    }
+
+    /* JSON conversion helpers */
+
+    /**
+     * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
+     * This method is recursive.
+     * The elements for which the conversion fails will be skipped.
+     *
+     * @param jsonObject to be converted
+     * @return {@link java.util.Map} containing the elements from the provided json, null if {@code jsonObject} is null
+     */
+    static Map<String, Object> toMap(final JSONObject jsonObject) throws JSONException {
+        if (jsonObject == null) {
+            Log.debug(LOG_TAG, "toMap - will not convert to map, the passed in json is null.");
+            return null;
+        }
+
+        Map<String, Object> jsonAsMap = new HashMap<>();
+        Iterator<String> keysIterator = jsonObject.keys();
+
+        if (keysIterator == null) return null;
+
+        while (keysIterator.hasNext()) {
+            String nextKey = keysIterator.next();
+            jsonAsMap.put(nextKey, fromJson(jsonObject.get(nextKey)));
+        }
+
+        return jsonAsMap;
+    }
+
+    /**
+     * Converts provided {@link org.json.JSONObject} into a {@link Map<String,  Variant >} for any number of levels, which can be used as event data.
+     * This method is recursive.
+     * The elements for which the conversion fails will be skipped.
+     *
+     * @param jsonObject to be converted
+     * @return {@link Map<String, Variant>} containing the elements from the provided json, null if {@code jsonObject} is null
+     */
+    static Map<String, Variant> toVariantMap(final JSONObject jsonObject) throws JSONException {
+        if (jsonObject == null) {
+            Log.debug(LOG_TAG, "toVariantMap - will not convert to variant map, the passed in json is null.");
+            return null;
+        }
+
+        final Map<String, Variant> jsonAsVariantMap = new HashMap<>();
+        final Iterator<String> keysIterator = jsonObject.keys();
+
+        while (keysIterator.hasNext()) {
+            final String nextKey = keysIterator.next();
+            final Object value = fromJson(jsonObject.get(nextKey));
+            jsonAsVariantMap.put(nextKey, getVariantValue(value));
+        }
+
+        return jsonAsVariantMap;
+    }
+
+    /**
+     * Converts provided {@link JSONArray} into {@link List} for any number of levels which can be used as event data
+     * This method is recursive.
+     * The elements for which the conversion fails will be skipped.
+     *
+     * @param jsonArray to be converted
+     * @return {@link List} containing the elements from the provided json, null if {@code jsonArray} is null
+     */
+    static List<Object> toList(final JSONArray jsonArray) throws JSONException {
+        if (jsonArray == null) {
+            Log.debug(LOG_TAG, "toList - will not convert to list, the passed in json array is null.");
+            return null;
+        }
+
+        List<Object> jsonArrayAsList = new ArrayList<>();
+        int size = jsonArray.length();
+
+        for (int i = 0; i < size; i++) {
+            jsonArrayAsList.add(fromJson(jsonArray.get(i)));
+        }
+
+        return jsonArrayAsList;
+    }
+
+    /**
+     * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     *
+     * @param object to be converted to jSON
+     * @return {@link Object} containing a json object or json array
+     */
+    static Object toJSON(final Object object) throws JSONException {
+        if (object instanceof HashMap) {
+            JSONObject jsonObject = new JSONObject();
+            final Map map = (HashMap) object;
+            for (final Object key : map.keySet()) {
+                jsonObject.put(key.toString(), toJSON(map.get(key)));
+            }
+            return jsonObject;
+        } else if (object instanceof Iterable) {
+            JSONArray jsonArray = new JSONArray();
+            final Iterator iterator = ((Iterable<?>) object).iterator();
+            while (iterator.hasNext()) {
+                jsonArray.put(toJSON(iterator.next()));
+            }
+            return jsonArray;
+        } else {
+            return object;
+        }
+    }
+
+    /**
+     * Converts provided {@link JSONObject} to a {@link Map} or {@link JSONArray} into a {@link List}.
+     *
+     * @param json to be converted
+     * @return {@link Object} converted from the provided json object.
+     */
+    private static Object fromJson(final Object json) throws JSONException {
+        if (json == JSONObject.NULL) {
+            return null;
+        } else if (json instanceof JSONObject) {
+            return toMap((JSONObject) json);
+        } else if (json instanceof JSONArray) {
+            return toList((JSONArray) json);
+        } else {
+            return json;
+        }
+    }
+
+    /**
+     * Converts the provided {@link Object} into a {@link Variant}.
+     * This method is recursive if the passed in {@code Object} is a {@link Map} or {@link List}.
+     *
+     * @param value to be converted to a variant
+     * @return {@code Variant} value of the passed in {@code Object}
+     */
+    private static Variant getVariantValue(final Object value) {
+        final Variant convertedValue;
+        if (value instanceof String) {
+            convertedValue = StringVariant.fromString((String) value);
+        } else if (value instanceof Double) {
+            convertedValue = DoubleVariant.fromDouble((Double) value);
+        } else if (value instanceof Integer) {
+            convertedValue = IntegerVariant.fromInteger((int) value);
+        } else if (value instanceof Boolean) {
+            convertedValue = BooleanVariant.fromBoolean((boolean) value);
+        } else if (value instanceof Long) {
+            convertedValue = LongVariant.fromLong((long) value);
+        } else if (value instanceof Map) {
+            final Map<String, Variant> map = new HashMap<>();
+            for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
+                map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
+            }
+            convertedValue = Variant.fromVariantMap(map);
+        } else if (value instanceof List) {
+            final List<Variant> list = new ArrayList<>();
+            for (final Object element : (List) value) {
+                list.add(getVariantValue(element));
+            }
+            convertedValue = Variant.fromVariantList(list);
+        } else {
+            convertedValue = (Variant) value;
+        }
+        return convertedValue;
+    }
+
+    // ========================================================================================
+    // PlatformServices getters
+    // ========================================================================================
+
+    /**
+     * Returns the {@link PlatformServices} instance.
+     *
+     * @return {@code PlatformServices} or null if {@code PlatformServices} are unavailable
+     */
+    static PlatformServices getPlatformServices() {
+        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getPlatformServices - Platform services are not available.");
+        }
+
+        return platformServices;
+    }
+
+    /**
+     * Returns platform {@link JsonUtilityService} instance.
+     *
+     * @return {@code JsonUtilityService} or null if {@link PlatformServices} are unavailable
+     */
+    static JsonUtilityService getJsonUtilityService() {
+        final PlatformServices platformServices = getPlatformServices();
+
+        if (platformServices == null) {
+            Log.debug(LOG_TAG,
+                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
+            return null;
+        }
+
+        final JsonUtilityService jsonUtilityService = platformServices.getJsonUtilityService();
+        if (jsonUtilityService == null) {
+            Log.debug(LOG_TAG,
+                    "getJsonUtilityService - JsonUtility services are not available.");
+        }
+
+        return jsonUtilityService;
     }
 }
