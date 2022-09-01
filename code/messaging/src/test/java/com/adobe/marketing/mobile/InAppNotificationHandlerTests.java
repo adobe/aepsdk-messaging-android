@@ -136,7 +136,7 @@ public class InAppNotificationHandlerTests {
     @After
     public void cleanup() {
         // use messaging cache utilities to clean the cache after each test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
     }
 
     // ========================================================================================
@@ -318,15 +318,15 @@ public class InAppNotificationHandlerTests {
     }
 
     // ========================================================================================
-    // inAppNotificationHandler load cached messages on instantiation
+    // inAppNotificationHandler load cached propositions on instantiation
     // ========================================================================================
     @Test
-    public void test_cachedMessagePayload_ValidPayload() {
+    public void test_cachedPropositions_ValidPayload() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
+        messagingCacheUtilities.cachePropositions(payload.get(0));
 
         // test
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
@@ -338,7 +338,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_cachedMessagePayload_nonMatchingScope() {
+    public void test_cachedPropositions_nonMatchingScope() {
         // setup
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
 
@@ -347,7 +347,7 @@ public class InAppNotificationHandlerTests {
         config.noValidAppSurfaceInPayload = true;
         config.nonMatchingAppSurfaceInPayload = true;
         List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cacheRetrievedMessages(payload.get(0));
+        messagingCacheUtilities.cachePropositions(payload.get(0));
 
         // test
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);

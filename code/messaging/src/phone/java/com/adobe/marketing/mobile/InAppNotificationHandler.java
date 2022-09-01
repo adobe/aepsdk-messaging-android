@@ -22,7 +22,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Person
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.MESSAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,11 +54,11 @@ class InAppNotificationHandler {
         // create a module to get access to the Core rules engine for adding ODE rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
-        // load cached rules (if any) when InAppNotificationHandler is instantiated
-        if (messagingCacheUtilities != null && messagingCacheUtilities.areMessagesCached()) {
-            Map<String, Object> cachedMessages = messagingCacheUtilities.getCachedMessages();
+        // load cached propositions (if any) when InAppNotificationHandler is instantiated
+        if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
+            Map<String, Object> cachedMessages = messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
-                Log.trace(LOG_TAG, "%s - Retrieved cached messages, attempting to load them into the rules engine.", SELF_TAG);
+                Log.trace(LOG_TAG, "%s - Retrieved cached propositions, attempting to load in-app messages into the rules engine.", SELF_TAG);
                 handlePersonalizationPayload(cachedMessages);
             }
         }
@@ -105,7 +105,7 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Handles the notification payload by extracting the rules json objects present in the Edge response event payload
+     * Handles the notification payload by extracting the rules json objects present in the Edge response event
      * into a list of {@code Map} objects. The valid rule json objects are then registered in the {@link RulesEngine}.
      *
      * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Edge extension.
@@ -113,7 +113,7 @@ class InAppNotificationHandler {
     void handlePersonalizationPayload(final Map<String, Object> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
             Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
-            messagingCacheUtilities.clearCachedDataFromSubdirectory(MESSAGES_CACHE_SUBDIRECTORY);
+            messagingCacheUtilities.clearCachedDataFromSubdirectory(PROPOSITIONS_CACHE_SUBDIRECTORY);
             return;
         }
         final String appSurface = App.getAppContext().getPackageName();
@@ -132,11 +132,11 @@ class InAppNotificationHandler {
             return;
         }
 
-        // extract the items from the offers payload then attempt to register the contained rules
+        // extract the items from the notification payload then attempt to register the contained rules
         List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get(ITEMS);
 
-        // save the payload to the messaging cache
-        messagingCacheUtilities.cacheRetrievedMessages(payload);
+        // save the proposition payload if present to the messaging cache
+        messagingCacheUtilities.cachePropositions(payload);
 
         registerRules(items);
     }

@@ -103,7 +103,7 @@ class MessagingInternal extends Extension {
             Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
         }
 
-        // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
+        // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
         inAppNotificationHandler = new InAppNotificationHandler(this, messagingCacheUtilities);
         registerEventListeners(extensionApi);
 
@@ -386,14 +386,14 @@ class MessagingInternal extends Extension {
             // Set the messaging state
             messagingState.setState(configSharedState, edgeIdentitySharedState);
 
-            // fetch messages from offers on initial launch once we have configuration and identity state set
+            // fetch in-app messages on initial launch once we have configuration and identity state set
             if (messagingState.isReadyForEvents()
                     && !initialMessageFetchComplete) {
                 inAppNotificationHandler.fetchMessages();
                 initialMessageFetchComplete = true;
             }
 
-            // validate fetch messages event then refresh in-app messages from offers
+            // validate fetch messages event then refresh in-app messages via an Edge extension event
             if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
                 if (messagingState.isConfigStateSet()) {
                     inAppNotificationHandler.fetchMessages();
