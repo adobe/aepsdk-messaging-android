@@ -60,6 +60,18 @@ android {
     libraryVariants.all { variant ->
         variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }
+
+    sourceSets {
+        final def resourceDir = 'src/test/resources'
+
+        test {
+            resources.srcDirs += [resourceDir]
+        }
+
+        androidTest {
+            resources.srcDirs += [resourceDir]
+        }
+    }
 }
 
 android.libraryVariants.all { variant ->

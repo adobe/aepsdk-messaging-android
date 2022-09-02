@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-@Ignore // TODO: update tests after inbound changes complete
+@Ignore // TODO: unignore test when XAS issues resolved
 public class E2EFunctionalTests {
     static {
         BuildConfig.IS_E2E_TEST.set(true);
@@ -85,10 +85,10 @@ public class E2EFunctionalTests {
     }
 
     @Test
-    public void testGetMessageDefinitionFromOptimize() throws InterruptedException {
+    public void testGetMessageDefinitionFromEdge() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        final String expectedOptimizeEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoieGNvcmU6b2ZmZXItYWN0aXZpdHk6MTRiNTU2YzExZDRjMjQzMyIsInBsYWNlbWVudElkIjoieGNvcmU6b2ZmZXItcGxhY2VtZW50OjE0MmFlMTBkMWQyZmQ4ODMiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
+        final String expectedEdgePersonalizationEventData = "{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://com.adobe.marketing.mobile.messaging.test\"]}}}";
         // test
         Messaging.refreshInAppMessages();
         // wait for configuration + messaging rules to load
@@ -106,7 +106,7 @@ public class E2EFunctionalTests {
                 EventSource.REQUEST_CONTENT.getName());
         assertEquals(2, optimizeRequestEvents.size());
         final Event optimizeRequestEvent = optimizeRequestEvents.get(0);
-        assertEquals(expectedOptimizeEventData, optimizeRequestEvent.getData().toString());
+        assertEquals(expectedEdgePersonalizationEventData, optimizeRequestEvent.getData().toString());
 
         // verify edge personalization decision event, 2 events expected due to initial offers fetch + refreshInAppMessages api call
         final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS);

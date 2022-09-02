@@ -156,6 +156,7 @@ final class MessagingConstants {
             static final String ITEMS = "items";
             static final String DATA = "data";
             static final String CONTENT = "content";
+            static final String RULES = "rules";
             static final String ID = "id";
             static final String SCOPE = "scope";
             static final String SCOPE_DETAILS = "scopeDetails";

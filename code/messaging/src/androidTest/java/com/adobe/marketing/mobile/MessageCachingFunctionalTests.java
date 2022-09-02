@@ -22,7 +22,6 @@ import com.adobe.marketing.mobile.messaging.BuildConfig;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -34,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
-@Ignore // TODO: update tests after inbound changes complete
 @RunWith(AndroidJUnit4.class)
 public class MessageCachingFunctionalTests {
     static {
@@ -102,7 +100,7 @@ public class MessageCachingFunctionalTests {
         final String expectedCondition = "((foo EQUALS bar))";
         final String expectedConsequence = MessagingTestUtils.loadStringFromFile("expected_consequence_data.txt");
         // dispatch edge response event containing a messaging payload
-        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("personalization_payload.json");
         // wait for event and rules processing
         TestHelper.sleep(1000);
         // verify rule payload was loaded into rules engine
@@ -122,7 +120,7 @@ public class MessageCachingFunctionalTests {
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.arePropositionsCached());
         final Map<String, Object> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
-        assertEquals(cachedPropositions, MessagingTestUtils.getVariantMapFromFile("optimize_payload.json"));
+        assertEquals(cachedPropositions, MessagingTestUtils.getMapFromFile("personalization_payload.json"));
     }
 
     @Test

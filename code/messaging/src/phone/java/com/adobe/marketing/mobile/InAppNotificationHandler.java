@@ -21,6 +21,9 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Person
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.QUERY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.DATA;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.CONTENT;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.RULES;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
@@ -153,11 +156,8 @@ class InAppNotificationHandler {
         // Loop through each rule in the payload and collect the rule json's present.
         // Additionally, extract the image assets and build the asset list for asset caching.
         for (final Map<String, Object> currentItem : items) {
-            final Object dataObject = currentItem.get(MessagingConstants.EventDataKeys.Personalization.DATA);
-            final Map<String, String> data = new HashMap<>();
-            data.putAll((Map<String, String>) dataObject);
-            final String ruleJson = data.get(MessagingConstants.EventDataKeys.Personalization.CONTENT);
-            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
+            final Map<String, Object> data = (Map<String, Object>) currentItem.get(MessagingConstants.EventDataKeys.Personalization.DATA);
+            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject((Map)(data.get(MessagingConstants.EventDataKeys.Personalization.CONTENT)));
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
