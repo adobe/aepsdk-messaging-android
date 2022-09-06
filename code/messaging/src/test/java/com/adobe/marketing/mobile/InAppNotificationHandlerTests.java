@@ -143,7 +143,6 @@ public class InAppNotificationHandlerTests {
     // ========================================================================================
     // handlePersonalizationPayload
     // ========================================================================================
-    @Ignore // TODO: revisit after XAS payload handling complete
     @Test
     public void test_handlePersonalizationPayload_ValidIAMPayloadPresent() {
         // setup
@@ -161,7 +160,6 @@ public class InAppNotificationHandlerTests {
         assertEquals(1, loadedRules.size());
     }
 
-    @Ignore // TODO: revisit after XAS payload handling complete
     @Test
     public void test_handlePersonalizationPayload_MultipleValidIAMPayloadPresent() {
         // setup
@@ -179,7 +177,6 @@ public class InAppNotificationHandlerTests {
         assertEquals(3, loadedRules.size());
     }
 
-    @Ignore // TODO: revisit after XAS payload handling complete
     @Test
     public void test_handlePersonalizationPayload_OneInvalidIAMPayloadPresent() {
         // setup

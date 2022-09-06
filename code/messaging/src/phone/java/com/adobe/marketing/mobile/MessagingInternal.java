@@ -415,6 +415,7 @@ class MessagingInternal extends Extension {
                 if (payload != null && payload.size() > 0) {
                     inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
                 }
+                Log.warning(LOG_TAG, "%s - Unable to handle personalization payload, the payload was empty.", SELF_TAG);
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 // handle rules response events containing message definitions
                 inAppNotificationHandler.createInAppMessage(eventToProcess);

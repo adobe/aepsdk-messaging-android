@@ -156,8 +156,9 @@ class InAppNotificationHandler {
         // Loop through each rule in the payload and collect the rule json's present.
         // Additionally, extract the image assets and build the asset list for asset caching.
         for (final Map<String, Object> currentItem : items) {
-            final Map<String, Object> data = (Map<String, Object>) currentItem.get(MessagingConstants.EventDataKeys.Personalization.DATA);
-            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject((Map)(data.get(MessagingConstants.EventDataKeys.Personalization.CONTENT)));
+            final Map<String, String> data = (Map<String, String>) currentItem.get(DATA);
+            final String ruleJson = data.get(CONTENT);
+            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
             // we want to discard invalid jsons
             if (ruleJsonObject != null) {
                 ruleJsons.add(ruleJsonObject);
