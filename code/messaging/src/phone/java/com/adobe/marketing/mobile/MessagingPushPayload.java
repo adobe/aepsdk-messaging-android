@@ -179,6 +179,7 @@ public class MessagingPushPayload {
             case MessagingConstant.PushNotificationPayload.ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
             case MessagingConstant.PushNotificationPayload.ActionButtonType.WEBURL: return ActionType.WEBURL;
             case MessagingConstant.PushNotificationPayload.ActionButtonType.DISMISS: return ActionType.DISMISS;
+            case MessagingConstant.PushNotificationPayload.ActionButtonType.OPENAPP: return ActionType.OPENAPP;
         }
 
         return ActionType.NONE;
@@ -212,9 +213,10 @@ public class MessagingPushPayload {
                 Log.debug(MessagingConstant.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
-            String uri = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
-            String type = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE);
+            String uri = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.URI, "");
+            String type = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE, "");
 
+            Log.trace(MessagingConstant.LOG_TAG, "%s - Creating an ActionButton with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
             return new ActionButton(label, uri, type);
         } catch (JSONException e) {
             Log.debug(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
@@ -226,7 +228,7 @@ public class MessagingPushPayload {
      * Enum to denote the type of action
      */
     public enum ActionType {
-        DEEPLINK, WEBURL, DISMISS, NONE
+        DEEPLINK, WEBURL, DISMISS, OPENAPP, NONE
     }
 
     /**
