@@ -193,7 +193,7 @@ public class MessagingPushPayload {
         List<ActionButton> actionButtonList = new ArrayList<>(3);
         try {
             final JSONArray jsonArray = new JSONArray(actionButtons);
-            for (final int i=0; i < jsonArray.length(); i++) {
+            for (int i=0; i < jsonArray.length(); i++) {
                 final JSONObject jsonObject = jsonArray.getJSONObject(i);
                 final ActionButton button = getActionButton(jsonObject);
                 if (button == null) continue;
