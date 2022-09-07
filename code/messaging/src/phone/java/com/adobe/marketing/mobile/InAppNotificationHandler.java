@@ -216,13 +216,13 @@ class InAppNotificationHandler {
     private void cacheImageAssetsFromPayload(final JsonUtilityService.JSONObject ruleJsonObject) {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
-            final JSONArray rulesArray = new JSONArray(ruleJsonObject.getString(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY));
-            final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
-            final JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            final JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            final JsonUtilityService.JSONArray rulesArray = ruleJsonObject.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
+            final JsonUtilityService.JSONArray  consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            final JsonUtilityService.JSONObject  details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final JsonUtilityService.JSONArray  remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
             if (remoteAssets.length() != 0) {
-                for (final Object object : MessagingUtils.toList(remoteAssets)) {
-                    final String imageAssetUrl = object.toString();
+                for (int index = 0; index < remoteAssets.length(); index++) {
+                    final String imageAssetUrl = (String) remoteAssets.get(index);
                     if (StringUtils.stringIsUrl(imageAssetUrl)) {
                         Log.debug(LOG_TAG,
                                 "%s - Image asset to be cached (%s) ", SELF_TAG, imageAssetUrl);
@@ -230,7 +230,7 @@ class InAppNotificationHandler {
                     }
                 }
             }
-        } catch (final JSONException | JsonException jsonException) {
+        } catch (final JsonException jsonException) {
             Log.warning(LOG_TAG,
                     "%s - An exception occurred retrieving the remoteAssets array from the rule json payload: %s", SELF_TAG, jsonException.getLocalizedMessage());
             return;

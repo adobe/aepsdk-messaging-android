@@ -101,7 +101,7 @@ public class MessagingDelegateTests {
         messagingDelegate.onShow(mockAEPMessage);
 
         // verify Log.debug called
-        verifyStatic(Log.class);
+        verifyStatic(Log.class, times(1));
         Log.debug(anyString(), anyString(), any());
     }
 
@@ -111,7 +111,7 @@ public class MessagingDelegateTests {
         messagingDelegate.onDismiss(mockAEPMessage);
 
         // verify Log.debug called
-        verifyStatic(Log.class);
+        verifyStatic(Log.class, times(1));
         Log.debug(anyString(), anyString(), any());
     }
 
@@ -121,7 +121,7 @@ public class MessagingDelegateTests {
         messagingDelegate.onShowFailure();
 
         // verify Log.debug called
-        verifyStatic(Log.class);
+        verifyStatic(Log.class, times(1));
         Log.debug(anyString(), anyString(), any());
     }
 

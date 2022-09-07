@@ -15,6 +15,8 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -23,9 +25,9 @@ import android.content.pm.PackageManager;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -41,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingCacheUtilities.class})
 public class InAppNotificationHandlerTests {
     private static final String mockAppId = "mock_applicationId";
     private final Map<String, Object> mockConfigState = new HashMap<>();
@@ -72,6 +74,8 @@ public class InAppNotificationHandlerTests {
     PackageManager packageManager;
     @Mock
     MessagingInternal mockMessagingInternal;
+    @Mock
+    MessagingCacheUtilities mockMessagingCacheUtilities;
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
@@ -138,6 +142,40 @@ public class InAppNotificationHandlerTests {
     public void cleanup() {
         // use messaging cache utilities to clean the cache after each test
         messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+    }
+
+    // ========================================================================================
+    // fetchMessages
+    // ========================================================================================
+    @Test
+    public void test_fetchMessages_appIdPresent() {
+        // setup
+        String expectedEventData = "{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}";
+        // test
+        inAppNotificationHandler.fetchMessages();
+
+        // verify MobileCore.dispatchEvent called
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event data
+        Event event = eventCaptor.getValue();
+        assertEquals(expectedEventData, event.getData().toString());
+    }
+
+    @Test
+    public void test_fetchMessages_emptyAppId() {
+        // setup
+        when(mockContext.getPackageName()).thenReturn("");
+
+        // test
+        inAppNotificationHandler.fetchMessages();
+
+        // verify MobileCore.dispatchEvent not called
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
     }
 
     // ========================================================================================
@@ -271,6 +309,30 @@ public class InAppNotificationHandlerTests {
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
         assertEquals(0, moduleRules.size());
+    }
+
+    @Test
+    public void test_handlePersonalizationPayload_VeryImageAssetPresentInPayloadIsCached() {
+        // setup
+        String IMAGE_URL = "https://www.adobe.com/adobe.png";
+        inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, mockMessagingCacheUtilities);
+        MessageTestConfig config = new MessageTestConfig();
+        config.count = 1;
+        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+
+        // test
+        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+
+        // verify rule loaded
+        ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
+        Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
+        ConcurrentLinkedQueue<Rule> loadedRules = rules.iterator().next();
+        assertEquals(1, loadedRules.size());
+
+        // verify image asset attempted to be cached
+        ArgumentCaptor<List<String>> imageAssetListCaptor = ArgumentCaptor.forClass(List.class);
+        verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(imageAssetListCaptor.capture());
+        assertEquals(IMAGE_URL, imageAssetListCaptor.getValue().get(0));
     }
 
     // ========================================================================================
