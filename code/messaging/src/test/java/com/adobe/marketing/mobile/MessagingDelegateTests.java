@@ -78,7 +78,7 @@ public class MessagingDelegateTests {
         messagingDelegate = new MessagingDelegate();
     }
 
-    void setupMocks() throws Exception {
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -86,6 +86,7 @@ public class MessagingDelegateTests {
         PowerMockito.mockStatic(ServiceProvider.class);
 
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
+        when(mockAEPMessage.getParent()).thenReturn(mockMessage);
         when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
         when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
         when(ServiceProvider.getInstance()).thenReturn(mockServiceProvider);
@@ -153,5 +154,43 @@ public class MessagingDelegateTests {
         // verify no internal open url or ui service show url method is called
         verify(mockUIService, times(0)).showUrl(anyString());
         verify(mockAEPMessage, times(0)).openUrl(anyString());
+    }
+
+    @Test
+    public void test_openUrlWithNullUrl() {
+        // test
+        messagingDelegate.openUrl(mockAEPMessage, null);
+
+        // verify no internal open url method is not called
+        verify(mockAEPMessage, times(0)).openUrl(urlStringCaptor.capture());
+    }
+
+    @Test
+    public void test_overrideUrlLoadWithInvalidUri() {
+        // test
+        messagingDelegate.overrideUrlLoad(mockAEPMessage,"invaliduri");
+
+        // verify no message tracking call
+        verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+    }
+
+    @Test
+    public void test_overrideUrlLoadWithInvalidScheme() {
+        // test
+        messagingDelegate.overrideUrlLoad(mockAEPMessage,"notadbinapp://");
+
+        // verify no message tracking call
+        verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+    }
+
+    @Test
+    public void test_overrideUrlLoadWithJavascriptPayload() {
+        // test
+        messagingDelegate.overrideUrlLoad(mockAEPMessage,"adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
+
+        // verify encoded javascript evaluated
+        ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockMessage, times(1)).evaluateJavascript(stringArgumentCaptor.capture());
+        assertEquals("(function test() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
     }
 }

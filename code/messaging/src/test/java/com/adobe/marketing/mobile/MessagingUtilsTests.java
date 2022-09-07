@@ -75,6 +75,39 @@ public class MessagingUtilsTests {
     }
 
     // ========================================================================================
+    // toVariantMap
+    // ========================================================================================
+    @Test
+    public void test_toVariantMap() {
+        try {
+            // mock
+            JSONObject json = new JSONObject(mockJsonObj);
+
+            // test
+            Map<String, Variant> result = MessagingUtils.toVariantMap(json);
+
+            if (result == null) {
+                Assert.fail();
+            }
+
+            // verify
+            Assert.assertTrue(result.containsKey("messageProfile"));
+            Assert.assertTrue(result.containsKey("pushChannelContext"));
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void test_toVariantMap_when_nullJson() {
+        try {
+            Assert.assertNull(MessagingUtils.toVariantMap(null));
+        } catch (JSONException e) {
+            Assert.fail();
+        }
+    }
+
+    // ========================================================================================
     // toList
     // ========================================================================================
     @Test
