@@ -19,6 +19,16 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PERSONALIZATION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.QUERY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PAYLOAD;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONObject;
@@ -37,6 +47,7 @@ class InAppNotificationHandler {
     private final Module messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
+    private String requestMessagesEventId;
 
     /**
      * Constructor
@@ -55,7 +66,7 @@ class InAppNotificationHandler {
             List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached propositions, attempting to load in-app messages into the rules engine.", SELF_TAG);
-                handleEdgePersonalizationNotification(cachedMessages);
+                processPropositions(cachedMessages);
             }
         }
     }
@@ -90,27 +101,50 @@ class InAppNotificationHandler {
         };
         eventData.put(XDM, xdmData);
 
+        final Event event = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
+                MessagingConstants.EventType.EDGE,
+                MessagingConstants.EventSource.REQUEST_CONTENT,
+                null)
+                .setEventData(eventData)
+                .build();
+
+        // used for ensuring that the messaging extension is responding to the correct handle
+        requestMessagesEventId = event.getUniqueIdentifier();
 
         // send event
         Log.debug(LOG_TAG, "%s - Dispatching edge event to fetch in-app messages.", SELF_TAG);
-        MessagingUtils.sendEvent(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
-                MessagingConstants.EventType.EDGE,
-                MessagingConstants.EventSource.REQUEST_CONTENT,
-                eventData,
-                MessagingConstants.EventDispatchErrors.PERSONALIZATION_REQUEST_ERROR);
+        MessagingUtils.sendEvent(event, MessagingConstants.EventDispatchErrors.PERSONALIZATION_REQUEST_ERROR);
     }
 
     /**
-     * Handles the proposition payload containing in-app messages by extracting the rules json objects present in the Edge response event
-     * into a list of {@code Map} objects. The valid rule json objects are then registered in the {@link RulesEngine}.
+     * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
+     * is cleared. Non empty payloads are converted into rules within {@link #processPropositions(List)}.
      *
-     * @param propositions A {@link List<PropositionPayload>} containing the in-app message definitions retrieved via the Edge extension.
+     * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
-    void handleEdgePersonalizationNotification(final List<PropositionPayload> propositions) {
-        // save the proposition payload to the messaging cache
-        messagingCacheUtilities.cachePropositions(propositions);
+    void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
+        final String requestEventId = getRequestEventId(edgeResponseEvent);
+        if (!requestMessagesEventId.equals(requestEventId)) {
+            return;
+        }
+        final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
+        final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
+        if (propositions == null || propositions.isEmpty()) {
+            Log.trace(LOG_TAG, "%s - Payload for in-app messages was empty. Clearing local cache.", SELF_TAG);
+            messagingCacheUtilities.clearCachedDataFromSubdirectory();
+            return;
+        }
+        processPropositions(propositions);
+    }
 
-        final List<JsonUtilityService.JSONObject> convertedPropositions = new ArrayList<>();
+    /**
+     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JsonUtilityService.JSONObject} are
+     * are then registered in the {@link RulesEngine}.
+     *
+     * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
+     */
+    private void processPropositions(final List<PropositionPayload> propositions) {
+        final List<JsonUtilityService.JSONObject> foundRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             final String appSurface = App.getAppContext().getPackageName();
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
@@ -129,7 +163,7 @@ class InAppNotificationHandler {
             }
 
             final JsonUtilityService.JSONObject ruleJson = proposition.getItems().get(0).getData().getRuleJsonObject();
-            convertedPropositions.add(ruleJson);
+            foundRules.add(ruleJson);
 
             // cache any image assets present in the current rule json's image assets array
             cacheImageAssetsFromPayload(ruleJson);
@@ -137,7 +171,10 @@ class InAppNotificationHandler {
             // store reporting data for this payload for later use
             storePropositionInfo(proposition, getMessageId(ruleJson));
         }
-        registerRules(convertedPropositions);
+        // save the proposition payload to the messaging cache
+        messagingCacheUtilities.cachePropositions(propositions);
+
+        registerRules(foundRules);
     }
 
     /**
@@ -171,12 +208,22 @@ class InAppNotificationHandler {
     private String getMessageId(final JsonUtilityService.JSONObject rulePayload) {
         final JsonUtilityService.JSONObject consequences;
         try {
-            consequences = rulePayload.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
-            return consequences.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
+            consequences = rulePayload.getJSONObject(JSON_KEY).getJSONObject(JSON_CONSEQUENCES_KEY);
+            return consequences.getString(MESSAGE_CONSEQUENCE_ID);
         } catch (final JsonException exception) {
             Log.warning(LOG_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
             return null;
         }
+    }
+
+    /**
+     * Retrieves the request event id from the edge response event.
+     *
+     * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
+     */
+    private String getRequestEventId(final Event edgeResponseEvent) {
+        final Map<String, Object> eventData = edgeResponseEvent.getEventData();
+        return (String) eventData.get(REQUEST_EVENT_ID);
     }
 
     /**
@@ -185,7 +232,7 @@ class InAppNotificationHandler {
      * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
      */
     void createInAppMessage(final Event rulesEvent) {
-        final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
         if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
             Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
@@ -193,13 +240,13 @@ class InAppNotificationHandler {
         }
 
         try {
-            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.get(MESSAGE_CONSEQUENCE_DETAIL);
             if (MessagingUtils.isMapNullOrEmpty(details)) {
                 Log.warning(LOG_TAG,
                         "%s - Unable to create an in-app message, the consequence details are null or empty", SELF_TAG);
                 return;
             }
-            final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
+            final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             // the asset map is populated when the edge response event containing messages is processed
             final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.show();
@@ -217,10 +264,10 @@ class InAppNotificationHandler {
     private void cacheImageAssetsFromPayload(final JsonUtilityService.JSONObject ruleJsonObject) {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
-            final JsonUtilityService.JSONArray rulesArray = ruleJsonObject.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-            final JsonUtilityService.JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
-            final JsonUtilityService.JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            final JsonUtilityService.JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            final JsonUtilityService.JSONArray rulesArray = ruleJsonObject.getJSONArray(JSON_KEY);
+            final JsonUtilityService.JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            final JsonUtilityService.JSONObject details = consequence.getJSONObject(0).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            final JsonUtilityService.JSONArray remoteAssets = details.getJSONArray(MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
             if (remoteAssets.length() != 0) {
                 for (int index = 0; index < remoteAssets.length(); index++) {
                     final String imageAssetUrl = (String) remoteAssets.get(index);
@@ -267,12 +314,10 @@ class InAppNotificationHandler {
                 // get individual rule json object
                 final JsonUtilityService.JSONObject ruleObject = rulesJsonArray.getJSONObject(i);
                 // get rule condition
-                final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(
-                        MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY);
+                final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(JSON_CONDITION_KEY);
                 final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
                 // get consequences
-                final JsonUtilityService.JSONArray consequenceJSONArray = ruleObject.getJSONArray(
-                        MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+                final JsonUtilityService.JSONArray consequenceJSONArray = ruleObject.getJSONArray(JSON_CONSEQUENCES_KEY);
                 final List<Event> consequences = generateConsequenceEvents(consequenceJSONArray);
                 if (consequences != null) {
                     parsedRule = new Rule(condition, consequences);
@@ -328,7 +373,7 @@ class InAppNotificationHandler {
                             new MessagingConsequenceSerializer()).getVariantMap();
 
                     EventData eventData = new EventData();
-                    eventData.putVariantMap(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                    eventData.putVariantMap(CONSEQUENCE_TRIGGERED,
                             consequenceVariantMap);
 
                     final Event event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)

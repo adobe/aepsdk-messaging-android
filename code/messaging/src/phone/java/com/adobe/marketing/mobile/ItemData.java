@@ -12,15 +12,15 @@
 
 package com.adobe.marketing.mobile;
 
-class ItemData {
+import java.io.Serializable;
+
+class ItemData implements Serializable {
     private final String id;
     private final String content;
-    private final JsonUtilityService.JSONObject ruleJson;
 
     ItemData(final String id, final String content) {
         this.id = id;
         this.content = content;
-        this.ruleJson = MessagingUtils.getJsonUtilityService().createJSONObject(content);
     }
 
     String getId() {
@@ -32,6 +32,6 @@ class ItemData {
     }
 
     JsonUtilityService.JSONObject getRuleJsonObject() {
-        return ruleJson;
+        return MessagingUtils.getJsonUtilityService().createJSONObject(content);
     }
 }

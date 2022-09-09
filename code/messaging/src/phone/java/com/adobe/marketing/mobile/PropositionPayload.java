@@ -12,12 +12,13 @@
 
 package com.adobe.marketing.mobile;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-class PropositionPayload {
+class PropositionPayload implements Serializable {
     private final PropositionInfo propositionInfo;
     private final List<PayloadItem> items = new ArrayList<>();
 

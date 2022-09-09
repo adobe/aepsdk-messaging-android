@@ -27,6 +27,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,7 +42,6 @@ import java.util.Map;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private final int STREAM_WRITE_BUFFER_SIZE = 4096;
     private final SystemInfoService systemInfoService;
     private final NetworkService networkService;
     private final Map<String, String> assetMap = new HashMap<>();
@@ -91,37 +92,41 @@ final class MessagingCacheUtilities {
     List<PropositionPayload> getCachedPropositions() {
         final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, false);
         if (cachedMessageFile == null) {
-            Log.debug(LOG_TAG, "%s - Unable to find a cached proposition.", SELF_TAG);
+            Log.trace(LOG_TAG, "%s - Unable to find a cached proposition.", SELF_TAG);
             return null;
         }
 
+        Log.trace(LOG_TAG, "%s - Loading cached proposition from (%s)", SELF_TAG, cachedMessageFile.getPath());
         FileInputStream fileInputStream = null;
+        ObjectInputStream objectInputStream = null;
+        List<PropositionPayload> cachedPropositions = null;
         try {
             fileInputStream = new FileInputStream(cachedMessageFile);
-            final String streamContents = StringUtils.streamToString(fileInputStream);
-            final JSONArray cachedMessagePayload = new JSONArray(streamContents);
-            final List<Object> cachedMessagePayloadList = MessagingUtils.toList(cachedMessagePayload);
-            final List<Map<String, Object>> cachedPropositionsList = new ArrayList<>();
-            for (final Object propositionMap : cachedMessagePayloadList) {
-                cachedPropositionsList.add((Map<String, Object>) propositionMap);
-            }
-            return MessagingUtils.createPropositionPayload(cachedPropositionsList);
+            objectInputStream = new ObjectInputStream(fileInputStream);
+            cachedPropositions = (List<PropositionPayload>) objectInputStream.readObject();
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, "%s - Exception occurred when retrieving the cached proposition file: %s", SELF_TAG, fileNotFoundException.getMessage());
             return null;
-        } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when creating the JSONArray: %s", SELF_TAG, jsonException.getMessage());
+        } catch (final IOException ioException) {
+            Log.warning(LOG_TAG, "%s - Exception occurred when reading from the cached file: %s", SELF_TAG, ioException.getMessage());
+            return null;
+        } catch (final ClassNotFoundException classNotFoundException) {
+            Log.warning(LOG_TAG, "%s - Class not found: %s", SELF_TAG, classNotFoundException.getMessage());
             return null;
         } finally {
             try {
                 if (fileInputStream != null) {
                     fileInputStream.close();
                 }
+                if (objectInputStream != null) {
+                    objectInputStream.close();
+                }
             } catch (final IOException ioException) {
                 Log.warning(LOG_TAG, "%s - Exception occurred when closing the FileInputStream: %s", SELF_TAG, ioException.getMessage());
                 return null;
             }
         }
+        return cachedPropositions;
     }
 
     /**
@@ -137,57 +142,28 @@ final class MessagingCacheUtilities {
             return;
         }
         Log.debug(LOG_TAG, "%s - Creating new cached propositions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY));
-        final File cachedPropositions = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
-        try {
-            // convert the message payload to JSON then cache the JSON as a string
-            final JSONArray jsonArray = (JSONArray) MessagingUtils.toJSON(propositionPayload);
-            writeInputStreamIntoFile(cachedPropositions, new ByteArrayInputStream(jsonArray.toString().getBytes(StandardCharsets.UTF_8)), false);
-        } catch (final JSONException e) {
-            Log.error(LOG_TAG, "%s - JSONException while attempting to create JSON from ArrayList payload: (%s)", SELF_TAG, e);
-        }
-    }
-
-    /**
-     * Writes the provided {@link InputStream} into the provided cache {@link File}.
-     * <p>
-     * The content of the inputStream is appended to an existing file if the boolean is set as true.
-     *
-     * @param cachedFile  {@code File} to which the content has to be written
-     * @param inputStream The {@code InputStream} to be written to the cache
-     * @param append      true, if you want to append the input stream to the existing file content
-     * @return {@code boolean} containing true if the {@code InputStream} has been successfully written into the file, false otherwise
-     */
-    private boolean writeInputStreamIntoFile(final File cachedFile, final InputStream inputStream, final boolean append) {
-        if (cachedFile == null || inputStream == null) {
-            Log.error(LOG_TAG, "%s - Failed to write InputStream to the cache. The cachedFile or inputStream is null.", SELF_TAG);
-            return false;
-        }
-
-        FileOutputStream outputStream = null;
+        final File propositionCache = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
+        FileOutputStream fileOutputStream;
+        ObjectOutputStream objectOutputStream = null;
 
         try {
-            outputStream = new FileOutputStream(cachedFile, append);
-            final byte[] data = new byte[STREAM_WRITE_BUFFER_SIZE];
-            int count;
-
-            while ((count = inputStream.read(data)) != -1) {
-                outputStream.write(data, 0, count);
-            }
-            outputStream.flush();
+            fileOutputStream = new FileOutputStream(propositionCache, false);
+            objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            objectOutputStream.writeObject(propositionPayload);
+            objectOutputStream.flush();
         } catch (final IOException e) {
             Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
-            return false;
+            return;
         } finally {
             try {
-                if (outputStream != null) {
-                    outputStream.close();
+                if (objectOutputStream != null) {
+                    objectOutputStream.close();
                 }
             } catch (final IOException e) {
-                Log.error(LOG_TAG, "%s - Unable to close the OutputStream (%s) ", SELF_TAG, e);
+                Log.error(LOG_TAG, "%s - Unable to close the ObjectOutputStream (%s) ", SELF_TAG, e);
             }
         }
-
-        return true;
+        return;
     }
 
     // ========================================================================================================

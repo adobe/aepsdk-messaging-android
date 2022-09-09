@@ -17,9 +17,10 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Person
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE_DETAILS;
 
+import java.io.Serializable;
 import java.util.Map;
 
-class PropositionInfo {
+class PropositionInfo implements Serializable {
     final private String id;
     final private String scope;
     final private Map<String, Object> scopeDetails;

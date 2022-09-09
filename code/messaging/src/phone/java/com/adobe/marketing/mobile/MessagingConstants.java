@@ -70,6 +70,7 @@ final class MessagingConstants {
 
     final class EventDataKeys {
         static final String STATE_OWNER = "stateowner";
+        static final String REQUEST_EVENT_ID = "requestEventId";
 
         final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";

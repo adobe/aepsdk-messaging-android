@@ -340,17 +340,19 @@ class MessagingUtils {
         final Event event = new Event.Builder(eventName, eventType, eventSource, mask)
                 .setEventData(data)
                 .build();
+        sendEvent(event, errorMessage);
+    }
 
-        // send event
+    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
+        sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
+    }
+
+    static void sendEvent(final Event event, final String errorMessage) {
         MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
             @Override
             public void error(final ExtensionError extensionError) {
                 Log.warning(LOG_TAG, "sendEvent - %s: %s", errorMessage, extensionError);
             }
         });
-    }
-
-    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
-        sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
     }
 }

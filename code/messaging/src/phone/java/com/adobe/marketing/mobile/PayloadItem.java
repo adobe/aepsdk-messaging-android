@@ -17,9 +17,10 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Person
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCHEMA;
 
+import java.io.Serializable;
 import java.util.Map;
 
-class PayloadItem {
+class PayloadItem implements Serializable {
     final private String id;
     final private String schema;
     final private ItemData data;
