@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ITEMS;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONArray;
@@ -183,6 +184,20 @@ class MessagingUtils {
             convertedValue = (Variant) value;
         }
         return convertedValue;
+    }
+
+    static List<PropositionPayload> createPropositionPayload(final List<Map<String, Object>> payloads) {
+        if (payloads == null || payloads.size() == 0) {
+            return null;
+        }
+
+        List<PropositionPayload> propositionPayloads = new ArrayList<>();
+        for (final Map<String, Object> payload : payloads) {
+            final PropositionInfo propositionInfo = new PropositionInfo(payload);
+            final PropositionPayload propositionPayload = new PropositionPayload(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
+            propositionPayloads.add(propositionPayload);
+        }
+        return propositionPayloads;
     }
 
     // ========================================================================================

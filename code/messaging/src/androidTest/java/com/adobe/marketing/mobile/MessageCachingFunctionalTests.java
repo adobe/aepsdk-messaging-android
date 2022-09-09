@@ -88,7 +88,7 @@ public class MessageCachingFunctionalTests {
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory();
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 

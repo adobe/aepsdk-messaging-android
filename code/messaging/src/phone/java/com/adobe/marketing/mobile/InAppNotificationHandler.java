@@ -16,19 +16,11 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ITEMS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PERSONALIZATION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.QUERY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.DATA;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.CONTENT;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.RULES;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -44,6 +36,7 @@ class InAppNotificationHandler {
     final MessagingInternal parent;
     private final Module messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
+    private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
 
     /**
      * Constructor
@@ -54,15 +47,15 @@ class InAppNotificationHandler {
     InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
         this.messagingCacheUtilities = messagingCacheUtilities;
-        // create a module to get access to the Core rules engine for adding ODE rules
+        // create a module to get access to the Core rules engine for adding AJO in-app message rules
         messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
         };
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
         if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
-            Map<String, Object> cachedMessages = messagingCacheUtilities.getCachedPropositions();
+            List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, "%s - Retrieved cached propositions, attempting to load in-app messages into the rules engine.", SELF_TAG);
-                handlePersonalizationPayload(cachedMessages);
+                handleEdgePersonalizationNotification(cachedMessages);
             }
         }
     }
@@ -108,67 +101,56 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Handles the notification payload by extracting the rules json objects present in the Edge response event
+     * Handles the proposition payload containing in-app messages by extracting the rules json objects present in the Edge response event
      * into a list of {@code Map} objects. The valid rule json objects are then registered in the {@link RulesEngine}.
      *
-     * @param payload A {@link Map<String, Variant>} containing the personalization decision payload retrieved via the Edge extension.
+     * @param propositions A {@link List<PropositionPayload>} containing the in-app message definitions retrieved via the Edge extension.
      */
-    void handlePersonalizationPayload(final Map<String, Object> payload) {
-        if (MessagingUtils.isMapNullOrEmpty(payload)) {
-            Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
-            messagingCacheUtilities.clearCachedDataFromSubdirectory(PROPOSITIONS_CACHE_SUBDIRECTORY);
-            return;
+    void handleEdgePersonalizationNotification(final List<PropositionPayload> propositions) {
+        // save the proposition payload to the messaging cache
+        messagingCacheUtilities.cachePropositions(propositions);
+
+        final List<JsonUtilityService.JSONObject> convertedPropositions = new ArrayList<>();
+        for (final PropositionPayload proposition : propositions) {
+            final String appSurface = App.getAppContext().getPackageName();
+            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
+
+            final String scope = proposition.getPropositionInfo().getScope();
+            if (StringUtils.isNullOrEmpty(scope)) {
+                Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
+                return;
+            }
+
+            // check that app surface is present in the payload before processing any in-app message rules present
+            Log.debug(LOG_TAG, "%s - IAM payload contained the app surface: (%s)", SELF_TAG, scope);
+            if (!scope.equals(SURFACE_BASE + appSurface)) {
+                Log.debug(LOG_TAG, "%s - the retrieved application identifier did not match the app surface present in the IAM payload: (%s).", SELF_TAG, appSurface);
+                return;
+            }
+
+            final JsonUtilityService.JSONObject ruleJson = proposition.getItems().get(0).getData().getRuleJsonObject();
+            convertedPropositions.add(ruleJson);
+
+            // cache any image assets present in the current rule json's image assets array
+            cacheImageAssetsFromPayload(ruleJson);
+
+            // store reporting data for this payload for later use
+            storePropositionInfo(proposition, getMessageId(ruleJson));
         }
-        final String appSurface = App.getAppContext().getPackageName();
-        Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
-
-        final String scope = (String) payload.get(SCOPE);
-        if (StringUtils.isNullOrEmpty(scope)) {
-            Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
-            return;
-        }
-
-        // check that app surface is present in the payload before processing any in-app message rules present
-        Log.debug(LOG_TAG, "%s - IAM payload contained the app surface: (%s)", SELF_TAG, scope);
-        if (!scope.equals(SURFACE_BASE + appSurface)) {
-            Log.debug(LOG_TAG, "%s - the retrieved application identifier did not match the app surface present in the IAM payload: (%s).", SELF_TAG, appSurface);
-            return;
-        }
-
-        // extract the items from the notification payload then attempt to register the contained rules
-        List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get(ITEMS);
-
-        // save the proposition payload if present to the messaging cache
-        messagingCacheUtilities.cachePropositions(payload);
-
-        registerRules(items);
+        registerRules(convertedPropositions);
     }
 
     /**
      * Validates each {@link Rule} in the items {@code List} then adds all valid rules to the {@link RulesEngine}.
      * Any image assets found are cached using the {@link MessagingCacheUtilities}.
      *
-     * @param items a {@link List<Map<String, Object>>} containing a rule payload.
+     * @param rulePayload a {@link List<JsonUtilityService.JSONObject>>} containing a rule payload.
      */
-    private void registerRules(final List<Map<String, Object>> items) {
-        final List<JsonUtilityService.JSONObject> ruleJsons = new ArrayList<>();
+    private void registerRules(final List<JsonUtilityService.JSONObject> rulePayload) {
         final List<Rule> parsedRules = new ArrayList<>();
-        // Loop through each rule in the payload and collect the rule json's present.
-        // Additionally, extract the image assets and build the asset list for asset caching.
-        for (final Map<String, Object> currentItem : items) {
-            final Map<String, String> data = (Map<String, String>) currentItem.get(DATA);
-            final String ruleJson = data.get(CONTENT);
-            final JsonUtilityService.JSONObject ruleJsonObject = MessagingUtils.getJsonUtilityService().createJSONObject(ruleJson);
-            // we want to discard invalid jsons
-            if (ruleJsonObject != null) {
-                ruleJsons.add(ruleJsonObject);
-                // cache any image assets present in the current rule json's image assets array
-                cacheImageAssetsFromPayload(ruleJsonObject);
-            }
-        }
 
         // create Rule objects from the rule jsons and load them into the RulesEngine
-        for (final JsonUtilityService.JSONObject ruleJson : ruleJsons) {
+        for (final JsonUtilityService.JSONObject ruleJson : rulePayload) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
             if (parsedRule != null) {
                 parsedRules.add(parsedRule);
@@ -176,6 +158,25 @@ class InAppNotificationHandler {
         }
         Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %d rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
+    }
+
+    private void storePropositionInfo(final PropositionPayload propositionPayload, final String messageId) {
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.debug(LOG_TAG, "Unable to associate proposition information for in-app message. MessageId unavailable in rule consequence.");
+            return;
+        }
+        propositionInfoMap.put(messageId, propositionPayload.getPropositionInfo());
+    }
+
+    private String getMessageId(final JsonUtilityService.JSONObject rulePayload) {
+        final JsonUtilityService.JSONObject consequences;
+        try {
+            consequences = rulePayload.getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            return consequences.getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
+        } catch (final JsonException exception) {
+            Log.warning(LOG_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
+            return null;
+        }
     }
 
     /**
@@ -217,9 +218,9 @@ class InAppNotificationHandler {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
             final JsonUtilityService.JSONArray rulesArray = ruleJsonObject.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-            final JsonUtilityService.JSONArray  consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
-            final JsonUtilityService.JSONObject  details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-            final JsonUtilityService.JSONArray  remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            final JsonUtilityService.JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
+            final JsonUtilityService.JSONObject details = consequence.getJSONObject(0).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+            final JsonUtilityService.JSONArray remoteAssets = details.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
             if (remoteAssets.length() != 0) {
                 for (int index = 0; index < remoteAssets.length(); index++) {
                     final String imageAssetUrl = (String) remoteAssets.get(index);

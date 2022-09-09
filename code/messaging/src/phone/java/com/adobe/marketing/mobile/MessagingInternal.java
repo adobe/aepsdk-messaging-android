@@ -412,10 +412,13 @@ class MessagingInternal extends Extension {
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
                 // validate the edge response event then load any iam rules present
                 final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Personalization.PAYLOAD);
-                if (payload != null && payload.size() > 0) {
-                    inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+                final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
+                if (propositions == null || propositions.isEmpty()) {
+                    Log.warning(LOG_TAG, "%s - Payload for in-app messages was empty. Clearing local cache.", SELF_TAG);
+                    messagingCacheUtilities.clearCachedDataFromSubdirectory();
+                    return;
                 }
-                Log.warning(LOG_TAG, "%s - Unable to handle personalization payload, the payload was empty.", SELF_TAG);
+                inAppNotificationHandler.handleEdgePersonalizationNotification(propositions);
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 // handle rules response events containing message definitions
                 inAppNotificationHandler.createInAppMessage(eventToProcess);

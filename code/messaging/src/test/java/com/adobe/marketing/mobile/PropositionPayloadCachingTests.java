@@ -128,7 +128,7 @@ public class PropositionPayloadCachingTests {
     @Test
     public void testClearCache() {
         // test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory();
         // verify deleteFilesNotInList called
         verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
     }

@@ -161,7 +161,9 @@ final class MessagingConstants {
             static final String SCOPE = "scope";
             static final String SCOPE_DETAILS = "scopeDetails";
             static final String QUERY = "query";
+            static final String SCHEMA = "schema";
             static final String SURFACES = "surfaces";
+            static final String CORRELATION_ID = "correlationID";
 
             private Personalization() {
             }

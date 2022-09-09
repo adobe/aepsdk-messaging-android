@@ -17,8 +17,8 @@ import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRE
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -76,20 +76,19 @@ final class MessagingCacheUtilities {
 
     /**
      * Delete all contents in the {@link Messaging} extension cache subdirectory.
-     *
-     * @param cacheSubdirectory the {@code String} subdirectory to be cleared.
      */
-    void clearCachedDataFromSubdirectory(final String cacheSubdirectory) {
-        cacheManager.deleteFilesNotInList(null, cacheSubdirectory, true);
-        Log.trace(LOG_TAG, "%s - In-app messaging %s cache has been deleted.", SELF_TAG, cacheSubdirectory);
+    void clearCachedDataFromSubdirectory() {
+        cacheManager.deleteFilesNotInList(null, PROPOSITIONS_CACHE_SUBDIRECTORY, true);
+        cacheManager.deleteFilesNotInList(null, IMAGES_CACHE_SUBDIRECTORY, true);
+        Log.trace(LOG_TAG, "%s - In-app messaging %s and %s caches have been deleted.", SELF_TAG, PROPOSITIONS_CACHE_SUBDIRECTORY, IMAGES_CACHE_SUBDIRECTORY);
     }
 
     /**
-     * Retrieves cached {@code String} proposition payloads and returns them in a {@link Map<String, Object>}.
+     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<PropositionPayload>}.
      *
-     * @return a {@code Map<String, Object>} containing the cached proposition payloads.
+     * @return a {@code List<PropositionPayload>} containing the cached proposition payloads.
      */
-    Map<String, Object> getCachedPropositions() {
+    List<PropositionPayload> getCachedPropositions() {
         final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, false);
         if (cachedMessageFile == null) {
             Log.debug(LOG_TAG, "%s - Unable to find a cached proposition.", SELF_TAG);
@@ -100,8 +99,13 @@ final class MessagingCacheUtilities {
         try {
             fileInputStream = new FileInputStream(cachedMessageFile);
             final String streamContents = StringUtils.streamToString(fileInputStream);
-            final JSONObject cachedMessagePayload = new JSONObject(streamContents);
-            return MessagingUtils.toMap(cachedMessagePayload);
+            final JSONArray cachedMessagePayload = new JSONArray(streamContents);
+            final List<Object> cachedMessagePayloadList = MessagingUtils.toList(cachedMessagePayload);
+            final List<Map<String, Object>> cachedPropositionsList = new ArrayList<>();
+            for (final Object propositionMap : cachedMessagePayloadList) {
+                cachedPropositionsList.add((Map<String, Object>) propositionMap);
+            }
+            return MessagingUtils.createPropositionPayload(cachedPropositionsList);
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, "%s - Exception occurred when retrieving the cached proposition file: %s", SELF_TAG, fileNotFoundException.getMessage());
             return null;
@@ -121,23 +125,23 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Caches the {@link Map <String, Object>} proposition payload.
+     * Caches the {@code List<PropositionPayload>} payload.
      *
-     * @param propositionPayload the {@code Map<String, Object>} containing the message payload to be cached.
+     * @param propositionPayload the {@link List<PropositionPayload>} containing the message payload to be cached.
      */
-    void cachePropositions(final Map<String, Object> propositionPayload) {
+    void cachePropositions(final List<PropositionPayload> propositionPayload) {
         // clean any existing cached files first
-        clearCachedDataFromSubdirectory(PROPOSITIONS_CACHE_SUBDIRECTORY);
+        clearCachedDataFromSubdirectory();
         // quick out if an empty message payload was received
-        if (MessagingUtils.isMapNullOrEmpty(propositionPayload)) {
+        if (propositionPayload.isEmpty()) {
             return;
         }
         Log.debug(LOG_TAG, "%s - Creating new cached propositions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY));
         final File cachedPropositions = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
         try {
             // convert the message payload to JSON then cache the JSON as a string
-            final Object json = MessagingUtils.toJSON(propositionPayload);
-            writeInputStreamIntoFile(cachedPropositions, new ByteArrayInputStream(json.toString().getBytes(StandardCharsets.UTF_8)), false);
+            final JSONArray jsonArray = (JSONArray) MessagingUtils.toJSON(propositionPayload);
+            writeInputStreamIntoFile(cachedPropositions, new ByteArrayInputStream(jsonArray.toString().getBytes(StandardCharsets.UTF_8)), false);
         } catch (final JSONException e) {
             Log.error(LOG_TAG, "%s - JSONException while attempting to create JSON from ArrayList payload: (%s)", SELF_TAG, e);
         }

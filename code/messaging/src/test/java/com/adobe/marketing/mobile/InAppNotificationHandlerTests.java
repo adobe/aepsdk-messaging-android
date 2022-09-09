@@ -141,7 +141,7 @@ public class InAppNotificationHandlerTests {
     @After
     public void cleanup() {
         // use messaging cache utilities to clean the cache after each test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory();
     }
 
     // ========================================================================================
