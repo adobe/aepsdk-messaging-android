@@ -550,34 +550,37 @@ class MessagingInternal extends Extension {
             scopeDetails.put(CHARACTERISTICS, characteristics);
         }
 
-        // create propositions list
+        // add propositions
         final List<Map<String, Object>> propositions = new ArrayList<>();
         final Map<String, Object> propositionMap = new HashMap<>();
         propositionMap.put(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID, propositionInfo.getId());
         propositionMap.put(SCOPE, propositionInfo.getScope());
         propositionMap.put(SCOPE_DETAILS, propositionInfo.getScopeDetails());
+        propositions.add(propositionMap);
 
-        // create proposition event type
+        // add proposition event
         final Map<String, Integer> propositionEventType = new HashMap<>();
         propositionEventType.put(eventType.name(), 1);
 
+        // add propositions and proposition event to decisioning map
         final Map<String, Object> decisioning = new HashMap<>();
         decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
         decisioning.put(PROPOSITIONS, propositions);
 
-        final Map<String, Object> experience = new HashMap<>();
-        experience.put(DECISIONING, decisioning);
+        // create experience map with proposition tracking data
+        final Map<String, Object> experienceMap = new HashMap<>();
+        experienceMap.put(DECISIONING, decisioning);
 
-        // Create XDM data with tracking data
+        // create XDM data with experience data
         final Map<String, Object> xdmMap = new HashMap<>();
         xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType.toString());
-        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experience);
+        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
 
         // create maps for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
         iamHistoryMap.put(EVENT_TYPE, eventType.toString());
         iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.getCorrelationId());
-        iamHistoryMap.put(TRACKING_ACTION, interaction);
+        iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // Create the mask for storing event history
         final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
@@ -587,7 +590,7 @@ class MessagingInternal extends Extension {
         xdmEventData.put(IAM_HISTORY, iamHistoryMap);
 
         // dispatch in-app tracking event
-        MessagingUtils.sendEvent(MessagingConstants.EventName.IAM_INTERACTION_EVENT,
+        MessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmEventData,

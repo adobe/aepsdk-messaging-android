@@ -101,7 +101,7 @@ class InAppNotificationHandler {
         };
         eventData.put(XDM, xdmData);
 
-        final Event event = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
+        final Event event = new Event.Builder(MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 null)

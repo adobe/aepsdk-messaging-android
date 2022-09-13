@@ -158,7 +158,7 @@ public final class Messaging {
         final EventData eventData = new EventData();
         eventData.putBoolean(REFRESH_MESSAGES, true);
 
-        final Event refreshMessageEvent = new Event.Builder(MessagingConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT,
+        final Event refreshMessageEvent = new Event.Builder(MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
                 MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setData(eventData)
                 .build();
