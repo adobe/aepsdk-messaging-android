@@ -125,7 +125,10 @@ class InAppNotificationHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = getRequestEventId(edgeResponseEvent);
         if (!requestMessagesEventId.equals(requestEventId)) {
-            return;
+            // TODO: remove following check, for testing only
+            if (!requestEventId.equals("MANUAL_TESTING_ID")) {
+                return;
+            }
         }
         final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
@@ -166,13 +169,15 @@ class InAppNotificationHandler {
             }
 
             final JsonUtilityService.JSONObject ruleJson = proposition.getItems().get(0).getData().getRuleJsonObject();
-            foundRules.add(ruleJson);
+            if (ruleJson != null) {
+                foundRules.add(ruleJson);
 
-            // cache any image assets present in the current rule json's image assets array
-            cacheImageAssetsFromPayload(ruleJson);
+                // cache any image assets present in the current rule json's image assets array
+                cacheImageAssetsFromPayload(ruleJson);
 
-            // store reporting data for this payload for later use
-            storePropositionInfo(getMessageId(ruleJson), proposition);
+                // store reporting data for this payload for later use
+                storePropositionInfo(getMessageId(ruleJson), proposition);
+            }
         }
 
         registerRules(foundRules);

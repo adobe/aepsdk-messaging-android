@@ -39,10 +39,7 @@ class MessagingApplication : Application() {
             // update config to use cjmstage for int integration
             val cjmStageConfig: HashMap<String, Any> = hashMapOf(
                 "edge.environment" to "int",
-                //"experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
-                "edge.configId" to "15525167-fd4e-4511-b9e0-02119485784f"
-                //"edge.configId" to "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
-                //"messaging.eventDataset" to "610ae80b3cbbc718dab06208"
+                "edge.configId" to "15525167-fd4e-4511-b9e0-02119485784f" // ajo-web
             )
             MobileCore.updateConfiguration(cjmStageConfig)
         }
