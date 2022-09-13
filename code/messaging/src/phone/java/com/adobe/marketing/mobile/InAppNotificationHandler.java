@@ -16,10 +16,10 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PERSONALIZATION;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.QUERY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SURFACES;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.PAYLOAD;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
@@ -134,12 +134,15 @@ class InAppNotificationHandler {
             messagingCacheUtilities.clearCachedDataFromSubdirectory();
             return;
         }
+        // save the proposition payload to the messaging cache
+        messagingCacheUtilities.cachePropositions(propositions);
+        Log.trace(LOG_TAG, "%s - Loading in-app messages definitions from network response.", SELF_TAG);
         processPropositions(propositions);
     }
 
     /**
-     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JsonUtilityService.JSONObject} are
-     * are then registered in the {@link RulesEngine}.
+     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JsonUtilityService.JSONObject}s
+     * found will be registered with the {@link RulesEngine}.
      *
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
@@ -169,35 +172,38 @@ class InAppNotificationHandler {
             cacheImageAssetsFromPayload(ruleJson);
 
             // store reporting data for this payload for later use
-            storePropositionInfo(proposition, getMessageId(ruleJson));
+            storePropositionInfo(getMessageId(ruleJson), proposition);
         }
-        // save the proposition payload to the messaging cache
-        messagingCacheUtilities.cachePropositions(propositions);
 
         registerRules(foundRules);
     }
 
     /**
-     * Validates each {@link Rule} in the items {@code List} then adds all valid rules to the {@link RulesEngine}.
-     * Any image assets found are cached using the {@link MessagingCacheUtilities}.
+     * Parses each item in the {@code List<JsonUtilityService.JSONObject>>} then adds all valid rules to the {@link RulesEngine}.
      *
      * @param rulePayload a {@link List<JsonUtilityService.JSONObject>>} containing a rule payload.
      */
     private void registerRules(final List<JsonUtilityService.JSONObject> rulePayload) {
         final List<Rule> parsedRules = new ArrayList<>();
 
-        // create Rule objects from the rule jsons and load them into the RulesEngine
+        // create rule objects from the rule JSONs and load them into the rule engine
         for (final JsonUtilityService.JSONObject ruleJson : rulePayload) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
             if (parsedRule != null) {
                 parsedRules.add(parsedRule);
             }
         }
-        Log.debug(LOG_TAG, "%s - handleOfferNotification - registering %d rules", SELF_TAG, parsedRules.size());
+        Log.debug(LOG_TAG, "%s - registerRules - registering %d rules", SELF_TAG, parsedRules.size());
         messagingModule.replaceRules(parsedRules);
     }
 
-    private void storePropositionInfo(final PropositionPayload propositionPayload, final String messageId) {
+    /**
+     * Creates a mapping between the message id and the {@code PropositionInfo} to use for in-app message interaction tracking.
+     *
+     * @param messageId a {@code String} containing the rule consequence id
+     * @param propositionPayload a {@link PropositionPayload} containing an in-app message payload
+     */
+    private void storePropositionInfo(final String messageId, final PropositionPayload propositionPayload) {
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(LOG_TAG, "Unable to associate proposition information for in-app message. MessageId unavailable in rule consequence.");
             return;
@@ -205,10 +211,25 @@ class InAppNotificationHandler {
         propositionInfoMap.put(messageId, propositionPayload.getPropositionInfo());
     }
 
+    /**
+     * Returns a {@code PropositionInfo} object to use for in-app message interaction tracking.
+     *
+     * @param messageId a {@code String} containing the rule consequence id to use for retrieving a {@link PropositionInfo} object
+     * @return a {@code PropositionInfo} containing XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+     */
+    private PropositionInfo getPropositionInfoForMessageId(final String messageId) {
+        return propositionInfoMap.get(messageId);
+    }
+
+    /**
+     * Extracts the message id from the provided rule payload's consequence.
+     *
+     * @return a {@code String> containing the consequence id
+     */
     private String getMessageId(final JsonUtilityService.JSONObject rulePayload) {
         final JsonUtilityService.JSONObject consequences;
         try {
-            consequences = rulePayload.getJSONObject(JSON_KEY).getJSONObject(JSON_CONSEQUENCES_KEY);
+            consequences = rulePayload.getJSONArray(JSON_KEY).getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY).getJSONObject(0);
             return consequences.getString(MESSAGE_CONSEQUENCE_ID);
         } catch (final JsonException exception) {
             Log.warning(LOG_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
@@ -247,8 +268,9 @@ class InAppNotificationHandler {
                 return;
             }
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            // the asset map is populated when the edge response event containing messages is processed
             final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
+            message.propositionInfo = getPropositionInfoForMessageId(message.id);
+            message.trigger();
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG,

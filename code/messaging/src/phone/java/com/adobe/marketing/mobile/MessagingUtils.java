@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ITEMS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONArray;
@@ -343,10 +343,25 @@ class MessagingUtils {
         sendEvent(event, errorMessage);
     }
 
+    /**
+     * Dispatches an event with the given parameters.
+     *
+     * @param eventName    a {@code String} containing the name of the event to be dispatched
+     * @param eventType    a {@code String} containing the type of the event to be dispatched
+     * @param eventSource  a {@code String} containing the source of the event to be dispatched
+     * @param data         a {@link Map} containing the data of the event to be dispatched
+     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
+     */
     static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
         sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
     }
 
+    /**
+     * Dispatches an event.
+     *
+     * @param event a {@link Event} to be dispatched
+     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
+     */
     static void sendEvent(final Event event, final String errorMessage) {
         MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
             @Override

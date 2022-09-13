@@ -12,10 +12,10 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.CONTENT;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.DATA;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Personalization.SCHEMA;
+import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.CONTENT;
+import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.DATA;
+import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.SCHEMA;
 
 import java.io.Serializable;
 import java.util.Map;

@@ -44,6 +44,8 @@ public class Message extends MessagingDelegate {
     public boolean autoTrack = true;
     // private properties
     private WebView webView;
+    // package private
+    PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
     /**
      * Constructor.
@@ -59,7 +61,7 @@ public class Message extends MessagingDelegate {
      *
      * @param parent             {@link MessagingInternal} instance that created this Message
      * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
-     * @param rawMessageSettings {@code Map<String, Object>} contating the raw message settings found in the "mobileParameters" present in the rule consequence
+     * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
@@ -121,7 +123,7 @@ public class Message extends MessagingDelegate {
                     "%s - Unable to record a message interaction, MessagingEdgeEventType was null.", SELF_TAG);
             return;
         }
-        messagingInternal.handleInAppTrackingInfo(eventType, interaction, this);
+        messagingInternal.sendPropositionInteraction(interaction, eventType, this);
     }
 
     /**
@@ -230,6 +232,14 @@ public class Message extends MessagingDelegate {
             }
 
             aepMessage.dismiss();
+        }
+    }
+
+    public void trigger() {
+        if (aepMessage != null) {
+            if (autoTrack) {
+                track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
+            }
         }
     }
 

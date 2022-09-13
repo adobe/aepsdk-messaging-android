@@ -137,10 +137,6 @@ final class MessagingCacheUtilities {
     void cachePropositions(final List<PropositionPayload> propositionPayload) {
         // clean any existing cached files first
         clearCachedDataFromSubdirectory();
-        // quick out if an empty message payload was received
-        if (propositionPayload.isEmpty()) {
-            return;
-        }
         Log.debug(LOG_TAG, "%s - Creating new cached propositions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY));
         final File propositionCache = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
         FileOutputStream fileOutputStream;
