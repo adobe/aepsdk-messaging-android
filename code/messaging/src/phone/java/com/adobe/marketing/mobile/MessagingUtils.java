@@ -30,7 +30,7 @@ class MessagingUtils {
 
     /**
      * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
-     * This method is recursive.
+     * This method may recurse.
      * The elements for which the conversion fails will be skipped.
      *
      * @param jsonObject to be converted
@@ -57,7 +57,7 @@ class MessagingUtils {
 
     /**
      * Converts provided {@link org.json.JSONObject} into a {@link Map<String, Variant>} for any number of levels, which can be used as event data.
-     * This method is recursive.
+     * This method may recurse.
      * The elements for which the conversion fails will be skipped.
      *
      * @param jsonObject to be converted
@@ -83,7 +83,7 @@ class MessagingUtils {
 
     /**
      * Converts provided {@link JSONArray} into {@link List} for any number of levels which can be used as event data
-     * This method is recursive.
+     * This method may recurse.
      * The elements for which the conversion fails will be skipped.
      *
      * @param jsonArray to be converted
@@ -107,6 +107,8 @@ class MessagingUtils {
 
     /**
      * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     * This method may recurse.
+     * The elements for which the conversion fails will be skipped.
      *
      * @param object to be converted to jSON
      * @return {@link Object} containing a json object or json array
