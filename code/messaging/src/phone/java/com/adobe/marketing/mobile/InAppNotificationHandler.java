@@ -115,7 +115,7 @@ class InAppNotificationHandler {
      */
     void handlePersonalizationPayload(final Map<String, Object> payload) {
         if (MessagingUtils.isMapNullOrEmpty(payload)) {
-            Log.warning(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages.", SELF_TAG);
+            Log.debug(LOG_TAG, "%s - Empty content returned in call to retrieve in-app messages. Clearing local cache.", SELF_TAG);
             messagingCacheUtilities.clearCachedDataFromSubdirectory(PROPOSITIONS_CACHE_SUBDIRECTORY);
             return;
         }

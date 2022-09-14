@@ -106,6 +106,8 @@ class MessagingUtils {
 
     /**
      * Converts provided {@link Object} to a {@link JSONObject} or {@link JSONArray}.
+     * This method is recursive.
+     * The elements for which the conversion fails will be skipped.
      *
      * @param object to be converted to jSON
      * @return {@link Object} containing a json object or json array
