@@ -88,7 +88,7 @@ public class MessageCachingFunctionalTests {
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingTestConstants.MESSAGES_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -100,7 +100,7 @@ public class MessageCachingFunctionalTests {
         final String expectedCondition = "((foo EQUALS bar))";
         final String expectedConsequence = MessagingTestUtils.loadStringFromFile("expected_consequence_data.txt");
         // dispatch edge response event containing a messaging payload
-        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("optimize_payload.json");
+        MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("personalization_payload.json");
         // wait for event and rules processing
         TestHelper.sleep(1000);
         // verify rule payload was loaded into rules engine
@@ -118,9 +118,9 @@ public class MessageCachingFunctionalTests {
             }
         }
         // verify message payload was cached
-        assertTrue(messagingCacheUtilities.areMessagesCached());
-        final Map<String, Variant> cachedMessages = messagingCacheUtilities.getCachedMessages();
-        assertEquals(cachedMessages, MessagingTestUtils.getVariantMapFromFile("optimize_payload.json"));
+        assertTrue(messagingCacheUtilities.arePropositionsCached());
+        final Map<String, Object> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+        assertEquals(cachedPropositions, MessagingTestUtils.getMapFromFile("personalization_payload.json"));
     }
 
     @Test
@@ -133,6 +133,6 @@ public class MessageCachingFunctionalTests {
         final ConcurrentHashMap moduleRules = MobileCore.getCore().eventHub.getModuleRuleAssociation();
         assertEquals(1, moduleRules.size()); // configuration only
         // verify message payload was not cached
-        assertFalse(messagingCacheUtilities.areMessagesCached());
+        assertFalse(messagingCacheUtilities.arePropositionsCached());
     }
 }

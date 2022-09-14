@@ -16,7 +16,7 @@ package com.adobe.marketing.mobile;
  */
 public class MessagingTestConstants {
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
-    static final String MESSAGES_CACHE_SUBDIRECTORY = "messages";
+    static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 

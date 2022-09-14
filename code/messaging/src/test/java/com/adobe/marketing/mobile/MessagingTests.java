@@ -28,7 +28,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -70,7 +69,7 @@ public class MessagingTests {
         final ArgumentCaptor<ExtensionErrorCallback> callbackCaptor = ArgumentCaptor.forClass(ExtensionErrorCallback.class);
 
         // The monitor extension should register with core
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(1));
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.registerExtension(ArgumentMatchers.eq(MessagingInternal.class), callbackCaptor.capture());
 
         // verify the callback
@@ -156,7 +155,7 @@ public class MessagingTests {
         Messaging.handleNotificationResponse(null, false, null);
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(0));
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
         MobileCore.dispatchEvent(any(Event.class), any(ExtensionErrorCallback.class));
     }
 
@@ -181,7 +180,7 @@ public class MessagingTests {
         // verify
         verify(mockIntent, times(2)).getStringExtra(anyString());
 
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(1));
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event
@@ -217,7 +216,7 @@ public class MessagingTests {
         // verify
         verify(mockIntent, times(2)).getStringExtra(anyString());
 
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(0));
+        PowerMockito.verifyStatic(MobileCore.class, times(0));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
     }
 
@@ -242,7 +241,7 @@ public class MessagingTests {
         // verify
         verify(mockIntent, times(2)).getStringExtra(anyString());
 
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(1));
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
     }
 
@@ -257,7 +256,7 @@ public class MessagingTests {
         Messaging.refreshInAppMessages();
 
         // verify
-        PowerMockito.verifyStatic(MobileCore.class, Mockito.times(1));
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
         MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
 
         // verify event

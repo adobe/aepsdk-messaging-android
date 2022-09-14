@@ -29,17 +29,17 @@ import android.os.Looper;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
+import com.adobe.marketing.mobile.internal.context.App;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.MessageCreationException;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
-import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
-import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
+import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 import com.adobe.marketing.mobile.services.ui.UIService;
-import com.adobe.marketing.mobile.internal.context.App;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +49,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
@@ -68,25 +67,8 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, App.class, MessagingState.class, ServiceProvider.class})
 public class MessageTests {
-    class CustomMessagingDelegate extends MessagingDelegate {
-        private boolean showMessage = true;
-
-        @Override
-        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-            if (!showMessage) {
-                Message message = (Message) fullscreenMessage.getParent();
-                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
-            }
-            return showMessage;
-        }
-
-        public void setShowMessage(boolean showMessage) {
-            this.showMessage = showMessage;
-        }
-    }
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
     private final Map<String, Object> consequence = new HashMap<>();
-
     @Mock
     Core mockCore;
     @Mock
@@ -236,7 +218,7 @@ public class MessageTests {
         assertNotNull(message);
     }
 
-    @Test (expected = MessageRequiredFieldMissingException.class)
+    @Test(expected = MessageRequiredFieldMissingException.class)
     public void test_messageConstructor_MissingDetails() throws MessageRequiredFieldMissingException {
         // setup
         Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
@@ -245,7 +227,7 @@ public class MessageTests {
         message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
     }
 
-    @Test (expected = MessageRequiredFieldMissingException.class)
+    @Test(expected = MessageRequiredFieldMissingException.class)
     public void test_messageConstructor_MissingMessageExecutionId() throws MessageRequiredFieldMissingException {
         // setup
         MessageTestConfig config = new MessageTestConfig();
@@ -322,7 +304,7 @@ public class MessageTests {
         assertEquals(0, settings.getHorizontalInset());
         assertEquals(MessageAnimation.FADE, settings.getDismissAnimation());
         assertEquals(false, settings.getUITakeover());
-        Map<MessageGesture, String>  expectedGestureStringMap = new HashMap() {
+        Map<MessageGesture, String> expectedGestureStringMap = new HashMap() {
             {
                 put(MessageGesture.BACKGROUND_TAP, "center");
                 put(MessageGesture.SWIPE_DOWN, "bottom");
@@ -645,5 +627,22 @@ public class MessageTests {
 
         // verify evaluate javascript not called
         verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
+    }
+
+    class CustomMessagingDelegate extends MessagingDelegate {
+        private boolean showMessage = true;
+
+        @Override
+        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
+            if (!showMessage) {
+                Message message = (Message) fullscreenMessage.getParent();
+                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
+            }
+            return showMessage;
+        }
+
+        public void setShowMessage(boolean showMessage) {
+            this.showMessage = showMessage;
+        }
     }
 }

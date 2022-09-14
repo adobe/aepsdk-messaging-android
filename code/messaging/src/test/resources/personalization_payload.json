@@ -1,0 +1,21 @@
+{
+  "scopeDetails" : {
+    "characteristics" : {
+      "cjmEvent" : {"messageExecution":{"messageExecutionID":"5d1ab71b-9c79-47ab-8cd0-3094867aec9a","messageID":"e34d32f4-16ab-440a-91f6-c681dfb8c5bd","messageType":"marketing","campaignID":"1671fb9f-7096-4edc-8914-53ffe51bad57","campaignVersionID":"294de099-e449-4e40-860b-a8e8d5a28c13","campaignActionID":"01decab6-313b-4764-b7af-9f91ba2efdbf","messagePublicationID":"c925f829-a936-4f10-b64e-ef244faebc69"},"messageProfile":{"channel":{"_id":"https://ns.adobe.com/xdm/channels/inApp","_type":"https://ns.adobe.com/xdm/channel-types/inApp"},"messageProfileID":"efa27a43-258b-4b55-93c0-05883f3b3eee"}}
+    },
+    "correlationID" : "e34d32f4-16ab-440a-91f6-c681dfb8c5bd",
+    "decisionProvider" : "AJO"
+  },
+  "scope" : "mobileapp://com.adobe.marketing.mobile.messaging.test",
+  "items": [
+    {
+      "id": "8649aa56-ad0e-47d3-b0e6-8214ad032620",
+      "schema": "https:\/\/ns.adobe.com\/personalization\/json-content-item",
+      "data": {
+        "content" : "{\"version\":1,\"rules\":[{\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"definition\":{\"key\":\"foo\",\"matcher\":\"eq\",\"values\":[\"bar\"]},\"type\":\"matcher\"}],\"logic\":\"and\"}},\"consequences\":[{\"id\":\"ebdbd89e-3318-4720-afbc-d929890b28ae\",\"type\":\"cjmiam\",\"detail\":{\"mobileParameters\":{\"verticalAlign\":\"center\",\"horizontalInset\":0,\"dismissAnimation\":\"bottom\",\"uiTakeover\":true,\"horizontalAlign\":\"center\",\"verticalInset\":0,\"displayAnimation\":\"bottom\",\"width\":100,\"height\":100,\"gestures\":{}},\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",\"remoteAssets\":[]}}]}]}",
+        "id": "df6cf615-c12a-42df-bdf2-42d5c8bd9218"
+      }
+    }
+  ],
+  "id": "d597cdf7-204b-4645-8115-5a0a06a910e0"
+}

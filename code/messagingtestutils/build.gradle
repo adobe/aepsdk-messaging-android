@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility rootProject.ext.sourceCompatibility
+        targetCompatibility rootProject.ext.sourceCompatibility
+    }
+}
+
+dependencies {
+    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
+    implementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    // Using older version of PowerMock as it supports minimum Android API < 26
+    // the root issue appears to be a dependency with Objenesis in Mockito-Core
+    // where Objenesis 2 requires minimum Android API 26
+    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+}

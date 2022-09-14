@@ -13,8 +13,6 @@
 package com.adobe.marketing.mobile;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -23,14 +21,11 @@ import static org.mockito.Mockito.when;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
-import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
@@ -42,7 +37,6 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,6 +47,7 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalHandleRulesResponseContentTests {
+    private final static String mockAppId = "mock_applicationId";
     private final Map<String, Object> mobileParameters = new HashMap() {
         {
             put(MessagingTestConstants.EventDataKeys.MobileParametersKeys.SCHEMA_VERSION, "version");
@@ -67,14 +62,13 @@ public class MessagingInternalHandleRulesResponseContentTests {
     private final Map<String, Object> identityMap = new HashMap<>();
     private final Map<String, Object> ecidMap = new HashMap<>();
     private final List<Map> ids = new ArrayList<>();
-    private final byte[] base64EncodedBytes = "ZGVjaXNpb25TY29wZQ==".getBytes(); // base64 encoded "decisionScope"
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
     @Mock
     Application mockApplication;
     @Mock
-    Context context;
+    Context mockContext;
     @Mock
     Core mockCore;
     @Mock
@@ -89,10 +83,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
     UIService mockUIService;
     @Mock
     PackageManager packageManager;
-    @Mock
-    ApplicationInfo applicationInfo;
-    @Mock
-    Bundle bundle;
     @Mock
     AEPMessage mockAEPMessage;
     @Mock
@@ -111,7 +101,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         setupMocks();
         setupPlatformServicesMocks();
-        setupActivityAndPlacementIdMocks();
+        setupApplicationIdMocks();
         setupSharedStateMocks();
 
         messagingInternal = new MessagingInternal(mockExtensionApi);
@@ -137,7 +127,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
         when(mockPlatformServices.getEncodingService()).thenReturn(mockAndroidEncodingService);
         when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
         when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
-        when(mockAndroidEncodingService.base64Encode(any(byte[].class))).thenReturn(base64EncodedBytes);
 
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
@@ -146,16 +135,13 @@ public class MessagingInternalHandleRulesResponseContentTests {
         Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
     }
 
-    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
-        // setup activity id mocks
+    void setupApplicationIdMocks() {
         when(App.getApplication()).thenReturn(mockApplication);
+        when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
-        when(mockApplication.getApplicationContext()).thenReturn(context);
-        when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
-        Whitebox.setInternalState(applicationInfo, "metaData", bundle);
-        when(bundle.getString(anyString())).thenReturn("mock_activity");
-        // setup placement id mocks
-        when(mockApplication.getPackageName()).thenReturn("mock_placement");
+        when(mockApplication.getApplicationContext()).thenReturn(mockContext);
+        when(mockApplication.getPackageName()).thenReturn(mockAppId);
+        when(mockContext.getPackageName()).thenReturn(mockAppId);
     }
 
     void setupSharedStateMocks() {

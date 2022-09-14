@@ -36,14 +36,14 @@ import java.util.Map;
  */
 public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
+    private final FullscreenMessage aepMessage;
+    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
     // public properties
     public String id;
     public boolean autoTrack = true;
     // private properties
     private WebView webView;
-    private final FullscreenMessage aepMessage;
-    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
 
     /**
      * Constructor.
@@ -234,29 +234,31 @@ public class Message extends MessagingDelegate {
     }
 
     /**
-     * Sample Message payload:
-     * "messageSetting": {
-     * "schemaVersion": "1.0",
-     * "width": "80",
-     * "height": "50",
-     * "verticalAlign": "center",
-     * "verticalInset": "0",
-     * "horizontalAlign": "center",
-     * "horizontalInset": "0",
-     * "uiTakeover": true,
-     * "displayAnimation": "top",
-     * "dismissAnimation": "top",
-     * "backdropColor": "AA00EE",
-     * "backdropOpacity": 0.2,
-     * "cornerRadius": 15,
-     * "gestures": {
-     * "swipeUp": "adbinapp://dismiss",
-     * "swipeDown": "adbinapp://dismiss",
-     * "swipeLeft": "adbinapp://dismiss?interaction=negative",
-     * "swipeRight": "adbinapp://dismiss?interaction=positive",
-     * "tapBackground": "adbinapp://dismiss"
-     * }
-     * }
+     * Sample mobile parameters payload represented by a MessageSettings object:
+     {
+        "mobileParameters": {
+            "schemaVersion": "1.0",
+            "width": 80,
+            "height": 50,
+            "verticalAlign": "center",
+            "verticalInset": 0,
+            "horizontalAlign": "center",
+            "horizontalInset": 0,
+            "uiTakeover": true,
+            "displayAnimation": "top",
+            "dismissAnimation": "top",
+            "backdropColor": "000000", // RRGGBB
+            "backdropOpacity: 0.3,
+            "cornerRadius": 15,
+            "gestures": {
+                "swipeUp": "adbinapp://dismiss",
+                "swipeDown": "adbinapp://dismiss",
+                "swipeLeft": "adbinapp://dismiss?interaction=negative",
+                "swipeRight": "adbinapp://dismiss?interaction=positive",
+                "tapBackground": "adbinapp://dismiss"
+             }
+        }
+     }
      */
     private MessageSettings addMessageSettings(final AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;

@@ -15,7 +15,6 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -25,9 +24,7 @@ import static org.mockito.Mockito.when;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -53,6 +50,8 @@ import java.util.concurrent.ExecutorService;
 @PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
 public class MessagingInternalTests {
 
+    private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
+    private static final String mockAppId = "mock_applicationId";
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -81,53 +80,9 @@ public class MessagingInternalTests {
     @Mock
     PackageManager packageManager;
     @Mock
-    ApplicationInfo applicationInfo;
-    @Mock
-    Bundle bundle;
-    @Mock
     Message mockMessage;
     private MessagingInternal messagingInternal;
     private EventHub eventHub;
-    private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
-
-    @Before
-    public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
-        eventHub = new EventHub("testEventHub", mockPlatformServices);
-        mockCore.eventHub = eventHub;
-
-        setupMocks();
-        setupPlatformServicesMocks();
-        setupActivityAndPlacementIdMocks();
-
-        messagingInternal = new MessagingInternal(mockExtensionApi);
-    }
-
-    void setupMocks() {
-        PowerMockito.mockStatic(MobileCore.class);
-        PowerMockito.mockStatic(Event.class);
-        PowerMockito.mockStatic(App.class);
-        when(MobileCore.getCore()).thenReturn(mockCore);
-    }
-
-    void setupPlatformServicesMocks() {
-        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
-        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
-        when(mockPlatformServices.getJsonUtilityService()).thenReturn(mockAndroidJsonUtility);
-        final File mockCache = new File("mock_cache");
-        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-    }
-
-    void setupActivityAndPlacementIdMocks() throws PackageManager.NameNotFoundException {
-        // activity id mocks
-        when(App.getApplication()).thenReturn(mockApplication);
-        when(mockApplication.getPackageManager()).thenReturn(packageManager);
-        when(mockApplication.getApplicationContext()).thenReturn(context);
-        when(packageManager.getApplicationInfo(anyString(), anyInt())).thenReturn(applicationInfo);
-        Whitebox.setInternalState(applicationInfo, "metaData", bundle);
-        when(bundle.getString(anyString())).thenReturn("mock_activity");
-        // placement id mocks
-        when(mockApplication.getPackageName()).thenReturn("mock_placement");
-    }
 
     static Map<String, Object> setupXdmMap(MessageTestConfig config) {
         Map<String, Object> mixins = new HashMap<>();
@@ -163,6 +118,39 @@ public class MessagingInternalTests {
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
         return details;
+    }
+
+    @Before
+    public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
+        eventHub = new EventHub("testEventHub", mockPlatformServices);
+        mockCore.eventHub = eventHub;
+
+        setupMocks();
+        setupPlatformServicesMocks();
+        setupApplicationIdMocks();
+
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+    }
+
+    void setupMocks() {
+        PowerMockito.mockStatic(MobileCore.class);
+        PowerMockito.mockStatic(Event.class);
+        PowerMockito.mockStatic(App.class);
+        when(MobileCore.getCore()).thenReturn(mockCore);
+    }
+
+    void setupPlatformServicesMocks() {
+        when(mockPlatformServices.getSystemInfoService()).thenReturn(mockAndroidSystemInfoService);
+        when(mockPlatformServices.getNetworkService()).thenReturn(mockAndroidNetworkService);
+        when(mockPlatformServices.getJsonUtilityService()).thenReturn(mockAndroidJsonUtility);
+        final File mockCache = new File("mock_cache");
+        when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
+    }
+
+    void setupApplicationIdMocks() {
+        when(App.getApplication()).thenReturn(mockApplication);
+        when(mockApplication.getPackageManager()).thenReturn(packageManager);
+        when(mockApplication.getPackageName()).thenReturn(mockAppId);
     }
 
     // ========================================================================================

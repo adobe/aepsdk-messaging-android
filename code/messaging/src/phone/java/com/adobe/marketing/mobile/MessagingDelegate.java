@@ -121,7 +121,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         // check adbinapp scheme
         final String messageScheme = uri.getScheme();
 
-        if (!messageScheme.equals(MessagingConstants.MessagingScheme.ADOBE_INAPP)) {
+        if (messageScheme == null || !messageScheme.equals(MessagingConstants.MessagingScheme.ADOBE_INAPP)) {
             Log.debug(LOG_TAG, "%s - Invalid message scheme found in URI. (%s)", SELF_TAG, urlString);
             return false;
         }

@@ -43,9 +43,6 @@ import java.util.Map;
 public class ImageAssetCachingTests {
     private final static String IMAGE_URL = "https://www.adobe.com/adobe.png";
     private final static String IMAGE_URL2 = "https://www.adobe.com/adobe2.png";
-    private EventHub eventHub;
-    private MessagingCacheUtilities messagingCacheUtilities;
-
     // Mocks
     @Mock
     Core mockCore;
@@ -61,6 +58,8 @@ public class ImageAssetCachingTests {
     NetworkService mockNetworkService;
     @Mock
     CacheManager mockCacheManager;
+    private EventHub eventHub;
+    private MessagingCacheUtilities messagingCacheUtilities;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, MissingPlatformServicesException {

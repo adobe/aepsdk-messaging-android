@@ -228,11 +228,11 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify edge event
+        // verify edge events (2 events due to initial in-app message fetch request)
         List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(1, edgeRequestEvents.size());
-        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getData().toString());
+        assertEquals(2, edgeRequestEvents.size());
+        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(1).getData().toString());
     }
 
     @Test
@@ -264,11 +264,11 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify edge event
+        // verify edge events (2 events due to initial in-app message fetch request)
         List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(1, edgeRequestEvents.size());
-        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getData().toString());
+        assertEquals(2, edgeRequestEvents.size());
+        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(1).getData().toString());
     }
 
     @Test
@@ -322,10 +322,10 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify edge event
+        // verify edge events (2 events due to initial in-app message fetch request)
         List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(1, edgeRequestEvents.size());
+        assertEquals(2, edgeRequestEvents.size());
     }
 
     @Test
@@ -380,8 +380,7 @@ public class MessagingPublicAPITests {
     public void testRefreshInAppMessages() throws InterruptedException {
         // setup
         final String expectedMessagingEventData = "{\"refreshmessages\":true}";
-        // activity = mock_activity, placement = mock_placement
-        final String expectedOffersEventData = "{\"requesttype\":\"updatepropositions\",\"decisionscopes\":[{\"name\":\"eyJhY3Rpdml0eUlkIjoibW9ja19hY3Rpdml0eSIsInBsYWNlbWVudElkIjoibW9ja19wbGFjZW1lbnQiLCJpdGVtQ291bnQiOjMwfQ==\"}]}";
+        final String expectedEdgePersonalizationEventData = "{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://com.adobe.marketing.mobile.messaging.test\"]}}}";
         // test
         Messaging.refreshInAppMessages();
         TestHelper.sleep(500);
@@ -392,11 +391,11 @@ public class MessagingPublicAPITests {
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getData().toString());
 
-        // verify optimize request content events (initial offers fetch on app launch and offers fetch from refreshInAppMessages API)
-        final List<Event> optimizeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.OPTIMIZE,
+        // verify edge request content events (initial offers fetch on app launch and offers fetch from refreshInAppMessages API)
+        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT.getName());
-        assertEquals(2, optimizeRequestEvents.size());
-        assertEquals(expectedOffersEventData.trim(), optimizeRequestEvents.get(1).getData().toString());
+        assertEquals(2, edgePersonalizationRequestEvents.size());
+        assertEquals(expectedEdgePersonalizationEventData.trim(), edgePersonalizationRequestEvents.get(1).getData().toString());
     }
 
     // --------------------------------------------------------------------------------------------

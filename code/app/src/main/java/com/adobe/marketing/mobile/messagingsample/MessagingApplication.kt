@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.adobe.marketing.mobile.optimize.Optimize
+import com.adobe.marketing.mobile.edge.consent.Consent;
 import com.google.firebase.iid.FirebaseInstanceId
 
 class MessagingApplication : Application() {
@@ -26,10 +26,10 @@ class MessagingApplication : Application() {
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
         Messaging.registerExtension()
-        Optimize.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()
         Assurance.registerExtension()
+        Consent.registerExtension()
         Assurance.startSession("YOUR-SESSION-ID")
 
         MobileCore.start {
@@ -39,10 +39,10 @@ class MessagingApplication : Application() {
             // update config to use cjmstage for int integration
             val cjmStageConfig: HashMap<String, Any> = hashMapOf(
                 "edge.environment" to "int",
-                "experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
-                "edge.configId" to "d9457e9f-cacc-4280-88f2-6c846e3f9531",
+                //"experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
+                "edge.configId" to "15525167-fd4e-4511-b9e0-02119485784f"
                 //"edge.configId" to "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
-                "messaging.eventDataset" to "610ae80b3cbbc718dab06208"
+                //"messaging.eventDataset" to "610ae80b3cbbc718dab06208"
             )
             MobileCore.updateConfiguration(cjmStageConfig)
         }

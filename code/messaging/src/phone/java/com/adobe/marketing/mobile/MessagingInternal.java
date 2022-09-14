@@ -103,7 +103,7 @@ class MessagingInternal extends Extension {
             Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
         }
 
-        // initialize the in-app notification handler and check if we have any cached messages. if we do, load them.
+        // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
         inAppNotificationHandler = new InAppNotificationHandler(this, messagingCacheUtilities);
         registerEventListeners(extensionApi);
 
@@ -386,14 +386,14 @@ class MessagingInternal extends Extension {
             // Set the messaging state
             messagingState.setState(configSharedState, edgeIdentitySharedState);
 
-            // fetch messages from offers on initial launch once we have configuration and identity state set
+            // fetch in-app messages on initial launch once we have configuration and identity state set
             if (messagingState.isReadyForEvents()
                     && !initialMessageFetchComplete) {
                 inAppNotificationHandler.fetchMessages();
                 initialMessageFetchComplete = true;
             }
 
-            // validate fetch messages event then refresh in-app messages from offers
+            // validate fetch messages event then refresh in-app messages via an Edge extension event
             if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
                 if (messagingState.isConfigStateSet()) {
                     inAppNotificationHandler.fetchMessages();
@@ -410,11 +410,12 @@ class MessagingInternal extends Extension {
                 // handle the push tracking information from messaging request content event
                 handleTrackingInfo(eventToProcess);
             } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
-                // validate the edge response event from Optimize then load any iam rules present
-                final List<Map<String, Variant>> payload = (ArrayList<Map<String, Variant>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Optimize.PAYLOAD);
+                // validate the edge response event then load any iam rules present
+                final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) eventToProcess.getEventData().get(MessagingConstants.EventDataKeys.Personalization.PAYLOAD);
                 if (payload != null && payload.size() > 0) {
-                    inAppNotificationHandler.handleOfferNotificationPayload(payload.get(0));
+                    inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
                 }
+                Log.warning(LOG_TAG, "%s - Unable to handle personalization payload, the payload was empty.", SELF_TAG);
             } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
                 // handle rules response events containing message definitions
                 inAppNotificationHandler.createInAppMessage(eventToProcess);
