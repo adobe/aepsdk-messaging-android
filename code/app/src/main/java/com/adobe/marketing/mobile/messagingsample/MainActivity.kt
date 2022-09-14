@@ -16,6 +16,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.appcompat.app.AppCompatActivity
@@ -44,7 +45,11 @@ class MainActivity : AppCompatActivity() {
         val notificationIntent = Intent(this, NotificationBroadcastReceiver::class.java)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION_ID, 1)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION, notification)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        } else {
+            PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
         val futureInMillis = SystemClock.elapsedRealtime() + delay
         val alarmManager = (getSystemService(Context.ALARM_SERVICE) as AlarmManager)
         alarmManager[AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis] = pendingIntent
@@ -62,7 +67,11 @@ class MainActivity : AppCompatActivity() {
             putExtra(FROM, "action")
             Messaging.addPushTrackingDetails(this, "messageId", NotificationBroadcastReceiver.XDM_DATA)
         }
-        val pendingIntent: PendingIntent = PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
+        val pendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        } else {
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
         builder.addAction(R.drawable.ic_launcher_background, "buttonAction",
                 pendingIntent)
         return builder.build()

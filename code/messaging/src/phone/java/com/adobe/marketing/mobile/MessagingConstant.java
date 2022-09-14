@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile;
 final class MessagingConstant {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.0.0";
+    static final String EXTENSION_VERSION = "1.1.0";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
     private MessagingConstant() {}
@@ -163,6 +163,7 @@ final class MessagingConstant {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
             static final String DISMISS = "DISMISS";
+            static final String OPENAPP = "OPENAPP";
 
             private ActionButtonType() {/* no-op */}
         }
