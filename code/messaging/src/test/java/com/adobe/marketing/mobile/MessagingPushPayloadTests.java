@@ -16,12 +16,13 @@ import android.os.Bundle;
 
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONException;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,30 +42,49 @@ public class MessagingPushPayloadTests {
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
     private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
-    private Map<String, String> mockData;
+    private final String mockMalformedActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\"},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
 
-    @Before
-    public void setup() {
-        mockData = getMockData();
-        payload = new MessagingPushPayload(mockData);
-    }
+    private Map<String, String> mockData;
 
     // ========================================================================================
     // constructor
     // ========================================================================================
     @Test
     public void test_Constructor_with_RemoteMessage() {
+        mockData = getMockData(false);
         Bundle bundle = Mockito.mock(Bundle.class);
         RemoteMessage message = new RemoteMessage(bundle);
+        Whitebox.setInternalState(message, "data", mockData);
         payload = new MessagingPushPayload(message);
         Assert.assertNotNull(payload);
     }
 
     @Test
     public void test_Constructor_with_MapData() {
-        Map<String, String> data = new HashMap<>();
-        payload = new MessagingPushPayload(data);
+        mockData = getMockData(false);
+        payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
+    }
+
+    @Test
+    public void test_Constructor_with_RemoteMessage_MalformedActionButtons() {
+        mockData = getMockData(true);
+        Bundle bundle = Mockito.mock(Bundle.class);
+        RemoteMessage message = new RemoteMessage(bundle);
+        Whitebox.setInternalState(message, "data", mockData);
+        payload = new MessagingPushPayload(message);
+        Assert.assertNotNull(payload);
+        // verify only 1 button created
+        Assert.assertEquals(1, payload.getActionButtons().size());
+    }
+
+    @Test
+    public void test_Constructor_with_MapData_MalformedActionButtons() {
+        mockData = getMockData(true);
+        payload = new MessagingPushPayload(mockData);
+        Assert.assertNotNull(payload);
+        // verify only 1 button created
+        Assert.assertEquals(1, payload.getActionButtons().size());
     }
 
     // ========================================================================================
@@ -72,6 +92,8 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     @Test
     public void test_PublicMethods() {
+        mockData = getMockData(false);
+        payload = new MessagingPushPayload(mockData);
         Assert.assertEquals(mockTitle, payload.getTitle());
         Assert.assertEquals(mockBody, payload.getBody());
         Assert.assertEquals(mockSound, payload.getSound());
@@ -92,7 +114,7 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     // Helper
     // ========================================================================================
-    private Map<String, String> getMockData() {
+    private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
         mockData.put(MessagingConstant.PushNotificationPayload.TITLE, mockTitle);
         mockData.put(MessagingConstant.PushNotificationPayload.BODY, mockBody);
@@ -104,7 +126,12 @@ public class MessagingPushPayloadTests {
         mockData.put(MessagingConstant.PushNotificationPayload.IMAGE_URL, mockImageUrl);
         mockData.put(MessagingConstant.PushNotificationPayload.ACTION_TYPE, mockActionType);
         mockData.put(MessagingConstant.PushNotificationPayload.ACTION_URI, mockActionUri);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
+        if (testingMalformedButtonString) {
+            mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockMalformedActionButtons);
+        } else {
+            mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
+        }
+
         return mockData;
     }
 }
