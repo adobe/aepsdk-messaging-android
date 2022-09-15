@@ -11,7 +11,10 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -19,6 +22,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,12 +34,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({MobileCore.class})
+@PrepareForTest({MobileCore.class, MessagingUtils.class})
 public class PropositionPayloadCachingTests {
     @Mock
     CacheManager mockCacheManager;
@@ -44,30 +50,41 @@ public class PropositionPayloadCachingTests {
     NetworkService mockNetworkService;
 
     private MessagingCacheUtilities messagingCacheUtilities;
+    private File cachedProposition = new File("cached_proposition");
 
     @Before
-    public void setup() throws MissingPlatformServicesException {
+    public void setup() throws Exception {
+        when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedProposition);
         messagingCacheUtilities = new MessagingCacheUtilities(mockSystemInfoService, mockNetworkService, mockCacheManager);
     }
 
+    @After
+    public void tearDown() {
+        if (!cachedProposition.exists()) {
+            cachedProposition.delete();
+        }
+    }
+
     @Test
-    public void testGetCachedPropositionPayload() throws URISyntaxException {
+    public void testGetCachedPropositionPayload() throws JSONException {
         // setup
-        final Map<String, Object> payload = MessagingTestUtils.getMapFromFile("show_once.json");
-        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("show_once.json").toURI());
-        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
+        final List<Map<String, Object>> testPayload = new ArrayList<>();
+        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        final List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(testPayload);
+        messagingCacheUtilities.cachePropositions(payload);
+        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedProposition);
         // test
-        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
-        // verify payload retrieved
-        assertEquals(payload, retrievedPayload);
+        // verify cached payload retrieved
+        assertEquals(MessagingTestUtils.convertPayloadToString(payload), MessagingTestUtils.convertPayloadToString(retrievedPayload));
     }
 
     @Test
     public void testGetCachedPropositionPayload_WhenNoPropositionsCached() {
         // test
-        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -79,7 +96,7 @@ public class PropositionPayloadCachingTests {
         // setup
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(null);
         // test
-        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -92,7 +109,7 @@ public class PropositionPayloadCachingTests {
         final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("invalid.json").toURI());
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
         // test
-        final Map<String, Object> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
         // verify getFileForCachedURL called
         verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
         // verify null payload retrieved
@@ -102,34 +119,23 @@ public class PropositionPayloadCachingTests {
     @Test
     public void testCachePropositionPayload() throws URISyntaxException {
         // setup
-        final Map<String, Object> payload = MessagingTestUtils.getMapFromFile("show_once.json");
-        final File cachedMessageLocation = new File(MessagingTestUtils.class.getClassLoader().getResource("cached_message.json").toURI());
-        when(mockCacheManager.createNewCacheFile(anyString(), anyString(), any(Date.class))).thenReturn(cachedMessageLocation);
+        final List<Map<String, Object>> testPayload = new ArrayList<>();
+        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        final List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(testPayload);
+        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedProposition);
         // test
         messagingCacheUtilities.cachePropositions(payload);
-        // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
+        // verify deleteFilesNotInList called 2 times as image and proposition cache are deleted
+        verify(mockCacheManager, times(2)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
         // verify createNewCacheFile called
         verify(mockCacheManager, times(1)).createNewCacheFile(anyString(), anyString(), any(Date.class));
-    }
-
-    @Test
-    public void testCachePropositionPayload_WhenPayloadIsNull() throws URISyntaxException {
-        // setup
-        final Map<String, Object> payload = null;
-        // test
-        messagingCacheUtilities.cachePropositions(payload);
-        // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
-        // verify createNewCacheFile not called
-        verify(mockCacheManager, times(0)).createNewCacheFile(anyString(), anyString(), any(Date.class));
     }
 
     @Test
     public void testClearCache() {
         // test
         messagingCacheUtilities.clearCachedDataFromSubdirectory();
-        // verify deleteFilesNotInList called
-        verify(mockCacheManager, times(1)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
+        // verify deleteFilesNotInList called 2 times as image and proposition cache are deleted
+        verify(mockCacheManager, times(2)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
     }
 }

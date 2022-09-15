@@ -159,15 +159,54 @@ public class MessagingTestConstants {
                 }
             }
 
-            public static final class IAMDetailsDataKeys {
-                public static final class EventType {
-                    public static final String DISMISS = "inapp.dismiss";
-                    public static final String INTERACT = "inapp.interact";
-                    public static final String TRIGGER = "inapp.trigger";
-                    public static final String DISPLAY = "inapp.display";
-                }
+            final class IAMDetailsDataKeys {
+                static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
+                static final String SURFACE_BASE = "mobileapp://";
 
                 private IAMDetailsDataKeys() {
+                }
+
+                final class EventType {
+                    static final String DISMISS = "decisioning.propositionDismiss";
+                    static final String INTERACT = "decisioning.propositionInteract";
+                    static final String TRIGGER = "decisioning.propositionTrigger";
+                    static final String DISPLAY = "decisioning.propositionDisplay";
+                    static final String PERSONALIZATION_REQUEST = "personalization.request";
+
+                    private EventType() {
+                    }
+                }
+
+                final class Key {
+                    static final String PERSONALIZATION = "personalization";
+                    static final String CHARACTERISTICS = "characteristics";
+                    static final String DECISIONING = "decisioning";
+                    static final String PAYLOAD = "payload";
+                    static final String ITEMS = "items";
+                    static final String ID = "id";
+                    static final String SCOPE = "scope";
+                    static final String SCOPE_DETAILS = "scopeDetails";
+                    static final String QUERY = "query";
+                    static final String SURFACES = "surfaces";
+                    static final String ACTION = "action";
+                    static final String IN_APP_MESSAGE_TRACKING = "inappMessageTracking";
+                    static final String CJM_XDM = "cjmXdm";
+                    static final String PROPOSITION_EVENT_TYPE = "propositionEventType";
+                    static final String PROPOSITIONS = "propositions";
+
+                    private Key() {
+                    }
+                }
+
+                final class Value {
+                    static final String TRIGGERED = "triggered";
+                    static final String DISPLAYED = "displayed";
+                    static final String CLICKED = "clicked";
+                    static final String DISMISSED = "dismissed";
+                    static final String EMPTY_CONTENT = "{}";
+
+                    private Value() {
+                    }
                 }
             }
         }

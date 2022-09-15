@@ -24,6 +24,9 @@ class PropositionPayload implements Serializable {
 
     PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
         this.propositionInfo = propositionInfo;
+        if (items == null || items.size() == 0) {
+            return;
+        }
         final Iterator iterator = items.listIterator();
         while (iterator.hasNext()) {
             final PayloadItem payloadItem = new PayloadItem((Map<String, Object>) iterator.next());

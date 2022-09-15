@@ -85,6 +85,7 @@ final class MessagingConstants {
         static final String SCOPE_DETAILS = "scopeDetails";
         static final String SCHEMA = "schema";
         static final String CORRELATION_ID = "correlationID";
+        static final String ACTIVITY = "activity";
 
         private PayloadKeys() {
         }
@@ -192,6 +193,8 @@ final class MessagingConstants {
                     static final String CJM_XDM = "cjmXdm";
                     static final String PROPOSITION_EVENT_TYPE = "propositionEventType";
                     static final String PROPOSITIONS = "propositions";
+                    static final String PROPOSITION_ACTION = "propositionAction";
+                    static final String LABEL = "label";
 
                     private Key() {
                     }
@@ -309,7 +312,7 @@ final class MessagingConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.messageId";
+            static final String MESSAGE_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {

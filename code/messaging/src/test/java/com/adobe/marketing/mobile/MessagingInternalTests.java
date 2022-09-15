@@ -796,10 +796,10 @@ public class MessagingInternalTests {
     }
 
     // ========================================================================================
-    // handleInAppTrackingInfo
+    // sendPropositionInteraction
     // ========================================================================================
     @Test
-    public void test_handleInAppTrackingInfo_InAppInteractTracking() {
+    public void test_sendPropositionInteraction_InAppInteractTracking() {
         // setup
         mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
         // expected
@@ -814,7 +814,7 @@ public class MessagingInternalTests {
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
-        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_INTERACT, "confirm", mockMessage);
+        messagingInternal.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
 
         // verify experience event dataset id
         verify(messagingState, times(1)).getExperienceEventDatasetId();
@@ -831,7 +831,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleInAppTrackingInfo_InAppInteractTracking_WhenDatasetIdIsNull() {
+    public void test_sendPropositionInteraction_InAppInteractTracking_WhenDatasetIdIsNull() {
         // setup
         mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
         // expected
@@ -846,7 +846,7 @@ public class MessagingInternalTests {
         when(messagingState.getExperienceEventDatasetId()).thenReturn(null);
 
         //test
-        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_INTERACT, "confirm", mockMessage);
+        messagingInternal.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
 
         // verify experience event dataset id
         verify(messagingState, times(1)).getExperienceEventDatasetId();
@@ -857,7 +857,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleInAppTrackingInfo_InAppDismissTracking() {
+    public void test_sendPropositionInteraction_InAppDismissTracking() {
         // setup
         mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
         // expected
@@ -872,7 +872,7 @@ public class MessagingInternalTests {
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
-        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_DISMISS, null, mockMessage);
+        messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISMISS, mockMessage);
 
         // verify experience event dataset id
         verify(messagingState, times(1)).getExperienceEventDatasetId();
@@ -889,7 +889,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleInAppTrackingInfo_InAppDisplayTracking() {
+    public void test_sendPropositionInteraction_InAppDisplayTracking() {
         // setup
         mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
         // expected
@@ -904,7 +904,7 @@ public class MessagingInternalTests {
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
-        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_DISPLAY, null, mockMessage);
+        messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISPLAY, mockMessage);
 
         // verify experience event dataset id
         verify(messagingState, times(1)).getExperienceEventDatasetId();
@@ -921,7 +921,7 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_handleInAppTrackingInfo_InAppTriggeredTracking() {
+    public void test_sendPropositionInteraction_InAppTriggeredTracking() {
         // setup
         mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
         // expected
@@ -936,7 +936,7 @@ public class MessagingInternalTests {
         when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
 
         //test
-        messagingInternal.handleInAppTrackingInfo(MessagingEdgeEventType.IN_APP_TRIGGER, null, mockMessage);
+        messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_TRIGGER, mockMessage);
 
         // verify experience event dataset id
         verify(messagingState, times(1)).getExperienceEventDatasetId();

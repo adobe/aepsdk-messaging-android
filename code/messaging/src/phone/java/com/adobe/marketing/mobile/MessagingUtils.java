@@ -195,9 +195,11 @@ class MessagingUtils {
 
         List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
-            final PropositionInfo propositionInfo = new PropositionInfo(payload);
-            final PropositionPayload propositionPayload = new PropositionPayload(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
-            propositionPayloads.add(propositionPayload);
+            if (payload != null) {
+                final PropositionInfo propositionInfo = new PropositionInfo(payload);
+                final PropositionPayload propositionPayload = new PropositionPayload(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
+                propositionPayloads.add(propositionPayload);
+            }
         }
         return propositionPayloads;
     }

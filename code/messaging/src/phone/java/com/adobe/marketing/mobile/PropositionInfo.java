@@ -16,6 +16,7 @@ import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.CORRELAT
 import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.ID;
 import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.MessagingConstants.PayloadKeys.ACTIVITY;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -24,6 +25,7 @@ class PropositionInfo implements Serializable {
     final private String id;
     final private String scope;
     final private Map<String, Object> scopeDetails;
+
 
     PropositionInfo(final Map<String, Object> propositionInfoMap) {
         this.id = (String) propositionInfoMap.get(ID);
@@ -45,5 +47,13 @@ class PropositionInfo implements Serializable {
 
     String getCorrelationId() {
         return (String) scopeDetails.get(CORRELATION_ID);
+    }
+
+    String getActivityId() {
+        final Map<String, Object> activityMap = (Map<String, Object>) scopeDetails.get(ACTIVITY);
+        if (MessagingUtils.isMapNullOrEmpty(activityMap)) {
+            return "";
+        }
+        return (String) activityMap.get(ID);
     }
 }

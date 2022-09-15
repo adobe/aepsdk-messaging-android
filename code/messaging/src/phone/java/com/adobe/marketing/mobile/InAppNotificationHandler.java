@@ -126,7 +126,7 @@ class InAppNotificationHandler {
         final String requestEventId = getRequestEventId(edgeResponseEvent);
         if (!requestMessagesEventId.equals(requestEventId)) {
             // TODO: remove following check, for testing only
-            if (!requestEventId.equals("MANUAL_TESTING_ID")) {
+            if (!requestEventId.equals("TESTING_ID")) {
                 return;
             }
         }
@@ -168,15 +168,17 @@ class InAppNotificationHandler {
                 return;
             }
 
-            final JsonUtilityService.JSONObject ruleJson = proposition.getItems().get(0).getData().getRuleJsonObject();
-            if (ruleJson != null) {
-                foundRules.add(ruleJson);
+            for (final PayloadItem payloadItem : proposition.getItems()) {
+                final JsonUtilityService.JSONObject ruleJson = payloadItem.getData().getRuleJsonObject();
+                if (ruleJson != null) {
+                    foundRules.add(ruleJson);
 
-                // cache any image assets present in the current rule json's image assets array
-                cacheImageAssetsFromPayload(ruleJson);
+                    // cache any image assets present in the current rule json's image assets array
+                    cacheImageAssetsFromPayload(ruleJson);
 
-                // store reporting data for this payload for later use
-                storePropositionInfo(getMessageId(ruleJson), proposition);
+                    // store reporting data for this payload for later use
+                    storePropositionInfo(getMessageId(ruleJson), proposition);
+                }
             }
         }
 

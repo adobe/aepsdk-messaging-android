@@ -99,7 +99,7 @@ final class MessagingCacheUtilities {
         Log.trace(LOG_TAG, "%s - Loading cached proposition from (%s)", SELF_TAG, cachedMessageFile.getPath());
         FileInputStream fileInputStream = null;
         ObjectInputStream objectInputStream = null;
-        List<PropositionPayload> cachedPropositions = null;
+        List<PropositionPayload> cachedPropositions;
         try {
             fileInputStream = new FileInputStream(cachedMessageFile);
             objectInputStream = new ObjectInputStream(fileInputStream);

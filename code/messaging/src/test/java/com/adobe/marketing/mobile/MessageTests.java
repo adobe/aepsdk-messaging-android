@@ -328,7 +328,7 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
         String interaction = interactionArgumentCaptor.getValue();
         assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -348,7 +348,7 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).show();
 
         // verify tracking event data
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
         String interaction = interactionArgumentCaptor.getValue();
         assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -379,7 +379,7 @@ public class MessageTests {
         message.show();
 
         // expect 1 tracking event: custom delegate suppressed message tracking
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
         List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
         // verify custom delegate suppressed message tracking event
@@ -398,7 +398,7 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).dismiss();
 
         // verify dismissed tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
         String interaction = interactionArgumentCaptor.getValue();
         assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
@@ -414,7 +414,7 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).dismiss();
 
         // verify no dismissed tracking event
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
     }
 
     // ========================================================================================
@@ -431,7 +431,7 @@ public class MessageTests {
         message.overrideUrlLoad(mockAEPMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
 
         // expect 1 event: deeplink click tracking
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
         List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
         // verify interact tracking event
@@ -455,7 +455,7 @@ public class MessageTests {
         message.overrideUrlLoad(mockAEPMessage, "");
 
         // expect 0 events: deeplink click tracking + dismissed tracking
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
 
         // verify showUrl not called
         verify(mockUIService, times(0)).showUrl(anyString());
@@ -470,7 +470,7 @@ public class MessageTests {
         message.track("mock track", MessagingEdgeEventType.IN_APP_INTERACT);
 
         // verify mock tracking event
-        verify(mockMessagingInternal, times(1)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
         MessagingEdgeEventType displayTrackingEvent = messagingEdgeEventTypeArgumentCaptor.getValue();
         String interaction = interactionArgumentCaptor.getValue();
         assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, displayTrackingEvent);
@@ -483,7 +483,7 @@ public class MessageTests {
         message.track(null, null);
 
         // verify no tracking event
-        verify(mockMessagingInternal, times(0)).handleInAppTrackingInfo(messagingEdgeEventTypeArgumentCaptor.capture(), interactionArgumentCaptor.capture(), any(Message.class));
+        verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
 
     }
 

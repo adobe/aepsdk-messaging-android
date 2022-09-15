@@ -16,6 +16,9 @@ import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CJM_XDM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -535,41 +538,22 @@ class MessagingInternal extends Extension {
             return;
         }
 
-        // add iam mixin information if this is an interact eventType
-        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
-            final Map<String, Object> characteristics = (Map<String, Object>) scopeDetails.get(CHARACTERISTICS);
-            if (MessagingUtils.isMapNullOrEmpty(characteristics)) {
-                Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, characteristics were not found for this message.", SELF_TAG);
-                return;
-            }
-            final Map<String, Object> inAppMessageTrackingMap = new HashMap<>();
-            inAppMessageTrackingMap.put(ACTION, interaction);
-            final Map<String, Object> cjmXdmMap = new HashMap<>();
-            cjmXdmMap.put(IN_APP_MESSAGE_TRACKING, inAppMessageTrackingMap);
-            characteristics.put(CJM_XDM, cjmXdmMap);
-            scopeDetails.put(CHARACTERISTICS, characteristics);
-        }
-
-        // add propositions
-        final List<Map<String, Object>> propositions = new ArrayList<>();
-        final Map<String, Object> propositionMap = new HashMap<>();
-        propositionMap.put(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID, propositionInfo.getId());
-        propositionMap.put(SCOPE, propositionInfo.getScope());
-        propositionMap.put(SCOPE_DETAILS, propositionInfo.getScopeDetails());
-        propositions.add(propositionMap);
-
-        // add proposition event
-        final Map<String, Integer> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.name(), 1);
-
-        // add propositions and proposition event to decisioning map
         final Map<String, Object> decisioning = new HashMap<>();
-        decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
-        decisioning.put(PROPOSITIONS, propositions);
+        // add propositionAction if this is an interact eventType
+        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
+            final Map<String, String> propositionAction = new HashMap<>();
+            propositionAction.put(ID, interaction);
+            propositionAction.put(LABEL, interaction);
+            decisioning.put(PROPOSITION_ACTION, propositionAction);
+        }
 
         // create experience map with proposition tracking data
         final Map<String, Object> experienceMap = new HashMap<>();
         experienceMap.put(DECISIONING, decisioning);
+
+        // add proposition event
+        final Map<String, Integer> propositionEventType = new HashMap<>();
+        propositionEventType.put(eventType.name(), 1);
 
         // create XDM data with experience data
         final Map<String, Object> xdmMap = new HashMap<>();
@@ -579,7 +563,7 @@ class MessagingInternal extends Extension {
         // create maps for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
         iamHistoryMap.put(EVENT_TYPE, eventType.toString());
-        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.getCorrelationId());
+        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.getActivityId());
         iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // Create the mask for storing event history

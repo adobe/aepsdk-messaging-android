@@ -10,6 +10,8 @@
 */
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -26,10 +28,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -346,7 +350,7 @@ public class MessagingTestUtils {
         }
     }
 
-    static List<Map> generateMessagePayload(final MessageTestConfig config) {
+    static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
         if (config.count <= 0) {
             return null;
         }
@@ -378,9 +382,9 @@ public class MessagingTestUtils {
         }
         messagePayload.put("items", items);
         messagePayload.put("id", "testResponseId" + count);
-        List<Map> payload = new ArrayList<>();
+        List<Map<String, Object>> payload = new ArrayList<>();
         if (config.hasEmptyPayload) {
-            payload.add(new HashMap<>());
+            payload.add(new HashMap<String, Object>());
         } else {
             payload.add(messagePayload);
         }
@@ -588,5 +592,18 @@ public class MessagingTestUtils {
         }
 
         return jsonUtilityService;
+    }
+
+    static String convertPayloadToString(List<PropositionPayload> propositionPayloads) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(propositionPayloads);
+            objectOutputStream.flush();
+            return byteArrayOutputStream.toString();
+        } catch (Exception e) {
+            Log.debug("MessagingTestUtile", "Exception occurred while converting payloads to string: %s", e.getMessage());
+            return "";
+        }
     }
 }
