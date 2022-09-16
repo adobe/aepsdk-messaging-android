@@ -11,10 +11,7 @@
 
 package com.adobe.marketing.mobile;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,7 +47,7 @@ public class PropositionPayloadCachingTests {
     NetworkService mockNetworkService;
 
     private MessagingCacheUtilities messagingCacheUtilities;
-    private File cachedProposition = new File("cached_proposition");
+    private final File cachedProposition = new File("cached_proposition");
 
     @Before
     public void setup() throws Exception {

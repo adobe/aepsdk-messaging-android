@@ -109,6 +109,21 @@ public class MessagingTests {
     }
 
     @Test
+    public void test_addPushTrackingDetailsNoXdmData() {
+        String mockMessageId = "mockMessageId";
+        Map<String, String> mockDataMap = new HashMap<>();
+        mockDataMap.put(MessagingTestConstants.TrackingKeys._XDM, null);
+
+        // test
+        boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
+
+        // verify
+        Assert.assertTrue(done);
+        verify(mockIntent, times(1)).putExtra(MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, mockMessageId);
+        verify(mockIntent, times(0)).putExtra(MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, "");
+    }
+
+    @Test
     public void test_addPushTrackingDetailsWithEmptyData() {
         String mockMessageId = "mockMessageId";
         Map<String, String> mockDataMap = new HashMap<>();
@@ -196,6 +211,81 @@ public class MessagingTests {
     }
 
     @Test
+    public void test_handleNotificationResponseNoXdmData() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        String mockActionId = "mockActionId";
+        String messageId = "messageId";
+
+        try {
+            PowerMockito.whenNew(Intent.class)
+                    .withNoArguments().thenReturn(mockIntent);
+        } catch (Exception e) {
+            Log.debug("MessagingTest", "Intent exception");
+        }
+
+        when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
+
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+
+        // verify
+        verify(mockIntent, times(2)).getStringExtra(anyString());
+
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        EventData eventData = event.getData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        try {
+            assertEquals(eventData.getString2(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+        } catch (VariantException e) {
+            Log.debug("MessagingTest", "getString2 variant exception, error : %s", e.getMessage());
+        }
+    }
+
+    @Test
+    public void test_handleNotificationResponseEventDispatchError() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<ExtensionErrorCallback> callbackCaptor = ArgumentCaptor.forClass(ExtensionErrorCallback.class);
+        String mockActionId = "mockActionId";
+        String mockXdm = "mockXdm";
+
+        try {
+            PowerMockito.whenNew(Intent.class)
+                    .withNoArguments().thenReturn(mockIntent);
+        } catch (Exception e) {
+            Log.debug("MessagingTest", "Intent exception");
+        }
+
+        when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
+
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+
+        // verify
+        verify(mockIntent, times(2)).getStringExtra(anyString());
+
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), callbackCaptor.capture());
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        EventData eventData = event.getData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        try {
+            assertEquals(eventData.getString2(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+        } catch (VariantException e) {
+            Log.debug("MessagingTest", "getString2 variant exception, error : %s", e.getMessage());
+        }
+        // no exception should occur when triggering extension error callback
+        callbackCaptor.getValue().error(ExtensionError.UNEXPECTED_ERROR);
+    }
+
+    @Test
     public void test_handleNotificationResponseWithEmptyMessageId() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         String mockActionId = "mockActionId";
@@ -266,5 +356,28 @@ public class MessagingTests {
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
         assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT.toLowerCase(), event.getName().toLowerCase());
+    }
+
+    @Test
+    public void test_refreshInAppMessageEventDispatchError() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<ExtensionErrorCallback> callbackCaptor = ArgumentCaptor.forClass(ExtensionErrorCallback.class);
+
+        // test
+        Messaging.refreshInAppMessages();
+
+        // verify
+        PowerMockito.verifyStatic(MobileCore.class, times(1));
+        MobileCore.dispatchEvent(eventCaptor.capture(), callbackCaptor.capture());
+
+        // verify event
+        Event event = eventCaptor.getValue();
+        EventData eventData = event.getData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
+        assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
+        assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT.toLowerCase(), event.getName().toLowerCase());
+        // no exception should occur when triggering extension error callback
+        callbackCaptor.getValue().error(ExtensionError.UNEXPECTED_ERROR);
     }
 }

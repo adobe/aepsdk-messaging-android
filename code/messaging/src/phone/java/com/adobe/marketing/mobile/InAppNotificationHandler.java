@@ -158,7 +158,7 @@ class InAppNotificationHandler {
             final String appSurface = App.getAppContext().getPackageName();
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
 
-            final String scope = proposition.getPropositionInfo().getScope();
+            final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
                 Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
                 return;
@@ -171,8 +171,8 @@ class InAppNotificationHandler {
                 return;
             }
 
-            for (final PayloadItem payloadItem : proposition.getItems()) {
-                final JsonUtilityService.JSONObject ruleJson = payloadItem.getData().getRuleJsonObject();
+            for (final PayloadItem payloadItem : proposition.items) {
+                final JsonUtilityService.JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson != null) {
                     foundRules.add(ruleJson);
 
@@ -218,7 +218,7 @@ class InAppNotificationHandler {
             Log.debug(LOG_TAG, "Unable to associate proposition information for in-app message. MessageId unavailable in rule consequence.");
             return;
         }
-        propositionInfoMap.put(messageId, propositionPayload.getPropositionInfo());
+        propositionInfoMap.put(messageId, propositionPayload.propositionInfo);
     }
 
     /**

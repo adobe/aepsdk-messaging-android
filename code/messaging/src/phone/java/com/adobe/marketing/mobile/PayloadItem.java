@@ -21,26 +21,14 @@ import java.io.Serializable;
 import java.util.Map;
 
 class PayloadItem implements Serializable {
-    final private String id;
-    final private String schema;
-    final private ItemData data;
+    final String id;
+    final String schema;
+    final ItemData data;
 
     PayloadItem(final Map<String, Object> payloadItemMap) {
-        this.id = (String) payloadItemMap.get(ID);
-        this.schema = (String) payloadItemMap.get(SCHEMA);
+        id = (String) payloadItemMap.get(ID);
+        schema = (String) payloadItemMap.get(SCHEMA);
         final Map<String, String> dataMap = (Map<String, String>) payloadItemMap.get(DATA);
-        this.data = new ItemData(dataMap.get(ID), dataMap.get(CONTENT));
-    }
-
-    String getId() {
-        return id;
-    }
-
-    String getSchema() {
-        return schema;
-    }
-
-    ItemData getData() {
-        return data;
+        data = new ItemData(dataMap.get(ID), dataMap.get(CONTENT));
     }
 }

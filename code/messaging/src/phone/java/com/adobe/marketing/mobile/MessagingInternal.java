@@ -529,16 +529,16 @@ class MessagingInternal extends Extension {
       */
     public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
-        final Map<String, Object> scopeDetails = propositionInfo.getScopeDetails();
+        final Map<String, Object> scopeDetails = propositionInfo.scopeDetails;
         if (MessagingUtils.isMapNullOrEmpty(scopeDetails)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
             return;
         }
         final List<Map<String, Object>> propositions = new ArrayList<>();
         final Map<String, Object> proposition = new HashMap<>();
-        proposition.put(ID, propositionInfo.getId());
-        proposition.put(SCOPE, propositionInfo.getScope());
-        proposition.put(SCOPE_DETAILS, propositionInfo.getScopeDetails());
+        proposition.put(ID, propositionInfo.id);
+        proposition.put(SCOPE, propositionInfo.scope);
+        proposition.put(SCOPE_DETAILS, propositionInfo.scopeDetails);
         propositions.add(proposition);
 
         final Map<String, Integer> propositionEventType = new HashMap<>();
@@ -568,7 +568,7 @@ class MessagingInternal extends Extension {
         // create maps for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
         iamHistoryMap.put(EVENT_TYPE, eventType.toString());
-        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.getActivityId());
+        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.activityId);
         iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // Create the mask for storing event history

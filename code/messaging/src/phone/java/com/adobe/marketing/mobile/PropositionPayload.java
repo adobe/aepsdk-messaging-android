@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 class PropositionPayload implements Serializable {
-    private final PropositionInfo propositionInfo;
-    private final List<PayloadItem> items = new ArrayList<>();
+    final PropositionInfo propositionInfo;
+    final List<PayloadItem> items = new ArrayList<>();
 
     PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
         this.propositionInfo = propositionInfo;
@@ -32,13 +32,5 @@ class PropositionPayload implements Serializable {
             final PayloadItem payloadItem = new PayloadItem((Map<String, Object>) iterator.next());
             this.items.add(payloadItem);
         }
-    }
-
-    PropositionInfo getPropositionInfo() {
-        return propositionInfo;
-    }
-
-    List<PayloadItem> getItems() {
-        return items;
     }
 }

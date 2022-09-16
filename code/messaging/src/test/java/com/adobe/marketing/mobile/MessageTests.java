@@ -227,6 +227,39 @@ public class MessageTests {
         message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
     }
 
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_messageConstructor_NotCJMConsequenceType() throws MessageRequiredFieldMissingException {
+        // setup
+        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
+        consequenceMap.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
+        consequenceMap.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "otherRuleType");
+
+        // test
+        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_messageConstructor_MissingConsequenceId() throws MessageRequiredFieldMissingException {
+        // setup
+        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
+        consequenceMap.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
+
+        // test
+        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_messageConstructor_DetailsMissingHtml() throws MessageRequiredFieldMissingException {
+        // setup
+        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
+        Map<String, Object> detailsMap = (Map<String, Object>) consequenceMap.get(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        detailsMap.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+        consequenceMap.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, detailsMap);
+
+        // test
+        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
+    }
+
     @Test
     public void test_addMessageSettings_NullMessageSettingsGivesDefaultValues() {
         // test
@@ -306,7 +339,7 @@ public class MessageTests {
     }
 
     // ========================================================================================
-    // Message show and dismiss tests
+    // Message show, dismiss, and trigger tests
     // ========================================================================================
     @Test
     public void test_messageShow() {
@@ -403,6 +436,27 @@ public class MessageTests {
         verify(mockAEPMessage, times(1)).dismiss();
 
         // verify no dismissed tracking event
+        verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+    }
+
+    @Test
+    public void test_messageTrigger() {
+        // test
+        message.trigger();
+
+        // verify no trigger tracking event
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+    }
+
+    @Test
+    public void test_messageTrigger_autoTrackFalse() {
+        // setup
+        message.autoTrack = false;
+
+        // test
+        message.trigger();
+
+        // verify no trigger tracking event
         verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
     }
 

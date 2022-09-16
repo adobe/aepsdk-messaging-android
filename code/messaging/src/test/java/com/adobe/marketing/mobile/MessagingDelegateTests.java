@@ -25,6 +25,7 @@ import android.content.Context;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
+import com.adobe.marketing.mobile.services.ui.MessageWebView;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
 import org.junit.Before;
@@ -63,6 +64,8 @@ public class MessagingDelegateTests {
     UIService mockUIService;
     @Mock
     MessagingInternal mockMessagingInternal;
+    @Mock
+    MessageWebView mockWebview;
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
     private EventHub eventHub;
@@ -78,13 +81,14 @@ public class MessagingDelegateTests {
         messagingDelegate = new MessagingDelegate();
     }
 
-    void setupMocks() {
+    void setupMocks() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(Log.class);
         PowerMockito.mockStatic(ServiceProvider.class);
 
+        when(mockMessage.getWebView()).thenReturn(mockWebview);
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
         when(mockAEPMessage.getParent()).thenReturn(mockMessage);
         when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
@@ -168,7 +172,7 @@ public class MessagingDelegateTests {
     @Test
     public void test_overrideUrlLoadWithInvalidUri() {
         // test
-        messagingDelegate.overrideUrlLoad(mockAEPMessage,"invaliduri");
+        messagingDelegate.overrideUrlLoad(mockAEPMessage, "invaliduri");
 
         // verify no message tracking call
         verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
@@ -177,7 +181,7 @@ public class MessagingDelegateTests {
     @Test
     public void test_overrideUrlLoadWithInvalidScheme() {
         // test
-        messagingDelegate.overrideUrlLoad(mockAEPMessage,"notadbinapp://");
+        messagingDelegate.overrideUrlLoad(mockAEPMessage, "notadbinapp://");
 
         // verify no message tracking call
         verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
@@ -186,9 +190,9 @@ public class MessagingDelegateTests {
     @Test
     public void test_overrideUrlLoadWithJavascriptPayload() {
         // test
-        messagingDelegate.overrideUrlLoad(mockAEPMessage,"adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
+        messagingDelegate.overrideUrlLoad(mockAEPMessage, "adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
 
-        // verify encoded javascript evaluated
+        // verify encoded javascript evaluated by the webview object
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockMessage, times(1)).evaluateJavascript(stringArgumentCaptor.capture());
         assertEquals("(function test() { return 'javascript value'; })();", stringArgumentCaptor.getValue());

@@ -22,38 +22,24 @@ import java.io.Serializable;
 import java.util.Map;
 
 class PropositionInfo implements Serializable {
-    final private String id;
-    final private String scope;
-    final private Map<String, Object> scopeDetails;
+    final String id;
+    final String scope;
+    final Map<String, Object> scopeDetails;
+    final String correlationId;
+    final String activityId;
 
 
     PropositionInfo(final Map<String, Object> propositionInfoMap) {
-        this.id = (String) propositionInfoMap.get(ID);
-        this.scope = (String) propositionInfoMap.get(SCOPE);
-        this.scopeDetails = (Map<String, Object>) propositionInfoMap.get(SCOPE_DETAILS);
-    }
-
-    String getId() {
-        return id;
-    }
-
-    String getScope() {
-        return scope;
-    }
-
-    Map<String, Object> getScopeDetails() {
-        return scopeDetails;
-    }
-
-    String getCorrelationId() {
-        return (String) scopeDetails.get(CORRELATION_ID);
-    }
-
-    String getActivityId() {
-        final Map<String, Object> activityMap = (Map<String, Object>) scopeDetails.get(ACTIVITY);
-        if (MessagingUtils.isMapNullOrEmpty(activityMap)) {
-            return "";
+        id = (String) propositionInfoMap.get(ID);
+        scope = (String) propositionInfoMap.get(SCOPE);
+        scopeDetails = (Map<String, Object>) propositionInfoMap.get(SCOPE_DETAILS);
+        if (!MessagingUtils.isMapNullOrEmpty(scopeDetails)) {
+            correlationId = (String) scopeDetails.get(CORRELATION_ID);
+            final Map<String, Object> activityMap = (Map<String, Object>) scopeDetails.get(ACTIVITY);
+            activityId = MessagingUtils.isMapNullOrEmpty(activityMap) ? "" : (String) activityMap.get(ID);
+        } else {
+            correlationId = "";
+            activityId = "";
         }
-        return (String) activityMap.get(ID);
     }
 }

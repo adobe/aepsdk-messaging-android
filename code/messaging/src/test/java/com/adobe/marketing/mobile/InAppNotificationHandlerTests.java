@@ -12,8 +12,6 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
-import static com.adobe.marketing.mobile.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventType.EDGE;
 import static org.junit.Assert.assertEquals;
