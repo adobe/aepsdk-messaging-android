@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CJM_XDM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
@@ -23,12 +24,14 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import org.json.JSONObject;
@@ -262,8 +265,23 @@ class InAppNotificationHandler {
     void createInAppMessage(final Event rulesEvent) {
         final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
         if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
-            Log.warning(LOG_TAG,
+            Log.debug(LOG_TAG,
                     "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
+            return;
+        }
+
+        final String consequenceType = (String) triggeredConsequence.get(MESSAGE_CONSEQUENCE_TYPE);
+
+        // ensure we have a CJM IAM payload before creating a message
+        if (StringUtils.isNullOrEmpty(consequenceType)) {
+            Log.debug(LOG_TAG,
+                    "%s - Unable to create an in-app message, missing consequence type: %s.", SELF_TAG);
+            return;
+        }
+
+        if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
+            Log.debug(LOG_TAG,
+                    "%s - Unable to create an in-app message, unknown message consequence type: %s.", SELF_TAG, consequenceType);
             return;
         }
 

@@ -30,12 +30,12 @@ public class MessagingTestConstants {
         }
     }
 
-    public static final class EventName {
-        public static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-        public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
-        public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
-        public static final String RETRIEVE_MESSAGE_DEFINITIONS_EVENT = "Retrieve message definitions";
-        public static final String IAM_INTERACTION_EVENT = "In App tracking edge event";
+    final class EventName {
+        static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
+        static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+        static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
 
         private EventName() {
         }

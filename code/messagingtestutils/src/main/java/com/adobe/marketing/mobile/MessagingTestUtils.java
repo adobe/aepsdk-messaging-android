@@ -10,6 +10,10 @@
 */
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 
 import android.app.Application;
@@ -350,6 +354,26 @@ public class MessagingTestUtils {
         }
     }
 
+    static PropositionInfo generatePropositionInfo(boolean nullScopeDetails) {
+        Map<String, Object> scopeDetails = new HashMap<>();
+        Map<String, Object> characteristics = new HashMap<>();
+        Map<String, Object> cjmEvent = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+        Map<String, Object> messagePayload = new HashMap<>();
+        messageExecution.put("messageExecutionID", "testExecutionId");
+        cjmEvent.put("messageExecution", messageExecution);
+        characteristics.put("cjmEvent", cjmEvent);
+        scopeDetails.put("scopeDetails", characteristics);
+        if (nullScopeDetails) {
+            messagePayload.put("scopeDetails", null);
+        } else {
+            messagePayload.put("scopeDetails", scopeDetails);
+        }
+        messagePayload.put("scope", "mobileapp://mock_applicationId");
+        messagePayload.put("id", "testResponseId");
+        return new PropositionInfo(messagePayload);
+    }
+
     static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
         if (config.count <= 0) {
             return null;
@@ -389,6 +413,19 @@ public class MessagingTestUtils {
             payload.add(messagePayload);
         }
         return payload;
+    }
+
+    static String convertPayloadToString(List<PropositionPayload> propositionPayloads) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(propositionPayloads);
+            objectOutputStream.flush();
+            return byteArrayOutputStream.toString();
+        } catch (Exception e) {
+            Log.debug("MessagingTestUtile", "Exception occurred while converting payloads to string: %s", e.getMessage());
+            return "";
+        }
     }
 
     /* JSON conversion helpers */
@@ -592,18 +629,5 @@ public class MessagingTestUtils {
         }
 
         return jsonUtilityService;
-    }
-
-    static String convertPayloadToString(List<PropositionPayload> propositionPayloads) {
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(propositionPayloads);
-            objectOutputStream.flush();
-            return byteArrayOutputStream.toString();
-        } catch (Exception e) {
-            Log.debug("MessagingTestUtile", "Exception occurred while converting payloads to string: %s", e.getMessage());
-            return "";
-        }
     }
 }

@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CJM_XDM;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
@@ -43,16 +42,14 @@ import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MESSAGE
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CHARACTERISTICS;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ACTION;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.IN_APP_MESSAGE_TRACKING;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.IAM_HISTORY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -537,8 +534,20 @@ class MessagingInternal extends Extension {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
             return;
         }
+        final List<Map<String, Object>> propositions = new ArrayList<>();
+        final Map<String, Object> proposition = new HashMap<>();
+        proposition.put(ID, propositionInfo.getId());
+        proposition.put(SCOPE, propositionInfo.getScope());
+        proposition.put(SCOPE_DETAILS, propositionInfo.getScopeDetails());
+        propositions.add(proposition);
+
+        final Map<String, Integer> propositionEventType = new HashMap<>();
+        propositionEventType.put(eventType.name(), 1);
 
         final Map<String, Object> decisioning = new HashMap<>();
+        decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
+        decisioning.put(PROPOSITIONS, propositions);
+
         // add propositionAction if this is an interact eventType
         if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
             final Map<String, String> propositionAction = new HashMap<>();
@@ -550,10 +559,6 @@ class MessagingInternal extends Extension {
         // create experience map with proposition tracking data
         final Map<String, Object> experienceMap = new HashMap<>();
         experienceMap.put(DECISIONING, decisioning);
-
-        // add proposition event
-        final Map<String, Integer> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.name(), 1);
 
         // create XDM data with experience data
         final Map<String, Object> xdmMap = new HashMap<>();

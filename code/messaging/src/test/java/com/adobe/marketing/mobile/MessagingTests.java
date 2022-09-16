@@ -265,6 +265,6 @@ public class MessagingTests {
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
-        assertEquals(MessagingTestConstants.EventName.RETRIEVE_MESSAGE_DEFINITIONS_EVENT.toLowerCase(), event.getName().toLowerCase());
+        assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT.toLowerCase(), event.getName().toLowerCase());
     }
 }

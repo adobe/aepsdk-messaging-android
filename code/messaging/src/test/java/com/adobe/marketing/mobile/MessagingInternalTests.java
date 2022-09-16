@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -801,9 +802,9 @@ public class MessagingInternalTests {
     @Test
     public void test_sendPropositionInteraction_InAppInteractTracking() {
         // setup
-        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"inappMessageTracking\":{\"action\":\"confirm\"},\"eventType\":\"inapp.interact\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_INTERACT\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"confirm\",\"eventType\":\"decisioning.propositionInteract\"}}";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -815,9 +816,6 @@ public class MessagingInternalTests {
 
         //test
         messagingInternal.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
-
-        // verify experience event dataset id
-        verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
         // 1 event dispatched: edge event with in app interact event tracking info
@@ -831,25 +829,18 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_sendPropositionInteraction_InAppInteractTracking_WhenDatasetIdIsNull() {
+    public void test_sendPropositionInteraction_InAppInteractTracking_WhenScopeDetailsNull() {
         // setup
-        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
-        // expected
-        final String expectedEventData = "{\"xdm\":{\"inappMessageTracking\":{\"action\":\"confirm\"},\"eventType\":\"inapp.interact\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(true);
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
-
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // Mocks
         when(messagingState.getExperienceEventDatasetId()).thenReturn(null);
 
         //test
         messagingInternal.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
-
-        // verify experience event dataset id
-        verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is not called
         PowerMockito.verifyStatic(MobileCore.class, times(0));
@@ -859,23 +850,17 @@ public class MessagingInternalTests {
     @Test
     public void test_sendPropositionInteraction_InAppDismissTracking() {
         // setup
-        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.dismiss\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_DISMISS\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionDismiss\"}}";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
-        // Mocks
-        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
-
         //test
         messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISMISS, mockMessage);
-
-        // verify experience event dataset id
-        verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
         // 1 event dispatched: edge event with in app dismiss event tracking info
@@ -891,23 +876,17 @@ public class MessagingInternalTests {
     @Test
     public void test_sendPropositionInteraction_InAppDisplayTracking() {
         // setup
-        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.display\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_DISPLAY\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionDisplay\"}}";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
-        // Mocks
-        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
-
         //test
         messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISPLAY, mockMessage);
-
-        // verify experience event dataset id
-        verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
         // 1 event dispatched: edge event with in app display event tracking info
@@ -923,23 +902,17 @@ public class MessagingInternalTests {
     @Test
     public void test_sendPropositionInteraction_InAppTriggeredTracking() {
         // setup
-        mockMessage.details = setupDetailsMaps(setupXdmMap(new MessageTestConfig()));
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"inapp.trigger\",\"_experience\":{\"customerJourneyManagement\":{\"messageExecution\":{\"messageExecutionID\":\"123456789\",\"messagePublicationID\":\"messagePublicationID\",\"messageID\":\"messageID\",\"ajoCampaignVersionID\":\"ajoCampaignVersionID\",\"ajoCampaignID\":\"ajoCampaignID\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inapp\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}";
+        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_TRIGGER\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionTrigger\"}}";
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
 
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
-        // Mocks
-        when(messagingState.getExperienceEventDatasetId()).thenReturn("mock_datasetId");
-
         //test
         messagingInternal.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_TRIGGER, mockMessage);
-
-        // verify experience event dataset id
-        verify(messagingState, times(1)).getExperienceEventDatasetId();
 
         // verify dispatch event is called
         // 1 event dispatched: edge event with in app trigger event tracking info

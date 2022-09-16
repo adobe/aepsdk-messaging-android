@@ -81,6 +81,7 @@ public class InAppNotificationHandlerTests {
     MessagingInternal mockMessagingInternal;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
@@ -99,7 +100,7 @@ public class InAppNotificationHandlerTests {
 
         messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "UNIT_TESTING_ID");
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
     }
 
     void setupMocks() {
@@ -195,7 +196,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -218,7 +219,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -246,7 +247,7 @@ public class InAppNotificationHandlerTests {
         payload.addAll(invalidPayload);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -270,7 +271,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -292,7 +293,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -314,7 +315,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -336,7 +337,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -354,7 +355,7 @@ public class InAppNotificationHandlerTests {
         // setup
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", null);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -371,13 +372,13 @@ public class InAppNotificationHandlerTests {
         // setup
         String IMAGE_URL = "https://www.adobe.com/adobe.png";
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, mockMessagingCacheUtilities);
-        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "UNIT_TESTING_ID");
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -405,7 +406,7 @@ public class InAppNotificationHandlerTests {
         // setup
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "UNIT_TESTING_ID");
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -414,7 +415,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -433,7 +434,7 @@ public class InAppNotificationHandlerTests {
         // setup
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
-        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "UNIT_TESTING_ID");
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
@@ -441,7 +442,7 @@ public class InAppNotificationHandlerTests {
         List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("payload", payload);
-        eventData.put("requestEventId", "UNIT_TESTING_ID");
+        eventData.put("requestEventId", "TESTING_ID");
         Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();

@@ -227,17 +227,6 @@ public class MessageTests {
         message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
     }
 
-    @Test(expected = MessageRequiredFieldMissingException.class)
-    public void test_messageConstructor_MissingMessageExecutionId() throws MessageRequiredFieldMissingException {
-        // setup
-        MessageTestConfig config = new MessageTestConfig();
-        config.isMissingMessageId = true;
-        Map<String, Object> xdmMap = setupXdmMap(config);
-        Map<String, Object> consequenceMap = setupDetailsAndConsequenceMaps(xdmMap);
-        // test
-        message = new Message(mockMessagingInternal, consequenceMap, new HashMap<String, Object>(), new HashMap<String, String>());
-    }
-
     @Test
     public void test_addMessageSettings_NullMessageSettingsGivesDefaultValues() {
         // test
