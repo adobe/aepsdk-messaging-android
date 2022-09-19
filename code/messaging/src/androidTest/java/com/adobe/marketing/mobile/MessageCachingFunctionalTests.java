@@ -27,7 +27,9 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -119,8 +121,11 @@ public class MessageCachingFunctionalTests {
         }
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.arePropositionsCached());
-        final Map<String, Object> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
-        assertEquals(cachedPropositions, MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        final List<PropositionPayload> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+        final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
+        expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        final String expectedPropositionString = MessagingTestUtils.convertPayloadToString(MessagingUtils.createPropositionPayload(expectedPropositions));
+        assertEquals(expectedPropositionString, MessagingTestUtils.convertPayloadToString(cachedPropositions));
     }
 
     @Test

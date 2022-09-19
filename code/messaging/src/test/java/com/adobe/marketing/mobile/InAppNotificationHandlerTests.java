@@ -15,8 +15,11 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventType.EDGE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.when;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Looper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingCacheUtilities.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingCacheUtilities.class, InAppNotificationHandler.class})
 public class InAppNotificationHandlerTests {
     private static final String mockAppId = "mock_applicationId";
     private final Map<String, Object> mockConfigState = new HashMap<>();
@@ -79,6 +83,10 @@ public class InAppNotificationHandlerTests {
     MessagingInternal mockMessagingInternal;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+    @Mock
+    Message mockMessage;
+    @Mock
+    Looper mockLooper;
 
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
@@ -109,11 +117,13 @@ public class InAppNotificationHandlerTests {
     }
 
     void setupApplicationIdMocks() {
+        when(MobileCore.getApplication()).thenReturn(mockApplication);
         when(App.getApplication()).thenReturn(mockApplication);
         when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
         when(mockApplication.getApplicationContext()).thenReturn(mockContext);
         when(mockApplication.getPackageName()).thenReturn(mockAppId);
+        when(mockApplication.getMainLooper()).thenReturn(mockLooper);
         when(mockContext.getPackageName()).thenReturn(mockAppId);
     }
 
@@ -493,5 +503,71 @@ public class InAppNotificationHandlerTests {
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
         Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
         assertEquals(0, rules.size());
+    }
+
+    // ========================================================================================
+    // createInAppMessage
+    // ========================================================================================
+    @Test
+    public void test_createInAppMessage() {
+        // setup
+        try {
+            PowerMockito.whenNew(Message.class).withArguments(any(MessagingInternal.class), anyMap(), anyMap(), anyMap()).thenReturn(mockMessage);
+        } catch (Exception e) {
+            fail("Failed to create mock Message: " + e.getMessage());
+        }
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mobileParameters = new HashMap<>();
+
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        Event mockEvent = mock(Event.class);
+
+        // when get eventData called return event data containing a valid rules response content event with a triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        inAppNotificationHandler.createInAppMessage(mockEvent);
+
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
+        verify(mockMessage, times(1)).trigger();
+        verify(mockMessage, times(1)).show();
+    }
+
+    @Test
+    public void test_createInAppMessage_InvalidRuleConsequence() {
+        // setup
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mobileParameters = new HashMap<>();
+
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "notCjmIam");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        Event mockEvent = mock(Event.class);
+
+        // when get eventData called return event data containing a valid rules response content event with a triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        inAppNotificationHandler.createInAppMessage(mockEvent);
+
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 }

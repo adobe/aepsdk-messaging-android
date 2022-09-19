@@ -10,12 +10,6 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -129,6 +123,7 @@ public class MessagingTestUtils {
         final List<Map<String, Object>> items = new ArrayList<>();
         items.add(getMapFromFile(fileName));
         eventData.put("payload", items);
+        eventData.put("requestEventId", "TESTING_ID");
         final Event event = new Event.Builder("edge response testing", MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -423,7 +418,7 @@ public class MessagingTestUtils {
             objectOutputStream.flush();
             return byteArrayOutputStream.toString();
         } catch (Exception e) {
-            Log.debug("MessagingTestUtile", "Exception occurred while converting payloads to string: %s", e.getMessage());
+            Log.debug("MessagingTestUtils", "Exception occurred while converting payloads to string: %s", e.getMessage());
             return "";
         }
     }
@@ -606,28 +601,5 @@ public class MessagingTestUtils {
         }
 
         return platformServices;
-    }
-
-    /**
-     * Returns platform {@link JsonUtilityService} instance.
-     *
-     * @return {@code JsonUtilityService} or null if {@link PlatformServices} are unavailable
-     */
-    static JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
-            return null;
-        }
-
-        final JsonUtilityService jsonUtilityService = platformServices.getJsonUtilityService();
-        if (jsonUtilityService == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService - JsonUtility services are not available.");
-        }
-
-        return jsonUtilityService;
     }
 }

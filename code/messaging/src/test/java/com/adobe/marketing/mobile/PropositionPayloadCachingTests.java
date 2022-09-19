@@ -63,7 +63,7 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
-    public void testGetCachedPropositionPayload() throws JSONException {
+    public void testGetCachedPropositionPayload() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));

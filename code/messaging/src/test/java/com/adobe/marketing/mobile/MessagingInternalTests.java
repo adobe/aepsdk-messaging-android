@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -47,7 +48,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingInternal.class})
 public class MessagingInternalTests {
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
@@ -83,42 +84,6 @@ public class MessagingInternalTests {
     Message mockMessage;
     private MessagingInternal messagingInternal;
     private EventHub eventHub;
-
-    static Map<String, Object> setupXdmMap(MessageTestConfig config) {
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experiance = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        if (!config.isMissingMessageId) {
-            messageExecution.put("messageExecutionID", "123456789");
-        }
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experiance.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experiance);
-        xdm.put("mixins", mixins);
-        return xdm;
-    }
-
-    static Map<String, Object> setupDetailsMaps(Map<String, Object> xdmMap) {
-        Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        return details;
-    }
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException, IOException, JSONException {
@@ -175,6 +140,60 @@ public class MessagingInternalTests {
 
         verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
                 eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerRulesEngineResponseContent.class), any(ExtensionErrorCallback.class));
+    }
+
+    @Test
+    public void test_Constructor_CacheManagerCreationError() throws Exception {
+        // setup
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        PowerMockito.whenNew(CacheManager.class).withAnyArguments().thenReturn(null);
+        // test
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        // verify 5 listeners are registered
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerIdentityRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.HUB.getName()),
+                eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(MessagingConstants.EventType.EDGE),
+                eq(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerOffersPersonalizationDecisions.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerRulesEngineResponseContent.class), any(ExtensionErrorCallback.class));
+        // verify MessagingCacheUtilities are null because the CacheManager was not created
+        MessagingCacheUtilities cacheUtilities = Whitebox.getInternalState(messagingInternal,"messagingCacheUtilities");
+        assertNull(cacheUtilities);
+    }
+
+    @Test
+    public void test_Constructor_MessagingCacheUtilitiesCreationError() throws Exception {
+        // setup
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+        PowerMockito.whenNew(MessagingCacheUtilities.class).withAnyArguments().thenReturn(null);
+        // test
+        messagingInternal = new MessagingInternal(mockExtensionApi);
+        // verify 5 listeners are registered
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerMessagingRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.GENERIC_IDENTITY.getName()),
+                eq(EventSource.REQUEST_CONTENT.getName()), eq(ListenerIdentityRequestContent.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.HUB.getName()),
+                eq(EventSource.SHARED_STATE.getName()), eq(ListenerHubSharedState.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(MessagingConstants.EventType.EDGE),
+                eq(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS), eq(ListenerOffersPersonalizationDecisions.class), any(ExtensionErrorCallback.class));
+
+        verify(mockExtensionApi, times(2)).registerEventListener(eq(EventType.RULES_ENGINE.getName()),
+                eq(EventSource.RESPONSE_CONTENT.getName()), eq(ListenerRulesEngineResponseContent.class), any(ExtensionErrorCallback.class));
+        // verify MessagingCacheUtilities are null
+        MessagingCacheUtilities cacheUtilities = Whitebox.getInternalState(messagingInternal,"messagingCacheUtilities");
+        assertNull(cacheUtilities);
     }
 
     // ========================================================================================
@@ -482,6 +501,24 @@ public class MessagingInternalTests {
 
         // verify if the push token is stored in shared state
         verify(mockExtensionApi, times(1)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
+    }
+
+    @Test
+    public void test_handlePushToken_when_eventIsNull() {
+        // Mocks
+        String mockECID = "mock_ecid";
+
+        // private mocks
+        Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
+
+        // when - then return mock
+        when(messagingState.getEcid()).thenReturn(mockECID);
+
+        //test
+        messagingInternal.handlePushToken(null);
+
+        // verify
+        verify(mockExtensionApi, times(0)).setSharedEventState(any(Map.class), any(Event.class), any(ExtensionErrorCallback.class));
     }
 
 

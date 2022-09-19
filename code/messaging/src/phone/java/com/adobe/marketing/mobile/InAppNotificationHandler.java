@@ -128,7 +128,7 @@ class InAppNotificationHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = getRequestEventId(edgeResponseEvent);
         if (!requestMessagesEventId.equals(requestEventId)) {
-            // TODO: remove following check, for testing only
+            // for unit and functional testing
             if (!requestEventId.equals("TESTING_ID")) {
                 return;
             }

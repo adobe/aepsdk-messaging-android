@@ -26,7 +26,7 @@ android {
 }
 
 dependencies {
-    implementation project(':messaging')
+    compileOnly project(':messaging')
     implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
     implementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"

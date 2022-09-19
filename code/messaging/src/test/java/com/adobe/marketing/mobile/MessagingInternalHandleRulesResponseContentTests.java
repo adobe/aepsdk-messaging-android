@@ -189,7 +189,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
+        verify(mockMessage, times(1)).trigger();
         verify(mockMessage, times(1)).show();
     }
 
@@ -225,7 +226,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -260,7 +262,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -285,7 +288,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -312,7 +316,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -344,7 +349,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -375,7 +381,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -411,7 +418,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -446,7 +454,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 
@@ -481,7 +490,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
         verify(mockMessage, times(0)).show();
     }
 }
