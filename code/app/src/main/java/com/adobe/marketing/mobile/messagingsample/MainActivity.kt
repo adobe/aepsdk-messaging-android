@@ -37,7 +37,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
-    private var selectionMade = false
 
     // TODO: restore after generating new i18N messages for testing
 //    private enum class i18NSpinnerValues(val value: String) {
@@ -283,7 +282,6 @@ class MainActivity : AppCompatActivity() {
 //                }
                 // otherwise check if a locally generated IAM was selected
                 handleGeneratedIamValues(parent, pos)
-                selectionMade = true
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}

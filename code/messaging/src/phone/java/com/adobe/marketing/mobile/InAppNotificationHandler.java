@@ -127,11 +127,9 @@ class InAppNotificationHandler {
      */
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = getRequestEventId(edgeResponseEvent);
-        if (!requestMessagesEventId.equals(requestEventId)) {
-            // for unit and functional testing
-            if (!requestEventId.equals("TESTING_ID")) {
-                return;
-            }
+        // "TESTING_ID" used in unit and functional testing
+        if (!requestMessagesEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+            return;
         }
         final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
