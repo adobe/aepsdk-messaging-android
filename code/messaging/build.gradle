@@ -21,7 +21,6 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
         versionName rootProject.moduleVersion
         // flag for e2e tests
         buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
@@ -34,7 +33,9 @@ android {
 
     flavorDimensions "target"
     productFlavors {
-        phone
+        phone {
+            dimension "target"
+        }
     }
 
     buildTypes {
@@ -81,6 +82,7 @@ android.libraryVariants.all { variant ->
         doFirst {
             classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
         }
+        exclude "**/BuildConfig.java"
         exclude "**/R.java"
         options {
             links "https://developer.android.com/reference"
@@ -177,13 +179,13 @@ signing {
 }
 
 task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
-    def excludeRegex = ['**/ADB*.class']
+    def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
     def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
 
     additionalClassDirs.setFrom files([debugTree])
     additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
     sourceDirectories.setFrom files(android.sourceSets.phone.java.sourceFiles)
-    executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
+    executionData "jacoco.exec"
 
     reports {
         xml.enabled true
