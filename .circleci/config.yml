@@ -32,7 +32,7 @@ jobs:
           command: make ci-unit-test
       # code coverage
       - run:
-          name: Upload Unit Test Code Coverage Report
+          name: Upload Code Coverage Report
           command: |
             curl -s https://codecov.io/bash > codecov;
             VERSION=$(grep 'VERSION=\"[0-9\.]*\"' codecov | cut -d'"' -f2);
@@ -41,7 +41,8 @@ jobs:
               shasum -a $i -c --ignore-missing <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM") ||
               shasum -a $i -c <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM" | grep -w "codecov")
             done
-            bash ./codecov -v -X s3 -c -D "./ci/unit-test/" -F unit-tests -t ${CODECOV_TOKEN}
+            bash ./codecov -v -X s3 -c -D "./ci/unit-test/build/reports" -F unit-tests
+            
       - store_artifacts:
           path: ci/unit-test/build/reports
       - store_test_results:
