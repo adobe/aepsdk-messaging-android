@@ -18,7 +18,7 @@ jobs:
     environment:
       JVM_OPTS: -Xmx3200m
     steps:
-     - checkout
+      - checkout
       - run:
           name: Javadoc
           command: make ci-javadoc
