@@ -77,8 +77,8 @@ Provides the type of action which needs to be performed when push notification i
     public ActionType getActionType()
 ```
 #### Enum `ActionType`
-There are 4 types of action available. These are used to determine which action needs to be performed when push notification is clicked.
-`DEEPLINK`, `WEBURL`, `DISMISS`, `NONE`
+There are 5 types of action available. These are used to determine which action needs to be performed when push notification is clicked.
+`DEEPLINK`, `WEBURL`, `DISMISS`, `OPENAPP`, and `NONE`
 
 ### Get action buttons
 Provides the list of buttons with label, type of action and uri/url.
