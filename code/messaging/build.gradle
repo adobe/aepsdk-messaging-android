@@ -234,7 +234,7 @@ dependencies {
     androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
     androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
-    androidTestImplementation 'com.adobe.marketing.mobile:edge:1.1.1'
+    androidTestImplementation 'com.adobe.marketing.mobile:edge:1.3.2'
 
     // add test util dependencies for functional and unit tests
     testImplementation project(':messagingtestutils')

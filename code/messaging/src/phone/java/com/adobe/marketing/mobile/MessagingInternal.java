@@ -542,7 +542,7 @@ class MessagingInternal extends Extension {
         propositions.add(proposition);
 
         final Map<String, Integer> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.name(), 1);
+        propositionEventType.put(eventType.getPropositionEventType(), 1);
 
         final Map<String, Object> decisioning = new HashMap<>();
         decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
@@ -567,7 +567,7 @@ class MessagingInternal extends Extension {
 
         // create maps for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
-        iamHistoryMap.put(EVENT_TYPE, eventType.toString());
+        iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
         iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.activityId);
         iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 

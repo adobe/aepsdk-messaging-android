@@ -30,6 +30,21 @@ public enum MessagingEdgeEventType {
         return value;
     }
 
+    public String getPropositionEventType() {
+        switch (this) {
+            case IN_APP_DISMISS:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.DISMISS;
+            case IN_APP_INTERACT:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.INTERACT;
+            case IN_APP_TRIGGER:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.TRIGGER;
+            case IN_APP_DISPLAY:
+                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.DISPLAY;
+            default:
+                return "";
+        }
+    }
+
     @Override
     public String toString() {
         switch (this) {

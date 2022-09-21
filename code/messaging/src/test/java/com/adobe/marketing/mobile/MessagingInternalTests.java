@@ -12,9 +12,23 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.IAM_HISTORY;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
+import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.MessagingConstants.TrackingKeys.XDM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -28,6 +42,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +58,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -116,6 +133,28 @@ public class MessagingInternalTests {
         when(App.getApplication()).thenReturn(mockApplication);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
         when(mockApplication.getPackageName()).thenReturn(mockAppId);
+    }
+
+    boolean arePropositionPayloadsEqual(Map<String, Object> expected, Map<String, Object> actual) {
+        Map<String, Object> expectedXdmMap = (Map<String, Object>) expected.get("xdm");
+        Map<String, Object> expectedEventHistoryMap =  (Map<String, Object>) expected.get("iam");
+        String expectedScope = (String) expected.get("scope");
+        String expectedId = (String) expected.get("id");
+
+        Map<String, Object> actualXdmMap = (Map<String, Object>) actual.get("xdm");
+        Map<String, Object> actualEventHistoryMap =  (Map<String, Object>) actual.get("iam");
+        String actualScope = (String) actual.get("scope");
+        String actualId = (String) actual.get("id");
+
+        if (expectedId != actualId) {
+            return false;
+        }
+
+        if (expectedScope != actualScope) {
+            return false;
+        }
+
+        return expectedXdmMap.equals(actualXdmMap) && expectedEventHistoryMap.equals(actualEventHistoryMap);
     }
 
     // ========================================================================================
@@ -836,11 +875,12 @@ public class MessagingInternalTests {
     // sendPropositionInteraction
     // ========================================================================================
     @Test
-    public void test_sendPropositionInteraction_InAppInteractTracking() {
+    public void test_sendPropositionInteraction_InAppInteractTracking() throws JSONException {
         // setup
         mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_INTERACT\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"confirm\",\"eventType\":\"decisioning.propositionInteract\"}}";
+        final JSONObject expectedEventData = new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"interact\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"confirm\",\"eventType\":\"interact\"}}");
+        final Map<String, Object> expectedEventDataMap = MessagingTestUtils.toMap(expectedEventData);
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -861,7 +901,7 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(expectedEventData, event.getData().toString());
+        assertTrue(arePropositionPayloadsEqual(expectedEventDataMap, event.getEventData()));
     }
 
     @Test
@@ -884,11 +924,12 @@ public class MessagingInternalTests {
     }
 
     @Test
-    public void test_sendPropositionInteraction_InAppDismissTracking() {
+    public void test_sendPropositionInteraction_InAppDismissTracking() throws JSONException {
         // setup
         mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_DISMISS\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionDismiss\"}}";
+        final JSONObject expectedEventData = new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"dismiss\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"dismiss\"}}");
+        final Map<String, Object> expectedEventDataMap = MessagingTestUtils.toMap(expectedEventData);
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -906,15 +947,16 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(expectedEventData, event.getData().toString());
+        assertTrue(arePropositionPayloadsEqual(expectedEventDataMap, event.getEventData()));
     }
 
     @Test
-    public void test_sendPropositionInteraction_InAppDisplayTracking() {
+    public void test_sendPropositionInteraction_InAppDisplayTracking() throws JSONException {
         // setup
         mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_DISPLAY\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionDisplay\"}}";
+        final JSONObject expectedEventData = new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"display\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"display\"}}");
+        final Map<String, Object> expectedEventDataMap = MessagingTestUtils.toMap(expectedEventData);
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -932,15 +974,16 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(expectedEventData, event.getData().toString());
+        assertTrue(arePropositionPayloadsEqual(expectedEventDataMap, event.getEventData()));
     }
 
     @Test
-    public void test_sendPropositionInteraction_InAppTriggeredTracking() {
+    public void test_sendPropositionInteraction_InAppTriggeredTracking() throws JSONException {
         // setup
         mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
         // expected
-        final String expectedEventData = "{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"IN_APP_TRIGGER\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"messageId\":\"\",\"action\":\"\",\"eventType\":\"decisioning.propositionTrigger\"}}";
+        final JSONObject expectedEventData = new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"trigger\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"trigger\"}}");
+        final Map<String, Object> expectedEventDataMap = MessagingTestUtils.toMap(expectedEventData);
 
         // private mocks
         Whitebox.setInternalState(messagingInternal, "messagingState", messagingState);
@@ -958,7 +1001,7 @@ public class MessagingInternalTests {
         // verify event
         Event event = eventCaptor.getValue();
         assertNotNull(event.getData());
-        assertEquals(expectedEventData, event.getData().toString());
+        assertTrue(arePropositionPayloadsEqual(expectedEventDataMap, event.getEventData()));
     }
 
     // ========================================================================================

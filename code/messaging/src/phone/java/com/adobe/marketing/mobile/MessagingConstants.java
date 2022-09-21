@@ -177,6 +177,16 @@ final class MessagingConstants {
                     }
                 }
 
+                final class PropositionEventType {
+                    static final String TRIGGER = "trigger";
+                    static final String DISPLAY = "display";
+                    static final String INTERACT = "interact";
+                    static final String DISMISS = "dismiss";
+
+                    private PropositionEventType() {
+                    }
+                }
+
                 final class Key {
                     static final String PERSONALIZATION = "personalization";
                     static final String CHARACTERISTICS = "characteristics";
@@ -303,7 +313,7 @@ final class MessagingConstants {
     final class EventMask {
         final class Keys {
             static final String EVENT_TYPE = "eventType";
-            static final String MESSAGE_ID = "messageId";
+            static final String MESSAGE_ID = "id";
             static final String TRACKING_ACTION = "action";
 
             private Keys() {
