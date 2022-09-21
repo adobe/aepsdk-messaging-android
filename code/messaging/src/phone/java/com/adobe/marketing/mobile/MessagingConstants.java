@@ -373,6 +373,7 @@ final class MessagingConstants {
             static final String DEEPLINK = "DEEPLINK";
             static final String WEBURL = "WEBURL";
             static final String DISMISS = "DISMISS";
+            static final String OPENAPP = "OPENAPP";
 
             private ActionButtonType() {
             }
