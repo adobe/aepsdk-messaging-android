@@ -1,5 +1,7 @@
 #  API Usage
 
+## Push Messaging APIs
+
 ## Syncing the push token to profile in platform. 
 
 To do this, add the following code to Application class's `onCreate()` method:
@@ -60,4 +62,16 @@ To do this, add the following code where you have access to `intent` after the u
 
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
+```
+
+## In-App Messaging APIs
+
+#### Programmatically refresh in-app message definitions from the remote
+
+By default, the SDK will automatically fetch in-app message definitions from the remote at the time the Messaging extension is registered. This generally happens once per app lifecycle.
+
+Some use cases may require the client to request an update from the remote more frequently. Calling the following API will force the Messaging extension to get an updated definition of messages from the remote:
+
+```java
+Messaging.refreshInAppMessages();
 ```

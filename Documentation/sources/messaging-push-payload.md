@@ -1,8 +1,8 @@
 #  MessagingPushPayload Usage
-This document explains how to use `MessagingPushPayload` for getting the notification attributes like title, body, actions etc for creating the push notifications.
+This document explains how to use `MessagingPushPayload` class for getting the notification attributes like title, body, actions etc for creating a push notification from a received AJO push payload.
 
 ## Creating the MessagingPushPayload object
-To do this, use the below constructors in the `FirebaseMessagingService` class's `onMessageReceived` method:
+Use the below constructors in the `FirebaseMessagingService` class's `onMessageReceived` method:
 
 ### Constructor
 
