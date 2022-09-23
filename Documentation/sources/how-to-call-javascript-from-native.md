@@ -24,7 +24,7 @@ public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
   // access to the whole message from the parent
   Message message = (Message) fullscreenMessage.getParent();
       
-  WebView webView = message.view;
+  WebView webView = message.getWebView();
   
   ...
 }
@@ -44,7 +44,7 @@ public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
   // access to the whole message from the parent
   Message message = (Message) fullscreenMessage.getParent();
       
-  WebView webView = message.view;
+  WebView webView = message.getWebView();
   // webview operations must be run on the ui thread
   webView.post(new Runnable() {
     @Override
