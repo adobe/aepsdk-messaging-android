@@ -8,7 +8,7 @@ The `Message` class contains the definition of an in-app message and controls it
 
 ### id
 
-Identifier of the `Message`. This value matches the Message Execution ID assigned by Adobe Journey Optimizer (AJO) Campaign.
+Identifier of the `Message`.
 
 ```java
 public String id;
@@ -63,7 +63,7 @@ public void track(final String interaction, final MessagingEdgeEventType eventTy
 
 ### trigger
 
-Signals to the UIService. that the message was triggered.
+Signals to the UIService that the message was triggered.
 
 If `autoTrack` is true, calling this method will result in an "decisioning.propositionTrigger" Edge Event being dispatched.
 
@@ -77,7 +77,7 @@ Adds a handler for named JavaScript messages sent from the message's `WKWebView`
 
 The parameter passed to `handler` will contain the body of the message passed from the `WKWebView`'s JavaScript.
 
-For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./sources/how-to-call-native-from-javascript.md).
+For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./how-to-call-native-from-javascript.md).
 
 ```java
 public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)

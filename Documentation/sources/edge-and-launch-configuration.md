@@ -1,8 +1,8 @@
 #  Configuring Edge & Launch
 
 ### Configure the Datastream
-- To create the datastream follow the [datastream document](https://aep-sdks.gitbook.io/docs/getting-started/configure-datastreams)
-- In the screenshot below select the `Profile Dataset` to `CJM Push Profile Dataset`
+- To create the datastream follow the [datastream document](https://aep-sdks.gitbook.io/docs/getting-started/configure-datastreams).
+- On the Data Collection UI location specified in the screenshot below, select the `Profile Dataset` to `CJM Push Profile Dataset`
 ![Datastream](../assets/edge-config.png)
 
 ### Setup launch mobile property

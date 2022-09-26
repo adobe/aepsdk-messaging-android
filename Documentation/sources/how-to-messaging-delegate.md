@@ -18,7 +18,7 @@ CustomDelegate myMessagingDelegate = new CustomDelegate();
 ServiceProvider.getInstance().setMessageDelegate(myMessagingDelegate);
 ```
 
-### FullscreenMessageDelegate interface (Android)
+### FullscreenMessageDelegate interface
 
 The `FullscreenMessageDelegate` interface, which is implemented in the Android Messaging extension in the `MessagingDelegate` class, is defined below:
 

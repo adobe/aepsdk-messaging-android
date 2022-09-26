@@ -27,7 +27,7 @@ adbinapp://dismiss
 
 Adding a URL variable named `interaction` will cause the SDK to send an Experience Event to the Adobe Experience Edge.
 
-The example below will dismiss the current in-app message and send an `inapp.interact` event to edge with an action of `imageLiked`:
+The example below will dismiss the current in-app message and send an `decisioning.propositionInteract` event to edge with an action of `imageLiked`:
 
 ```
 adbinapp://dismiss?interaction=imageLiked
@@ -41,7 +41,7 @@ If the value for a URL variable named `link` contains a valid URL, the SDK will 
 
 If the provided URL does not contain a custom scheme, the URL will be loaded in the device's default web browser.  
 
-The example below will dismiss the current in-app message, send an `inapp.interact` event to edge with an action of `adobe`, and open the adobe.com website in mobile Safari (the default browser on the user's iOS device):
+The example below will dismiss the current in-app message, send an `decisioning.propositionInteract` event to edge with an action of `adobe`, and open the adobe.com website on the device's default web browser:
 
 ```
 adbinapp://dismiss?interaction=adobe&link=https://adobe.com

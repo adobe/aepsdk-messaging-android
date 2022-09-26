@@ -32,4 +32,4 @@ public void onCreate() {
 ```
 
 #### Next Step
-Checkout the API usage [here](APIUsage.md)
+Checkout the API usage [here](./api-usage.md)

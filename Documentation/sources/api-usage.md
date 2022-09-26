@@ -1,10 +1,20 @@
 #  API Usage
 
+## General APIs
+
+## Getting the extension version.
+
+Call the `extensionVersion` API to retrieve a `String` containing the Messaging extension's version.
+
+```java
+Messaging.extensionVersion()
+```
+
 ## Push Messaging APIs
 
 ## Syncing the push token to profile in platform. 
 
-To do this, add the following code to Application class's `onCreate()` method:
+Add the following code to the Application class's `onCreate()` method:
 
 ```java
     FirebaseMessaging.getInstance().getToken()
@@ -51,14 +61,14 @@ Messaging.handleNotificationResponse(intent, true, null);
 ```
 
 ##### Sending feedback when application is opened with custom action. 
-To do this, add the following code where you have access to `intent` after the user interact with the push notification:
+Call the `handleNotificationResponse` API with a custom action in the  
 
 ```java
 Messaging.handleNotificationResponse(intent, true, <actionId>);
 ```
 
 ##### Sending feedback when application is not opened but a custom action is performed by the user. 
-To do this, add the following code where you have access to `intent` after the user interact with the push notification:
+To do this, add the following code where you have access to `intent` after the user has interacted with the push notification:
 
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
