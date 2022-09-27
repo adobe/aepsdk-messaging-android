@@ -29,7 +29,7 @@ class PropositionInfo implements Serializable {
     final String activityId;
 
 
-    PropositionInfo(final Map<String, Object> propositionInfoMap) {
+    private PropositionInfo(final Map<String, Object> propositionInfoMap) {
         id = (String) propositionInfoMap.get(ID);
         scope = (String) propositionInfoMap.get(SCOPE);
         scopeDetails = (Map<String, Object>) propositionInfoMap.get(SCOPE_DETAILS);
@@ -41,5 +41,18 @@ class PropositionInfo implements Serializable {
             correlationId = "";
             activityId = "";
         }
+    }
+
+    static PropositionInfo create(final Map<String, Object> propositionInfoMap) {
+        if (StringUtils.isNullOrEmpty((String) propositionInfoMap.get(ID))) {
+            return null;
+        }
+        if (StringUtils.isNullOrEmpty((String) propositionInfoMap.get(SCOPE))) {
+            return null;
+        }
+        if (MessagingUtils.isMapNullOrEmpty((Map) propositionInfoMap.get(SCOPE_DETAILS))) {
+            return null;
+        }
+        return new PropositionInfo(propositionInfoMap);
     }
 }

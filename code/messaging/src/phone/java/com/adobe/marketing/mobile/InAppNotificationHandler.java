@@ -132,10 +132,10 @@ class InAppNotificationHandler {
             return;
         }
         final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
-        final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
+        final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
             Log.trace(LOG_TAG, "%s - Payload for in-app messages was empty. Clearing local cache.", SELF_TAG);
-            messagingCacheUtilities.clearCachedDataFromSubdirectory();
+            messagingCacheUtilities.clearCachedData();
             return;
         }
         // save the proposition payload to the messaging cache
@@ -153,9 +153,18 @@ class InAppNotificationHandler {
     private void processPropositions(final List<PropositionPayload> propositions) {
         final List<JsonUtilityService.JSONObject> foundRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
+            if (proposition == null) {
+                Log.trace(LOG_TAG, "%s - processing aborted, null proposition found.", SELF_TAG);
+                return;
+            }
+
+            if (proposition.propositionInfo == null) {
+                Log.trace(LOG_TAG, "%s - the proposition info is invalid. The proposition payload will be ignored.", SELF_TAG);
+                return;
+            }
+
             final String appSurface = App.getAppContext().getPackageName();
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
-
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
                 Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);

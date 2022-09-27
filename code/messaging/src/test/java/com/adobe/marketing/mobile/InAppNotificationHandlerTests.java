@@ -156,7 +156,7 @@ public class InAppNotificationHandlerTests {
     @After
     public void cleanup() {
         // use messaging cache utilities to clean the cache after each test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory();
+        messagingCacheUtilities.clearCachedData();
     }
 
     // ========================================================================================
@@ -472,7 +472,7 @@ public class InAppNotificationHandlerTests {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(MessagingTestUtils.generateMessagePayload(config));
+        List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
         messagingCacheUtilities.cachePropositions(payload);
 
         // test
@@ -493,7 +493,7 @@ public class InAppNotificationHandlerTests {
         config.count = 1;
         config.noValidAppSurfaceInPayload = true;
         config.nonMatchingAppSurfaceInPayload = true;
-        List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(MessagingTestUtils.generateMessagePayload(config));
+        List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
         messagingCacheUtilities.cachePropositions(payload);
 
         // test

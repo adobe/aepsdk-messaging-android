@@ -90,7 +90,7 @@ public class MessageCachingFunctionalTests {
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedDataFromSubdirectory();
+        messagingCacheUtilities.clearCachedData();
         MobileCore.getCore().eventHub.getModuleRuleAssociation().clear();
     }
 
@@ -124,7 +124,7 @@ public class MessageCachingFunctionalTests {
         final List<PropositionPayload> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
         final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
         expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-        final String expectedPropositionString = MessagingTestUtils.convertPayloadToString(MessagingUtils.createPropositionPayload(expectedPropositions));
+        final String expectedPropositionString = MessagingTestUtils.convertPayloadToString(MessagingUtils.getPropositionPayloads(expectedPropositions));
         assertEquals(expectedPropositionString, MessagingTestUtils.convertPayloadToString(cachedPropositions));
     }
 

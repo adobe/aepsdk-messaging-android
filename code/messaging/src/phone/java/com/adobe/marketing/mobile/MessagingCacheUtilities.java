@@ -78,7 +78,7 @@ final class MessagingCacheUtilities {
     /**
      * Delete all contents in the {@link Messaging} extension cache subdirectory.
      */
-    void clearCachedDataFromSubdirectory() {
+    void clearCachedData() {
         cacheManager.deleteFilesNotInList(null, PROPOSITIONS_CACHE_SUBDIRECTORY, true);
         cacheManager.deleteFilesNotInList(null, IMAGES_CACHE_SUBDIRECTORY, true);
         Log.trace(LOG_TAG, "%s - In-app messaging %s and %s caches have been deleted.", SELF_TAG, PROPOSITIONS_CACHE_SUBDIRECTORY, IMAGES_CACHE_SUBDIRECTORY);
@@ -136,7 +136,7 @@ final class MessagingCacheUtilities {
      */
     void cachePropositions(final List<PropositionPayload> propositionPayload) {
         // clean any existing cached files first
-        clearCachedDataFromSubdirectory();
+        clearCachedData();
         Log.debug(LOG_TAG, "%s - Creating new cached propositions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY));
         final File propositionCache = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
         FileOutputStream fileOutputStream;
@@ -148,7 +148,7 @@ final class MessagingCacheUtilities {
             objectOutputStream.writeObject(propositionPayload);
             objectOutputStream.flush();
         } catch (final IOException e) {
-            Log.error(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
+            Log.warning(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
             return;
         } finally {
             try {
@@ -156,7 +156,7 @@ final class MessagingCacheUtilities {
                     objectOutputStream.close();
                 }
             } catch (final IOException e) {
-                Log.error(LOG_TAG, "%s - Unable to close the ObjectOutputStream (%s) ", SELF_TAG, e);
+                Log.warning(LOG_TAG, "%s - Unable to close the ObjectOutputStream (%s) ", SELF_TAG, e);
             }
         }
         return;
