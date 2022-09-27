@@ -61,16 +61,6 @@ public void track(final String interaction, final MessagingEdgeEventType eventTy
 * *interaction* - a custom `String` value to be recorded in the interaction
 * *eventType* - the [`MessagingEdgeEventType`](#enum-messagingedgeeventtype) to be used for the ensuing Edge Event
 
-### trigger
-
-Signals to the UIService that the message was triggered.
-
-If `autoTrack` is true, calling this method will result in an "decisioning.propositionTrigger" Edge Event being dispatched.
-
-```java
-public void trigger()
-```
-
 ### handleJavascriptMessage
 
 Adds a handler for named JavaScript messages sent from the message's `WKWebView`.
