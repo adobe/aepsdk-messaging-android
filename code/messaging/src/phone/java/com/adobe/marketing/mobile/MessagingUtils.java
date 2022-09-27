@@ -160,7 +160,7 @@ class MessagingUtils {
         return convertedValue;
     }
 
-    static List<PropositionPayload> createPropositionPayload(final List<Map<String, Object>> payloads) {
+    static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
         if (payloads == null || payloads.size() == 0) {
             return null;
         }

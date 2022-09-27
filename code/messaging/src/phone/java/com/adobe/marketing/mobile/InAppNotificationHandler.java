@@ -132,10 +132,10 @@ class InAppNotificationHandler {
             return;
         }
         final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
-        final List<PropositionPayload> propositions = MessagingUtils.createPropositionPayload(payload);
+        final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
             Log.trace(LOG_TAG, "%s - Payload for in-app messages was empty. Clearing local cache.", SELF_TAG);
-            messagingCacheUtilities.clearCachedDataFromSubdirectory();
+            messagingCacheUtilities.clearCachedData();
             return;
         }
         // save the proposition payload to the messaging cache

@@ -240,7 +240,7 @@ public class Message extends MessagingDelegate {
         }
     }
 
-    public void trigger() {
+    void trigger() {
         if (aepMessage != null) {
             if (autoTrack) {
                 track(null, MessagingEdgeEventType.IN_APP_TRIGGER);

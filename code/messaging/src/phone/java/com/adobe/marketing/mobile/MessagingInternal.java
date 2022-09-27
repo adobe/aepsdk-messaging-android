@@ -47,9 +47,9 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messag
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.IAM_HISTORY;
 import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
+import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -529,8 +529,7 @@ class MessagingInternal extends Extension {
       */
     public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
-        final Map<String, Object> scopeDetails = propositionInfo.scopeDetails;
-        if (MessagingUtils.isMapNullOrEmpty(scopeDetails)) {
+        if (MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
             return;
         }
@@ -568,7 +567,7 @@ class MessagingInternal extends Extension {
         // create maps for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
         iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.activityId);
+        iamHistoryMap.put(MESSAGE_ID, propositionInfo.activityId);
         iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // Create the mask for storing event history

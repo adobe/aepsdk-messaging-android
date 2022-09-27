@@ -67,7 +67,7 @@ public class PropositionPayloadCachingTests {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-        final List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(testPayload);
+        final List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(testPayload);
         messagingCacheUtilities.cachePropositions(payload);
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedProposition);
         // test
@@ -118,7 +118,7 @@ public class PropositionPayloadCachingTests {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-        final List<PropositionPayload> payload = MessagingUtils.createPropositionPayload(testPayload);
+        final List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(testPayload);
         when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedProposition);
         // test
         messagingCacheUtilities.cachePropositions(payload);
@@ -131,7 +131,7 @@ public class PropositionPayloadCachingTests {
     @Test
     public void testClearCache() {
         // test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory();
+        messagingCacheUtilities.clearCachedData();
         // verify deleteFilesNotInList called 2 times as image and proposition cache are deleted
         verify(mockCacheManager, times(2)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
     }
