@@ -9,7 +9,6 @@
     "correlationID" : "correlationID",
     "decisionProvider" : "AJO"
   },
-  "scope" : "mobileapp://com.adobe.marketing.mobile.messaging.test",
   "items": [
     {
       "id": "itemId",

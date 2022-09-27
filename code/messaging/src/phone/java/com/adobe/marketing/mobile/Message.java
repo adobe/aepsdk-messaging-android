@@ -12,6 +12,11 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
 import android.os.Handler;
@@ -44,6 +49,8 @@ public class Message extends MessagingDelegate {
     public boolean autoTrack = true;
     // private properties
     private WebView webView;
+    // package private
+    PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
     /**
      * Constructor.
@@ -59,37 +66,37 @@ public class Message extends MessagingDelegate {
      *
      * @param parent             {@link MessagingInternal} instance that created this Message
      * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
-     * @param rawMessageSettings {@code Map<String, Object>} contating the raw message settings found in the "mobileParameters" present in the rule consequence
+     * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
     public Message(final MessagingInternal parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
         messagingInternal = parent;
 
-        final String consequenceType = (String) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
+        final String consequenceType = (String) consequence.get(MESSAGE_CONSEQUENCE_TYPE);
 
-        if (!MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
+        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
             Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", SELF_TAG,
                     consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
-        details = (Map<String, Object>) consequence.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        details = (Map<String, Object>) consequence.get(MESSAGE_CONSEQUENCE_DETAIL);
         if (MessagingUtils.isMapNullOrEmpty(details)) {
-            Log.debug(MessagingConstants.LOG_TAG,
+            Log.debug(LOG_TAG,
                     "%s - Invalid consequence (%s). Required field \"detail\" is null or empty.", SELF_TAG, consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        id = getMessageId(details);
+        id = (String) consequence.get(MESSAGE_CONSEQUENCE_ID);
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"id\" is null or empty.", SELF_TAG, consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
-        final String html = (String) details.get(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+        final String html = (String) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
         if (StringUtils.isNullOrEmpty(html)) {
-            Log.warning(MessagingConstants.LOG_TAG,
+            Log.warning(LOG_TAG,
                     "%s - Unable to create an in-app message, the html payload is null or empty.", SELF_TAG);
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
         }
@@ -121,7 +128,7 @@ public class Message extends MessagingDelegate {
                     "%s - Unable to record a message interaction, MessagingEdgeEventType was null.", SELF_TAG);
             return;
         }
-        messagingInternal.handleInAppTrackingInfo(eventType, interaction, this);
+        messagingInternal.sendPropositionInteraction(interaction, eventType, this);
     }
 
     /**
@@ -230,6 +237,14 @@ public class Message extends MessagingDelegate {
             }
 
             aepMessage.dismiss();
+        }
+    }
+
+    void trigger() {
+        if (aepMessage != null) {
+            if (autoTrack) {
+                track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
+            }
         }
     }
 
@@ -367,20 +382,5 @@ public class Message extends MessagingDelegate {
                 .setUiTakeover(uiTakeover)
                 .setGestures(gestureMap)
                 .build();
-    }
-
-    /**
-     * Gets the message id {@code String} contained in the message execution payload.
-     *
-     * @param messageDetails {@code Map<String, Object>} containing the message details
-     * @return {@code String} containing the message id or null if none was found
-     */
-    private String getMessageId(Map<String, Object> messageDetails) {
-        final Map<String, Object> xdm = (Map<String, Object>) messageDetails.get(MessagingConstants.TrackingKeys._XDM);
-        final Map<String, Object> mixins = MessagingUtils.isMapNullOrEmpty(xdm) ? null : (Map<String, Object>) xdm.get(MessagingConstants.TrackingKeys.MIXINS);
-        final Map<String, Object> experience = MessagingUtils.isMapNullOrEmpty(mixins) ? null : (Map<String, Object>) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
-        final Map<String, Object> cjm = MessagingUtils.isMapNullOrEmpty(experience) ? null : (Map<String, Object>) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
-        final Map<String, Object> messageExecution = MessagingUtils.isMapNullOrEmpty(cjm) ? null : (Map<String, Object>) cjm.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION);
-        return MessagingUtils.isMapNullOrEmpty(messageExecution) ? null : (String) messageExecution.get(MessagingConstants.TrackingKeys.MESSAGE_EXECUTION_ID);
     }
 }

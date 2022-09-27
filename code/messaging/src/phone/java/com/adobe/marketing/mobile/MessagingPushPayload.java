@@ -185,12 +185,10 @@ public class MessagingPushPayload {
         }
 
         switch (type) {
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.DEEPLINK:
-                return ActionType.DEEPLINK;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL:
-                return ActionType.WEBURL;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.DISMISS:
-                return ActionType.DISMISS;
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL: return ActionType.WEBURL;
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.DISMISS: return ActionType.DISMISS;
+            case MessagingConstants.PushNotificationPayload.ActionButtonType.OPENAPP: return ActionType.OPENAPP;
         }
 
         return ActionType.NONE;
@@ -203,15 +201,15 @@ public class MessagingPushPayload {
         }
         List<ActionButton> actionButtonList = new ArrayList<>(3);
         try {
-            JSONArray jsonArray = new JSONArray(actionButtons);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                ActionButton button = getActionButton(jsonObject);
+            final JSONArray jsonArray = new JSONArray(actionButtons);
+            for (int i=0; i < jsonArray.length(); i++) {
+                final JSONObject jsonObject = jsonArray.getJSONObject(i);
+                final ActionButton button = getActionButton(jsonObject);
                 if (button == null) continue;
                 actionButtonList.add(button);
             }
-        } catch (JSONException e) {
-            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+        } catch (final JSONException e) {
+            Log.warning(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
         return actionButtonList;
@@ -219,17 +217,18 @@ public class MessagingPushPayload {
 
     private ActionButton getActionButton(final JSONObject jsonObject) {
         try {
-            String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
+            final String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {
                 Log.debug(MessagingConstants.LOG_TAG, "%s - Label is empty", SELF_TAG);
                 return null;
             }
-            String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
-            String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
+            final String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
+            final String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
 
+            Log.trace(MessagingConstants.LOG_TAG, "%s - Creating an ActionButton with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
             return new ActionButton(label, uri, type);
-        } catch (JSONException e) {
-            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+        } catch (final JSONException e) {
+            Log.warning(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
             return null;
         }
     }
@@ -238,7 +237,7 @@ public class MessagingPushPayload {
      * Enum to denote the type of action
      */
     public enum ActionType {
-        DEEPLINK, WEBURL, DISMISS, NONE
+        DEEPLINK, WEBURL, DISMISS, OPENAPP, NONE
     }
 
     /**

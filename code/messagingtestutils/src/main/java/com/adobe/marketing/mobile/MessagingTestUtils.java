@@ -26,10 +26,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -121,6 +123,7 @@ public class MessagingTestUtils {
         final List<Map<String, Object>> items = new ArrayList<>();
         items.add(getMapFromFile(fileName));
         eventData.put("payload", items);
+        eventData.put("requestEventId", "TESTING_ID");
         final Event event = new Event.Builder("edge response testing", MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
@@ -346,7 +349,27 @@ public class MessagingTestUtils {
         }
     }
 
-    static List<Map> generateMessagePayload(final MessageTestConfig config) {
+    static PropositionInfo generatePropositionInfo(boolean nullScopeDetails) {
+        Map<String, Object> scopeDetails = new HashMap<>();
+        Map<String, Object> characteristics = new HashMap<>();
+        Map<String, Object> cjmEvent = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+        Map<String, Object> messagePayload = new HashMap<>();
+        messageExecution.put("messageExecutionID", "testExecutionId");
+        cjmEvent.put("messageExecution", messageExecution);
+        characteristics.put("cjmEvent", cjmEvent);
+        scopeDetails.put("scopeDetails", characteristics);
+        if (nullScopeDetails) {
+            messagePayload.put("scopeDetails", null);
+        } else {
+            messagePayload.put("scopeDetails", scopeDetails);
+        }
+        messagePayload.put("scope", "mobileapp://mock_applicationId");
+        messagePayload.put("id", "testResponseId");
+        return PropositionInfo.create(messagePayload);
+    }
+
+    static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
         if (config.count <= 0) {
             return null;
         }
@@ -378,13 +401,26 @@ public class MessagingTestUtils {
         }
         messagePayload.put("items", items);
         messagePayload.put("id", "testResponseId" + count);
-        List<Map> payload = new ArrayList<>();
+        List<Map<String, Object>> payload = new ArrayList<>();
         if (config.hasEmptyPayload) {
-            payload.add(new HashMap<>());
+            payload.add(new HashMap<String, Object>());
         } else {
             payload.add(messagePayload);
         }
         return payload;
+    }
+
+    static String convertPayloadToString(List<PropositionPayload> propositionPayloads) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(propositionPayloads);
+            objectOutputStream.flush();
+            return byteArrayOutputStream.toString();
+        } catch (Exception e) {
+            Log.debug("MessagingTestUtils", "Exception occurred while converting payloads to string: %s", e.getMessage());
+            return "";
+        }
     }
 
     /* JSON conversion helpers */
@@ -565,28 +601,5 @@ public class MessagingTestUtils {
         }
 
         return platformServices;
-    }
-
-    /**
-     * Returns platform {@link JsonUtilityService} instance.
-     *
-     * @return {@code JsonUtilityService} or null if {@link PlatformServices} are unavailable
-     */
-    static JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
-            return null;
-        }
-
-        final JsonUtilityService jsonUtilityService = platformServices.getJsonUtilityService();
-        if (jsonUtilityService == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService - JsonUtility services are not available.");
-        }
-
-        return jsonUtilityService;
     }
 }

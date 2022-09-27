@@ -32,10 +32,15 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
                 NotificationChannel("10001", "Messaging Sample Notification Channel", importance)
             notificationManager.createNotificationChannel(notificationChannel)
         }
-        notification?.contentIntent =
+        notification?.contentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
+                Messaging.addPushTrackingDetails(this, "messageId", XDM_DATA)
+            }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        } else {
             PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
                 Messaging.addPushTrackingDetails(this, "messageId", XDM_DATA)
             }, 0)
+        }
         val id = intent?.getIntExtra(NOTIFICATION_ID, 0)
         id?.let { notificationManager.notify(it, notification) }
     }

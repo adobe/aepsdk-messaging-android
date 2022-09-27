@@ -14,25 +14,28 @@ jobs:
   build-and-unit-test:
     working_directory: ~/code
     docker:
-      - image: circleci/android:api-29
+      - image: circleci/android:api-29-node
     environment:
       JVM_OPTS: -Xmx3200m
     steps:
       - checkout
-      # - run:
-      #     name: Build
-      #     command: make ci-build
       - run:
-          name: Build then make Javadoc
+          name: Javadoc
           command: make ci-javadoc
       - store_artifacts:
           path: ci/javadoc/build/reports
+
+      - run:
+          name: Build
+          command: make ci-build
+
       - run:
           name: UnitTests
           command: make ci-unit-test
+          
       # code coverage
       - run:
-          name: Upload Unit Test Code Coverage Report
+          name: Upload Code Coverage Report
           command: |
             curl -s https://codecov.io/bash > codecov;
             VERSION=$(grep 'VERSION=\"[0-9\.]*\"' codecov | cut -d'"' -f2);
@@ -41,9 +44,11 @@ jobs:
               shasum -a $i -c --ignore-missing <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM") ||
               shasum -a $i -c <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM" | grep -w "codecov")
             done
-            bash ./codecov -v -X s3 -c -D "./ci/unit-test/" -F unit-tests -t ${CODECOV_TOKEN}
+            bash ./codecov -v -X s3 -c -D "./ci/unit-test/build/reports" -F unit-tests
+            
       - store_artifacts:
           path: ci/unit-test/build/reports
+
       - store_test_results:
           path: ci/unit-test/build/test-results
 
@@ -71,7 +76,7 @@ jobs:
               shasum -a $i -c --ignore-missing <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM") ||
               shasum -a $i -c <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM" | grep -w "codecov")
             done
-            bash ./codecov -v -X s3 -c -D "./ci/functional-test/build/reports" -F functional-tests -t ${CODECOV_TOKEN}
+            bash ./codecov -v -X s3 -c -D "./ci/functional-test/build/reports" -F functional-tests -t
       - store_artifacts:
           path: ci/functional-test/build/reports
       - store_test_results:

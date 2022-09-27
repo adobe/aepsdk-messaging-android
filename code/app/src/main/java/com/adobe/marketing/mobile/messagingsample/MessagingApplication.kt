@@ -34,15 +34,11 @@ class MessagingApplication : Application() {
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/cf7779260cdd/launch-be72758aa82a-development")
+            MobileCore.configureWithAppID("staging/1b50a869c4a2/eabbaa346d96/launch-d66dc409a75e-development")
             MobileCore.lifecycleStart(null)
             // update config to use cjmstage for int integration
             val cjmStageConfig: HashMap<String, Any> = hashMapOf(
-                "edge.environment" to "int",
-                //"experienceCloud.org" to "745F37C35E4B776E0A49421B@AdobeOrg",
-                "edge.configId" to "15525167-fd4e-4511-b9e0-02119485784f"
-                //"edge.configId" to "1f0eb783-2464-4bdd-951d-7f8afbf527f5:dev"
-                //"messaging.eventDataset" to "610ae80b3cbbc718dab06208"
+                "edge.environment" to "int"
             )
             MobileCore.updateConfiguration(cjmStageConfig)
         }

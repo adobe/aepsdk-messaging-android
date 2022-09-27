@@ -12,9 +12,14 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS;
+import static com.adobe.marketing.mobile.MessagingTestConstants.EventType.EDGE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,6 +27,7 @@ import static org.mockito.Mockito.when;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Looper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,6 +38,7 @@ import org.mockito.Mock;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -43,14 +50,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingCacheUtilities.class})
+@PrepareForTest({Event.class, MobileCore.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, MessagingCacheUtilities.class, InAppNotificationHandler.class})
 public class InAppNotificationHandlerTests {
     private static final String mockAppId = "mock_applicationId";
     private final Map<String, Object> mockConfigState = new HashMap<>();
     private final Map<String, Object> mockIdentityState = new HashMap<>();
     private final Map<String, Object> identityMap = new HashMap<>();
     private final Map<String, Object> ecidMap = new HashMap<>();
-    private final List<Map> ids = new ArrayList<>();
+    private final List<Map<String, Object>> ids = new ArrayList<>();
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -76,6 +83,11 @@ public class InAppNotificationHandlerTests {
     MessagingInternal mockMessagingInternal;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+    @Mock
+    Message mockMessage;
+    @Mock
+    Looper mockLooper;
+
     private AndroidPlatformServices platformServices;
     private JsonUtilityService jsonUtilityService;
     private EventHub eventHub;
@@ -94,6 +106,7 @@ public class InAppNotificationHandlerTests {
 
         messagingCacheUtilities = new MessagingCacheUtilities(mockAndroidSystemInfoService, mockAndroidNetworkService, new CacheManager(mockAndroidSystemInfoService));
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
     }
 
     void setupMocks() {
@@ -104,11 +117,13 @@ public class InAppNotificationHandlerTests {
     }
 
     void setupApplicationIdMocks() {
+        when(MobileCore.getApplication()).thenReturn(mockApplication);
         when(App.getApplication()).thenReturn(mockApplication);
         when(App.getAppContext()).thenReturn(mockContext);
         when(mockApplication.getPackageManager()).thenReturn(packageManager);
         when(mockApplication.getApplicationContext()).thenReturn(mockContext);
         when(mockApplication.getPackageName()).thenReturn(mockAppId);
+        when(mockApplication.getMainLooper()).thenReturn(mockLooper);
         when(mockContext.getPackageName()).thenReturn(mockAppId);
     }
 
@@ -141,7 +156,7 @@ public class InAppNotificationHandlerTests {
     @After
     public void cleanup() {
         // use messaging cache utilities to clean the cache after each test
-        messagingCacheUtilities.clearCachedDataFromSubdirectory(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        messagingCacheUtilities.clearCachedData();
     }
 
     // ========================================================================================
@@ -182,14 +197,20 @@ public class InAppNotificationHandlerTests {
     // handlePersonalizationPayload
     // ========================================================================================
     @Test
-    public void test_handlePersonalizationPayload_ValidIAMPayloadPresent() {
+    public void test_handleEdgePersonalizationNotification_ValidIAMPayloadPresent() {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -203,10 +224,16 @@ public class InAppNotificationHandlerTests {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 3;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify 3 rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -223,12 +250,18 @@ public class InAppNotificationHandlerTests {
         MessageTestConfig invalidPayloadConfig = new MessageTestConfig();
         invalidPayloadConfig.count = 1;
         invalidPayloadConfig.isMissingRulesKey = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
-        List<Map> invalidPayload = MessagingTestUtils.generateMessagePayload(invalidPayloadConfig);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(validPayloadConfig);
+        List<Map<String, Object>> invalidPayload = MessagingTestUtils.generateMessagePayload(invalidPayloadConfig);
         payload.addAll(invalidPayload);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify 2 rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -243,10 +276,16 @@ public class InAppNotificationHandlerTests {
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageId = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -259,10 +298,16 @@ public class InAppNotificationHandlerTests {
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageType = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -275,10 +320,16 @@ public class InAppNotificationHandlerTests {
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.isMissingMessageDetail = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify 1 rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -291,10 +342,16 @@ public class InAppNotificationHandlerTests {
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.hasEmptyPayload = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -303,8 +360,15 @@ public class InAppNotificationHandlerTests {
 
     @Test
     public void test_handlePersonalizationPayload_IAMPayloadIsNull() {
+        // setup
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", null);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(null);
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify no rules loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -316,12 +380,19 @@ public class InAppNotificationHandlerTests {
         // setup
         String IMAGE_URL = "https://www.adobe.com/adobe.png";
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, mockMessagingCacheUtilities);
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -343,15 +414,22 @@ public class InAppNotificationHandlerTests {
         // setup
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.noValidAppSurfaceInPayload = true;
         config.nonMatchingAppSurfaceInPayload = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify no rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -364,15 +442,21 @@ public class InAppNotificationHandlerTests {
         // setup
         mockMessagingInternal = new MessagingInternal(mockExtensionApi);
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
+        Whitebox.setInternalState(inAppNotificationHandler, "requestMessagesEventId", "TESTING_ID");
 
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
         config.noValidAppSurfaceInPayload = true;
-
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
+        List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("payload", payload);
+        eventData.put("requestEventId", "TESTING_ID");
+        Event edgeEvent = new Event.Builder("personalization event", EDGE, PERSONALIZATION_DECISIONS)
+                .setEventData(eventData)
+                .build();
 
         // test
-        inAppNotificationHandler.handlePersonalizationPayload(payload.get(0));
+        inAppNotificationHandler.handleEdgePersonalizationNotification(edgeEvent);
 
         // verify no rule loaded
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
@@ -388,8 +472,8 @@ public class InAppNotificationHandlerTests {
         // setup
         MessageTestConfig config = new MessageTestConfig();
         config.count = 1;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cachePropositions(payload.get(0));
+        List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
+        messagingCacheUtilities.cachePropositions(payload);
 
         // test
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
@@ -409,8 +493,8 @@ public class InAppNotificationHandlerTests {
         config.count = 1;
         config.noValidAppSurfaceInPayload = true;
         config.nonMatchingAppSurfaceInPayload = true;
-        List<Map> payload = MessagingTestUtils.generateMessagePayload(config);
-        messagingCacheUtilities.cachePropositions(payload.get(0));
+        List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
+        messagingCacheUtilities.cachePropositions(payload);
 
         // test
         inAppNotificationHandler = new InAppNotificationHandler(mockMessagingInternal, messagingCacheUtilities);
@@ -419,5 +503,71 @@ public class InAppNotificationHandlerTests {
         ConcurrentHashMap moduleRules = mockCore.eventHub.getModuleRuleAssociation();
         Collection<ConcurrentLinkedQueue<Rule>> rules = moduleRules.values();
         assertEquals(0, rules.size());
+    }
+
+    // ========================================================================================
+    // createInAppMessage
+    // ========================================================================================
+    @Test
+    public void test_createInAppMessage() {
+        // setup
+        try {
+            PowerMockito.whenNew(Message.class).withArguments(any(MessagingInternal.class), anyMap(), anyMap(), anyMap()).thenReturn(mockMessage);
+        } catch (Exception e) {
+            fail("Failed to create mock Message: " + e.getMessage());
+        }
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mobileParameters = new HashMap<>();
+
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        Event mockEvent = mock(Event.class);
+
+        // when get eventData called return event data containing a valid rules response content event with a triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        inAppNotificationHandler.createInAppMessage(mockEvent);
+
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
+        verify(mockMessage, times(1)).trigger();
+        verify(mockMessage, times(1)).show();
+    }
+
+    @Test
+    public void test_createInAppMessage_InvalidRuleConsequence() {
+        // setup
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> details = new HashMap<>();
+        Map<String, Object> mobileParameters = new HashMap<>();
+
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "notCjmIam");
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        Event mockEvent = mock(Event.class);
+
+        // when get eventData called return event data containing a valid rules response content event with a triggered consequence
+        when(mockEvent.getEventData()).thenReturn(eventData);
+
+        // test
+        inAppNotificationHandler.createInAppMessage(mockEvent);
+
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 }

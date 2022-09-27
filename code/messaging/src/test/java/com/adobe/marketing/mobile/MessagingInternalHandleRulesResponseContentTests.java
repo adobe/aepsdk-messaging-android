@@ -24,16 +24,13 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
-import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -45,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class})
+@PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, InAppNotificationHandler.class})
 public class MessagingInternalHandleRulesResponseContentTests {
     private final static String mockAppId = "mock_applicationId";
     private final Map<String, Object> mobileParameters = new HashMap() {
@@ -84,11 +81,11 @@ public class MessagingInternalHandleRulesResponseContentTests {
     @Mock
     PackageManager packageManager;
     @Mock
-    AEPMessage mockAEPMessage;
-    @Mock
     ServiceProvider mockServiceProvider;
     @Mock
     MessagingDelegate mockMessagingDelegate;
+    @Mock
+    Message mockMessage;
 
     private MessagingInternal messagingInternal;
     private JsonUtilityService jsonUtilityService;
@@ -108,13 +105,16 @@ public class MessagingInternalHandleRulesResponseContentTests {
         MobileCore.setApplication(App.getApplication());
     }
 
-    void setupMocks() {
+    void setupMocks() throws Exception {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
         PowerMockito.mockStatic(ServiceProvider.class);
         when(MobileCore.getCore()).thenReturn(mockCore);
         when(MobileCore.getApplication()).thenReturn(mockApplication);
+        /// setup PropositionInfo mock
+        mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+        PowerMockito.whenNew(Message.class).withAnyArguments().thenReturn(mockMessage);
     }
 
     void setupPlatformServicesMocks() {
@@ -130,9 +130,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         final File mockCache = new File("mock_cache");
         when(mockAndroidSystemInfoService.getApplicationCacheDir()).thenReturn(mockCache);
-
-        // setup createFullscreenMessage mock
-        Mockito.when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
     }
 
     void setupApplicationIdMocks() {
@@ -165,30 +162,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
@@ -214,8 +189,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is called
-        verify(mockAEPMessage, times(1)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
+        verify(mockMessage, times(1)).trigger();
+        verify(mockMessage, times(1)).show();
     }
 
     @Test
@@ -223,31 +199,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
@@ -271,8 +226,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
@@ -280,31 +236,10 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
@@ -327,8 +262,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     public void test_handleRulesResponseEvent_NullConsequences() {
@@ -352,8 +288,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
@@ -379,19 +316,21 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
     public void test_handleRulesResponseEvent_EmptyDetails() {
         // setup
-        Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
+
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
+        Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
         // Mocks
@@ -410,18 +349,20 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
     public void test_handleRulesResponseEvent_NullDetails() {
         // setup
-        Map<String, Object> eventData = new HashMap<>();
         Map<String, Object> consequence = new HashMap<>();
+
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
+        Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
         // Mocks
@@ -440,8 +381,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
@@ -449,35 +391,14 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
@@ -497,8 +418,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
@@ -506,34 +428,13 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
@@ -553,8 +454,9 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 
     @Test
@@ -562,33 +464,13 @@ public class MessagingInternalHandleRulesResponseContentTests {
         // setup
         Map<String, Object> consequence = new HashMap<>();
         Map<String, Object> details = new HashMap<>();
-        Map<String, Object> mixins = new HashMap<>();
-        Map<String, Object> xdm = new HashMap<>();
-        Map<String, Object> experience = new HashMap<>();
-        Map<String, Object> cjm = new HashMap<>();
-        Map<String, Object> messageProfile = new HashMap<>();
-        Map<String, Object> channel = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // setup xdm map
-        channel.put("_id", "https://ns.adobe.com/xdm/channels/inapp");
-        messageExecution.put("messageExecutionID", "messageExecutionID");
-        messageExecution.put("messagePublicationID", "messagePublicationID");
-        messageExecution.put("messageID", "messageID");
-        messageExecution.put("ajoCampaignVersionID", "ajoCampaignVersionID");
-        messageExecution.put("ajoCampaignID", "ajoCampaignID");
-        messageProfile.put("channel", channel);
-        cjm.put("messageProfile", messageProfile);
-        cjm.put("messageExecution", messageExecution);
-        experience.put("customerJourneyManagement", cjm);
-        mixins.put("_experience", experience);
-        xdm.put("mixins", mixins);
 
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdm);
         details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
         consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
+        consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "unknownIamType");
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
 
@@ -608,7 +490,8 @@ public class MessagingInternalHandleRulesResponseContentTests {
         messagingInternal.queueEvent(mockEvent);
         messagingInternal.processEvents();
 
-        // verify MessagingFullscreenMessage.show() is not called
-        verify(mockAEPMessage, times(0)).show();
+        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
+        verify(mockMessage, times(0)).trigger();
+        verify(mockMessage, times(0)).show();
     }
 }

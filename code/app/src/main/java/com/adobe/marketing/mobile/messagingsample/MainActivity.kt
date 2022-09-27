@@ -16,6 +16,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
@@ -38,17 +39,18 @@ class MainActivity : AppCompatActivity() {
     private var triggerKey = "key"
     private var triggerValue = "value"
 
-    private enum class i18NSpinnerValues(val value: String) {
-        KOREAN("Korean character test"),
-        CYRILLIC("Cyrillic character test"),
-        SURROGATE("Surrogate pair character test"),
-        CHINESE("Chinese character test"),
-        HIGH_ASCII("High ascii character test"),
-        JAPANESE("Japanese 1+2 byte character test"),
-        CHINESE_FOUR_BYTE("Chinese 4 byte character test"),
-        FOUR_BYTE("I8N 4 byte character test"),
-        HEBREW("Hebrew character test")
-    }
+    // TODO: restore after generating new i18N messages for testing
+//    private enum class i18NSpinnerValues(val value: String) {
+//        KOREAN("Korean character test"),
+//        CYRILLIC("Cyrillic character test"),
+//        SURROGATE("Surrogate pair character test"),
+//        CHINESE("Chinese character test"),
+//        HIGH_ASCII("High ascii character test"),
+//        JAPANESE("Japanese 1+2 byte character test"),
+//        CHINESE_FOUR_BYTE("Chinese 4 byte character test"),
+//        FOUR_BYTE("I8N 4 byte character test"),
+//        HEBREW("Hebrew character test")
+//    }
 
     private enum class generatedIAMSpinnerValues(val value: String) {
         BOTTOM_BANNER("Bottom Banner"),
@@ -198,6 +200,7 @@ class MainActivity : AppCompatActivity() {
                 it.build()
             }
             MobileCore.dispatchEvent(iamTrigger, null)
+            //MobileCore.trackAction("rymorale", null)
         }
 
         btnHistoricalEvent1.setOnClickListener {
@@ -271,11 +274,13 @@ class MainActivity : AppCompatActivity() {
         // spinner selection handling
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                // first check for i18n selections which are created then downloaded from AJO/Optimize
-                handleI18nSpinnerValues(parent, pos)
-                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
-                    return
-                }
+
+                // TODO: restore after generating new i18N messages for testing
+                // first check for i18n selections which are created then downloaded from AJO
+//                handleI18nSpinnerValues(parent, pos)
+//                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
+//                    return
+//                }
                 // otherwise check if a locally generated IAM was selected
                 handleGeneratedIamValues(parent, pos)
             }
@@ -295,22 +300,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleI18nSpinnerValues(parent: AdapterView<*>, pos: Int) {
-        triggerKey = "ryan"
-        triggerValue = ""
-        when (parent.getItemAtPosition(pos)) {
-            i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
-            i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
-            i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
-            i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
-            i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
-            i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
-            i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
-            i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
-            i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
-            else -> print("Testing locally generated IAM")
-        }
-    }
+    // TODO: restore after generating new i18N messages for testing
+//    private fun handleI18nSpinnerValues(parent: AdapterView<*>, pos: Int) {
+//        triggerKey = "ryan"
+//        triggerValue = ""
+//        when (parent.getItemAtPosition(pos)) {
+//            i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
+//            i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
+//            i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
+//            i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
+//            i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
+//            i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
+//            i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
+//            i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
+//            i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
+//            else -> print("Testing locally generated IAM")
+//        }
+//    }
 
     private fun handleGeneratedIamValues(parent: AdapterView<*>, pos: Int) {
         triggerKey = "foo"
@@ -341,12 +347,11 @@ class MainActivity : AppCompatActivity() {
         val notificationIntent = Intent(this, NotificationBroadcastReceiver::class.java)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION_ID, 1)
         notificationIntent.putExtra(NotificationBroadcastReceiver.NOTIFICATION, notification)
-        val pendingIntent = PendingIntent.getBroadcast(
-                this,
-                0,
-                notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        } else {
+            PendingIntent.getBroadcast(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
         val futureInMillis = SystemClock.elapsedRealtime() + delay
         val alarmManager = (getSystemService(Context.ALARM_SERVICE) as AlarmManager)
         alarmManager[AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis] = pendingIntent
@@ -368,12 +373,13 @@ class MainActivity : AppCompatActivity() {
                     NotificationBroadcastReceiver.XDM_DATA
             )
         }
-        val pendingIntent: PendingIntent =
-                PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, 0)
-        builder.addAction(
-                R.drawable.ic_launcher_background, "buttonAction",
-                pendingIntent
-        )
+        val pendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        } else {
+            PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+        builder.addAction(R.drawable.ic_launcher_background, "buttonAction",
+                pendingIntent)
         return builder.build()
     }
 
@@ -391,7 +397,7 @@ class MainActivity : AppCompatActivity() {
         MobileCore.lifecyclePause()
     }
 
-    // local optimize event generation for testing
+    // local AJO proposition event generation for testing
     private fun generateAndDispatchEdgeResponseEvent(generatedIAMParameters: generatedIAMParameters) {
         // extract parameter values from generatedIAMParams enum
         val height = generatedIAMParameters.values[0]
@@ -407,49 +413,42 @@ class MainActivity : AppCompatActivity() {
         val opacity = generatedIAMParameters.values[10]
         val cornerRadius = generatedIAMParameters.values[11]
         val uiTakeover = generatedIAMParameters.values[12]
-        // simulate edge response event containing offers
+        // simulate edge response event containing an iam payload
         val payload = JSONObject(
-                "{\n" +
-                        "  \"activity\": {\n" +
-                        "    \"id\": \"906E3A095DC834230A495FD6@AdobeOrg\",\n" +
-                        "    \"etag\": \"9\"\n" +
-                        "  },\n" +
-                        "  \"id\": \"57d8f990-734a-4d7b-a7e7-739b03753226\",\n" +
-                        "  \"scope\": \"eyJ4ZG06bmFtZSI6ImNvbS5hZG9iZS5tYXJrZXRpbmcubW9iaWxlLm1lc3NhZ2luZ3NhbXBsZSJ9\",\n" +
-                        "  \"items\": [\n" +
-                        "    {\n" +
-                        "      \"id\": \"xcore:personalized-offer:140f858533497db9\",\n" +
-                        "      \"data\": {\n" +
-                        "        \"characteristics\": {\n" +
-                        "          \"inappmessageExecutionId\": \"dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime\"\n" +
-                        "        },\n" +
-                        "        \"id\": \"xcore:personalized-offer:140f858533497db9\",\n" +
-                        "        \"content\": \"{\\\"version\\\":1,\\\"rules\\\":[{\\\"condition\\\":{\\\"type\\\":\\\"group\\\",\\\"definition\\\":{\\\"conditions\\\":[{\\\"definition\\\":{\\\"key\\\":\\\"foo\\\",\\\"matcher\\\":\\\"eq\\\",\\\"values\\\":[\\\"bar\\\"]},\\\"type\\\":\\\"matcher\\\"}],\\\"logic\\\":\\\"and\\\"}},\\\"consequences\\\":[{\\\"id\\\":\\\"e56a8dbb-c5a4-4219-9563-0496e00b4083\\\",\\\"type\\\":\\\"cjmiam\\\",\\\"detail\\\":{\\\"remoteAssets\\\":[\\\"https://upload.wikimedia.org/wikipedia/en/thumb/6/6d/Seattle_Mariners_logo_%28low_res%29.svg/1200px-Seattle_Mariners_logo_%28low_res%29.svg.png\\\"],\\\"mobileParameters\\\":{\\\"verticalAlign\\\":\\\"" + vAlign + "\\\",\\\"horizontalInset\\\":" + hInset + ",\\\"dismissAnimation\\\":\\\"" + dismissAnimation + "\\\",\\\"uiTakeover\\\":" + uiTakeover + ",\\\"horizontalAlign\\\":\\\"" + hAlign + "\\\",\\\"verticalInset\\\":" + vInset + ",\\\"displayAnimation\\\":\\\"" + displayAnimation + "\\\",\\\"width\\\":" + width + ",\\\"height\\\":" + height + ",\\\"backdropOpacity\\\":" + opacity + ",\\\"backdropColor\\\":\\\"#" + bdColor + "\\\",\\\"cornerRadius\\\":" + cornerRadius + ",\\\"gestures\\\":{}},\\\"html\\\":\\\"<html>\\\\n<head>\\\\n\\\\t<style>\\\\n\\\\t\\\\thtml,\\\\n\\\\t\\\\tbody {\\\\n\\\\t\\\\t\\\\tmargin: 0;\\\\n\\\\t\\\\t\\\\tpadding: 0;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\theight: 100%;\\\\n\\\\t\\\\t\\\\tfont-family: adobe-clean, \\\\\\\"Source Sans Pro\\\\\\\", -apple-system, BlinkMacSystemFont, \\\\\\\"Segoe UI\\\\\\\", Roboto, sans-serif;\\\\n\\\\t\\\\t}\\\\n\\\\n    h3 {\\\\n\\\\t\\\\t\\\\tmargin: .1rem auto;\\\\n\\\\t\\\\t}\\\\n\\\\t\\\\tp {\\\\n\\\\t\\\\t\\\\tmargin: 0;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.body {\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tbackground-color: #" + iamColor + ";\\\\n\\\\t\\\\t\\\\tborder-radius: 5px;\\\\n\\\\t\\\\t\\\\tcolor: #333333;\\\\n\\\\t\\\\t\\\\twidth: 100vw;\\\\n\\\\t\\\\t\\\\theight: 100vh;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\talign-items: center;\\\\n\\\\t\\\\t\\\\tbackground-size: 'cover';\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.content {\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\theight: 100%;\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tjustify-content: center;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tposition: relative;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\ta {\\\\n\\\\t\\\\t\\\\ttext-decoration: none;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.image {\\\\n\\\\t\\\\t  height: 1rem;\\\\n\\\\t\\\\t  flex-grow: 4;\\\\n\\\\t\\\\t  flex-shrink: 1;\\\\n\\\\t\\\\t  display: flex;\\\\n\\\\t\\\\t  justify-content: center;\\\\n\\\\t\\\\t  width: 90%;\\\\n      flex-direction: column;\\\\n      align-items: center;\\\\n\\\\t\\\\t}\\\\n    .image img {\\\\n      max-height: 100%;\\\\n      max-width: 100%;\\\\n    }\\\\n\\\\n\\\\t\\\\t.text {\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\tline-height: 20px;\\\\n\\\\t\\\\t\\\\tfont-size: 14px;\\\\n\\\\t\\\\t\\\\tcolor: #333333;\\\\n\\\\t\\\\t\\\\tpadding: 0 25px;\\\\n\\\\t\\\\t\\\\tline-height: 1.25rem;\\\\n\\\\t\\\\t\\\\tfont-size: 0.875rem;\\\\n\\\\t\\\\t}\\\\n\\\\t\\\\t.title {\\\\n\\\\t\\\\t\\\\tline-height: 1.3125rem;\\\\n\\\\t\\\\t\\\\tfont-size: 1.025rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.buttons {\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tfont-size: 1rem;\\\\n\\\\t\\\\t\\\\tline-height: 1.3rem;\\\\n\\\\t\\\\t\\\\ttext-decoration: none;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\tbox-sizing: border-box;\\\\n\\\\t\\\\t\\\\tpadding: .8rem;\\\\n\\\\t\\\\t\\\\tpadding-top: .4rem;\\\\n\\\\t\\\\t\\\\tgap: 0.3125rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.button {\\\\n\\\\t\\\\t\\\\tflex-grow: 1;\\\\n\\\\t\\\\t\\\\tbackground-color: #1473E6;\\\\n\\\\t\\\\t\\\\tcolor: #FFFFFF;\\\\n\\\\t\\\\t\\\\tborder-radius: .25rem;\\\\n\\\\t\\\\t\\\\tcursor: pointer;\\\\n\\\\t\\\\t\\\\tpadding: .3rem;\\\\n\\\\t\\\\t\\\\tgap: .5rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.btnClose {\\\\n\\\\t\\\\t\\\\tcolor: #000000;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.closeBtn {\\\\n\\\\t\\\\t\\\\talign-self: flex-end;\\\\n\\\\t\\\\t\\\\twidth: 1.8rem;\\\\n\\\\t\\\\t\\\\theight: 1.8rem;\\\\n\\\\t\\\\t\\\\tmargin-top: 1rem;\\\\n\\\\t\\\\t\\\\tmargin-right: .3rem;\\\\n\\\\t\\\\t}\\\\n\\\\t</style>\\\\n\\\\t<style type=\\\\\\\"text/css\\\\\\\" id=\\\\\\\"editor-styles\\\\\\\">\\\\n[data-uuid=\\\\\\\"e69adbda-8cfc-4c51-bcab-f8b2fd314d8f\\\\\\\"]  {\\\\n  flex-direction: row !important;\\\\n}\\\\n</style>\\\\n</head>\\\\n\\\\n<body>\\\\n\\\\t<div class=\\\\\\\"body\\\\\\\">\\\\n    <div class=\\\\\\\"closeBtn\\\\\\\" data-btn-style=\\\\\\\"plain\\\\\\\" data-uuid=\\\\\\\"fbc580c2-94c1-43c8-a46b-f66bb8ca8554\\\\\\\">\\\\n  <a class=\\\\\\\"btnClose\\\\\\\" href=\\\\\\\"adbinapp://cancel\\\\\\\">\\\\n    <svg xmlns=\\\\\\\"http://www.w3.org/2000/svg\\\\\\\" height=\\\\\\\"18\\\\\\\" viewbox=\\\\\\\"0 0 18 18\\\\\\\" width=\\\\\\\"18\\\\\\\" class=\\\\\\\"close\\\\\\\">\\\\n  <rect id=\\\\\\\"Canvas\\\\\\\" fill=\\\\\\\"#ffffff\\\\\\\" opacity=\\\\\\\"" + opacity + "\\\\\\\" width=\\\\\\\"18\\\\\\\" height=\\\\\\\"18\\\\\\\" />\\\\n  <path fill=\\\\\\\"currentColor\\\\\\\" xmlns=\\\\\\\"http://www.w3.org/2000/svg\\\\\\\" d=\\\\\\\"M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z\\\\\\\" />\\\\n</svg>\\\\n  </a>\\\\n</div><div class=\\\\\\\"image\\\\\\\" data-uuid=\\\\\\\"88c0afd9-1e3d-4d52-900f-fa08a56ad5e2\\\\\\\">\\\\n<img src=\\\\\\\"https://upload.wikimedia.org/wikipedia/en/thumb/6/6d/Seattle_Mariners_logo_%28low_res%29.svg/1200px-Seattle_Mariners_logo_%28low_res%29.svg.png\\\\\\\" alt=\\\\\\\"\\\\\\\">\\\\n</div><div class=\\\\\\\"text\\\\\\\" data-uuid=\\\\\\\"e7e49562-a365-4d38-be0e-d69cba829cb4\\\\\\\">\\\\n<h3>AJO In App test</h3>\\\\n<p>Locally generated message</p>\\\\n</div><div data-uuid=\\\\\\\"e69adbda-8cfc-4c51-bcab-f8b2fd314d8f\\\\\\\" class=\\\\\\\"buttons\\\\\\\">\\\\n  <a class=\\\\\\\"button\\\\\\\" data-uuid=\\\\\\\"864bd990-fc7f-4b1a-8d45-069c58981eb2\\\\\\\" href=\\\\\\\"adbinapp://dismiss?js=(function test() { return 'javascript value'; })();\\\\\\\">Dismiss</a>\\\\n</div>\\\\n\\\\t</div>\\\\n\\\\n\\\\n</body></html>\\\",\\\"_xdm\\\":{\\\"mixins\\\":{\\\"_experience\\\":{\\\"customerJourneyManagement\\\":{\\\"messageExecution\\\":{\\\"messageExecutionID\\\":\\\"dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime\\\",\\\"messageID\\\":\\\"fb31245e-3382-4b3a-a15a-dcf11f463020\\\",\\\"messagePublicationID\\\":\\\"aafe8df1-9c30-496d-ba0c-4b300f8cbabb\\\",\\\"ajoCampaignID\\\":\\\"7a237b33-2648-4903-82d1-efa1aac7c60d\\\",\\\"ajoCampaignVersionID\\\":\\\"38bd427b-f48e-4b3e-a4e1-03033b830d66\\\"},\\\"messageProfile\\\":{\\\"channel\\\":{\\\"_id\\\":\\\"https://ns.adobe.com/xdm/channels/inapp\\\"}}}}}}}}]}]}\",\n" +
-                        "        \"format\": \"application/json\"\n" +
-                        "      },\n" +
-                        "      \"etag\": \"1\",\n" +
-                        "      \"schema\": \"https://ns.adobe.com/experience/offer-management/content-component-json\"\n" +
-                        "    }\n" +
-                        "  ],\n" +
-                        "  \"placement\": {\n" +
-                        "    \"id\": \"com.adobe.marketing.mobile.messagingsample\",\n" +
-                        "    \"etag\": \"1\"\n" +
-                        "  }\n" +
-                        "}"
+            "{\n" +
+                    "  \"scopeDetails\" : {\n" +
+                    "    \"characteristics\" : {\n" +
+                    "      \"cjmEvent\" : {\"messageExecution\":{\"messageExecutionID\":\"5d1ab71b-9c79-47ab-8cd0-3094867aec9a\",\"messageID\":\"e34d32f4-16ab-440a-91f6-c681dfb8c5bd\",\"messageType\":\"marketing\",\"campaignID\":\"1671fb9f-7096-4edc-8914-53ffe51bad57\",\"campaignVersionID\":\"294de099-e449-4e40-860b-a8e8d5a28c13\",\"campaignActionID\":\"01decab6-313b-4764-b7af-9f91ba2efdbf\",\"messagePublicationID\":\"c925f829-a936-4f10-b64e-ef244faebc69\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/inApp\",\"_type\":\"https://ns.adobe.com/xdm/channel-types/inApp\"},\"messageProfileID\":\"efa27a43-258b-4b55-93c0-05883f3b3eee\"}}\n" +
+                    "    },\n" +
+                    "    \"correlationID\" : \"e34d32f4-16ab-440a-91f6-c681dfb8c5bd\",\n" +
+                    "    \"decisionProvider\" : \"AJO\"\n" +
+                    "  },\n" +
+                    "  \"scope\" : \"mobileapp://com.adobe.marketing.mobile.messagingsample\",\n" +
+                    "  \"items\": [\n" +
+                    "    {\n" +
+                    "      \"id\": \"8649aa56-ad0e-47d3-b0e6-8214ad032620\",\n" +
+                    "      \"schema\": \"https:\\/\\/ns.adobe.com\\/personalization\\/json-content-item\",\n" +
+                    "      \"data\": {\n" +
+                    "        \"content\": \"{\\\"version\\\":1,\\\"rules\\\":[{\\\"condition\\\":{\\\"type\\\":\\\"group\\\",\\\"definition\\\":{\\\"conditions\\\":[{\\\"definition\\\":{\\\"key\\\":\\\"foo\\\",\\\"matcher\\\":\\\"eq\\\",\\\"values\\\":[\\\"bar\\\"]},\\\"type\\\":\\\"matcher\\\"}],\\\"logic\\\":\\\"and\\\"}},\\\"consequences\\\":[{\\\"id\\\":\\\"e56a8dbb-c5a4-4219-9563-0496e00b4083\\\",\\\"type\\\":\\\"cjmiam\\\",\\\"detail\\\":{\\\"remoteAssets\\\":[\\\"https://upload.wikimedia.org/wikipedia/en/thumb/6/6d/Seattle_Mariners_logo_%28low_res%29.svg/1200px-Seattle_Mariners_logo_%28low_res%29.svg.png\\\"],\\\"mobileParameters\\\":{\\\"verticalAlign\\\":\\\"" + vAlign + "\\\",\\\"horizontalInset\\\":" + hInset + ",\\\"dismissAnimation\\\":\\\"" + dismissAnimation + "\\\",\\\"uiTakeover\\\":" + uiTakeover + ",\\\"horizontalAlign\\\":\\\"" + hAlign + "\\\",\\\"verticalInset\\\":" + vInset + ",\\\"displayAnimation\\\":\\\"" + displayAnimation + "\\\",\\\"width\\\":" + width + ",\\\"height\\\":" + height + ",\\\"backdropOpacity\\\":" + opacity + ",\\\"backdropColor\\\":\\\"#" + bdColor + "\\\",\\\"cornerRadius\\\":" + cornerRadius + ",\\\"gestures\\\":{}},\\\"html\\\":\\\"<html>\\\\n<head>\\\\n\\\\t<style>\\\\n\\\\t\\\\thtml,\\\\n\\\\t\\\\tbody {\\\\n\\\\t\\\\t\\\\tmargin: 0;\\\\n\\\\t\\\\t\\\\tpadding: 0;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\theight: 100%;\\\\n\\\\t\\\\t\\\\tfont-family: adobe-clean, \\\\\\\"Source Sans Pro\\\\\\\", -apple-system, BlinkMacSystemFont, \\\\\\\"Segoe UI\\\\\\\", Roboto, sans-serif;\\\\n\\\\t\\\\t}\\\\n\\\\n    h3 {\\\\n\\\\t\\\\t\\\\tmargin: .1rem auto;\\\\n\\\\t\\\\t}\\\\n\\\\t\\\\tp {\\\\n\\\\t\\\\t\\\\tmargin: 0;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.body {\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tbackground-color: #" + iamColor + ";\\\\n\\\\t\\\\t\\\\tborder-radius: 5px;\\\\n\\\\t\\\\t\\\\tcolor: #333333;\\\\n\\\\t\\\\t\\\\twidth: 100vw;\\\\n\\\\t\\\\t\\\\theight: 100vh;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\talign-items: center;\\\\n\\\\t\\\\t\\\\tbackground-size: 'cover';\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.content {\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\theight: 100%;\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tjustify-content: center;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tposition: relative;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\ta {\\\\n\\\\t\\\\t\\\\ttext-decoration: none;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.image {\\\\n\\\\t\\\\t  height: 1rem;\\\\n\\\\t\\\\t  flex-grow: 4;\\\\n\\\\t\\\\t  flex-shrink: 1;\\\\n\\\\t\\\\t  display: flex;\\\\n\\\\t\\\\t  justify-content: center;\\\\n\\\\t\\\\t  width: 90%;\\\\n      flex-direction: column;\\\\n      align-items: center;\\\\n\\\\t\\\\t}\\\\n    .image img {\\\\n      max-height: 100%;\\\\n      max-width: 100%;\\\\n    }\\\\n\\\\n\\\\t\\\\t.text {\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\tline-height: 20px;\\\\n\\\\t\\\\t\\\\tfont-size: 14px;\\\\n\\\\t\\\\t\\\\tcolor: #333333;\\\\n\\\\t\\\\t\\\\tpadding: 0 25px;\\\\n\\\\t\\\\t\\\\tline-height: 1.25rem;\\\\n\\\\t\\\\t\\\\tfont-size: 0.875rem;\\\\n\\\\t\\\\t}\\\\n\\\\t\\\\t.title {\\\\n\\\\t\\\\t\\\\tline-height: 1.3125rem;\\\\n\\\\t\\\\t\\\\tfont-size: 1.025rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.buttons {\\\\n\\\\t\\\\t\\\\twidth: 100%;\\\\n\\\\t\\\\t\\\\tdisplay: flex;\\\\n\\\\t\\\\t\\\\tflex-direction: column;\\\\n\\\\t\\\\t\\\\tfont-size: 1rem;\\\\n\\\\t\\\\t\\\\tline-height: 1.3rem;\\\\n\\\\t\\\\t\\\\ttext-decoration: none;\\\\n\\\\t\\\\t\\\\ttext-align: center;\\\\n\\\\t\\\\t\\\\tbox-sizing: border-box;\\\\n\\\\t\\\\t\\\\tpadding: .8rem;\\\\n\\\\t\\\\t\\\\tpadding-top: .4rem;\\\\n\\\\t\\\\t\\\\tgap: 0.3125rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.button {\\\\n\\\\t\\\\t\\\\tflex-grow: 1;\\\\n\\\\t\\\\t\\\\tbackground-color: #1473E6;\\\\n\\\\t\\\\t\\\\tcolor: #FFFFFF;\\\\n\\\\t\\\\t\\\\tborder-radius: .25rem;\\\\n\\\\t\\\\t\\\\tcursor: pointer;\\\\n\\\\t\\\\t\\\\tpadding: .3rem;\\\\n\\\\t\\\\t\\\\tgap: .5rem;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.btnClose {\\\\n\\\\t\\\\t\\\\tcolor: #000000;\\\\n\\\\t\\\\t}\\\\n\\\\n\\\\t\\\\t.closeBtn {\\\\n\\\\t\\\\t\\\\talign-self: flex-end;\\\\n\\\\t\\\\t\\\\twidth: 1.8rem;\\\\n\\\\t\\\\t\\\\theight: 1.8rem;\\\\n\\\\t\\\\t\\\\tmargin-top: 1rem;\\\\n\\\\t\\\\t\\\\tmargin-right: .3rem;\\\\n\\\\t\\\\t}\\\\n\\\\t</style>\\\\n\\\\t<style type=\\\\\\\"text/css\\\\\\\" id=\\\\\\\"editor-styles\\\\\\\">\\\\n[data-uuid=\\\\\\\"e69adbda-8cfc-4c51-bcab-f8b2fd314d8f\\\\\\\"]  {\\\\n  flex-direction: row !important;\\\\n}\\\\n</style>\\\\n</head>\\\\n\\\\n<body>\\\\n\\\\t<div class=\\\\\\\"body\\\\\\\">\\\\n    <div class=\\\\\\\"closeBtn\\\\\\\" data-btn-style=\\\\\\\"plain\\\\\\\" data-uuid=\\\\\\\"fbc580c2-94c1-43c8-a46b-f66bb8ca8554\\\\\\\">\\\\n  <a class=\\\\\\\"btnClose\\\\\\\" href=\\\\\\\"adbinapp://cancel\\\\\\\">\\\\n    <svg xmlns=\\\\\\\"http://www.w3.org/2000/svg\\\\\\\" height=\\\\\\\"18\\\\\\\" viewbox=\\\\\\\"0 0 18 18\\\\\\\" width=\\\\\\\"18\\\\\\\" class=\\\\\\\"close\\\\\\\">\\\\n  <rect id=\\\\\\\"Canvas\\\\\\\" fill=\\\\\\\"#ffffff\\\\\\\" opacity=\\\\\\\"" + opacity + "\\\\\\\" width=\\\\\\\"18\\\\\\\" height=\\\\\\\"18\\\\\\\" />\\\\n  <path fill=\\\\\\\"currentColor\\\\\\\" xmlns=\\\\\\\"http://www.w3.org/2000/svg\\\\\\\" d=\\\\\\\"M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z\\\\\\\" />\\\\n</svg>\\\\n  </a>\\\\n</div><div class=\\\\\\\"image\\\\\\\" data-uuid=\\\\\\\"88c0afd9-1e3d-4d52-900f-fa08a56ad5e2\\\\\\\">\\\\n<img src=\\\\\\\"https://upload.wikimedia.org/wikipedia/en/thumb/6/6d/Seattle_Mariners_logo_%28low_res%29.svg/1200px-Seattle_Mariners_logo_%28low_res%29.svg.png\\\\\\\" alt=\\\\\\\"\\\\\\\">\\\\n</div><div class=\\\\\\\"text\\\\\\\" data-uuid=\\\\\\\"e7e49562-a365-4d38-be0e-d69cba829cb4\\\\\\\">\\\\n<h3>AJO In App test</h3>\\\\n<p>Locally generated message</p>\\\\n</div><div data-uuid=\\\\\\\"e69adbda-8cfc-4c51-bcab-f8b2fd314d8f\\\\\\\" class=\\\\\\\"buttons\\\\\\\">\\\\n  <a class=\\\\\\\"button\\\\\\\" data-uuid=\\\\\\\"864bd990-fc7f-4b1a-8d45-069c58981eb2\\\\\\\" href=\\\\\\\"adbinapp://dismiss?interaction=closed&js=(function test() { return 'javascript value'; })();\\\\\\\">Dismiss</a>\\\\n</div>\\\\n\\\\t</div>\\\\n\\\\n\\\\n</body></html>\\\",\\\"_xdm\\\":{\\\"mixins\\\":{\\\"_experience\\\":{\\\"customerJourneyManagement\\\":{\\\"messageExecution\\\":{\\\"messageExecutionID\\\":\\\"dummy_message_execution_id_7a237b33-2648-4903-82d1-efa1aac7c60d-all-visitors-everytime\\\",\\\"messageID\\\":\\\"fb31245e-3382-4b3a-a15a-dcf11f463020\\\",\\\"messagePublicationID\\\":\\\"aafe8df1-9c30-496d-ba0c-4b300f8cbabb\\\",\\\"ajoCampaignID\\\":\\\"7a237b33-2648-4903-82d1-efa1aac7c60d\\\",\\\"ajoCampaignVersionID\\\":\\\"38bd427b-f48e-4b3e-a4e1-03033b830d66\\\"},\\\"messageProfile\\\":{\\\"channel\\\":{\\\"_id\\\":\\\"https://ns.adobe.com/xdm/channels/inapp\\\"}}}}}}}}]}]}\",\n" +
+                    "        \"id\": \"df6cf615-c12a-42df-bdf2-42d5c8bd9218\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"id\": \"d597cdf7-204b-4645-8115-5a0a06a910e0\"\n" +
+                    "}"
         )
         val convertedPayload = PayloadFormatUtils.toObjectMap(payload)
-        var listPayload: ArrayList<Map<String, Any>> = ArrayList(1)
-        listPayload.add(convertedPayload as Map<String, Any>)
+        var listPayload = listOf(convertedPayload)
         val edgeResponseEvent = Event.Builder(
-                "AEP Response Event Handle",
-                "com.adobe.eventType.edge",
-                "personalization:decisions"
+            "AEP Response Event Handle",
+            "com.adobe.eventType.edge",
+            "personalization:decisions"
         ).let {
             val eventData: HashMap<String, Any?> = hashMapOf(
-                    "payload" to listPayload,
-                    "requestId" to "D158979E-0506-4968-8031-17A6A8A87DA8",
-                    "type" to "personalization:decisions",
-                    "requestEventId" to "2E964037-E319-4D14-98B8-0682374E547B"
+                "payload" to listPayload,
+                "requestId" to "D158979E-0506-4968-8031-17A6A8A87DA8",
+                "type" to "personalization:decisions",
+                "requestEventId" to "TESTING_ID"
             )
             it.setEventData(eventData)
             it.build()
