@@ -153,9 +153,18 @@ class InAppNotificationHandler {
     private void processPropositions(final List<PropositionPayload> propositions) {
         final List<JsonUtilityService.JSONObject> foundRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
+            if (proposition == null) {
+                Log.trace(LOG_TAG, "%s - processing aborted, null proposition found.", SELF_TAG);
+                return;
+            }
+
+            if (proposition.propositionInfo == null) {
+                Log.trace(LOG_TAG, "%s - the proposition info is invalid. The proposition payload will be ignored.", SELF_TAG);
+                return;
+            }
+
             final String appSurface = App.getAppContext().getPackageName();
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
-
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
                 Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);

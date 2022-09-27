@@ -529,7 +529,7 @@ class MessagingInternal extends Extension {
       */
     public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
-        if (MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
+        if (propositionInfo == null || MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
             return;
         }

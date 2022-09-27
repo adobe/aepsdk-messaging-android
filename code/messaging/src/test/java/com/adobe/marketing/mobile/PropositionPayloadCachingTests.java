@@ -19,7 +19,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,7 +113,7 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
-    public void testCachePropositionPayload() throws URISyntaxException {
+    public void testCachePropositionPayload() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));

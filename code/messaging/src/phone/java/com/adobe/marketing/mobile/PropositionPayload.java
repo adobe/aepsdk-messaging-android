@@ -22,15 +22,24 @@ class PropositionPayload implements Serializable {
     final PropositionInfo propositionInfo;
     final List<PayloadItem> items = new ArrayList<>();
 
-    PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
+    private PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
         this.propositionInfo = propositionInfo;
-        if (items == null || items.size() == 0) {
-            return;
-        }
         final Iterator iterator = items.listIterator();
         while (iterator.hasNext()) {
             final PayloadItem payloadItem = new PayloadItem((Map<String, Object>) iterator.next());
             this.items.add(payloadItem);
         }
+    }
+
+    static PropositionPayload create(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
+        if (propositionInfo == null) {
+            return null;
+        }
+
+        if (items == null || items.size() == 0) {
+            return null;
+        }
+
+        return new PropositionPayload(propositionInfo, items);
     }
 }

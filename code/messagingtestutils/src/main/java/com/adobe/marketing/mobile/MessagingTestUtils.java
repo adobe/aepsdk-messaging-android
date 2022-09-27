@@ -366,7 +366,7 @@ public class MessagingTestUtils {
         }
         messagePayload.put("scope", "mobileapp://mock_applicationId");
         messagePayload.put("id", "testResponseId");
-        return new PropositionInfo(messagePayload);
+        return PropositionInfo.create(messagePayload);
     }
 
     static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {

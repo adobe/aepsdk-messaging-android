@@ -168,8 +168,8 @@ class MessagingUtils {
         List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final PropositionInfo propositionInfo = new PropositionInfo(payload);
-                final PropositionPayload propositionPayload = new PropositionPayload(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
+                final PropositionInfo propositionInfo = PropositionInfo.create(payload);
+                final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
                 propositionPayloads.add(propositionPayload);
             }
         }
