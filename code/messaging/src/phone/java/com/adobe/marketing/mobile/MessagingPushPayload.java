@@ -207,21 +207,16 @@ public class MessagingPushPayload {
     }
 
     private ActionButton getActionButton(final JSONObject jsonObject) {
-        try {
-            final String label = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.LABEL);
-            if (label.isEmpty()) {
-                Log.debug(MessagingConstant.LOG_TAG, "%s - Label is empty", SELF_TAG);
-                return null;
-            }
-            final String uri = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
-            final String type = jsonObject.getString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE);
-
-            Log.trace(MessagingConstant.LOG_TAG, "%s - Creating an ActionButton with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
-            return new ActionButton(label, uri, type);
-        } catch (final JSONException e) {
-            Log.warning(MessagingConstant.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+        final String label = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.LABEL);
+        if (StringUtils.isNullOrEmpty(label)) {
+            Log.debug(MessagingConstant.LOG_TAG, "%s - Unable to create an action button, missing button label", SELF_TAG);
             return null;
         }
+        final String uri = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
+        final String type = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE);
+
+        Log.trace(MessagingConstant.LOG_TAG, "%s - Creating an action button with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
+        return new ActionButton(label, uri, type);
     }
 
     /**
