@@ -54,21 +54,21 @@ boolean update = addPushTrackingDetails(final Intent intent, final String messag
 | actionId          | String     | actionId of the element which performed  the custom action.                                                                    |
 
 ##### Sending push notification interaction feedback when application is opened without any custom action. 
-To do this, add the following code where you have access to `intent` after the user has interacted with the push notification:
+Add the following code where you have access to `intent` after the user has interacted with the push notification:
 
 ```java
 Messaging.handleNotificationResponse(intent, true, null);
 ```
 
-##### Sending feedback when application is opened with custom action. 
-Call the `handleNotificationResponse` API with a custom action in the  
+##### Sending feedback when application is opened with a custom action. 
+Similar to the example above, call the `handleNotificationResponse` API but this time with a custom action:
 
 ```java
 Messaging.handleNotificationResponse(intent, true, <actionId>);
 ```
 
 ##### Sending feedback when application is not opened but a custom action is performed by the user. 
-To do this, add the following code where you have access to `intent` after the user has interacted with the push notification:
+Add the following code where you have access to `intent` after the user has interacted with the push notification:
 
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);

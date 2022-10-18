@@ -63,9 +63,9 @@ public void track(final String interaction, final MessagingEdgeEventType eventTy
 
 ### handleJavascriptMessage
 
-Adds a handler for named JavaScript messages sent from the message's `WKWebView`.
+Adds a handler for named JavaScript messages sent from the message's `WebView`.
 
-The parameter passed to `handler` will contain the body of the message passed from the `WKWebView`'s JavaScript.
+The  `AdobeCallback` will contain the body of the message passed from the `WebView`'s JavaScript.
 
 For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./how-to-call-native-from-javascript.md).
 

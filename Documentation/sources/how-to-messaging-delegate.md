@@ -67,9 +67,9 @@ public interface FullscreenMessageDelegate {
 
 ### Retrieving the Message object from the implemented interface methods
 
-The user interface methods (except for `onShowFailure()`) in a `FullscreenMessageDelegate` implementation will be passed an `AEPMessage` object. An `AEPMessage` object is the Android Core implementation of the `FullscreenMessage` interface. It contains a reference to the parent `Message` class and is your primary way to interact with the message.
+The user interface methods (except for `onShowFailure()`) in a `FullscreenMessageDelegate` implementation will be passed a `FullscreenMessage` object. An  `AEPMessage` object is the Android Core implementation of the `FullscreenMessage` interface and it contains a reference to the parent `Message` class. The reference to the `Message` object is your primary way to interact with an AJO in-app message.
 
-A reference to the `AEPMessage` object can be obtained by calling `fullscreenMessage.getParent()` . An example of how to access the `Message` in the `onShow` delegate method can be seen below:
+The reference can be obtained by calling `fullscreenMessage.getParent()` . An example of how to access the `Message` in the `onShow` delegate method can be seen below:
 
 ```java
 @Override
@@ -81,7 +81,7 @@ public void onShow(FullscreenMessage fullscreenMessage) {
 
 ### Controlling when a message should be shown to the end user
 
-If a custom  `FullscreenMessageDelegate` has been set in the `ServiceProvider`, this delegate's `shouldShowMessage` method will be called prior to displaying an in-app message for which the end user has qualified. You are responsible for returning `true` if the message should be shown, or `false` if the message should be suppressed.
+If a custom  `FullscreenMessageDelegate`  implementation has been set in the `ServiceProvider`, the delegate's `shouldShowMessage` method will be called prior to displaying an in-app message for which the end user has qualified. You are responsible for returning `true` if the message should be shown, or `false` if the message should be suppressed.
 
 An example of when you may choose to suppress an in-app message due to the status of some other workflow within the app can be seen below:
 
@@ -138,6 +138,10 @@ public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
     
     // cast to MessageWebView to access the startInAppMessage function
     inAppMessageView = (MessageWebView) currentMessage.getWebView();
+    
+    // the startInAppMessage function can be called to display the WebView in a custom location.
+    // this method internally calls WebView.loadDataWithBaseURL()
+    inAppMessageView.startInAppMessage();
     
     return false;
   }
