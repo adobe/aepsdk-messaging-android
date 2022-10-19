@@ -1,8 +1,20 @@
 #  API Usage
 
+## General APIs
+
+## Getting the extension version.
+
+Call the `extensionVersion` API to retrieve a `String` containing the Messaging extension's version.
+
+```java
+Messaging.extensionVersion()
+```
+
+## Push Messaging APIs
+
 ## Syncing the push token to profile in platform. 
 
-To do this, add the following code to Application class's `onCreate()` method:
+Add the following code to the Application class's `onCreate()` method:
 
 ```java
     FirebaseMessaging.getInstance().getToken()
@@ -42,22 +54,34 @@ boolean update = addPushTrackingDetails(final Intent intent, final String messag
 | actionId          | String     | actionId of the element which performed  the custom action.                                                                    |
 
 ##### Sending push notification interaction feedback when application is opened without any custom action. 
-To do this, add the following code where you have access to `intent` after the user has interacted with the push notification:
+Add the following code where you have access to `intent` after the user has interacted with the push notification:
 
 ```java
 Messaging.handleNotificationResponse(intent, true, null);
 ```
 
-##### Sending feedback when application is opened with custom action. 
-To do this, add the following code where you have access to `intent` after the user interact with the push notification:
+##### Sending feedback when application is opened with a custom action. 
+Similar to the example above, call the `handleNotificationResponse` API but this time with a custom action:
 
 ```java
 Messaging.handleNotificationResponse(intent, true, <actionId>);
 ```
 
 ##### Sending feedback when application is not opened but a custom action is performed by the user. 
-To do this, add the following code where you have access to `intent` after the user interact with the push notification:
+Add the following code where you have access to `intent` after the user has interacted with the push notification:
 
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
+```
+
+## In-App Messaging APIs
+
+#### Programmatically refresh in-app message definitions from the remote
+
+By default, the SDK will automatically fetch in-app message definitions from the remote at the time the Messaging extension is registered. This generally happens once per app lifecycle.
+
+Some use cases may require the client to request an update from the remote more frequently. Calling the following API will force the Messaging extension to get an updated definition of messages from the remote:
+
+```java
+Messaging.refreshInAppMessages();
 ```

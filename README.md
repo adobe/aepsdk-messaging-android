@@ -10,7 +10,7 @@ The AEPMessaging extension, along with Adobe Customer Journey Optimizer, enables
 Integrate the AEPMessaging extension into your app by including the following in your gradle file's `dependencies`:
 
 ```
-implementation 'com.adobe.marketing.mobile:messaging:1.0.0'
+implementation 'com.adobe.marketing.mobile:messaging:1.3.0'
 implementation 'com.adobe.marketing.mobile:edge:1.+'
 implementation 'com.adobe.marketing.mobile:edgeidentity:1.+'
 implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
