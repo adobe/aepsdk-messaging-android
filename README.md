@@ -7,13 +7,33 @@
 The AEPMessaging extension, along with Adobe Customer Journey Optimizer, enables sending and tracking push notifications in the Adobe Experience Platform
 
 ## Installation
-Integrate the AEPMessaging extension into your app by including the following in your gradle file's `dependencies`:
+In-app messages are enabled in Messaging SDK version `1.3.0` or newer. Libraries built from the staging branch will contain `beta` in the artifact name.
 
+The Messaging SDK is available from the Sonatype snapshot repository while it is in beta. In your app's top level Gradle file, add a reference to the repository:
+
+```groovy
+allprojects {
+  repositories {
+    // other needed repositories...
+    // add the sonatype snapshot repository
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+  }
+} 
 ```
-implementation 'com.adobe.marketing.mobile:messaging:1.3.0'
+
+Integrate the AEPMessaging extension into your app by including the following in your app level gradle file's `dependencies`:
+
+```groovy
+implementation 'com.adobe.marketing.mobile:messaging:1.3.0-beta-3-SNAPSHOT'
 implementation 'com.adobe.marketing.mobile:edge:1.+'
 implementation 'com.adobe.marketing.mobile:edgeidentity:1.+'
 implementation 'com.adobe.marketing.mobile:sdk-core:1.+'
+```
+
+If you use the Messaging extension (In-App beta) alongside the Campaign Standard extension, Campaign Standard extension version 1.0.9 or newer must be used to resolve a compatibility issue:
+
+```groovy
+implementation 'com.adobe.marketing.mobile:campaign:[1.0.9,)'
 ```
 
 Adding Firebase messaging sdk as it is required for using [FCM](https://firebase.google.com/docs/cloud-messaging/android/client#add_firebase_sdks_to_your_app)
