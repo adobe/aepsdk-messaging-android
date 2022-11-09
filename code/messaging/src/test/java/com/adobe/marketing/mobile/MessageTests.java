@@ -106,8 +106,35 @@ public class MessageTests {
     @Captor
     ArgumentCaptor<String> interactionArgumentCaptor;
     private Message message;
-    private AEPMessage aepMessage;
     private EventHub eventHub;
+
+    class CustomMessagingDelegate extends MessagingDelegate {
+        private boolean showMessage = false;
+
+        @Override
+        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
+            if (!showMessage) {
+                Message message = (Message) fullscreenMessage.getParent();
+                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
+            }
+            return showMessage;
+        }
+
+        public void setShowMessage(boolean showMessage) {
+            this.showMessage = showMessage;
+        }
+
+        // return an actual message as getParent above returns a mock and we need an actual message object to test showing a suppressed message
+        public Message getSavedMessage() {
+            Message fakeSavedMessage = null;
+            try {
+                fakeSavedMessage = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+            } catch (MessageRequiredFieldMissingException e) {
+                fail(e.getLocalizedMessage());
+            }
+            return fakeSavedMessage;
+        }
+    }
 
     @Before
     public void setup() throws Exception {
@@ -124,7 +151,7 @@ public class MessageTests {
         }
     }
 
-    void setupMocks() throws Exception {
+    void setupMocks() {
         PowerMockito.mockStatic(MobileCore.class);
         PowerMockito.mockStatic(Event.class);
         PowerMockito.mockStatic(App.class);
@@ -150,7 +177,7 @@ public class MessageTests {
         }).when(mockHandler).post(any(Runnable.class));
         when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(mockAEPMessage);
         when(mockAEPMessage.getSettings()).thenReturn(mockAEPMessageSettings);
-        when(mockAEPMessageSettings.getParent()).thenReturn(mockMessage);
+        when(mockAEPMessage.getParent()).thenReturn(mockMessage);
         when(mockMessagingState.getExperienceEventDatasetId()).thenReturn("datasetId");
     }
 
@@ -358,60 +385,6 @@ public class MessageTests {
     }
 
     @Test
-    public void test_messageShow_withShowMessageTrueInCustomDelegate() {
-        // setup custom delegate, show message is true by default
-        CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
-        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
-
-        // test
-        message.show();
-
-        // verify aepMessage show called
-        verify(mockAEPMessage, times(1)).show();
-
-        // verify tracking event data
-        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
-        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-        String interaction = interactionArgumentCaptor.getValue();
-        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
-        assertEquals(null, interaction);
-    }
-
-    @Test
-    public void test_messageShow_withShowMessageFalseInCustomDelegate() {
-        when(mockAEPMessageSettings.getParent()).thenReturn(message);
-        // setup custom delegate
-        CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
-        customMessageDelegate.setShowMessage(false);
-        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
-        // setup mocks
-        try {
-            aepMessage = new AEPMessage("html", mockAEPMessageSettings, Collections.<String, String>emptyMap());
-        } catch (MessageCreationException e) {
-            fail(e.getLocalizedMessage());
-        }
-        when(mockUIService.createFullscreenMessage(any(String.class), any(MessageSettings.class), any(Map.class))).thenReturn(aepMessage);
-        try {
-            message = new Message(mockMessagingInternal, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
-        } catch (MessageRequiredFieldMissingException e) {
-            fail(e.getLocalizedMessage());
-        }
-
-        // test
-        message.show();
-
-        // expect 1 tracking event: custom delegate suppressed message tracking
-        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
-        List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
-        List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
-        // verify custom delegate suppressed message tracking event
-        MessagingEdgeEventType displayTrackingEvent = capturedEvents.get(0);
-        String interaction = capturedInteractions.get(0);
-        assertEquals(MessagingEdgeEventType.IN_APP_DISPLAY, displayTrackingEvent);
-        assertEquals("suppressed", interaction);
-    }
-
-    @Test
     public void test_messageDismiss_suppressAutoTrackFalse() {
         // test
         message.dismiss(false);
@@ -458,6 +431,82 @@ public class MessageTests {
 
         // verify no trigger tracking event
         verify(mockMessagingInternal, times(0)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+    }
+
+    // ========================================================================================
+    // Message show with custom messaging delegate
+    // ========================================================================================
+    @Test
+    public void test_messageShow_showMessageFalseInCustomMessagingDelegate() {
+        // setup
+        CustomMessagingDelegate customMessagingDelegate = new CustomMessagingDelegate();
+        customMessagingDelegate.showMessage = false;
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessagingDelegate);
+        // test
+        message.show(true); // set to true to test custom messaging delegate
+
+        // verify aepMessage show not called
+        verify(mockAEPMessage, times(0)).show();
+
+        // verify suppressed tracking event sent by custom delegate
+        verify(mockMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals("suppressed", interaction);
+    }
+
+    @Test
+    public void test_messageShow_showMessageFalseInCustomMessagingDelegate_ShowSuppressedMessage() {
+        // setup
+        CustomMessagingDelegate customMessagingDelegate = new CustomMessagingDelegate();
+        customMessagingDelegate.showMessage = false;
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessagingDelegate);
+
+        // test
+        message.show(true); // set to true to test custom messaging delegate
+
+        // verify aepMessage show not called
+        verify(mockAEPMessage, times(0)).show();
+
+        // verify suppressed tracking event sent by custom delegate
+        verify(mockMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals("suppressed", interaction);
+
+        // test
+        customMessagingDelegate.setShowMessage(true);
+        Message savedMessage = customMessagingDelegate.getSavedMessage();
+        savedMessage.show();
+
+        // verify default tracking event data
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+        eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals(null, interaction);
+    }
+
+    @Test
+    public void test_messageShow_showMessageTrueInCustomMessagingDelegate() {
+        // setup
+        CustomMessagingDelegate customMessagingDelegate = new CustomMessagingDelegate();
+        customMessagingDelegate.showMessage = true;
+        when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessagingDelegate);
+        // test
+        message.show(true); // set to true to test custom messaging delegate
+
+        // verify aepMessage show called
+        verify(mockAEPMessage, times(1)).show();
+
+        // verify default tracking event data
+        verify(mockMessagingInternal, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+        MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+        String interaction = interactionArgumentCaptor.getValue();
+        assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+        assertEquals(null, interaction);
     }
 
     // ========================================================================================
@@ -670,22 +719,5 @@ public class MessageTests {
 
         // verify evaluate javascript not called
         verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
-    }
-
-    class CustomMessagingDelegate extends MessagingDelegate {
-        private boolean showMessage = true;
-
-        @Override
-        public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-            if (!showMessage) {
-                Message message = (Message) fullscreenMessage.getParent();
-                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
-            }
-            return showMessage;
-        }
-
-        public void setShowMessage(boolean showMessage) {
-            this.showMessage = showMessage;
-        }
     }
 }

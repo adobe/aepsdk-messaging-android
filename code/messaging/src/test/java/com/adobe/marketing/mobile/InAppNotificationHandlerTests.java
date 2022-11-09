@@ -539,7 +539,7 @@ public class InAppNotificationHandlerTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
         verify(mockMessage, times(1)).trigger();
-        verify(mockMessage, times(1)).show();
+        verify(mockMessage, times(1)).show(true);
     }
 
     @Test

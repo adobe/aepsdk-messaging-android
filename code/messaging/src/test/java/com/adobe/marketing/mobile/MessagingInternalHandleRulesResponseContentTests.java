@@ -191,7 +191,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
         verify(mockMessage, times(1)).trigger();
-        verify(mockMessage, times(1)).show();
+        verify(mockMessage, times(1)).show(true);
     }
 
     @Test
@@ -228,7 +228,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -264,7 +264,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     public void test_handleRulesResponseEvent_NullConsequences() {
@@ -290,7 +290,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -318,7 +318,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -351,7 +351,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -383,7 +383,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -420,7 +420,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -456,7 +456,7 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 
     @Test
@@ -492,6 +492,6 @@ public class MessagingInternalHandleRulesResponseContentTests {
 
         // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
         verify(mockMessage, times(0)).trigger();
-        verify(mockMessage, times(0)).show();
+        verify(mockMessage, times(0)).show(true);
     }
 }

@@ -216,9 +216,13 @@ public class Message extends MessagingDelegate {
 
     // ui management
     public void show() {
+        show(false);
+    }
+
+    public void show(final boolean isUsingMessageDelegate) {
         if (aepMessage != null) {
-            // check if messages should be displayed before attempting to show one
-            if (!(ServiceProvider.getInstance().getMessageDelegate()).shouldShowMessage(aepMessage)) {
+            // check if the message delegate should be used. if yes, then check the should show message status.
+            if (isUsingMessageDelegate && !(ServiceProvider.getInstance().getMessageDelegate()).shouldShowMessage(aepMessage)) {
                 Log.debug(LOG_TAG,
                         "%s - Message couldn't be displayed, MessagingDelegate#shouldShowMessage states the message should not be displayed.", SELF_TAG);
                 return;
