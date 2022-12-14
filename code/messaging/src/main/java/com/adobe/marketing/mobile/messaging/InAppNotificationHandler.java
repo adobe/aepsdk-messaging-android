@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CJM_XDM;
@@ -34,6 +34,11 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.REQUES
 import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -47,7 +52,7 @@ import java.util.Map;
 class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     final MessagingInternal parent;
-    private final Module messagingModule;
+    private final Extension messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
     private String requestMessagesEventId;
@@ -62,7 +67,7 @@ class InAppNotificationHandler {
         this.parent = parent;
         this.messagingCacheUtilities = messagingCacheUtilities;
         // create a module to get access to the Core rules engine for adding AJO in-app message rules
-        messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) {
+        messagingModule = new Extension(parent.getApi());  Module("Messaging", MobileCore.getCore().eventHub) {
         };
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
         if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
@@ -151,7 +156,7 @@ class InAppNotificationHandler {
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
     private void processPropositions(final List<PropositionPayload> propositions) {
-        final List<JsonUtilityService.JSONObject> foundRules = new ArrayList<>();
+        final List<JSONObject> foundRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             if (proposition == null) {
                 Log.trace(LOG_TAG, "%s - processing aborted, null proposition found.", SELF_TAG);
@@ -163,7 +168,7 @@ class InAppNotificationHandler {
                 return;
             }
 
-            final String appSurface = App.getAppContext().getPackageName();
+            final String appSurface = ServiceProvider.getInstance().getAppContextService().getApplicationContext().getPackageName();;
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
@@ -179,7 +184,7 @@ class InAppNotificationHandler {
             }
 
             for (final PayloadItem payloadItem : proposition.items) {
-                final JsonUtilityService.JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
+                final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson != null) {
                     foundRules.add(ruleJson);
 

@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
@@ -50,6 +50,10 @@ import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.TRACK
 import static com.adobe.marketing.mobile.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,7 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 class MessagingInternal extends Extension {
-    private final String SELF_TAG = "MessagingInternal";
+    final static String SELF_TAG = "MessagingInternal";
     private final MessagingState messagingState;
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
@@ -96,21 +100,22 @@ class MessagingInternal extends Extension {
     protected MessagingInternal(final ExtensionApi extensionApi) {
         super(extensionApi);
 
-        final PlatformServices platformServices = MessagingUtils.getPlatformServices();
-        final SystemInfoService systemInfoService = platformServices.getSystemInfoService();
+        final ServiceProvider serviceProvider = ServiceProvider.getInstance();
+        final SystemInfoService systemInfoService = serviceProvider.getDeviceInfoService(); platformServices.getSystemInfoService();
         final NetworkService networkService = platformServices.getNetworkService();
-        CacheManager cacheManager = null;
+        CacheService cacheManager = serviceProvider.getCacheService();
         try {
+
             cacheManager = new CacheManager(systemInfoService);
         } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the cache manager: %s", exception.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when creating the cache manager: %s", exception.getMessage());
         }
 
         // initialize the Messaging Caching functionality
         try {
             messagingCacheUtilities = new MessagingCacheUtilities(systemInfoService, networkService, cacheManager);
         } catch (final MissingPlatformServicesException e) {
-            Log.warning(LOG_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when creating the messaging cache utilities: %s", e.getMessage());
         }
 
         // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
@@ -130,7 +135,7 @@ class MessagingInternal extends Extension {
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "MessagingInternal - Failed to sync push token, ecid is null.");
+            Log.error(LOG_TAG, MessagingInternal.SELF_TAG,"Failed to sync push token, ECID is null.");
             return null;
         }
 

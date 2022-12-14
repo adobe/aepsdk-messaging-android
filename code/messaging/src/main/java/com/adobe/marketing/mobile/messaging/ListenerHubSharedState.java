@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 class ListenerHubSharedState extends ExtensionListener {
     private final static String SELF_TAG = "ListenerHubSharedState";
