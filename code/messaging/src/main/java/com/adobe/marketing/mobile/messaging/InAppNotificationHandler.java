@@ -80,7 +80,7 @@ class InAppNotificationHandler {
         if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
             List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
-                Log.trace(LOG_TAG, "%s - Retrieved cached propositions, attempting to load in-app messages into the rules engine.", SELF_TAG);
+                Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 processPropositions(cachedMessages);
             }
         }
@@ -94,7 +94,7 @@ class InAppNotificationHandler {
     void fetchMessages() {
         final String appSurface = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
         if (StringUtils.isNullOrEmpty(appSurface)) {
-            Log.warning(LOG_TAG, "%s - Unable to retrieve in-app messages - unable to retrieve the application id.", SELF_TAG);
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app messages - unable to retrieve the application id.");
             return;
         }
 
@@ -127,7 +127,7 @@ class InAppNotificationHandler {
         requestMessagesEventId = event.getUniqueIdentifier();
 
         // send event
-        Log.debug(LOG_TAG, "%s - Dispatching edge event to fetch in-app messages.", SELF_TAG);
+        Log.debug(LOG_TAG, SELF_TAG, "Dispatching edge event to fetch in-app messages.");
         MessagingUtils.sendEvent(event, MessagingConstants.EventDispatchErrors.PERSONALIZATION_REQUEST_ERROR);
     }
 
@@ -146,13 +146,13 @@ class InAppNotificationHandler {
         final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
-            Log.trace(LOG_TAG, "%s - Payload for in-app messages was empty. Clearing local cache.", SELF_TAG);
+            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache.");
             messagingCacheUtilities.clearCachedData();
             return;
         }
         // save the proposition payload to the messaging cache
         messagingCacheUtilities.cachePropositions(propositions);
-        Log.trace(LOG_TAG, "%s - Loading in-app messages definitions from network response.", SELF_TAG);
+        Log.trace(LOG_TAG, SELF_TAG, "Loading in-app messages definitions from network response.");
         processPropositions(propositions);
     }
 
@@ -166,27 +166,27 @@ class InAppNotificationHandler {
         final List<JSONObject> foundRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             if (proposition == null) {
-                Log.trace(LOG_TAG, "%s - processing aborted, null proposition found.", SELF_TAG);
+                Log.trace(LOG_TAG, SELF_TAG, "Processing aborted, null proposition found.");
                 return;
             }
 
             if (proposition.propositionInfo == null) {
-                Log.trace(LOG_TAG, "%s - the proposition info is invalid. The proposition payload will be ignored.", SELF_TAG);
+                Log.trace(LOG_TAG, SELF_TAG, "The proposition info is invalid. The proposition payload will be ignored.");
                 return;
             }
 
             final String appSurface = ServiceProvider.getInstance().getAppContextService().getApplicationContext().getPackageName();
-            Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
+            Log.trace(LOG_TAG, SELF_TAG, "Using the application identifier (%s) to validate the notification payload.", appSurface);
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
-                Log.warning(LOG_TAG, "%s - Unable to find a scope in the payload, payload will be discarded.", SELF_TAG);
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to find a scope in the payload, payload will be discarded.");
                 return;
             }
 
             // check that app surface is present in the payload before processing any in-app message rules present
-            Log.debug(LOG_TAG, "%s - IAM payload contained the app surface: (%s)", SELF_TAG, scope);
+            Log.debug(LOG_TAG, SELF_TAG, "IAM payload contained the app surface: (%s)", scope);
             if (!scope.equals(SURFACE_BASE + appSurface)) {
-                Log.debug(LOG_TAG, "%s - the retrieved application identifier did not match the app surface present in the IAM payload: (%s).", SELF_TAG, appSurface);
+                Log.debug(LOG_TAG, SELF_TAG, "The retrieved application identifier did not match the app surface present in the IAM payload: (%s).", appSurface);
                 return;
             }
 
@@ -205,7 +205,7 @@ class InAppNotificationHandler {
         }
         final JSONArray jsonArrayFromRulesList = new JSONArray(foundRules);
         final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.toString(), extensionApi);
-        Log.debug(LOG_TAG, "%s - registerRules - registering %d rules", SELF_TAG, parsedRules.size());
+        Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
     }
 
@@ -267,8 +267,7 @@ class InAppNotificationHandler {
     void createInAppMessage(final Event rulesEvent) {
         final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
         if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
-            Log.debug(LOG_TAG,
-                    "%s - Unable to create an in-app message, consequences are null or empty.", SELF_TAG);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null or empty.");
             return;
         }
 
@@ -276,22 +275,19 @@ class InAppNotificationHandler {
 
         // ensure we have a CJM IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
-            Log.debug(LOG_TAG,
-                    "%s - Unable to create an in-app message, missing consequence type: %s.", SELF_TAG);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type: %s.");
             return;
         }
 
         if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
-            Log.debug(LOG_TAG,
-                    "%s - Unable to create an in-app message, unknown message consequence type: %s.", SELF_TAG, consequenceType);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;
         }
 
         try {
             final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.get(MESSAGE_CONSEQUENCE_DETAIL);
             if (MessagingUtils.isMapNullOrEmpty(details)) {
-                Log.warning(LOG_TAG,
-                        "%s - Unable to create an in-app message, the consequence details are null or empty", SELF_TAG);
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
                 return;
             }
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
@@ -300,8 +296,7 @@ class InAppNotificationHandler {
             message.trigger();
             message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
-            Log.warning(LOG_TAG,
-                    "%s - Unable to create an in-app message, an exception occurred during creation: %s", SELF_TAG, exception.getLocalizedMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }
     }
 
@@ -321,15 +316,13 @@ class InAppNotificationHandler {
                 for (int index = 0; index < remoteAssets.length(); index++) {
                     final String imageAssetUrl = (String) remoteAssets.get(index);
                     if (UrlUtils.isValidUrl(imageAssetUrl)) {
-                        Log.debug(LOG_TAG,
-                                "%s - Image asset to be cached (%s) ", SELF_TAG, imageAssetUrl);
+                        Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", imageAssetUrl);
                         remoteAssetsList.add(imageAssetUrl);
                     }
                 }
             }
         } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG,
-                    "%s - An exception occurred retrieving the remoteAssets array from the rule json payload: %s", SELF_TAG, jsonException.getLocalizedMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "An exception occurred retrieving the remoteAssets array from the rule json payload: %s", jsonException.getLocalizedMessage());
             return;
         }
         messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
