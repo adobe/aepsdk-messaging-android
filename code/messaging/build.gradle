@@ -15,13 +15,11 @@ jacoco {
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionName rootProject.moduleVersion
         // flag for e2e tests
         buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
         // flag for functional tests
@@ -41,7 +39,6 @@ android {
     buildTypes {
         debug {
             testCoverageEnabled true
-            debuggable true
         }
         release {
             minifyEnabled false
@@ -213,7 +210,8 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
-    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
+    implementation 'com.github.adobe.aepsdk-core-android:core:v2.0.0-alpha.4'
+    // implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

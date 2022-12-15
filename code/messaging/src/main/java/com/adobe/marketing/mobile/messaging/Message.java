@@ -10,28 +10,29 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import android.os.Handler;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.AEPMessage;
-import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +44,7 @@ public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
     private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
+    private final Handler webViewHandler = new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
     // public properties
     public String id;
     public boolean autoTrack = true;
@@ -64,71 +65,63 @@ public class Message extends MessagingDelegate {
      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
      * </ul>
      *
-     * @param parent             {@link MessagingInternal} instance that created this Message
+     * @param parent             {@link MessagingExtension} instance that created this Message
      * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
      * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingInternal parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
-        messagingInternal = parent;
+    public Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+        messagingExtension = parent;
 
         final String consequenceType = (String) consequence.get(MESSAGE_CONSEQUENCE_TYPE);
 
-        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
-            Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", SELF_TAG,
-                    consequence.toString(), consequenceType);
+        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {            
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
         details = (Map<String, Object>) consequence.get(MESSAGE_CONSEQUENCE_DETAIL);
         if (MessagingUtils.isMapNullOrEmpty(details)) {
-            Log.debug(LOG_TAG,
-                    "%s - Invalid consequence (%s). Required field \"detail\" is null or empty.", SELF_TAG, consequence.toString());
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
         id = (String) consequence.get(MESSAGE_CONSEQUENCE_ID);
         if (StringUtils.isNullOrEmpty(id)) {
-            Log.debug(LOG_TAG, "%s - Invalid consequence (%s). Required field \"id\" is null or empty.", SELF_TAG, consequence.toString());
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
         final String html = (String) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
         if (StringUtils.isNullOrEmpty(html)) {
-            Log.warning(LOG_TAG,
-                    "%s - Unable to create an in-app message, the html payload is null or empty.", SELF_TAG);
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
         }
 
-        final MessageSettings settings;
-        AEPMessageSettings.Builder messageSettingsBuilder = new AEPMessageSettings.Builder(this);
-        if (!MessagingUtils.isMapNullOrEmpty(rawMessageSettings)) {
-            settings = addMessageSettings(messageSettingsBuilder, rawMessageSettings);
-        } else {
-            settings = messageSettingsBuilder.build();
-        }
+        final MessageSettings settings = messageSettingsFromMap(rawMessageSettings);
 
         // set the internal Messaging delegate if a custom Messaging delegate is not being used
         if (ServiceProvider.getInstance().getMessageDelegate() == null) {
             ServiceProvider.getInstance().setMessageDelegate(this);
         }
-        aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, settings, assetMap);
+
+        aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, !assetMap.isEmpty(), settings);
+        aepMessage.setLocalAssetsMap(assetMap);
     }
 
     /**
      * Dispatch tracking information via a Messaging request content event.
      *
      * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
+     * @param eventType   {@link MessagingEdgeEventType} enum containing the Event Type to be used for the ensuing Edge Event
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (eventType == null) {
-            Log.debug(LOG_TAG,
-                    "%s - Unable to record a message interaction, MessagingEdgeEventType was null.", SELF_TAG);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to record a message interaction, MessagingEdgeEventType was null.");
             return;
         }
-        messagingInternal.sendPropositionInteraction(interaction, eventType, this);
+        messagingExtension.sendPropositionInteraction(interaction, eventType, this);
     }
 
     /**
@@ -139,12 +132,12 @@ public class Message extends MessagingDelegate {
      */
     public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback) {
         if (StringUtils.isNullOrEmpty(name)) {
-            Log.trace(LOG_TAG, "Will not store the callback, no name was provided.");
+            Log.trace(LOG_TAG, SELF_TAG, "Will not store the callback, no name was provided.");
             return;
         }
 
         if (scriptHandlers.get(name) != null) {
-            Log.trace(LOG_TAG, "Will not create a new WebViewJavascriptInterface, the name is already in use.");
+            Log.trace(LOG_TAG, SELF_TAG, "Will not create a new WebViewJavascriptInterface, the name is already in use.");
             return;
         }
 
@@ -156,7 +149,7 @@ public class Message extends MessagingDelegate {
                 getWebView();
 
                 if (webView == null) {
-                    Log.debug(LOG_TAG, "Will not add a javascript interface, the MessageWebView is null.");
+                    Log.debug(LOG_TAG, SELF_TAG, "Will not add a javascript interface, the MessageWebView is null.");
                     return;
                 }
 
@@ -174,7 +167,8 @@ public class Message extends MessagingDelegate {
      */
     public WebView getWebView() {
         if (webView == null) {
-            webView = ((AEPMessage) aepMessage).getWebView();
+            // TODO: uncomment when this is available in services
+            // webView = aepMessage.getWebView();
         }
         return webView;
     }
@@ -189,17 +183,17 @@ public class Message extends MessagingDelegate {
      */
     void evaluateJavascript(final String content) {
         if (StringUtils.isNullOrEmpty(content)) {
-            Log.debug(LOG_TAG, "Will not evaluate javascript, it is null or empty.");
+            Log.debug(LOG_TAG, SELF_TAG, "Will not evaluate javascript, it is null or empty.");
             return;
         }
 
         if (scriptHandlers == null || scriptHandlers.isEmpty()) {
-            Log.debug(LOG_TAG, "Will not evaluate javascript, no script handlers have been set.");
+            Log.debug(LOG_TAG, SELF_TAG, "Will not evaluate javascript, no script handlers have been set.");
             return;
         }
 
         if (webView == null) {
-            Log.debug(LOG_TAG, "Will not evaluate javascript, the MessageWebView is null.");
+            Log.debug(LOG_TAG, SELF_TAG, "Will not evaluate javascript, the MessageWebView is null.");
             return;
         }
 
@@ -207,7 +201,7 @@ public class Message extends MessagingDelegate {
             webView.evaluateJavascript(content, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(final String value) {
-                    Log.debug(LOG_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
+                    Log.debug(LOG_TAG, SELF_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
                     entry.getValue().run(value);
                 }
             });
@@ -219,8 +213,7 @@ public class Message extends MessagingDelegate {
         if (aepMessage != null) {
             // check if messages should be displayed before attempting to show one
             if (!(ServiceProvider.getInstance().getMessageDelegate()).shouldShowMessage(aepMessage)) {
-                Log.debug(LOG_TAG,
-                        "%s - Message couldn't be displayed, MessagingDelegate#shouldShowMessage states the message should not be displayed.", SELF_TAG);
+                Log.debug(LOG_TAG, SELF_TAG, "Message couldn't be displayed, MessagingDelegate#shouldShowMessage states the message should not be displayed.");
                 return;
             }
             if (autoTrack) {
@@ -275,7 +268,7 @@ public class Message extends MessagingDelegate {
         }
      }
      */
-    private MessageSettings addMessageSettings(final AEPMessageSettings.Builder builder, final Map<String, Object> rawSettings) {
+    private MessageSettings messageSettingsFromMap(final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;
         String backdropColor;
         float backdropOpacity;
@@ -368,19 +361,21 @@ public class Message extends MessagingDelegate {
             }
         }
 
-        return builder.setWidth(width)
-                .setHeight(height)
-                .setVerticalInset(verticalInset)
-                .setHorizontalInset(horizontalInset)
-                .setVerticalAlign(verticalAlign)
-                .setHorizontalAlign(horizontalAlign)
-                .setDisplayAnimation(displayAnimation)
-                .setDismissAnimation(dismissAnimation)
-                .setBackdropColor(backdropColor)
-                .setBackdropOpacity(backdropOpacity)
-                .setCornerRadius(cornerRadius)
-                .setUiTakeover(uiTakeover)
-                .setGestures(gestureMap)
-                .build();
+        MessageSettings settings = new MessageSettings();
+        settings.setWidth(width);
+        settings.setHeight(height);
+        settings.setVerticalInset(verticalInset);
+        settings.setHorizontalInset(horizontalInset);
+        settings.setVerticalAlign(verticalAlign);
+        settings.setHorizontalAlign(horizontalAlign);
+        settings.setDisplayAnimation(displayAnimation);
+        settings.setDismissAnimation(dismissAnimation);
+        settings.setBackdropColor(backdropColor);
+        settings.setBackdropOpacity(backdropOpacity);
+        settings.setCornerRadius(cornerRadius);
+        settings.setUiTakeover(uiTakeover);
+        settings.setGestures(gestureMap);
+
+        return settings;
     }
 }

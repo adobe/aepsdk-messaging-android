@@ -10,11 +10,19 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
+
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import com.adobe.marketing.mobile.services.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 
 class ItemData implements Serializable {
+    final static String SELF_TAG = "ItemData";
+
     final String id;
     final String content;
 
@@ -23,7 +31,13 @@ class ItemData implements Serializable {
         this.content = content;
     }
 
-    JsonUtilityService.JSONObject getRuleJsonObject() {
-        return MessagingUtils.getJsonUtilityService().createJSONObject(content);
+    JSONObject getRuleJsonObject() {
+        try {
+            return new JSONObject(content);
+        } catch (JSONException e) {
+            Log.warning(LOG_TAG, SELF_TAG, "JSONException thrown while attempting to create object: %s", e.getLocalizedMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 }

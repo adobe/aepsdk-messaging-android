@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.Map;
  * {@code MessagingConsequenceSerializer} can be used to serialize a {@code MessagingConsequence} instance to a {@code Variant}
  * and to deserialize a {@code Variant} to a {@code MessagingConsequence} instance.
  */
-final class MessagingConsequenceSerializer implements VariantSerializer<MessagingConsequence> {
+final class MessagingConsequenceSerializer {
 
     /**
      * Serializes the given {@code MessagingConsequence} instance to a {@code Variant}.

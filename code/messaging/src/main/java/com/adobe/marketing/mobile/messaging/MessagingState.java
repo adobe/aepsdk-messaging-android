@@ -9,12 +9,12 @@
  governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.ECID;
-import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.ID;
-import static com.adobe.marketing.mobile.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ECID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 import java.util.List;
 import java.util.Map;

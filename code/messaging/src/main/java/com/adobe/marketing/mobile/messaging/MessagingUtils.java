@@ -10,10 +10,12 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.services.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
+
+    private static String SELF_TAG = "MessagingUtils";
+
     /* JSON conversion helpers */
 
     /**
@@ -38,47 +43,18 @@ class MessagingUtils {
      */
     static Map<String, Object> toMap(final JSONObject jsonObject) throws JSONException {
         if (jsonObject == null) {
-            Log.debug(LOG_TAG, "toMap - will not convert to map, the passed in json is null.");
+            Log.debug(LOG_TAG, SELF_TAG, "toMap - will not convert to map, the passed in json is null.");
             return null;
         }
 
         Map<String, Object> jsonAsMap = new HashMap<>();
         Iterator<String> keysIterator = jsonObject.keys();
-
-        if (keysIterator == null) return null;
-
         while (keysIterator.hasNext()) {
             String nextKey = keysIterator.next();
             jsonAsMap.put(nextKey, fromJson(jsonObject.get(nextKey)));
         }
 
         return jsonAsMap;
-    }
-
-    /**
-     * Converts provided {@link org.json.JSONObject} into a {@link Map<String, Variant>} for any number of levels, which can be used as event data.
-     * This method may recurse.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonObject to be converted
-     * @return {@link Map<String, Variant>} containing the elements from the provided json, null if {@code jsonObject} is null
-     */
-    static Map<String, Variant> toVariantMap(final JSONObject jsonObject) throws JSONException {
-        if (jsonObject == null) {
-            Log.debug(LOG_TAG, "toVariantMap - will not convert to variant map, the passed in json is null.");
-            return null;
-        }
-
-        final Map<String, Variant> jsonAsVariantMap = new HashMap<>();
-        final Iterator<String> keysIterator = jsonObject.keys();
-
-        while (keysIterator.hasNext()) {
-            final String nextKey = keysIterator.next();
-            final Object value = fromJson(jsonObject.get(nextKey));
-            jsonAsVariantMap.put(nextKey, getVariantValue(value));
-        }
-
-        return jsonAsVariantMap;
     }
 
     /**
@@ -91,7 +67,7 @@ class MessagingUtils {
      */
     static List<Object> toList(final JSONArray jsonArray) throws JSONException {
         if (jsonArray == null) {
-            Log.debug(LOG_TAG, "toList - will not convert to list, the passed in json array is null.");
+            Log.debug(LOG_TAG, SELF_TAG, "toList - will not convert to list, the passed in json array is null.");
             return null;
         }
 
@@ -123,43 +99,6 @@ class MessagingUtils {
         }
     }
 
-    /**
-     * Converts the provided {@link Object} into a {@link Variant}.
-     * This method is recursive if the passed in {@code Object} is a {@link Map} or {@link List}.
-     *
-     * @param value to be converted to a variant
-     * @return {@code Variant} value of the passed in {@code Object}
-     */
-    private static Variant getVariantValue(final Object value) {
-        final Variant convertedValue;
-        if (value instanceof String) {
-            convertedValue = StringVariant.fromString((String) value);
-        } else if (value instanceof Double) {
-            convertedValue = DoubleVariant.fromDouble((Double) value);
-        } else if (value instanceof Integer) {
-            convertedValue = IntegerVariant.fromInteger((int) value);
-        } else if (value instanceof Boolean) {
-            convertedValue = BooleanVariant.fromBoolean((boolean) value);
-        } else if (value instanceof Long) {
-            convertedValue = LongVariant.fromLong((long) value);
-        } else if (value instanceof Map) {
-            final Map<String, Variant> map = new HashMap<>();
-            for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
-                map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
-            }
-            convertedValue = Variant.fromVariantMap(map);
-        } else if (value instanceof List) {
-            final List<Variant> list = new ArrayList<>();
-            for (final Object element : (List) value) {
-                list.add(getVariantValue(element));
-            }
-            convertedValue = Variant.fromVariantList(list);
-        } else {
-            convertedValue = (Variant) value;
-        }
-        return convertedValue;
-    }
-
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
         if (payloads == null || payloads.size() == 0) {
             return null;
@@ -189,8 +128,8 @@ class MessagingUtils {
             return false;
         }
 
-        return EventType.GENERIC_IDENTITY.getName().equalsIgnoreCase(event.getType()) &&
-                EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+        return EventType.GENERIC_IDENTITY.equalsIgnoreCase(event.getType()) &&
+                EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource());
     }
 
     /**
@@ -203,7 +142,7 @@ class MessagingUtils {
         }
 
         return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType()) &&
-                EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource());
+                EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource());
     }
 
     /**
@@ -216,7 +155,7 @@ class MessagingUtils {
         }
 
         return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType())
-                && EventSource.REQUEST_CONTENT.getName().equalsIgnoreCase(event.getSource())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
     }
 
@@ -229,8 +168,8 @@ class MessagingUtils {
             return false;
         }
 
-        return EventType.RULES_ENGINE.getName().equalsIgnoreCase(event.getType())
-                && EventSource.RESPONSE_CONTENT.getName().equalsIgnoreCase(event.getSource())
+        return EventType.RULES_ENGINE.equalsIgnoreCase(event.getType())
+                && EventSource.RESPONSE_CONTENT.equalsIgnoreCase(event.getSource())
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
     }
 
@@ -253,49 +192,6 @@ class MessagingUtils {
      */
     static boolean isMapNullOrEmpty(final Map map) {
         return map == null || map.isEmpty();
-    }
-
-    // ========================================================================================
-    // PlatformServices getters
-    // ========================================================================================
-
-    /**
-     * Returns the {@link PlatformServices} instance.
-     *
-     * @return {@code PlatformServices} or null if {@code PlatformServices} are unavailable
-     */
-    static PlatformServices getPlatformServices() {
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getPlatformServices - Platform services are not available.");
-        }
-
-        return platformServices;
-    }
-
-    /**
-     * Returns platform {@link JsonUtilityService} instance.
-     *
-     * @return {@code JsonUtilityService} or null if {@link PlatformServices} are unavailable
-     */
-    static JsonUtilityService getJsonUtilityService() {
-        final PlatformServices platformServices = getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService -  Cannot get JsonUtility Service, Platform services are not available.");
-            return null;
-        }
-
-        final JsonUtilityService jsonUtilityService = platformServices.getJsonUtilityService();
-        if (jsonUtilityService == null) {
-            Log.debug(LOG_TAG,
-                    "getJsonUtilityService - JsonUtility services are not available.");
-        }
-
-        return jsonUtilityService;
     }
 
     // ========================================================================================
@@ -339,11 +235,14 @@ class MessagingUtils {
      * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
      */
     static void sendEvent(final Event event, final String errorMessage) {
-        MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
+        MobileCore.dispatchEventWithResponseCallback(event, 5000L, new AdobeCallbackWithError<Event>() {
             @Override
-            public void error(final ExtensionError extensionError) {
-                Log.warning(LOG_TAG, "sendEvent - %s: %s", errorMessage, extensionError);
+            public void fail(AdobeError adobeError) {
+                Log.warning(LOG_TAG, SELF_TAG, "sendEvent - %s: %s", errorMessage, adobeError.getErrorName());
             }
+
+            @Override
+            public void call(Event event) {}
         });
     }
 }

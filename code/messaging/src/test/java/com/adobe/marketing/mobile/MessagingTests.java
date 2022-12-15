@@ -199,7 +199,7 @@ public class MessagingTests {
 
         // verify event
         Event event = eventCaptor.getValue();
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         try {
@@ -235,7 +235,7 @@ public class MessagingTests {
 
         // verify event
         Event event = eventCaptor.getValue();
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         try {
@@ -272,7 +272,7 @@ public class MessagingTests {
 
         // verify event
         Event event = eventCaptor.getValue();
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         try {
@@ -350,7 +350,7 @@ public class MessagingTests {
 
         // verify event
         Event event = eventCaptor.getValue();
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());
@@ -371,7 +371,7 @@ public class MessagingTests {
 
         // verify event
         Event event = eventCaptor.getValue();
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
         assertNotNull(eventData);
         assertEquals(MessagingTestConstants.EventType.MESSAGING.toLowerCase(), event.getEventType().getName());
         assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT.toLowerCase(), event.getEventSource().getName());

@@ -43,7 +43,7 @@ import java.util.Map;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, InAppNotificationHandler.class})
-public class MessagingInternalHandleRulesResponseContentTests {
+public class MessagingExtensionHandleRulesResponseContentTests {
     private final static String mockAppId = "mock_applicationId";
     private final Map<String, Object> mobileParameters = new HashMap() {
         {

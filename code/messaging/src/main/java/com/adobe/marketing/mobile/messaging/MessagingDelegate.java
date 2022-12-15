@@ -10,16 +10,18 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.AEPMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -39,7 +41,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
     private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
     private final String JAVASCRIPT_QUERY_KEY = "js";
     // internal properties
-    MessagingInternal messagingInternal;
+    MessagingExtension messagingExtension;
     Map<String, Object> details = new HashMap<>();
 
     // ============================================================================================
@@ -53,8 +55,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
-        Log.debug(LOG_TAG,
-                "%s - Fullscreen message shown.", SELF_TAG);
+        Log.debug(LOG_TAG, SELF_TAG, "Fullscreen message shown.");
     }
 
     /**
@@ -64,8 +65,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
-        Log.debug(LOG_TAG,
-                "%s - Fullscreen message dismissed.", SELF_TAG);
+        Log.debug(LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 
     /**
@@ -83,12 +83,11 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onShowFailure() {
-        Log.debug(LOG_TAG,
-                "%s - Fullscreen message failed to show.", SELF_TAG);
+        Log.debug(LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");
     }
 
     /**
-     * Invoked when a {@link AEPMessage} is attempting to load a URL.
+     * Invoked when a {@link FullscreenMessage} is attempting to load a URL.
      *
      * @param fullscreenMessage the {@link FullscreenMessage} instance
      * @param urlString         {@link String} containing the URL being loaded by the {@code AEPMessage}
@@ -96,10 +95,10 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public boolean overrideUrlLoad(final FullscreenMessage fullscreenMessage, final String urlString) {
-        Log.trace(LOG_TAG, "%s - Fullscreen overrideUrlLoad callback received with url (%s)", SELF_TAG, urlString);
+        Log.trace(LOG_TAG, SELF_TAG, "Fullscreen overrideUrlLoad callback received with url (%s)", urlString);
 
         if (StringUtils.isNullOrEmpty(urlString)) {
-            Log.debug(LOG_TAG, "%s - Cannot process provided URL string, it is null or empty.", SELF_TAG);
+            Log.debug(LOG_TAG, SELF_TAG, "Cannot process provided URL string, it is null or empty.");
             return true;
         }
 
@@ -114,7 +113,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         try {
             uri = new URI(localUrlString);
         } catch (final URISyntaxException ex) {
-            Log.debug(LOG_TAG, "%s - Invalid message URI found (%s), exception is: %s.", SELF_TAG, urlString, ex.getMessage());
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid message URI found (%s), exception is: %s.", urlString, ex.getMessage());
             return true;
         }
 
@@ -122,15 +121,17 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         final String messageScheme = uri.getScheme();
 
         if (messageScheme == null || !messageScheme.equals(MessagingConstants.MessagingScheme.ADOBE_INAPP)) {
-            Log.debug(LOG_TAG, "%s - Invalid message scheme found in URI. (%s)", SELF_TAG, urlString);
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid message scheme found in URI. (%s)", urlString);
             return false;
         }
 
         // Populate message data
         final String query = uri.getQuery();
-        final Map<String, String> messageData = UrlUtilities.extractQueryParameters(query);
+        final Map<String, String> messageData = extractQueryParameters(query);
 
-        final MessageSettings aepMessageSettings = ((AEPMessage) fullscreenMessage).getSettings();
+        // TODO: use getSettings when available from UIServices
+        // final MessageSettings aepMessageSettings = fullscreenMessage.getSettings();
+        final MessageSettings aepMessageSettings = new MessageSettings();
         final Message message = (Message) aepMessageSettings.getParent();
 
         if (!MessagingUtils.isMapNullOrEmpty(messageData)) {
@@ -138,8 +139,8 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
             final String interaction = messageData.get(MessagingConstants.MessagingScheme.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingInternal class available for tracking
-                messagingInternal = message.messagingInternal;
-                if (messagingInternal != null) {
+                messagingExtension = message.messagingExtension;
+                if (messagingExtension != null) {
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
             }
@@ -177,33 +178,33 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      */
     protected void openUrl(final FullscreenMessage message, final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(LOG_TAG, "Will not open URL, it is null or empty.");
+            Log.debug(LOG_TAG, SELF_TAG,  "Will not open URL, it is null or empty.");
             return;
         }
 
         // if we have a deeplink, open the url via an intent
         if (url.contains(MessagingConstants.MessagingScheme.DEEPLINK)) {
-            Log.debug(LOG_TAG, "%s - Opening deeplink (%s).", SELF_TAG, url);
+            Log.debug(LOG_TAG, SELF_TAG, "Opening deeplink (%s).", url);
             message.openUrl(url);
             return;
         }
 
         // otherwise check if it is a valid url. if so, open the url with the ui service.
-        if (!StringUtils.stringIsUrl(url)) {
-            Log.debug(LOG_TAG, "URL is invalid: %s", url);
+        if (!UrlUtils.isValidUrl(url)) {
+            Log.debug(LOG_TAG, SELF_TAG,  "URL is invalid: %s", url);
             return;
         }
 
         final UIService uiService = ServiceProvider.getInstance().getUIService();
 
         if (uiService == null || !uiService.showUrl(url)) {
-            Log.debug(LOG_TAG, "%s - Could not open URL (%s)", SELF_TAG, url);
+            Log.debug(LOG_TAG, SELF_TAG, "Could not open URL (%s)", url);
         }
     }
 
     private String encodeJavascript(final String urlString) {
         final String[] queryTokens = urlString.split("\\?");
-        final Map<String, String> queryParams = UrlUtilities.extractQueryParameters(queryTokens[1]);
+        final Map<String, String> queryParams = extractQueryParameters(queryTokens[1]);
         final StringBuilder processedUrlStringBuilder = new StringBuilder(queryTokens[0]);
         try {
             final String javascript = queryParams.get(JAVASCRIPT_QUERY_KEY);
@@ -225,8 +226,38 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
                 count++;
             }
         } catch (UnsupportedEncodingException unsupportedEncodingException) {
-            Log.debug(LOG_TAG, "%s - Invalid encoding type (%s), javascript will be ignored.", SELF_TAG, StandardCharsets.UTF_8);
+            Log.debug(LOG_TAG, SELF_TAG, "Invalid encoding type (%s), javascript will be ignored.", StandardCharsets.UTF_8);
         }
         return processedUrlStringBuilder.toString();
+    }
+
+    // TODO: remove below this line after core updates to support these
+    private static Map<String, String> extractQueryParameters(final String queryString) {
+        if (StringUtils.isNullOrEmpty(queryString)) {
+            return null;
+        }
+
+        final Map<String, String> parameters = new HashMap<String, String>();
+        final String[] paramArray = queryString.split("&");
+
+        for (String currentParam : paramArray) {
+            // quick out in case this entry is null or empty string
+            if (StringUtils.isNullOrEmpty(currentParam)) {
+                continue;
+            }
+
+            final String[] currentParamArray = currentParam.split("=", 2);
+
+            if (currentParamArray.length != 2 ||
+                    (currentParamArray[0].isEmpty() || currentParamArray[1].isEmpty())) {
+                continue;
+            }
+
+            final String key = currentParamArray[0];
+            final String value = currentParamArray[1];
+            parameters.put(key, value);
+        }
+
+        return parameters;
     }
 }

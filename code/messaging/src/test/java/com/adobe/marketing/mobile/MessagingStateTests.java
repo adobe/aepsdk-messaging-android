@@ -52,8 +52,8 @@ public class MessagingStateTests {
     @Test
     public void test_setState_when_paramsArePresent() {
         //mocks
-        EventData mockConfigEventData = getMockConfigEventData();
-        EventData mockIdentityEventData = getMockEdgeIdentityEventData();
+       Map<String, Object> mockConfigEventData = getMockConfigEventData();
+       Map<String, Object> mockIdentityEventData = getMockEdgeIdentityEventData();
 
         // test
         messagingState.setState(mockConfigEventData.toObjectMap(), mockIdentityEventData.toObjectMap());
@@ -62,14 +62,14 @@ public class MessagingStateTests {
         Assert.assertEquals(messagingState.getExperienceEventDatasetId(), MOCK_EXP_EVENT_DATASET);
     }
 
-    private EventData getMockConfigEventData() {
-        EventData configEventData = new EventData();
+    privateMap<String, Object> getMockConfigEventData() {
+       Map<String, Object> configEventData = new EventData();
         configEventData.putString(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, MOCK_EXP_EVENT_DATASET);
         return configEventData;
     }
 
-    private EventData getMockEdgeIdentityEventData() {
-        EventData identityEventData = new EventData();
+    privateMap<String, Object> getMockEdgeIdentityEventData() {
+       Map<String, Object> identityEventData = new EventData();
         Map<String, Variant> identityMap = new HashMap<>();
         List<Variant> ecids = new ArrayList<>();
         ecids.add(Variant.fromStringMap(Collections.singletonMap(MessagingConstants.SharedState.EdgeIdentity.ID, MOCK_VID)));

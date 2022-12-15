@@ -10,17 +10,15 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.CACHE_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
-
-import org.json.JSONArray;
-import org.json.JSONException;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_NAME;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,12 +27,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.caching.CacheEntry;
+import com.adobe.marketing.mobile.services.caching.CacheExpiry;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
+import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.services.Networking;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.UrlUtils;
 
 /**
  * This class contains functionality to cache the json message payload and any image asset URL's present in an
@@ -42,24 +50,12 @@ import java.util.Map;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private final SystemInfoService systemInfoService;
-    private final NetworkService networkService;
     private final Map<String, String> assetMap = new HashMap<>();
-    private final CacheManager cacheManager;
+    private final CacheService cacheManager;
+    private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
 
-    MessagingCacheUtilities(final SystemInfoService systemInfoService, final NetworkService networkService, final CacheManager cacheManager) throws MissingPlatformServicesException {
-        if (networkService == null) {
-            throw new MissingPlatformServicesException("Network service implementation missing");
-        }
-        if (systemInfoService == null) {
-            throw new MissingPlatformServicesException("System info service implementation missing");
-        }
-        if (cacheManager == null) {
-            throw new MissingPlatformServicesException("Cache Manager implementation missing");
-        }
-        this.systemInfoService = systemInfoService;
-        this.networkService = networkService;
-        this.cacheManager = cacheManager;
+    MessagingCacheUtilities() {
+        this.cacheManager = ServiceProvider.getInstance().getCacheService();
         createImageAssetsCacheDirectory();
     }
     // ========================================================================================================
@@ -72,16 +68,16 @@ final class MessagingCacheUtilities {
      * @return {@code boolean} containing true if cached propositions are found, false otherwise.
      */
     boolean arePropositionsCached() {
-        return cacheManager.getFileForCachedURL(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, false) != null;
+        return cacheManager.get(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY) != null;
     }
 
     /**
-     * Delete all contents in the {@link Messaging} extension cache subdirectory.
+     * Delete all contents in the Messaging extension cache subdirectory.
      */
     void clearCachedData() {
-        cacheManager.deleteFilesNotInList(null, PROPOSITIONS_CACHE_SUBDIRECTORY, true);
-        cacheManager.deleteFilesNotInList(null, IMAGES_CACHE_SUBDIRECTORY, true);
-        Log.trace(LOG_TAG, "%s - In-app messaging %s and %s caches have been deleted.", SELF_TAG, PROPOSITIONS_CACHE_SUBDIRECTORY, IMAGES_CACHE_SUBDIRECTORY);
+        cacheManager.remove(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY);
+        cacheManager.remove(CACHE_NAME, IMAGES_CACHE_SUBDIRECTORY);
+        Log.trace(LOG_TAG, SELF_TAG, "In-app messaging %s and %s caches have been deleted.", PROPOSITIONS_CACHE_SUBDIRECTORY, IMAGES_CACHE_SUBDIRECTORY);
     }
 
     /**
@@ -90,39 +86,37 @@ final class MessagingCacheUtilities {
      * @return a {@code List<PropositionPayload>} containing the cached proposition payloads.
      */
     List<PropositionPayload> getCachedPropositions() {
-        final File cachedMessageFile = cacheManager.getFileForCachedURL(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, false);
+        final CacheResult cachedMessageFile = cacheManager.get(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cachedMessageFile == null) {
-            Log.trace(LOG_TAG, "%s - Unable to find a cached proposition.", SELF_TAG);
+            Log.trace(LOG_TAG, SELF_TAG,"Unable to find a cached proposition.");
             return null;
         }
 
-        Log.trace(LOG_TAG, "%s - Loading cached proposition from (%s)", SELF_TAG, cachedMessageFile.getPath());
-        FileInputStream fileInputStream = null;
+        final Map<String, String> fileMetadata = cachedMessageFile.getMetadata();
+        if (fileMetadata != null && !fileMetadata.isEmpty()) {
+            Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
+        }
         ObjectInputStream objectInputStream = null;
         List<PropositionPayload> cachedPropositions;
         try {
-            fileInputStream = new FileInputStream(cachedMessageFile);
-            objectInputStream = new ObjectInputStream(fileInputStream);
+            objectInputStream = new ObjectInputStream(cachedMessageFile.getData());
             cachedPropositions = (List<PropositionPayload>) objectInputStream.readObject();
         } catch (final FileNotFoundException fileNotFoundException) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when retrieving the cached proposition file: %s", SELF_TAG, fileNotFoundException.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", fileNotFoundException.getMessage());
             return null;
         } catch (final IOException ioException) {
-            Log.warning(LOG_TAG, "%s - Exception occurred when reading from the cached file: %s", SELF_TAG, ioException.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when reading from the cached file: %s", ioException.getMessage());
             return null;
         } catch (final ClassNotFoundException classNotFoundException) {
-            Log.warning(LOG_TAG, "%s - Class not found: %s", SELF_TAG, classNotFoundException.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Class not found: %s", classNotFoundException.getMessage());
             return null;
         } finally {
             try {
-                if (fileInputStream != null) {
-                    fileInputStream.close();
-                }
                 if (objectInputStream != null) {
                     objectInputStream.close();
                 }
             } catch (final IOException ioException) {
-                Log.warning(LOG_TAG, "%s - Exception occurred when closing the FileInputStream: %s", SELF_TAG, ioException.getMessage());
+                Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when closing the FileInputStream: %s", ioException.getMessage());
                 return null;
             }
         }
@@ -137,29 +131,36 @@ final class MessagingCacheUtilities {
     void cachePropositions(final List<PropositionPayload> propositionPayload) {
         // clean any existing cached files first
         clearCachedData();
-        Log.debug(LOG_TAG, "%s - Creating new cached propositions at: %s", SELF_TAG, cacheManager.getBaseFilePath(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY));
-        final File propositionCache = cacheManager.createNewCacheFile(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, new Date());
-        FileOutputStream fileOutputStream;
+        Log.debug(LOG_TAG, SELF_TAG, "Creating new cached propositions");
+        ByteArrayOutputStream byteArrayOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
+        InputStream inputStream = null;
 
         try {
-            fileOutputStream = new FileOutputStream(propositionCache, false);
-            objectOutputStream = new ObjectOutputStream(fileOutputStream);
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(propositionPayload);
             objectOutputStream.flush();
+            inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            final CacheEntry cacheEntry = new CacheEntry(inputStream, CacheExpiry.never(), null);
+            cacheManager.set(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY, cacheEntry);
         } catch (final IOException e) {
-            Log.warning(LOG_TAG, "%s - IOException while attempting to write remote file (%s)", SELF_TAG, e);
-            return;
+            Log.warning(LOG_TAG, SELF_TAG, "IOException while attempting to write remote file (%s)", e);
         } finally {
             try {
                 if (objectOutputStream != null) {
                     objectOutputStream.close();
                 }
+                if (byteArrayOutputStream != null) {
+                    byteArrayOutputStream.close();
+                }
+                if (inputStream != null) {
+                    inputStream.close();
+                }
             } catch (final IOException e) {
-                Log.warning(LOG_TAG, "%s - Unable to close the ObjectOutputStream (%s) ", SELF_TAG, e);
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to close the ObjectOutputStream (%s) ", e);
             }
         }
-        return;
     }
 
     // ========================================================================================================
@@ -173,7 +174,7 @@ final class MessagingCacheUtilities {
      */
     void cacheImageAssets(final List<String> assetsUrls) {
         if (cacheManager == null) {
-            Log.trace(LOG_TAG, "%s - Failed to cache asset, the cache manager is not available.", SELF_TAG);
+            Log.trace(LOG_TAG, SELF_TAG, "Failed to cache asset, the cache manager is not available.");
             return;
         }
 
@@ -209,7 +210,7 @@ final class MessagingCacheUtilities {
      * @return {@code boolean} indicating whether the provided asset is downloadable
      */
     boolean assetIsDownloadable(final String assetUrl) {
-        return StringUtils.stringIsUrl(assetUrl) && (assetUrl.startsWith("http"));
+        return UrlUtils.isValidUrl(assetUrl) && (assetUrl.startsWith("http"));
     }
 
     /**

@@ -48,7 +48,7 @@ public class ListenerIdentityRequestContentTests {
     @Test
     public void testHear_WhenIdentityRequestContentEvent() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
@@ -78,7 +78,7 @@ public class ListenerIdentityRequestContentTests {
     @Test
     public void testHear_WithNullParentExtension() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", EventType.GENERIC_IDENTITY,
                 EventSource.REQUEST_CONTENT).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);

@@ -10,27 +10,27 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * {@code MessagingConsequence} class represents a Messaging extension rule consequence present in an Edge response event from Offers.
  */
-class MessagingConsequence {
+class MessagingConsequence implements Serializable {
     private final String id;
     private final String type;
-    private final Map<String, Variant> details;
+    private final Map<String, Object> details;
 
     /**
      * Constructor
      *
      * @param id      {@link String} containing unique consequence Id
      * @param type    {@code String} containing message consequence type
-     * @param details {@code Map<String, Variant>} containing consequence detail
+     * @param details {@code Map<String, Object>} containing consequence detail
      */
-    MessagingConsequence(final String id, final String type,
-                         final Map<String, Variant> details) {
+    MessagingConsequence(final String id, final String type, final Map<String, Object> details) {
         this.id = id;
         this.type = type;
         this.details = details;
@@ -57,9 +57,9 @@ class MessagingConsequence {
     /**
      * Get the {@code detail} Map for this {@code MessagingRuleConsequence} instance.
      *
-     * @return {@code Map<String,Variant>} containing this {@link MessagingConsequence#details}
+     * @return {@code Map<String, Object>} containing this {@link MessagingConsequence#details}
      */
-    Map<String, Variant> getDetails() {
+    Map<String, Object> getDetails() {
         return details;
     }
 }
