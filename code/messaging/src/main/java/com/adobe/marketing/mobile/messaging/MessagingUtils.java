@@ -14,6 +14,11 @@ package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ECID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
+
 import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.Log;
 
@@ -244,5 +249,49 @@ class MessagingUtils {
             @Override
             public void call(Event event) {}
         });
+    }
+
+    // ========================================================================================
+    // Shared State Helpers
+    // ========================================================================================
+    static String getSharedStateEcid(final Map<String, Object> edgeIdentityState) {
+        if (edgeIdentityState != null) {
+            try {
+                Object identityMapObj = edgeIdentityState.get(IDENTITY_MAP);
+                if (identityMapObj instanceof Map) {
+                    Map<String, Object> identityMap = (Map<String, Object>) identityMapObj;
+                    Object ecidsObj = identityMap.get(ECID);
+                    if (ecidsObj instanceof List) {
+                        List<Object> ecids = (List<Object>) identityMap.get(ECID);
+                        if (!ecids.isEmpty()) {
+                            Object ecidObject = ecids.get(0);
+                            if (ecidObject instanceof Map) {
+                                Map<String, Object> ecid = (Map<String, Object>) ecids.get(0);
+                                Object idObj = ecid.get(ID);
+                                if (idObj instanceof String) {
+                                    return (String) idObj;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (ClassCastException e) {
+                Log.debug(LOG_TAG, SELF_TAG, "Exception while trying to get the ECID. Error -> %s", e.getLocalizedMessage());
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    static String getShareStateMessagingEventDatasetId(final Map<String, Object> configState) {
+        if (configState != null) {
+            Object expEventDatasetId = configState.get(EXPERIENCE_EVENT_DATASET_ID);
+            if (expEventDatasetId instanceof String) {
+                return (String) expEventDatasetId;
+            }
+        }
+
+        return null;
     }
 }

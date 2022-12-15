@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messaging;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "1.3.0-beta-3";
+    static final String EXTENSION_VERSION = "2.0.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_NAME = "com.adobe.messaging.cache";
@@ -25,16 +25,12 @@ final class MessagingConstants {
     }
 
     final class TrackingKeys {
-        static final String _XDM = "_xdm";
         static final String XDM = "xdm";
         static final String META = "meta";
         static final String CJM = "cjm";
         static final String MIXINS = "mixins";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
-        static final String MESSAGE_EXECUTION = "messageExecution";
-        static final String MESSAGE_EXECUTION_ID = "messageExecutionID";
-        static final String MESSAGE_ID = "messageID";
         static final String MESSAGE_PROFILE_JSON = "{\n" +
                 "   \"messageProfile\":{\n" +
                 "      \"channel\":{\n" +
@@ -66,7 +62,6 @@ final class MessagingConstants {
     final class MessagingScheme {
         static final String ADOBE_INAPP = "adbinapp";
         static final String PATH_CANCEL = "cancel";
-        static final String PATH_CONFIRM = "confirm";
         static final String PATH_DISMISS = "dismiss";
         static final String INTERACTION = "interaction";
         static final String DEEPLINK = "adb_deeplink";
@@ -106,13 +101,8 @@ final class MessagingConstants {
         final class Messaging {
             static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
             static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
-            static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
-
-            // Google messaging id key
-            static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
-
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
             static final String REFRESH_MESSAGES = "refreshmessages";
@@ -128,8 +118,6 @@ final class MessagingConstants {
                 static final String PUSH_PROVIDER = "pushProvider";
                 static final String EVENT_TYPE = "eventType";
                 static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
-                static final String IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME = "inappMessageTracking";
-                static final String ACTION = "action";
 
                 private XDMDataKeys() {
                 }
@@ -160,7 +148,6 @@ final class MessagingConstants {
             }
 
             final class IAMDetailsDataKeys {
-                static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
                 static final String SURFACE_BASE = "mobileapp://";
 
                 private IAMDetailsDataKeys() {
@@ -189,7 +176,6 @@ final class MessagingConstants {
 
                 final class Key {
                     static final String PERSONALIZATION = "personalization";
-                    static final String CHARACTERISTICS = "characteristics";
                     static final String DECISIONING = "decisioning";
                     static final String PAYLOAD = "payload";
                     static final String ITEMS = "items";
@@ -198,27 +184,12 @@ final class MessagingConstants {
                     static final String SCOPE_DETAILS = "scopeDetails";
                     static final String QUERY = "query";
                     static final String SURFACES = "surfaces";
-                    static final String ACTION = "action";
-                    static final String IN_APP_MESSAGE_TRACKING = "inappMessageTracking";
-                    static final String CJM_XDM = "cjmXdm";
                     static final String PROPOSITION_EVENT_TYPE = "propositionEventType";
                     static final String PROPOSITIONS = "propositions";
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
 
-                    private Key() {
-                    }
-                }
-
-                final class Value {
-                    static final String TRIGGERED = "triggered";
-                    static final String DISPLAYED = "displayed";
-                    static final String CLICKED = "clicked";
-                    static final String DISMISSED = "dismissed";
-                    static final String EMPTY_CONTENT = "{}";
-
-                    private Value() {
-                    }
+                    private Key() {}
                 }
             }
         }
@@ -233,9 +204,7 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_XDM = "_xdm";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {
@@ -243,8 +212,6 @@ final class MessagingConstants {
         }
 
         final class MobileParametersKeys {
-            static final String MOBILE_PARAMETERS = "mobileParameters";
-            static final String SCHEMA_VERSION = "schemaVersion";
             static final String WIDTH = "width";
             static final String HEIGHT = "height";
             static final String VERTICAL_ALIGN = "verticalAlign";
@@ -258,7 +225,6 @@ final class MessagingConstants {
             static final String BACKDROP_OPACITY = "backdropOpacity";
             static final String CORNER_RADIUS = "cornerRadius";
             static final String GESTURES = "gestures";
-            static final String BODY = "body";
 
             private MobileParametersKeys() {
             }
@@ -275,7 +241,6 @@ final class MessagingConstants {
 
     final class EventName {
         static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
-        static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
@@ -299,14 +264,6 @@ final class MessagingConstants {
         static final String PERSONALIZATION_REQUEST_ERROR = "Error in dispatching event to fetch in-app messages";
 
         private EventDispatchErrors() {
-        }
-    }
-
-    final class EventDataValues {
-        static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
-        static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
-
-        private EventDataValues() {
         }
     }
 

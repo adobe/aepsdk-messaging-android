@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import android.webkit.JavascriptInterface;
+import com.adobe.marketing.mobile.AdobeCallback;
 
 public class WebViewJavascriptInterface {
     private final AdobeCallback<String> callback;
