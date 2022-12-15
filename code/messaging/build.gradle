@@ -177,7 +177,7 @@ signing {
 
 task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
     def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
+    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile/messaging", excludes: excludeRegex)
 
     additionalClassDirs.setFrom files([debugTree])
     additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
@@ -193,7 +193,7 @@ task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebug
 
 task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPhoneDebugCoverageReport") {
     def excludeRegex = ['**/ADB*.class']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
+    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile/messaging", excludes: excludeRegex)
 
     additionalClassDirs.setFrom files([debugTree])
     additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
@@ -211,7 +211,6 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 
 dependencies {
     implementation 'com.github.adobe.aepsdk-core-android:core:v2.0.0-alpha.4'
-    // implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

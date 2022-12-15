@@ -27,7 +27,7 @@ android {
 
 dependencies {
     compileOnly project(':messaging')
-    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}"
+    implementation 'com.github.adobe.aepsdk-core-android:core:v2.0.0-alpha.4'
     implementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
