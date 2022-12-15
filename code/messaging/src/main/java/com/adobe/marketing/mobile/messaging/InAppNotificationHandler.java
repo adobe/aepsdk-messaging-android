@@ -275,7 +275,7 @@ class InAppNotificationHandler {
 
         // ensure we have a CJM IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type: %s.");
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type.");
             return;
         }
 
