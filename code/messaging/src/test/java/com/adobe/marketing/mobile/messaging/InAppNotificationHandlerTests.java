@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS;
 import static com.adobe.marketing.mobile.MessagingTestConstants.EventType.EDGE;

@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
