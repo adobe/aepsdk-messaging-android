@@ -76,7 +76,6 @@ import java.util.concurrent.Executors;
 
 public final class MessagingExtension extends Extension {
     final static String SELF_TAG = "MessagingExtension";
-    private final MessagingState messagingState;
     private final Object executorMutex = new Object();
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final InAppNotificationHandler inAppNotificationHandler;
@@ -113,9 +112,6 @@ public final class MessagingExtension extends Extension {
 
         // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
         this.inAppNotificationHandler = new InAppNotificationHandler(this, extensionApi, messagingRulesEngine);
-
-        // initialize the messaging state
-        this.messagingState = new MessagingState();
     }
 
     //region Extension interface methods
@@ -289,14 +285,9 @@ public final class MessagingExtension extends Extension {
                 return;
             }
 
-            // Set the messaging state
-            messagingState.setState(configSharedState, edgeIdentitySharedState);
-
             // validate fetch messages event then refresh in-app messages via an Edge extension event
             if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
-                if (messagingState.isConfigStateSet()) {
-                    inAppNotificationHandler.fetchMessages();
-                }
+                inAppNotificationHandler.fetchMessages();
             } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
                 // handle the push token from generic identity request content event
                 handlePushToken(eventToProcess);
@@ -333,7 +324,14 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final Map<String, Object> eventData = getProfileEventData(pushToken, messagingState.getEcid());
+        final Map<String, Object> edgeIdentitySharedState = getXDMSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
+        final String ecid = MessagingUtils.getSharedStateEcid(edgeIdentitySharedState);
+        if (StringUtils.isNullOrEmpty(ecid)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to sync the push token. ECID is unavailable for the user.");
+            return;
+        }
+
+        final Map<String, Object> eventData = getProfileEventData(pushToken, ecid);
         if (eventData == null) {
             return;
         }
@@ -368,7 +366,8 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final String datasetId = messagingState.getExperienceEventDatasetId();
+        final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
+        final String datasetId = MessagingUtils.getShareStateMessagingEventDatasetId(configSharedState);
         if (StringUtils.isNullOrEmpty(datasetId)) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
             return;

@@ -14,7 +14,10 @@ package com.adobe.marketing.mobile.messaging;
 
 import android.app.Notification;
 
-import com.adobe.marketing.mobile.internal.utility.StringUtils;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import com.adobe.marketing.mobile.util.StringUtils;
+
+import com.adobe.marketing.mobile.services.Log;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
@@ -54,11 +57,11 @@ public class MessagingPushPayload {
      */
     public MessagingPushPayload(final RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstants.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message is null", SELF_TAG);
+            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message is null");
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstants.LOG_TAG, "%s - Failed to create MessagingPushPayload, remote message data payload is null", SELF_TAG);
+            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message data payload is null");
             return;
         }
         init(message.getData());
@@ -134,7 +137,7 @@ public class MessagingPushPayload {
     private void init(final Map<String, String> data) {
         this.data = data;
         if (data == null) {
-            Log.debug(MessagingConstants.LOG_TAG, "Payload extraction failed because data provided is null");
+            Log.debug(LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
             return;
         }
         this.title = data.get(MessagingConstants.PushNotificationPayload.TITLE);
@@ -196,7 +199,7 @@ public class MessagingPushPayload {
 
     private List<ActionButton> getActionButtonsFromString(final String actionButtons) {
         if (actionButtons == null) {
-            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : actionButtons is null", SELF_TAG);
+            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
             return null;
         }
         List<ActionButton> actionButtonList = new ArrayList<>(3);
@@ -209,7 +212,7 @@ public class MessagingPushPayload {
                 actionButtonList.add(button);
             }
         } catch (final JSONException e) {
-            Log.warning(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
             return null;
         }
         return actionButtonList;
@@ -219,16 +222,16 @@ public class MessagingPushPayload {
         try {
             final String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
             if (label.isEmpty()) {
-                Log.debug(MessagingConstants.LOG_TAG, "%s - Label is empty", SELF_TAG);
+                Log.debug(LOG_TAG, SELF_TAG, "Label is empty");
                 return null;
             }
             final String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
             final String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
 
-            Log.trace(MessagingConstants.LOG_TAG, "%s - Creating an ActionButton with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
+            Log.trace(LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
             return new ActionButton(label, uri, type);
         } catch (final JSONException e) {
-            Log.warning(MessagingConstants.LOG_TAG, "%s - Exception in converting actionButtons json string to json object, Error : %s", SELF_TAG, e.getMessage());
+            Log.warning(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
             return null;
         }
     }

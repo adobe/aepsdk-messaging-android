@@ -18,6 +18,8 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKey
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ACTIVITY;
 
+import com.adobe.marketing.mobile.util.StringUtils;
+
 import java.io.Serializable;
 import java.util.Map;
 
