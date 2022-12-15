@@ -13,32 +13,37 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
+import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.*;
-import com.adobe.marketing.mobile.rulesengine.*;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.UrlUtils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -52,22 +57,25 @@ import java.util.Map;
 class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     final MessagingExtension parent;
-    private final Extension messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
     private String requestMessagesEventId;
+    private final ExtensionApi extensionApi;
+    private final LaunchRulesEngine launchRulesEngine;
 
     /**
      * Constructor
      *
-     * @param parent                  {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param parent       {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param extensionApi {@link ExtensionApi} instance
+     * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      */
-    InAppNotificationHandler(final MessagingExtension parent) {
+    InAppNotificationHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
         this.parent = parent;
         this.messagingCacheUtilities = new MessagingCacheUtilities();
-        // create a module to get access to the Core rules engine for adding AJO in-app message rules
-        // TODO: still needed with rules engine changes?
-        messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) { };
+        this.extensionApi = extensionApi;
+        this.launchRulesEngine = rulesEngine;
+
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
         if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
             List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
@@ -150,7 +158,7 @@ class InAppNotificationHandler {
 
     /**
      * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JSONObject}s
-     * found will be registered with the {@link RulesEngine}.
+     * found will be registered with the {@link LaunchRulesEngine}.
      *
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
@@ -167,7 +175,7 @@ class InAppNotificationHandler {
                 return;
             }
 
-            final String appSurface = ServiceProvider.getInstance().getAppContextService().getApplicationContext().getPackageName();;
+            final String appSurface = ServiceProvider.getInstance().getAppContextService().getApplicationContext().getPackageName();
             Log.trace(LOG_TAG, "%s - Using the application identifier (%s) to validate the notification payload.", SELF_TAG, appSurface);
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
@@ -195,38 +203,21 @@ class InAppNotificationHandler {
                 }
             }
         }
-
-        registerRules(foundRules);
-    }
-
-    /**
-     * Parses each item in the {@code List<JsonUtilityService.JSONObject>>} then adds all valid rules to the {@link RulesEngine}.
-     *
-     * @param rulePayload a {@link List<JsonUtilityService.JSONObject>>} containing a rule payload.
-     */
-    private void registerRules(final List<JSONObject> rulePayload) {
-        final List<Rule> parsedRules = new ArrayList<>();
-
-        // create rule objects from the rule JSONs and load them into the rule engine
-        for (final JSONObject ruleJson : rulePayload) {
-            final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
-            if (parsedRule != null) {
-                parsedRules.add(parsedRule);
-            }
-        }
+        final JSONArray jsonArrayFromRulesList = new JSONArray(foundRules);
+        final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.toString(), extensionApi);
         Log.debug(LOG_TAG, "%s - registerRules - registering %d rules", SELF_TAG, parsedRules.size());
-        messagingModule.replaceRules(parsedRules);
+        launchRulesEngine.replaceRules(parsedRules);
     }
 
     /**
      * Creates a mapping between the message id and the {@code PropositionInfo} to use for in-app message interaction tracking.
      *
-     * @param messageId a {@code String} containing the rule consequence id
+     * @param messageId          a {@code String} containing the rule consequence id
      * @param propositionPayload a {@link PropositionPayload} containing an in-app message payload
      */
     private void storePropositionInfo(final String messageId, final PropositionPayload propositionPayload) {
         if (StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(LOG_TAG, "Unable to associate proposition information for in-app message. MessageId unavailable in rule consequence.");
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to associate proposition information for in-app message. MessageId unavailable in rule consequence.");
             return;
         }
         propositionInfoMap.put(messageId, propositionPayload.propositionInfo);
@@ -247,13 +238,13 @@ class InAppNotificationHandler {
      *
      * @return a {@code String> containing the consequence id
      */
-    private String getMessageId(final JsonUtilityService.JSONObject rulePayload) {
-        final JsonUtilityService.JSONObject consequences;
+    private String getMessageId(final JSONObject rulePayload) {
+        final JSONObject consequences;
         try {
             consequences = rulePayload.getJSONArray(JSON_KEY).getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY).getJSONObject(0);
             return consequences.getString(MESSAGE_CONSEQUENCE_ID);
-        } catch (final JsonException exception) {
-            Log.warning(LOG_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
+        } catch (final JSONException exception) {
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
             return null;
         }
     }
@@ -315,138 +306,32 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Cache any asset URL's present in the {@link RuleConsequence} detail {@link JSONObject}.
+     * Cache any asset URL's present in the {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} detail {@link JSONObject}.
      *
-     * @param ruleJsonObject A {@link Rule} JSON object containing an in-app message definition.
+     * @param ruleJsonObject A {@link JSONObject} containing an in-app message definition.
      */
-    private void cacheImageAssetsFromPayload(final JsonUtilityService.JSONObject ruleJsonObject) {
+    private void cacheImageAssetsFromPayload(final JSONObject ruleJsonObject) {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
-            final JsonUtilityService.JSONArray rulesArray = ruleJsonObject.getJSONArray(JSON_KEY);
-            final JsonUtilityService.JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
-            final JsonUtilityService.JSONObject details = consequence.getJSONObject(0).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-            final JsonUtilityService.JSONArray remoteAssets = details.getJSONArray(MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+            final JSONArray rulesArray = ruleJsonObject.getJSONArray(JSON_KEY);
+            final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            final JSONObject details = consequence.getJSONObject(0).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            final JSONArray remoteAssets = details.getJSONArray(MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
             if (remoteAssets.length() != 0) {
                 for (int index = 0; index < remoteAssets.length(); index++) {
                     final String imageAssetUrl = (String) remoteAssets.get(index);
-                    if (StringUtils.stringIsUrl(imageAssetUrl)) {
+                    if (UrlUtils.isValidUrl(imageAssetUrl)) {
                         Log.debug(LOG_TAG,
                                 "%s - Image asset to be cached (%s) ", SELF_TAG, imageAssetUrl);
                         remoteAssetsList.add(imageAssetUrl);
                     }
                 }
             }
-        } catch (final JsonException jsonException) {
+        } catch (final JSONException jsonException) {
             Log.warning(LOG_TAG,
                     "%s - An exception occurred retrieving the remoteAssets array from the rule json payload: %s", SELF_TAG, jsonException.getLocalizedMessage());
             return;
         }
         messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
-    }
-
-    /**
-     * Parses rules from the provided {@code jsonObject} into a {@code Rule}.
-     *
-     * @param rulesJsonObject {@code JSONObject} containing a rule and consequences
-     * @return a {@code Rule} object that was parsed from the input {@code jsonObject} or null if parsing failed.
-     */
-    private Rule parseRuleFromJsonObject(final JsonUtilityService.JSONObject rulesJsonObject) {
-        if (rulesJsonObject == null) {
-            Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse rules, input jsonObject is null.", SELF_TAG);
-            return null;
-        }
-
-        JsonUtilityService.JSONArray rulesJsonArray;
-
-        try {
-            rulesJsonArray = rulesJsonObject.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY);
-        } catch (final JsonException jsonException) {
-            Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse rules (%s)", SELF_TAG, jsonException);
-            return null;
-        }
-
-        // loop through each rule definition
-        Rule parsedRule = null;
-        for (int i = 0; i < rulesJsonArray.length(); i++) {
-            try {
-                // get individual rule json object
-                final JsonUtilityService.JSONObject ruleObject = rulesJsonArray.getJSONObject(i);
-                // get rule condition
-                final JsonUtilityService.JSONObject ruleConditionJsonObject = ruleObject.getJSONObject(JSON_CONDITION_KEY);
-                final RuleCondition condition = RuleCondition.ruleConditionFromJson(ruleConditionJsonObject);
-                // get consequences
-                final JsonUtilityService.JSONArray consequenceJSONArray = ruleObject.getJSONArray(JSON_CONSEQUENCES_KEY);
-                final List<Event> consequences = generateConsequenceEvents(consequenceJSONArray);
-                if (consequences != null) {
-                    parsedRule = new Rule(condition, consequences);
-                }
-            } catch (final JsonException e) {
-                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse individual rule json (%s)", SELF_TAG, e.getLocalizedMessage());
-            } catch (final UnsupportedConditionException e) {
-                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to parse individual rule conditions (%s)", SELF_TAG, e);
-            } catch (final IllegalArgumentException e) {
-                Log.debug(LOG_TAG, "%s - parseRulesFromJsonObject -  Unable to create rule object (%s)", SELF_TAG, e);
-            }
-        }
-
-        return parsedRule;
-    }
-
-    /**
-     * Parses {@code MessagingConsequence} objects from the given {@code consequenceJsonArray} and converts them
-     * into a list of {@code Event}s.
-     * <p>
-     *
-     * @param consequenceJsonArray {@link JsonUtilityService.JSONArray} object containing 1 or more rule consequence definitions
-     * @return a {@code List} of consequence {@code Event} objects.
-     * @throws JsonException if errors occur during parsing
-     */
-    private List<Event> generateConsequenceEvents(final JsonUtilityService.JSONArray consequenceJsonArray) throws
-            JsonException {
-        final List<Event> parsedEvents = new ArrayList<>();
-
-        if (consequenceJsonArray == null || consequenceJsonArray.length() == 0) {
-            Log.debug(LOG_TAG,
-                    "%s - generateConsequenceEvents -  The passed in consequence array is null, so returning an empty consequence events list.", SELF_TAG);
-            return parsedEvents;
-        }
-
-        final JsonUtilityService jsonUtilityService = MessagingUtils.getJsonUtilityService();
-
-        if (jsonUtilityService == null) {
-            Log.debug(LOG_TAG,
-                    "%s - generateConsequenceEvents -  JsonUtility service is not available, returning empty consequence events list.", SELF_TAG);
-            return parsedEvents;
-        }
-
-        JsonObjectVariantSerializer serializer = new JsonObjectVariantSerializer(jsonUtilityService);
-        for (int i = 0; i < consequenceJsonArray.length(); i++) {
-            try {
-                final Variant consequenceAsVariant = Variant.fromTypedObject(consequenceJsonArray.getJSONObject(i), serializer);
-
-                MessagingConsequence consequence = consequenceAsVariant.getTypedObject(new MessagingConsequenceSerializer());
-
-                if (consequence != null) {
-                    final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
-                            new MessagingConsequenceSerializer()).getVariantMap();
-
-                   Map<String, Object> eventData = new EventData();
-                    eventData.putVariantMap(CONSEQUENCE_TRIGGERED,
-                            consequenceVariantMap);
-
-                    final Event event = new Event.Builder("Rules Event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
-                            .setData(eventData)
-                            .build();
-
-                    parsedEvents.add(event);
-                }
-            } catch (VariantException ex) {
-                Log.warning(LOG_TAG,
-                        "%s - Unable to convert consequence json object to a variant.", SELF_TAG);
-                return null;
-            }
-        }
-
-        return parsedEvents;
     }
 }

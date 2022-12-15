@@ -52,6 +52,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -79,6 +80,7 @@ public final class MessagingExtension extends Extension {
     private final InAppNotificationHandler inAppNotificationHandler;
     private ExecutorService executorService;
     private boolean initialMessageFetchComplete = false;
+    private LaunchRulesEngine messagingRulesEngine;
 
     /**
      * Constructor.
@@ -104,8 +106,11 @@ public final class MessagingExtension extends Extension {
     MessagingExtension(final ExtensionApi extensionApi) {
         super(extensionApi);
 
+        // initialize the messaging extension rules engine instance
+        messagingRulesEngine = new LaunchRulesEngine(extensionApi);
+
         // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
-        this.inAppNotificationHandler = new InAppNotificationHandler(this);
+        this.inAppNotificationHandler = new InAppNotificationHandler(this, extensionApi, messagingRulesEngine);
 
         // initialize the messaging state
         this.messagingState = new MessagingState();
