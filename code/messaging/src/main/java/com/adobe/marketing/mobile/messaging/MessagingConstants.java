@@ -279,6 +279,7 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+        static final String TRIGGERED_IN_APP_MESSAGE_EVENT = "Triggered in-app message event";
 
         private EventName() {
         }
@@ -297,6 +298,7 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_ERROR = "Error in dispatching event for push notification tracking";
         static final String IN_APP_TRACKING_ERROR = "Error in dispatching event for in-app notification tracking";
         static final String PERSONALIZATION_REQUEST_ERROR = "Error in dispatching event to fetch in-app messages";
+        static final String IN_APP_MESSAGE_TRIGGER_ERROR = "Error in dispatching event for a triggered in-app message";
 
         private EventDispatchErrors() {
         }

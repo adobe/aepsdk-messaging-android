@@ -52,7 +52,9 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -80,7 +82,7 @@ public final class MessagingExtension extends Extension {
     private final InAppNotificationHandler inAppNotificationHandler;
     private ExecutorService executorService;
     private boolean initialMessageFetchComplete = false;
-    private LaunchRulesEngine messagingRulesEngine;
+    private final LaunchRulesEngine messagingRulesEngine;
 
     /**
      * Constructor.
@@ -123,7 +125,8 @@ public final class MessagingExtension extends Extension {
      *
      * @return A {@link String} extension name for Messaging
      */
-    @NonNull @Override
+    @NonNull
+    @Override
     protected String getName() {
         return EXTENSION_NAME;
     }
@@ -133,7 +136,8 @@ public final class MessagingExtension extends Extension {
      *
      * @return A {@link String} friendly extension name for Messaging
      */
-    @NonNull @Override
+    @NonNull
+    @Override
     protected String getFriendlyName() {
         return FRIENDLY_EXTENSION_NAME;
     }
@@ -143,7 +147,8 @@ public final class MessagingExtension extends Extension {
      *
      * @return A {@link String} representing the extension version
      */
-    @NonNull @Override
+    @NonNull
+    @Override
     protected String getVersion() {
         return EXTENSION_VERSION;
     }
@@ -155,10 +160,12 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::queueAndProcessEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::queueAndProcessEvent);
         getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::queueAndProcessEvent);
+        getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
     }
 
     @Override
-    protected void onUnregistered() {}
+    protected void onUnregistered() {
+    }
 
     @Override
     public boolean readyForEvent(@NonNull final Event event) {
@@ -202,6 +209,32 @@ public final class MessagingExtension extends Extension {
 
         queueEvent(event);
         processEvents();
+    }
+
+    void handleWildcardEvents(final Event event) {
+        List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
+        final List<RuleConsequence> consequences = new ArrayList<>();
+
+        if (triggeredRules == null || triggeredRules.isEmpty()) {
+            return;
+        }
+
+        for (final LaunchRule rule : triggeredRules) {
+            consequences.addAll(rule.getConsequenceList());
+        }
+
+        if (consequences.isEmpty()) {
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequences.get(0));
+
+        MessagingUtils.sendEvent(MessagingConstants.EventName.TRIGGERED_IN_APP_MESSAGE_EVENT,
+                EventType.RULES_ENGINE,
+                EventSource.RESPONSE_CONTENT,
+                eventData,
+                MessagingConstants.EventDispatchErrors.IN_APP_MESSAGE_TRIGGER_ERROR);
     }
 
     //endregion
@@ -372,8 +405,8 @@ public final class MessagingExtension extends Extension {
      * Sends a proposition interaction to the customer's experience event dataset.
      *
      * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-     * @param message The {@link Message} which triggered the proposition interaction
+     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
+     * @param message     The {@link Message} which triggered the proposition interaction
      */
     void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
@@ -478,7 +511,7 @@ public final class MessagingExtension extends Extension {
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
-            Log.error(LOG_TAG, MessagingExtension.SELF_TAG,"Failed to sync push token, ECID is null.");
+            Log.error(LOG_TAG, MessagingExtension.SELF_TAG, "Failed to sync push token, ECID is null.");
             return null;
         }
 
