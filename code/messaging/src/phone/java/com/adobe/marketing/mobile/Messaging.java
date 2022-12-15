@@ -12,27 +12,38 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataValues.EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-
 import android.content.Intent;
+import com.adobe.marketing.mobile.messaging.MessagingExtension;
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
-
 public final class Messaging {
-    private static final String SELF_TAG = "Messaging";
+    private static final String EXTENSION_VERSION = "2.0.0";
+    private static final String FULL_EXTENSION_NAME = "com.adobe.eventType.messaging";
+    private static final String LOG_TAG = "Messaging";
+    private static final String CLASS_NAME = "Messaging";
 
-    private Messaging() {
-    }
+    private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
+    private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
+    private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+    private static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+    private static final String REFRESH_MESSAGES = "refreshMessages";
+    private static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+    private static final long TIMEOUT_MILLIS = 5000L;
+    private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
+    private static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
+    private static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
+    private static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
+    private static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
+    private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
+    private static final String _XDM = "_xdm";
+
+    public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
+
+    private Messaging() { }
 
     /**
      * Returns the current version of the Messaging extension.
@@ -48,16 +59,13 @@ public final class Messaging {
      * <p>
      * This will allow the extension to send and receive events to and from the SDK.
      */
+    @Deprecated
     public static void registerExtension() {
-        if (MobileCore.getCore() == null || MobileCore.getCore().eventHub == null) {
-            Log.warning(LOG_TAG, "%s - Unable to register Messaging SDK since MobileCore is not initialized properly.", SELF_TAG);
-        }
-
-        MobileCore.registerExtension(MessagingInternal.class, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.debug(LOG_TAG, "%s - There was an error registering Messaging Extension: %s", SELF_TAG, extensionError.getErrorName());
+        MobileCore.registerExtension(MessagingExtension.class, extensionError -> {
+            if (extensionError == null) {
+                return;
             }
+            Log.error(LOG_TAG, CLASS_NAME, "There was an error registering Messaging Extension: %s", extensionError.getErrorName());
         });
     }
 
@@ -73,27 +81,28 @@ public final class Messaging {
      */
     public static boolean addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data) {
         if (intent == null) {
-            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as intent is null.", SELF_TAG);
+            Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as intent is null.");
             return false;
         }
         if (StringUtils.isNullOrEmpty(messageId)) {
-            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as MessageId is null.", SELF_TAG);
+            Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as MessageId is null.");
             return false;
         }
-        if (MessagingUtils.isMapNullOrEmpty(data)) {
-            Log.warning(LOG_TAG, "%s - Failed to add push tracking details as data is null or empty.", SELF_TAG);
+        if (isMapNullOrEmpty(data)) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as data is null or empty.");
             return false;
         }
+
 
         // Adding message id as extras in intent
-        intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        intent.putExtra(TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
         // Adding xdm data as extras in intent. If the xdm key is not present just log a warning
-        final String xdmData = data.get(MessagingConstants.TrackingKeys._XDM);
+        final String xdmData = data.get(_XDM);
         if (xdmData != null && !xdmData.isEmpty()) {
-            intent.putExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, xdmData);
+            intent.putExtra(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
         } else {
-            Log.warning(LOG_TAG, "%s - Xdm data is not added as push tracking details to the intent, Xdm data is null or empty", SELF_TAG);
+            Log.warning(LOG_TAG, CLASS_NAME, "XDM data is not added as push tracking details to the intent, XDM data is null or empty");
         }
 
         return true;
@@ -108,46 +117,49 @@ public final class Messaging {
      */
     public static void handleNotificationResponse(final Intent intent, final boolean applicationOpened, final String customActionId) {
         if (intent == null) {
-            Log.warning(LOG_TAG, "%s - Failed to track notification interactions, intent provided is null", SELF_TAG);
+            Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
             return;
         }
-        String messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID);
+        String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
         if (StringUtils.isNullOrEmpty(messageId)) {
             // Check if the message Id is in the intent with the key TRACK_INFO_KEY_GOOGLE_MESSAGE_ID which comes through google directly
             // This happens when FirebaseMessagingService#onMessageReceived is not called.
-            messageId = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
+            messageId = intent.getStringExtra(TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (StringUtils.isNullOrEmpty(messageId)) {
-                Log.warning(LOG_TAG, "%s - Failed to track notification interactions, message id provided is null", SELF_TAG);
+                Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, message id provided is null");
                 return;
             }
         }
 
-        final String xdmData = intent.getStringExtra(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM);
+        final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
         if (xdmData == null) {
-            Log.warning(LOG_TAG, "%s - XDM data provided is null", SELF_TAG);
+            Log.warning(LOG_TAG, CLASS_NAME, "XDM data provided is null");
         }
 
-        final EventData eventData = new EventData();
-        eventData.putString(TRACK_INFO_KEY_MESSAGE_ID, messageId);
-        eventData.putBoolean(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
-        eventData.putString(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
+        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, xdmData);
 
         if (StringUtils.isNullOrEmpty(customActionId)) {
-            eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED);
+            eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED);
         } else {
-            eventData.putString(TRACK_INFO_KEY_ACTION_ID, customActionId);
-            eventData.putString(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
+            eventData.put(TRACK_INFO_KEY_ACTION_ID, customActionId);
+            eventData.put(TRACK_INFO_KEY_EVENT_TYPE, EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION);
         }
 
-        final Event messagingEvent = new Event.Builder(MessagingConstants.EventName.PUSH_NOTIFICATION_INTERACTION_EVENT,
-                MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT)
-                .setData(eventData)
+        final Event messagingEvent = new Event.Builder(PUSH_NOTIFICATION_INTERACTION_EVENT,
+                FULL_EXTENSION_NAME, REQUEST_CONTENT)
+                .setEventData(eventData)
                 .build();
-        MobileCore.dispatchEvent(messagingEvent, new ExtensionErrorCallback<ExtensionError>() {
+        MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
-            public void error(ExtensionError extensionError) {
-                Log.warning(LOG_TAG, "%s - Failed to track notification interactions: Error: %s", SELF_TAG, extensionError.toString());
+            public void fail(AdobeError adobeError) {
+                Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions: Error: %s", adobeError.getErrorName());
             }
+
+            @Override
+            public void call(Event event) {}
         });
     }
 
@@ -155,18 +167,26 @@ public final class Messaging {
      * Initiates a network call to retrieve remote In-App Message definitions from Offers.
      */
     public static void refreshInAppMessages() {
-        final EventData eventData = new EventData();
-        eventData.putBoolean(REFRESH_MESSAGES, true);
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(REFRESH_MESSAGES, true);
 
-        final Event refreshMessageEvent = new Event.Builder(MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
-                MessagingConstants.EventType.MESSAGING, MessagingConstants.EventSource.REQUEST_CONTENT)
-                .setData(eventData)
+        final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
+                FULL_EXTENSION_NAME, REQUEST_CONTENT)
+                .setEventData(eventData)
                 .build();
-        MobileCore.dispatchEvent(refreshMessageEvent, new ExtensionErrorCallback<ExtensionError>() {
+
+        MobileCore.dispatchEventWithResponseCallback(refreshMessageEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
-            public void error(ExtensionError extensionError) {
-                Log.warning(LOG_TAG, "%s - Failed to refresh in-app messages: Error: %s", SELF_TAG, extensionError.toString());
+            public void fail(AdobeError adobeError) {
+                Log.warning(LOG_TAG, CLASS_NAME, "Failed to refresh in-app messages: Error: %s", adobeError.getErrorName());
             }
+
+            @Override
+            public void call(Event event) { }
         });
+    }
+
+    private static boolean isMapNullOrEmpty(final Map map) {
+        return map == null || map.isEmpty();
     }
 }

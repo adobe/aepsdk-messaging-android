@@ -48,7 +48,7 @@ public class ListenerMessagingRequestContentTests {
     @Test
     public void testHear_WhenMessagingRequestContentEvent() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
@@ -78,7 +78,7 @@ public class ListenerMessagingRequestContentTests {
     @Test
     public void testHear_WithNullParentExtension() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", MessagingConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT.getName()).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);

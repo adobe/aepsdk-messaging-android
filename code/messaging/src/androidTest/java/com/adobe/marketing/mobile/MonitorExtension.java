@@ -180,7 +180,7 @@ class MonitorExtension extends Extension {
      * @param event
      */
     private void processXDMSharedStateRequest(final Event event) {
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
 
         if (eventData == null) {
             return;
@@ -192,7 +192,7 @@ class MonitorExtension extends Extension {
             return;
         }
 
-        EventData sharedState = getApi().getXDMSharedEventState(stateOwner, event);
+       Map<String, Object> sharedState = getApi().getXDMSharedEventState(stateOwner, event);
 
         Event responseEvent = new Event.Builder("Get Shared State Response", MessagingTestConstants.EventType.MONITOR,
                 MessagingTestConstants.EventSource.XDM_SHARED_STATE_RESPONSE)
@@ -210,7 +210,7 @@ class MonitorExtension extends Extension {
      * @param event
      */
     private void processSharedStateRequest(final Event event) {
-        EventData eventData = event.getData();
+       Map<String, Object> eventData = event.getData();
 
         if (eventData == null) {
             return;
@@ -222,7 +222,7 @@ class MonitorExtension extends Extension {
             return;
         }
 
-        EventData sharedState = getApi().getSharedEventState(stateOwner, event);
+       Map<String, Object> sharedState = getApi().getSharedEventState(stateOwner, event);
 
         Event responseEvent = new Event.Builder("Get Shared State Response", MessagingTestConstants.EventType.MONITOR,
                 MessagingTestConstants.EventSource.SHARED_STATE_RESPONSE)

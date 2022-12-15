@@ -12,18 +12,19 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import android.os.Handler;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
@@ -43,7 +44,7 @@ public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
     private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private final Handler webViewHandler = new Handler(MobileCore.getApplication().getMainLooper());
+    private final Handler webViewHandler = new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
     // public properties
     public String id;
     public boolean autoTrack = true;
@@ -64,14 +65,14 @@ public class Message extends MessagingDelegate {
      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
      * </ul>
      *
-     * @param parent             {@link MessagingInternal} instance that created this Message
+     * @param parent             {@link MessagingExtension} instance that created this Message
      * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
      * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingInternal parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
-        messagingInternal = parent;
+    public Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+        messagingExtension = parent;
 
         final String consequenceType = (String) consequence.get(MESSAGE_CONSEQUENCE_TYPE);
 
@@ -113,14 +114,14 @@ public class Message extends MessagingDelegate {
      * Dispatch tracking information via a Messaging request content event.
      *
      * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
+     * @param eventType   {@link MessagingEdgeEventType} enum containing the Event Type to be used for the ensuing Edge Event
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (eventType == null) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to record a message interaction, MessagingEdgeEventType was null.");
             return;
         }
-        messagingInternal.sendPropositionInteraction(interaction, eventType, this);
+        messagingExtension.sendPropositionInteraction(interaction, eventType, this);
     }
 
     /**

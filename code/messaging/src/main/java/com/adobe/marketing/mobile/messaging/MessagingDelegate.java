@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -21,12 +21,11 @@ import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -42,7 +41,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
     private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
     private final String JAVASCRIPT_QUERY_KEY = "js";
     // internal properties
-    MessagingInternal messagingInternal;
+    MessagingExtension messagingExtension;
     Map<String, Object> details = new HashMap<>();
 
     // ============================================================================================
@@ -140,8 +139,8 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
             final String interaction = messageData.get(MessagingConstants.MessagingScheme.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingInternal class available for tracking
-                messagingInternal = message.messagingInternal;
-                if (messagingInternal != null) {
+                messagingExtension = message.messagingExtension;
+                if (messagingExtension != null) {
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
             }
@@ -191,7 +190,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         }
 
         // otherwise check if it is a valid url. if so, open the url with the ui service.
-        if (!stringIsUrl(url)) {
+        if (!UrlUtils.isValidUrl(url)) {
             Log.debug(LOG_TAG, SELF_TAG,  "URL is invalid: %s", url);
             return;
         }
@@ -260,18 +259,5 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         }
 
         return parameters;
-    }
-
-    private static boolean stringIsUrl(final String stringUrl) {
-        if (StringUtils.isNullOrEmpty(stringUrl)) {
-            return false;
-        }
-
-        try {
-            new URL(stringUrl);
-            return true;
-        } catch (MalformedURLException ex) {
-            return false;
-        }
     }
 }

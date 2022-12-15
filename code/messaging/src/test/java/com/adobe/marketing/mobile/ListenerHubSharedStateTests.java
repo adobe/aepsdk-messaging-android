@@ -47,7 +47,7 @@ public class ListenerHubSharedStateTests {
     @Test
     public void testHear_WhenHubSharedStateEvent() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", "test source", "test type").setData(eventData).build();
 
         // test
@@ -75,7 +75,7 @@ public class ListenerHubSharedStateTests {
     @Test
     public void testHear_WithNullParentExtension() {
         // setup
-        EventData eventData = new EventData();
+       Map<String, Object> eventData = new EventData();
         Event mockEvent = new Event.Builder("testEvent", EventType.HUB,
                 EventSource.SHARED_STATE).setData(eventData).build();
         when(mockExtensionApi.getExtension()).thenReturn(null);

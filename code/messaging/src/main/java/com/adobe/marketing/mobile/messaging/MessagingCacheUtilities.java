@@ -12,10 +12,10 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.CACHE_NAME;
-import static com.adobe.marketing.mobile.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_NAME;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +35,7 @@ import java.util.Map;
 
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
@@ -49,16 +50,12 @@ import com.adobe.marketing.mobile.util.UrlUtils;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private final DeviceInforming systemInfoService;
-    private final Networking networkService;
     private final Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheManager;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
 
-    MessagingCacheUtilities(final DeviceInforming systemInfoService, final Networking networkService, final CacheService cacheManager) {
-        this.systemInfoService = systemInfoService;
-        this.networkService = networkService;
-        this.cacheManager = cacheManager;
+    MessagingCacheUtilities() {
+        this.cacheManager = ServiceProvider.getInstance().getCacheService();
         createImageAssetsCacheDirectory();
     }
     // ========================================================================================================
@@ -75,7 +72,7 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Delete all contents in the {@link Messaging} extension cache subdirectory.
+     * Delete all contents in the Messaging extension cache subdirectory.
      */
     void clearCachedData() {
         cacheManager.remove(CACHE_NAME, PROPOSITIONS_CACHE_SUBDIRECTORY);

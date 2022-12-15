@@ -12,32 +12,32 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.CJM_XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
-import static com.adobe.marketing.mobile.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
-import static com.adobe.marketing.mobile.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONDITION_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.rulesengine.*;
 
 import org.json.JSONObject;
 
@@ -51,7 +51,7 @@ import java.util.Map;
  */
 class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
-    final MessagingInternal parent;
+    final MessagingExtension parent;
     private final Extension messagingModule;
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
@@ -60,15 +60,14 @@ class InAppNotificationHandler {
     /**
      * Constructor
      *
-     * @param parent                  {@link MessagingInternal} instance that is the parent of this {@code InAppNotificationHandler}
-     * @param messagingCacheUtilities {@link MessagingCacheUtilities} instance to use for caching in-app message rule jsons and image assets
+     * @param parent                  {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
      */
-    InAppNotificationHandler(final MessagingInternal parent, final MessagingCacheUtilities messagingCacheUtilities) {
+    InAppNotificationHandler(final MessagingExtension parent) {
         this.parent = parent;
-        this.messagingCacheUtilities = messagingCacheUtilities;
+        this.messagingCacheUtilities = new MessagingCacheUtilities();
         // create a module to get access to the Core rules engine for adding AJO in-app message rules
-        messagingModule = new Extension(parent.getApi());  Module("Messaging", MobileCore.getCore().eventHub) {
-        };
+        // TODO: still needed with rules engine changes?
+        messagingModule = new Module("Messaging", MobileCore.getCore().eventHub) { };
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
         if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
             List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
@@ -85,7 +84,7 @@ class InAppNotificationHandler {
      * If the application id is unavailable, calling this method will do nothing.
      */
     void fetchMessages() {
-        final String appSurface = App.getAppContext().getPackageName();
+        final String appSurface = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
         if (StringUtils.isNullOrEmpty(appSurface)) {
             Log.warning(LOG_TAG, "%s - Unable to retrieve in-app messages - unable to retrieve the application id.", SELF_TAG);
             return;
@@ -150,7 +149,7 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JsonUtilityService.JSONObject}s
+     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JSONObject}s
      * found will be registered with the {@link RulesEngine}.
      *
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
@@ -205,11 +204,11 @@ class InAppNotificationHandler {
      *
      * @param rulePayload a {@link List<JsonUtilityService.JSONObject>>} containing a rule payload.
      */
-    private void registerRules(final List<JsonUtilityService.JSONObject> rulePayload) {
+    private void registerRules(final List<JSONObject> rulePayload) {
         final List<Rule> parsedRules = new ArrayList<>();
 
         // create rule objects from the rule JSONs and load them into the rule engine
-        for (final JsonUtilityService.JSONObject ruleJson : rulePayload) {
+        for (final JSONObject ruleJson : rulePayload) {
             final Rule parsedRule = parseRuleFromJsonObject(ruleJson);
             if (parsedRule != null) {
                 parsedRules.add(parsedRule);
@@ -431,7 +430,7 @@ class InAppNotificationHandler {
                     final Map<String, Variant> consequenceVariantMap = Variant.fromTypedObject(consequence,
                             new MessagingConsequenceSerializer()).getVariantMap();
 
-                    EventData eventData = new EventData();
+                   Map<String, Object> eventData = new EventData();
                     eventData.putVariantMap(CONSEQUENCE_TRIGGERED,
                             consequenceVariantMap);
 

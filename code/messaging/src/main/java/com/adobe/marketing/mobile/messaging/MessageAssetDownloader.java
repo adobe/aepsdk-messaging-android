@@ -33,10 +33,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Assists in downloading and caching assets for {@code CampaignMessage}s.
+ * Assists in downloading and caching assets for {@code Message}s.
  */
 class MessageAssetDownloader {
-    private static final String SELF_TAG = "CampaignMessageAssetsDownloader";
+    private static final String SELF_TAG = "MessageAssetDownloader";
     private final List<String> assetsCollection;
     private final Networking networkService;
     private final DeviceInforming deviceInfoService;
@@ -51,13 +51,13 @@ class MessageAssetDownloader {
      * @param assets          {@code ArrayList<String>} of assets to download and cache
      * @param parentMessageId {@link String} containing the message Id of the requesting message used as a cache subdirectory
      */
-    CampaignMessageAssetsDownloader(final List<String> assets, final String parentMessageId) {
+    MessageAssetDownloader(final List<String> assets, final String parentMessageId) {
         this.assetsCollection = assets;
         this.networkService = ServiceProvider.getInstance().getNetworkService();
         this.deviceInfoService = ServiceProvider.getInstance().getDeviceInfoService();
         this.cacheService = new FileCacheService();
         this.messageId = parentMessageId;
-        this.assetCacheLocation =  CampaignConstants.CACHE_BASE_DIR + File.separator + CampaignConstants.MESSAGE_CACHE_DIR + File.separator + messageId;
+        this.assetCacheLocation =  MessagingConstants.CA.CACHE_BASE_DIR + File.separator + CampaignConstants.MESSAGE_CACHE_DIR + File.separator + messageId;
         createMessageAssetCacheDirectory();
     }
 
