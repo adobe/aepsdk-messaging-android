@@ -10,10 +10,15 @@
 */
 package com.adobe.marketing.mobile.messaging;
 
+import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.services.*;
+import com.adobe.marketing.mobile.services.caching.CacheService;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -50,7 +55,7 @@ public class MessagingTestUtils {
     private static final String LOG_TAG = "MessagingTestUtils";
     private static final String REMOTE_URL = "https://www.adobe.com/adobe.png";
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
-    private static CacheManager cacheManager;
+    private static CacheService cacheManager;
 
     /**
      * Serialize the given {@code map} to a JSON Object, then flattens to {@code Map<String, String>}.
@@ -133,22 +138,6 @@ public class MessagingTestUtils {
                 Log.debug(LOG_TAG, "exception occurred in dispatching edge personalization event: %s", extensionError.getErrorName());
             }
         });
-    }
-
-    /**
-     * Converts a file containing a JSON into a {@link Map<String, Variant>}.
-     *
-     * @param fileName the {@code String} name of a file located in the resource directory
-     * @return a {@code Map<String, Variant>} containing the JSON's contents
-     */
-    static Map<String, Variant> getVariantMapFromFile(final String fileName) {
-        try {
-            final JSONObject json = new JSONObject(loadStringFromFile(fileName));
-            return toVariantMap(json);
-        } catch (final JSONException jsonException) {
-            Log.warning(LOG_TAG, "getVariantMapFromFile() - Exception occurred when creating the JSONObject: %s", jsonException.getMessage());
-            return null;
-        }
     }
 
     /**
