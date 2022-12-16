@@ -150,9 +150,11 @@ public class MessagingPushPayload {
 
         try {
             String count = data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT);
-            this.badgeCount = Integer.parseInt(count);
+            if (count != null) {
+                this.badgeCount = Integer.parseInt(count);
+            }
         } catch (NumberFormatException e) {
-            Log.debug(MessagingConstants.LOG_TAG, "%s - Exception in converting string %s to int", SELF_TAG);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
         }
 
         this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_PRIORITY));
