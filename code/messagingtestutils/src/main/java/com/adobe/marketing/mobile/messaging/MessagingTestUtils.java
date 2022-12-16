@@ -12,13 +12,14 @@ package com.adobe.marketing.mobile.messaging;
 
 import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.*;
+import com.adobe.marketing.mobile.services.caching.CacheEntry;
+import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.adobe.marketing.mobile.util.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -39,7 +40,6 @@ import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -55,7 +55,8 @@ public class MessagingTestUtils {
     private static final String LOG_TAG = "MessagingTestUtils";
     private static final String REMOTE_URL = "https://www.adobe.com/adobe.png";
     private static final int STREAM_WRITE_BUFFER_SIZE = 4096;
-    private static CacheService cacheManager;
+    static final String CHARSET_UTF_8 = "UTF-8";
+    private static final int STREAM_READ_BUFFER_SIZE = 1024;
 
     /**
      * Serialize the given {@code map} to a JSON Object, then flattens to {@code Map<String, String>}.
@@ -76,7 +77,7 @@ public class MessagingTestUtils {
             addKeys("", new ObjectMapper().readTree(jsonObject.toString()), payloadMap);
             return payloadMap;
         } catch (IOException e) {
-            MobileCore.log(LoggingMode.ERROR, LOG_TAG, "Failed to parse JSON object to tree structure.");
+            Log.error(LOG_TAG, LOG_TAG, "Failed to parse JSON object to tree structure.");
         }
 
         return Collections.emptyMap();
@@ -166,7 +167,7 @@ public class MessagingTestUtils {
         final InputStream inputStream = convertResourceFileToInputStream(fileName);
         try {
             if (inputStream != null) {
-                final String streamContents = StringUtils.streamToString(inputStream);
+                final String streamContents = streamToString(inputStream);
                 return streamContents;
             } else {
                 return null;
@@ -185,22 +186,18 @@ public class MessagingTestUtils {
      * Cleans Messaging extension payload and image asset cache files.
      */
     static void cleanCache() {
-        final SystemInfoService systemInfoService = MessagingTestUtils.getPlatformServices().getSystemInfoService();
-        try {
-            cacheManager = new CacheManager(systemInfoService);
-        } catch (final MissingPlatformServicesException exception) {
-            Log.warning(LOG_TAG, "Error clearing cache: %s", exception.getMessage());
-        }
-        cacheManager.deleteFilesNotInList(null, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY);
-        cacheManager.deleteFilesNotInList(null, MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
+        cacheService.remove(MessagingTestConstants.CACHE_NAME, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY);
+        cacheService.remove(MessagingTestConstants.CACHE_NAME, MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
     }
 
     /**
      * Adds a test image to the Messaging extension image asset cache.
      */
     static void addImageAssetToCache() {
-        final File mockCachedImage = cacheManager.createNewCacheFile(REMOTE_URL, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY, new Date());
-        writeInputStreamIntoFile(mockCachedImage, convertResourceFileToInputStream("adobe.png"), false);
+        final InputStream adobePng = convertResourceFileToInputStream("adobe.png");
+        final CacheEntry mockCachedImage = new CacheEntry(adobePng, CacheExpiry.never(), null);
+        ServiceProvider.getInstance().getCacheService().set(MessagingTestConstants.CACHE_NAME, REMOTE_URL, mockCachedImage);
     }
 
     /**
@@ -247,9 +244,9 @@ public class MessagingTestUtils {
             }
             result = true;
         } catch (final IOException e) {
-            Log.error(LOG_TAG, "IOException while attempting to write to file (%s)", e);
+            Log.error(LOG_TAG, LOG_TAG, "IOException while attempting to write to file (%s)", e.getLocalizedMessage());
         } catch (final Exception e) {
-            Log.error(LOG_TAG, "Unexpected exception while attempting to write to file (%s)", e);
+            Log.error(LOG_TAG, LOG_TAG, "Unexpected exception while attempting to write to file (%s)", e.getLocalizedMessage());
         } finally {
             try {
                 if (outputStream != null) {
@@ -257,7 +254,7 @@ public class MessagingTestUtils {
                 }
 
             } catch (final Exception e) {
-                Log.error(LOG_TAG, "Unable to close the OutputStream (%s) ", e);
+                Log.error(LOG_TAG, LOG_TAG, "Unable to close the OutputStream (%s) ", e.getLocalizedMessage());
             }
         }
 
@@ -407,7 +404,7 @@ public class MessagingTestUtils {
             objectOutputStream.flush();
             return byteArrayOutputStream.toString();
         } catch (Exception e) {
-            Log.debug("MessagingTestUtils", "Exception occurred while converting payloads to string: %s", e.getMessage());
+            Log.debug(LOG_TAG, LOG_TAG, "Exception occurred while converting payloads to string: %s", e.getMessage());
             return "";
         }
     }
@@ -424,7 +421,7 @@ public class MessagingTestUtils {
      */
     static Map<String, Object> toMap(final JSONObject jsonObject) throws JSONException {
         if (jsonObject == null) {
-            Log.debug(LOG_TAG, "toMap - will not convert to map, the passed in json is null.");
+            Log.debug(LOG_TAG, LOG_TAG, "toMap - will not convert to map, the passed in json is null.");
             return null;
         }
 
@@ -442,32 +439,6 @@ public class MessagingTestUtils {
     }
 
     /**
-     * Converts provided {@link org.json.JSONObject} into a {@link Map<String,  Variant >} for any number of levels, which can be used as event data.
-     * This method is recursive.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonObject to be converted
-     * @return {@link Map<String, Variant>} containing the elements from the provided json, null if {@code jsonObject} is null
-     */
-    static Map<String, Variant> toVariantMap(final JSONObject jsonObject) throws JSONException {
-        if (jsonObject == null) {
-            Log.debug(LOG_TAG, "toVariantMap - will not convert to variant map, the passed in json is null.");
-            return null;
-        }
-
-        final Map<String, Variant> jsonAsVariantMap = new HashMap<>();
-        final Iterator<String> keysIterator = jsonObject.keys();
-
-        while (keysIterator.hasNext()) {
-            final String nextKey = keysIterator.next();
-            final Object value = fromJson(jsonObject.get(nextKey));
-            jsonAsVariantMap.put(nextKey, getVariantValue(value));
-        }
-
-        return jsonAsVariantMap;
-    }
-
-    /**
      * Converts provided {@link JSONArray} into {@link List} for any number of levels which can be used as event data
      * This method is recursive.
      * The elements for which the conversion fails will be skipped.
@@ -477,7 +448,7 @@ public class MessagingTestUtils {
      */
     static List<Object> toList(final JSONArray jsonArray) throws JSONException {
         if (jsonArray == null) {
-            Log.debug(LOG_TAG, "toList - will not convert to list, the passed in json array is null.");
+            Log.debug(LOG_TAG, LOG_TAG, "toList - will not convert to list, the passed in json array is null.");
             return null;
         }
 
@@ -535,60 +506,25 @@ public class MessagingTestUtils {
         }
     }
 
-    /**
-     * Converts the provided {@link Object} into a {@link Variant}.
-     * This method is recursive if the passed in {@code Object} is a {@link Map} or {@link List}.
-     *
-     * @param value to be converted to a variant
-     * @return {@code Variant} value of the passed in {@code Object}
-     */
-    private static Variant getVariantValue(final Object value) {
-        final Variant convertedValue;
-        if (value instanceof String) {
-            convertedValue = StringVariant.fromString((String) value);
-        } else if (value instanceof Double) {
-            convertedValue = DoubleVariant.fromDouble((Double) value);
-        } else if (value instanceof Integer) {
-            convertedValue = IntegerVariant.fromInteger((int) value);
-        } else if (value instanceof Boolean) {
-            convertedValue = BooleanVariant.fromBoolean((boolean) value);
-        } else if (value instanceof Long) {
-            convertedValue = LongVariant.fromLong((long) value);
-        } else if (value instanceof Map) {
-            final Map<String, Variant> map = new HashMap<>();
-            for (final Map.Entry entry : ((Map<String, Object>) value).entrySet()) {
-                map.put((String) entry.getKey(), getVariantValue(entry.getValue()));
-            }
-            convertedValue = Variant.fromVariantMap(map);
-        } else if (value instanceof List) {
-            final List<Variant> list = new ArrayList<>();
-            for (final Object element : (List) value) {
-                list.add(getVariantValue(element));
-            }
-            convertedValue = Variant.fromVariantList(list);
-        } else {
-            convertedValue = (Variant) value;
-        }
-        return convertedValue;
-    }
-
-    // ========================================================================================
-    // PlatformServices getters
-    // ========================================================================================
-
-    /**
-     * Returns the {@link PlatformServices} instance.
-     *
-     * @return {@code PlatformServices} or null if {@code PlatformServices} are unavailable
-     */
-    static PlatformServices getPlatformServices() {
-        final PlatformServices platformServices = MobileCore.getCore().eventHub.getPlatformServices();
-
-        if (platformServices == null) {
-            Log.debug(LOG_TAG,
-                    "getPlatformServices - Platform services are not available.");
+    static String streamToString(final InputStream inputStream) {
+        if (inputStream == null) {
+            return null;
         }
 
-        return platformServices;
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        final byte[] data = new byte[STREAM_READ_BUFFER_SIZE];
+        int bytesRead;
+
+        try {
+            while ((bytesRead = inputStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, bytesRead);
+            }
+
+            return buffer.toString(CHARSET_UTF_8);
+        } catch (final IOException ex) {
+            Log.debug(LOG_TAG, LOG_TAG, "Unable to convert InputStream to String, %s", ex.getLocalizedMessage());
+            return null;
+        }
     }
+
 }

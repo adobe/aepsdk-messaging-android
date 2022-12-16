@@ -31,8 +31,6 @@ import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.internal.context.App;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.AEPMessage;
-import com.adobe.marketing.mobile.services.ui.AEPMessageSettings;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.MessageCreationException;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
@@ -40,6 +38,7 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
 import com.adobe.marketing.mobile.services.ui.UIService;
+import com.adobe.marketing.mobile.*;
 
 import org.junit.Assert;
 import org.junit.Before;
