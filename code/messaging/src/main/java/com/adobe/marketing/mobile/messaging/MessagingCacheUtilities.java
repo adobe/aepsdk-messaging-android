@@ -77,20 +77,20 @@ final class MessagingCacheUtilities {
      * @return a {@code List<PropositionPayload>} containing the cached proposition payloads.
      */
     List<PropositionPayload> getCachedPropositions() {
-        final CacheResult cachedMessageFile = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
-        if (cachedMessageFile == null) {
+        final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
+        if (cacheResult == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
             return null;
         }
 
-        final Map<String, String> fileMetadata = cachedMessageFile.getMetadata();
+        final Map<String, String> fileMetadata = cacheResult.getMetadata();
         if (fileMetadata != null && !fileMetadata.isEmpty()) {
             Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
         ObjectInputStream objectInputStream = null;
         List<PropositionPayload> cachedPropositions;
         try {
-            objectInputStream = new ObjectInputStream(cachedMessageFile.getData());
+            objectInputStream = new ObjectInputStream(cacheResult.getData());
             cachedPropositions = (List<PropositionPayload>) objectInputStream.readObject();
         } catch (final FileNotFoundException fileNotFoundException) {
             Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", fileNotFoundException.getMessage());
