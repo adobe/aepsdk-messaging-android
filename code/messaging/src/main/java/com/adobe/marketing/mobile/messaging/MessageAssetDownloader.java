@@ -11,6 +11,10 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_BASE_DIR;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+
+import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.HttpConnecting;
 import com.adobe.marketing.mobile.services.HttpMethod;
@@ -22,15 +26,16 @@ import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
-import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
-import com.adobe.marketing.mobile.util.UrlUtils;
+import com.adobe.marketing.mobile.util.TimeUtils;
 
 import java.io.File;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Assists in downloading and caching assets for {@code Message}s.
@@ -41,139 +46,171 @@ class MessageAssetDownloader {
     private final Networking networkService;
     private final DeviceInforming deviceInfoService;
     private final CacheService cacheService;
-    private final String messageId;
     private File assetDir;
     private final String assetCacheLocation;
 
     /**
      * Constructor.
      *
-     * @param assets          {@code ArrayList<String>} of assets to download and cache
-     * @param parentMessageId {@link String} containing the message Id of the requesting message used as a cache subdirectory
+     * @param assets {@code ArrayList<String>} of assets to download and cache
      */
-    MessageAssetDownloader(final List<String> assets, final String parentMessageId) {
+    MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
         this.networkService = ServiceProvider.getInstance().getNetworkService();
         this.deviceInfoService = ServiceProvider.getInstance().getDeviceInfoService();
-        this.cacheService = new FileCacheService();
-        this.messageId = parentMessageId;
-        this.assetCacheLocation =  MessagingConstants.CA.CACHE_BASE_DIR + File.separator + CampaignConstants.MESSAGE_CACHE_DIR + File.separator + messageId;
-        createMessageAssetCacheDirectory();
+        this.cacheService = ServiceProvider.getInstance().getCacheService();
+        this.assetCacheLocation = deviceInfoService.getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
     }
 
     /**
-     * Downloads and caches assets for a {@code CampaignMessage}.
-     * <p>
-     * Loops through {@link #assetsCollection} downloads and caches the collection of assets.
+     * Downloads and caches all assets present in the {@link MessageAssetDownloader#assetsCollection} list.
      * <p>
      * Attempts to purge assets that have previously been cached but are for messages that are no longer active.
      */
     void downloadAssetCollection() {
-        final ArrayList<String> assetsToRetain = new ArrayList<>();
-
-        if (assetsCollection != null && !assetsCollection.isEmpty()) {
-            for (final String currentAsset : assetsCollection) {
-                if (assetIsDownloadable(currentAsset)) {
-                    assetsToRetain.add(currentAsset);
-                }
-            }
+        if (assetsCollection == null || assetsCollection.isEmpty()) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Empty list of assets provided, will not download any assets.");
+            return;
         }
 
         // clear old assets
-        Utils.clearCachedAssetsNotInList(assetDir, assetsToRetain);
+        clearCachedAssetsNotInList(assetDir, assetsCollection);
 
-        // download assets within the assets to retain list
-        for (final String url : assetsToRetain) {
+        // download assets within the assets collection list
+        for (final String url : assetsCollection) {
             // 304 - Not Modified support
             final CacheResult cachedAsset = cacheService.get(assetCacheLocation, url);
-            final Map<String, String> requestProperties = Utils.extractHeadersFromCache(cachedAsset);
-            final NetworkRequest networkRequest = new NetworkRequest(url, HttpMethod.GET, null, requestProperties, CampaignConstants.CAMPAIGN_TIMEOUT_DEFAULT, CampaignConstants.CAMPAIGN_TIMEOUT_DEFAULT);
+            final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
+            final NetworkRequest networkRequest = new NetworkRequest(url, HttpMethod.GET, null, requestProperties, MessagingConstants.DEFAULT_TIMEOUT, MessagingConstants.DEFAULT_TIMEOUT);
             networkService.connectAsync(networkRequest, connection -> {
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                    Log.debug(CampaignConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Asset was cached previously: %s", url);
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Asset was cached previously: %s", url);
                     connection.close();
                     return;
                 } else if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    Log.debug(CampaignConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Failed to download asset from URL: %s", url);
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Failed to download asset from URL: %s", url);
                     connection.close();
                     return;
                 }
-                cacheAssetData(connection, url, messageId);
+                cacheAssetData(connection, url);
                 connection.close();
             });
         }
     }
 
     /**
+     * Recursively checks and deletes files within the cached assets directory which aren't within the {@code assetsToRetain} list.
+     *
+     * @param cacheAsset     {@link File} containing the cached assets directory
+     * @param assetsToRetain {@code List<String>} containing assets which should be retained
+     */
+    private void clearCachedAssetsNotInList(final File cacheAsset, final List<String> assetsToRetain) {
+        if (cacheAsset.isDirectory()) {
+            for (final File child : cacheAsset.listFiles()) {
+                clearCachedAssetsNotInList(child, assetsToRetain);
+            }
+        } else {
+            for (final String asset : assetsToRetain) {
+                if (!cacheAsset.getName().equals(StringEncoder.sha2hash(asset)) && cacheAsset.exists()) {
+                    cacheAsset.delete();
+                }
+            }
+        }
+    }
+
+    /**
+     * Extracts the response properties (like {@code HTTP_HEADER_ETAG} , {@code HTTP_HEADER_LAST_MODIFIED}
+     * that are useful as cache metadata.
+     *
+     * @param response the {@code HttpConnecting} from where the response properties should be extracted from
+     * @return a map of metadata keys and their values as obrained from the {@code response}
+     */
+    private HashMap<String, String> extractMetadataFromResponse(final HttpConnecting response) {
+        final HashMap<String, String> metadata = new HashMap<>();
+
+        final String lastModifiedProp = response.getResponsePropertyValue(MessagingConstants.HTTP_HEADER_LAST_MODIFIED);
+        final Date lastModifiedDate = TimeUtils.parseRFC2822Date(
+                lastModifiedProp, TimeZone.getTimeZone("GMT"), Locale.US);
+        final String lastModifiedMetadata = lastModifiedDate == null
+                ? String.valueOf(new Date(0L).getTime())
+                : String.valueOf(lastModifiedDate.getTime());
+        metadata.put(MessagingConstants.HTTP_HEADER_LAST_MODIFIED, lastModifiedMetadata);
+
+        final String eTagProp = response.getResponsePropertyValue(MessagingConstants.HTTP_HEADER_ETAG);
+        metadata.put(MessagingConstants.HTTP_HEADER_ETAG, eTagProp == null ? "" : eTagProp);
+
+        return metadata;
+    }
+
+    /**
+     * Creates http headers for conditional fetching, based on the metadata of the
+     * {@code CacheResult} provided.
+     *
+     * @param cacheResult the cache result whose metadata should be used for finding headers
+     * @return a map of headers (HTTP_HEADER_IF_MODIFIED_SINCE, HTTP_HEADER_IF_NONE_MATCH)
+     * that can be used while fetching any modified content.
+     */
+    private Map<String, String> extractHeadersFromCache(final CacheResult cacheResult) {
+        final Map<String, String> headers = new HashMap<>();
+        if (cacheResult == null) {
+            return headers;
+        }
+
+        final Map<String, String> metadata = cacheResult.getMetadata();
+        final String eTag = metadata == null ? "" : metadata.get(MessagingConstants.HTTP_HEADER_ETAG);
+        headers.put(MessagingConstants.HTTP_HEADER_IF_NONE_MATCH, eTag != null ? eTag : "");
+
+        // Last modified in cache metadata is stored in epoch string. So Convert it to RFC-2822 date format.
+        final String lastModified = metadata == null ? null : metadata.get(MessagingConstants.HTTP_HEADER_LAST_MODIFIED);
+        long lastModifiedEpoch;
+        try {
+            lastModifiedEpoch = lastModified != null ? Long.parseLong(lastModified) : 0L;
+        } catch (final NumberFormatException e) {
+            lastModifiedEpoch = 0L;
+        }
+
+        final String ifModifiedSince = TimeUtils.getRFC2822Date(lastModifiedEpoch,
+                TimeZone.getTimeZone("GMT"), Locale.US);
+        headers.put(MessagingConstants.HTTP_HEADER_IF_MODIFIED_SINCE, ifModifiedSince);
+        return headers;
+    }
+
+    /**
      * Caches the provided {@code InputStream} contained in the {@code HttpConnecting} from the given asset URL.
      *
      * @param connection {@link HttpConnecting} containing the downloaded remote asset data.
-     * @param key        {@code String} The asset download URL. Used to name the cache folder.
-     * @param messageId  {@code String} The id of the message
+     * @param key        {@code String} The asset download URL.
      */
-    private void cacheAssetData(final HttpConnecting connection, final String key, final String messageId) {
+    private void cacheAssetData(final HttpConnecting connection, final String key) {
         // create message asset cache directory if needed
-        if (!createDirectoryIfNeeded(messageId)) {
-            Log.debug(CampaignConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Cannot cache asset for message id %s, failed to create cache directory.", messageId);
+        if (!createAssetCacheDirectory()) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Cannot cache asset, failed to create image cache directory.");
             return;
         }
 
-        Log.debug(CampaignConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Caching asset %s for message id %s.", key, messageId);
-        final Map<String, String> metadata = Utils.extractMetadataFromResponse(connection);
+        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Caching asset %s.", key);
+        final Map<String, String> metadata = extractMetadataFromResponse(connection);
         final String cachePath = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir().getAbsolutePath();
-        metadata.put(CampaignConstants.METADATA_PATH, cachePath + File.separator + assetCacheLocation);
+        metadata.put(MessagingConstants.METADATA_PATH, cachePath + File.separator + assetCacheLocation);
         final CacheEntry cacheEntry = new CacheEntry(connection.getInputStream(), CacheExpiry.never(), metadata);
         cacheService.set(assetCacheLocation, key, cacheEntry);
     }
 
     /**
-     * Determine whether the provided {@code assetPath} is downloadable.
+     * Creates assets cache directory for a {@code Message}.
      * <p>
-     * Checks that the {@code assetPath} is both a valid URL, and has a scheme of "http" or "https".
-     *
-     * @param assetPath {@link String} containing the asset path to check
-     * @return {@code boolean} indicating whether the provided asset is downloadable
+     * This method checks if the cache directory already exists in which case no new directory is created for image assets.
      */
-    private boolean assetIsDownloadable(final String assetPath) {
-        return UrlUtils.isValidUrl(assetPath) && (assetPath.startsWith("http") || assetPath.startsWith("https"));
-    }
-
-    /**
-     * Creates assets cache directory for a {@code CampaignMessage}.
-     * <p>
-     * This method checks if the cache directory already exists in which case no new directory is created for assets.
-     */
-    private void createMessageAssetCacheDirectory() {
+    private boolean createAssetCacheDirectory() {
         try {
-            assetDir = new File(deviceInfoService.getApplicationCacheDir() + File.separator + CampaignConstants.CACHE_BASE_DIR + File.separator
-                    + CampaignConstants.MESSAGE_CACHE_DIR);
-
-            if (!assetDir.exists() && !assetDir.mkdirs()) {
-                Log.warning(CampaignConstants.LOG_TAG, SELF_TAG,
-                        "createMessageAssetCacheDirectory - Unable to create directory for caching message assets");
+            assetDir = new File(assetCacheLocation);
+            if (!assetDir.exists()) {
+                return assetDir.mkdirs();
             }
+            return true;
         } catch (final Exception ex) {
-            Log.warning(CampaignConstants.LOG_TAG, SELF_TAG, "createMessageAssetCacheDirectory - An unexpected error occurred while managing assets cache directory: \n %s", ex);
-        }
-    }
-
-    /**
-     * Creates assets cache directory for a {@code CampaignMessage}.
-     * <p>
-     * This method checks if the cache directory already exists in which case no new directory is created for assets.
-     *
-     * @param messageId {@code String} The id of the message
-     * @return {@code boolean} if true, the asset cache directory for the message id was created successfully
-     */
-    private boolean createDirectoryIfNeeded(final String messageId) {
-        if (!assetDir.exists()) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "createAssetCacheDirectory - An unexpected error occurred while managing the image cache directory: \n %s", ex);
             return false;
         }
-
-        final File cacheDirectory = new File(assetDir + File.separator + messageId);
-        if (!cacheDirectory.exists()) {
-            return cacheDirectory.mkdir();
-        }
-        return true;
     }
 }
