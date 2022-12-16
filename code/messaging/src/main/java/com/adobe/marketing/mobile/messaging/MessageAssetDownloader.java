@@ -44,7 +44,6 @@ class MessageAssetDownloader {
     private static final String SELF_TAG = "MessageAssetDownloader";
     private final List<String> assetsCollection;
     private final Networking networkService;
-    private final DeviceInforming deviceInfoService;
     private final CacheService cacheService;
     private File assetDir;
     private final String assetCacheLocation;
@@ -57,9 +56,8 @@ class MessageAssetDownloader {
     MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
         this.networkService = ServiceProvider.getInstance().getNetworkService();
-        this.deviceInfoService = ServiceProvider.getInstance().getDeviceInfoService();
         this.cacheService = ServiceProvider.getInstance().getCacheService();
-        this.assetCacheLocation = deviceInfoService.getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+        this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
     }
 
     /**
@@ -209,7 +207,7 @@ class MessageAssetDownloader {
             }
             return true;
         } catch (final Exception ex) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "createAssetCacheDirectory - An unexpected error occurred while managing the image cache directory: \n %s", ex);
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "createAssetCacheDirectory - An unexpected error occurred while managing the image cache directory: \n %s", ex.getLocalizedMessage());
             return false;
         }
     }
