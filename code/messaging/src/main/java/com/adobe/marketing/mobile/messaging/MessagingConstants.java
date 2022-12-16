@@ -17,9 +17,16 @@ final class MessagingConstants {
     static final String EXTENSION_VERSION = "2.0.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
-    static final String CACHE_NAME = "com.adobe.messaging.cache";
+    static final String AEPSDK_CACHE_BASE_DIR = "aepsdkcache";
+    static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
+    static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
+    static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
+    static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
+    static final String HTTP_HEADER_ETAG = "Etag";
+    static final String METADATA_PATH = "pathToFile";
+    static final int DEFAULT_TIMEOUT = 5;
 
     private MessagingConstants() {
     }
