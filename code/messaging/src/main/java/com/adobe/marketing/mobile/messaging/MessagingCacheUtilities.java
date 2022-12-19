@@ -92,8 +92,8 @@ final class MessagingCacheUtilities {
         try {
             objectInputStream = new ObjectInputStream(cacheResult.getData());
             cachedPropositions = (List<PropositionPayload>) objectInputStream.readObject();
-        } catch (final FileNotFoundException fileNotFoundException) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", fileNotFoundException.getMessage());
+        } catch (final NullPointerException nullPointerException) {
+            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", nullPointerException.getMessage());
             return null;
         } catch (final IOException ioException) {
             Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when reading from the cached file: %s", ioException.getMessage());
@@ -108,7 +108,6 @@ final class MessagingCacheUtilities {
                 }
             } catch (final IOException ioException) {
                 Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when closing the FileInputStream: %s", ioException.getMessage());
-                return null;
             }
         }
         return cachedPropositions;

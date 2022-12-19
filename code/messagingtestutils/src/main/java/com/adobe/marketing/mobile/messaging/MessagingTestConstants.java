@@ -18,6 +18,7 @@ public class MessagingTestConstants {
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
+    static final String CACHE_BASE_DIR = "messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
 
     public static final class EventType {
