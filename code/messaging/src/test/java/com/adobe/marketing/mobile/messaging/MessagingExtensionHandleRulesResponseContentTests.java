@@ -23,6 +23,7 @@
 //import android.content.Context;
 //import android.content.pm.PackageManager;
 //
+//import com.adobe.marketing.mobile.ExtensionApi;
 //import com.adobe.marketing.mobile.services.ServiceProvider;
 //import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 //import com.adobe.marketing.mobile.services.ui.UIService;
@@ -31,18 +32,16 @@
 //import org.junit.Test;
 //import org.junit.runner.RunWith;
 //import org.mockito.Mock;
-//import org.powermock.api.mockito.PowerMockito;
-//import org.powermock.core.classloader.annotations.PrepareForTest;
-//import org.powermock.modules.junit4.PowerMockRunner;
+//import org.mockito.junit.MockitoJUnitRunner;
 //
 //import java.io.File;
 //import java.util.ArrayList;
 //import java.util.HashMap;
 //import java.util.List;
 //import java.util.Map;
+//import com.adobe.marketing.mobile.services.*;
 //
-//@RunWith(PowerMockRunner.class)
-//@PrepareForTest({Event.class, MobileCore.class, ServiceProvider.class, ExtensionApi.class, ExtensionUnexpectedError.class, MessagingState.class, App.class, Context.class, InAppNotificationHandler.class})
+//@RunWith(MockitoJUnitRunner.Silent.class)
 //public class MessagingExtensionHandleRulesResponseContentTests {
 //    private final static String mockAppId = "mock_applicationId";
 //    private final Map<String, Object> mobileParameters = new HashMap() {
@@ -67,15 +66,9 @@
 //    @Mock
 //    Context mockContext;
 //    @Mock
-//    Core mockCore;
+//    DeviceInforming mockAndroidSystemInfoService;
 //    @Mock
-//    AndroidPlatformServices mockPlatformServices;
-//    @Mock
-//    AndroidEncodingService mockAndroidEncodingService;
-//    @Mock
-//    AndroidSystemInfoService mockAndroidSystemInfoService;
-//    @Mock
-//    AndroidNetworkService mockAndroidNetworkService;
+//    Networking mockAndroidNetworkService;
 //    @Mock
 //    UIService mockUIService;
 //    @Mock
@@ -87,8 +80,8 @@
 //    @Mock
 //    Message mockMessage;
 //
-//    private MessagingInternal messagingInternal;
-//    private JsonUtilityService jsonUtilityService;
+//    private MessagingExtension messagingExtension;
+//
 //    private EventHub eventHub;
 //
 //    @Before
@@ -101,7 +94,7 @@
 //        setupApplicationIdMocks();
 //        setupSharedStateMocks();
 //
-//        messagingInternal = new MessagingInternal(mockExtensionApi);
+//        messagingExtension = new MessagingInternal(mockExtensionApi);
 //        MobileCore.setApplication(App.getApplication());
 //    }
 //
@@ -186,8 +179,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
 //        verify(mockMessage, times(1)).trigger();
@@ -223,8 +216,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -259,8 +252,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -285,8 +278,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -313,8 +306,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -346,8 +339,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -378,8 +371,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -415,8 +408,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -451,8 +444,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();
@@ -487,8 +480,8 @@
 //        when(mockEvent.getEventData()).thenReturn(eventData);
 //
 //        // test
-//        messagingInternal.queueEvent(mockEvent);
-//        messagingInternal.processEvents();
+//        messagingExtension.queueEvent(mockEvent);
+//        messagingExtension.processEvents();
 //
 //        // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() not called
 //        verify(mockMessage, times(0)).trigger();

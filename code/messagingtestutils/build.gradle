@@ -23,11 +23,12 @@ android {
         sourceCompatibility rootProject.ext.sourceCompatibility
         targetCompatibility rootProject.ext.sourceCompatibility
     }
+    namespace 'com.adobe.marketing.mobile.messagingtestutils'
 }
 
 dependencies {
     compileOnly project(':messaging')
-    implementation 'com.github.adobe.aepsdk-core-android:core:v2.0.0-alpha.4'
+    implementation "com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT"
     implementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

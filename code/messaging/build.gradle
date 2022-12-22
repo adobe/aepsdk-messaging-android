@@ -70,6 +70,7 @@ android {
             resources.srcDirs += [resourceDir]
         }
     }
+    namespace 'com.adobe.marketing.mobile.messaging'
 }
 
 android.libraryVariants.all { variant ->
@@ -210,7 +211,9 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
-    implementation 'com.github.adobe.aepsdk-core-android:core:v2.0.0-alpha.4'
+    implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
+        changing = true
+    }
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"

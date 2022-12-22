@@ -126,13 +126,13 @@ class MessageAssetDownloader {
     private HashMap<String, String> extractMetadataFromResponse(final HttpConnecting response) {
         final HashMap<String, String> metadata = new HashMap<>();
 
-        final String lastModifiedProp = response.getResponsePropertyValue(MessagingConstants.HTTP_HEADER_LAST_MODIFIED);
-        final Date lastModifiedDate = TimeUtils.parseRFC2822Date(
-                lastModifiedProp, TimeZone.getTimeZone("GMT"), Locale.US);
-        final String lastModifiedMetadata = lastModifiedDate == null
-                ? String.valueOf(new Date(0L).getTime())
-                : String.valueOf(lastModifiedDate.getTime());
-        metadata.put(MessagingConstants.HTTP_HEADER_LAST_MODIFIED, lastModifiedMetadata);
+//        final String lastModifiedProp = response.getResponsePropertyValue(MessagingConstants.HTTP_HEADER_LAST_MODIFIED);
+//        final Date lastModifiedDate = TimeUtils.parseRFC2822Date(
+//                lastModifiedProp, TimeZone.getTimeZone("GMT"), Locale.US);
+//        final String lastModifiedMetadata = lastModifiedDate == null
+//                ? String.valueOf(new Date(0L).getTime())
+//                : String.valueOf(lastModifiedDate.getTime());
+//        metadata.put(MessagingConstants.HTTP_HEADER_LAST_MODIFIED, lastModifiedMetadata);
 
         final String eTagProp = response.getResponsePropertyValue(MessagingConstants.HTTP_HEADER_ETAG);
         metadata.put(MessagingConstants.HTTP_HEADER_ETAG, eTagProp == null ? "" : eTagProp);

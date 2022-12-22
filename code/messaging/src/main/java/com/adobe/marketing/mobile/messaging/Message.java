@@ -167,8 +167,7 @@ public class Message extends MessagingDelegate {
      */
     public WebView getWebView() {
         if (webView == null) {
-            // TODO: uncomment when this is available in services
-            // webView = aepMessage.getWebView();
+            webView = aepMessage.getWebView();
         }
         return webView;
     }
