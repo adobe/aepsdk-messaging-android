@@ -163,7 +163,7 @@ public class MessagingDelegateTests {
             // test
             messagingDelegate.openUrl(mockFullscreenMessage, null);
 
-            // verify no internal open url method is not called
+            // verify no internal open url method is called
             verify(mockFullscreenMessage, times(0)).openUrl(urlStringCaptor.capture());
         });
     }

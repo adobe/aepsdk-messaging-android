@@ -107,7 +107,7 @@ public final class MessagingExtension extends Extension {
         this(extensionApi, null, null, null);
     }
 
-    // FOR TESTING ONLY
+    @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final ConcurrentLinkedQueue<Event> eventQueue, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
         super(extensionApi);
 
