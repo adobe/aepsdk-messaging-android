@@ -11,16 +11,12 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
-import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -33,21 +29,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,36 +53,63 @@ public class PropositionPayloadCachingTests {
     ServiceProvider mockServiceProvider;
     @Mock
     CacheResult mockCacheResult;
+    @Mock
+    PropositionPayload mockPropositionPayload;
 
-    private MessagingCacheUtilities messagingCacheUtilities = new MessagingCacheUtilities();
-    private final File cachedProposition = new File("cached_proposition");
+    private MessagingCacheUtilities messagingCacheUtilities;
     private InputStream propositionInputStream;
     final Map<String, String> fakeMetaData = new HashMap<>();
 
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.openMocks(this);
-//        serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class);
 
-
-
+        ByteArrayOutputStream baos = null;
+        ObjectOutputStream oos = null;
         try {
-            propositionInputStream = new FileInputStream(cachedProposition);
-        } catch (IOException ex) { }
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            final List<PropositionPayload> list = new ArrayList<>();
+            list.add(mockPropositionPayload);
+            oos.writeObject(list);
+            oos.flush();
+            propositionInputStream = new ByteArrayInputStream(baos.toByteArray());
+
+
+        } catch (IOException ex) {
+            final IOException exception = ex;
+        } finally {
+            if (baos != null) {
+                baos.close();
+            }
+            if (oos != null) {
+                oos.close();
+            }
+        }
         fakeMetaData.put("fakeKey", "fakeValue");
     }
 
     @After
     public void tearDown() {
-//        serviceProviderMockedStatic.close();
+        Mockito.reset(mockCacheService);
+        Mockito.reset(mockServiceProvider);
+        Mockito.reset(mockCacheResult);
     }
 
-    @Test
-    public void testGetCachedPropositionPayload() {
+    void runWithMockedServiceProvider(final Runnable runnable) {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
             when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
 
+            messagingCacheUtilities = new MessagingCacheUtilities();
+
+            runnable.run();
+        }
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload() {
+        runWithMockedServiceProvider(() -> {
             // setup
             when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
@@ -98,68 +118,92 @@ public class PropositionPayloadCachingTests {
             // test
             final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
-            // verify getFileForCachedURL called
+            // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
-        }
-
-
+            assertNotNull(retrievedPayload);
+            assertEquals(1, retrievedPayload.size());
+        });
     }
-//
-//    @Test
-//    public void testGetCachedPropositionPayload_WhenNoPropositionsCached() {
-//        // test
-//        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
-//        // verify getFileForCachedURL called
-//        verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
-//        // verify null payload retrieved
-//        assertEquals(null, retrievedPayload);
-//    }
-//
-//    @Test
-//    public void testGetCachedPropositionPayload_WhenCacheFileReturnedIsNull() {
-//        // setup
-//        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(null);
-//        // test
-//        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
-//        // verify getFileForCachedURL called
-//        verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
-//        // verify null payload retrieved
-//        assertEquals(null, retrievedPayload);
-//    }
-//
-//    @Test
-//    public void testGetCachedPropositionPayload_WhenCachedPropositionsAreInvalid() throws URISyntaxException {
-//        // setup
-//        final File cachedFile = new File(MessagingTestUtils.class.getClassLoader().getResource("invalid.json").toURI());
-//        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedFile);
-//        // test
-//        final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
-//        // verify getFileForCachedURL called
-//        verify(mockCacheManager, times(1)).getFileForCachedURL(anyString(), anyString(), anyBoolean());
-//        // verify null payload retrieved
-//        assertEquals(null, retrievedPayload);
-//    }
-//
-//    @Test
-//    public void testCachePropositionPayload() {
-//        // setup
-//        final List<Map<String, Object>> testPayload = new ArrayList<>();
-//        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-//        final List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(testPayload);
-//        when(mockCacheManager.getFileForCachedURL(anyString(), anyString(), anyBoolean())).thenReturn(cachedProposition);
-//        // test
-//        messagingCacheUtilities.cachePropositions(payload);
-//        // verify deleteFilesNotInList called 2 times as image and proposition cache are deleted
-//        verify(mockCacheManager, times(2)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
-//        // verify createNewCacheFile called
-//        verify(mockCacheManager, times(1)).createNewCacheFile(anyString(), anyString(), any(Date.class));
-//    }
-//
-//    @Test
-//    public void testClearCache() {
-//        // test
-//        messagingCacheUtilities.clearCachedData();
-//        // verify deleteFilesNotInList called 2 times as image and proposition cache are deleted
-//        verify(mockCacheManager, times(2)).deleteFilesNotInList(ArgumentMatchers.<List<String>>isNull(), anyString(), anyBoolean());
-//    }
+
+    @Test
+    public void testGetCachedPropositionPayload_WhenNoPropositionsCached() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(null);
+
+            // test
+            final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload_WhenCacheFileReturnedIsNull() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(null);
+
+            // test
+            final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload_WhenCachedPropositionsAreInvalid() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(MessagingTestUtils.convertResourceFileToInputStream("invalid.json"));
+
+            // test
+            final List<PropositionPayload> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testCachePropositionPayload() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(propositionInputStream);
+
+            final List<PropositionPayload> list = new ArrayList<>();
+            list.add(mockPropositionPayload);
+
+            // test
+            messagingCacheUtilities.cachePropositions(list);
+
+            // verify
+            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).set(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());
+        });
+    }
+
+    @Test
+    public void testClearCache() {
+        runWithMockedServiceProvider(() -> {
+            // test
+            messagingCacheUtilities.clearCachedData();
+
+            // verify
+            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
+        });
+    }
 }

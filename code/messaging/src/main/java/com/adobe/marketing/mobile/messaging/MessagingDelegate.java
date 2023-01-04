@@ -129,10 +129,8 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         final String query = uri.getQuery();
         final Map<String, String> messageData = extractQueryParameters(query);
 
-        // TODO: use getSettings when available from UIServices
-        // final MessageSettings aepMessageSettings = fullscreenMessage.getSettings();
-        final MessageSettings aepMessageSettings = new MessageSettings();
-        final Message message = (Message) aepMessageSettings.getParent();
+        final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
+        final Message message = (Message) messageSettings.getParent();
 
         if (!MessagingUtils.isMapNullOrEmpty(messageData)) {
             // handle optional tracking
@@ -154,7 +152,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
             // handle optional javascript code to be executed
             final String javascript = messageData.get(MessagingConstants.MessagingScheme.JS);
             if (!StringUtils.isNullOrEmpty(javascript)) {
-                ((Message) (fullscreenMessage.getParent())).evaluateJavascript(javascript);
+                message.evaluateJavascript(javascript);
             }
         }
 
@@ -231,7 +229,6 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         return processedUrlStringBuilder.toString();
     }
 
-    // TODO: remove below this line after core updates to support these
     private static Map<String, String> extractQueryParameters(final String queryString) {
         if (StringUtils.isNullOrEmpty(queryString)) {
             return null;

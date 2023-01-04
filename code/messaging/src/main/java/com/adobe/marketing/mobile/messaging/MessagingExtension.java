@@ -75,13 +75,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class MessagingExtension extends Extension {
-    final static String SELF_TAG = "MessagingExtension";
-    private final Object executorMutex = new Object();
-    private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
-    private final InAppNotificationHandler inAppNotificationHandler;
-    private ExecutorService executorService;
+    private final static String SELF_TAG = "MessagingExtension";
+
+    private final ConcurrentLinkedQueue<Event> eventQueue;
+    final InAppNotificationHandler inAppNotificationHandler;
     private boolean initialMessageFetchComplete = false;
-    private final LaunchRulesEngine messagingRulesEngine;
+    final LaunchRulesEngine messagingRulesEngine;
 
     /**
      * Constructor.
@@ -105,13 +104,16 @@ public final class MessagingExtension extends Extension {
      * @param extensionApi {@link ExtensionApi} instance
      */
     MessagingExtension(final ExtensionApi extensionApi) {
+        this(extensionApi, null, null, null);
+    }
+
+    @VisibleForTesting
+    MessagingExtension(final ExtensionApi extensionApi, final ConcurrentLinkedQueue<Event> eventQueue, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
         super(extensionApi);
 
-        // initialize the messaging extension rules engine instance
-        messagingRulesEngine = new LaunchRulesEngine(extensionApi);
-
-        // initialize the in-app notification handler and check if we have any cached propositions. if we do, load them.
-        this.inAppNotificationHandler = new InAppNotificationHandler(this, extensionApi, messagingRulesEngine);
+        this.eventQueue = eventQueue != null ? eventQueue : new ConcurrentLinkedQueue<Event>();
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
+        this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
     //region Extension interface methods
@@ -160,8 +162,7 @@ public final class MessagingExtension extends Extension {
     }
 
     @Override
-    protected void onUnregistered() {
-    }
+    protected void onUnregistered() {}
 
     @Override
     public boolean readyForEvent(@NonNull final Event event) {
@@ -244,7 +245,7 @@ public final class MessagingExtension extends Extension {
      * The queued events are then processed in an orderly fashion.
      * No action is taken if the provided event's value is null.
      *
-     * @param event The {@link Event} thats needs to be queued
+     * @param event The {@link Event} that needs to be queued
      */
     void queueEvent(final Event event) {
         if (event == null) {
@@ -470,21 +471,6 @@ public final class MessagingExtension extends Extension {
         if (isSharedStateUpdateFor(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event) ||
                 isSharedStateUpdateFor(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
             processEvents();
-        }
-    }
-
-    /**
-     * Getter for the {@link #executorService}. Access to which is mutex protected.
-     *
-     * @return A non-null {@link ExecutorService} instance
-     */
-    ExecutorService getExecutor() {
-        synchronized (executorMutex) {
-            if (executorService == null) {
-                executorService = Executors.newSingleThreadExecutor();
-            }
-
-            return executorService;
         }
     }
 
