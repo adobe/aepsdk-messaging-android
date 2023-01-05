@@ -128,7 +128,7 @@ class InAppNotificationHandler {
 
         // send event
         Log.debug(LOG_TAG, SELF_TAG, "Dispatching edge event to fetch in-app messages.");
-        MessagingUtils.sendEvent(event, MessagingConstants.EventDispatchErrors.PERSONALIZATION_REQUEST_ERROR);
+        extensionApi.dispatch(event);
     }
 
     /**

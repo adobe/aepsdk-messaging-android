@@ -10,6 +10,8 @@
 */
 package com.adobe.marketing.mobile.messaging;
 
+import com.adobe.marketing.mobile.util.JSONUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +53,7 @@ public class MessagingUtilsTests {
             JSONObject json = new JSONObject(mockJsonObj);
 
             // test
-            Map<String, Object> result = MessagingUtils.toMap(json);
+            Map<String, Object> result = JSONUtils.toMap(json);
 
             if (result == null) {
                 Assert.fail();
@@ -68,7 +70,7 @@ public class MessagingUtilsTests {
     @Test
     public void test_toMap_when_nullJson() {
         try {
-            Assert.assertNull(MessagingUtils.toMap(null));
+            Assert.assertNull(JSONUtils.toMap(null));
         } catch (JSONException e) {
             Assert.fail();
         }
@@ -84,7 +86,7 @@ public class MessagingUtilsTests {
             JSONArray json = new JSONArray(mockJsonArr);
 
             // test
-            List<Object> result = MessagingUtils.toList(json);
+            List<Object> result = JSONUtils.toList(json);
 
             // verify
             Assert.assertEquals(result.size(), 2);
@@ -96,7 +98,7 @@ public class MessagingUtilsTests {
     @Test
     public void test_toList_when_nullJson() {
         try {
-            Assert.assertNull(MessagingUtils.toList(null));
+            Assert.assertNull(JSONUtils.toList(null));
         } catch (JSONException e) {
             Assert.fail();
         }

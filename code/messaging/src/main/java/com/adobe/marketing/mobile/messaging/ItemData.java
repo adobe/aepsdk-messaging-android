@@ -34,9 +34,8 @@ class ItemData implements Serializable {
     JSONObject getRuleJsonObject() {
         try {
             return new JSONObject(content);
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             Log.warning(LOG_TAG, SELF_TAG, "JSONException thrown while attempting to create object: %s", e.getLocalizedMessage());
-            e.printStackTrace();
             return null;
         }
     }
