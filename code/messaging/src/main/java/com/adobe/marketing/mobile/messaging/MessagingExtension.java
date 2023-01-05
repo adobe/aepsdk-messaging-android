@@ -229,21 +229,6 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
-        final Map<String, Object> edgeIdentitySharedState = getXDMSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, eventToProcess);
-
-        // NOTE: configuration is mandatory processing the event, so if shared state is null (pending) stop processing events
-        if (MessagingUtils.isMapNullOrEmpty(configSharedState)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Could not process event, configuration shared state is pending");
-            return;
-        }
-
-        // NOTE: identity is mandatory processing the event, so if shared state is null (pending) stop processing events
-        if (MessagingUtils.isMapNullOrEmpty(edgeIdentitySharedState)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Could not process event, identity shared state is pending");
-            return;
-        }
-
         // validate fetch messages event then refresh in-app messages via an Edge extension event
         if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
             inAppNotificationHandler.fetchMessages();
@@ -252,12 +237,14 @@ public final class MessagingExtension extends Extension {
             handlePushToken(eventToProcess);
         } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // Need experience event dataset id for sending the push token
-            if (!configSharedState.containsKey(MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID)) {
+            final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
+            final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
+            if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
             // handle the push tracking information from messaging request content event
-            handleTrackingInfo(eventToProcess);
+            handleTrackingInfo(eventToProcess, experienceEventDatasetId);
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
             inAppNotificationHandler.handleEdgePersonalizationNotification(eventToProcess);
@@ -305,7 +292,7 @@ public final class MessagingExtension extends Extension {
                 extensionApi);
     }
 
-    void handleTrackingInfo(final Event event) {
+    void handleTrackingInfo(final Event event, final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventData is null.");
@@ -321,8 +308,6 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
-        final String datasetId = MessagingUtils.getShareStateMessagingEventDatasetId(configSharedState);
         if (StringUtils.isNullOrEmpty(datasetId)) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
             return;

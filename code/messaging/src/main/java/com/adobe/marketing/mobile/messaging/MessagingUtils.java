@@ -164,27 +164,19 @@ class MessagingUtils {
     // Shared State Helpers
     // ========================================================================================
     static String getSharedStateEcid(final Map<String, Object> edgeIdentityState) {
-        if (!MessagingUtils.isMapNullOrEmpty(edgeIdentityState)) {
-            final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, IDENTITY_MAP, null);
-            if (!MessagingUtils.isMapNullOrEmpty(identityMap)) {
-                List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
-                if (ecids != null && !ecids.isEmpty()) {
-                    final Map<String, Object> ecidMap = ecids.get(0);
-                    if (!MessagingUtils.isMapNullOrEmpty(ecidMap)) {
-                        return DataReader.optString(ecidMap, ID, null);
-                    }
-                }
-            }
-        }
+        final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, IDENTITY_MAP, null);
+        if (MessagingUtils.isMapNullOrEmpty(identityMap)) return null;
 
-        return null;
+        final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
+        if (ecids == null || ecids.isEmpty()) return null;
+
+        final Map<String, Object> ecidMap = ecids.get(0);
+        if (MessagingUtils.isMapNullOrEmpty(ecidMap)) return null;
+
+        return DataReader.optString(ecidMap, ID, null);
     }
 
     static String getShareStateMessagingEventDatasetId(final Map<String, Object> configState) {
-        if (!MessagingUtils.isMapNullOrEmpty(configState)) {
-            return DataReader.optString(configState, EXPERIENCE_EVENT_DATASET_ID, null);
-        }
-
-        return null;
+        return DataReader.optString(configState, EXPERIENCE_EVENT_DATASET_ID, null);
     }
 }

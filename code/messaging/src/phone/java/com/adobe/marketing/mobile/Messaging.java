@@ -23,6 +23,7 @@ import java.util.Map;
 
 public final class Messaging {
     private static final String EXTENSION_VERSION = "2.0.0";
+    // TODO: replace with EventType.MESSAGING when available
     private static final String MESSAGING_EVENT_TYPE = "com.adobe.eventType.messaging";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
@@ -30,7 +31,6 @@ public final class Messaging {
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-    private static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
     private static final String REFRESH_MESSAGES = "refreshMessages";
     private static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
@@ -151,7 +151,7 @@ public final class Messaging {
         }
 
         final Event messagingEvent = new Event.Builder(PUSH_NOTIFICATION_INTERACTION_EVENT,
-                MESSAGING_EVENT_TYPE, REQUEST_CONTENT)
+                MESSAGING_EVENT_TYPE, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
@@ -174,7 +174,7 @@ public final class Messaging {
         eventData.put(REFRESH_MESSAGES, true);
 
         final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
-                MESSAGING_EVENT_TYPE, REQUEST_CONTENT)
+                MESSAGING_EVENT_TYPE, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
 
