@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile;
 
 import android.content.Intent;
+
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -22,7 +23,7 @@ import java.util.Map;
 
 public final class Messaging {
     private static final String EXTENSION_VERSION = "2.0.0";
-    private static final String FULL_EXTENSION_NAME = "com.adobe.eventType.messaging";
+    private static final String MESSAGING_EVENT_TYPE = "com.adobe.eventType.messaging";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -43,7 +44,8 @@ public final class Messaging {
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
 
-    private Messaging() { }
+    private Messaging() {
+    }
 
     /**
      * Returns the current version of the Messaging extension.
@@ -149,7 +151,7 @@ public final class Messaging {
         }
 
         final Event messagingEvent = new Event.Builder(PUSH_NOTIFICATION_INTERACTION_EVENT,
-                FULL_EXTENSION_NAME, REQUEST_CONTENT)
+                MESSAGING_EVENT_TYPE, REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
@@ -159,7 +161,8 @@ public final class Messaging {
             }
 
             @Override
-            public void call(Event event) {}
+            public void call(Event event) {
+            }
         });
     }
 
@@ -171,7 +174,7 @@ public final class Messaging {
         eventData.put(REFRESH_MESSAGES, true);
 
         final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
-                FULL_EXTENSION_NAME, REQUEST_CONTENT)
+                MESSAGING_EVENT_TYPE, REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
 
@@ -182,7 +185,8 @@ public final class Messaging {
             }
 
             @Override
-            public void call(Event event) { }
+            public void call(Event event) {
+            }
         });
     }
 
