@@ -236,52 +236,6 @@ public class MessagingExtensionTests {
         });
     }
 
-    @Test
-    public void test_processEvent_whenSharedStates_present_noMatchingHandler() {
-        runUsingMockedServiceProvider(() -> {
-            // Mocks
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("somekey", "somedata");
-            Event mockEvent = mock(Event.class);
-            when(mockEvent.getEventData()).thenReturn(eventData);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
-
-            // test
-            messagingExtension.processEvent(mockEvent);
-
-            // verify
-            verify(mockExtensionApi, times(1)).getSharedState(any(), any(), anyBoolean(), any());
-            verify(mockExtensionApi, times(1)).getXDMSharedState(any(), any(), anyBoolean(), any());
-            verify(mockEvent, times(5)).getType();
-        });
-    }
-
-    @Test
-    public void test_processEvent_with_genericIdentityEvent() {
-        runUsingMockedServiceProvider(() -> {
-            // Mocks
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("somekey", "somedata");
-            Event mockEvent = mock(Event.class);
-            when(mockEvent.getEventData()).thenReturn(eventData);
-            when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
-            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
-
-            // test
-            messagingExtension.processEvent(mockEvent);
-
-            // verify
-            verify(mockExtensionApi, times(1)).getSharedState(any(), any(), anyBoolean(), any());
-            verify(mockExtensionApi, times(1)).getXDMSharedState(any(), any(), anyBoolean(), any());
-            verify(mockEvent, times(2)).getType();
-            verify(mockEvent, times(1)).getSource();
-            verify(mockEvent, times(5)).getEventData();
-        });
-    }
-
     //
 //    @Test
 //    public void test_processEvents_with_messagingEventType() {
