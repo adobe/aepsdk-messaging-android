@@ -94,8 +94,6 @@ public class MessagingExtensionTests {
     @Mock
     RuleConsequence mockRuleConsequence;
 
-    private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
-    private static final String mockAppId = "mock_applicationId";
     private static final String mockCJMData = "{\n" +
             "        \"mixins\" :{\n" +
             "          \"_experience\": {\n" +

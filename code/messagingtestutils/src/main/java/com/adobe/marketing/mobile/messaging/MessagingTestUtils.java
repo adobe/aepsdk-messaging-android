@@ -388,9 +388,7 @@ public class MessagingTestUtils {
         messagePayload.put("items", items);
         messagePayload.put("id", "testResponseId" + count);
         List<Map<String, Object>> payload = new ArrayList<>();
-        if (config.hasEmptyPayload) {
-            payload.add(new HashMap<String, Object>());
-        } else {
+        if (!config.hasEmptyPayload) {
             payload.add(messagePayload);
         }
         return payload;

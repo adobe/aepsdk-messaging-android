@@ -70,7 +70,9 @@ class MessageAssetDownloader {
         }
 
         // clear old assets
-        clearCachedAssetsNotInList(assetDir, assetsCollection);
+        if (assetDir != null) {
+            clearCachedAssetsNotInList(assetDir, assetsCollection);
+        }
 
         // download assets within the assets collection list
         for (final String url : assetsCollection) {
