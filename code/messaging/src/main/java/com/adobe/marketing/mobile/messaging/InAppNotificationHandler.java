@@ -64,6 +64,7 @@ class InAppNotificationHandler {
     private String requestMessagesEventId;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
+    private Message message;
 
     /**
      * Constructor
@@ -92,6 +93,11 @@ class InAppNotificationHandler {
                 processPropositions(cachedMessages);
             }
         }
+    }
+
+    @VisibleForTesting
+    Message getMessage() {
+        return message;
     }
 
     /**
@@ -299,7 +305,7 @@ class InAppNotificationHandler {
                 return;
             }
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
+            message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = getPropositionInfoForMessageId(message.id);
             message.trigger();
             message.show();
