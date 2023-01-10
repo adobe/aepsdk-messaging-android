@@ -127,6 +127,9 @@ public class MessagingExtensionTests {
         reset(mockEdgeIdentityData);
         reset(mockDeviceInfoService);
         reset(mockApplication);
+        reset(mockMessage);
+        reset(mockLaunchRule);
+        reset(mockRuleConsequence);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {

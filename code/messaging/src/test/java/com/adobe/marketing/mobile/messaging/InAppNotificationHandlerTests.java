@@ -106,7 +106,7 @@ public class InAppNotificationHandlerTests {
         reset(mockNetworkService);
         reset(mockCacheService);
         reset(mockCacheResult);
-        reset(mockNetworkService);
+        reset(mockMessagingExtension);
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
 
