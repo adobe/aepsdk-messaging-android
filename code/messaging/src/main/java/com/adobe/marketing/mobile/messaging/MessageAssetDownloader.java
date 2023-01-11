@@ -56,6 +56,7 @@ class MessageAssetDownloader {
         this.assetsCollection = assets;
         this.cacheService = ServiceProvider.getInstance().getCacheService();
         this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+        createAssetCacheDirectory();
     }
 
     /**
