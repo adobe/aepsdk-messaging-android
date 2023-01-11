@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,6 +89,13 @@ public class MessageAssetDownloaderTests {
 
     @After
     public void tearDown() {
+        reset(mockServiceProvider);
+        reset(mockUIService);
+        reset(mockCacheService);
+        reset(mockCacheResult);
+        reset(mockDeviceInfoService);
+        reset(mockNetworkService);
+        reset(mockHttpConnection);
         clearCacheFiles(testCacheDir);
     }
 
