@@ -23,8 +23,6 @@ import java.util.Map;
 
 public final class Messaging {
     private static final String EXTENSION_VERSION = "2.0.0";
-    // TODO: replace with EventType.MESSAGING when available
-    private static final String MESSAGING_EVENT_TYPE = "com.adobe.eventType.messaging";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -151,7 +149,7 @@ public final class Messaging {
         }
 
         final Event messagingEvent = new Event.Builder(PUSH_NOTIFICATION_INTERACTION_EVENT,
-                MESSAGING_EVENT_TYPE, EventSource.REQUEST_CONTENT)
+                EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
@@ -174,7 +172,7 @@ public final class Messaging {
         eventData.put(REFRESH_MESSAGES, true);
 
         final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
-                MESSAGING_EVENT_TYPE, EventSource.REQUEST_CONTENT)
+                EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
 

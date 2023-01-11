@@ -79,7 +79,6 @@ public final class MessagingExtension extends Extension {
     final InAppNotificationHandler inAppNotificationHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
-    private final ExtensionApi extensionApi;
 
     /**
      * Constructor.
@@ -109,7 +108,6 @@ public final class MessagingExtension extends Extension {
     @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
         super(extensionApi);
-        this.extensionApi = extensionApi;
         this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
         this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
     }
@@ -211,7 +209,7 @@ public final class MessagingExtension extends Extension {
                 EventType.RULES_ENGINE,
                 EventSource.RESPONSE_CONTENT,
                 eventData,
-                extensionApi);
+                getApi());
     }
 
     //endregion
@@ -284,7 +282,7 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 eventData,
-                extensionApi);
+                getApi());
     }
 
     void handleTrackingInfo(final Event event, final String datasetId) {
@@ -332,7 +330,7 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmData,
-                extensionApi);
+                getApi());
     }
 
     /**
@@ -398,7 +396,7 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmEventData,
                 mask,
-                extensionApi);
+                getApi());
     }
     //endregion
 
