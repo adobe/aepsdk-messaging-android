@@ -43,7 +43,6 @@ import java.util.TimeZone;
 class MessageAssetDownloader {
     private static final String SELF_TAG = "MessageAssetDownloader";
     private final List<String> assetsCollection;
-    private final Networking networkService;
     private final CacheService cacheService;
     private File assetDir;
     private final String assetCacheLocation;
@@ -55,7 +54,6 @@ class MessageAssetDownloader {
      */
     MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
-        this.networkService = ServiceProvider.getInstance().getNetworkService();
         this.cacheService = ServiceProvider.getInstance().getCacheService();
         this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
     }
@@ -80,7 +78,7 @@ class MessageAssetDownloader {
             final CacheResult cachedAsset = cacheService.get(assetCacheLocation, url);
             final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
             final NetworkRequest networkRequest = new NetworkRequest(url, HttpMethod.GET, null, requestProperties, MessagingConstants.DEFAULT_TIMEOUT, MessagingConstants.DEFAULT_TIMEOUT);
-            networkService.connectAsync(networkRequest, connection -> {
+            ServiceProvider.getInstance().getNetworkService().connectAsync(networkRequest, connection -> {
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Asset was cached previously: %s", url);
                     connection.close();

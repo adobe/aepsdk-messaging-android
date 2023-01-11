@@ -21,88 +21,15 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedStat
 
 import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.Log;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.adobe.marketing.mobile.util.DataReader;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
 
-    private static String SELF_TAG = "MessagingUtils";
-
-    /* JSON conversion helpers */
-
-    /**
-     * Converts provided {@link org.json.JSONObject} into {@link java.util.Map} for any number of levels, which can be used as event data
-     * This method may recurse.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonObject to be converted
-     * @return {@link java.util.Map} containing the elements from the provided json, null if {@code jsonObject} is null
-     */
-    static Map<String, Object> toMap(final JSONObject jsonObject) throws JSONException {
-        if (jsonObject == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "toMap - will not convert to map, the passed in json is null.");
-            return null;
-        }
-
-        Map<String, Object> jsonAsMap = new HashMap<>();
-        Iterator<String> keysIterator = jsonObject.keys();
-        while (keysIterator.hasNext()) {
-            String nextKey = keysIterator.next();
-            jsonAsMap.put(nextKey, fromJson(jsonObject.get(nextKey)));
-        }
-
-        return jsonAsMap;
-    }
-
-    /**
-     * Converts provided {@link JSONArray} into {@link List} for any number of levels which can be used as event data
-     * This method may recurse.
-     * The elements for which the conversion fails will be skipped.
-     *
-     * @param jsonArray to be converted
-     * @return {@link List} containing the elements from the provided json, null if {@code jsonArray} is null
-     */
-    static List<Object> toList(final JSONArray jsonArray) throws JSONException {
-        if (jsonArray == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "toList - will not convert to list, the passed in json array is null.");
-            return null;
-        }
-
-        List<Object> jsonArrayAsList = new ArrayList<>();
-        int size = jsonArray.length();
-
-        for (int i = 0; i < size; i++) {
-            jsonArrayAsList.add(fromJson(jsonArray.get(i)));
-        }
-
-        return jsonArrayAsList;
-    }
-
-    /**
-     * Converts provided {@link JSONObject} to a {@link Map} or {@link JSONArray} into a {@link List}.
-     *
-     * @param json to be converted
-     * @return {@link Object} converted from the provided json object.
-     */
-    private static Object fromJson(final Object json) throws JSONException {
-        if (json == JSONObject.NULL) {
-            return null;
-        } else if (json instanceof JSONObject) {
-            return toMap((JSONObject) json);
-        } else if (json instanceof JSONArray) {
-            return toList((JSONArray) json);
-        } else {
-            return json;
-        }
-    }
+    private static final String SELF_TAG = "MessagingUtils";
 
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
         if (payloads == null || payloads.size() == 0) {
@@ -211,13 +138,13 @@ class MessagingUtils {
      * @param eventSource  a {@code String} containing the source of the event to be dispatched
      * @param data         a {@link Map} containing the data of the event to be dispatched
      * @param mask         a {@link String[]} containing an optional event mask
-     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
+     * @param extensionApi {@link ExtensionApi} to use for dispatching the event
      */
-    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String[] mask, final String errorMessage) {
+    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String[] mask, final ExtensionApi extensionApi) {
         final Event event = new Event.Builder(eventName, eventType, eventSource, mask)
                 .setEventData(data)
                 .build();
-        sendEvent(event, errorMessage);
+        extensionApi.dispatch(event);
     }
 
     /**
@@ -227,71 +154,29 @@ class MessagingUtils {
      * @param eventType    a {@code String} containing the type of the event to be dispatched
      * @param eventSource  a {@code String} containing the source of the event to be dispatched
      * @param data         a {@link Map} containing the data of the event to be dispatched
-     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
+     * @param extensionApi {@link ExtensionApi} to use for dispatching the event
      */
-    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final String errorMessage) {
-        sendEvent(eventName, eventType, eventSource, data, null, errorMessage);
-    }
-
-    /**
-     * Dispatches an event.
-     *
-     * @param event a {@link Event} to be dispatched
-     * @param errorMessage a {code String} containing the message to be logged if an error occurred during event dispatching
-     */
-    static void sendEvent(final Event event, final String errorMessage) {
-        MobileCore.dispatchEventWithResponseCallback(event, 5000L, new AdobeCallbackWithError<Event>() {
-            @Override
-            public void fail(AdobeError adobeError) {
-                Log.warning(LOG_TAG, SELF_TAG, "sendEvent - %s: %s", errorMessage, adobeError.getErrorName());
-            }
-
-            @Override
-            public void call(Event event) {}
-        });
+    static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final ExtensionApi extensionApi) {
+        sendEvent(eventName, eventType, eventSource, data, null, extensionApi);
     }
 
     // ========================================================================================
     // Shared State Helpers
     // ========================================================================================
     static String getSharedStateEcid(final Map<String, Object> edgeIdentityState) {
-        if (edgeIdentityState != null) {
-            try {
-                Object identityMapObj = edgeIdentityState.get(IDENTITY_MAP);
-                if (identityMapObj instanceof Map) {
-                    Map<String, Object> identityMap = (Map<String, Object>) identityMapObj;
-                    Object ecidsObj = identityMap.get(ECID);
-                    if (ecidsObj instanceof List) {
-                        List<Object> ecids = (List<Object>) identityMap.get(ECID);
-                        if (!ecids.isEmpty()) {
-                            Object ecidObject = ecids.get(0);
-                            if (ecidObject instanceof Map) {
-                                Map<String, Object> ecid = (Map<String, Object>) ecids.get(0);
-                                Object idObj = ecid.get(ID);
-                                if (idObj instanceof String) {
-                                    return (String) idObj;
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (ClassCastException e) {
-                Log.debug(LOG_TAG, SELF_TAG, "Exception while trying to get the ECID. Error -> %s", e.getLocalizedMessage());
-                return null;
-            }
-        }
+        final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, IDENTITY_MAP, null);
+        if (MessagingUtils.isMapNullOrEmpty(identityMap)) return null;
 
-        return null;
+        final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
+        if (ecids == null || ecids.isEmpty()) return null;
+
+        final Map<String, Object> ecidMap = ecids.get(0);
+        if (MessagingUtils.isMapNullOrEmpty(ecidMap)) return null;
+
+        return DataReader.optString(ecidMap, ID, null);
     }
 
     static String getShareStateMessagingEventDatasetId(final Map<String, Object> configState) {
-        if (configState != null) {
-            Object expEventDatasetId = configState.get(EXPERIENCE_EVENT_DATASET_ID);
-            if (expEventDatasetId instanceof String) {
-                return (String) expEventDatasetId;
-            }
-        }
-
-        return null;
+        return DataReader.optString(configState, EXPERIENCE_EVENT_DATASET_ID, null);
     }
 }
