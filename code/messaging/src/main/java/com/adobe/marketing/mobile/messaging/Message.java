@@ -26,6 +26,7 @@ import android.webkit.WebView;
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -68,35 +69,35 @@ public class Message extends MessagingDelegate {
      * </ul>
      *
      * @param parent             {@link MessagingExtension} instance that created this Message
-     * @param consequence        {@code Map<String, Object>} containing a {@code Message} defining payload
+     * @param consequence        {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} containing a {@code Message} defining payload
      * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+    public Message(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
         this(parent, consequence, rawMessageSettings, assetMap, null, null);
     }
 
     @VisibleForTesting
-    Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap, final WebView webView, final Handler webViewHandler) throws MessageRequiredFieldMissingException {
+    Message(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap, final WebView webView, final Handler webViewHandler) throws MessageRequiredFieldMissingException {
         messagingExtension = parent;
         this.webView = webView;
         this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
 
-        final String consequenceType = (String) consequence.get(MESSAGE_CONSEQUENCE_TYPE);
+        final String consequenceType = (String) consequence.getType();
 
         if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
-        details = (Map<String, Object>) consequence.get(MESSAGE_CONSEQUENCE_DETAIL);
+        details = (Map<String, Object>) consequence.getDetail();
         if (MessagingUtils.isMapNullOrEmpty(details)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        id = (String) consequence.get(MESSAGE_CONSEQUENCE_ID);
+        id = (String) consequence.getId();
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");

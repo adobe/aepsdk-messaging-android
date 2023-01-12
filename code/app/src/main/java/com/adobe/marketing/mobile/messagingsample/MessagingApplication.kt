@@ -14,8 +14,9 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.adobe.marketing.mobile.edge.consent.Consent;
-import com.google.firebase.iid.FirebaseInstanceId
+import com.adobe.marketing.mobile.edge.consent.Consent
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
 
@@ -28,9 +29,9 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()
-        Assurance.registerExtension()
-        Consent.registerExtension()
-        Assurance.startSession("YOUR-SESSION-ID")
+        //Assurance.registerExtension()
+        //Consent.registerExtension()
+        //Assurance.startSession("YOUR-SESSION-ID")
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
@@ -44,13 +45,15 @@ class MessagingApplication : Application() {
         }
 
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            // Log and toast
             if (task.isSuccessful) {
-                val token = task.result?.token ?: ""
+                // Get new FCM registration token
+                val token = task.result
                 print("MessagingApplication Firebase token :: $token")
                 // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
             }
-        }
+        })
     }
 }
