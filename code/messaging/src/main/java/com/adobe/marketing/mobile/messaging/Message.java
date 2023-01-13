@@ -110,6 +110,7 @@ public class Message extends MessagingDelegate {
         }
 
         final MessageSettings settings = messageSettingsFromMap(rawMessageSettings);
+        settings.setParent(this);
 
         // set the internal Messaging delegate if a custom Messaging delegate is not being used
         if (ServiceProvider.getInstance().getMessageDelegate() == null) {
