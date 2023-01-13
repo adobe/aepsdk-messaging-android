@@ -215,13 +215,13 @@ class MainActivity : ComponentActivity() {
 
         // triggerKey and triggerValue are set from the spinner item selected
         btnTriggerFullscreenIAM.setOnClickListener {
-            val iamTrigger = Event.Builder("test", "iamtest", "iamtest").let {
-                val eventData: HashMap<String, Any?> = hashMapOf(triggerKey to triggerValue)
-                it.setEventData(eventData)
-                it.build()
-            }
-            MobileCore.dispatchEvent(iamTrigger, null)
-            //MobileCore.trackAction("rymorale", null)
+//            val iamTrigger = Event.Builder("test", "iamtest", "iamtest").let {
+//                val eventData: HashMap<String, Any?> = hashMapOf(triggerKey to triggerValue)
+//                it.setEventData(eventData)
+//                it.build()
+//            }
+//            MobileCore.dispatchEvent(iamTrigger, null)
+            MobileCore.trackAction("samus", null)
         }
 
         btnHistoricalEvent1.setOnClickListener {
