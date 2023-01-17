@@ -195,7 +195,7 @@ class MainActivity : ComponentActivity() {
 
         // setup ui interaction listeners
         setupButtonClickListeners()
-        setupSpinnerItemSelectedListener()
+        //setupSpinnerItemSelectedListener()
         setupSwitchListeners()
 
         // handle push notification interactions
