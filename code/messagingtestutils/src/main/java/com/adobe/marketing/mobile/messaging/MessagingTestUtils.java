@@ -38,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -399,8 +400,8 @@ public class MessagingTestUtils {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(propositionPayloads);
-            objectOutputStream.flush();
-            return byteArrayOutputStream.toString();
+            objectOutputStream.defaultWriteObject();
+            return objectOutputStream.toString();
         } catch (Exception e) {
             Log.debug(LOG_TAG, LOG_TAG, "Exception occurred while converting payloads to string: %s", e.getMessage());
             return "";
