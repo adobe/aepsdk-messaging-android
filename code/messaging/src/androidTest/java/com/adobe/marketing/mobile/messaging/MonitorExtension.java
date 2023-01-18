@@ -38,9 +38,11 @@ class MonitorExtension extends Extension {
 
     private static final Map<EventSpec, List<Event>> receivedEvents = new HashMap<>();
     private static final Map<EventSpec, ADBCountDownLatch> expectedEvents = new HashMap<>();
+    public static ExtensionApi extensionApi;
 
     protected MonitorExtension(ExtensionApi extensionApi) {
         super(extensionApi);
+        MonitorExtension.extensionApi = extensionApi;
 
         extensionApi.registerWildcardListener(
                 MonitorListener.class, extensionError -> MobileCore.log(LoggingMode.ERROR, LOG_TAG,

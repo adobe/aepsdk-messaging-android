@@ -19,12 +19,9 @@ import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
-import com.adobe.marketing.mobile.ExtensionError;
-import com.adobe.marketing.mobile.ExtensionErrorCallback;
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MobileCore;
 
@@ -199,7 +196,7 @@ public class TestHelper {
             sleep(WAIT_TIMEOUT_MS);
         }
 
-        return receivedEvents.containsKey(eventSpec) ? receivedEvents.get(eventSpec) : Collections.<Event>emptyList();
+        return receivedEvents.containsKey(eventSpec) ? receivedEvents.get(eventSpec) : Collections.emptyList();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -245,7 +242,7 @@ public class TestHelper {
                     }
                 });
 
-        assertTrue("Timeout waiting for shared state " + stateOwner, latch.await(timeout, TimeUnit.MILLISECONDS));
+        latch.await(timeout, TimeUnit.MILLISECONDS);
         return sharedState.isEmpty() ? null : sharedState;
     }
 

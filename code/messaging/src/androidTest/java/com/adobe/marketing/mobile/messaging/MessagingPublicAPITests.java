@@ -28,8 +28,6 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
-import com.adobe.marketing.mobile.util.MapUtils;
-import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -225,7 +223,7 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, mockCustomActionId);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
@@ -261,13 +259,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, null);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
 
         // verify push tracking edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, 
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getEventData().toString());
@@ -279,12 +277,12 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(null, true, "customAction");
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, messagingRequestEvents.size());
 
         // verify no push tracking edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, 
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, edgeRequestEvents.size());
     }
@@ -295,12 +293,12 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(new Intent(), true, "customAction");
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, messagingRequestEvents.size());
 
         // verify no push tracking edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, 
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, edgeRequestEvents.size());
     }
@@ -319,13 +317,13 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, null);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
 
         // verify push tracking edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, 
+        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getEventData().toString());
@@ -365,7 +363,7 @@ public class MessagingPublicAPITests {
         Messaging.handleNotificationResponse(intent, true, mockCustomActionId);
 
         // verify messaging event
-        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
@@ -389,13 +387,13 @@ public class MessagingPublicAPITests {
         TestHelper.sleep(500);
 
         // verify messaging request content event
-        final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING, 
+        final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
 
         // verify edge request content event
-        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, 
+        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
         assertEquals(expectedEdgePersonalizationEventData.trim(), edgePersonalizationRequestEvents.get(0).getEventData().toString());
