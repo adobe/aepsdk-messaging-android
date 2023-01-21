@@ -253,11 +253,6 @@ public final class MessagingExtension extends Extension {
     }
 
     void handlePushToken(final Event event) {
-        if (!eventIsValid(event)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to sync push token. Event or EventData is null.");
-            return;
-        }
-
         final String pushToken = (String) event.getEventData().get(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER);
 
         if (StringUtils.isNullOrEmpty(pushToken)) {
@@ -299,7 +294,7 @@ public final class MessagingExtension extends Extension {
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
         final String messageId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "");
         final boolean isApplicationOpened = DataReader.optBoolean(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
-        final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "");
+        final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
@@ -541,29 +536,6 @@ public final class MessagingExtension extends Extension {
         } catch (final JSONException | ClassCastException e) {
             Log.warning(LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe data is malformed : %s", e.getMessage());
         }
-    }
-
-    /**
-     * Checks if the provided {@code event} is a shared state update event for {@code stateOwnerName}
-     *
-     * @param stateOwnerName the shared state owner name; should not be null
-     * @param event          current event to check; should not be null
-     * @return {@code boolean} indicating if it is the shared state update for the provided {@code stateOwnerName}
-     */
-    private boolean isSharedStateUpdateFor(final String stateOwnerName, final Event event) {
-        if (stateOwnerName == null || stateOwnerName.isEmpty() || event == null) {
-            return false;
-        }
-
-        String stateOwner;
-
-        try {
-            stateOwner = (String) event.getEventData().get(MessagingConstants.EventDataKeys.STATE_OWNER);
-        } catch (ClassCastException e) {
-            return false;
-        }
-
-        return stateOwnerName.equals(stateOwner);
     }
 
     private boolean hasValidSharedState(final String extensionName, final Event event) {

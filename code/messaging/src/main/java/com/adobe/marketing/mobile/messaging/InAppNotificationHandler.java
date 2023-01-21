@@ -32,6 +32,8 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
@@ -62,6 +64,7 @@ class InAppNotificationHandler {
     private String requestMessagesEventId;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
+    private Message message;
 
     /**
      * Constructor
@@ -71,19 +74,30 @@ class InAppNotificationHandler {
      * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      */
     InAppNotificationHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
+        this(parent, extensionApi, rulesEngine, null, null);
+    }
+
+    @VisibleForTesting
+    InAppNotificationHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String requestMessagesEventId) {
         this.parent = parent;
-        this.messagingCacheUtilities = new MessagingCacheUtilities();
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
+        this.requestMessagesEventId = requestMessagesEventId;
 
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
-        if (messagingCacheUtilities != null && messagingCacheUtilities.arePropositionsCached()) {
-            List<PropositionPayload> cachedMessages = messagingCacheUtilities.getCachedPropositions();
+        this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
+        if (this.messagingCacheUtilities != null && this.messagingCacheUtilities.arePropositionsCached()) {
+            List<PropositionPayload> cachedMessages = this.messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 processPropositions(cachedMessages);
             }
         }
+    }
+
+    @VisibleForTesting
+    Message getMessage() {
+        return message;
     }
 
     /**
@@ -175,7 +189,7 @@ class InAppNotificationHandler {
                 return;
             }
 
-            final String appSurface = ServiceProvider.getInstance().getAppContextService().getApplicationContext().getPackageName();
+            final String appSurface = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
             Log.trace(LOG_TAG, SELF_TAG, "Using the application identifier (%s) to validate the notification payload.", appSurface);
             final String scope = proposition.propositionInfo.scope;
             if (StringUtils.isNullOrEmpty(scope)) {
@@ -291,7 +305,7 @@ class InAppNotificationHandler {
                 return;
             }
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            final Message message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
+            message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = getPropositionInfoForMessageId(message.id);
             message.trigger();
             message.show();

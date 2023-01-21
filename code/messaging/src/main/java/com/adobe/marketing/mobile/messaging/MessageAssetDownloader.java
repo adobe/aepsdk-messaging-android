@@ -56,6 +56,7 @@ class MessageAssetDownloader {
         this.assetsCollection = assets;
         this.cacheService = ServiceProvider.getInstance().getCacheService();
         this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+        createAssetCacheDirectory();
     }
 
     /**
@@ -70,7 +71,9 @@ class MessageAssetDownloader {
         }
 
         // clear old assets
-        clearCachedAssetsNotInList(assetDir, assetsCollection);
+        if (assetDir != null) {
+            clearCachedAssetsNotInList(assetDir, assetsCollection);
+        }
 
         // download assets within the assets collection list
         for (final String url : assetsCollection) {

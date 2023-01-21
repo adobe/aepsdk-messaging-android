@@ -23,6 +23,8 @@ import android.os.Handler;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.MobileParametersKeys;
 import com.adobe.marketing.mobile.services.Log;
@@ -44,7 +46,7 @@ public class Message extends MessagingDelegate {
     private final static String SELF_TAG = "Message";
     private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
-    private final Handler webViewHandler = new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
+    private final Handler webViewHandler;
     // public properties
     public String id;
     public boolean autoTrack = true;
@@ -72,11 +74,18 @@ public class Message extends MessagingDelegate {
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
     public Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+        this(parent, consequence, rawMessageSettings, assetMap, null, null);
+    }
+
+    @VisibleForTesting
+    Message(final MessagingExtension parent, final Map<String, Object> consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap, final WebView webView, final Handler webViewHandler) throws MessageRequiredFieldMissingException {
         messagingExtension = parent;
+        this.webView = webView;
+        this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
 
         final String consequenceType = (String) consequence.get(MESSAGE_CONSEQUENCE_TYPE);
 
-        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {            
+        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
@@ -108,6 +117,11 @@ public class Message extends MessagingDelegate {
 
         aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, !assetMap.isEmpty(), settings);
         aepMessage.setLocalAssetsMap(assetMap);
+    }
+
+    @VisibleForTesting
+    Map<String, WebViewJavascriptInterface> getScriptHandlers() {
+        return scriptHandlers;
     }
 
     /**
