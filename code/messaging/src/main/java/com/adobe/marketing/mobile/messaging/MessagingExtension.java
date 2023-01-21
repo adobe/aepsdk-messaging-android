@@ -294,7 +294,7 @@ public final class MessagingExtension extends Extension {
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
         final String messageId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "");
         final boolean isApplicationOpened = DataReader.optBoolean(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
-        final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "");
+        final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
@@ -454,7 +454,7 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> trackingMap = new HashMap<>();
         final Map<String, Object> customActionMap = new HashMap<>();
 
-        if (!StringUtils.isNullOrEmpty(actionId)) {
+        if (actionId != null) {
             customActionMap.put(XDMDataKeys.ACTION_ID, actionId);
             trackingMap.put(XDMDataKeys.CUSTOM_ACTION, customActionMap);
         }
