@@ -29,6 +29,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Networking;
@@ -576,25 +577,16 @@ public class InAppNotificationHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedConstruction<Message> mockedConstruction = Mockito.mockConstruction(Message.class)) {
-                Map<String, Object> consequence = new HashMap<>();
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-                Map<String, Object> eventData = new HashMap<>();
-                eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
-                Event mockEvent = mock(Event.class);
-
-                // when get eventData called return event data containing a valid rules response content event with a triggered consequence
-                when(mockEvent.getEventData()).thenReturn(eventData);
+                RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(mockEvent);
+                inAppNotificationHandler.createInAppMessage(consequence);
 
                 // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
                 Message mockMessage = mockedConstruction.constructed().get(0);
@@ -609,25 +601,16 @@ public class InAppNotificationHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedConstruction<Message> mockedConstruction = Mockito.mockConstruction(Message.class)) {
-                Map<String, Object> consequence = new HashMap<>();
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
                 details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-                consequence.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "notCjmIam");
-                Map<String, Object> eventData = new HashMap<>();
-                eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
-                Event mockEvent = mock(Event.class);
-
-                // when get eventData called return event data containing a valid rules response content event with a triggered consequence
-                when(mockEvent.getEventData()).thenReturn(eventData);
+                RuleConsequence consequence = new RuleConsequence("123456789", "notCjmIam", details);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(mockEvent);
+                inAppNotificationHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());

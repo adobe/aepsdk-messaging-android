@@ -87,16 +87,14 @@ public final class MessagingExtension extends Extension {
      * Called during messaging extension's registration.
      * The following listeners are registered during this extension's registration.
      * <ul>
-     *     <li> Listening to event with eventType {@link EventType#HUB}
-     *           and EventSource {@link EventSource#SHARED_STATE}</li>
-     *     <li> Listening to event with eventType {@link MessagingConstants.EventType#MESSAGING}
-     *          and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> Listening to event with eventType {@link EventType#GENERIC_IDENTITY}
      * 	        and EventSource {@link EventSource#REQUEST_CONTENT}</li>
+     *     <li> Listening to event with eventType {@link MessagingConstants.EventType#MESSAGING}
+     *          and EventSource {@link EventSource#REQUEST_CONTENT}</li>
      *      <li> Listening to event with eventType {@link MessagingConstants.EventType#EDGE}
      * 	        and EventSource {@link MessagingConstants.EventSource#PERSONALIZATION_DECISIONS}</li>
-     *      <li> Listening to event with eventType {@link EventType#RULES_ENGINE}
-     * 	        and EventSource {@link EventSource#RESPONSE_CONTENT}</li>
+     * 	    <li> Listening to event with eventType {@link EventType#WILDCARD}
+     *          and EventSource {@link EventSource#WILDCARD}</li>
      * </ul>
      *
      * @param extensionApi {@link ExtensionApi} instance
@@ -153,7 +151,6 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
-        getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
     }
 
@@ -168,7 +165,7 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        if (!hasValidSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
+        if (!hasValidXdmSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
             Log.trace(LOG_TAG, SELF_TAG, "Event processing is paused - waiting for valid XDM shared state from Edge Identity extension.");
             return false;
         }
@@ -202,14 +199,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequences.get(0));
-
-        MessagingUtils.sendEvent(MessagingConstants.EventName.TRIGGERED_IN_APP_MESSAGE_EVENT,
-                EventType.RULES_ENGINE,
-                EventSource.RESPONSE_CONTENT,
-                eventData,
-                getApi());
+        inAppNotificationHandler.createInAppMessage(consequences.get(0));
     }
 
     //endregion
@@ -246,9 +236,6 @@ public final class MessagingExtension extends Extension {
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
             inAppNotificationHandler.handleEdgePersonalizationNotification(eventToProcess);
-        } else if (MessagingUtils.isMessagingConsequenceEvent(eventToProcess)) {
-            // handle rules response events containing message definitions
-            inAppNotificationHandler.createInAppMessage(eventToProcess);
         }
     }
 
@@ -543,8 +530,17 @@ public final class MessagingExtension extends Extension {
         if (result == null) {
             return false;
         }
-        final Map<String, Object> configuration = result.getValue();
-        return configuration != null && !configuration.isEmpty();
+        final Map<String, Object> sharedState = result.getValue();
+        return sharedState != null && !sharedState.isEmpty();
+    }
+
+    private boolean hasValidXdmSharedState(final String extensionName, final Event event) {
+        final SharedStateResult result = getApi().getXDMSharedState(extensionName, event, false, SharedStateResolution.LAST_SET);
+        if (result == null) {
+            return false;
+        }
+        final Map<String, Object> sharedState = result.getValue();
+        return sharedState != null && !sharedState.isEmpty();
     }
 
     private Map<String, Object> getSharedState(final String extensionName, final Event event) {

@@ -14,8 +14,9 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.adobe.marketing.mobile.edge.consent.Consent;
-import com.google.firebase.iid.FirebaseInstanceId
+import com.adobe.marketing.mobile.edge.consent.Consent
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
 
@@ -28,29 +29,26 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()
-        Assurance.registerExtension()
-        Consent.registerExtension()
-        Assurance.startSession("YOUR-SESSION-ID")
+        //Assurance.registerExtension()
+        //Consent.registerExtension()
+        //Assurance.startSession("YOUR-SESSION-ID")
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("staging/1b50a869c4a2/eabbaa346d96/launch-d66dc409a75e-development")
+            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
             MobileCore.lifecycleStart(null)
-            // update config to use cjmstage for int integration
-            val cjmStageConfig: HashMap<String, Any> = hashMapOf(
-                "edge.environment" to "int"
-            )
-            MobileCore.updateConfiguration(cjmStageConfig)
         }
 
 
-        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            // Log and toast
             if (task.isSuccessful) {
-                val token = task.result?.token ?: ""
+                // Get new FCM registration token
+                val token = task.result
                 print("MessagingApplication Firebase token :: $token")
                 // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
             }
-        }
+        })
     }
 }

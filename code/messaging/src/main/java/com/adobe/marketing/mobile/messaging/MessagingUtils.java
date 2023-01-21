@@ -86,7 +86,7 @@ class MessagingUtils {
             return false;
         }
 
-        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType())
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
     }

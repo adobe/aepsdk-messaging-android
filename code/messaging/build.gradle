@@ -211,6 +211,7 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
+    implementation fileTree(dir: 'libs', include: ['edge-release-2.0.0.aar', 'edgeidentity-release-2.0.0.aar'])
     implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
         changing = true
     }
@@ -228,13 +229,7 @@ dependencies {
 
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    // Using older version of PowerMock as it supports minimum Android API < 26
-    // the root issue appears to be a dependency with Objenesis in Mockito-Core
-    // where Objenesis 2 requires minimum Android API 26
-    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
-    androidTestImplementation 'com.adobe.marketing.mobile:edge:1.3.2'
 
     // add test util dependencies for functional and unit tests
     testImplementation project(':messagingtestutils')

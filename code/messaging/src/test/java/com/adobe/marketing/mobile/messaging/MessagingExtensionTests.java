@@ -156,8 +156,17 @@ public class MessagingExtensionTests {
     // constructor
     // ========================================================================================
     @Test
+    public void test_TestableConstructor() {
+        runUsingMockedServiceProvider(() -> {
+            assertNotNull(messagingExtension.messagingRulesEngine);
+            assertNotNull(messagingExtension.inAppNotificationHandler);
+        });
+    }
+
+    @Test
     public void test_Constructor() {
         runUsingMockedServiceProvider(() -> {
+            messagingExtension = new MessagingExtension(mockExtensionApi);
             assertNotNull(messagingExtension.messagingRulesEngine);
             assertNotNull(messagingExtension.inAppNotificationHandler);
         });
@@ -169,10 +178,9 @@ public class MessagingExtensionTests {
             // test
             messagingExtension.onRegistered();
 
-            // verify 5 listeners are registered
+            // verify 4 listeners are registered
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY), eq(EventSource.REQUEST_CONTENT), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.EDGE), eq(MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS), any());
-            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE), eq(EventSource.RESPONSE_CONTENT), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.WILDCARD), eq(EventSource.WILDCARD), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingTestConstants.EventType.MESSAGING), eq(EventSource.REQUEST_CONTENT), any());
         });
@@ -221,7 +229,7 @@ public class MessagingExtensionTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -236,7 +244,7 @@ public class MessagingExtensionTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -251,7 +259,7 @@ public class MessagingExtensionTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -275,7 +283,6 @@ public class MessagingExtensionTests {
         when(mockMessagingRulesEngine.process(any(Event.class))).thenReturn(launchRuleList);
 
         runUsingMockedServiceProvider(() -> {
-            final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
             Map<String, Object> eventData = new HashMap<>();
             eventData.put("key", "value");
             Event mockEvent = mock(Event.class);
@@ -287,15 +294,8 @@ public class MessagingExtensionTests {
             // test
             messagingExtension.handleWildcardEvents(mockEvent);
 
-            // verify
-            // 1 event dispatched: rules response event
-            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-
-            // verify event
-            Event event = eventCaptor.getValue();
-            assertEquals(MessagingConstants.EventName.TRIGGERED_IN_APP_MESSAGE_EVENT, event.getName());
-            assertEquals(EventType.RULES_ENGINE, event.getType());
-            assertEquals(EventSource.RESPONSE_CONTENT, event.getSource());
+            // verify triggered rule consequence passed to InAppNotificationHandler to create a Message
+            verify(mockInAppNotificationHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
         });
     }
 
@@ -820,25 +820,6 @@ public class MessagingExtensionTests {
 
             // verify
             verify(mockInAppNotificationHandler, times(1)).handleEdgePersonalizationNotification(any(Event.class));
-        });
-    }
-
-    @Test
-    public void test_processEvent_rulesResponseEvent() {
-        runUsingMockedServiceProvider(() -> {
-            // setup
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("triggeredconsequence", "mock_triggered_consequence");
-            Event mockEvent = mock(Event.class);
-            when(mockEvent.getEventData()).thenReturn(eventData);
-            when(mockEvent.getType()).thenReturn(EventType.RULES_ENGINE);
-            when(mockEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT);
-
-            // test
-            messagingExtension.processEvent(mockEvent);
-
-            // verify
-            verify(mockInAppNotificationHandler, times(1)).createInAppMessage(any(Event.class));
         });
     }
 

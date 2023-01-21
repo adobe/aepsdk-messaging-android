@@ -31,6 +31,7 @@ import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -87,7 +88,6 @@ public class MessageTests {
     Handler mockHandler;
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
-    private Map<String, Object> consequence = setupDetailsAndConsequenceMaps(setupXdmMap(new MessageTestConfig()));
     private Message message;
 
     @Before
@@ -163,17 +163,13 @@ public class MessageTests {
         return xdm;
     }
 
-    Map<String, Object> setupDetailsAndConsequenceMaps(Map<String, Object> xdmMap) {
-        consequence = new HashMap<>();
+    RuleConsequence createRuleConsequence(Map<String, Object> xdmMap) {
         Map<String, Object> details = new HashMap<>();
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, details);
-        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
-        return consequence;
+        return new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
     }
 
     // ========================================================================================
@@ -185,7 +181,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -196,13 +192,14 @@ public class MessageTests {
     }
 
     @Test
-    public void test_messageConstructor_MissingDetails() {
+    public void test_messageConstructor_MissingConsequenceDetails() {
         // setup
-        consequence.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
+
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -215,12 +212,17 @@ public class MessageTests {
     @Test
     public void test_messageConstructor_NotCJMConsequenceType() {
         // setup
-        consequence.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
-        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "otherRuleType");
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
+        RuleConsequence consequence = new RuleConsequence("123456789", "otherRuleType", details);
+
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -233,11 +235,17 @@ public class MessageTests {
     @Test
     public void test_messageConstructor_MissingConsequenceId() {
         // setup
-        consequence.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID);
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
+        RuleConsequence consequence = new RuleConsequence("", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -250,13 +258,16 @@ public class MessageTests {
     @Test
     public void test_messageConstructor_DetailsMissingHtml() {
         // setup
-        Map<String, Object> detailsMap = (Map<String, Object>) consequence.get(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
-        detailsMap.remove(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
-        consequence.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, detailsMap);
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -276,7 +287,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -305,7 +316,7 @@ public class MessageTests {
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
             when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -335,7 +346,7 @@ public class MessageTests {
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
             customMessageDelegate.setShowMessage(false);
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -364,7 +375,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -390,7 +401,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -412,7 +423,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -433,7 +444,7 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -457,7 +468,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -488,7 +499,7 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -517,7 +528,7 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -539,7 +550,7 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>());
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -561,7 +572,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -581,7 +592,7 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -601,7 +612,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -622,7 +633,7 @@ public class MessageTests {
         AdobeCallback<String> callback2 = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -648,7 +659,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<String, Object>(), new HashMap<String, String>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }

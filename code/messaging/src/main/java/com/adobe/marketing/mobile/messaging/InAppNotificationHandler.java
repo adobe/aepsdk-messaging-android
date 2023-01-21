@@ -21,7 +21,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
@@ -29,7 +28,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import androidx.annotation.VisibleForTesting;
@@ -38,6 +36,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -93,11 +92,6 @@ class InAppNotificationHandler {
                 processPropositions(cachedMessages);
             }
         }
-    }
-
-    @VisibleForTesting
-    Message getMessage() {
-        return message;
     }
 
     /**
@@ -157,7 +151,7 @@ class InAppNotificationHandler {
         if (!requestMessagesEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
         }
-        final List<Map<String, Object>> payload = (ArrayList<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
+        final List<Map<String, Object>> payload = (List<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
             Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache.");
@@ -218,7 +212,8 @@ class InAppNotificationHandler {
             }
         }
         final JSONArray jsonArrayFromRulesList = new JSONArray(foundRules);
-        final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.toString(), extensionApi);
+
+        final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.optString(0), extensionApi);
         Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
     }
@@ -276,16 +271,15 @@ class InAppNotificationHandler {
     /**
      * Create an in-app message object then attempt to display it.
      *
-     * @param rulesEvent The Rules Engine {@link Event} containing an in-app message definition.
+     * @param triggeredConsequence A {@link RuleConsequence} containing an in-app message definition.
      */
-    void createInAppMessage(final Event rulesEvent) {
-        final Map<String, Object> triggeredConsequence = (Map<String, Object>) rulesEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
-        if (MessagingUtils.isMapNullOrEmpty(triggeredConsequence)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null or empty.");
+    void createInAppMessage(final RuleConsequence triggeredConsequence) {
+        if (triggeredConsequence == null) {
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null.");
             return;
         }
 
-        final String consequenceType = (String) triggeredConsequence.get(MESSAGE_CONSEQUENCE_TYPE);
+        final String consequenceType = (String) triggeredConsequence.getType();
 
         // ensure we have a CJM IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
@@ -299,11 +293,12 @@ class InAppNotificationHandler {
         }
 
         try {
-            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.get(MESSAGE_CONSEQUENCE_DETAIL);
+            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.getDetail();
             if (MessagingUtils.isMapNullOrEmpty(details)) {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
                 return;
             }
+
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = getPropositionInfoForMessageId(message.id);
