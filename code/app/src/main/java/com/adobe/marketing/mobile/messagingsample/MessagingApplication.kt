@@ -28,7 +28,7 @@ class MessagingApplication : Application() {
         Messaging.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()
-        //Assurance.registerExtension()
+        Assurance.registerExtension()
         //Assurance.startSession("YOUR-SESSION-ID")
 
         MobileCore.start {
