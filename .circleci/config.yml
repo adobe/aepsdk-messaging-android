@@ -33,7 +33,7 @@ jobs:
           name: Run Unit Tests
           command: make ci-unit-test
       - store_test_results:
-          path: code/android-messaging-library/build/test-results/testPhoneDebugUnitTest
+          path: android-messaging-library/build/test-results/testPhoneDebugUnitTest
       - run:
           name: Upload Core unit test coverage
           command: |
