@@ -61,5 +61,5 @@ dependencies {
     implementation ('com.adobe.marketing.mobile:assurance:2.0.0-SNAPSHOT') {
         transitive(false)
     }
-    implementation project(':messaging')
+    implementation project(":${rootProject.moduleProjectName}")
 }
