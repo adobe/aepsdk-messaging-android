@@ -20,9 +20,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Assemble phone release
-          command: make assemble-phone-release
-      - run:
           name: Javadoc
           command: make javadoc
       - run:
