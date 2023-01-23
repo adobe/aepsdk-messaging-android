@@ -20,22 +20,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Javadoc
-          command: make ci-javadoc
-      - store_artifacts:
-          path: ci/javadoc/build/reports
-
-      - run:
-          name: Build
-          command: make ci-build
-
-      - run:
-          name: UnitTests
-          command: make ci-unit-test
-          
-      # code coverage
-      - run:
-          name: Upload Code Coverage Report
+          name: Download Codecov Uploader
           command: |
             curl -s https://codecov.io/bash > codecov;
             VERSION=$(grep 'VERSION=\"[0-9\.]*\"' codecov | cut -d'"' -f2);
@@ -44,13 +29,15 @@ jobs:
               shasum -a $i -c --ignore-missing <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM") ||
               shasum -a $i -c <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM" | grep -w "codecov")
             done
-            bash ./codecov -v -X s3 -c -D "./ci/unit-test/build/reports" -F unit-tests
-            
-      - store_artifacts:
-          path: ci/unit-test/build/reports
-
+      - run:
+          name: Run unit tests
+          command: make ci-unit-test-coverage
       - store_test_results:
-          path: ci/unit-test/build/test-results
+          path: code/android-messaging-library/build/test-results/testPhoneDebugUnitTest/
+      - run:
+          name: Upload unit test coverage
+          command: |
+            bash ./codecov -v -X s3 -c -D "./code/android-messaging-library/build/reports/coverage/test/phone/debug" -F unit-tests
 
   functional-test:
     executor:
