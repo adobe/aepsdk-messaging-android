@@ -30,14 +30,14 @@ jobs:
               shasum -a $i -c <(curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${VERSION}/SHA${i}SUM" | grep -w "codecov")
             done
       - run:
-          name: Run Unit Tests
-          command: make ci-unit-test
+          name: Run unit tests
+          command: make ci-unit-test-coverage
       - store_test_results:
           path: code/android-messaging-library/build/test-results/testPhoneDebugUnitTest/
       - run:
           name: Upload unit test coverage
           command: |
-            bash ./codecov -v -X s3 -c -D "./code/android-messaging-library/build/outputs/unit_test_code_coverage/phoneDebugUnitTest" -F unit-tests
+            bash ./codecov -v -X s3 -c -D "./code/android-messaging-library/build/reports/coverage/test/phone/debug" -F unit-tests
 
   functional-test:
     executor:
