@@ -20,9 +20,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Javadoc
-          command: make javadoc
-      - run:
           name: Download Codecov Uploader
           command: |
             curl -s https://codecov.io/bash > codecov;
