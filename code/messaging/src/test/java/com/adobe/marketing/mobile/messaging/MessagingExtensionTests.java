@@ -790,7 +790,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
-            eventData.put("refreshmessages", true);
+            eventData.put("refreshMessages", true);
             Event mockEvent = mock(Event.class);
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);

@@ -37,6 +37,8 @@ buildscript {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    // constraint layout dependency for assurance
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
@@ -44,15 +46,20 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
-    implementation fileTree(dir: 'libs', include: ['edge-release-2.0.0.aar', 'edgeidentity-release-2.0.0.aar', 'edgeconsent-release-2.0.0.aar'])
     implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
         transitive(true)
+    }
+    implementation ('com.adobe.marketing.mobile:edgeidentity:2.0.0-SNAPSHOT') {
+        transitive(false)
+    }
+    implementation ('com.adobe.marketing.mobile:edge:2.0.0-SNAPSHOT') {
+        transitive(false)
     }
     implementation ('com.github.adobe.aepsdk-core-android:lifecycle:dev-v2.0.0-SNAPSHOT') {
         transitive(false)
     }
-//    implementation ('com.github.adobe:aepsdk-assurance-android:v2.0.0-alpha.1') {
-//        transitive(false)
-//    }
+    implementation ('com.adobe.marketing.mobile:assurance:2.0.0-SNAPSHOT') {
+        transitive(false)
+    }
     implementation project(':messaging')
 }
