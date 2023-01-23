@@ -1,4 +1,4 @@
-EXTENSION-LIBRARY-FOLDER-NAME = messaging
+EXTENSION-LIBRARY-FOLDER-NAME = android-messaging-library
 
 BUILD-ASSEMBLE-LOCATION = ./ci/assemble
 ROOT_DIR=$(shell git rev-parse --show-toplevel)
