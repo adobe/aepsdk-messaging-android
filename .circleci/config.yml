@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Upload Core unit test coverage
           command: |
-            bash ./codecov -v -X s3 -c -D "./ci/unit-test/build/reports" -F unit-tests
+            bash ./codecov -v -X s3 -c -D "./code/android-messaging-library/build/reports/coverage/test/phone/debug" -F unit-tests
 
   functional-test:
     executor:
