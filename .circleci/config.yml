@@ -31,7 +31,7 @@ jobs:
             done
       - run:
           name: Run Unit Tests
-          command: make unit-test-coverage
+          command: make ci-unit-test
       - store_test_results:
           path: code/android-campaign-library/build/test-results/testPhoneDebugUnitTest
       - run:
