@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.adobe.marketing.mobile.edge.consent.Consent
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -30,7 +29,6 @@ class MessagingApplication : Application() {
         Identity.registerExtension()
         Edge.registerExtension()
         //Assurance.registerExtension()
-        //Consent.registerExtension()
         //Assurance.startSession("YOUR-SESSION-ID")
 
         MobileCore.start {

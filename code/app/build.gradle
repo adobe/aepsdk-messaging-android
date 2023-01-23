@@ -44,14 +44,19 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
-    implementation fileTree(dir: 'libs', include: ['edge-release-2.0.0.aar', 'edgeidentity-release-2.0.0.aar', 'edgeconsent-release-2.0.0.aar'])
     implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
         transitive(true)
+    }
+    implementation ('com.adobe.marketing.mobile:edgeidentity:2.0.0-SNAPSHOT') {
+        transitive(false)
+    }
+    implementation ('com.adobe.marketing.mobile:edge:2.0.0-SNAPSHOT') {
+        transitive(false)
     }
     implementation ('com.github.adobe.aepsdk-core-android:lifecycle:dev-v2.0.0-SNAPSHOT') {
         transitive(false)
     }
-//    implementation ('com.github.adobe:aepsdk-assurance-android:v2.0.0-alpha.1') {
+//    implementation ('com.adobe.marketing.mobile:assurance:2.0.0-SNAPSHOT') {
 //        transitive(false)
 //    }
     implementation project(':messaging')

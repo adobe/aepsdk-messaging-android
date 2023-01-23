@@ -211,9 +211,15 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['edge-release-2.0.0.aar', 'edgeidentity-release-2.0.0.aar'])
     implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
+        transitive(true)
         changing = true
+    }
+    implementation ('com.adobe.marketing.mobile:edgeidentity:2.0.0-SNAPSHOT') {
+        transitive(false)
+    }
+    implementation ('com.adobe.marketing.mobile:edge:2.0.0-SNAPSHOT') {
+        transitive(false)
     }
 
     // Firebase sdk compile only
