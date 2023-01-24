@@ -176,14 +176,19 @@ signing {
     sign publishing.publications
 }
 
-task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
+task unitTestsCoverageReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
     def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile/messaging", excludes: excludeRegex)
+    def javaClasses = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes", excludes: excludeRegex)
+    def kotlinClasses = fileTree(dir: "${project.buildDir}/tmp/kotlin-classes/phoneDebug", excludes: excludeRegex)
+    classDirectories.setFrom(files([javaClasses, kotlinClasses]))
 
-    additionalClassDirs.setFrom files([debugTree])
-    additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
-    sourceDirectories.setFrom files(android.sourceSets.phone.java.sourceFiles)
-    executionData "jacoco.exec"
+    def mainSrc = "${project.projectDir}/src/main/java"
+    def phoneSrc = "${project.projectDir}/src/phone/java"
+    sourceDirectories.setFrom files([mainSrc, phoneSrc])
+
+    executionData.setFrom fileTree(dir: "$buildDir", includes: [
+            "outputs/unit_test_code_coverage/phoneDebugUnitTest/testPhoneDebugUnitTest.exec",
+    ])
 
     reports {
         xml.enabled true
