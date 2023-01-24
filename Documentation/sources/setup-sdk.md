@@ -6,7 +6,6 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.edge.identity.Identity;
-import com.adobe.marketing.mobile.edge.consent.Consent;
 ```
 
 #### Registering the extension
@@ -20,7 +19,6 @@ public void onCreate() {
     Messaging.registerExtension();
     Edge.registerExtension();
     Identity.registerExtension();
-    Consent.registerExtension();
     
     MobileCore.start(new AdobeCallback() {
         @Override

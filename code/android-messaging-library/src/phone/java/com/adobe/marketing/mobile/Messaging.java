@@ -14,8 +14,12 @@ package com.adobe.marketing.mobile;
 
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.HashMap;
@@ -79,7 +83,7 @@ public final class Messaging {
      * @param data      Map which represents the data part of the remoteMessage which is received in FirebaseMessagingService#onMessageReceived
      * @return boolean value indicating whether the intent was update with push tracking details (messageId and xdm data).
      */
-    public static boolean addPushTrackingDetails(final Intent intent, final String messageId, final Map<String, String> data) {
+    public static boolean addPushTrackingDetails(@NonNull final Intent intent, @NonNull final String messageId, final @NonNull Map<String, String> data) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as intent is null.");
             return false;
@@ -88,7 +92,7 @@ public final class Messaging {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as MessageId is null.");
             return false;
         }
-        if (isMapNullOrEmpty(data)) {
+        if (MapUtils.isNullOrEmpty(data)) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to add push tracking details as data is null or empty.");
             return false;
         }
@@ -115,7 +119,7 @@ public final class Messaging {
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
      */
-    public static void handleNotificationResponse(final Intent intent, final boolean applicationOpened, final String customActionId) {
+    public static void handleNotificationResponse(@NonNull final Intent intent, @Nullable final boolean applicationOpened, @Nullable final String customActionId) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
             return;
@@ -186,9 +190,5 @@ public final class Messaging {
             public void call(Event event) {
             }
         });
-    }
-
-    private static boolean isMapNullOrEmpty(final Map map) {
-        return map == null || map.isEmpty();
     }
 }
