@@ -1,7 +1,7 @@
 # Adobe Experience Platform - Messaging extension for Android
 
 [![CircleCI](https://img.shields.io/circleci/project/github/adobe/aepsdk-messaging-android/main.svg?logo=circleci)](https://circleci.com/gh/adobe/workflows/aepsdk-messaging-android)
-[![Code Coverage](https://img.shields.io/codecov/c/github/adobe/aepsdk-messaging-android/main.svg?logo=codecov)](https://codecov.io/gh/adobe/aepsdk-messaging-android/branch/staging-v2.0.0)
+[![Code Coverage]([![codecov](https://codecov.io/gh/adobe/aepsdk-messaging-android/branch/master/graph/badge.svg?token=3RLMTJQ1TM)](https://codecov.io/gh/adobe/aepsdk-messaging-android))](https://codecov.io/gh/adobe/aepsdk-messaging-android/branch/staging-v2.0.0)
 
 ## About this project
 The AEPMessaging extension enables sending and tracking push notifications in the Adobe Experience Platform
