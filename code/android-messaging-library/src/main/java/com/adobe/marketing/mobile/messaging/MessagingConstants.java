@@ -17,7 +17,6 @@ final class MessagingConstants {
     static final String EXTENSION_VERSION = "2.0.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
-    static final String AEPSDK_CACHE_BASE_DIR = "aepsdkcache";
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -94,7 +93,6 @@ final class MessagingConstants {
     }
 
     final class EventDataKeys {
-        static final String STATE_OWNER = "stateowner";
         static final String REQUEST_EVENT_ID = "requestEventId";
         static final String IAM_HISTORY = "iam";
 
@@ -196,7 +194,8 @@ final class MessagingConstants {
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
 
-                    private Key() {}
+                    private Key() {
+                    }
                 }
             }
         }
@@ -262,17 +261,6 @@ final class MessagingConstants {
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
 
         private EventSource() {
-        }
-    }
-
-    final class EventDispatchErrors {
-        static final String PUSH_PROFILE_UPDATE_ERROR = "Error in dispatching event for updating the push profile details";
-        static final String PUSH_TRACKING_ERROR = "Error in dispatching event for push notification tracking";
-        static final String IN_APP_TRACKING_ERROR = "Error in dispatching event for in-app notification tracking";
-        static final String PERSONALIZATION_REQUEST_ERROR = "Error in dispatching event to fetch in-app messages";
-        static final String IN_APP_MESSAGE_TRIGGER_ERROR = "Error in dispatching event for a triggered in-app message";
-
-        private EventDispatchErrors() {
         }
     }
 
