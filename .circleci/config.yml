@@ -33,11 +33,11 @@ jobs:
           name: Run unit tests
           command: make ci-unit-test-coverage
       - store_test_results:
-          path: code/android-messaging-library/build/test-results/testPhoneDebugUnitTest/
+          path: code/messaging/build/test-results/testPhoneDebugUnitTest/
       - run:
           name: Upload unit test coverage
           command: |
-            bash ./codecov -v -X s3 -c -D "./code/android-messaging-library/build/reports/coverage/test/phone/debug" -F unit-tests
+            bash ./codecov -v -X s3 -c -D "./code/messaging/build/reports/coverage/test/phone/debug" -F unit-tests
 
   functional-test:
     executor:

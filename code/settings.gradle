@@ -1,2 +1,2 @@
-include ':app', ':android-messaging-library', ':messagingtestutils'
+include ':app', ':messaging', ':messagingtestutils'
 rootProject.name='messaging-sdk'
