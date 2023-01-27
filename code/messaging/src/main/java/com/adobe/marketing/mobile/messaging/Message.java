@@ -210,28 +210,24 @@ public class Message extends MessagingDelegate {
         }
 
         for (final Map.Entry<String, WebViewJavascriptInterface> entry : scriptHandlers.entrySet()) {
-            webView.evaluateJavascript(content, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(final String value) {
-                    Log.debug(LOG_TAG, SELF_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
-                    entry.getValue().run(value);
-                }
+            webView.evaluateJavascript(content, value -> {
+                Log.debug(LOG_TAG, SELF_TAG, "Running javascript callback for javascript function (%s)", entry.getKey());
+                entry.getValue().run(value);
             });
         }
     }
 
     // ui management
     public void show() {
+        show(false);
+    }
+
+    public void show(final boolean withMessagingDelegateControl) {
         if (aepMessage != null) {
-            // check if messages should be displayed before attempting to show one
-            if (!(ServiceProvider.getInstance().getMessageDelegate()).shouldShowMessage(aepMessage)) {
-                Log.debug(LOG_TAG, SELF_TAG, "Message couldn't be displayed, MessagingDelegate#shouldShowMessage states the message should not be displayed.");
-                return;
-            }
             if (autoTrack) {
                 track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
             }
-            aepMessage.show();
+            aepMessage.show(withMessagingDelegateControl);
         }
     }
 

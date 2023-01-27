@@ -61,10 +61,10 @@ class NotificationService : FirebaseMessagingService() {
 
             priority = payload.notificationPriority
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
-                Messaging.addPushTrackingDetails(this, message.messageId, message.data)
+                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
             }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
-                Messaging.addPushTrackingDetails(this, message.messageId, message.data)
+                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
             }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setAutoCancel(true)
         }
