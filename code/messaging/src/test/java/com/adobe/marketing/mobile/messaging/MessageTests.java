@@ -16,6 +16,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -39,6 +40,7 @@ import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
+import com.adobe.marketing.mobile.services.ui.internal.MessagesMonitor;
 
 import org.junit.After;
 import org.junit.Before;
@@ -86,6 +88,8 @@ public class MessageTests {
     WebView mockWebView;
     @Mock
     Handler mockHandler;
+    @Mock
+    MessagesMonitor mockMessagesMonitor;
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
     private Message message;
@@ -110,6 +114,7 @@ public class MessageTests {
         reset(mockLooper);
         reset(mockWebView);
         reset(mockHandler);
+        reset(mockMessagesMonitor);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -295,7 +300,7 @@ public class MessageTests {
             message.show();
 
             // verify fullscreen message show called
-            verify(mockFullscreenMessage, times(1)).show();
+            verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
             verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
@@ -325,7 +330,7 @@ public class MessageTests {
             message.show();
 
             // verify fullscreen message show called
-            verify(mockFullscreenMessage, times(1)).show();
+            verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
             verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
@@ -354,17 +359,17 @@ public class MessageTests {
             when(mockFullscreenMessage.getParent()).thenReturn(message);
 
             // test
-            message.show();
+            message.show(false);
 
-            // verify fullscreen message show not called
-            verify(mockFullscreenMessage, times(0)).show();
+            // verify fullscreen message show called
+            verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
             verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
-            assertEquals("suppressed", interaction);
+            assertEquals(null, interaction);
         });
     }
 
@@ -572,7 +577,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -586,13 +591,33 @@ public class MessageTests {
         });
     }
 
+    @Test
+    public void test_handleJavascript_when_webviewNull() {
+        // setup
+        AdobeCallback<String> callback = s -> assertEquals("hello world", s);
+        runUsingMockedServiceProvider(() -> {
+            try {
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), null, mockHandler);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            message.handleJavascriptMessage("test", callback);
+            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+
+            // verify evaluate javascript not called
+            verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
+        });
+    }
+
 
     @Test
     public void test_handleJavascript_withNoCallback() {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -612,7 +637,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -633,7 +658,7 @@ public class MessageTests {
         AdobeCallback<String> callback2 = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -646,7 +671,6 @@ public class MessageTests {
             // verify only one WebViewJavascriptInterface created
             Map<String, WebViewJavascriptInterface> scriptHandlers = message.getScriptHandlers();
             assertEquals(1, scriptHandlers.size());
-            WebViewJavascriptInterface webViewJavascriptInterface = scriptHandlers.get("test");
             // verify evaluate javascript called
             verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
         });
@@ -659,7 +683,7 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension,  createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }

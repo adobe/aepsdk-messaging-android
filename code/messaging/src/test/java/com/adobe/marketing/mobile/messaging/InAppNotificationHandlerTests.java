@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -588,10 +589,10 @@ public class InAppNotificationHandlerTests {
                 // test
                 inAppNotificationHandler.createInAppMessage(consequence);
 
-                // verify MessagingFullscreenMessage.show() and MessagingFullscreenMessage.trigger() called
+                // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
                 Message mockMessage = mockedConstruction.constructed().get(0);
                 verify(mockMessage, times(1)).trigger();
-                verify(mockMessage, times(1)).show();
+                verify(mockMessage, times(1)).show(eq(true));
             }
         });
     }

@@ -303,7 +303,7 @@ class InAppNotificationHandler {
             message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = getPropositionInfoForMessageId(message.id);
             message.trigger();
-            message.show();
+            message.show(true);
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }

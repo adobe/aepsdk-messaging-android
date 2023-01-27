@@ -18,6 +18,8 @@ import com.adobe.marketing.mobile.Messaging
 
 class NotificationDeleteReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        Messaging.handleNotificationResponse(intent, false, "delete")
+        if (intent != null) {
+            Messaging.handleNotificationResponse(intent, false, "delete")
+        }
     }
 }
