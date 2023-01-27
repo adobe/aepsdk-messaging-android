@@ -216,7 +216,7 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
-    implementation("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
+    implementation ("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
         transitive(true)
         changing = true
     }
