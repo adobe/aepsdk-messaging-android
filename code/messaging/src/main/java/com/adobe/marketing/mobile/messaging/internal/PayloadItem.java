@@ -8,14 +8,14 @@
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCHEMA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.DATA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCHEMA;
 
 import java.io.Serializable;
 import java.util.Map;

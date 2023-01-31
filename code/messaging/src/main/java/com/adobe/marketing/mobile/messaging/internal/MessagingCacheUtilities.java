@@ -8,13 +8,13 @@
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -26,7 +26,6 @@ import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -40,13 +39,13 @@ import java.util.Map;
  * This class contains functionality to cache the json message payload and any image asset URL's present in an
  * AJO in-app message definition.
  */
-final class MessagingCacheUtilities {
+public final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
     private final Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheService;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
 
-    MessagingCacheUtilities() {
+    public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
     }
     // ========================================================================================================

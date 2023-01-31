@@ -18,7 +18,6 @@ import android.os.Bundle;
 
 import com.google.firebase.messaging.RemoteMessage;
 
-import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -115,20 +114,20 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingConstants.PushNotificationPayload.TITLE, mockTitle);
-        mockData.put(MessagingConstants.PushNotificationPayload.BODY, mockBody);
-        mockData.put(MessagingConstants.PushNotificationPayload.SOUND, mockSound);
-        mockData.put(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT, mockBadgeCount);
-        mockData.put(MessagingConstants.PushNotificationPayload.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingConstants.PushNotificationPayload.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingConstants.PushNotificationPayload.ICON, mockIcon);
-        mockData.put(MessagingConstants.PushNotificationPayload.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingConstants.PushNotificationPayload.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingConstants.PushNotificationPayload.ACTION_URI, mockActionUri);
+        mockData.put(MessagingPushPayload.TITLE, mockTitle);
+        mockData.put(MessagingPushPayload.BODY, mockBody);
+        mockData.put(MessagingPushPayload.SOUND, mockSound);
+        mockData.put(MessagingPushPayload.NOTIFICATION_COUNT, mockBadgeCount);
+        mockData.put(MessagingPushPayload.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingPushPayload.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingPushPayload.ICON, mockIcon);
+        mockData.put(MessagingPushPayload.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingPushPayload.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingPushPayload.ACTION_URI, mockActionUri);
         if (testingMalformedButtonString) {
-            mockData.put(MessagingConstants.PushNotificationPayload.ACTION_BUTTONS, mockMalformedActionButtons);
+            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockMalformedActionButtons);
         } else {
-            mockData.put(MessagingConstants.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
+            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockActionButtons);
         }
 
         return mockData;

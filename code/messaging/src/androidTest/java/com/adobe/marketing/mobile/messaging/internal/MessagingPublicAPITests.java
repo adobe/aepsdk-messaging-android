@@ -9,11 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.messaging.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.messaging.TestHelper.resetTestExpectations;
+import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.messaging.internal.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -28,6 +28,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.messaging.BuildConfig;
 
 import org.junit.Assert;
 import org.junit.Before;

@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 
 import android.app.Notification;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import com.adobe.marketing.mobile.services.Log;
@@ -33,7 +32,40 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
-    private final String SELF_TAG = "MessagingPushPayload";
+    static final String LOG_TAG = "Messaging";
+    static final String SELF_TAG = "MessagingPushPayload";
+    static final String TITLE = "adb_title";
+    static final String BODY = "adb_body";
+    static final String SOUND = "adb_sound";
+    static final String NOTIFICATION_COUNT = "adb_n_count";
+    static final String NOTIFICATION_PRIORITY = "adb_n_priority";
+    static final String CHANNEL_ID = "adb_channel_id";
+    static final String ICON = "adb_icon";
+    static final String IMAGE_URL = "adb_image";
+    static final String ACTION_TYPE = "adb_a_type";
+    static final String ACTION_URI = "adb_uri";
+    static final String ACTION_BUTTONS = "adb_act";
+
+    static final class NotificationPriorities {
+        static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
+        static final String PRIORITY_MIN = "PRIORITY_MIN";
+        static final String PRIORITY_LOW = "PRIORITY_LOW";
+        static final String PRIORITY_HIGH = "PRIORITY_HIGH";
+        static final String PRIORITY_MAX = "PRIORITY_MAX";
+    }
+
+    static final class ActionButtonType {
+        static final String DEEPLINK = "DEEPLINK";
+        static final String WEBURL = "WEBURL";
+        static final String DISMISS = "DISMISS";
+        static final String OPENAPP = "OPENAPP";
+    }
+
+    static final class ActionButtons {
+        static final String LABEL = "label";
+        static final String URI = "uri";
+        static final String TYPE = "type";
+    }
 
     private String title;
     private String body;
@@ -140,45 +172,40 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
             return;
         }
-        this.title = data.get(MessagingConstants.PushNotificationPayload.TITLE);
-        this.body = data.get(MessagingConstants.PushNotificationPayload.BODY);
-        this.sound = data.get(MessagingConstants.PushNotificationPayload.SOUND);
-        this.channelId = data.get(MessagingConstants.PushNotificationPayload.CHANNEL_ID);
-        this.icon = data.get(MessagingConstants.PushNotificationPayload.ICON);
-        this.actionUri = data.get(MessagingConstants.PushNotificationPayload.ACTION_URI);
-        this.imageUrl = data.get(MessagingConstants.PushNotificationPayload.IMAGE_URL);
+        this.title = data.get(TITLE);
+        this.body = data.get(BODY);
+        this.sound = data.get(SOUND);
+        this.channelId = data.get(CHANNEL_ID);
+        this.icon = data.get(ICON);
+        this.actionUri = data.get(ACTION_URI);
+        this.imageUrl = data.get(IMAGE_URL);
 
         try {
-            String count = data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_COUNT);
+            String count = data.get(NOTIFICATION_COUNT);
             if (count != null) {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
+            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
         }
 
-        this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.PushNotificationPayload.NOTIFICATION_PRIORITY));
-        this.actionType = getActionTypeFromString(data.get(MessagingConstants.PushNotificationPayload.ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(MessagingConstants.PushNotificationPayload.ACTION_BUTTONS));
+        this.notificationPriority = getNotificationPriorityFromString(data.get(NOTIFICATION_PRIORITY));
+        this.actionType = getActionTypeFromString(data.get(ACTION_TYPE));
+        this.actionButtons = getActionButtonsFromString(data.get(ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
         switch (priority) {
-            case MessagingConstants.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_MIN:
+            case NotificationPriorities.PRIORITY_MIN:
                 return Notification.PRIORITY_MIN;
-            case MessagingConstants.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_LOW:
+            case NotificationPriorities.PRIORITY_LOW:
                 return Notification.PRIORITY_LOW;
-            case MessagingConstants.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_HIGH:
+            case NotificationPriorities.PRIORITY_HIGH:
                 return Notification.PRIORITY_HIGH;
-            case MessagingConstants.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_MAX:
+            case NotificationPriorities.PRIORITY_MAX:
                 return Notification.PRIORITY_MAX;
-            case MessagingConstants.PushNotificationPayload.NotificationPriorities
-                    .PRIORITY_DEFAULT:
+            case NotificationPriorities.PRIORITY_DEFAULT:
             default:
                 return Notification.PRIORITY_DEFAULT;
         }
@@ -190,10 +217,10 @@ public class MessagingPushPayload {
         }
 
         switch (type) {
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.WEBURL: return ActionType.WEBURL;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.DISMISS: return ActionType.DISMISS;
-            case MessagingConstants.PushNotificationPayload.ActionButtonType.OPENAPP: return ActionType.OPENAPP;
+            case ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
+            case ActionButtonType.WEBURL: return ActionType.WEBURL;
+            case ActionButtonType.DISMISS: return ActionType.DISMISS;
+            case ActionButtonType.OPENAPP: return ActionType.OPENAPP;
         }
 
         return ActionType.NONE;
@@ -222,13 +249,13 @@ public class MessagingPushPayload {
 
     private ActionButton getActionButton(final JSONObject jsonObject) {
         try {
-            final String label = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.LABEL);
+            final String label = jsonObject.getString(ActionButtons.LABEL);
             if (label.isEmpty()) {
                 Log.debug(LOG_TAG, SELF_TAG, "Label is empty");
                 return null;
             }
-            final String uri = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.URI);
-            final String type = jsonObject.getString(MessagingConstants.PushNotificationPayload.ActionButtons.TYPE);
+            final String uri = jsonObject.getString(ActionButtons.URI);
+            final String type = jsonObject.getString(ActionButtons.TYPE);
 
             Log.trace(LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
             return new ActionButton(label, uri, type);

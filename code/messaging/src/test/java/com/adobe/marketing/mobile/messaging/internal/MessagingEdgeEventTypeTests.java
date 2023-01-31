@@ -9,9 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,11 +42,11 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_toString() {
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, MessagingEdgeEventType.IN_APP_DISMISS.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT, MessagingEdgeEventType.IN_APP_INTERACT.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER, MessagingEdgeEventType.IN_APP_TRIGGER.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY, MessagingEdgeEventType.IN_APP_DISPLAY.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, MessagingEdgeEventType.IN_APP_DISMISS.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT, MessagingEdgeEventType.IN_APP_INTERACT.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER, MessagingEdgeEventType.IN_APP_TRIGGER.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY, MessagingEdgeEventType.IN_APP_DISPLAY.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
     }
 }

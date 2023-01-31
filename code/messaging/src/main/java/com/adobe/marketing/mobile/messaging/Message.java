@@ -12,10 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
 import android.os.Handler;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
@@ -24,7 +20,10 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.MobileParametersKeys;
+import com.adobe.marketing.mobile.messaging.internal.MessageRequiredFieldMissingException;
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.internal.PropositionInfo;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
@@ -32,6 +31,7 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.HashMap;
@@ -41,7 +41,27 @@ import java.util.Map;
  * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
  */
 public class Message extends MessagingDelegate {
-    private final static String SELF_TAG = "Message";
+    private static final String LOG_TAG = "Messaging";
+    private static final String SELF_TAG = "Message";
+    private static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+    private static final String MESSAGE_CONSEQUENCE_ID = "id";
+    private static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+    private static final String WIDTH = "width";
+    private static final String HEIGHT = "height";
+    private static final String VERTICAL_ALIGN = "verticalAlign";
+    private static final String VERTICAL_INSET = "verticalInset";
+    private static final String HORIZONTAL_ALIGN = "horizontalAlign";
+    private static final String HORIZONTAL_INSET = "horizontalInset";
+    private static final String UI_TAKEOVER = "uiTakeover";
+    private static final String DISPLAY_ANIMATION = "displayAnimation";
+    private static final String DISMISS_ANIMATION = "dismissAnimation";
+    private static final String BACKDROP_COLOR = "backdropColor";
+    private static final String BACKDROP_OPACITY = "backdropOpacity";
+    private static final String CORNER_RADIUS = "cornerRadius";
+    private static final String GESTURES = "gestures";
+    
     private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
     private final Handler webViewHandler;
@@ -51,7 +71,7 @@ public class Message extends MessagingDelegate {
     // private properties
     private WebView webView;
     // package private
-    PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+    public PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
     /**
      * Constructor.
@@ -60,9 +80,9 @@ public class Message extends MessagingDelegate {
      * <p>
      * The consequence {@code Map} for a {@code Message} is required to have valid values for the following fields:
      * <ul>
-     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
-     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
-     *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
+     *     <li>{@value #MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
+     *     <li>{@value #MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
+     *     <li>{@value #MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
      * </ul>
      *
      * @param parent             {@link MessagingExtension} instance that created this Message
@@ -80,21 +100,20 @@ public class Message extends MessagingDelegate {
         messagingExtension = parent;
         this.webView = webView;
         this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
-
-        final String consequenceType = (String) consequence.getType();
+        final String consequenceType = consequence.getType();
 
         if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
 
-        details = (Map<String, Object>) consequence.getDetail();
-        if (MessagingUtils.isMapNullOrEmpty(details)) {
+        details = consequence.getDetail();
+        if (MapUtils.isNullOrEmpty(details)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        id = (String) consequence.getId();
+        id = consequence.getId();
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
@@ -241,7 +260,7 @@ public class Message extends MessagingDelegate {
         }
     }
 
-    void trigger() {
+    public void trigger() {
         if (aepMessage != null) {
             if (autoTrack) {
                 track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
@@ -286,83 +305,83 @@ public class Message extends MessagingDelegate {
         MessageAnimation displayAnimation, dismissAnimation;
         Map<MessageGesture, String> gestureMap = new HashMap<>();
 
-        if (rawSettings.get(MobileParametersKeys.WIDTH) != null) {
-            width = (int) rawSettings.get(MobileParametersKeys.WIDTH);
+        if (rawSettings.get(WIDTH) != null) {
+            width = (int) rawSettings.get(WIDTH);
         } else {
             width = 100;
         }
 
-        if (rawSettings.get(MobileParametersKeys.HEIGHT) != null) {
-            height = (int) rawSettings.get(MobileParametersKeys.HEIGHT);
+        if (rawSettings.get(HEIGHT) != null) {
+            height = (int) rawSettings.get(HEIGHT);
         } else {
             height = 100;
         }
 
-        if (rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN) != null) {
-            verticalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.VERTICAL_ALIGN)).toUpperCase());
+        if (rawSettings.get(VERTICAL_ALIGN) != null) {
+            verticalAlign = MessageAlignment.valueOf(((String) rawSettings.get(VERTICAL_ALIGN)).toUpperCase());
         } else {
             verticalAlign = MessageAlignment.CENTER;
         }
 
-        if (rawSettings.get(MobileParametersKeys.VERTICAL_INSET) != null) {
-            verticalInset = (int) rawSettings.get(MobileParametersKeys.VERTICAL_INSET);
+        if (rawSettings.get(VERTICAL_INSET) != null) {
+            verticalInset = (int) rawSettings.get(VERTICAL_INSET);
         } else {
             verticalInset = 0;
         }
 
-        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN) != null) {
-            horizontalAlign = MessageAlignment.valueOf(((String) rawSettings.get(MobileParametersKeys.HORIZONTAL_ALIGN)).toUpperCase());
+        if (rawSettings.get(HORIZONTAL_ALIGN) != null) {
+            horizontalAlign = MessageAlignment.valueOf(((String) rawSettings.get(HORIZONTAL_ALIGN)).toUpperCase());
         } else {
             horizontalAlign = MessageAlignment.CENTER;
         }
 
-        if (rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET) != null) {
-            horizontalInset = (int) rawSettings.get(MobileParametersKeys.HORIZONTAL_INSET);
+        if (rawSettings.get(HORIZONTAL_INSET) != null) {
+            horizontalInset = (int) rawSettings.get(HORIZONTAL_INSET);
         } else {
             horizontalInset = 0;
         }
 
-        if (rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION) != null) {
-            displayAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISPLAY_ANIMATION)).toUpperCase());
+        if (rawSettings.get(DISPLAY_ANIMATION) != null) {
+            displayAnimation = MessageAnimation.valueOf(((String) rawSettings.get(DISPLAY_ANIMATION)).toUpperCase());
         } else {
             displayAnimation = MessageAnimation.NONE;
         }
 
-        if (rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION) != null) {
-            dismissAnimation = MessageAnimation.valueOf(((String) rawSettings.get(MobileParametersKeys.DISMISS_ANIMATION)).toUpperCase());
+        if (rawSettings.get(DISMISS_ANIMATION) != null) {
+            dismissAnimation = MessageAnimation.valueOf(((String) rawSettings.get(DISMISS_ANIMATION)).toUpperCase());
         } else {
             dismissAnimation = MessageAnimation.NONE;
         }
 
-        if (rawSettings.get(MobileParametersKeys.BACKDROP_COLOR) != null) {
-            backdropColor = (String) rawSettings.get(MobileParametersKeys.BACKDROP_COLOR);
+        if (rawSettings.get(BACKDROP_COLOR) != null) {
+            backdropColor = (String) rawSettings.get(BACKDROP_COLOR);
         } else {
             backdropColor = "#FFFFFF";
         }
 
-        if (rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY) != null) {
-            final double opacity = ((double) rawSettings.get(MobileParametersKeys.BACKDROP_OPACITY));
+        if (rawSettings.get(BACKDROP_OPACITY) != null) {
+            final double opacity = ((double) rawSettings.get(BACKDROP_OPACITY));
             backdropOpacity = (float) opacity;
         } else {
             backdropOpacity = 0.0f;
         }
 
-        if (rawSettings.get(MobileParametersKeys.CORNER_RADIUS) != null) {
-            final Integer radius = (Integer) rawSettings.get(MobileParametersKeys.CORNER_RADIUS);
+        if (rawSettings.get(CORNER_RADIUS) != null) {
+            final Integer radius = (Integer) rawSettings.get(CORNER_RADIUS);
             cornerRadius = radius.floatValue();
         } else {
             cornerRadius = 0.0f;
         }
 
-        if (rawSettings.get(MobileParametersKeys.UI_TAKEOVER) != null) {
-            uiTakeover = (boolean) rawSettings.get(MobileParametersKeys.UI_TAKEOVER);
+        if (rawSettings.get(UI_TAKEOVER) != null) {
+            uiTakeover = (boolean) rawSettings.get(UI_TAKEOVER);
         } else {
             uiTakeover = true;
         }
 
         // we need to convert key strings present in the gestures map to MessageGesture enum keys
-        final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(MobileParametersKeys.GESTURES);
-        if (!MessagingUtils.isMapNullOrEmpty(stringMap)) {
+        final Map<String, String> stringMap = (Map<String, String>) rawSettings.get(GESTURES);
+        if (!MapUtils.isNullOrEmpty(stringMap)) {
             for (final Map.Entry<String, String> entry : stringMap.entrySet()) {
                 final MessageGesture gesture = MessageGesture.get(entry.getKey());
                 gestureMap.put(gesture, entry.getValue());

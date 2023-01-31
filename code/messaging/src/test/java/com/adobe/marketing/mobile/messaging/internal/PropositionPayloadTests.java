@@ -9,10 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import com.adobe.marketing.mobile.messaging.internal.ItemData;
+import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
+import com.adobe.marketing.mobile.messaging.internal.PayloadItem;
+import com.adobe.marketing.mobile.messaging.internal.PropositionPayload;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -9,19 +9,20 @@
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
 */
-package com.adobe.marketing.mobile.messaging;
+
+package com.adobe.marketing.mobile.messaging.internal;
 
 /**
  * Exception indicating that a required field is missing from the payload definition for a {@code InAppNotification} object.
  */
-final class MessageRequiredFieldMissingException extends Exception {
+public final class MessageRequiredFieldMissingException extends Exception {
 
     /**
      * Constructor.
      *
      * @param message {@link String} containing the message for the new exception
      */
-    MessageRequiredFieldMissingException(final String message) {
+    public MessageRequiredFieldMissingException(final String message) {
         super(message);
     }
 }

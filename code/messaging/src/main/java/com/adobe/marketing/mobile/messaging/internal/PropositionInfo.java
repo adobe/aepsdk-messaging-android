@@ -8,22 +8,22 @@
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.CORRELATION_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ACTIVITY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.CORRELATION_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ACTIVITY;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.io.Serializable;
 import java.util.Map;
 
-class PropositionInfo implements Serializable {
+public class PropositionInfo implements Serializable {
     final String id;
     final String scope;
     final Map<String, Object> scopeDetails;

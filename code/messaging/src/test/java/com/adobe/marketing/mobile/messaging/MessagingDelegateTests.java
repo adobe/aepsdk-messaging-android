@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
 
 import com.adobe.marketing.mobile.LoggingMode;
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;

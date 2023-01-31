@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.Extension;
@@ -19,6 +19,7 @@ import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
+import com.adobe.marketing.mobile.messaging.internal.ADBCountDownLatch;
 import com.adobe.marketing.mobile.util.DataReader;
 
 import java.util.ArrayList;

@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,6 +41,11 @@ import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.messaging.Message;
+import com.adobe.marketing.mobile.messaging.internal.MessagingTestUtils;
+import com.adobe.marketing.mobile.messaging.internal.InAppNotificationHandler;
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -180,9 +185,9 @@ public class MessagingExtensionTests {
 
             // verify 4 listeners are registered
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY), eq(EventSource.REQUEST_CONTENT), any());
-            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.EDGE), eq(MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS), any());
+            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.EDGE), eq(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.WILDCARD), eq(EventSource.WILDCARD), any());
-            verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingTestConstants.EventType.MESSAGING), eq(EventSource.REQUEST_CONTENT), any());
+            verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING), eq(EventSource.REQUEST_CONTENT), any());
         });
     }
 
@@ -228,8 +233,8 @@ public class MessagingExtensionTests {
     public void test_readyForEvent_when_eventReceived_and_configurationAndIdentitySharedStateDataPresent_then_readyForEventTrue() {
         // setup
         runUsingMockedServiceProvider(() -> {
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -243,8 +248,8 @@ public class MessagingExtensionTests {
     public void test_readyForEvent_when_eventReceived_and_configurationSharedStateNotReady_then_readyForEventIsFalse() {
         // setup
         runUsingMockedServiceProvider(() -> {
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockEdgeIdentityData);
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -258,8 +263,8 @@ public class MessagingExtensionTests {
     public void test_readyForEvent_when_eventReceived_and_identitySharedStateNotReady_then_readyForEventIsFalse() {
         // setup
         runUsingMockedServiceProvider(() -> {
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), any(Event.class), anyBoolean(), any(SharedStateResolution.class))).thenReturn(new SharedStateResult(SharedStateStatus.PENDING, new HashMap<>()));
 
             Event testEvent = new Event.Builder("Test event", EventType.CONFIGURATION, EventSource.RESPONSE_CONTENT)
                     .build();
@@ -370,8 +375,8 @@ public class MessagingExtensionTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
                 when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                 when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-                when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+                when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+                when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
                 // test
                 messagingExtension.processEvent(mockEvent);
@@ -418,8 +423,8 @@ public class MessagingExtensionTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
                 when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                 when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-                when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+                when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+                when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
                 // test
                 messagingExtension.processEvent(mockEvent);
@@ -458,8 +463,8 @@ public class MessagingExtensionTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
                 when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                 when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-                when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+                when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+                when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
                 // test
                 messagingExtension.processEvent(mockEvent);
@@ -498,8 +503,8 @@ public class MessagingExtensionTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
                 when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                 when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-                when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+                when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+                when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
                 // test
                 messagingExtension.processEvent(mockEvent);
@@ -538,8 +543,8 @@ public class MessagingExtensionTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
                 when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                 when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-                when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+                when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+                when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
                 // test
                 messagingExtension.processEvent(mockEvent);
@@ -576,8 +581,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -617,8 +622,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -660,8 +665,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -688,8 +693,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(null);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -715,8 +720,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -742,8 +747,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);
@@ -773,8 +778,8 @@ public class MessagingExtensionTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-            when(mockExtensionApi.getSharedState(eq(MessagingTestConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
-            when(mockExtensionApi.getXDMSharedState(eq(MessagingTestConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
             messagingExtension.processEvent(mockEvent);

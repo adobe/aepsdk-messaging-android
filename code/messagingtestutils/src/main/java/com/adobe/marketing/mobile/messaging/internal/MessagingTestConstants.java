@@ -9,12 +9,13 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 /**
  * Class to maintain test constants.
  */
 public class MessagingTestConstants {
+    public static final String EXTENSION_VERSION = MessagingConstants.EXTENSION_VERSION;
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -31,12 +32,12 @@ public class MessagingTestConstants {
         }
     }
 
-    final class EventName {
-        static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
-        static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-        static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
-        static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
-        static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+    public final class EventName {
+        public static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
+        public static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
+        public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
+        public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
 
         private EventName() {
         }
@@ -50,7 +51,7 @@ public class MessagingTestConstants {
         public static final String SHARED_STATE_RESPONSE = "com.adobe.eventSource.sharedStateResponse";
         public static final String UNREGISTER = "com.adobe.eventSource.unregister";
         public static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
-        static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        public static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
 
         private EventSource() {
         }

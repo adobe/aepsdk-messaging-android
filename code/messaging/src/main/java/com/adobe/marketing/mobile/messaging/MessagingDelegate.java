@@ -12,14 +12,15 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
 import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
@@ -37,9 +38,17 @@ import java.util.Map;
  * and loading any javascript code for the {@link Message} class.
  */
 public class MessagingDelegate implements FullscreenMessageDelegate {
-    private final static String SELF_TAG = "MessageDelegate";
-    private final String EXPECTED_JAVASCRIPT_PARAM = "js=";
-    private final String JAVASCRIPT_QUERY_KEY = "js";
+    private static final String LOG_TAG = "Messaging";
+    private static final String SELF_TAG = "MessageDelegate";
+    private static final String EXPECTED_JAVASCRIPT_PARAM = "js=";
+    private static final String JAVASCRIPT_QUERY_KEY = "js";
+    private static final String ADOBE_INAPP = "adbinapp";
+    private static final String PATH_CANCEL = "cancel";
+    private static final String PATH_DISMISS = "dismiss";
+    private static final String INTERACTION = "interaction";
+    private static final String DEEPLINK = "adb_deeplink";
+    private static final String LINK = "link";
+    private static final String JS = "js";
     // internal properties
     MessagingExtension messagingExtension;
     Map<String, Object> details = new HashMap<>();
@@ -120,7 +129,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         // check adbinapp scheme
         final String messageScheme = uri.getScheme();
 
-        if (messageScheme == null || !messageScheme.equals(MessagingConstants.MessagingScheme.ADOBE_INAPP)) {
+        if (messageScheme == null || !messageScheme.equals(ADOBE_INAPP)) {
             Log.debug(LOG_TAG, SELF_TAG, "Invalid message scheme found in URI. (%s)", urlString);
             return false;
         }
@@ -132,9 +141,9 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
         final Message message = (Message) messageSettings.getParent();
 
-        if (!MessagingUtils.isMapNullOrEmpty(messageData)) {
+        if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
-            final String interaction = messageData.get(MessagingConstants.MessagingScheme.INTERACTION);
+            final String interaction = messageData.get(INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingInternal class available for tracking
                 messagingExtension = message.messagingExtension;
@@ -144,20 +153,20 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
             }
 
             // handle optional deep link
-            final String url = messageData.get(MessagingConstants.MessagingScheme.LINK);
+            final String url = messageData.get(LINK);
             if (!StringUtils.isNullOrEmpty(url)) {
                 openUrl(fullscreenMessage, url);
             }
 
             // handle optional javascript code to be executed
-            final String javascript = messageData.get(MessagingConstants.MessagingScheme.JS);
+            final String javascript = messageData.get(JS);
             if (!StringUtils.isNullOrEmpty(javascript)) {
                 message.evaluateJavascript(javascript);
             }
         }
 
         final String host = uri.getHost();
-        if ((host.equals(MessagingConstants.MessagingScheme.PATH_DISMISS)) || (host.equals(MessagingConstants.MessagingScheme.PATH_CANCEL))) {
+        if ((host.equals(PATH_DISMISS)) || (host.equals(PATH_CANCEL))) {
             message.dismiss(true);
         }
 
@@ -181,7 +190,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
         }
 
         // if we have a deeplink, open the url via an intent
-        if (url.contains(MessagingConstants.MessagingScheme.DEEPLINK)) {
+        if (url.contains(DEEPLINK)) {
             Log.debug(LOG_TAG, SELF_TAG, "Opening deeplink (%s).", url);
             message.openUrl(url);
             return;

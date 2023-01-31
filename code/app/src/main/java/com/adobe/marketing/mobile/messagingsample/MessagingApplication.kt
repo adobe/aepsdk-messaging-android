@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
+import com.adobe.marketing.mobile.messaging.internal.MessagingExtension
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -24,7 +25,6 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-
         Messaging.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()

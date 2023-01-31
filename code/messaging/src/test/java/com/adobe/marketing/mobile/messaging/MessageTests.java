@@ -33,6 +33,11 @@ import android.webkit.WebView;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.messaging.internal.MessageRequiredFieldMissingException;
+import com.adobe.marketing.mobile.messaging.internal.MessageTestConfig;
+import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
 import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -170,11 +175,9 @@ public class MessageTests {
 
     RuleConsequence createRuleConsequence(Map<String, Object> xdmMap) {
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, xdmMap);
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        return new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        return new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
     }
 
     // ========================================================================================
@@ -199,7 +202,7 @@ public class MessageTests {
     @Test
     public void test_messageConstructor_MissingConsequenceDetails() {
         // setup
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
 
         runUsingMockedServiceProvider(() -> {
             // test
@@ -218,8 +221,6 @@ public class MessageTests {
     public void test_messageConstructor_NotCJMConsequenceType() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
         RuleConsequence consequence = new RuleConsequence("123456789", "otherRuleType", details);
@@ -241,11 +242,9 @@ public class MessageTests {
     public void test_messageConstructor_MissingConsequenceId() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        RuleConsequence consequence = new RuleConsequence("", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        RuleConsequence consequence = new RuleConsequence("", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
         runUsingMockedServiceProvider(() -> {
             // test
@@ -264,10 +263,8 @@ public class MessageTests {
     public void test_messageConstructor_DetailsMissingHtml() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE, "fullscreen");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_XDM, setupXdmMap(new MessageTestConfig()));
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
         runUsingMockedServiceProvider(() -> {
             // test

@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
@@ -22,8 +22,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
@@ -189,9 +187,9 @@ public class PropositionPayloadCachingTests {
             messagingCacheUtilities.cachePropositions(list);
 
             // verify
-            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
-            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
-            verify(mockCacheService, times(1)).set(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());
+            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.IMAGES_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).set(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());
         });
     }
 
@@ -202,8 +200,8 @@ public class PropositionPayloadCachingTests {
             messagingCacheUtilities.clearCachedData();
 
             // verify
-            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
-            verify(mockCacheService, times(1)).remove(eq(MessagingTestConstants.CACHE_BASE_DIR), eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.IMAGES_CACHE_SUBDIRECTORY));
         });
     }
 }

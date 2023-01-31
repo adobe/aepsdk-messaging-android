@@ -10,44 +10,44 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.FRIENDLY_EXTENSION_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.JsonValues.ECID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.JsonValues.FCM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.CJM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.COLLECT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.DATASET_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.EXPERIENCE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.META;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.MIXINS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.MESSAGE_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_NAME;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FRIENDLY_EXTENSION_NAME;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.ECID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.FCM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CJM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.COLLECT;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.DATASET_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.EXPERIENCE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.META;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.MIXINS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -55,7 +55,8 @@ import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+import com.adobe.marketing.mobile.messaging.Message;
+import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
@@ -327,7 +328,7 @@ public final class MessagingExtension extends Extension {
      * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
      * @param message     The {@link Message} which triggered the proposition interaction
      */
-    void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
+    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
         if (propositionInfo == null || MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
