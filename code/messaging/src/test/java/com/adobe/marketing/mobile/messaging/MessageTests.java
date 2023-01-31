@@ -35,6 +35,7 @@ import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessageRequiredFieldMissingException;
 import com.adobe.marketing.mobile.messaging.internal.MessageTestConfig;
+import com.adobe.marketing.mobile.messaging.internal.MessagingDelegate;
 import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;

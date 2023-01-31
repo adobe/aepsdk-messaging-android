@@ -35,7 +35,6 @@ import com.adobe.marketing.mobile.Event
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.messaging.Message
-import com.adobe.marketing.mobile.messaging.internal.InAppNotificationHandler
 import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage

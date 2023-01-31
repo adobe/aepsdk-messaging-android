@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessageRequiredFieldMissingException;
+import com.adobe.marketing.mobile.messaging.internal.MessagingDelegate;
 import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.PropositionInfo;
@@ -212,7 +213,7 @@ public class Message extends MessagingDelegate {
      *
      * @param content {@code String} containing the javascript code to be executed
      */
-    void evaluateJavascript(final String content) {
+    public void evaluateJavascript(final String content) {
         if (StringUtils.isNullOrEmpty(content)) {
             Log.debug(LOG_TAG, SELF_TAG, "Will not evaluate javascript, it is null or empty.");
             return;

@@ -10,10 +10,9 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.Message;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
@@ -50,8 +49,8 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
     private static final String LINK = "link";
     private static final String JS = "js";
     // internal properties
-    MessagingExtension messagingExtension;
-    Map<String, Object> details = new HashMap<>();
+    protected MessagingExtension messagingExtension;
+    protected Map<String, Object> details = new HashMap<>();
 
     // ============================================================================================
     // FullscreenMessageDelegate implementation
