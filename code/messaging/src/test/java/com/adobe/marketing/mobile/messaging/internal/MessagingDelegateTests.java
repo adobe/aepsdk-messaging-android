@@ -22,7 +22,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
 
 import com.adobe.marketing.mobile.LoggingMode;
-import com.adobe.marketing.mobile.messaging.Message;
+import com.adobe.marketing.mobile.MessagingDelegate;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -56,7 +57,7 @@ public class MessagingDelegateTests {
     @Mock
     MessageSettings mockMessageSettings;
     @Mock
-    Message mockMessage;
+    InternalMessage mockInternalMessage;
 
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
@@ -78,7 +79,7 @@ public class MessagingDelegateTests {
         reset(mockLogging);
         reset(mockUIService);
         reset(mockMessageSettings);
-        reset(mockMessage);
+        reset(mockInternalMessage);
     }
 
     void runWithMockedServiceProvider(final Runnable runnable) {
@@ -173,13 +174,13 @@ public class MessagingDelegateTests {
     public void test_overrideUrlLoadWithInvalidUri() {
         // setup
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockMessage);
+        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
 
         // test
         messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "invaliduri");
 
         // verify no message tracking call and message settings weren't created
-        verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+        verify(mockInternalMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
         verify(mockMessageSettings, times(0)).getParent();
     }
 
@@ -187,13 +188,13 @@ public class MessagingDelegateTests {
     public void test_overrideUrlLoadWithInvalidScheme() {
         // setup
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockMessage);
+        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
 
         // test
         messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "notadbinapp://");
 
         // verify no message tracking call and message settings weren't created
-        verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+        verify(mockInternalMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
         verify(mockMessageSettings, times(0)).getParent();
     }
 
@@ -201,16 +202,16 @@ public class MessagingDelegateTests {
     public void test_overrideUrlLoadWithJavascriptPayload() {
         // setup
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockMessage);
+        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
 
         // test
         messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
 
         // verify encoded javascript evaluated by the webview object
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockMessage, times(1)).evaluateJavascript(stringArgumentCaptor.capture());
+        verify(mockInternalMessage, times(1)).evaluateJavascript(stringArgumentCaptor.capture());
         assertEquals("(function test() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
-        verify(mockMessage, times(1)).dismiss(anyBoolean());
+        verify(mockInternalMessage, times(1)).dismiss(anyBoolean());
         verify(mockMessageSettings, times(1)).getParent();
     }
 }

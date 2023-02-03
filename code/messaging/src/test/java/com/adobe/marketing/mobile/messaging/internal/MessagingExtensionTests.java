@@ -34,6 +34,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
@@ -41,11 +42,6 @@ import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.Message;
-import com.adobe.marketing.mobile.messaging.internal.MessagingTestUtils;
-import com.adobe.marketing.mobile.messaging.internal.InAppNotificationHandler;
-import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -93,7 +89,7 @@ public class MessagingExtensionTests {
     @Mock
     Application mockApplication;
     @Mock
-    Message mockMessage;
+    InternalMessage mockInternalMessage;
     @Mock
     LaunchRule mockLaunchRule;
     @Mock
@@ -132,7 +128,7 @@ public class MessagingExtensionTests {
         reset(mockEdgeIdentityData);
         reset(mockDeviceInfoService);
         reset(mockApplication);
-        reset(mockMessage);
+        reset(mockInternalMessage);
         reset(mockLaunchRule);
         reset(mockRuleConsequence);
     }
@@ -835,7 +831,7 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppInteractTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"interact\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"confirm\",\"eventType\":\"interact\"}}"));
@@ -845,7 +841,7 @@ public class MessagingExtensionTests {
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
             // test
-            messagingExtension.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
+            messagingExtension.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockInternalMessage);
 
             // verify dispatch event is called
             // 1 event dispatched: edge event with in app interact event tracking info
@@ -865,10 +861,10 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppInteractTracking_WhenScopeDetailsNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(true);
+            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(true);
 
             // test
-            messagingExtension.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockMessage);
+            messagingExtension.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockInternalMessage);
 
             // verify dispatch event is called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -879,7 +875,7 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppDismissTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"dismiss\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"dismiss\"}}"));
@@ -889,7 +885,7 @@ public class MessagingExtensionTests {
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
             // test
-            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISMISS, mockMessage);
+            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISMISS, mockInternalMessage);
 
             // verify dispatch event is called
             // 1 event dispatched: edge event with in app dismiss event tracking info
@@ -909,7 +905,7 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppDisplayTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"display\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"display\"}}"));
@@ -919,7 +915,7 @@ public class MessagingExtensionTests {
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
             // test
-            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISPLAY, mockMessage);
+            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_DISPLAY, mockInternalMessage);
 
             // verify dispatch event is called
             // 1 event dispatched: edge event with in app display event tracking info
@@ -939,7 +935,7 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppTriggeredTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"trigger\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"trigger\"}}"));
@@ -949,7 +945,7 @@ public class MessagingExtensionTests {
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
             // test
-            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_TRIGGER, mockMessage);
+            messagingExtension.sendPropositionInteraction(null, MessagingEdgeEventType.IN_APP_TRIGGER, mockInternalMessage);
 
             // verify dispatch event is called
             // 1 event dispatched: edge event with in app triggered event tracking info

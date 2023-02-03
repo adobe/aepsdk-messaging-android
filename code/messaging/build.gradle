@@ -124,7 +124,7 @@ publishing {
                 url = 'https://aep-sdks.gitbook.io'
                 licenses {
                     license {
-                        name = 'Adobe Proprietary'
+                        name = 'The Apache License, Version 2.0'
                     }
                 }
                 developers {
@@ -216,16 +216,9 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
-    implementation ("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
-        transitive(true)
-        changing = true
-    }
-    implementation ('com.adobe.marketing.mobile:edgeidentity:2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
-    implementation ('com.adobe.marketing.mobile:edge:2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
+    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
+    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
 
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
@@ -245,6 +238,8 @@ dependencies {
     // add test util dependencies for functional and unit tests
     testImplementation project(':messagingtestutils')
     androidTestImplementation project(':messagingtestutils')
+    testImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    androidTestImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
 }
 
 tasks.withType(Test) {

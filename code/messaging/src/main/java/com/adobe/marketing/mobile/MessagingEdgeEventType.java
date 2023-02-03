@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
 public enum MessagingEdgeEventType {
     IN_APP_DISMISS(0),
@@ -19,6 +19,17 @@ public enum MessagingEdgeEventType {
     IN_APP_DISPLAY(3),
     PUSH_APPLICATION_OPENED(4),
     PUSH_CUSTOM_ACTION(5);
+
+    static final String PROPOSITION_EVENT_TYPE_DISMISS = "dismiss";
+    static final String PROPOSITION_EVENT_TYPE_INTERACT = "interact";
+    static final String PROPOSITION_EVENT_TYPE_TRIGGER = "trigger";
+    static final String PROPOSITION_EVENT_TYPE_DISPLAY = "display";
+    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
+    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";
+    static final String PROPOSITION_EVENT_TYPE_TRIGGER_STRING = "decisioning.propositionTrigger";
+    static final String PROPOSITION_EVENT_TYPE_DISPLAY_STRING = "decisioning.propositionDisplay";
+    static final String PROPOSITION_EVENT_TYPE_INTERACT_STRING = "decisioning.propositionInteract";
+    static final String PROPOSITION_EVENT_TYPE_DISMISS_STRING = "decisioning.propositionDismiss";
 
     final int value;
 
@@ -33,13 +44,13 @@ public enum MessagingEdgeEventType {
     public String getPropositionEventType() {
         switch (this) {
             case IN_APP_DISMISS:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.DISMISS;
+                return PROPOSITION_EVENT_TYPE_DISMISS;
             case IN_APP_INTERACT:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.INTERACT;
+                return PROPOSITION_EVENT_TYPE_INTERACT;
             case IN_APP_TRIGGER:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.TRIGGER;
+                return PROPOSITION_EVENT_TYPE_TRIGGER;
             case IN_APP_DISPLAY:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.PropositionEventType.DISPLAY;
+                return PROPOSITION_EVENT_TYPE_DISPLAY;
             default:
                 return "";
         }
@@ -49,17 +60,17 @@ public enum MessagingEdgeEventType {
     public String toString() {
         switch (this) {
             case IN_APP_DISMISS:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS;
+                return PROPOSITION_EVENT_TYPE_DISMISS_STRING;
             case IN_APP_INTERACT:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT;
+                return PROPOSITION_EVENT_TYPE_INTERACT_STRING;
             case IN_APP_TRIGGER:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER;
+                return PROPOSITION_EVENT_TYPE_TRIGGER_STRING;
             case IN_APP_DISPLAY:
-                return MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY;
+                return PROPOSITION_EVENT_TYPE_DISPLAY_STRING;
             case PUSH_APPLICATION_OPENED:
-                return MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED;
+                return PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED;
             case PUSH_CUSTOM_ACTION:
-                return MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION;
+                return PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION;
             default:
                 return super.toString();
         }

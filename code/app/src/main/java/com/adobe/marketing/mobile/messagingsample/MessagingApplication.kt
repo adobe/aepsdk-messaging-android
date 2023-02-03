@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messagingsample
 import android.app.Application
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -38,7 +37,7 @@ class MessagingApplication : Application() {
         }
 
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast
             if (task.isSuccessful) {
                 // Get new FCM registration token
@@ -47,6 +46,6 @@ class MessagingApplication : Application() {
                 // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
             }
-        })
+        }
     }
 }

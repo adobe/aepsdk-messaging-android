@@ -55,7 +55,6 @@ import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.Message;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -326,9 +325,9 @@ public final class MessagingExtension extends Extension {
      *
      * @param interaction {@code String} containing the interaction which occurred
      * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-     * @param message     The {@link Message} which triggered the proposition interaction
+     * @param message     The {@link InternalMessage} which triggered the proposition interaction
      */
-    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final Message message) {
+    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final InternalMessage message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
         if (propositionInfo == null || MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);

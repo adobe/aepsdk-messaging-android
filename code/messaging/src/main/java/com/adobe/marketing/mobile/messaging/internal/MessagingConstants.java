@@ -66,19 +66,6 @@ final class MessagingConstants {
         }
     }
 
-    final class MessagingScheme {
-        static final String ADOBE_INAPP = "adbinapp";
-        static final String PATH_CANCEL = "cancel";
-        static final String PATH_DISMISS = "dismiss";
-        static final String INTERACTION = "interaction";
-        static final String DEEPLINK = "adb_deeplink";
-        static final String LINK = "link";
-        static final String JS = "js";
-
-        private MessagingScheme() {
-        }
-    }
-
     final class PayloadKeys {
         static final String DATA = "data";
         static final String CONTENT = "content";
@@ -170,16 +157,6 @@ final class MessagingConstants {
                     }
                 }
 
-                final class PropositionEventType {
-                    static final String TRIGGER = "trigger";
-                    static final String DISPLAY = "display";
-                    static final String INTERACT = "interact";
-                    static final String DISMISS = "dismiss";
-
-                    private PropositionEventType() {
-                    }
-                }
-
                 final class Key {
                     static final String PERSONALIZATION = "personalization";
                     static final String DECISIONING = "decisioning";
@@ -203,7 +180,6 @@ final class MessagingConstants {
 
         final class RulesEngine {
             static final String JSON_KEY = "rules";
-            static final String JSON_CONDITION_KEY = "condition";
             static final String JSON_CONSEQUENCES_KEY = "consequences";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
@@ -314,53 +290,6 @@ final class MessagingConstants {
             static final String PUSH_IDENTIFIER = "pushidentifier";
 
             private Messaging() {
-            }
-        }
-    }
-
-    final class PushNotificationPayload {
-        static final String TITLE = "adb_title";
-        static final String BODY = "adb_body";
-        static final String SOUND = "adb_sound";
-        static final String NOTIFICATION_COUNT = "adb_n_count";
-        static final String NOTIFICATION_PRIORITY = "adb_n_priority";
-        static final String CHANNEL_ID = "adb_channel_id";
-        static final String ICON = "adb_icon";
-        static final String IMAGE_URL = "adb_image";
-        static final String ACTION_TYPE = "adb_a_type";
-        static final String ACTION_URI = "adb_uri";
-        static final String ACTION_BUTTONS = "adb_act";
-
-        private PushNotificationPayload() {
-        }
-
-        final class ActionButtonType {
-            static final String DEEPLINK = "DEEPLINK";
-            static final String WEBURL = "WEBURL";
-            static final String DISMISS = "DISMISS";
-            static final String OPENAPP = "OPENAPP";
-
-            private ActionButtonType() {
-            }
-        }
-
-        final class NotificationPriorities {
-            static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
-            static final String PRIORITY_MIN = "PRIORITY_MIN";
-            static final String PRIORITY_LOW = "PRIORITY_LOW";
-            static final String PRIORITY_HIGH = "PRIORITY_HIGH";
-            static final String PRIORITY_MAX = "PRIORITY_MAX";
-
-            private NotificationPriorities() {
-            }
-        }
-
-        final class ActionButtons {
-            static final String LABEL = "label";
-            static final String URI = "uri";
-            static final String TYPE = "type";
-
-            private ActionButtons() {
             }
         }
     }

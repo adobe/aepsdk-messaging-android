@@ -13,10 +13,9 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 public class MessagingEdgeEventTypeTests {
 

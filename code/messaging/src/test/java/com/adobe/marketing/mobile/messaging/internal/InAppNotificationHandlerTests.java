@@ -32,7 +32,6 @@ import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
-import com.adobe.marketing.mobile.messaging.Message;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Networking;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -578,7 +577,7 @@ public class InAppNotificationHandlerTests {
     public void test_createInAppMessage() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<Message> mockedConstruction = Mockito.mockConstruction(Message.class)) {
+            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
@@ -591,9 +590,9 @@ public class InAppNotificationHandlerTests {
                 inAppNotificationHandler.createInAppMessage(consequence);
 
                 // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
-                Message mockMessage = mockedConstruction.constructed().get(0);
-                verify(mockMessage, times(1)).trigger();
-                verify(mockMessage, times(1)).show(eq(true));
+                InternalMessage mockInternalMessage = mockedConstruction.constructed().get(0);
+                verify(mockInternalMessage, times(1)).trigger();
+                verify(mockInternalMessage, times(1)).show(eq(true));
             }
         });
     }
@@ -602,7 +601,7 @@ public class InAppNotificationHandlerTests {
     public void test_createInAppMessage_InvalidRuleConsequence() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<Message> mockedConstruction = Mockito.mockConstruction(Message.class)) {
+            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 

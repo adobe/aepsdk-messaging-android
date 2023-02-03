@@ -11,6 +11,8 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.messaging.internal.PropositionInfo;
+import com.adobe.marketing.mobile.messaging.internal.PropositionPayload;
 import com.adobe.marketing.mobile.services.*;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
@@ -125,7 +127,7 @@ public class MessagingTestUtils {
      *
      * @param fileName the {@code String} name of a file located in the resource directory
      */
-    public static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
+    static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
         final Map<String, Object> eventData = new HashMap();
         final List<Map<String, Object>> items = new ArrayList<>();
         items.add(getMapFromFile(fileName));
@@ -164,7 +166,7 @@ public class MessagingTestUtils {
      * @param fileName the {@code String} name of a file located in the resource directory
      * @return a {@code String} containing the file's contents
      */
-    public static String loadStringFromFile(final String fileName) {
+    static String loadStringFromFile(final String fileName) {
         final InputStream inputStream = convertResourceFileToInputStream(fileName);
         try {
             if (inputStream != null) {

@@ -10,9 +10,10 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import android.webkit.JavascriptInterface;
+
 import com.adobe.marketing.mobile.AdobeCallback;
 
 public class WebViewJavascriptInterface {

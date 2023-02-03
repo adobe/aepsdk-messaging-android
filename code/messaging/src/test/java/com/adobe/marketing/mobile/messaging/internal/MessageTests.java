@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -32,13 +32,9 @@ import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingDelegate;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.internal.MessageRequiredFieldMissingException;
-import com.adobe.marketing.mobile.messaging.internal.MessageTestConfig;
-import com.adobe.marketing.mobile.messaging.internal.MessagingDelegate;
-import com.adobe.marketing.mobile.messaging.internal.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
-import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
 import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -98,7 +94,7 @@ public class MessageTests {
     MessagesMonitor mockMessagesMonitor;
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
-    private Message message;
+    private InternalMessage internalMessage;
 
     @Before
     public void setup() {
@@ -190,7 +186,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -208,7 +204,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -229,7 +225,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -250,7 +246,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -270,7 +266,7 @@ public class MessageTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                message = new Message(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -290,18 +286,18 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             // test
-            message.show();
+            internalMessage.show();
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -319,19 +315,19 @@ public class MessageTests {
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
             when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.show();
+            internalMessage.show();
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -349,21 +345,21 @@ public class MessageTests {
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
             customMessageDelegate.setShowMessage(false);
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             when(mockServiceProvider.getMessageDelegate()).thenReturn(customMessageDelegate);
-            when(mockFullscreenMessage.getParent()).thenReturn(message);
+            when(mockFullscreenMessage.getParent()).thenReturn(internalMessage);
 
             // test
-            message.show(false);
+            internalMessage.show(false);
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
 
             // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -378,18 +374,18 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             // test
-            message.dismiss(false);
+            internalMessage.dismiss(false);
 
             // verify fullscreen message dismiss called
             verify(mockFullscreenMessage, times(1)).dismiss();
 
             // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
@@ -404,18 +400,18 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             // test
-            message.dismiss(true);
+            internalMessage.dismiss(true);
 
             // verify fullscreen message dismiss called
             verify(mockFullscreenMessage, times(1)).dismiss();
 
             // verify no tracking event
-            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(Message.class));
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(InternalMessage.class));
         });
     }
 
@@ -426,15 +422,15 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             // test
-            message.trigger();
+            internalMessage.trigger();
 
             // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(eventType, MessagingEdgeEventType.IN_APP_TRIGGER);
@@ -447,17 +443,17 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.autoTrack = false;
-            message.trigger();
+            internalMessage.setAutoTrack(false);
+            internalMessage.trigger();
 
             // verify no tracking event
-            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(Message.class));
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(InternalMessage.class));
         });
     }
 
@@ -471,19 +467,19 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             MessageSettings settings = new MessageSettings();
-            settings.setParent(message);
+            settings.setParent(internalMessage);
             when(mockFullscreenMessage.getMessageSettings()).thenReturn(settings);
 
             // test
-            message.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
+            internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=deeplinkclicked&link=https://adobe.com");
 
             // expect 1 event: deeplink click tracking
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             List<MessagingEdgeEventType> capturedEvents = messagingEdgeEventTypeArgumentCaptor.getAllValues();
             List<String> capturedInteractions = interactionArgumentCaptor.getAllValues();
             // verify interact tracking event
@@ -502,19 +498,19 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
             MessageSettings settings = new MessageSettings();
-            settings.setParent(message);
+            settings.setParent(internalMessage);
             when(mockFullscreenMessage.getMessageSettings()).thenReturn(settings);
 
             // test
-            message.overrideUrlLoad(mockFullscreenMessage, "");
+            internalMessage.overrideUrlLoad(mockFullscreenMessage, "");
 
             // verify no tracking event
-            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(Message.class));
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(InternalMessage.class));
 
             // verify showUrl not called
             verify(mockUIService, times(0)).showUrl(anyString());
@@ -531,16 +527,16 @@ public class MessageTests {
         ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.track("mock track", MessagingEdgeEventType.IN_APP_INTERACT);
+            internalMessage.track("mock track", MessagingEdgeEventType.IN_APP_INTERACT);
 
             // verify tracking event
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(Message.class));
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
             MessagingEdgeEventType displayTrackingEvent = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
             assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, displayTrackingEvent);
@@ -553,16 +549,16 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.track("mock track", null);
+            internalMessage.track("mock track", null);
 
             // verify no tracking event
-            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(Message.class));
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), any(InternalMessage.class));
         });
     }
 
@@ -575,14 +571,14 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage("test", callback);
-            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+            internalMessage.handleJavascriptMessage("test", callback);
+            internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify evaluate javascript called
             verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
@@ -595,14 +591,14 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), null, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), null, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage("test", callback);
-            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+            internalMessage.handleJavascriptMessage("test", callback);
+            internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify evaluate javascript not called
             verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
@@ -615,14 +611,14 @@ public class MessageTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage("test", null);
-            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+            internalMessage.handleJavascriptMessage("test", null);
+            internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify evaluate javascript called
             verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
@@ -635,14 +631,14 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage(null, callback);
-            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+            internalMessage.handleJavascriptMessage(null, callback);
+            internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify evaluate javascript not called
             verify(mockWebView, times(0)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
@@ -656,18 +652,18 @@ public class MessageTests {
         AdobeCallback<String> callback2 = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage("test", callback);
-            message.handleJavascriptMessage("test", callback2);
-            message.evaluateJavascript("(function test(hello world) { return(arg); })()");
+            internalMessage.handleJavascriptMessage("test", callback);
+            internalMessage.handleJavascriptMessage("test", callback2);
+            internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify only one WebViewJavascriptInterface created
-            Map<String, WebViewJavascriptInterface> scriptHandlers = message.getScriptHandlers();
+            Map<String, WebViewJavascriptInterface> scriptHandlers = internalMessage.getScriptHandlers();
             assertEquals(1, scriptHandlers.size());
             // verify evaluate javascript called
             verify(mockWebView, times(1)).evaluateJavascript(ArgumentMatchers.contains("(function test(hello world) { return(arg); })()"), any(ValueCallback.class));
@@ -681,14 +677,14 @@ public class MessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                message = new Message(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(setupXdmMap(new MessageTestConfig())), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
-            message.handleJavascriptMessage("test", callback);
-            message.evaluateJavascript(null);
+            internalMessage.handleJavascriptMessage("test", callback);
+            internalMessage.evaluateJavascript(null);
 
             // verify evaluate javascript not called
             verify(mockWebView, times(0)).evaluateJavascript(anyString(), any(ValueCallback.class));
@@ -701,8 +697,8 @@ public class MessageTests {
         @Override
         public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
             if (!showMessage) {
-                Message message = (Message) fullscreenMessage.getParent();
-                message.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
+                InternalMessage internalMessage = (InternalMessage) fullscreenMessage.getParent();
+                internalMessage.track("suppressed", MessagingEdgeEventType.IN_APP_DISPLAY);
             }
             return showMessage;
         }

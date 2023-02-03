@@ -10,9 +10,8 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.messaging.Message;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
@@ -49,7 +48,6 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
     private static final String LINK = "link";
     private static final String JS = "js";
     // internal properties
-    protected MessagingExtension messagingExtension;
     protected Map<String, Object> details = new HashMap<>();
 
     // ============================================================================================
@@ -144,8 +142,8 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
             // handle optional tracking
             final String interaction = messageData.get(INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
-                // ensure we have the MessagingInternal class available for tracking
-                messagingExtension = message.messagingExtension;
+                // ensure we have the MessagingExtension class available for tracking
+                final Object messagingExtension = message.getParent();
                 if (messagingExtension != null) {
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
@@ -182,7 +180,7 @@ public class MessagingDelegate implements FullscreenMessageDelegate {
      *
      * @param url {@link String} containing the deeplink to load or url to be shown
      */
-    protected void openUrl(final FullscreenMessage message, final String url) {
+    public void openUrl(final FullscreenMessage message, final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
             Log.debug(LOG_TAG, SELF_TAG,  "Will not open URL, it is null or empty.");
             return;

@@ -38,7 +38,6 @@ import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
-import com.adobe.marketing.mobile.messaging.Message;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -64,7 +63,7 @@ class InAppNotificationHandler {
     private String requestMessagesEventId;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private Message message;
+    private InternalMessage message;
 
     /**
      * Constructor
@@ -280,7 +279,7 @@ class InAppNotificationHandler {
             return;
         }
 
-        final String consequenceType = (String) triggeredConsequence.getType();
+        final String consequenceType = triggeredConsequence.getType();
 
         // ensure we have a CJM IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
@@ -294,15 +293,15 @@ class InAppNotificationHandler {
         }
 
         try {
-            final Map<String, Object> details = (Map<String, Object>) triggeredConsequence.getDetail();
+            final Map<String, Object> details = triggeredConsequence.getDetail();
             if (MessagingUtils.isMapNullOrEmpty(details)) {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
                 return;
             }
 
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            message = new Message(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
-            message.propositionInfo = getPropositionInfoForMessageId(message.id);
+            message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
+            message.propositionInfo = getPropositionInfoForMessageId(message.getId());
             message.trigger();
             message.show(true);
         } catch (final MessageRequiredFieldMissingException exception) {
