@@ -15,7 +15,6 @@ package com.adobe.marketing.mobile;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.WebViewJavascriptInterface;
 
 public interface Message {
@@ -70,9 +69,9 @@ public interface Message {
     String getId();
 
     /**
-     * Returns the {@link MessagingExtension} which created this {@link Message} object.
+     * Returns the {@link Object} which created this {@link Message} object.
      */
-    MessagingExtension getParent();
+    Object getParent();
 
     /**
      * Sets the {@link Message}'s auto tracking preference.
