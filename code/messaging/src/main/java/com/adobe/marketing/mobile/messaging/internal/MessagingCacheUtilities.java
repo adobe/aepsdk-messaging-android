@@ -39,7 +39,7 @@ import java.util.Map;
  * This class contains functionality to cache the json message payload and any image asset URL's present in an
  * AJO in-app message definition.
  */
-public final class MessagingCacheUtilities {
+final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
     private final Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheService;

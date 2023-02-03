@@ -23,7 +23,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.io.Serializable;
 import java.util.Map;
 
-public class PropositionInfo implements Serializable {
+class PropositionInfo implements Serializable {
     final String id;
     final String scope;
     final Map<String, Object> scopeDetails;

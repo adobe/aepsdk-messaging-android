@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 /**
  * Exception indicating that a required field is missing from the payload definition for a {@code InAppNotification} object.
  */
-public final class MessageRequiredFieldMissingException extends Exception {
+final class MessageRequiredFieldMissingException extends Exception {
 
     /**
      * Constructor.
