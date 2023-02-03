@@ -54,7 +54,7 @@ public final class Messaging {
      *
      * @return A {@link String} representing the Messaging extension version
      */
-    public static String extensionVersion() {
+    @NonNull public static String extensionVersion() {
         return EXTENSION_VERSION;
     }
 
@@ -119,7 +119,7 @@ public final class Messaging {
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
      */
-    public static void handleNotificationResponse(@NonNull final Intent intent, @Nullable final boolean applicationOpened, @Nullable final String customActionId) {
+    public static void handleNotificationResponse(@NonNull final Intent intent, final boolean applicationOpened, @Nullable final String customActionId) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
             return;
