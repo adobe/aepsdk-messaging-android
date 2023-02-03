@@ -46,21 +46,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
-    implementation ("com.adobe.marketing.mobile:core:${mavenCoreVersion}-SNAPSHOT") {
-        transitive(true)
-        changing = true
-    }
-    implementation ('com.adobe.marketing.mobile:edgeidentity:2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
-    implementation ('com.adobe.marketing.mobile:edge:2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
-    implementation ('com.github.adobe.aepsdk-core-android:lifecycle:dev-v2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
-    implementation ('com.adobe.marketing.mobile:assurance:2.0.0-SNAPSHOT') {
-        transitive(false)
-    }
+    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    implementation "com.adobe.marketing.mobile:lifecycle:$rootProject.mavenLifecycleVersion"
+    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
+    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
+    implementation "com.adobe.marketing.mobile:assurance:$rootProject.mavenAssuranceVersion"
+
     implementation project(":${rootProject.moduleProjectName}")
 }

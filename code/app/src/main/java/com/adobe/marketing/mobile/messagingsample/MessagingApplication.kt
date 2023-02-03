@@ -24,7 +24,6 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-
         Messaging.registerExtension()
         Identity.registerExtension()
         Edge.registerExtension()
@@ -38,7 +37,7 @@ class MessagingApplication : Application() {
         }
 
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast
             if (task.isSuccessful) {
                 // Get new FCM registration token
@@ -47,6 +46,6 @@ class MessagingApplication : Application() {
                 // Syncing the push token with experience platform
                 MobileCore.setPushIdentifier(token)
             }
-        })
+        }
     }
 }

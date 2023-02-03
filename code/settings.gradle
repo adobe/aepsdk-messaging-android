@@ -1,2 +1,2 @@
 include ':app', ':messaging', ':messagingtestutils'
-rootProject.name='messaging-sdk'
+rootProject.name='aepsdk-messaging-android'
