@@ -263,11 +263,6 @@ public class MessagingPushPayload {
             Log.warning(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
             return null;
         }
-        final String uri = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.URI);
-        final String type = jsonObject.optString(MessagingConstant.PushNotificationPayload.ActionButtons.TYPE);
-
-        Log.trace(MessagingConstant.LOG_TAG, "%s - Creating an action button with label (%s), uri (%s), and type (%s)", SELF_TAG, label, uri, type);
-        return new ActionButton(label, uri, type);
     }
 
     /**
