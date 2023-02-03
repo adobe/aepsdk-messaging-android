@@ -15,21 +15,22 @@ jacoco {
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName rootProject.moduleVersion
+        // flag for e2e tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
+        // flag for functional tests
+        buildConfigField "java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)"
 
         testInstrumentationRunner rootProject.ext.testInstrumentationRunner
         consumerProguardFiles 'consumer-rules.pro'
     }
 
     flavorDimensions "target"
-    productFlavors{
+    productFlavors {
         phone {
             dimension "target"
         }
@@ -38,7 +39,6 @@ android {
     buildTypes {
         debug {
             testCoverageEnabled true
-            debuggable true
         }
         release {
             minifyEnabled false
@@ -54,15 +54,32 @@ android {
         sourceCompatibility rootProject.ext.sourceCompatibility
         targetCompatibility rootProject.ext.targetCompatibility
     }
+
+    libraryVariants.all { variant ->
+        variant.getRuntimeConfiguration().exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+
+    sourceSets {
+        final def resourceDir = 'src/test/resources'
+
+        test {
+            resources.srcDirs += [resourceDir]
+        }
+
+        androidTest {
+            resources.srcDirs += [resourceDir]
+        }
+    }
+    namespace 'com.adobe.marketing.mobile.messaging'
 }
 
 android.libraryVariants.all { variant ->
     tasks.withType(Javadoc) {
-        source = [android.sourceSets.main.java.sourceFiles, android.sourceSets.phone.java.sourceFiles]
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-        doFirst{classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)}
-
+        doFirst {
+            classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+        }
         exclude "**/BuildConfig.java"
         exclude "**/R.java"
         options {
@@ -90,7 +107,7 @@ def isReleaseBuild() {
     return hasProperty('release')
 }
 
-version = isReleaseBuild() ? rootProject.moduleVersion : rootProject.moduleVersion+"-SNAPSHOT"
+version = isReleaseBuild() ? moduleVersion : moduleVersion + "-SNAPSHOT"
 
 publishing {
     publications {
@@ -107,7 +124,7 @@ publishing {
                 url = 'https://aep-sdks.gitbook.io'
                 licenses {
                     license {
-                        name = 'Adobe Proprietary'
+                        name = 'The Apache License, Version 2.0'
                     }
                 }
                 developers {
@@ -145,9 +162,9 @@ publishing {
     }
 }
 
-ext."signing.gnupg.executable"="gpg"
-ext."signing.gnupg.keyName"=System.getenv("GPG_KEY_ID")
-ext."signing.gnupg.passphrase"=System.getenv("GPG_PASSPHRASE")
+ext."signing.gnupg.executable" = "gpg"
+ext."signing.gnupg.keyName" = System.getenv("GPG_KEY_ID")
+ext."signing.gnupg.passphrase" = System.getenv("GPG_PASSPHRASE")
 
 signing {
     useGpgCmd()
@@ -159,61 +176,30 @@ signing {
     sign publishing.publications
 }
 
+task unitTestsCoverageReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
+    def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
+    def javaClasses = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes", excludes: excludeRegex)
+    def kotlinClasses = fileTree(dir: "${project.buildDir}/tmp/kotlin-classes/phoneDebug", excludes: excludeRegex)
+    classDirectories.setFrom(files([javaClasses, kotlinClasses]))
 
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.adobe.marketing.mobile:core:${rootProject.mavenCoreVersion}"
+    def mainSrc = "${project.projectDir}/src/main/java"
+    def phoneSrc = "${project.projectDir}/src/phone/java"
+    sourceDirectories.setFrom files([mainSrc, phoneSrc])
 
-    // Firebase sdk compile only
-    compileOnly "com.google.firebase:firebase-messaging:21.1.0"
-
-    // Firebase sdk test implementation
-    testImplementation "com.google.firebase:firebase-messaging:21.1.0"
-    testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
-    testImplementation 'org.powermock:powermock-api-mockito2:2.0.0'
-    testImplementation 'org.powermock:powermock-module-junit4:2.0.0'
-    testImplementation 'org.json:json:20180813'
-
-    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    // Using older version of PowerMock as it supports minimum Android API < 26
-    // the root issue appears to be a dependency with Objenesis in Mockito-Core
-    // where Objenesis 2 requires minimum Android API 26
-    androidTestImplementation 'org.powermock:powermock-module-junit4:1+'
-    androidTestImplementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
-    androidTestImplementation 'com.adobe.marketing.mobile:edgeidentity:1.0.0'
-}
-
-afterEvaluate {
-    generatePhoneReleaseBuildConfig.enabled = false
-}
-
-tasks.withType(Test) {
-    testLogging {
-        showStandardStreams = true
-    }
-}
-
-task platformUnitTestJacocoReport(type: JacocoReport, dependsOn: "testPhoneDebugUnitTest") {
-    def excludeRegex = ['**/ADB*.class']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
-
-    additionalClassDirs.setFrom files([debugTree])
-    additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
-    sourceDirectories.setFrom files(android.sourceSets.phone.java.sourceFiles)
-    executionData "$buildDir/jacoco/testPhoneDebugUnitTest.exec"
+    executionData.setFrom fileTree(dir: "$buildDir", includes: [
+            "outputs/unit_test_code_coverage/phoneDebugUnitTest/testPhoneDebugUnitTest.exec",
+    ])
 
     reports {
-        xml.enabled false
+        xml.enabled true
         csv.enabled false
         html.enabled true
     }
 }
 
 task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPhoneDebugCoverageReport") {
-    def excludeRegex = ['**/ADB*.class', '**/BuildConfig.class']
-    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile", excludes: excludeRegex)
+    def excludeRegex = ['**/ADB*.class']
+    def debugTree = fileTree(dir: "${project.buildDir}/intermediates/javac/phoneDebug/classes/com/adobe/marketing/mobile/messaging", excludes: excludeRegex)
 
     additionalClassDirs.setFrom files([debugTree])
     additionalSourceDirs.setFrom files(android.sourceSets.main.java.sourceFiles)
@@ -226,5 +212,38 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
         xml.enabled true
         csv.enabled false
         html.enabled true
+    }
+}
+
+dependencies {
+    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
+    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
+
+    // Firebase sdk compile only
+    compileOnly "com.google.firebase:firebase-messaging:21.1.0"
+
+    // Firebase sdk test implementation
+    testImplementation 'com.google.firebase:firebase-messaging:21.1.0'
+    testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.mockitoCoreVersion}"
+    testImplementation "org.mockito:mockito-inline:${rootProject.ext.mockitoCoreVersion}"
+    testImplementation 'org.json:json:20180813'
+
+
+    androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.9'
+
+    // add test util dependencies for functional and unit tests
+    testImplementation project(':messagingtestutils')
+    androidTestImplementation project(':messagingtestutils')
+    testImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    androidTestImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+}
+
+tasks.withType(Test) {
+    testLogging {
+        showStandardStreams = true
     }
 }

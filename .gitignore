@@ -15,6 +15,7 @@
 bin/
 gen/
 out/
+ci/
 
 # Gradle files
 .gradle/
@@ -71,3 +72,10 @@ code/testapp/.idea*
 
 # sdk-build
 sdk-build
+# unit test generated files
+code/messaging/mock_cache/*
+# jacoco generated file
+code/messaging/jacoco.exec
+
+.vscode/
+code/messaging/cache/

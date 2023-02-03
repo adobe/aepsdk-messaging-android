@@ -4,14 +4,13 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion "31.0.0"
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.adobe.marketing.mobile.messagingsample"
         minSdkVersion 19
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 1
-        versionName "1.1.1"
+        versionName "2.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -21,39 +20,37 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    namespace 'com.adobe.marketing.mobile.messagingsample'
 }
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
         google()
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.31"
-        classpath 'com.google.gms:google-services:4.3.3'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20'
+        classpath 'com.google.gms:google-services:4.3.14'
     }
 }
 
-def adobeDependencies = [
-        core       : "com.adobe.marketing.mobile:core:+",
-        userProfile: "com.adobe.marketing.mobile:userprofile:+",
-        edgeidentity   : "com.adobe.marketing.mobile:edgeidentity:+",
-        lifecycle  : "com.adobe.marketing.mobile:lifecycle:+",
-        signal     : "com.adobe.marketing.mobile:signal:+",
-        edge       : "com.adobe.marketing.mobile:edge:1.1.0"
-]
-
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.firebase:firebase-messaging:21.1.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    // constraint layout dependency for assurance
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
-    implementation adobeDependencies.values()
-    implementation project(':messaging')
+    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    implementation "com.adobe.marketing.mobile:lifecycle:$rootProject.mavenLifecycleVersion"
+    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
+    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
+    implementation "com.adobe.marketing.mobile:assurance:$rootProject.mavenAssuranceVersion"
+
+    implementation project(":${rootProject.moduleProjectName}")
 }

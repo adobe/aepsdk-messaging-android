@@ -12,25 +12,23 @@
 
 package com.adobe.marketing.mobile;
 
+import static org.mockito.Mockito.when;
+
 import android.os.Bundle;
 
 import com.google.firebase.messaging.RemoteMessage;
 
-import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@RunWith(PowerMockRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushPayloadTests {
-    private MessagingPushPayload payload;
-
     private final String mockTitle = "mockTitle";
     private final String mockBody = "mockBody";
     private final String mockSound = "mockSound";
@@ -42,9 +40,8 @@ public class MessagingPushPayloadTests {
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
     private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
-    private final String mockActionButtonsWithNoUriAndTypeKey = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\"},\n {\n \"label\" : \"button2\", \n \"type\" : \"OPENAPP\"\n},\n{\n\"label\" : \"open app\", \n \"type\" : \"OPENAPP\"\n}\n]";
     private final String mockMalformedActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\"},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
-
+    private MessagingPushPayload payload;
     private Map<String, String> mockData;
 
     // ========================================================================================
@@ -52,61 +49,40 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     @Test
     public void test_Constructor_with_RemoteMessage() {
-        mockData = getMockData("default");
+        mockData = getMockData(false);
         Bundle bundle = Mockito.mock(Bundle.class);
-        RemoteMessage message = new RemoteMessage(bundle);
-        Whitebox.setInternalState(message, "data", mockData);
-        payload = new MessagingPushPayload(message);
+        final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getData()).thenReturn(mockData);
+        payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
     }
 
     @Test
     public void test_Constructor_with_MapData() {
-        mockData = getMockData("default");
+        mockData = getMockData(false);
         payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
     }
 
     @Test
     public void test_Constructor_with_RemoteMessage_MalformedActionButtons() {
-        mockData = getMockData("malformed");
+        mockData = getMockData(true);
         Bundle bundle = Mockito.mock(Bundle.class);
-        RemoteMessage message = new RemoteMessage(bundle);
-        Whitebox.setInternalState(message, "data", mockData);
-        payload = new MessagingPushPayload(message);
+        final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getData()).thenReturn(mockData);
+        payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
-        // 3 buttons should be created even if an action button contains malformed data
-        Assert.assertEquals(3, payload.getActionButtons().size());
+        // verify only 1 button created
+        Assert.assertEquals(1, payload.getActionButtons().size());
     }
 
     @Test
     public void test_Constructor_with_MapData_MalformedActionButtons() {
-        mockData = getMockData("malformed");
+        mockData = getMockData(true);
         payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
-        // 3 buttons should be created even if an action button contains malformed data
-        Assert.assertEquals(3, payload.getActionButtons().size());
-    }
-
-    @Test
-    public void test_Constructor_with_RemoteMessage_PayloadContainsActionButtonStringWithNoTypeAndUri() {
-        mockData = getMockData("missing");
-        Bundle bundle = Mockito.mock(Bundle.class);
-        RemoteMessage message = new RemoteMessage(bundle);
-        Whitebox.setInternalState(message, "data", mockData);
-        payload = new MessagingPushPayload(message);
-        Assert.assertNotNull(payload);
-        // 3 buttons should be created even if an action button is missing type and/or uri
-        Assert.assertEquals(3, payload.getActionButtons().size());
-    }
-
-    @Test
-    public void test_Constructor_with_MapData_PayloadContainsActionButtonStringWithNoTypeAndUri() {
-        mockData = getMockData("missing");
-        payload = new MessagingPushPayload(mockData);
-        Assert.assertNotNull(payload);
-        // 3 buttons should be created even if an action button is missing type and/or uri
-        Assert.assertEquals(3, payload.getActionButtons().size());
+        // verify only 1 button created
+        Assert.assertEquals(1, payload.getActionButtons().size());
     }
 
     // ========================================================================================
@@ -114,7 +90,7 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     @Test
     public void test_PublicMethods() {
-        mockData = getMockData("default");
+        mockData = getMockData(false);
         payload = new MessagingPushPayload(mockData);
         Assert.assertEquals(mockTitle, payload.getTitle());
         Assert.assertEquals(mockBody, payload.getBody());
@@ -136,24 +112,22 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     // Helper
     // ========================================================================================
-    private Map<String, String> getMockData(String testType) {
+    private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingConstant.PushNotificationPayload.TITLE, mockTitle);
-        mockData.put(MessagingConstant.PushNotificationPayload.BODY, mockBody);
-        mockData.put(MessagingConstant.PushNotificationPayload.SOUND, mockSound);
-        mockData.put(MessagingConstant.PushNotificationPayload.NOTIFICATION_COUNT, mockBadgeCount);
-        mockData.put(MessagingConstant.PushNotificationPayload.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingConstant.PushNotificationPayload.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingConstant.PushNotificationPayload.ICON, mockIcon);
-        mockData.put(MessagingConstant.PushNotificationPayload.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingConstant.PushNotificationPayload.ACTION_URI, mockActionUri);
-        if (testType.equals("malformed")) {
-            mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockMalformedActionButtons);
-        } else if (testType.equals("missing")){
-            mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockActionButtonsWithNoUriAndTypeKey);
-        } else { // default
-            mockData.put(MessagingConstant.PushNotificationPayload.ACTION_BUTTONS, mockActionButtons);
+        mockData.put(MessagingPushPayload.TITLE, mockTitle);
+        mockData.put(MessagingPushPayload.BODY, mockBody);
+        mockData.put(MessagingPushPayload.SOUND, mockSound);
+        mockData.put(MessagingPushPayload.NOTIFICATION_COUNT, mockBadgeCount);
+        mockData.put(MessagingPushPayload.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingPushPayload.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingPushPayload.ICON, mockIcon);
+        mockData.put(MessagingPushPayload.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingPushPayload.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingPushPayload.ACTION_URI, mockActionUri);
+        if (testingMalformedButtonString) {
+            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockMalformedActionButtons);
+        } else {
+            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockActionButtons);
         }
 
         return mockData;
