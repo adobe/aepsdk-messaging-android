@@ -20,7 +20,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.messaging.MessagingPushPayload
+import com.adobe.marketing.mobile.MessagingPushPayload
 import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
