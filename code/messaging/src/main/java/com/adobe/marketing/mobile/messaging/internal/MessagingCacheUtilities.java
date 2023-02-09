@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
@@ -26,6 +27,7 @@ import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -41,7 +43,7 @@ import java.util.Map;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private final Map<String, String> assetMap = new HashMap<>();
+    private Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheService;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
 
@@ -174,6 +176,8 @@ final class MessagingCacheUtilities {
             for (final String imageAssetUrl : assetsUrls) {
                 if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
                     assetsToRetain.add(imageAssetUrl);
+                    // update the asset to cached location map
+                    assetMap.put(imageAssetUrl, MessagingConstants.ASSET_CACHE_LOCATION);
                 }
             }
         }

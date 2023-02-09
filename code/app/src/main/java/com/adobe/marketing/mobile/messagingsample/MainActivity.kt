@@ -32,6 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
@@ -186,7 +187,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        ServiceProvider.getInstance().messageDelegate = customMessagingDelegate
+        MobileCore.setMessagingDelegate(customMessagingDelegate)
 
         // setup ui interaction listeners
         setupButtonClickListeners()
@@ -473,7 +474,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-class CustomDelegate : MessagingDelegate() {
+class CustomDelegate : MessagingDelegate {
     private var currentMessage: Message? = null
     private var webview: WebView? = null
     var showMessages = true
@@ -482,10 +483,11 @@ class CustomDelegate : MessagingDelegate() {
         // access to the whole message from the parent
         fullscreenMessage?.also {
             this.currentMessage = (fullscreenMessage.parent) as? Message
+            this.webview = currentMessage?.webView
 
             // if we're not showing the message now, we can save it for later
             if(!showMessages) {
-                println("message was suppressed: ${currentMessage?.id}")
+                println("\n message was suppressed: ${currentMessage?.id}")
                 currentMessage?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
             }
         }
@@ -506,7 +508,7 @@ class CustomDelegate : MessagingDelegate() {
 
         // running javascript content must be done on the ui thread
         webview?.post {
-            webview?.evaluateJavascript("startTimer();") { content ->
+            webview?.evaluateJavascript("(function() { return 'function return value'; })();") { content ->
                 if (content != null) {
                     println("js function return content is: $content")
                 }

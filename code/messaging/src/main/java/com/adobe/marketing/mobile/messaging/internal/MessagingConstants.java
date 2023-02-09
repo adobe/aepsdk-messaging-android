@@ -12,6 +12,10 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import com.adobe.marketing.mobile.services.ServiceProvider;
+
+import java.io.File;
+
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
@@ -26,9 +30,25 @@ final class MessagingConstants {
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String HTTP_HEADER_ETAG = "Etag";
     static final String METADATA_PATH = "pathToFile";
+    static final String ASSET_CACHE_LOCATION = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+
     static final int DEFAULT_TIMEOUT = 5;
 
     private MessagingConstants() {
+    }
+
+    final class QueryParameters {
+        static final String EXPECTED_JAVASCRIPT_PARAM = "js=";
+        static final String JAVASCRIPT_QUERY_KEY = "js";
+        static final String ADOBE_INAPP = "adbinapp";
+        static final String PATH_CANCEL = "cancel";
+        static final String PATH_DISMISS = "dismiss";
+        static final String INTERACTION = "interaction";
+        static final String DEEPLINK = "adb_deeplink";
+        static final String LINK = "link";
+        static final String JS = "js";
+
+        private QueryParameters() {}
     }
 
     final class TrackingKeys {

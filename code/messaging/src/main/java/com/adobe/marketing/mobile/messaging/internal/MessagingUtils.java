@@ -13,7 +13,6 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -26,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
-
-    private static final String SELF_TAG = "MessagingUtils";
 
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
         if (payloads == null || payloads.size() == 0) {
@@ -87,20 +84,6 @@ class MessagingUtils {
         return EventType.MESSAGING.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
-    }
-
-    /**
-     * @param event A Rules Response Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a messaging consequence event.
-     */
-    static boolean isMessagingConsequenceEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return EventType.RULES_ENGINE.equalsIgnoreCase(event.getType())
-                && EventSource.RESPONSE_CONTENT.equalsIgnoreCase(event.getSource())
-                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED);
     }
 
     /**
@@ -172,9 +155,5 @@ class MessagingUtils {
         if (MessagingUtils.isMapNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
-    }
-
-    static String getShareStateMessagingEventDatasetId(final Map<String, Object> configState) {
-        return DataReader.optString(configState, EXPERIENCE_EVENT_DATASET_ID, null);
     }
 }

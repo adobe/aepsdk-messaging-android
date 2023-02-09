@@ -16,7 +16,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -499,6 +498,62 @@ public class InAppNotificationHandlerTests {
         });
     }
 
+    @Test
+    public void test_handleEdgePersonalizationNotification_MissingPropositionInfo() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            MessageTestConfig config = new MessageTestConfig();
+            config.count = 1;
+            config.isMissingScopeDetails = true;
+            List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("payload", payload);
+            eventData.put("requestEventId", "TESTING_ID");
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+
+            // test
+            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+
+            // verify proposition cached
+            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+
+            // verify no assets cached
+            verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
+
+            // verify no rules loaded
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+        });
+    }
+
+    @Test
+    public void test_handleEdgePersonalizationNotification_MissingScope() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            MessageTestConfig config = new MessageTestConfig();
+            config.count = 1;
+            config.isMissingScope = true;
+            List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("payload", payload);
+            eventData.put("requestEventId", "TESTING_ID");
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+
+            // test
+            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+
+            // verify proposition cached
+            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+
+            // verify no assets cached
+            verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
+
+            // verify no rules loaded
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+        });
+    }
+
     // ========================================================================================
     // inAppNotificationHandler load cached propositions on instantiation
     // ========================================================================================
@@ -592,13 +647,51 @@ public class InAppNotificationHandlerTests {
                 // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
                 InternalMessage mockInternalMessage = mockedConstruction.constructed().get(0);
                 verify(mockInternalMessage, times(1)).trigger();
-                verify(mockInternalMessage, times(1)).show(eq(true));
+                verify(mockInternalMessage, times(1)).show();
             }
         });
     }
 
     @Test
-    public void test_createInAppMessage_InvalidRuleConsequence() {
+    public void test_createInAppMessage_EmptyConsequenceType() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+                Map<String, Object> details = new HashMap<>();
+                Map<String, Object> mobileParameters = new HashMap<>();
+
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+                RuleConsequence consequence = new RuleConsequence("123456789", "", details);
+
+                // test
+                inAppNotificationHandler.createInAppMessage(consequence);
+
+                // verify no message object created
+                assertEquals(0, mockedConstruction.constructed().size());
+            }
+        });
+    }
+
+    @Test
+    public void test_createInAppMessage_NullDetails() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+                RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
+
+                // test
+                inAppNotificationHandler.createInAppMessage(consequence);
+
+                // verify no message object created
+                assertEquals(0, mockedConstruction.constructed().size());
+            }
+        });
+    }
+
+    @Test
+    public void test_createInAppMessage_NotCjmIamPayload() {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
@@ -612,6 +705,20 @@ public class InAppNotificationHandlerTests {
 
                 // test
                 inAppNotificationHandler.createInAppMessage(consequence);
+
+                // verify no message object created
+                assertEquals(0, mockedConstruction.constructed().size());
+            }
+        });
+    }
+
+    @Test
+    public void test_createInAppMessage_NullRuleConsequence() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+                // test
+                inAppNotificationHandler.createInAppMessage(null);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());

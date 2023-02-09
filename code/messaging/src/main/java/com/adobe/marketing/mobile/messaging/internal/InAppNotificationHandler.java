@@ -193,7 +193,7 @@ class InAppNotificationHandler {
 
             // check that app surface is present in the payload before processing any in-app message rules present
             Log.debug(LOG_TAG, SELF_TAG, "IAM payload contained the app surface: (%s)", scope);
-            if (!scope.equals(SURFACE_BASE + appSurface)) {
+            if (!proposition.propositionInfo.scope.equals(SURFACE_BASE + appSurface)) {
                 Log.debug(LOG_TAG, SELF_TAG, "The retrieved application identifier did not match the app surface present in the IAM payload: (%s).", appSurface);
                 return;
             }
@@ -303,7 +303,7 @@ class InAppNotificationHandler {
             message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = getPropositionInfoForMessageId(message.getId());
             message.trigger();
-            message.show(true);
+            message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }

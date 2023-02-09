@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.reset;
@@ -39,8 +40,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ImageAssetCachingTests {
@@ -61,12 +65,11 @@ public class ImageAssetCachingTests {
 
     private final static String IMAGE_URL = "https://www.adobe.com/adobe.png";
     private final static String IMAGE_URL2 = "https://www.adobe.com/adobe2.png";
+    private final File testCacheDir = new File("testCache");
     private MessagingCacheUtilities messagingCacheUtilities;
 
     @Before
-    public void setup() {
-        messagingCacheUtilities = new MessagingCacheUtilities();
-    }
+    public void setup() {}
 
     @After
     public void tearDown() {
@@ -76,17 +79,27 @@ public class ImageAssetCachingTests {
         reset(mockCacheResult);
         reset(mockDeviceInfoService);
         reset(mockNetworkService);
+        if (testCacheDir.exists()) {
+            testCacheDir.delete();
+        }
     }
 
     private void setupServiceProviderMockAndRunTest(Runnable testRunnable) {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
+            Map<String, String> metaData = new HashMap<>();
+            metaData.put(MessagingConstants.HTTP_HEADER_ETAG, "etag");
+            metaData.put(MessagingConstants.HTTP_HEADER_LAST_MODIFIED, "lastModified");
+            metaData.put(MessagingConstants.METADATA_PATH, "testCachedAssetPath");
+            when(mockCacheResult.getMetadata()).thenReturn(metaData);
             when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
             when(mockCacheService.set(anyString(), anyString(), any(CacheEntry.class))).thenReturn(true);
             when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
+            when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(testCacheDir);
             when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
             when(mockServiceProvider.getNetworkService()).thenReturn(mockNetworkService);
+            messagingCacheUtilities = new MessagingCacheUtilities();
 
             testRunnable.run();
         }
@@ -122,6 +135,46 @@ public class ImageAssetCachingTests {
             messagingCacheUtilities.cacheImageAssets(imageAssets);
             // verify 0 network requests
             verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+        });
+    }
+
+    @Test
+    public void testCacheImageAssets_CacheServiceNotAvailable() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            when(mockServiceProvider.getCacheService()).thenReturn(null);
+            final List<String> imageAssets = new ArrayList<>();
+            // test
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+            // verify 0 network requests
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+        });
+    }
+
+    @Test
+    public void testGetAssetMap() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            ArgumentCaptor<NetworkRequest> networkRequestArgumentCaptor = ArgumentCaptor.forClass(NetworkRequest.class);
+            final List<String> imageAssets = new ArrayList<>();
+            imageAssets.add(IMAGE_URL);
+            imageAssets.add(IMAGE_URL2);
+            // test
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+            // verify 2 network requests made containing the 2 image URL's
+            verify(mockNetworkService, times(2)).connectAsync(networkRequestArgumentCaptor.capture(), any(NetworkCallback.class));
+            List<NetworkRequest> networkRequestList = networkRequestArgumentCaptor.getAllValues();
+            assertEquals(2, networkRequestList.size());
+            NetworkRequest firstRequest = networkRequestList.get(0);
+            NetworkRequest secondRequest = networkRequestList.get(1);
+            assertEquals(IMAGE_URL, firstRequest.getUrl());
+            assertEquals(IMAGE_URL2, secondRequest.getUrl());
+            // test
+            Map assetMap = messagingCacheUtilities.getAssetsMap();
+            // verify
+            assertEquals(2, assetMap.size());
+            assertEquals("testCache/messaging/images", assetMap.get(IMAGE_URL));
+            assertEquals("testCache/messaging/images", assetMap.get(IMAGE_URL2));
         });
     }
 }

@@ -44,7 +44,6 @@ class MessageAssetDownloader {
     private final List<String> assetsCollection;
     private final CacheService cacheService;
     private File assetDir;
-    private final String assetCacheLocation;
 
     /**
      * Constructor.
@@ -54,7 +53,6 @@ class MessageAssetDownloader {
     MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
         this.cacheService = ServiceProvider.getInstance().getCacheService();
-        this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
         createAssetCacheDirectory();
     }
 
@@ -77,7 +75,7 @@ class MessageAssetDownloader {
         // download assets within the assets collection list
         for (final String url : assetsCollection) {
             // 304 - Not Modified support
-            final CacheResult cachedAsset = cacheService.get(assetCacheLocation, url);
+            final CacheResult cachedAsset = cacheService.get(MessagingConstants.ASSET_CACHE_LOCATION, url);
             final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
             final NetworkRequest networkRequest = new NetworkRequest(url, HttpMethod.GET, null, requestProperties, MessagingConstants.DEFAULT_TIMEOUT, MessagingConstants.DEFAULT_TIMEOUT);
             ServiceProvider.getInstance().getNetworkService().connectAsync(networkRequest, connection -> {
@@ -188,10 +186,8 @@ class MessageAssetDownloader {
 
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Caching asset %s.", key);
         final Map<String, String> metadata = extractMetadataFromResponse(connection);
-        final String cachePath = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir().getAbsolutePath();
-        metadata.put(MessagingConstants.METADATA_PATH, cachePath + File.separator + assetCacheLocation);
         final CacheEntry cacheEntry = new CacheEntry(connection.getInputStream(), CacheExpiry.never(), metadata);
-        cacheService.set(assetCacheLocation, key, cacheEntry);
+        cacheService.set(MessagingConstants.ASSET_CACHE_LOCATION, key, cacheEntry);
     }
 
     /**
@@ -201,7 +197,7 @@ class MessageAssetDownloader {
      */
     private boolean createAssetCacheDirectory() {
         try {
-            assetDir = new File(assetCacheLocation);
+            assetDir = new File(MessagingConstants.ASSET_CACHE_LOCATION);
             if (!assetDir.exists()) {
                 return assetDir.mkdirs();
             }

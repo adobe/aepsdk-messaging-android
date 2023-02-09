@@ -186,7 +186,8 @@ public final class MessagingExtension extends Extension {
 
     void handleWildcardEvents(final Event event) {
         // handling mock rules delivered from the assurance ui
-        if (event.getName().equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
+        final String eventName = event.getName();
+        if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
             final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
             if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
                 final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");

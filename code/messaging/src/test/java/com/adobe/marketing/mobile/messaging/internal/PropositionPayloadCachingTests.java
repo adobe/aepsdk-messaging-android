@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -37,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,7 +127,7 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
-    public void testGetCachedPropositionPayload_WhenNoPropositionsCached() {
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenNoPropositionsCached() {
         runWithMockedServiceProvider(() -> {
             // setup
             when(mockCacheService.get(anyString(), anyString())).thenReturn(null);
@@ -139,7 +142,7 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
-    public void testGetCachedPropositionPayload_WhenCacheFileReturnedIsNull() {
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenCacheFileReturnedIsNull() {
         runWithMockedServiceProvider(() -> {
             // setup
             when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
@@ -156,7 +159,7 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
-    public void testGetCachedPropositionPayload_WhenCachedPropositionsAreInvalid() {
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenCachedPropositionsAreInvalid() {
         runWithMockedServiceProvider(() -> {
             // setup
             when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
