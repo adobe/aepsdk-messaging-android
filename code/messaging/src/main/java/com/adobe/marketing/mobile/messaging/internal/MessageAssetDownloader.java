@@ -12,8 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.services.HttpConnecting;
@@ -25,6 +24,7 @@ import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.TimeUtils;
 
 import java.io.File;
@@ -43,8 +43,8 @@ class MessageAssetDownloader {
     private static final String SELF_TAG = "MessageAssetDownloader";
     private final List<String> assetsCollection;
     private final CacheService cacheService;
-    private File assetDir;
     private final String assetCacheLocation;
+    private File assetDir;
 
     /**
      * Constructor.
@@ -54,7 +54,7 @@ class MessageAssetDownloader {
     MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
         this.cacheService = ServiceProvider.getInstance().getCacheService();
-        this.assetCacheLocation = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+        this.assetCacheLocation = MessagingUtils.getAssetCacheLocation();
         createAssetCacheDirectory();
     }
 
@@ -64,6 +64,11 @@ class MessageAssetDownloader {
      * Attempts to purge assets that have previously been cached but are for messages that are no longer active.
      */
     void downloadAssetCollection() {
+        if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
+            Log.debug(LOG_TAG, SELF_TAG, "downloadAssetCollection - Failed to download assets, the asset cache location is not available.");
+            return;
+        }
+
         if (assetsCollection == null || assetsCollection.isEmpty()) {
             Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Empty list of assets provided, will not download any assets.");
             return;
@@ -180,6 +185,11 @@ class MessageAssetDownloader {
      * @param key        {@code String} The asset download URL.
      */
     private void cacheAssetData(final HttpConnecting connection, final String key) {
+        if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
+            Log.debug(LOG_TAG, SELF_TAG, "cacheAssetData - Failed to cache asset from %s, the asset cache location is not available.", key);
+            return;
+        }
+
         // create message asset cache directory if needed
         if (!createAssetCacheDirectory()) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Cannot cache asset, failed to create image cache directory.");
@@ -188,8 +198,6 @@ class MessageAssetDownloader {
 
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Caching asset %s.", key);
         final Map<String, String> metadata = extractMetadataFromResponse(connection);
-        final String cachePath = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir().getAbsolutePath();
-        metadata.put(MessagingConstants.METADATA_PATH, cachePath + File.separator + assetCacheLocation);
         final CacheEntry cacheEntry = new CacheEntry(connection.getInputStream(), CacheExpiry.never(), metadata);
         cacheService.set(assetCacheLocation, key, cacheEntry);
     }
@@ -200,6 +208,11 @@ class MessageAssetDownloader {
      * This method checks if the cache directory already exists in which case no new directory is created for image assets.
      */
     private boolean createAssetCacheDirectory() {
+        if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
+            Log.debug(LOG_TAG, SELF_TAG, "createAssetCacheDirectory - Failed to create asset cache directory, the asset cache location is not available.");
+            return false;
+        }
+
         try {
             assetDir = new File(assetCacheLocation);
             if (!assetDir.exists()) {

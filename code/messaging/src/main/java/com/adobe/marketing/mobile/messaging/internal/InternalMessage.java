@@ -23,7 +23,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Message;
-import com.adobe.marketing.mobile.MessagingDelegate;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
@@ -33,6 +32,7 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
+import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -46,18 +46,18 @@ import java.util.Map;
 /**
  * This class contains the definition of an in-app message and controls its tracking via Experience Edge events.
  */
-class InternalMessage extends MessagingDelegate implements Message {
+class InternalMessage extends MessagingFullscreenMessageDelegate implements Message {
     private final static String SELF_TAG = "Message";
-    private final FullscreenMessage aepMessage;
-    private final Map<String, WebViewJavascriptInterface> scriptHandlers = new HashMap<>();
+    private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
-    // private properties
+    private final String id;
+    private FullscreenMessage aepMessage;
     private WebView webView;
-    private String id;
     private boolean autoTrack = true;
     private MessagingExtension messagingExtension;
     // package private
     PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+    Map<String, Object> details;
 
     /**
      * Constructor.
@@ -77,15 +77,17 @@ class InternalMessage extends MessagingDelegate implements Message {
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
-        this(parent, consequence, rawMessageSettings, assetMap, null, null);
+    InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+        this(parent, consequence, rawMessageSettings, assetMap, null, null, null);
     }
 
     @VisibleForTesting
-    InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap, final WebView webView, final Handler webViewHandler) throws MessageRequiredFieldMissingException {
+    InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap, final WebView webView, final Handler webViewHandler, final Map<String, WebViewJavascriptInterface> scriptHandlers) throws MessageRequiredFieldMissingException {
         messagingExtension = parent;
         this.webView = webView;
         this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
+        this.scriptHandlers = scriptHandlers != null ? scriptHandlers : new HashMap<>();
+
         final String consequenceType = consequence.getType();
 
         if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
@@ -114,12 +116,16 @@ class InternalMessage extends MessagingDelegate implements Message {
         final MessageSettings settings = messageSettingsFromMap(rawMessageSettings);
         settings.setParent(this);
 
-        // set the internal Messaging delegate if a custom Messaging delegate is not being used
-        if (ServiceProvider.getInstance().getMessageDelegate() == null) {
-            ServiceProvider.getInstance().setMessageDelegate(this);
+        final UIService uiService = ServiceProvider.getInstance().getUIService();
+        if (uiService == null) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
+            return;
         }
-
-        aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, ServiceProvider.getInstance().getMessageDelegate(), !assetMap.isEmpty(), settings);
+        aepMessage = uiService.createFullscreenMessage(html, this, !assetMap.isEmpty(), settings);
+        if (aepMessage == null) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Error occurred during in-app message creation.");
+            return;
+        }
         aepMessage.setLocalAssetsMap(assetMap);
     }
 

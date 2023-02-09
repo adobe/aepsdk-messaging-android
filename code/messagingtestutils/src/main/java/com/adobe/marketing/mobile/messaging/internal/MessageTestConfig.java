@@ -21,4 +21,6 @@ public class MessageTestConfig {
     public boolean nonMatchingAppSurfaceInPayload = false;
     public boolean hasEmptyPayload = false;
     public boolean noValidAppSurfaceInPayload = false;
+    public boolean isMissingScopeDetails = false;
+    public boolean isMissingScope = false;
 }

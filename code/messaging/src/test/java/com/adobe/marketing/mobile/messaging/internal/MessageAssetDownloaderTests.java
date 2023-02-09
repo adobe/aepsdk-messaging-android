@@ -85,7 +85,7 @@ public class MessageAssetDownloaderTests {
         // setup assets for testing
         assets = new ArrayList<>();
         assets.add(assetUrl);
-        expectedCacheLocation = "cache/messaging/images";
+        expectedCacheLocation = "testCache/messaging/images";
     }
 
     @After
@@ -122,7 +122,7 @@ public class MessageAssetDownloaderTests {
     }
 
     private void setupServiceProviderMockAndRunTest(Runnable testRunnable) {
-        testCacheDir = new File("cache");
+        testCacheDir = new File("testCache");
         testCacheDir.mkdirs();
         testCacheDir.setWritable(true);
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
@@ -193,10 +193,10 @@ public class MessageAssetDownloaderTests {
     public void testDownloadAssetCollection_when_assetInCacheIsNotForActiveMessage_then_cachedAssetIsDeleted() throws
             Exception {
         // setup
-        final File existingCacheDir = new File("cache/messaging/images/d38a46f6-4f43-435a-a862-4038c27b90a1");
+        final File existingCacheDir = new File("testCache/messaging/images/d38a46f6-4f43-435a-a862-4038c27b90a1");
         existingCacheDir.mkdirs();
         final File existingCachedFile = new
-                File("cache/messaging/images/d38a46f6-4f43-435a-a862-4038c27b90a1/028dbbd3617ccfb5e302f4aa2df2eb312d1571ee40b3f4aa448658c9082b0411");
+                File("testCache/messaging/images/d38a46f6-4f43-435a-a862-4038c27b90a1/028dbbd3617ccfb5e302f4aa2df2eb312d1571ee40b3f4aa448658c9082b0411");
         existingCachedFile.createNewFile();
 
         setupServiceProviderMockAndRunTest(() -> {

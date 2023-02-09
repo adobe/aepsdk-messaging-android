@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "2.0.0";
+    static final String EXTENSION_VERSION = "2.0.1";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_BASE_DIR = "messaging";
@@ -29,6 +29,19 @@ final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
 
     private MessagingConstants() {
+    }
+
+    final class QueryParameters {
+        static final String EXPECTED_JAVASCRIPT_PARAM = "js=";
+        static final String JAVASCRIPT_QUERY_KEY = "js";
+        static final String ADOBE_INAPP = "adbinapp";
+        static final String PATH_CANCEL = "cancel";
+        static final String PATH_DISMISS = "dismiss";
+        static final String INTERACTION = "interaction";
+        static final String DEEPLINK = "adb_deeplink";
+        static final String LINK = "link";
+
+        private QueryParameters() {}
     }
 
     final class TrackingKeys {
@@ -227,7 +240,7 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
-        static final String TRIGGERED_IN_APP_MESSAGE_EVENT = "Triggered in-app message event";
+        static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {
         }
