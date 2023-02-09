@@ -382,12 +382,22 @@ public class MessagingTestUtils {
             items.add(item);
         }
         Map<String, Object> messagePayload = new HashMap<>();
-        messagePayload.put("scopeDetails", scopeDetails);
+
+        // scope details modification
+        if (!config.isMissingScopeDetails) {
+            messagePayload.put("scopeDetails", scopeDetails);
+        }
+
+        // scope modification
         if (!config.noValidAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://mock_applicationId");
         } else if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }
+        if (config.isMissingScope) {
+            messagePayload.remove("scope");
+        }
+
         messagePayload.put("items", items);
         messagePayload.put("id", "testResponseId" + count);
         List<Map<String, Object>> payload = new ArrayList<>();

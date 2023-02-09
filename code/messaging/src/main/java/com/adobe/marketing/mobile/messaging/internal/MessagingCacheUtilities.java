@@ -22,6 +22,7 @@ import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.ByteArrayInputStream;
@@ -41,12 +42,14 @@ import java.util.Map;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private final Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheService;
+    private final String assetCacheLocation;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
+    private Map<String, String> assetMap = new HashMap<>();
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
+        this.assetCacheLocation = MessagingUtils.getAssetCacheLocation();
     }
     // ========================================================================================================
     // Message payload caching
@@ -162,6 +165,11 @@ final class MessagingCacheUtilities {
      * @param assetsUrls a {@link List<String>} containing asset URL's to be cached.
      */
     void cacheImageAssets(final List<String> assetsUrls) {
+        if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Failed to cache asset, the asset cache location is not available.");
+            return;
+        }
+
         if (cacheService == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Failed to cache asset, the cache manager is not available.");
             return;
@@ -174,6 +182,8 @@ final class MessagingCacheUtilities {
             for (final String imageAssetUrl : assetsUrls) {
                 if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
                     assetsToRetain.add(imageAssetUrl);
+                    // update the asset to cached location map
+                    assetMap.put(imageAssetUrl, assetCacheLocation);
                 }
             }
         }

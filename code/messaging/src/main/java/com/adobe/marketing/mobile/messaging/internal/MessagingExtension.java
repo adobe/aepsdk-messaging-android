@@ -59,6 +59,7 @@ import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDat
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.*;
@@ -184,6 +185,19 @@ public final class MessagingExtension extends Extension {
     //region Event listeners
 
     void handleWildcardEvents(final Event event) {
+        // handling mock rules delivered from the assurance ui
+        final String eventName = event.getName();
+        if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
+            final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+            if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
+                final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+                final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+                final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
+                inAppNotificationHandler.createInAppMessage(new RuleConsequence(id, type, detail));
+            }
+            return;
+        }
+
         List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
         final List<RuleConsequence> consequences = new ArrayList<>();
 

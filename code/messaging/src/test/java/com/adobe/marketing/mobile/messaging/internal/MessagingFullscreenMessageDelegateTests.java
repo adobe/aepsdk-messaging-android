@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
@@ -21,9 +22,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.*;
 
+import android.os.Handler;
+import android.webkit.ValueCallback;
+import android.webkit.WebView;
+
 import com.adobe.marketing.mobile.LoggingMode;
-import com.adobe.marketing.mobile.MessagingDelegate;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -43,8 +48,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MessagingDelegateTests {
+public class MessagingFullscreenMessageDelegateTests {
 
     @Mock
     ServiceProvider mockServiceProvider;
@@ -57,18 +66,27 @@ public class MessagingDelegateTests {
     @Mock
     MessageSettings mockMessageSettings;
     @Mock
-    InternalMessage mockInternalMessage;
+    MessagingExtension mockMessagingExtension;
+    @Mock
+    WebView mockWebView;
+    @Mock
+    Handler mockWebViewHandler;
 
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
 
-    private MessagingDelegate messagingDelegate;
+    private InternalMessage internalMessage;
+    private Map <String, WebViewJavascriptInterface> scriptHandlerMap;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         MockitoAnnotations.openMocks(this);
 
-        messagingDelegate = new MessagingDelegate();
+        try {
+            internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), mockWebView, mockWebViewHandler, new HashMap<>());
+        } catch (Exception exception) {
+            fail(exception.getMessage());
+        }
         Log.setLogLevel(LoggingMode.VERBOSE);
     }
 
@@ -79,7 +97,9 @@ public class MessagingDelegateTests {
         reset(mockLogging);
         reset(mockUIService);
         reset(mockMessageSettings);
-        reset(mockInternalMessage);
+        reset(mockMessagingExtension);
+        reset(mockWebView);
+        reset(mockWebViewHandler);
     }
 
     void runWithMockedServiceProvider(final Runnable runnable) {
@@ -87,16 +107,24 @@ public class MessagingDelegateTests {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
             when(mockServiceProvider.getLoggingService()).thenReturn(mockLogging);
             when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
+            when(mockMessageSettings.getParent()).thenReturn(mockFullscreenMessage);
 
             runnable.run();
         }
+    }
+
+    RuleConsequence createRuleConsequence() {
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "html");
+        return new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
     }
 
     @Test
     public void test_onMessageShow() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
             // test
-            messagingDelegate.onShow(mockFullscreenMessage);
+            internalMessage.onShow(mockFullscreenMessage);
 
             // verify
             logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
@@ -107,7 +135,7 @@ public class MessagingDelegateTests {
     public void test_onMessageDismiss() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
             // test
-            messagingDelegate.onDismiss(mockFullscreenMessage);
+            internalMessage.onDismiss(mockFullscreenMessage);
 
             // verify
             logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
@@ -118,7 +146,7 @@ public class MessagingDelegateTests {
     public void test_onMessageShowFailure() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
             // test
-            messagingDelegate.onShowFailure();
+            internalMessage.onShowFailure();
 
             // verify
             logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
@@ -128,7 +156,7 @@ public class MessagingDelegateTests {
     @Test
     public void test_openUrlWithAdbDeeplink() {
         // test
-        messagingDelegate.openUrl(mockFullscreenMessage, "adb_deeplink://signup");
+        internalMessage.openUrl(mockFullscreenMessage, "adb_deeplink://signup");
 
         // verify the internal open url method is called
         verify(mockFullscreenMessage, times(1)).openUrl(urlStringCaptor.capture());
@@ -139,7 +167,7 @@ public class MessagingDelegateTests {
     public void test_openUrlWithWebLink() {
         runWithMockedServiceProvider(() -> {
             // test
-            messagingDelegate.openUrl(mockFullscreenMessage, "https://www.adobe.com");
+            internalMessage.openUrl(mockFullscreenMessage, "https://www.adobe.com");
 
             // verify the ui service is called to show the url
             verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
@@ -151,7 +179,7 @@ public class MessagingDelegateTests {
     public void test_openUrlWithInvalidLink() {
         runWithMockedServiceProvider(() -> {
             // test
-            messagingDelegate.openUrl(mockFullscreenMessage, "htp://www.adobe.com");
+            internalMessage.openUrl(mockFullscreenMessage, "htp://www.adobe.com");
 
             // verify no internal open url or ui service show url method is called
             verify(mockUIService, times(0)).showUrl(anyString());
@@ -163,7 +191,7 @@ public class MessagingDelegateTests {
     public void test_openUrlWithNullUrl() {
         runWithMockedServiceProvider(() -> {
             // test
-            messagingDelegate.openUrl(mockFullscreenMessage, null);
+            internalMessage.openUrl(mockFullscreenMessage, null);
 
             // verify no internal open url method is called
             verify(mockFullscreenMessage, times(0)).openUrl(urlStringCaptor.capture());
@@ -174,13 +202,13 @@ public class MessagingDelegateTests {
     public void test_overrideUrlLoadWithInvalidUri() {
         // setup
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
+        when(mockMessageSettings.getParent()).thenReturn(internalMessage);
 
         // test
-        messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "invaliduri");
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "invaliduri");
 
         // verify no message tracking call and message settings weren't created
-        verify(mockInternalMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+        verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), eq(internalMessage));
         verify(mockMessageSettings, times(0)).getParent();
     }
 
@@ -188,30 +216,36 @@ public class MessagingDelegateTests {
     public void test_overrideUrlLoadWithInvalidScheme() {
         // setup
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
+        when(mockMessageSettings.getParent()).thenReturn(internalMessage);
 
         // test
-        messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "notadbinapp://");
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "notadbinapp://");
 
         // verify no message tracking call and message settings weren't created
-        verify(mockInternalMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+        verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), eq(internalMessage));
         verify(mockMessageSettings, times(0)).getParent();
     }
 
     @Test
     public void test_overrideUrlLoadWithJavascriptPayload() {
         // setup
+        scriptHandlerMap = new HashMap<>();
+        scriptHandlerMap.put("test", new WebViewJavascriptInterface(s -> assertEquals("javascript value", s)));
+
+        try {
+            internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), mockWebView, mockWebViewHandler, scriptHandlerMap);
+        } catch (Exception exception) {
+            fail(exception.getMessage());
+        }
         when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(mockInternalMessage);
+        when(mockMessageSettings.getParent()).thenReturn(internalMessage);
 
         // test
-        messagingDelegate.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
 
         // verify encoded javascript evaluated by the webview object
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockInternalMessage, times(1)).evaluateJavascript(stringArgumentCaptor.capture());
+        verify(mockWebView, times(1)).evaluateJavascript(stringArgumentCaptor.capture(), any(ValueCallback.class));
         assertEquals("(function test() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
-        verify(mockInternalMessage, times(1)).dismiss(anyBoolean());
-        verify(mockMessageSettings, times(1)).getParent();
     }
 }
