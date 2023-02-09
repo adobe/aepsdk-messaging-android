@@ -33,7 +33,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.services.MessagingDelegate
-import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
@@ -487,7 +486,7 @@ class CustomDelegate : MessagingDelegate {
 
             // if we're not showing the message now, we can save it for later
             if(!showMessages) {
-                println("\n message was suppressed: ${currentMessage?.id}")
+                println("message was suppressed: ${currentMessage?.id}")
                 currentMessage?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
             }
         }
@@ -498,14 +497,16 @@ class CustomDelegate : MessagingDelegate {
         this.currentMessage = fullscreenMessage?.parent as Message?
         this.webview = currentMessage?.webView
 
-        // in-line handling of javascript calls
-        currentMessage?.handleJavascriptMessage("custom_delegate_javascript_handler") { content ->
-            if(content != null) {
+        // example: in-line handling of javascript calls in the AJO in-app message html
+        // the content callback will contain the output of (function() { return 'inline js return value'; })();
+        currentMessage?.handleJavascriptMessage("handler_name") { content ->
+            if (content != null) {
                 println("magical handling of our content from js! content is: $content")
                 currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
         }
 
+        // example: running javascript on the webview created by the Messaging extension.
         // running javascript content must be done on the ui thread
         webview?.post {
             webview?.evaluateJavascript("(function() { return 'function return value'; })();") { content ->
