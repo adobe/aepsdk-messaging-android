@@ -12,14 +12,19 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +45,19 @@ class MessagingUtils {
             }
         }
         return propositionPayloads;
+    }
+
+    // ========================================================================================
+    // Cache Path helper
+    // ========================================================================================
+
+    static String getAssetCacheLocation() {
+        final DeviceInforming deviceInfoService = ServiceProvider.getInstance().getDeviceInfoService();
+        String assetCacheLocation = null;
+        if (deviceInfoService != null) {
+            assetCacheLocation = deviceInfoService.getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+        }
+        return assetCacheLocation;
     }
 
     // ========================================================================================

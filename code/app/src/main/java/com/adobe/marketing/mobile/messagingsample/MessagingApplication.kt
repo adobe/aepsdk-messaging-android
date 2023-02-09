@@ -31,7 +31,7 @@ class MessagingApplication : Application() {
 
         MobileCore.start {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("")
+            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
             MobileCore.lifecycleStart(null)
         }
 

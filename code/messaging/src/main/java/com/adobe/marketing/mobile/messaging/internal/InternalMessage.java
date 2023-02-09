@@ -32,6 +32,7 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAlignment;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageAnimation;
 import com.adobe.marketing.mobile.services.ui.MessageSettings.MessageGesture;
+import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -47,10 +48,10 @@ import java.util.Map;
  */
 class InternalMessage extends MessagingFullscreenMessageDelegate implements Message {
     private final static String SELF_TAG = "Message";
-    private final FullscreenMessage aepMessage;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
     private final String id;
+    private FullscreenMessage aepMessage;
     private WebView webView;
     private boolean autoTrack = true;
     private MessagingExtension messagingExtension;
@@ -76,7 +77,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
-    public InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
+    InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
         this(parent, consequence, rawMessageSettings, assetMap, null, null, null);
     }
 
@@ -115,7 +116,16 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         final MessageSettings settings = messageSettingsFromMap(rawMessageSettings);
         settings.setParent(this);
 
-        aepMessage = ServiceProvider.getInstance().getUIService().createFullscreenMessage(html, this, !assetMap.isEmpty(), settings);
+        final UIService uiService = ServiceProvider.getInstance().getUIService();
+        if (uiService == null) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
+            return;
+        }
+        aepMessage = uiService.createFullscreenMessage(html, this, !assetMap.isEmpty(), settings);
+        if (aepMessage == null) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Error occurred during in-app message creation.");
+            return;
+        }
         aepMessage.setLocalAssetsMap(assetMap);
     }
 

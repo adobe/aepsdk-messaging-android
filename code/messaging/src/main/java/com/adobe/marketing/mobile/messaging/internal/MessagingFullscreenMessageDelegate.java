@@ -129,7 +129,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             }
 
             // handle optional javascript code to be executed
-            final String javascript = messageData.get(MessagingConstants.QueryParameters.JS);
+            final String javascript = messageData.get(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY);
             if (!StringUtils.isNullOrEmpty(javascript)) {
                 message.evaluateJavascript(javascript);
             }

@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
@@ -23,11 +22,11 @@ import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -43,12 +42,14 @@ import java.util.Map;
  */
 final class MessagingCacheUtilities {
     private final static String SELF_TAG = "MessagingCacheUtilities";
-    private Map<String, String> assetMap = new HashMap<>();
     private final CacheService cacheService;
+    private final String assetCacheLocation;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
+    private Map<String, String> assetMap = new HashMap<>();
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
+        this.assetCacheLocation = MessagingUtils.getAssetCacheLocation();
     }
     // ========================================================================================================
     // Message payload caching
@@ -164,6 +165,11 @@ final class MessagingCacheUtilities {
      * @param assetsUrls a {@link List<String>} containing asset URL's to be cached.
      */
     void cacheImageAssets(final List<String> assetsUrls) {
+        if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Failed to cache asset, the asset cache location is not available.");
+            return;
+        }
+
         if (cacheService == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Failed to cache asset, the cache manager is not available.");
             return;
@@ -177,7 +183,7 @@ final class MessagingCacheUtilities {
                 if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
                     assetsToRetain.add(imageAssetUrl);
                     // update the asset to cached location map
-                    assetMap.put(imageAssetUrl, MessagingConstants.ASSET_CACHE_LOCATION);
+                    assetMap.put(imageAssetUrl, assetCacheLocation);
                 }
             }
         }
