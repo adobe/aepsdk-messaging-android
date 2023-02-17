@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+    }
+}
+
+android {
+    namespace 'com.adobe.iamTutorialAndroid'
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.adobe.iamTutorialAndroid"
+        minSdkVersion 19
+        targetSdkVersion 33
+        versionCode 1
+        versionName "2.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath 'org.codehaus.groovy:groovy-all:2.4.15'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20'
+        classpath 'com.android.tools.build:gradle:7.3.1'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    // constraint layout dependency for assurance
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    implementation "com.adobe.marketing.mobile:core:2.+"
+    implementation "com.adobe.marketing.mobile:edgeidentity:2.+"
+    implementation "com.adobe.marketing.mobile:edge:2.+"
+    implementation "com.adobe.marketing.mobile:assurance:2.+"
+    implementation "com.adobe.marketing.mobile:messaging:2.+"
+}

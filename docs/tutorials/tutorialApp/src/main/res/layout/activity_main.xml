@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#C5C5CA"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="IAM Tutorial App" />
+
+    <EditText
+        android:id="@+id/editTextTrigger"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="IAM Trigger" />
+
+    <Button
+        android:id="@+id/btnTriggerFullscreenIAM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trigger IAM" />
+
+    <Switch
+        android:id="@+id/allowIAMSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="Allow IAM" />
+
+    <Button
+        android:id="@+id/btnTriggerLastIAM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trigger Most Recent IAM" />
+
+    <Button
+        android:id="@+id/btnRefreshInAppMessages"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="refresh in app messages" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>
