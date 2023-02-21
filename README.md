@@ -53,6 +53,10 @@ To open and run the project, open the `code/build.gradle` file in Android Studio
 ## Documentation
 Additional documentation for configuration and sdk usage can be found under the [Documentation](Documentation/README.md) directory.
 
+## Tutorial
+
+A comprehensive tutorial for getting started with In-app messaging can be found [here](https://opensource.adobe.com/aepsdk-messaging-android/#/tutorials/README).
+
 ## Related Projects
 
 | Project                                                      | Description                                                  |
