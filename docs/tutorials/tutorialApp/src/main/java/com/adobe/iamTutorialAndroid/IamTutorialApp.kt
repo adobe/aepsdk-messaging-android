@@ -25,10 +25,8 @@ class IamTutorialApp : Application() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
         MobileCore.registerExtensions(listOf(Messaging.EXTENSION, Identity.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)) {
-            Assurance.startSession("ryan://?adb_validation_sessionid=475247d4-509c-4b84-841c-1b306d8aa56f")
-            //MobileCore.configureWithAppID("3149c49c3910/ade9986818bd/launch-10fefb329b07-development")
-            // NLD2
-            MobileCore.configureWithAppID("bf7248f92b53/75100d4daf35/launch-4d3425399dab-development")
+            Assurance.startSession("iamtutorial://?adb_validation_sessionid=d7a6221e-7862-4675-949a-9edc9890443f")
+            MobileCore.configureWithAppID("3149c49c3910/ade9986818bd/launch-10fefb329b07-development")
             MobileCore.lifecycleStart(null)
         }
     }

@@ -28,10 +28,10 @@ cd ~/
 unzip aepsdk-messaging-android-messaging-tutorials.zip
 ```
 
-5. Change directory to the `tutorialApp-Start`
+5. Change directory to the `tutorialApp`
 
 ```
-cd aepsdk-messaging-android-messaging-tutorials/docs/tutorials/tutorialApp-Start
+cd aepsdk-messaging-android-messaging-tutorials/docs/tutorials/tutorialApp
 ```
 
 6. Open the gradle file `build.grade` in Android Studio.
