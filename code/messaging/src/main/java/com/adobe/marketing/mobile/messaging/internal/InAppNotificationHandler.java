@@ -171,7 +171,7 @@ class InAppNotificationHandler {
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
     private void processPropositions(final List<PropositionPayload> propositions) {
-        final List<JSONObject> foundRules = new ArrayList<>();
+        List<LaunchRule> parsedRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             if (proposition == null) {
                 Log.trace(LOG_TAG, SELF_TAG, "Processing aborted, null proposition found.");
@@ -201,7 +201,10 @@ class InAppNotificationHandler {
             for (final PayloadItem payloadItem : proposition.items) {
                 final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson != null) {
-                    foundRules.add(ruleJson);
+                    final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                    if (parsedRule != null && !parsedRule.isEmpty()) {
+                        parsedRules.addAll(parsedRule);
+                    }
 
                     // cache any image assets present in the current rule json's image assets array
                     cacheImageAssetsFromPayload(ruleJson);
@@ -211,9 +214,7 @@ class InAppNotificationHandler {
                 }
             }
         }
-        final JSONArray jsonArrayFromRulesList = new JSONArray(foundRules);
-
-        final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.optString(0), extensionApi);
+        
         Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
     }

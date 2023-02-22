@@ -19,16 +19,17 @@
         android:layout_height="wrap_content"
         android:text="Get Local Notification" />
 
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trigger IAM" />
+
     <Button
         android:id="@+id/btnTriggerFullscreenIAM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Trigger IAM" />
-
-    <Spinner
-        android:id="@+id/iamTypeSpinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 
     <Switch
         android:id="@+id/allowIAMSwitch"
