@@ -171,7 +171,7 @@ class InAppNotificationHandler {
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
     private void processPropositions(final List<PropositionPayload> propositions) {
-        List<LaunchRule> parsedRules = new ArrayList<>();
+        final List<LaunchRule> parsedRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             if (proposition == null) {
                 Log.trace(LOG_TAG, SELF_TAG, "Processing aborted, null proposition found.");
@@ -214,7 +214,12 @@ class InAppNotificationHandler {
                 }
             }
         }
-        
+
+        if (parsedRules.isEmpty()) {
+            Log.debug(LOG_TAG, SELF_TAG, "registerRules - Will not register rules because no rules were found in the proposition payload.", parsedRules.size());
+            return;
+        }
+
         Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
     }
