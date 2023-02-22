@@ -21,10 +21,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.View
 import android.webkit.WebView
 import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -34,6 +32,7 @@ import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
+import com.adobe.marketing.mobile.util.StringUtils
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
@@ -208,15 +207,17 @@ class MainActivity : ComponentActivity() {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
 
-        // triggerKey and triggerValue are set from the spinner item selected
         btnTriggerFullscreenIAM.setOnClickListener {
-//            val iamTrigger = Event.Builder("test", "iamtest", "iamtest").let {
-//                val eventData: HashMap<String, Any?> = hashMapOf(triggerKey to triggerValue)
-//                it.setEventData(eventData)
-//                it.build()
-//            }
-//            MobileCore.dispatchEvent(iamTrigger, null)
-            MobileCore.trackAction("samus", null)
+            val trigger = editText.text.toString()
+            if (StringUtils.isNullOrEmpty(trigger)) {
+                Toast.makeText(
+                    this@MainActivity, "Empty trigger string provided. Triggering default message.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                MobileCore.trackAction("samus", null)
+            } else {
+                MobileCore.trackAction(trigger, null)
+            }
         }
 
         btnHistoricalEvent1.setOnClickListener {
@@ -275,34 +276,34 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupSpinnerItemSelectedListener() {
-        spinner = findViewById(R.id.iamTypeSpinner)
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter.createFromResource(
-                this,
-                R.array.iam_types_array,
-                android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            // Specify the layout to use when the list of choices appears
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            // Apply the adapter to the spinner
-            spinner.adapter = adapter
-        }
-        // spinner selection handling
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-
-                // TODO: restore after generating new i18N messages for testing
-                // first check for i18n selections which are created then downloaded from AJO
-//                handleI18nSpinnerValues(parent, pos)
-//                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
-//                    return
-//                }
-                // otherwise check if a locally generated IAM was selected
-                handleGeneratedIamValues(parent, pos)
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
+//        spinner = findViewById(R.id.iamTypeSpinner)
+//        // Create an ArrayAdapter using the string array and a default spinner layout
+//        ArrayAdapter.createFromResource(
+//                this,
+//                R.array.iam_types_array,
+//                android.R.layout.simple_spinner_item
+//        ).also { adapter ->
+//            // Specify the layout to use when the list of choices appears
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//            // Apply the adapter to the spinner
+//            spinner.adapter = adapter
+//        }
+//        // spinner selection handling
+//        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+//
+//                // TODO: restore after generating new i18N messages for testing
+//                // first check for i18n selections which are created then downloaded from AJO
+////                handleI18nSpinnerValues(parent, pos)
+////                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
+////                    return
+////                }
+//                // otherwise check if a locally generated IAM was selected
+//                handleGeneratedIamValues(parent, pos)
+//            }
+//
+//            override fun onNothingSelected(parent: AdapterView<*>) {}
+//        }
     }
 
     private fun setupSwitchListeners() {

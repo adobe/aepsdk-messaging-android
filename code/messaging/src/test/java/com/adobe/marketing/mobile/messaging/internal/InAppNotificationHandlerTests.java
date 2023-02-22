@@ -87,6 +87,7 @@ public class InAppNotificationHandlerTests {
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
 
+    private ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
     private InAppNotificationHandler inAppNotificationHandler;
 
@@ -205,7 +206,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -239,7 +241,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(3)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(3, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -279,7 +282,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(2)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(3, listArgumentCaptor.getValue().size());
 
             }
         });
@@ -315,7 +319,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -350,7 +355,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -385,7 +391,7 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
             }
         });
     }
@@ -586,7 +592,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rule loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
