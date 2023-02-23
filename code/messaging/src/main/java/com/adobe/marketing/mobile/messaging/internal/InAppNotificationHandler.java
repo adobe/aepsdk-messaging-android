@@ -141,7 +141,8 @@ class InAppNotificationHandler {
 
     /**
      * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
-     * is cleared. Non empty payloads are converted into rules within {@link #processPropositions(List)}.
+     * and any loaded rules in the Messaging extension's {@link LaunchRulesEngine} are cleared.
+     * Non empty payloads are converted into rules within {@link #processPropositions(List)}.
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
@@ -154,8 +155,9 @@ class InAppNotificationHandler {
         final List<Map<String, Object>> payload = (List<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
-            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache.");
+            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache and previously loaded rules.");
             messagingCacheUtilities.clearCachedData();
+            launchRulesEngine.replaceRules(new ArrayList<>());
             return;
         }
         // save the proposition payload to the messaging cache
