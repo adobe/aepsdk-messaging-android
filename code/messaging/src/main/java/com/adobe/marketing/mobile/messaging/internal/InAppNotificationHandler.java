@@ -141,7 +141,8 @@ class InAppNotificationHandler {
 
     /**
      * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
-     * is cleared. Non empty payloads are converted into rules within {@link #processPropositions(List)}.
+     * and any loaded rules in the Messaging extension's {@link LaunchRulesEngine} are cleared.
+     * Non empty payloads are converted into rules within {@link #processPropositions(List)}.
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
@@ -154,8 +155,9 @@ class InAppNotificationHandler {
         final List<Map<String, Object>> payload = (List<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
         final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         if (propositions == null || propositions.isEmpty()) {
-            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache.");
+            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache and previously loaded rules.");
             messagingCacheUtilities.clearCachedData();
+            launchRulesEngine.replaceRules(new ArrayList<>());
             return;
         }
         // save the proposition payload to the messaging cache
@@ -171,7 +173,7 @@ class InAppNotificationHandler {
      * @param propositions A {@link List<PropositionPayload>} containing in-app message definitions
      */
     private void processPropositions(final List<PropositionPayload> propositions) {
-        final List<JSONObject> foundRules = new ArrayList<>();
+        final List<LaunchRule> parsedRules = new ArrayList<>();
         for (final PropositionPayload proposition : propositions) {
             if (proposition == null) {
                 Log.trace(LOG_TAG, SELF_TAG, "Processing aborted, null proposition found.");
@@ -201,7 +203,10 @@ class InAppNotificationHandler {
             for (final PayloadItem payloadItem : proposition.items) {
                 final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson != null) {
-                    foundRules.add(ruleJson);
+                    final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                    if (parsedRule != null && !parsedRule.isEmpty()) {
+                        parsedRules.addAll(parsedRule);
+                    }
 
                     // cache any image assets present in the current rule json's image assets array
                     cacheImageAssetsFromPayload(ruleJson);
@@ -211,9 +216,12 @@ class InAppNotificationHandler {
                 }
             }
         }
-        final JSONArray jsonArrayFromRulesList = new JSONArray(foundRules);
 
-        final List<LaunchRule> parsedRules = JSONRulesParser.parse(jsonArrayFromRulesList.optString(0), extensionApi);
+        if (parsedRules.isEmpty()) {
+            Log.debug(LOG_TAG, SELF_TAG, "registerRules - Will not register rules because no rules were found in the proposition payload.", parsedRules.size());
+            return;
+        }
+
         Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
     }

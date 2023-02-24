@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -87,6 +88,7 @@ public class InAppNotificationHandlerTests {
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
 
+    private ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
     private InAppNotificationHandler inAppNotificationHandler;
 
@@ -205,7 +207,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -239,7 +242,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(3)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(3, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -279,7 +283,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(2)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(3, listArgumentCaptor.getValue().size());
 
             }
         });
@@ -315,7 +320,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -350,7 +356,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -385,7 +392,7 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
             }
         });
     }
@@ -394,6 +401,7 @@ public class InAppNotificationHandlerTests {
     public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty() {
         runUsingMockedServiceProvider(() -> {
             // setup
+            ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
             MessageTestConfig config = new MessageTestConfig();
             config.count = 1;
             config.hasEmptyPayload = true;
@@ -413,8 +421,12 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify cache cleared
+            verify(mockMessagingCacheUtilities, times(1)).clearCachedData();
+
+            // verify previously loaded rules are cleared
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertTrue(listArgumentCaptor.getValue().isEmpty());
         });
     }
 
@@ -422,6 +434,7 @@ public class InAppNotificationHandlerTests {
     public void test_handleEdgePersonalizationNotification_IAMPayloadIsNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
+            ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
             Map<String, Object> eventData = new HashMap<>();
             eventData.put("payload", null);
             eventData.put("requestEventId", "TESTING_ID");
@@ -437,8 +450,12 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify cache cleared
+            verify(mockMessagingCacheUtilities, times(1)).clearCachedData();
+
+            // verify previously loaded rules are cleared
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertTrue(listArgumentCaptor.getValue().isEmpty());
         });
     }
 
@@ -586,7 +603,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rule loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
     }
