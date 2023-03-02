@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.0.2";
+    private static final String EXTENSION_VERSION = "2.0.3";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
