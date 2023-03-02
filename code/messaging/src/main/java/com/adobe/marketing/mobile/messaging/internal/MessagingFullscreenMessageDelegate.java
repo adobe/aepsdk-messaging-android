@@ -22,7 +22,6 @@ import com.adobe.marketing.mobile.services.ui.MessageSettings;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -166,14 +165,8 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return;
         }
 
-        // otherwise check if it is a valid url. if so, open the url with the ui service.
-        if (!UrlUtils.isValidUrl(url)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "URL is invalid: %s", url);
-            return;
-        }
-
+        // open the url with the ui service.
         final UIService uiService = ServiceProvider.getInstance().getUIService();
-
         if (uiService == null || !uiService.showUrl(url)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Could not open URL (%s)", url);
         }
