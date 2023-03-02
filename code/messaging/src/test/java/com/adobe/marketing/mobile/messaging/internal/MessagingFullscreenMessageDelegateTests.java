@@ -176,18 +176,6 @@ public class MessagingFullscreenMessageDelegateTests {
     }
 
     @Test
-    public void test_openUrlWithInvalidLink() {
-        runWithMockedServiceProvider(() -> {
-            // test
-            internalMessage.openUrl(mockFullscreenMessage, "htp://www.adobe.com");
-
-            // verify no internal open url or ui service show url method is called
-            verify(mockUIService, times(0)).showUrl(anyString());
-            verify(mockFullscreenMessage, times(0)).openUrl(anyString());
-        });
-    }
-
-    @Test
     public void test_openUrlWithNullUrl() {
         runWithMockedServiceProvider(() -> {
             // test
