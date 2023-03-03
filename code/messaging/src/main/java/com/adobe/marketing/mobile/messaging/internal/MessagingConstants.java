@@ -32,7 +32,6 @@ final class MessagingConstants {
     }
 
     final class QueryParameters {
-        static final String EXPECTED_JAVASCRIPT_PARAM = "js=";
         static final String JAVASCRIPT_QUERY_KEY = "js";
         static final String ADOBE_INAPP = "adbinapp";
         static final String PATH_CANCEL = "cancel";
@@ -40,6 +39,7 @@ final class MessagingConstants {
         static final String INTERACTION = "interaction";
         static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
+        static final String AMPERSAND_HTML_ENTITY = "&amp;";
 
         private QueryParameters() {}
     }

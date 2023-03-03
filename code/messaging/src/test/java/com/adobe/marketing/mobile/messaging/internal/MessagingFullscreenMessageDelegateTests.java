@@ -155,19 +155,22 @@ public class MessagingFullscreenMessageDelegateTests {
 
     @Test
     public void test_openUrlWithAdbDeeplink() {
-        // test
-        internalMessage.openUrl(mockFullscreenMessage, "adb_deeplink://signup");
+        // setup
+        runWithMockedServiceProvider(() -> {
+            // test
+            internalMessage.openUrl("adb_deeplink://signup");
 
-        // verify the internal open url method is called
-        verify(mockFullscreenMessage, times(1)).openUrl(urlStringCaptor.capture());
-        assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
+            // verify the ui service is called to handle the deeplink
+            verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
+            assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
+        });
     }
 
     @Test
     public void test_openUrlWithWebLink() {
         runWithMockedServiceProvider(() -> {
             // test
-            internalMessage.openUrl(mockFullscreenMessage, "https://www.adobe.com");
+            internalMessage.openUrl("https://www.adobe.com");
 
             // verify the ui service is called to show the url
             verify(mockUIService, times(1)).showUrl(urlStringCaptor.capture());
@@ -179,7 +182,7 @@ public class MessagingFullscreenMessageDelegateTests {
     public void test_openUrlWithNullUrl() {
         runWithMockedServiceProvider(() -> {
             // test
-            internalMessage.openUrl(mockFullscreenMessage, null);
+            internalMessage.openUrl(null);
 
             // verify no internal open url method is called
             verify(mockFullscreenMessage, times(0)).openUrl(urlStringCaptor.capture());
@@ -229,11 +232,33 @@ public class MessagingFullscreenMessageDelegateTests {
         when(mockMessageSettings.getParent()).thenReturn(internalMessage);
 
         // test
-        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?js=(function test() { return 'javascript value'; })();");
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=javascript&amp;link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
 
-        // verify encoded javascript evaluated by the webview object
+        // verify javascript evaluated by the webview object
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockWebView, times(1)).evaluateJavascript(stringArgumentCaptor.capture(), any(ValueCallback.class));
-        assertEquals("(function test() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
+        assertEquals("js=(function() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
+    }
+
+    @Test
+    public void test_overrideUrlLoadWithDeeplink() {
+        // setup
+        runWithMockedServiceProvider(() -> {
+            try {
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), mockWebView, mockWebViewHandler, scriptHandlerMap);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+            when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
+            when(mockMessageSettings.getParent()).thenReturn(internalMessage);
+
+            // test
+            internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=deeplink&link=scheme%3A%2F%2Fparameters%3Fparam1%3Dvalue1%26param2%3Dvalue2");
+
+            // verify deeplink loaded with the uiservice
+            ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            verify(mockUIService, times(1)).showUrl(stringArgumentCaptor.capture());
+            assertEquals("scheme://parameters?param1=value1&param2=value2", stringArgumentCaptor.getValue());
+        });
     }
 }
