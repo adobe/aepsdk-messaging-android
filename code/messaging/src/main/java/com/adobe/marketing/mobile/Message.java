@@ -18,6 +18,8 @@ import android.webkit.WebView;
 import com.adobe.marketing.mobile.messaging.internal.WebViewJavascriptInterface;
 
 public interface Message {
+    boolean autoTrack = true;
+
     /**
      * Dispatch tracking information via a Messaging request content event.
      *
@@ -79,4 +81,13 @@ public interface Message {
      * @param enabled {@code boolean} if true, tracking is done automatically for {@code Message} show, dismiss, and triggered events.
      */
     void setAutoTrack(boolean enabled);
+
+    /**
+     * Gets the {@link Message}'s auto tracking preference.
+     *
+     * @return {@code boolean} containing the auto tracking preference.
+     */
+    default boolean getAutoTrack() {
+        return autoTrack;
+    }
 }
