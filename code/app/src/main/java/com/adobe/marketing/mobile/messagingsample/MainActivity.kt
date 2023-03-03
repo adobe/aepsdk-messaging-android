@@ -18,7 +18,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -201,8 +200,6 @@ class MainActivity : ComponentActivity() {
                 Messaging.handleNotificationResponse(intent, true, null)
             }
         }
-        val action: String? = intent?.action
-        val data: Uri? = intent?.data
     }
 
     private fun setupButtonClickListeners() {
