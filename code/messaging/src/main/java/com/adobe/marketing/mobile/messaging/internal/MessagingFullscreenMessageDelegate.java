@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,13 +80,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return true;
         }
 
-        URI uri;
+        // need to html unescape ampersands present in the link
+        final String localUrlString = urlString.replace(MessagingConstants.QueryParameters.AMPERSAND_HTML_ENTITY, "&");
 
-        // we need to url encode any javascript if present in the url
-        String localUrlString = urlString;
-        if (urlString.contains(MessagingConstants.QueryParameters.EXPECTED_JAVASCRIPT_PARAM)) {
-            localUrlString = encodeJavascript(urlString);
-        }
+        URI uri;
 
         try {
             uri = new URI(localUrlString);
@@ -103,34 +100,50 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return false;
         }
 
+        // url decode the query parameters
+        String queryParams;
+        try {
+            queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
+        } catch (final UnsupportedEncodingException exception) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
+            return false;
+        }
+
         // Populate message data
-        final String query = uri.getQuery();
-        final Map<String, String> messageData = extractQueryParameters(query);
+        final Map<String, String> messageData = extractQueryParameters(queryParams);
 
         final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
         final Message message = (Message) messageSettings.getParent();
 
         if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
-            final String interaction = messageData.get(MessagingConstants.QueryParameters.INTERACTION);
+            final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingExtension class available for tracking
                 final Object messagingExtension = message.getParent();
                 if (messagingExtension != null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
             }
 
             // handle optional deep link
-            final String url = messageData.get(MessagingConstants.QueryParameters.LINK);
-            if (!StringUtils.isNullOrEmpty(url)) {
-                openUrl(fullscreenMessage, url);
-            }
-
-            // handle optional javascript code to be executed
-            final String javascript = messageData.get(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY);
-            if (!StringUtils.isNullOrEmpty(javascript)) {
-                message.evaluateJavascript(javascript);
+            String deeplink = messageData.remove(MessagingConstants.QueryParameters.LINK);
+            if (!StringUtils.isNullOrEmpty(deeplink)) {
+                // handle optional javascript code to be executed
+                if (deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
+                    message.evaluateJavascript(deeplink);
+                } else {
+                    // if we have any remaining query parameters we need to append them to the deeplink
+                    if (!messageData.isEmpty()) {
+                        for (final Map.Entry<String, String> entry : messageData.entrySet()) {
+                            deeplink = deeplink.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
+                        }
+                    }
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", deeplink);
+                    openUrl(deeplink);
+                }
             }
         }
 
@@ -147,58 +160,21 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
     // ============================================================================================
 
     /**
-     * Determines if the passed in {@code String} link is a deeplink. If not,
-     * the {@link UIService} is used to load the link.
+     * Open the passed in url using the {@link UIService}.
      *
-     * @param url {@link String} containing the deeplink to load or url to be shown
+     * @param url {@link String} containing the deeplink or url to be loaded
      */
-    void openUrl(final FullscreenMessage message, final String url) {
+    void openUrl(final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "Will not open URL, it is null or empty.");
             return;
         }
 
-        // if we have a deeplink, open the url via an intent
-        if (url.contains(MessagingConstants.QueryParameters.DEEPLINK)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Opening deeplink (%s).", url);
-            message.openUrl(url);
-            return;
-        }
-
-        // open the url with the ui service.
+        // pass the url to the ui service
         final UIService uiService = ServiceProvider.getInstance().getUIService();
         if (uiService == null || !uiService.showUrl(url)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Could not open URL (%s)", url);
         }
-    }
-
-    private String encodeJavascript(final String urlString) {
-        final String[] queryTokens = urlString.split("\\?");
-        final Map<String, String> queryParams = extractQueryParameters(queryTokens[1]);
-        final StringBuilder processedUrlStringBuilder = new StringBuilder(queryTokens[0]);
-        try {
-            final String javascript = queryParams.get(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY);
-            if (StringUtils.isNullOrEmpty(javascript)) {
-                return null;
-            }
-            String urlEncodedJavascript = URLEncoder.encode(javascript, StandardCharsets.UTF_8.toString());
-            // the UrlEncoder replaces spaces with "+". we need to manually encode "+" to "%20"".
-            urlEncodedJavascript = urlEncodedJavascript.replace("+", "%20");
-            // rebuild the string
-            queryParams.put(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY, urlEncodedJavascript);
-            int count = 0;
-            for (final Map.Entry entry : queryParams.entrySet()) {
-                if (count == 0) {
-                    processedUrlStringBuilder.append("?").append(entry.getKey()).append("=").append(entry.getValue());
-                } else {
-                    processedUrlStringBuilder.append("&").append(entry.getKey()).append("=").append(entry.getValue());
-                }
-                count++;
-            }
-        } catch (final UnsupportedEncodingException unsupportedEncodingException) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid encoding type (%s), javascript will be ignored.", StandardCharsets.UTF_8);
-        }
-        return processedUrlStringBuilder.toString();
     }
 
     private static Map<String, String> extractQueryParameters(final String queryString) {
