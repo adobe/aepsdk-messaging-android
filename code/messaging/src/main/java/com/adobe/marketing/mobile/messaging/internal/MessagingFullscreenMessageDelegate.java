@@ -130,7 +130,11 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             // handle optional deep link
             String deeplink = messageData.remove(MessagingConstants.QueryParameters.LINK);
             if (!StringUtils.isNullOrEmpty(deeplink)) {
-                if (!deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                // handle optional javascript code to be executed
+                if (deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
+                    message.evaluateJavascript(deeplink);
+                } else {
                     // if we have any remaining query parameters we need to append them to the deeplink
                     if (!messageData.isEmpty()) {
                         for (final Map.Entry<String, String> entry : messageData.entrySet()) {
@@ -139,10 +143,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
                     }
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", deeplink);
                     openUrl(deeplink);
-                } else {
-                    // handle optional javascript code to be executed
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
-                    message.evaluateJavascript(deeplink);
                 }
             }
         }
