@@ -129,19 +129,21 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
 
             // handle optional deep link
             String deeplink = messageData.remove(MessagingConstants.QueryParameters.LINK);
-            if (!StringUtils.isNullOrEmpty(deeplink) && !deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
-                // if we have any remaining query parameters we need to append them to the deeplink
-                if (!messageData.isEmpty()) {
-                    for (final Map.Entry<String, String> entry : messageData.entrySet()) {
-                        deeplink = deeplink.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
+            if (!StringUtils.isNullOrEmpty(deeplink)) {
+                if (!deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                    // if we have any remaining query parameters we need to append them to the deeplink
+                    if (!messageData.isEmpty()) {
+                        for (final Map.Entry<String, String> entry : messageData.entrySet()) {
+                            deeplink = deeplink.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
+                        }
                     }
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", deeplink);
+                    openUrl(deeplink);
+                } else {
+                    // handle optional javascript code to be executed
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
+                    message.evaluateJavascript(deeplink);
                 }
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", deeplink);
-                openUrl(deeplink);
-            } else {
-                // handle optional javascript code to be executed
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
-                message.evaluateJavascript(deeplink);
             }
         }
 
