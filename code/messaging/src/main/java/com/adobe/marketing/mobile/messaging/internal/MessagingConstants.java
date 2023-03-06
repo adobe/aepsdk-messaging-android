@@ -39,7 +39,6 @@ final class MessagingConstants {
         static final String INTERACTION = "interaction";
         static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
-        static final String AMPERSAND_HTML_ENTITY = "&amp;";
 
         private QueryParameters() {}
     }
