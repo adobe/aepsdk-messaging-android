@@ -209,9 +209,9 @@ class MainActivity : ComponentActivity() {
 
         btnTriggerFullscreenIAM.setOnClickListener {
             val trigger = editText.text.toString()
-            if (StringUtils.isNullOrEmpty(trigger)) {
+            if (StringUtils.isNullOrEmpty(trigger) || trigger == "Trigger IAM") {
                 Toast.makeText(
-                    this@MainActivity, "Empty trigger string provided. Triggering default message.",
+                    this@MainActivity, "Empty or default trigger string provided. Triggering default message.",
                     Toast.LENGTH_SHORT
                 ).show()
                 MobileCore.trackAction("samus", null)

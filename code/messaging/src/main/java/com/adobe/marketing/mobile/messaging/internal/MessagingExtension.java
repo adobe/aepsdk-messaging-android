@@ -344,7 +344,7 @@ public final class MessagingExtension extends Extension {
     public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final InternalMessage message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
         if (propositionInfo == null || MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
-            Log.trace(LOG_TAG, "%s - Unable to record an in-app message interaction, the scope details were not found for this message.", SELF_TAG);
+            Log.trace(LOG_TAG, MessagingExtension.SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");
             return;
         }
         final List<Map<String, Object>> propositions = new ArrayList<>();

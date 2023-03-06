@@ -280,6 +280,11 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         this.autoTrack = useAutoTrack;
     }
 
+    @Override
+    public boolean getAutoTrack() {
+        return autoTrack;
+    }
+
     /**
      * Sample mobile parameters payload represented by a MessageSettings object:
      {

@@ -61,7 +61,7 @@ public interface Message {
      *
      * @param suppressAutoTrack if true, tracking is not done automatically for a dismiss event
      */
-    void dismiss(boolean suppressAutoTrack);
+    void dismiss(final boolean suppressAutoTrack);
 
     /**
      * Returns the {@link Message}'s id.
@@ -78,5 +78,14 @@ public interface Message {
      *
      * @param enabled {@code boolean} if true, tracking is done automatically for {@code Message} show, dismiss, and triggered events.
      */
-    void setAutoTrack(boolean enabled);
+    void setAutoTrack(final boolean enabled);
+
+    /**
+     * Gets the {@link Message}'s auto tracking preference.
+     *
+     * @return {@code boolean} containing the auto tracking preference.
+     */
+    default boolean getAutoTrack() {
+        return true;
+    }
 }
