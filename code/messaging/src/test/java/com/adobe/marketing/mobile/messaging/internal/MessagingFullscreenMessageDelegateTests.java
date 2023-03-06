@@ -232,7 +232,7 @@ public class MessagingFullscreenMessageDelegateTests {
         when(mockMessageSettings.getParent()).thenReturn(internalMessage);
 
         // test
-        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=javascript&amp;link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss?interaction=javascript&link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
 
         // verify javascript evaluated by the webview object
         ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);

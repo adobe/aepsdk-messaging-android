@@ -80,13 +80,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return true;
         }
 
-        // need to html unescape ampersands present in the link
-        final String localUrlString = urlString.replace(MessagingConstants.QueryParameters.AMPERSAND_HTML_ENTITY, "&");
-
-        URI uri;
+        final URI uri;
 
         try {
-            uri = new URI(localUrlString);
+            uri = new URI(urlString);
         } catch (final URISyntaxException ex) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid message URI found (%s), exception is: %s.", urlString, ex.getMessage());
             return true;
@@ -101,7 +98,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         }
 
         // url decode the query parameters
-        String queryParams;
+        final String queryParams;
         try {
             queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
         } catch (final UnsupportedEncodingException exception) {
@@ -128,21 +125,21 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             }
 
             // handle optional deep link
-            String deeplink = messageData.remove(MessagingConstants.QueryParameters.LINK);
-            if (!StringUtils.isNullOrEmpty(deeplink)) {
+            String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
+            if (!StringUtils.isNullOrEmpty(link)) {
                 // handle optional javascript code to be executed
-                if (deeplink.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", deeplink);
-                    message.evaluateJavascript(deeplink);
+                if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
+                    message.evaluateJavascript(link);
                 } else {
                     // if we have any remaining query parameters we need to append them to the deeplink
                     if (!messageData.isEmpty()) {
                         for (final Map.Entry<String, String> entry : messageData.entrySet()) {
-                            deeplink = deeplink.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
+                            link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
                         }
                     }
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", deeplink);
-                    openUrl(deeplink);
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
+                    openUrl(link);
                 }
             }
         }
