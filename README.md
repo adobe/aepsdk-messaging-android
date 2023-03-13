@@ -35,7 +35,7 @@ You can modify these two variables with your own environment file id and/or assu
 
 **Run demo application**
 
-- Once you have opened the project in Android Studio (see above) and setup the configuration variables, select the `app` runnable and your favorite emulator and run the program.
+Once you have opened the project in Android Studio (see above) and setup the configuration variables, select the `app` runnable and your favorite emulator and run the program.
 
 ## Documentation
 Additional documentation for configuration and sdk usage can be found under the [Documentation](Documentation/README.md) directory.
