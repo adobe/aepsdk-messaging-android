@@ -9,7 +9,7 @@
  governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messagingsample
+package com.adobe.inapp.bugbash
 
 import android.app.Notification
 import android.app.NotificationChannel
