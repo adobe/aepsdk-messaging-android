@@ -12,28 +12,33 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
+import android.util.Log
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 
+
 class MessagingApplication : Application() {
+    private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
+    private val ASSURANCE_SESSION_LINK = "YOUR-SESSION-LINK"
 
     override fun onCreate() {
         super.onCreate()
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        Messaging.registerExtension()
-        Identity.registerExtension()
-        Edge.registerExtension()
-        Assurance.registerExtension()
-        //Assurance.startSession("YOUR-SESSION-ID")
-
-        MobileCore.start {
-            // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
+        MobileCore.registerExtensions(
+            listOf(Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION, Assurance.EXTENSION)
+        ) { o: Any? ->
+            Log.d(
+                "MainApp",
+                "Adobe Experience Platform Mobile SDK was initialized."
+            )
+            MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             MobileCore.lifecycleStart(null)
         }
+
+        Assurance.startSession(ASSURANCE_SESSION_LINK)
 
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->

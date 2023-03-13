@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -434,7 +435,6 @@ public class InAppNotificationHandlerTests {
     public void test_handleEdgePersonalizationNotification_IAMPayloadIsNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
             Map<String, Object> eventData = new HashMap<>();
             eventData.put("payload", null);
             eventData.put("requestEventId", "TESTING_ID");
@@ -450,12 +450,11 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify cache cleared
-            verify(mockMessagingCacheUtilities, times(1)).clearCachedData();
+            // verify cache not cleared
+            verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify previously loaded rules are cleared
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertTrue(listArgumentCaptor.getValue().isEmpty());
+            // verify previously loaded rules not cleared
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
         });
     }
 

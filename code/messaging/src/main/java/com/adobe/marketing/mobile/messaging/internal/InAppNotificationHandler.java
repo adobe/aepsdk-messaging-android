@@ -34,12 +34,14 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
@@ -61,9 +63,12 @@ class InAppNotificationHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final Map<String, PropositionInfo> propositionInfoMap = new HashMap<>();
     private String requestMessagesEventId;
+    private String lastProcessedRequestEventId;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
     private InternalMessage message;
+    private List<Long> loadedRuleConsequencesHashes = new ArrayList<>();
+    private boolean rulesUpdated = false;
 
     /**
      * Constructor
@@ -148,19 +153,27 @@ class InAppNotificationHandler {
      */
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = getRequestEventId(edgeResponseEvent);
+
+        // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
+//        if (lastProcessedRequestEventId != requestEventId) {
+//            messagingCacheUtilities.clearCachedData();
+//            launchRulesEngine.replaceRules(new ArrayList<>());
+//            lastProcessedRequestEventId = requestEventId;
+//        }
+
         // "TESTING_ID" used in unit and functional testing
         if (!requestMessagesEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
         }
-        final List<Map<String, Object>> payload = (List<Map<String, Object>>) edgeResponseEvent.getEventData().get(PAYLOAD);
-        final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
-        if (propositions == null || propositions.isEmpty()) {
-            Log.trace(LOG_TAG, SELF_TAG, "Payload for in-app messages was empty. Clearing local cache and previously loaded rules.");
-            messagingCacheUtilities.clearCachedData();
-            launchRulesEngine.replaceRules(new ArrayList<>());
+
+        final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
+        if (payload == null || payload.isEmpty()) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring response for personalization:decisions that contains an empty payload.");
             return;
         }
+
         // save the proposition payload to the messaging cache
+        final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
         messagingCacheUtilities.cachePropositions(propositions);
         Log.trace(LOG_TAG, SELF_TAG, "Loading in-app messages definitions from network response.");
         processPropositions(propositions);
@@ -204,26 +217,48 @@ class InAppNotificationHandler {
                 final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson != null) {
                     final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
-                    if (parsedRule != null && !parsedRule.isEmpty()) {
-                        parsedRules.addAll(parsedRule);
+                    final LaunchRule launchRule = parsedRule.get(0);
+
+                    String consequenceDetail = null;
+                    if (launchRule != null) {
+                        final List<RuleConsequence> consequenceList = launchRule.getConsequenceList();
+                        if (!consequenceList.isEmpty()) {
+                            final RuleConsequence consequence = consequenceList.get(0);
+                            if (consequence != null) {
+                                consequenceDetail = consequence.getDetail().toString();
+                            }
+                        }
                     }
 
-                    // cache any image assets present in the current rule json's image assets array
-                    cacheImageAssetsFromPayload(ruleJson);
+                    if (!StringUtils.isNullOrEmpty(consequenceDetail)) {
+                        final long hashedConsequenceDetail = StringEncoder.convertStringToDecimalHash(consequenceDetail);
+                        if (!parsedRule.isEmpty() && !loadedRuleConsequencesHashes.contains(hashedConsequenceDetail)) {
+                            parsedRules.addAll(parsedRule);
+                            // cache any image assets present in the current rule json's image assets array
+                            cacheImageAssetsFromPayload(ruleJson);
 
-                    // store reporting data for this payload for later use
-                    storePropositionInfo(getMessageId(ruleJson), proposition);
+                            // store reporting data for this payload for later use
+                            storePropositionInfo(getMessageId(ruleJson), proposition);
+
+                            // save the launch rule hash code
+                            loadedRuleConsequencesHashes.add(hashedConsequenceDetail);
+
+                            // set flag
+                            rulesUpdated = true;
+                        }
+                    }
                 }
             }
         }
 
-        if (parsedRules.isEmpty()) {
-            Log.debug(LOG_TAG, SELF_TAG, "registerRules - Will not register rules because no rules were found in the proposition payload.", parsedRules.size());
+        if (parsedRules.isEmpty() || !rulesUpdated) {
+            Log.debug(LOG_TAG, SELF_TAG, "registerRules - Will not register rules because no new rules were found in the proposition payload.");
             return;
         }
 
         Log.debug(LOG_TAG, SELF_TAG, "registerRules - registering %d rules", parsedRules.size());
         launchRulesEngine.replaceRules(parsedRules);
+        rulesUpdated = false;
     }
 
     /**

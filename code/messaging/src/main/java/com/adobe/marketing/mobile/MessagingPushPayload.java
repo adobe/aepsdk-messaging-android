@@ -254,8 +254,11 @@ public class MessagingPushPayload {
                 Log.debug(LOG_TAG, SELF_TAG, "Label is empty");
                 return null;
             }
-            final String uri = jsonObject.getString(ActionButtons.URI);
-            final String type = jsonObject.getString(ActionButtons.TYPE);
+            String uri = null;
+            final String type = jsonObject.getString(ACTION_TYPE);
+            if (type.equals(ActionButtonType.WEBURL) || type.equals(ActionButtonType.DEEPLINK)) {
+                uri = jsonObject.optString(ActionButtons.URI);
+            }
 
             Log.trace(LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
             return new ActionButton(label, uri, type);

@@ -17,26 +17,25 @@ implementation 'com.adobe.marketing.mobile:edgeidentity:2.+'
 implementation 'com.adobe.marketing.core:2.+'
 ```
 
-If you use the Messaging extension alongside the Campaign Standard extension, Campaign Standard extension version 2.0.0 or newer must be used to resolve a compatibility issue:
-
-```groovy
-implementation 'com.adobe.marketing.mobile:campaign:2.+'
-```
-
-Adding Firebase messaging sdk as it is required for using [FCM](https://firebase.google.com/docs/cloud-messaging/android/client#add_firebase_sdks_to_your_app)
-```
-implementation 'com.google.firebase:firebase-messaging:<latest-version>'
-```
-
 ### Development
 
 **Open the project**
 
 To open and run the project, open the `code/build.gradle` file in Android Studio
 
+**Set your Data Collection Environment ID and your Assurance session link**
+
+In Android Studio open the `MessagingApplication` class within the `messagingsample` project. There are two predefined variables at the beginning of the class:
+```kotlin
+private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
+private val ASSURANCE_SESSION_LINK = "YOUR-SESSION-LINK"
+```
+
+You can modify these two variables with your own environment file id and/or assurance session link if needed.
+
 **Run demo application**
-- Follow this [Firebase documentation](https://firebase.google.com/docs/cloud-messaging/android/client#add_a_firebase_configuration_file) to add the configuration file for your firebase project. 
-- Once you opened the project in Android Studio (see above), select the `app` runnable and your favorite emulator and run the program.
+
+- Once you have opened the project in Android Studio (see above) and setup the configuration variables, select the `app` runnable and your favorite emulator and run the program.
 
 ## Documentation
 Additional documentation for configuration and sdk usage can be found under the [Documentation](Documentation/README.md) directory.

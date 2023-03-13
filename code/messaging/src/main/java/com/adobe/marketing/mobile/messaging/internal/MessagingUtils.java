@@ -24,6 +24,8 @@ import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +34,6 @@ import java.util.Map;
 class MessagingUtils {
 
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
-        if (payloads == null || payloads.size() == 0) {
-            return null;
-        }
-
         List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
