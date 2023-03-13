@@ -255,7 +255,7 @@ public class MessagingPushPayload {
                 return null;
             }
             String uri = null;
-            final String type = jsonObject.getString(ACTION_TYPE);
+            final String type = jsonObject.getString(ActionButtons.TYPE);
             if (type.equals(ActionButtonType.WEBURL) || type.equals(ActionButtonType.DEEPLINK)) {
                 uri = jsonObject.optString(ActionButtons.URI);
             }
