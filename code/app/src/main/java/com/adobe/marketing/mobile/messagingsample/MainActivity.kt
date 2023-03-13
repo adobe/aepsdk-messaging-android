@@ -83,10 +83,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupButtonClickListeners() {
-        btnGetLocalNotification.setOnClickListener {
-            scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
-        }
-
         btnTriggerFullscreenIAM.setOnClickListener {
             val trigger = editText.text.toString()
             if (StringUtils.isNullOrEmpty(trigger) || trigger == "Trigger IAM") {
