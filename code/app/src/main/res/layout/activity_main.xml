@@ -17,26 +17,13 @@
         android:id="@+id/editText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Trigger IAM" />
+        android:hint="@string/custom_action_word" />
 
     <Button
         android:id="@+id/btnTriggerFullscreenIAM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Trigger IAM" />
-
-    <Switch
-        android:id="@+id/allowIAMSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="Allow IAM" />
-
-    <Button
-        android:id="@+id/btnTriggerLastIAM"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Trigger Most Recent IAM" />
 
     <Button
         android:id="@+id/btnRefreshInAppMessages"

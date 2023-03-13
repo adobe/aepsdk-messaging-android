@@ -65,12 +65,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        MobileCore.setMessagingDelegate(customMessagingDelegate)
+        //MobileCore.setMessagingDelegate(customMessagingDelegate)
 
         // setup ui interaction listeners
         setupButtonClickListeners()
-        // setupSpinnerItemSelectedListener()
-        setupSwitchListeners()
 
         // handle push notification interactions
         intent?.extras?.apply {
@@ -97,27 +95,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        btnTriggerLastIAM.setOnClickListener {
-            Toast.makeText(
-                this@MainActivity, "Showing last message.",
-                Toast.LENGTH_SHORT
-            ).show()
-            customMessagingDelegate.getLastTriggeredMessage()?.show()
-        }
-
         btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
-        }
-    }
-
-    private fun setupSwitchListeners() {
-        allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
-            val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
-            Toast.makeText(
-                this@MainActivity, message,
-                Toast.LENGTH_SHORT
-            ).show()
-            customMessagingDelegate.showMessages = isChecked
         }
     }
 
