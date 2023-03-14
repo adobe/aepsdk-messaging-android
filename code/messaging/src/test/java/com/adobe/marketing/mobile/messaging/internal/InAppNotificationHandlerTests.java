@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -364,6 +365,7 @@ public class InAppNotificationHandlerTests {
 
     @Test
     public void test_handleEdgePersonalizationNotification_IAMPayloadMissingMessageDetail() {
+        ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
@@ -392,13 +394,13 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
                 // verify rules loaded
-                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(anyList());
             }
         });
     }
 
     @Test
-    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty() {
+    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty_Then_PayloadDropped() {
         runUsingMockedServiceProvider(() -> {
             // setup
             ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
@@ -421,12 +423,11 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify cache cleared
-            verify(mockMessagingCacheUtilities, times(1)).clearCachedData();
+            // verify cache not cleared
+            verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify previously loaded rules are cleared
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertTrue(listArgumentCaptor.getValue().isEmpty());
+            // verify previously loaded rules are not cleared
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
         });
     }
 
@@ -450,12 +451,11 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify cache cleared
-            verify(mockMessagingCacheUtilities, times(1)).clearCachedData();
+            // verify cache not cleared
+            verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify previously loaded rules are cleared
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertTrue(listArgumentCaptor.getValue().isEmpty());
+            // verify previously loaded rules not cleared
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
         });
     }
 
@@ -477,8 +477,8 @@ public class InAppNotificationHandlerTests {
             // test
             inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify proposition cached
-            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+            // verify proposition not cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -489,7 +489,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handlePersonalizationPayload_PayloadMissingScope() {
+    public void test_handlePersonalizationPayload_PayloadMissingAppSurface() {
         runUsingMockedServiceProvider(() -> {
             // setup
             MessageTestConfig config = new MessageTestConfig();
@@ -505,8 +505,8 @@ public class InAppNotificationHandlerTests {
             // test
             inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify proposition cached
-            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+            // verify no proposition cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -533,8 +533,8 @@ public class InAppNotificationHandlerTests {
             // test
             inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify proposition cached
-            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+            // verify no proposition cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -561,8 +561,8 @@ public class InAppNotificationHandlerTests {
             // test
             inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify proposition cached
-            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+            // verify no proposition cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -576,7 +576,7 @@ public class InAppNotificationHandlerTests {
     // inAppNotificationHandler load cached propositions on instantiation
     // ========================================================================================
     @Test
-    public void test_cachedPropositions_ValidPayload() {
+    public void test_cachedPropositions_cacheLoadedOnInAppNotificationHandlerConstruction() {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
@@ -603,43 +603,8 @@ public class InAppNotificationHandlerTests {
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
                 // verify rule loaded
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                verify(mockMessagingRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
                 assertEquals(1, listArgumentCaptor.getValue().size());
-            }
-        });
-    }
-
-    @Test
-    public void test_cachedPropositions_nonMatchingScope() {
-        runUsingMockedServiceProvider(() -> {
-            // setup
-            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(true);
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
-                CacheService cacheService = new FileCacheService();
-                when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
-                MessageTestConfig config = new MessageTestConfig();
-                config.count = 1;
-                config.noValidAppSurfaceInPayload = true;
-                config.nonMatchingAppSurfaceInPayload = true;
-                List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
-                when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
-
-                // test
-                inAppNotificationHandler = new InAppNotificationHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
-
-                // verify proposition not cached as we are loading a cached proposition
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
-
-                // verify no assets cached
-                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
-
-                // verify no rules loaded
-                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
             }
         });
     }

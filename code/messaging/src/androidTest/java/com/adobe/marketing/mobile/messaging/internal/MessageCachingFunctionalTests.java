@@ -82,7 +82,7 @@ public class MessageCachingFunctionalTests {
     @After
     public void tearDown() {
         // clear cache and loaded rules
-        messagingCacheUtilities.clearCachedData();
+        messagingCacheUtilities.cachePropositions(null);
     }
 
     // --------------------------------------------------------------------------------------------

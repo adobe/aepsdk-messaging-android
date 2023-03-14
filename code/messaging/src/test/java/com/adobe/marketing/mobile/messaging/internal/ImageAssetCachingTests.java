@@ -126,6 +126,38 @@ public class ImageAssetCachingTests {
     }
 
     @Test
+    public void testCacheImageAssets_MissingAssetCacheDirectory_Then_AssetsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(null);
+            messagingCacheUtilities = new MessagingCacheUtilities();
+            final List<String> imageAssets = new ArrayList<>();
+            imageAssets.add(IMAGE_URL);
+            imageAssets.add(IMAGE_URL2);
+            // test
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+            // verify no network requests made because the asset cache is not available
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+        });
+    }
+
+    @Test
+    public void testCacheImageAssets_CacheServiceNotAvailable_Then_AssetsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            when(mockServiceProvider.getCacheService()).thenReturn(null);
+            messagingCacheUtilities = new MessagingCacheUtilities();
+            final List<String> imageAssets = new ArrayList<>();
+            imageAssets.add(IMAGE_URL);
+            imageAssets.add(IMAGE_URL2);
+            // test
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+            // verify no network requests made because the asset cache is not available
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+        });
+    }
+
+    @Test
     public void testCacheImageAssets_EmptyImageAssetListDoesNotTriggerRemoteAssetFetch() {
         // setup
         setupServiceProviderMockAndRunTest(() -> {

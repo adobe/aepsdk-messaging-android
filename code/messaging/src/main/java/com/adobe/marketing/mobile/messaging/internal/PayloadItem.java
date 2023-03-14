@@ -17,6 +17,8 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.P
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCHEMA;
 
+import com.adobe.marketing.mobile.util.DataReader;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -26,9 +28,9 @@ class PayloadItem implements Serializable {
     final ItemData data;
 
     PayloadItem(final Map<String, Object> payloadItemMap) {
-        id = (String) payloadItemMap.get(ID);
-        schema = (String) payloadItemMap.get(SCHEMA);
-        final Map<String, String> dataMap = (Map<String, String>) payloadItemMap.get(DATA);
-        data = new ItemData(dataMap.get(ID), dataMap.get(CONTENT));
+        id = DataReader.optString(payloadItemMap, ID, "");
+        schema = DataReader.optString(payloadItemMap, SCHEMA, "");
+        final Map<String, String> dataMap = DataReader.optTypedMap(String.class, payloadItemMap, DATA, null);
+        data = new ItemData(DataReader.optString(dataMap, ID, ""), DataReader.optString(dataMap, CONTENT, ""));
     }
 }

@@ -217,10 +217,14 @@ public class MessagingPushPayload {
         }
 
         switch (type) {
-            case ActionButtonType.DEEPLINK: return ActionType.DEEPLINK;
-            case ActionButtonType.WEBURL: return ActionType.WEBURL;
-            case ActionButtonType.DISMISS: return ActionType.DISMISS;
-            case ActionButtonType.OPENAPP: return ActionType.OPENAPP;
+            case ActionButtonType.DEEPLINK:
+                return ActionType.DEEPLINK;
+            case ActionButtonType.WEBURL:
+                return ActionType.WEBURL;
+            case ActionButtonType.DISMISS:
+                return ActionType.DISMISS;
+            case ActionButtonType.OPENAPP:
+                return ActionType.OPENAPP;
         }
 
         return ActionType.NONE;
@@ -234,7 +238,7 @@ public class MessagingPushPayload {
         List<ActionButton> actionButtonList = new ArrayList<>(3);
         try {
             final JSONArray jsonArray = new JSONArray(actionButtons);
-            for (int i=0; i < jsonArray.length(); i++) {
+            for (int i = 0; i < jsonArray.length(); i++) {
                 final JSONObject jsonObject = jsonArray.getJSONObject(i);
                 final ActionButton button = getActionButton(jsonObject);
                 if (button == null) continue;
@@ -254,8 +258,11 @@ public class MessagingPushPayload {
                 Log.debug(LOG_TAG, SELF_TAG, "Label is empty");
                 return null;
             }
-            final String uri = jsonObject.getString(ActionButtons.URI);
+            String uri = null;
             final String type = jsonObject.getString(ActionButtons.TYPE);
+            if (type.equals(ActionButtonType.WEBURL) || type.equals(ActionButtonType.DEEPLINK)) {
+                uri = jsonObject.optString(ActionButtons.URI);
+            }
 
             Log.trace(LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
             return new ActionButton(label, uri, type);

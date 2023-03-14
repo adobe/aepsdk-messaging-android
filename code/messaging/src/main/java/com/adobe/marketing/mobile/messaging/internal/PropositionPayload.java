@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +23,8 @@ class PropositionPayload implements Serializable {
 
     private PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
         this.propositionInfo = propositionInfo;
-        final Iterator iterator = items.listIterator();
-        while (iterator.hasNext()) {
-            final PayloadItem payloadItem = new PayloadItem((Map<String, Object>) iterator.next());
+        for (final Map<String, Object> item : items) {
+            final PayloadItem payloadItem = new PayloadItem(item);
             this.items.add(payloadItem);
         }
     }

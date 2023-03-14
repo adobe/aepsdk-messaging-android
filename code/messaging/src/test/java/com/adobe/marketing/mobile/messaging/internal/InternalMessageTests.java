@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -51,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -290,6 +293,7 @@ public class InternalMessageTests {
             verify(mockUIService, times(1)).createFullscreenMessage(anyString(), any(FullscreenMessageDelegate.class), anyBoolean(), any(MessageSettings.class));
         });
     }
+
     // ========================================================================================
     // Message getId
     // ========================================================================================
@@ -309,6 +313,27 @@ public class InternalMessageTests {
             assertEquals("123456789", id);
         });
     }
+
+    // ========================================================================================
+    // Message set/getAutoTrack
+    // ========================================================================================
+    @Test
+    public void test_messageSetGetAutoTrack() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>());
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+            // test
+            internalMessage.setAutoTrack(false);
+
+            // verify
+            assertFalse(internalMessage.getAutoTrack());
+        });
+    }
+
     // ========================================================================================
     // Message show, dismiss, and trigger tests
     // ========================================================================================
