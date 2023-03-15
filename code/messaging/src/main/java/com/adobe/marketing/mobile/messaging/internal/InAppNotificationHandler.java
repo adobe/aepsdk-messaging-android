@@ -33,7 +33,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
-import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -251,7 +250,10 @@ class InAppNotificationHandler {
 
         if (persistChanges) {
             // save the proposition payload to the messaging cache
-            messagingCacheUtilities.cachePropositions(inMemoryPropositions);
+            if(!propositions.isEmpty()) {
+                inMemoryPropositions.addAll(propositions);
+                messagingCacheUtilities.cachePropositions(inMemoryPropositions);
+            }
         } else {
             inMemoryPropositions.addAll(propositions);
         }
@@ -355,5 +357,11 @@ class InAppNotificationHandler {
             return;
         }
         messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
+    }
+
+    // for testing, the size of the proposition info map should always mirror the number of rules currently loaded
+    @VisibleForTesting
+    int getRuleCount() {
+        return propositionInfo.size();
     }
 }

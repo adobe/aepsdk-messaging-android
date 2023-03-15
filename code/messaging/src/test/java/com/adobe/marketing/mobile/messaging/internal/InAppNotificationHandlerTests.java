@@ -265,6 +265,9 @@ public class InAppNotificationHandlerTests {
                 // verify new rules were added and not replaced as the request event id is the same for both personalization events
                 verify(mockMessagingRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
                 assertEquals(4, listArgumentCaptor.getValue().size());
+
+                // verify 7 rules in total have been loaded
+                assertEquals(7, inAppNotificationHandler.getRuleCount());
             }
         });
     }
