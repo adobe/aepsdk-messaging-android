@@ -13,12 +13,13 @@ package com.adobe.inapp.bugbash
 
 import android.app.Application
 import android.util.Log
+import androidx.multidex.MultiDexApplication
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 
 
-class MessagingApplication : Application() {
+class MessagingApplication : MultiDexApplication() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/a93ff37dae6c/launch-97cd3b98c5bc-development"
     private val ASSURANCE_SESSION_LINK = "YOUR-SESSION-LINK"
 
