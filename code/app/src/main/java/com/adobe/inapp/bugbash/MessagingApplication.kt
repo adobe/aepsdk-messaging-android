@@ -29,7 +29,7 @@ class MessagingApplication : MultiDexApplication() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
         MobileCore.registerExtensions(
-            listOf(Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION, Assurance.EXTENSION)
+            listOf(Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION, Assurance.EXTENSION, Lifecycle.EXTENSION)
         ) { o: Any? ->
             Log.d(
                 "MainApp",
