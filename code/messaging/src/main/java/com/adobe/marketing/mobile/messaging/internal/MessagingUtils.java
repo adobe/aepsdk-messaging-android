@@ -22,7 +22,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.S
 
 import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.DeviceInforming;
-import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -35,12 +34,14 @@ import java.util.Map;
 class MessagingUtils {
 
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) throws Exception {
-        List<PropositionPayload> propositionPayloads = new ArrayList<>();
+        final List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
                 final PropositionInfo propositionInfo = PropositionInfo.create(payload);
                 final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
-                propositionPayloads.add(propositionPayload);
+                if (propositionPayload != null) {
+                    propositionPayloads.add(propositionPayload);
+                }
             }
         }
         return propositionPayloads;

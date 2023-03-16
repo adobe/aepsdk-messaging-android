@@ -458,7 +458,7 @@ public class InAppNotificationHandlerTests {
     }
 
     @Test
-    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty_Then_PayloadDropped() {
+    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty_Then_CachedPropositionsAndLoadedRulesCleared() {
         runUsingMockedServiceProvider(() -> {
             // setup
             MessageTestConfig config = new MessageTestConfig();
@@ -474,8 +474,8 @@ public class InAppNotificationHandlerTests {
             // test
             inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify no proposition cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            // verify cached propositions cleared
+            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(eq(null));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -483,8 +483,9 @@ public class InAppNotificationHandlerTests {
             // verify cache not cleared
             verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify previously loaded rules are not cleared
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 
@@ -511,8 +512,9 @@ public class InAppNotificationHandlerTests {
             // verify cache not cleared
             verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify previously loaded rules not cleared
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 

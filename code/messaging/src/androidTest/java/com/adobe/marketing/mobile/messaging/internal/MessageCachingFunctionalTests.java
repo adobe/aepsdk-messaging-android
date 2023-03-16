@@ -89,7 +89,7 @@ public class MessageCachingFunctionalTests {
     // Caching received message payload
     // --------------------------------------------------------------------------------------------
     @Test
-    public void testMessageCaching_ReceivedMessagePayload() {
+    public void testMessageCaching_ReceivedMessagePayload() throws Exception {
         // dispatch edge response event containing a messaging payload
         MessagingTestUtils.dispatchEdgePersonalizationEventWithMessagePayload("personalization_payload.json");
         // wait for event and rules processing

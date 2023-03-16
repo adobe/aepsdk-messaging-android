@@ -166,22 +166,16 @@ class InAppNotificationHandler {
         }
 
         final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
-        if (payload == null || payload.isEmpty()) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring response for personalization:decisions that contains an empty payload.");
-            return;
-        }
 
         // convert the payload into a list of PropositionPayload(s)
-        final List<PropositionPayload> propositions;
+        List<PropositionPayload> propositions = null;
         try {
             propositions = MessagingUtils.getPropositionPayloads(payload);
         } catch (final Exception exception) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
-            return;
         }
 
         final String appSurface = getAppSurface();
-
         Log.trace(LOG_TAG, SELF_TAG, "Loading in-app message definitions from personalization:decisions network response.");
         processPropositions(propositions, clearExistingRules, true, appSurface);
     }
@@ -199,36 +193,34 @@ class InAppNotificationHandler {
         final List<LaunchRule> parsedRules = new ArrayList<>();
         final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>();
 
-        for (final PropositionPayload proposition : propositions) {
-            if (proposition == null) {
-                continue;
-            }
-
-            if (proposition.propositionInfo != null && !expectedScope.equals(proposition.propositionInfo.scope)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match expected scope (%s).", proposition.propositionInfo.scope, expectedScope);
-                continue;
-            }
-
-            for (final PayloadItem payloadItem : proposition.items) {
-                final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
-                if (ruleJson == null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
+        if (propositions != null && !propositions.isEmpty()) {
+            for (final PropositionPayload proposition : propositions) {
+                if (proposition.propositionInfo != null && !expectedScope.equals(proposition.propositionInfo.scope)) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match expected scope (%s).", proposition.propositionInfo.scope, expectedScope);
                     continue;
                 }
 
-                final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
-                if (parsedRule == null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
-                    continue;
+                for (final PayloadItem payloadItem : proposition.items) {
+                    final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
+                    if (ruleJson == null) {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
+                        continue;
+                    }
+
+                    final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                    if (parsedRule == null) {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
+                        continue;
+                    }
+
+                    // cache any image assets present in the current rule json's image assets array
+                    cacheImageAssetsFromPayload(ruleJson);
+
+                    // store reporting data for this payload for later use
+                    tempPropositionInfo.put(getMessageId(ruleJson), proposition.propositionInfo);
+
+                    parsedRules.add(parsedRule.get(0));
                 }
-
-                // cache any image assets present in the current rule json's image assets array
-                cacheImageAssetsFromPayload(ruleJson);
-
-                // store reporting data for this payload for later use
-                tempPropositionInfo.put(getMessageId(ruleJson), proposition.propositionInfo);
-
-                parsedRules.add(parsedRule.get(0));
             }
         }
 

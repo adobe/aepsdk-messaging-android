@@ -83,12 +83,11 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope_details.json"));
         // test
         try {
-            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+            // verify proposition payload failed to be created
+            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        // verify proposition payload failed to be created
-        assertNull(propositionPayload);
     }
 
     @Test
@@ -98,12 +97,11 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope.json"));
         // test
         try {
-            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+            // verify proposition payload failed to be created
+            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        // verify proposition payload failed to be created
-        assertNull(propositionPayload);
     }
 
     @Test
@@ -113,12 +111,11 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_items.json"));
         // test
         try {
-            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+            // verify proposition payload failed to be created
+            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        // verify proposition payload failed to be created
-        assertNull(propositionPayload);
     }
 
     @Test
@@ -128,11 +125,10 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_id.json"));
         // test
         try {
-            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+            // verify proposition payload failed to be created
+            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
-        // verify proposition payload failed to be created
-        assertNull(propositionPayload);
     }
 }
