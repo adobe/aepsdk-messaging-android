@@ -146,7 +146,7 @@ class InAppNotificationHandler {
     /**
      * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
      * and any loaded rules in the Messaging extension's {@link LaunchRulesEngine} are cleared.
-     * Non empty payloads are converted into rules within {@link #processPropositions(List, boolean, boolean, String)} )}.
+     * Non-empty payloads are converted into rules within {@link #processPropositions(List, boolean, boolean, String)} )}.
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
@@ -158,25 +158,6 @@ class InAppNotificationHandler {
             return;
         }
 
-        final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
-        if (payload == null || payload.isEmpty()) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring response for personalization:decisions that contains an empty payload.");
-            return;
-        }
-
-        // convert the payload into a list of PropositionPayload
-        final List<PropositionPayload> propositions = MessagingUtils.getPropositionPayloads(payload);
-
-        // quick out if we have a scope (implying payload is not empty) and the scope doesn't match our app surface
-        final String appSurface = getAppSurface();
-        Log.trace(LOG_TAG, SELF_TAG, "Using the application identifier (%s) to validate the notification payload.", appSurface);
-        final String scope = MessagingUtils.getScope(propositions);
-        Log.debug(LOG_TAG, SELF_TAG, "IAM payload contained the app surface: (%s)", scope);
-        if (!StringUtils.isNullOrEmpty(scope) && !scope.equals(appSurface)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Ignoring response for personalization:decisions where the scope does not match the surface for in-app messages.");
-            return;
-        }
-
         // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
         boolean clearExistingRules = false;
         if (lastProcessedRequestEventId != requestEventId) {
@@ -184,7 +165,24 @@ class InAppNotificationHandler {
             lastProcessedRequestEventId = requestEventId;
         }
 
-        Log.trace(LOG_TAG, SELF_TAG, "Loading in-app messages definitions from network response.");
+        final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
+        if (payload == null || payload.isEmpty()) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring response for personalization:decisions that contains an empty payload.");
+            return;
+        }
+
+        // convert the payload into a list of PropositionPayload(s)
+        final List<PropositionPayload> propositions;
+        try {
+            propositions = MessagingUtils.getPropositionPayloads(payload);
+        } catch (final Exception exception) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
+            return;
+        }
+
+        final String appSurface = getAppSurface();
+
+        Log.trace(LOG_TAG, SELF_TAG, "Loading in-app message definitions from personalization:decisions network response.");
         processPropositions(propositions, clearExistingRules, true, appSurface);
     }
 
@@ -202,19 +200,13 @@ class InAppNotificationHandler {
         final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>();
 
         for (final PropositionPayload proposition : propositions) {
-            if (proposition != null && proposition.propositionInfo != null && !expectedScope.equals(proposition.propositionInfo.scope)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match expected scope (%s).", proposition.propositionInfo.scope, expectedScope);
+            if (proposition == null) {
                 continue;
             }
 
-            if (proposition == null) {
-                Log.trace(LOG_TAG, SELF_TAG, "processPropositions - Processing aborted, null proposition found.");
-                return;
-            }
-
-            if (proposition.propositionInfo == null) {
-                Log.trace(LOG_TAG, SELF_TAG, "processPropositions - The proposition info is invalid. The proposition payload will be ignored.");
-                return;
+            if (proposition.propositionInfo != null && !expectedScope.equals(proposition.propositionInfo.scope)) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match expected scope (%s).", proposition.propositionInfo.scope, expectedScope);
+                continue;
             }
 
             for (final PayloadItem payloadItem : proposition.items) {
@@ -223,7 +215,13 @@ class InAppNotificationHandler {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
                     continue;
                 }
+
                 final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                if (parsedRule == null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
+                    continue;
+                }
+
                 // cache any image assets present in the current rule json's image assets array
                 cacheImageAssetsFromPayload(ruleJson);
 
@@ -239,18 +237,18 @@ class InAppNotificationHandler {
             messagingCacheUtilities.cachePropositions(null);
             propositionInfo = tempPropositionInfo;
             launchRulesEngine.replaceRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine.", parsedRules.size());
+            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), expectedScope);
         } else if (!parsedRules.isEmpty()) {
             propositionInfo.putAll(tempPropositionInfo);
             launchRulesEngine.addRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine.", parsedRules.size());
+            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), expectedScope);
         } else {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring request to load in-app messages for scope %s. The propositions parameter provided was empty.", expectedScope);
         }
 
         if (persistChanges) {
             // save the proposition payload to the messaging cache
-            if (!propositions.isEmpty()) {
+            if (!parsedRules.isEmpty()) {
                 inMemoryPropositions.addAll(propositions);
                 messagingCacheUtilities.cachePropositions(inMemoryPropositions);
             }
@@ -277,7 +275,7 @@ class InAppNotificationHandler {
 
     private String getAppSurface() {
         final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
-        return StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
+        return StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + packageName;
     }
 
     /**

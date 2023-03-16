@@ -444,14 +444,15 @@ public class InAppNotificationHandlerTests {
                 // test
                 inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
 
-                // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                // verify proposition not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
                 // verify no assets cached
                 verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-                // verify rules replaced
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(anyList());
+                // verify empty rules replaced
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(0, listArgumentCaptor.getValue().size());
             }
         });
     }
@@ -539,8 +540,9 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 
@@ -567,8 +569,9 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 
@@ -595,8 +598,9 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 
@@ -623,8 +627,9 @@ public class InAppNotificationHandlerTests {
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify no rules loaded
-            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
+            // verify empty rules replaced
+            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+            assertEquals(0, listArgumentCaptor.getValue().size());
         });
     }
 
@@ -646,7 +651,12 @@ public class InAppNotificationHandlerTests {
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 5;
-                List<PropositionPayload> payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
+                List<PropositionPayload> payload = null;
+                try {
+                    payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
+                } catch (Exception e) {
+                    fail(e.getMessage());
+                }
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test

@@ -18,6 +18,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.P
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCHEMA;
 
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -27,10 +28,13 @@ class PayloadItem implements Serializable {
     final String schema;
     final ItemData data;
 
-    PayloadItem(final Map<String, Object> payloadItemMap) {
-        id = DataReader.optString(payloadItemMap, ID, "");
-        schema = DataReader.optString(payloadItemMap, SCHEMA, "");
-        final Map<String, String> dataMap = DataReader.optTypedMap(String.class, payloadItemMap, DATA, null);
-        data = new ItemData(DataReader.optString(dataMap, ID, ""), DataReader.optString(dataMap, CONTENT, ""));
+    PayloadItem(final Map<String, Object> payloadItemMap) throws Exception {
+        id = DataReader.getString(payloadItemMap, ID);
+        schema = DataReader.getString(payloadItemMap, SCHEMA);
+        final Map<String, String> dataMap = DataReader.getTypedMap(String.class, payloadItemMap, DATA);
+        data = new ItemData(DataReader.getString(dataMap, ID), DataReader.getString(dataMap, CONTENT));
+        if (StringUtils.isNullOrEmpty(id) || StringUtils.isNullOrEmpty(schema) || data == null) {
+            throw new Exception("id, schema, and data are required for constructing PayloadItem objects.");
+        }
     }
 }

@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +28,10 @@ class ItemData implements Serializable {
     final String id;
     final String content;
 
-    ItemData(final String id, final String content) {
+    ItemData(final String id, final String content) throws Exception {
+        if (StringUtils.isNullOrEmpty(id) || StringUtils.isNullOrEmpty(content)) {
+            throw new Exception("id and content are required for constructing ItemData objects.");
+        }
         this.id = id;
         this.content = content;
     }

@@ -33,15 +33,18 @@ class PropositionInfo implements Serializable {
     final String activityId;
 
 
-    private PropositionInfo(final Map<String, Object> propositionInfoMap) {
-        id = DataReader.optString(propositionInfoMap, ID, "");
-        scope = DataReader.optString(propositionInfoMap, SCOPE, "");
-        scopeDetails = DataReader.optTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS, null);
+    private PropositionInfo(final Map<String, Object> propositionInfoMap) throws Exception {
+        id = DataReader.getString(propositionInfoMap, ID);
+        scope = DataReader.getString(propositionInfoMap, SCOPE);
+        if (StringUtils.isNullOrEmpty(id) || StringUtils.isNullOrEmpty(scope)) {
+            throw new Exception("id and scope are required for constructing PropositionInfo objects.");
+        }
+        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             correlationId = "";
             activityId = "";
         } else {
-            correlationId = DataReader.optString(scopeDetails, CORRELATION_ID, "");
+            correlationId = DataReader.getString(scopeDetails, CORRELATION_ID);
             final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, ACTIVITY, null);
             if (MapUtils.isNullOrEmpty(activityMap)) {
                 activityId = "";
@@ -51,14 +54,14 @@ class PropositionInfo implements Serializable {
         }
     }
 
-    static PropositionInfo create(final Map<String, Object> propositionInfoMap) {
-        if (StringUtils.isNullOrEmpty(DataReader.optString(propositionInfoMap, ID, ""))) {
+    static PropositionInfo create(final Map<String, Object> propositionInfoMap) throws Exception {
+        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, ID))) {
             return null;
         }
-        if (StringUtils.isNullOrEmpty(DataReader.optString(propositionInfoMap, SCOPE, ""))) {
+        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, SCOPE))) {
             return null;
         }
-        if (MapUtils.isNullOrEmpty(DataReader.optTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS, null))) {
+        if (MapUtils.isNullOrEmpty(DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS))) {
             return null;
         }
         return new PropositionInfo(propositionInfoMap);

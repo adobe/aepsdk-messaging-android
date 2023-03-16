@@ -52,12 +52,12 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     private final Handler webViewHandler;
     private final String id;
     private final MessagingExtension messagingExtension;
-    // package private
-    PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
-    Map<String, Object> details;
     private FullscreenMessage aepMessage;
     private WebView webView;
     private boolean autoTrack = true;
+    // package private
+    PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+    Map<String, Object> details;
 
     /**
      * Constructor.

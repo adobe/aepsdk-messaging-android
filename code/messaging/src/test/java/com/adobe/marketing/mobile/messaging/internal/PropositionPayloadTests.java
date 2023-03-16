@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import com.adobe.marketing.mobile.messaging.internal.ItemData;
 import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
@@ -37,7 +38,11 @@ public class PropositionPayloadTests {
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
         // test
-        propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        try {
+            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
         // verify proposition info
         assertEquals("activityId", propositionPayload.propositionInfo.activityId);
         assertEquals("correlationID", propositionPayload.propositionInfo.correlationId);
@@ -77,7 +82,11 @@ public class PropositionPayloadTests {
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope_details.json"));
         // test
-        propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        try {
+            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
         // verify proposition payload failed to be created
         assertNull(propositionPayload);
     }
@@ -88,7 +97,11 @@ public class PropositionPayloadTests {
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope.json"));
         // test
-        propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        try {
+            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
         // verify proposition payload failed to be created
         assertNull(propositionPayload);
     }
@@ -99,7 +112,11 @@ public class PropositionPayloadTests {
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_items.json"));
         // test
-        propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        try {
+            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
         // verify proposition payload failed to be created
         assertNull(propositionPayload);
     }
@@ -110,7 +127,11 @@ public class PropositionPayloadTests {
         final List<Map<String, Object>> testPayload = new ArrayList<>();
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_id.json"));
         // test
-        propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        try {
+            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
         // verify proposition payload failed to be created
         assertNull(propositionPayload);
     }

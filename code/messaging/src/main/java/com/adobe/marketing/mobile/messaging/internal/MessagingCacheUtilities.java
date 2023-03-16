@@ -124,9 +124,10 @@ final class MessagingCacheUtilities {
      * @param propositionPayload the {@link List<PropositionPayload>} containing the message payload to be cached.
      */
     void cachePropositions(final List<PropositionPayload> propositionPayload) {
-        // clean any existing cached files first if propositionPayload is null or empty
+        // clean any existing cached propositions first if propositionPayload is null or empty
         if (propositionPayload == null || propositionPayload.isEmpty()) {
-            clearCachedData();
+            cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
             return;
         }
 
