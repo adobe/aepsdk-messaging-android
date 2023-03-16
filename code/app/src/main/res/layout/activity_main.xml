@@ -23,7 +23,7 @@
         android:id="@+id/editText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Trigger IAM" />
+        android:hint="iam trigger word" />
 
     <Button
         android:id="@+id/btnTriggerFullscreenIAM"

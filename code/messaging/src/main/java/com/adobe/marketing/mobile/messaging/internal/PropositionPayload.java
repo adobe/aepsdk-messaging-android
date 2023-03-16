@@ -12,22 +12,27 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import com.adobe.marketing.mobile.services.Log;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 class PropositionPayload implements Serializable {
+    private final static String SELF_TAG = "PropositionPayload";
     final PropositionInfo propositionInfo;
     final List<PayloadItem> items = new ArrayList<>();
 
     private PropositionPayload(final PropositionInfo propositionInfo, final List<Map<String, Object>> items) {
         this.propositionInfo = propositionInfo;
-        final Iterator iterator = items.listIterator();
-        while (iterator.hasNext()) {
-            final PayloadItem payloadItem = new PayloadItem((Map<String, Object>) iterator.next());
-            this.items.add(payloadItem);
+        for (final Map<String, Object> item : items) {
+            try {
+                PayloadItem payloadItem = new PayloadItem(item);
+                this.items.add(payloadItem);
+            } catch (final Exception exception) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create a PayloadItem, an exception occurred: %s.", exception.getLocalizedMessage());
+            }
         }
     }
 

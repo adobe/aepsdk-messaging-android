@@ -51,10 +51,10 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
     private final String id;
+    private final MessagingExtension messagingExtension;
     private FullscreenMessage aepMessage;
     private WebView webView;
     private boolean autoTrack = true;
-    private MessagingExtension messagingExtension;
     // package private
     PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
     Map<String, Object> details;
@@ -107,7 +107,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
-        final String html = (String) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+        final String html = DataReader.optString(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, null);
         if (StringUtils.isNullOrEmpty(html)) {
             Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
@@ -276,41 +276,41 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     }
 
     @Override
-    public void setAutoTrack(boolean useAutoTrack) {
-        this.autoTrack = useAutoTrack;
-    }
-
-    @Override
     public boolean getAutoTrack() {
         return autoTrack;
     }
 
+    @Override
+    public void setAutoTrack(boolean useAutoTrack) {
+        this.autoTrack = useAutoTrack;
+    }
+
     /**
      * Sample mobile parameters payload represented by a MessageSettings object:
-     {
-        "mobileParameters": {
-            "schemaVersion": "1.0",
-            "width": 80,
-            "height": 50,
-            "verticalAlign": "center",
-            "verticalInset": 0,
-            "horizontalAlign": "center",
-            "horizontalInset": 0,
-            "uiTakeover": true,
-            "displayAnimation": "top",
-            "dismissAnimation": "top",
-            "backdropColor": "000000", // RRGGBB
-            "backdropOpacity: 0.3,
-            "cornerRadius": 15,
-            "gestures": {
-                "swipeUp": "adbinapp://dismiss",
-                "swipeDown": "adbinapp://dismiss",
-                "swipeLeft": "adbinapp://dismiss?interaction=negative",
-                "swipeRight": "adbinapp://dismiss?interaction=positive",
-                "tapBackground": "adbinapp://dismiss"
-             }
-        }
-     }
+     * {
+     * "mobileParameters": {
+     * "schemaVersion": "1.0",
+     * "width": 80,
+     * "height": 50,
+     * "verticalAlign": "center",
+     * "verticalInset": 0,
+     * "horizontalAlign": "center",
+     * "horizontalInset": 0,
+     * "uiTakeover": true,
+     * "displayAnimation": "top",
+     * "dismissAnimation": "top",
+     * "backdropColor": "000000", // RRGGBB
+     * "backdropOpacity: 0.3,
+     * "cornerRadius": 15,
+     * "gestures": {
+     * "swipeUp": "adbinapp://dismiss",
+     * "swipeDown": "adbinapp://dismiss",
+     * "swipeLeft": "adbinapp://dismiss?interaction=negative",
+     * "swipeRight": "adbinapp://dismiss?interaction=positive",
+     * "tapBackground": "adbinapp://dismiss"
+     * }
+     * }
+     * }
      */
     private MessageSettings messageSettingsFromMap(final Map<String, Object> rawSettings) {
         int width, height, verticalInset, horizontalInset;

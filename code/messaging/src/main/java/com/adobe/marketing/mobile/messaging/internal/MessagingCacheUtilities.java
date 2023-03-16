@@ -16,6 +16,8 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.I
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
@@ -45,7 +47,7 @@ final class MessagingCacheUtilities {
     private final CacheService cacheService;
     private final String assetCacheLocation;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
-    private Map<String, String> assetMap = new HashMap<>();
+    private final Map<String, String> assetMap = new HashMap<>();
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
@@ -67,6 +69,7 @@ final class MessagingCacheUtilities {
     /**
      * Delete all contents in the Messaging extension cache subdirectory.
      */
+    @VisibleForTesting
     void clearCachedData() {
         cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
         cacheService.remove(MessagingConstants.CACHE_BASE_DIR, IMAGES_CACHE_SUBDIRECTORY);
@@ -121,8 +124,13 @@ final class MessagingCacheUtilities {
      * @param propositionPayload the {@link List<PropositionPayload>} containing the message payload to be cached.
      */
     void cachePropositions(final List<PropositionPayload> propositionPayload) {
-        // clean any existing cached files first
-        clearCachedData();
+        // clean any existing cached propositions first if propositionPayload is null or empty
+        if (propositionPayload == null || propositionPayload.isEmpty()) {
+            cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
+            return;
+        }
+
         Log.debug(LOG_TAG, SELF_TAG, "Creating new cached propositions");
         ByteArrayOutputStream byteArrayOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
