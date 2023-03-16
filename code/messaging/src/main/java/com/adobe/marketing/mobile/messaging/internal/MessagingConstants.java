@@ -40,7 +40,8 @@ final class MessagingConstants {
         static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
 
-        private QueryParameters() {}
+        private QueryParameters() {
+        }
     }
 
     final class TrackingKeys {

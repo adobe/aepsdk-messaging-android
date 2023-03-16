@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+
 import com.adobe.marketing.mobile.services.Log;
 
 import org.json.JSONException;

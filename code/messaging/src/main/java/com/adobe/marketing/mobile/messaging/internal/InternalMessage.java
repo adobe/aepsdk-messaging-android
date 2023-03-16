@@ -51,13 +51,13 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
     private final String id;
-    private FullscreenMessage aepMessage;
-    private WebView webView;
-    private boolean autoTrack = true;
     private final MessagingExtension messagingExtension;
     // package private
     PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
     Map<String, Object> details;
+    private FullscreenMessage aepMessage;
+    private WebView webView;
+    private boolean autoTrack = true;
 
     /**
      * Constructor.
@@ -276,13 +276,13 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     }
 
     @Override
-    public void setAutoTrack(boolean useAutoTrack) {
-        this.autoTrack = useAutoTrack;
+    public boolean getAutoTrack() {
+        return autoTrack;
     }
 
     @Override
-    public boolean getAutoTrack() {
-        return autoTrack;
+    public void setAutoTrack(boolean useAutoTrack) {
+        this.autoTrack = useAutoTrack;
     }
 
     /**

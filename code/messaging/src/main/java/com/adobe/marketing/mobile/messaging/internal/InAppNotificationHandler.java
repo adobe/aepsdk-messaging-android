@@ -60,12 +60,12 @@ class InAppNotificationHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     final MessagingExtension parent;
     private final MessagingCacheUtilities messagingCacheUtilities;
+    private final ExtensionApi extensionApi;
+    private final LaunchRulesEngine launchRulesEngine;
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
     private List<PropositionPayload> inMemoryPropositions = new ArrayList<>();
     private String messagesRequestEventId;
     private String lastProcessedRequestEventId;
-    private final ExtensionApi extensionApi;
-    private final LaunchRulesEngine launchRulesEngine;
     private InternalMessage message;
 
     /**
@@ -250,7 +250,7 @@ class InAppNotificationHandler {
 
         if (persistChanges) {
             // save the proposition payload to the messaging cache
-            if(!propositions.isEmpty()) {
+            if (!propositions.isEmpty()) {
                 inMemoryPropositions.addAll(propositions);
                 messagingCacheUtilities.cachePropositions(inMemoryPropositions);
             }
