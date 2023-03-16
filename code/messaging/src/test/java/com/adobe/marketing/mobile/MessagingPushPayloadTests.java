@@ -82,7 +82,7 @@ public class MessagingPushPayloadTests {
         mockData = getMockData(true);
         payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
-        // verify only 2 button2 created
+        // verify only 2 buttons created
         Assert.assertEquals(2, payload.getActionButtons().size());
     }
 
