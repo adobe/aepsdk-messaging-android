@@ -260,16 +260,6 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Returns a {@code PropositionInfo} object to use for in-app message interaction tracking.
-     *
-     * @param messageId a {@code String} containing the rule consequence id to use for retrieving a {@link PropositionInfo} object
-     * @return a {@code PropositionInfo} containing XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
-     */
-    private PropositionInfo getPropositionInfoForMessageId(final String messageId) {
-        return propositionInfo.get(messageId);
-    }
-
-    /**
      * Extracts the message id from the provided rule payload's consequence.
      *
      * @return a {@code String> containing the consequence id
@@ -323,7 +313,7 @@ class InAppNotificationHandler {
 
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
             message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
-            message.propositionInfo = getPropositionInfoForMessageId(message.getId());
+            message.propositionInfo = propositionInfo.get(message.getId());
             message.trigger();
             message.show(true);
         } catch (final MessageRequiredFieldMissingException exception) {
