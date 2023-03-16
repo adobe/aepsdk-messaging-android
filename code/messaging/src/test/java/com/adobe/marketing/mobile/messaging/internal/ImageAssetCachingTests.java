@@ -152,7 +152,7 @@ public class ImageAssetCachingTests {
             imageAssets.add(IMAGE_URL2);
             // test
             messagingCacheUtilities.cacheImageAssets(imageAssets);
-            // verify no network requests made because the asset cache is not available
+            // verify no network requests made because the cache service is not available
             verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
         });
     }
