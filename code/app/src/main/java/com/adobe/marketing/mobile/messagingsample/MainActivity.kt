@@ -13,14 +13,17 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.Spinner
@@ -41,30 +44,88 @@ class MainActivity : ComponentActivity() {
     private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
-
-    // Declare the launcher at the top of your Activity/Fragment:
-    private val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // FCM SDK (and your app) can post notifications.
-        } else {
-            // TODO: Inform user that that your app will not show notifications.
-        }
+    
+    companion object {
+        private const val LOG_TAG = "MainActivity"
+        const val FROM = "from"
     }
 
     private fun askNotificationPermission() {
         // This is only necessary for API level >= 33 (TIRAMISU)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED
+                PackageManager.PERMISSION_GRANTED
             ) {
                 // FCM SDK (and your app) can post notifications.
+                Log.d(
+                    LOG_TAG,
+                    "Notification permission granted"
+                )
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                Log.d(
+                    LOG_TAG,
+                    "Notification Permission: Not granted"
+                )
+                showNotificationPermissionRationale()
             } else {
                 // Directly ask for the permission
+                Log.d(
+                    LOG_TAG,
+                    "Requesting notification permission"
+                )
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
+        } else {
+            Log.d(
+                LOG_TAG,
+                "Notification permission granted"
+            )
+            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult<String, Boolean>(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // FCM SDK (and your app) can post notifications.
+            Log.d(
+                LOG_TAG,
+                "Notification permission granted"
+            )
+            Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+        } else {
+            if (Build.VERSION.SDK_INT >= 33) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                    showNotificationPermissionRationale()
+                } else {
+                    Log.d(
+                        LOG_TAG,
+                        "Grant notification permission from settings"
+                    )
+                    Toast.makeText(
+                        this,
+                        "Grant notification permission from settings",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+    private fun showNotificationPermissionRationale() {
+        AlertDialog.Builder(this)
+            .setTitle("Grant notification permission")
+            .setMessage("Notification permission is required to show notifications")
+            .setPositiveButton("Ok") { dialog: DialogInterface?, which: Int ->
+                if (Build.VERSION.SDK_INT >= 33) {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private enum class generatedIAMSpinnerValues(val value: String) {
@@ -200,6 +261,9 @@ class MainActivity : ComponentActivity() {
                 Messaging.handleNotificationResponse(intent, true, null)
             }
         }
+
+        // Request push permissions for Android 33
+        askNotificationPermission()
     }
 
     private fun setupButtonClickListeners() {
@@ -398,10 +462,6 @@ class MainActivity : ComponentActivity() {
         builder.addAction(R.drawable.ic_launcher_background, "buttonAction",
                 pendingIntent)
         return builder.build()
-    }
-
-    companion object {
-        const val FROM = "from"
     }
 
     override fun onResume() {

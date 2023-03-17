@@ -254,7 +254,7 @@ public final class MessagingExtension extends Extension {
     }
 
     void handlePushToken(final Event event) {
-        final String pushToken = (String) event.getEventData().get(MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER);
+        final String pushToken = DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, null);
 
         if (StringUtils.isNullOrEmpty(pushToken)) {
             Log.debug(LOG_TAG, SELF_TAG, "Failed to sync push token, token is null or empty.");
@@ -343,7 +343,7 @@ public final class MessagingExtension extends Extension {
      */
     public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final InternalMessage message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
-        if (propositionInfo == null || MessagingUtils.isMapNullOrEmpty(propositionInfo.scopeDetails)) {
+        if (propositionInfo == null || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, MessagingExtension.SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");
             return;
         }

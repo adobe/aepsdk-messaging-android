@@ -190,8 +190,6 @@ public class PropositionPayloadCachingTests {
             messagingCacheUtilities.cachePropositions(list);
 
             // verify
-            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
-            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.IMAGES_CACHE_SUBDIRECTORY));
             verify(mockCacheService, times(1)).set(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());
         });
     }

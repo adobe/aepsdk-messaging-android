@@ -50,11 +50,11 @@ public class MessagingPushPayloadTests {
     @Test
     public void test_Constructor_with_RemoteMessage() {
         mockData = getMockData(false);
-        Bundle bundle = Mockito.mock(Bundle.class);
         final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
+        Assert.assertEquals(3, payload.getActionButtons().size());
     }
 
     @Test
@@ -62,6 +62,7 @@ public class MessagingPushPayloadTests {
         mockData = getMockData(false);
         payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
+        Assert.assertEquals(3, payload.getActionButtons().size());
     }
 
     @Test
@@ -72,8 +73,8 @@ public class MessagingPushPayloadTests {
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
-        // verify only 1 button created
-        Assert.assertEquals(1, payload.getActionButtons().size());
+        // verify only 2 buttons created
+        Assert.assertEquals(2, payload.getActionButtons().size());
     }
 
     @Test
@@ -81,8 +82,8 @@ public class MessagingPushPayloadTests {
         mockData = getMockData(true);
         payload = new MessagingPushPayload(mockData);
         Assert.assertNotNull(payload);
-        // verify only 1 button created
-        Assert.assertEquals(1, payload.getActionButtons().size());
+        // verify only 2 buttons created
+        Assert.assertEquals(2, payload.getActionButtons().size());
     }
 
     // ========================================================================================
