@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
@@ -23,6 +24,7 @@ import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,17 +33,15 @@ import java.util.Map;
 
 class MessagingUtils {
 
-    static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) {
-        if (payloads == null || payloads.size() == 0) {
-            return null;
-        }
-
-        List<PropositionPayload> propositionPayloads = new ArrayList<>();
+    static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) throws Exception {
+        final List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
                 final PropositionInfo propositionInfo = PropositionInfo.create(payload);
                 final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
-                propositionPayloads.add(propositionPayload);
+                if (propositionPayload != null) {
+                    propositionPayloads.add(propositionPayload);
+                }
             }
         }
         return propositionPayloads;
@@ -55,7 +55,10 @@ class MessagingUtils {
         final DeviceInforming deviceInfoService = ServiceProvider.getInstance().getDeviceInfoService();
         String assetCacheLocation = null;
         if (deviceInfoService != null) {
-            assetCacheLocation = deviceInfoService.getApplicationCacheDir() + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+            final File applicationCacheDir = deviceInfoService.getApplicationCacheDir();
+            if (applicationCacheDir != null) {
+                assetCacheLocation = applicationCacheDir + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+            }
         }
         return assetCacheLocation;
     }
@@ -117,12 +120,27 @@ class MessagingUtils {
                 MessagingConstants.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(event.getSource());
     }
 
+    // ========================================================================================
+    // Scope retrieval
+    // ========================================================================================
+
     /**
-     * @param map A {@link Map} of any type.
-     * @return {@code boolean} indicating if the passed in {@code Map} is empty.
+     * @param propositionPayloads A {@link List<PropositionPayload>} containing propositions retrieved from AJO
+     * @return {@code String} containing the scope retrieved from the proposition payload details
      */
-    static boolean isMapNullOrEmpty(final Map map) {
-        return map == null || map.isEmpty();
+    static String getScope(final List<PropositionPayload> propositionPayloads) {
+        PropositionPayload propositionPayload = null;
+        if (propositionPayloads.size() > 0) {
+            propositionPayload = propositionPayloads.get(0);
+        }
+        return propositionPayload == null ? null : propositionPayload.propositionInfo.scope;
+    }
+
+    // ========================================================================================
+    // Request event id retrieval
+    // ========================================================================================
+    static String getRequestEventId(final Event event) {
+        return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
     }
 
     // ========================================================================================
@@ -164,13 +182,13 @@ class MessagingUtils {
     // ========================================================================================
     static String getSharedStateEcid(final Map<String, Object> edgeIdentityState) {
         final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, IDENTITY_MAP, null);
-        if (MessagingUtils.isMapNullOrEmpty(identityMap)) return null;
+        if (MapUtils.isNullOrEmpty(identityMap)) return null;
 
         final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
         if (ecids == null || ecids.isEmpty()) return null;
 
         final Map<String, Object> ecidMap = ecids.get(0);
-        if (MessagingUtils.isMapNullOrEmpty(ecidMap)) return null;
+        if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
     }

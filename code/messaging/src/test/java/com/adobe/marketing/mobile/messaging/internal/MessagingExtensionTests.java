@@ -831,7 +831,11 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppInteractTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            try {
+                mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"interact\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"confirm\",\"eventType\":\"interact\"}}"));
@@ -861,7 +865,11 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppInteractTracking_WhenScopeDetailsNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(true);
+            try {
+                mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(true);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
 
             // test
             messagingExtension.sendPropositionInteraction("confirm", MessagingEdgeEventType.IN_APP_INTERACT, mockInternalMessage);
@@ -875,7 +883,11 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppDismissTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            try {
+                mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"dismiss\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"dismiss\"}}"));
@@ -905,7 +917,11 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppDisplayTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            try {
+                mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"display\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"display\"}}"));
@@ -935,7 +951,11 @@ public class MessagingExtensionTests {
     public void test_sendPropositionInteraction_InAppTriggeredTracking() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            try {
+                mockInternalMessage.propositionInfo = MessagingTestUtils.generatePropositionInfo(false);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"trigger\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"trigger\"}}"));

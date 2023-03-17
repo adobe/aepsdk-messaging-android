@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -338,7 +339,7 @@ public class MessagingTestUtils {
         }
     }
 
-    static PropositionInfo generatePropositionInfo(boolean nullScopeDetails) {
+    static PropositionInfo generatePropositionInfo(boolean nullScopeDetails) throws Exception {
         Map<String, Object> scopeDetails = new HashMap<>();
         Map<String, Object> characteristics = new HashMap<>();
         Map<String, Object> cjmEvent = new HashMap<>();
@@ -359,6 +360,7 @@ public class MessagingTestUtils {
     }
 
     static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
+        final Random random = new Random();
         if (config.count <= 0) {
             return null;
         }
@@ -377,7 +379,9 @@ public class MessagingTestUtils {
             cjmEvent.put("messageExecution", messageExecution);
             characteristics.put("cjmEvent", cjmEvent);
             scopeDetails.put("scopeDetails", characteristics);
-            data.put("content","{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d13e866\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
+            final int randomInt = random.nextInt(999999);
+            data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
+            data.put("content","{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt +"\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
             item.put("data", data);
             items.add(item);
         }
