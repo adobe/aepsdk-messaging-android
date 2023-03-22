@@ -13,7 +13,11 @@ Follow the steps below to download the InappTutorialApp from the [Messaging GitH
 | **Messaging Extension Code** |
 
 > [!NOTE]
-> Steps 3-6 in this section include commands you can run from your favorite Terminal app.  
+> Steps 3-6 in this section include commands you can run from your favorite Terminal app.
+
+[!WARNING]
+
+> The tutorial app is only available in the `messaging-tutorials` branch of the GitHub repo. If you are accessing this tutorial from a manual clone of the repo, ensure you are on the correct branch.
 
 3. Copy the `aepsdk-messaging-android-messaging-tutorials.zip` file from your `Downloads` directory to another appropriate location. For example, your home directory
 
@@ -50,7 +54,7 @@ For this tutorial, initlization code is already implemented in `tutorialApp`.
 
 Follow the steps below to run the `tutorialApp` :
 
-1. Select the mobile app target **tutorialApp** and destination of your connected Android device. Click on Play icon (**1**) to launch the app.
+1. Select the mobile app target **tutorialApp** and destination of your connected Android device. Click on the `Play` icon (**1**) to launch the app.
 
 | ![Run Mobile App](assets/messaging-app-run.png?raw=true) |
 | :---: |

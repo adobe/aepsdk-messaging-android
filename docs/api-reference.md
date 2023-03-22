@@ -61,6 +61,14 @@ void track(final String interaction, final MessagingEdgeEventType eventType)
 * *interaction* - a custom `String` value to be recorded in the interaction
 * *eventType* - the [`MessagingEdgeEventType`](#enum-messagingedgeeventtype) to be used for the ensuing Edge Event
 
+### getAutoTrack
+
+Retrieves the `Message's` auto tracking preference.
+
+```java
+default boolean getAutoTrack()
+```
+
 ### setAutoTrack
 
 Sets the `Message's` auto tracking preference.

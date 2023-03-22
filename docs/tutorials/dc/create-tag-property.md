@@ -55,11 +55,11 @@ In this section we will create a mobile property which contains the configuratio
 | **Install Adobe Experience Platform Edge Network extension** |
 
 > [!Tip]
-> When configuring the Edge extension, we will be using the Datastream created in part three (3) of this tutorial.
+> When configuring the Edge extension, we will be using the Datastream created in part one (1) of this tutorial.
 
-5. For each of the **Production**, **Staging**, and **Development** environments (**1**), ensure the sandbox matches the sandbox in which you created your Datastream.
+5. For each of the **Production**, **Staging**, and **Development** environments (**1**), ensure the sandbox matches the sandbox in which you created your Datastream. and select your Datastream from the dropdown.
 
-6. In the **Datastream** dropdown, select your Datastream (**2**).
+6. In the **Edge Network domain** text field, enter your domain (**2**). If you don't have a custom domain, enter `edge.adobedc.net`
 
 | ![Adobe Experience Platform Edge Network extension configuration](assets/tag-aep-details.png?raw=true) |
 | :---: |
@@ -113,14 +113,14 @@ In this section we will create a mobile property which contains the configuratio
 
 9. This screen shows installation instructions for your app based on the Tag Property's configuration. It includes:
   - Your **Environment File ID** (**1**) which helps the SDK locate your remote configuration.
-  - Dependencies for your **Podfile** (**2**).
+  - Dependencies for your **Gradle** file (**2**).
   - Initialization code for your app (**3**).
 
 > [!NOTE]
 > For this tutorial, the provided app will already have these values in it. This step in the tutorial was for reference only.
 
-| ![View install instructions](assets/tag-install-instructions-ios.png?raw=true) |
-| :---: |
-| **View install instructions** |
+| ![View install instructions](assets/tag-install-instructions-android.png?raw=true) |
+| :----------------------------------------------------------: |
+|                **View install instructions**                 |
 
 For the next part of the tutorial, we will show how to author an in-app message in **Adobe Journey Optimizer**.

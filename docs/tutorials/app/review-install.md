@@ -4,6 +4,8 @@ In this section is for reference only.  It covers how to get access to the **AEP
 
 ### Install the AEPMessaging extension
 
+To install the **AEPMessaging** SDK, add the following in your App's gradle file:
+
 | ![Installing the Messaging extension](assets/docs-install.png?raw=true) |
 | :---: |
 | **Installing the Messaging extension** |

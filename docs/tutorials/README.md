@@ -7,7 +7,6 @@ The AEPMessaging SDK extension is an open-source Android library written in Java
 
 In this tutorial, we will:
 
-1. Review schema and dataset configuration in **Adobe Experience Platform**
 1. Set up a Datastream, an App Surface, and a mobile Tag Property in the **Adobe Data Collection** user interface
 1. Create and activate an in-app message in **Adobe Journey Optimizer**
 1. Review steps to install the **AEPMessaging** extension in your mobile app

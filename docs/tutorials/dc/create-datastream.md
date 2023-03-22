@@ -20,7 +20,7 @@ In order to send data to the Edge Network, the datastream must be configured wit
 | :---: |
 | **Add a new Datastream** |
 
-4. Give the datastream an identifying name and description (**1**), then pick the AJO Inbound schema reviewed in the previous section using the dropdown menu (**2**). Finally, hit the **Save** (**3**) button.
+4. Give the datastream an identifying name and description (**1**), then pick an Event schema previously created in the [Adobe Experience Platform](https://experience.adobe.com/#/platform) UI section using the dropdown menu (**2**). Finally, hit the **Save** (**3**) button.
 
 | ![Set Datastream Values](assets/datastream-save.png?raw=true) |
 | :---: |
@@ -37,7 +37,7 @@ With the datastream set up, data can be directed to its destination by adding se
 | **Add Datastream Service** |
 
 2. From the **Service (required)** dropdown, select **Adobe Experience Platform** and make sure it is enabled (**1**).
-3. From the `Event Dataset`dropdown, select the AJO Inbound dataset reviewed earlier in this tutorial (**2**).
+3. From the `Event Dataset` dropdown, select a dataset previously created in the [Adobe Experience Platform](https://experience.adobe.com/#/platform) UI (**2**).
 4. Ensure the **Edge Segmentation** and **Adobe Journey Optimizer** boxes (**3**) are checked.
 4. Hit the **Save** (**4**) button.
 
