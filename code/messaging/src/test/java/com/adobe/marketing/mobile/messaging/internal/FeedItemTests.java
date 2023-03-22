@@ -130,16 +130,16 @@ public class FeedItemTests {
         assertNotNull(feedItem);
         assertEquals(TITLE, feedItem.title);
         assertEquals(BODY, feedItem.body);
-        assertEquals(null, feedItem.imageUrl);
-        assertEquals(null, feedItem.actionUrl);
-        assertEquals(null, feedItem.actionTitle);
+        assertNull(feedItem.imageUrl);
+        assertNull(feedItem.actionUrl);
+        assertNull(feedItem.actionTitle);
         assertEquals(publishedDate, feedItem.publishedDate);
         assertEquals(expiryDate, feedItem.expiryDate);
-        assertEquals(null, feedItem.meta);
+        assertNull(feedItem.meta);
     }
 
     @Test
-    public void testCreateFeedItem_NoActionTitle() {
+    public void testCreateFeedItem_ActionTitleNotRequired() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
@@ -152,15 +152,15 @@ public class FeedItemTests {
         assertEquals(TITLE, feedItem.title);
         assertEquals(BODY, feedItem.body);
         assertEquals(IMAGE_URL, feedItem.imageUrl);
-        assertEquals(null, feedItem.actionUrl);
-        assertEquals(null, feedItem.actionTitle);
+        assertEquals(ACTION_URL, feedItem.actionUrl);
+        assertNull(feedItem.actionTitle);
         assertEquals(publishedDate, feedItem.publishedDate);
         assertEquals(expiryDate, feedItem.expiryDate);
         assertEquals(metaMap, feedItem.meta);
     }
 
     @Test
-    public void testCreateFeedItem_NoActionUrl() {
+    public void testCreateFeedItem_ActionUrlNotRequired() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
@@ -173,7 +173,7 @@ public class FeedItemTests {
         assertEquals(TITLE, feedItem.title);
         assertEquals(BODY, feedItem.body);
         assertEquals(IMAGE_URL, feedItem.imageUrl);
-        assertEquals(null, feedItem.actionUrl);
+        assertNull(feedItem.actionUrl);
         assertEquals(ACTION_TITLE, feedItem.actionTitle);
         assertEquals(publishedDate, feedItem.publishedDate);
         assertEquals(expiryDate, feedItem.expiryDate);
@@ -181,7 +181,49 @@ public class FeedItemTests {
     }
 
     @Test
-    public void testCreateFeedItem_NoTitle() {
+    public void testCreateFeedItem_MetaNotRequired() {
+        // setup
+        long publishedDate = TimeUtils.getUnixTimeInSeconds();
+        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
+
+        // test
+        FeedItem feedItem = FeedItem.create(TITLE, BODY, IMAGE_URL, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, null);
+
+        // verify
+        assertNotNull(feedItem);
+        assertEquals(TITLE, feedItem.title);
+        assertEquals(BODY, feedItem.body);
+        assertEquals(IMAGE_URL, feedItem.imageUrl);
+        assertEquals(ACTION_URL, feedItem.actionUrl);
+        assertEquals(ACTION_TITLE, feedItem.actionTitle);
+        assertEquals(publishedDate, feedItem.publishedDate);
+        assertEquals(expiryDate, feedItem.expiryDate);
+        assertNull(feedItem.meta);
+    }
+
+    @Test
+    public void testCreateFeedItem_ImageUrlNotRequired() {
+        // setup
+        long publishedDate = TimeUtils.getUnixTimeInSeconds();
+        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
+
+        // test
+        FeedItem feedItem = FeedItem.create(TITLE, BODY, null, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, metaMap);
+
+        // verify
+        assertNotNull(feedItem);
+        assertEquals(TITLE, feedItem.title);
+        assertEquals(BODY, feedItem.body);
+        assertNull(feedItem.imageUrl);
+        assertEquals(ACTION_URL, feedItem.actionUrl);
+        assertEquals(ACTION_TITLE, feedItem.actionTitle);
+        assertEquals(publishedDate, feedItem.publishedDate);
+        assertEquals(expiryDate, feedItem.expiryDate);
+        assertEquals(metaMap, feedItem.meta);
+    }
+
+    @Test
+    public void testCreateFeedItem_TitleRequired() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
@@ -194,7 +236,7 @@ public class FeedItemTests {
     }
 
     @Test
-    public void testCreateFeedItem_NoBody() {
+    public void testCreateFeedItem_BodyRequired() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
@@ -213,7 +255,7 @@ public class FeedItemTests {
         long expiryDate = TimeUtils.getUnixTimeInSeconds() + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = FeedItem.create(TITLE, null, IMAGE_URL, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, metaMap);
+        FeedItem feedItem = FeedItem.create(TITLE, BODY, IMAGE_URL, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, metaMap);
 
         // verify
         assertNull(feedItem);
@@ -226,7 +268,7 @@ public class FeedItemTests {
         long expiryDate = 0;
 
         // test
-        FeedItem feedItem = FeedItem.create(TITLE, null, IMAGE_URL, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, metaMap);
+        FeedItem feedItem = FeedItem.create(TITLE, BODY, IMAGE_URL, ACTION_URL, ACTION_TITLE, publishedDate, expiryDate, metaMap);
 
         // verify
         assertNull(feedItem);

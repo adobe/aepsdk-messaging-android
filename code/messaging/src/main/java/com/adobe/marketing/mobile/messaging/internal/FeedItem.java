@@ -46,10 +46,8 @@ class FeedItem implements Serializable {
         this.title = title;
         this.body = body;
         this.imageUrl = imageUrl;
-        if (!StringUtils.isNullOrEmpty(actionTitle)) {
-            this.actionUrl = actionUrl;
-            this.actionTitle = actionTitle;
-        }
+        this.actionUrl = actionUrl;
+        this.actionTitle = actionTitle;
         this.publishedDate = publishedDate;
         this.expiryDate = expiryDate;
         this.meta = meta;
