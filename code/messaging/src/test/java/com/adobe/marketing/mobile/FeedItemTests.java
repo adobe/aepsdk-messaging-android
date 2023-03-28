@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.util.TimeUtils;
 
@@ -91,12 +92,12 @@ public class FeedItemTests {
         assertNotNull(feedItem);
         assertEquals(TITLE, feedItem.getTitle());
         assertEquals(BODY, feedItem.getBody());
-        assertNull(feedItem.getImageUrl());
-        assertNull(feedItem.getActionUrl());
-        assertNull(feedItem.getActionTitle());
+        assertEquals("", feedItem.getImageUrl());
+        assertEquals("", feedItem.getActionUrl());
+        assertEquals("", feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
         assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertNull(feedItem.getMeta());
+        assertTrue(feedItem.getMeta().isEmpty());
     }
 
     @Test
@@ -118,7 +119,7 @@ public class FeedItemTests {
         assertEquals(BODY, feedItem.getBody());
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
-        assertNull(feedItem.getActionTitle());
+        assertEquals("", feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
         assertEquals(expiryDate, feedItem.getExpiryDate());
         assertEquals(metaMap, feedItem.getMeta());
@@ -142,7 +143,7 @@ public class FeedItemTests {
         assertEquals(TITLE, feedItem.getTitle());
         assertEquals(BODY, feedItem.getBody());
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
-        assertNull(feedItem.getActionUrl());
+        assertEquals("", feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
         assertEquals(expiryDate, feedItem.getExpiryDate());
@@ -171,7 +172,7 @@ public class FeedItemTests {
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
         assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertNull(feedItem.getMeta());
+        assertTrue(feedItem.getMeta().isEmpty());
     }
 
     @Test
@@ -191,7 +192,7 @@ public class FeedItemTests {
         assertNotNull(feedItem);
         assertEquals(TITLE, feedItem.getTitle());
         assertEquals(BODY, feedItem.getBody());
-        assertNull(feedItem.getImageUrl());
+        assertEquals("", feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
@@ -267,5 +268,34 @@ public class FeedItemTests {
 
         // verify
         assertNull(feedItem);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testCreateFeedItem_CanOnlyBuildOnce() {
+        // setup
+        long publishedDate = TimeUtils.getUnixTimeInSeconds();
+        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
+
+        // test
+        FeedItem.Builder builder = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+                .setImageUrl(IMAGE_URL)
+                .setActionUrl(ACTION_URL)
+                .setActionTitle(ACTION_TITLE)
+                .setMeta(metaMap);
+        FeedItem feedItem = builder.build();
+
+        // verify
+        assertNotNull(feedItem);
+        assertEquals(TITLE, feedItem.getTitle());
+        assertEquals(BODY, feedItem.getBody());
+        assertEquals(IMAGE_URL, feedItem.getImageUrl());
+        assertEquals(ACTION_URL, feedItem.getActionUrl());
+        assertEquals(ACTION_TITLE, feedItem.getActionTitle());
+        assertEquals(publishedDate, feedItem.getPublishedDate());
+        assertEquals(expiryDate, feedItem.getExpiryDate());
+        assertEquals(metaMap, feedItem.getMeta());
+
+        // test, throws UnsupportedOperationException
+        builder.build();
     }
 }
