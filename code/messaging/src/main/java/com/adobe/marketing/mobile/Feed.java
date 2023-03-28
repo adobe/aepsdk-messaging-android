@@ -24,20 +24,42 @@ public class Feed {
     // List of FeedItem that are members of this Feed
     private List<FeedItem> items;
 
+    /**
+     * Constructor.
+     *
+     * @param surfaceUri {@link String} containing the AJO Surface URI used to retrieve the feed
+     * @param name {@code String} containing the friendly name for the feed which was provided in the AJO UI
+     * @param items {@link List<FeedItem>} that are members of this {@link Feed}
+     */
     Feed(final String surfaceUri, final String name, final List<FeedItem> items) {
         this.surfaceUri = surfaceUri;
         this.name = name;
         this.items = items;
     }
 
+    /**
+     * Gets the {@code Feed}'s surface uri.
+     *
+     * @return {@link String} containing the {@link Feed} surface uri.
+     */
     public String getSurfaceUri() {
         return surfaceUri;
     }
 
+    /**
+     * Gets the {@code Feed}'s friendly name
+     *
+     * @return {@link String} containing the {@link Feed} friendly name.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the {@code Feed}'s {@code FeedItem}s
+     *
+     * @return {@link List<FeedItem>} containing the {@link Feed}'s {@link FeedItem}s
+     */
     public List<FeedItem> getItems() {
         return items;
     }
