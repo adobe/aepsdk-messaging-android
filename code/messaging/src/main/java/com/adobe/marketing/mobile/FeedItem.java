@@ -59,7 +59,7 @@ public class FeedItem {
          * @param publishedDate required {@code long} represents when this feed item went live
          * @param expiryDate required {@code long} represents when this feed item expires
          */
-        Builder(final String title, final String body, final long publishedDate, final long expiryDate) {
+        public Builder(final String title, final String body, final long publishedDate, final long expiryDate) {
             feedItem = new FeedItem();
             feedItem.title = StringUtils.isNullOrEmpty(title) ? "" : title;
             feedItem.body = StringUtils.isNullOrEmpty(body) ? "" : body;
@@ -72,6 +72,13 @@ public class FeedItem {
             didBuild = false;
         }
 
+        /**
+         * Sets the image url for this {@code FeedItem}.
+         *
+         * @param imageUrl {@link String} containing the {@link FeedItem} image url.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
         public Builder setImageUrl(final String imageUrl) {
             throwIfAlreadyBuilt();
 
@@ -79,6 +86,13 @@ public class FeedItem {
             return this;
         }
 
+        /**
+         * Sets the action url for this {@code FeedItem}.
+         *
+         * @param actionUrl {@link String} containing the {@link FeedItem} action url.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
         public Builder setActionUrl(final String actionUrl) {
             throwIfAlreadyBuilt();
 
@@ -86,6 +100,13 @@ public class FeedItem {
             return this;
         }
 
+        /**
+         * Sets the action title for this {@code FeedItem}.
+         *
+         * @param actionTitle {@link String} containing the {@link FeedItem} action title.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
         public Builder setActionTitle(final String actionTitle) {
             throwIfAlreadyBuilt();
 
@@ -93,6 +114,13 @@ public class FeedItem {
             return this;
         }
 
+        /**
+         * Sets the metadata map for this {@code FeedItem}.
+         *
+         * @param meta {@code Map<String, Object>} containing {@link FeedItem} metadata.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
         public Builder setMeta(final Map<String, Object> meta) {
             throwIfAlreadyBuilt();
 
@@ -100,11 +128,16 @@ public class FeedItem {
             return this;
         }
 
+        /**
+         * Builds and returns the {@code FeedItem} object.
+         *
+         * @return {@link FeedItem} object or null.
+         */
         public FeedItem build() {
             if (StringUtils.isNullOrEmpty(feedItem.title) || StringUtils.isNullOrEmpty(feedItem.body) || feedItem.publishedDate <= 0 || feedItem.expiryDate <= 0) {
                 return null;
             }
-            
+
             throwIfAlreadyBuilt();
             didBuild = true;
 
@@ -118,34 +151,74 @@ public class FeedItem {
         }
     }
 
+    /**
+     * Gets the {@code FeedItem} title.
+     *
+     * @return {@link String} containing the {@link FeedItem} title.
+     */
     String getTitle() {
         return title;
     }
 
+    /**
+     * Gets the {@code FeedItem} body.
+     *
+     * @return {@link String} containing the {@link FeedItem} body.
+     */
     String getBody() {
         return body;
     }
 
+    /**
+     * Gets the {@code FeedItem} image url.
+     *
+     * @return {@link String} containing the {@link FeedItem} image url.
+     */
     String getImageUrl() {
         return imageUrl;
     }
 
+    /**
+     * Gets the {@code FeedItem} action url.
+     *
+     * @return {@link String} containing the {@link FeedItem} action url.
+     */
     String getActionUrl() {
         return actionUrl;
     }
 
+    /**
+     * Gets the {@code FeedItem} action title.
+     *
+     * @return {@link String} containing the {@link FeedItem} action title.
+     */
     String getActionTitle() {
         return actionTitle;
     }
 
+    /**
+     * Gets the {@code FeedItem} published date.
+     *
+     * @return {@code long} containing the {@link FeedItem} published date.
+     */
     long getPublishedDate() {
         return publishedDate;
     }
 
+    /**
+     * Gets the {@code FeedItem} expiry date.
+     *
+     * @return {@code long} containing the {@link FeedItem} expiry date.
+     */
     long getExpiryDate() {
         return expiryDate;
     }
 
+    /**
+     * Gets the {@code FeedItem} metadata.
+     *
+     * @return {@code Map<String, Object>} containing the {@link FeedItem} metadata.
+     */
     Map<String, Object> getMeta() {
         return meta;
     }
