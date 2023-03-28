@@ -81,7 +81,7 @@ public class MessagingExtensionTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
-    InAppNotificationHandler mockInAppNotificationHandler;
+    AJOPayloadHandler mockAJOPayloadHandler;
     @Mock
     SharedStateResult mockConfigData;
     @Mock
@@ -123,7 +123,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
-        reset(mockInAppNotificationHandler);
+        reset(mockAJOPayloadHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
         reset(mockDeviceInfoService);
@@ -147,7 +147,7 @@ public class MessagingExtensionTests {
                 put("key", "value");
             }});
 
-            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockInAppNotificationHandler);
+            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockAJOPayloadHandler);
 
             runnable.run();
         }
@@ -160,7 +160,7 @@ public class MessagingExtensionTests {
     public void test_TestableConstructor() {
         runUsingMockedServiceProvider(() -> {
             assertNotNull(messagingExtension.messagingRulesEngine);
-            assertNotNull(messagingExtension.inAppNotificationHandler);
+            assertNotNull(messagingExtension.AJOPayloadHandler);
         });
     }
 
@@ -169,7 +169,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             messagingExtension = new MessagingExtension(mockExtensionApi);
             assertNotNull(messagingExtension.messagingRulesEngine);
-            assertNotNull(messagingExtension.inAppNotificationHandler);
+            assertNotNull(messagingExtension.AJOPayloadHandler);
         });
     }
 
@@ -296,7 +296,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleWildcardEvents(mockEvent);
 
             // verify triggered rule consequence passed to InAppNotificationHandler to create a Message
-            verify(mockInAppNotificationHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
+            verify(mockAJOPayloadHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
         });
     }
 
@@ -801,7 +801,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockInAppNotificationHandler, times(1)).fetchMessages();
+            verify(mockAJOPayloadHandler, times(1)).fetchMessages(null);
         });
     }
 
@@ -820,7 +820,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockInAppNotificationHandler, times(1)).handleEdgePersonalizationNotification(any(Event.class));
+            verify(mockAJOPayloadHandler, times(1)).handleEdgePersonalizationNotification(any(Event.class));
         });
     }
 

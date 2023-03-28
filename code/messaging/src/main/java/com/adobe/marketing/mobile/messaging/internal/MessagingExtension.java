@@ -77,7 +77,7 @@ import java.util.Map;
 public final class MessagingExtension extends Extension {
     private final static String SELF_TAG = "MessagingExtension";
 
-    final InAppNotificationHandler inAppNotificationHandler;
+    final AJOPayloadHandler AJOPayloadHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
 
@@ -105,10 +105,10 @@ public final class MessagingExtension extends Extension {
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final AJOPayloadHandler AJOPayloadHandler) {
         super(extensionApi);
         this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
+        this.AJOPayloadHandler = AJOPayloadHandler != null ? AJOPayloadHandler : new AJOPayloadHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
     //region Extension interface methods
@@ -173,7 +173,7 @@ public final class MessagingExtension extends Extension {
 
         // fetch in-app messages on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            inAppNotificationHandler.fetchMessages();
+            AJOPayloadHandler.fetchMessages(null);
             initialMessageFetchComplete = true;
         }
 
@@ -193,7 +193,7 @@ public final class MessagingExtension extends Extension {
                 final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
                 final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
                 final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-                inAppNotificationHandler.createInAppMessage(new RuleConsequence(id, type, detail));
+                AJOPayloadHandler.createInAppMessage(new RuleConsequence(id, type, detail));
             }
             return;
         }
@@ -213,7 +213,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        inAppNotificationHandler.createInAppMessage(consequences.get(0));
+        AJOPayloadHandler.createInAppMessage(consequences.get(0));
     }
 
     //endregion
@@ -233,7 +233,11 @@ public final class MessagingExtension extends Extension {
 
         // validate fetch messages event then refresh in-app messages via an Edge extension event
         if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
-            inAppNotificationHandler.fetchMessages();
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
+            AJOPayloadHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
+        } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
+            AJOPayloadHandler.fetchMessages(null);
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
@@ -249,7 +253,7 @@ public final class MessagingExtension extends Extension {
             handleTrackingInfo(eventToProcess, experienceEventDatasetId);
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
-            inAppNotificationHandler.handleEdgePersonalizationNotification(eventToProcess);
+            AJOPayloadHandler.handleEdgePersonalizationNotification(eventToProcess);
         }
     }
 

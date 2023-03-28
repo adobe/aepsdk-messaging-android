@@ -120,6 +120,35 @@ class MessagingUtils {
                 MessagingConstants.EventSource.PERSONALIZATION_DECISIONS.equalsIgnoreCase(event.getSource());
     }
 
+    /**
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a update feeds event.
+     */
+    static boolean isUpdateFeedsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS);
+    }
+
+    // ========================================================================================
+    // Surfaces retrieval
+    // ========================================================================================
+
+    /**
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
+     */
+    static List<String> getSurfaces(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+        return DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+    }
+
     // ========================================================================================
     // Scope retrieval
     // ========================================================================================
