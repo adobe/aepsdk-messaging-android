@@ -14,81 +14,107 @@ package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class FeedItem {
     // Plain-text title for the feed item
-    private final String title;
+    private String title;
     // Plain-text body representing the content for the feed item
-    private final String body;
+    private String body;
     // String representing a URI that contains an image to be used for this feed item
-    private final String imageUrl;
+    private String imageUrl;
     // Contains a URL to be opened if the user interacts with the feed item
-    private final String actionUrl;
+    private String actionUrl;
     // Required if actionUrl is provided. Text to be used in title of button or link in feed item
-    private final String actionTitle;
+    private String actionTitle;
     // Represents when this feed item went live. Represented in seconds since January 1, 1970
-    private final long publishedDate;
+    private long publishedDate;
     // Represents when this feed item expires. Represented in seconds since January 1, 1970
-    private final long expiryDate;
+    private long expiryDate;
     // Contains additional key-value pairs associated with this feed item
-    private final Map<String, Object> meta;
+    private Map<String, Object> meta;
 
-    private FeedItem(final String title, final String body, final String imageUrl, final String actionUrl, final String actionTitle, final long publishedDate, final long expiryDate, final Map<String, Object> meta) {
-        this.title = title;
-        this.body = body;
-        this.imageUrl = imageUrl;
-        this.actionUrl = actionUrl;
-        this.actionTitle = actionTitle;
-        this.publishedDate = publishedDate;
-        this.expiryDate = expiryDate;
-        this.meta = meta;
-    }
+    /**
+     * Private constructor.
+     * <p>
+     * Use {@link Builder} to create {@link FeedItem} object.
+     */
+    private FeedItem() {}
 
+    /**
+     * {@code FeedItem} Builder.
+     */
     public static class Builder {
-        // required parameters
-        private final String title;
-        private final String body;
-        private final long publishedDate;
-        private final long expiryDate;
-        // optional parameters
-        private String imageUrl;
-        private String actionUrl;
-        private String actionTitle;
-        private Map<String, Object> meta;
+        private boolean didBuild;
+        final private FeedItem feedItem;
 
+        /**
+         * Builder constructor with required {@code FeedItem} attributes as parameters.
+         * <p>
+         * It sets default values for the remaining {@link FeedItem} attributes.
+         *
+         * @param title required {@link String} plain-text title for the feed item
+         * @param body required {@link String} plain-text body representing the content for the feed item
+         * @param publishedDate required {@code long} represents when this feed item went live
+         * @param expiryDate required {@code long} represents when this feed item expires
+         */
         Builder(final String title, final String body, final long publishedDate, final long expiryDate) {
-            this.title = title;
-            this.body = body;
-            this.publishedDate = publishedDate;
-            this.expiryDate = expiryDate;
+            feedItem = new FeedItem();
+            feedItem.title = StringUtils.isNullOrEmpty(title) ? "" : title;
+            feedItem.body = StringUtils.isNullOrEmpty(body) ? "" : body;
+            feedItem.publishedDate = publishedDate <= 0 ? 0 : publishedDate;
+            feedItem.expiryDate = expiryDate <= 0 ? 0 : expiryDate;
+            feedItem.imageUrl = "";
+            feedItem.actionUrl = "";
+            feedItem.actionTitle = "";
+            feedItem.meta = new HashMap<>();
+            didBuild = false;
         }
 
         public Builder setImageUrl(final String imageUrl) {
-            this.imageUrl = imageUrl;
+            throwIfAlreadyBuilt();
+
+            feedItem.imageUrl = imageUrl;
             return this;
         }
 
         public Builder setActionUrl(final String actionUrl) {
-            this.actionUrl = actionUrl;
+            throwIfAlreadyBuilt();
+
+            feedItem.actionUrl = actionUrl;
             return this;
         }
 
         public Builder setActionTitle(final String actionTitle) {
-            this.actionTitle = actionTitle;
+            throwIfAlreadyBuilt();
+
+            feedItem.actionTitle = actionTitle;
             return this;
         }
 
         public Builder setMeta(final Map<String, Object> meta) {
-            this.meta = meta;
+            throwIfAlreadyBuilt();
+
+            feedItem.meta = meta;
             return this;
         }
 
         public FeedItem build() {
-            if (StringUtils.isNullOrEmpty(title) || StringUtils.isNullOrEmpty(body) || publishedDate <= 0 || expiryDate <= 0) {
+            if (StringUtils.isNullOrEmpty(feedItem.title) || StringUtils.isNullOrEmpty(feedItem.body) || feedItem.publishedDate <= 0 || feedItem.expiryDate <= 0) {
                 return null;
             }
-            return new FeedItem(title, body, imageUrl, actionUrl, actionTitle, publishedDate, expiryDate, meta);
+            
+            throwIfAlreadyBuilt();
+            didBuild = true;
+
+            return feedItem;
+        }
+
+        private void throwIfAlreadyBuilt() {
+            if (didBuild) {
+                throw new UnsupportedOperationException("Attempted to call methods on FeedItem.Builder after build() was invoked.");
+            }
         }
     }
 
