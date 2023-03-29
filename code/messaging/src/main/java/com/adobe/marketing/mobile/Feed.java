@@ -31,7 +31,7 @@ public class Feed {
      * @param name {@code String} containing the friendly name for the feed which was provided in the AJO UI
      * @param items {@link List<FeedItem>} that are members of this {@link Feed}
      */
-    Feed(final String surfaceUri, final String name, final List<FeedItem> items) {
+    public Feed(final String surfaceUri, final String name, final List<FeedItem> items) {
         this.surfaceUri = surfaceUri;
         this.name = name;
         this.items = items;
