@@ -824,6 +824,32 @@ public class MessagingExtensionTests {
         });
     }
 
+    @Test
+    public void test_processEvent_updateFeedsForSurfacePathsEvent() {
+        ArgumentCaptor<List<String>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("promos/feed2");
+
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("updatefeeds", true);
+            eventData.put("surfaces", surfacePaths);
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(MessagingConstants.EventSource.REQUEST_CONTENT);
+
+            // test
+            messagingExtension.processEvent(mockEvent);
+
+            // verify
+            verify(mockAJOPayloadHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
+            assertEquals(surfacePaths, listArgumentCaptor.getValue());
+        });
+    }
+
     // ========================================================================================
     // sendPropositionInteraction
     // ========================================================================================

@@ -38,6 +38,7 @@ public class MessagingTestConstants {
         public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+        public static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
 
         private EventName() {
         }
@@ -115,13 +116,13 @@ public class MessagingTestConstants {
             public static final String TRACK_INFO_KEY_MESSAGE_EXECUTION_ID = "messageExecutionID";
             public static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             public static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
-
             // Google messaging id key
             public static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
 
             public static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
-
-            public static final String REFRESH_MESSAGES = "refreshmessages";
+            public static final String REFRESH_MESSAGES = "refreshMessages";
+            public static final String UPDATE_FEEDS = "updatefeeds";
+            public static final String SURFACES = "surfaces";
 
             private Messaging() {
             }

@@ -234,15 +234,16 @@ public final class MessagingExtension extends Extension {
         // validate fetch messages event then refresh in-app messages via an Edge extension event
         if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
-            AJOPayloadHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
-        } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
             AJOPayloadHandler.fetchMessages(null);
+        } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
+            // validate update feeds event then retrieve feeds via an Edge extension event
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
+            AJOPayloadHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
         } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
-            // Need experience event dataset id for sending the push token
+            // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {

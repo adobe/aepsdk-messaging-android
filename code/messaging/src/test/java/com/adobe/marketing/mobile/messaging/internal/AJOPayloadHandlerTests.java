@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -171,6 +172,98 @@ public class AJOPayloadHandlerTests {
 
             // verify extensionApi.dispatch not called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_SurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("promos/feed2");
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            AJOPayloadHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the feed surface paths
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_SurfacePathsProvided_InvalidPathsDropped() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("");
+        surfacePaths.add(null);
+        surfacePaths.add("promos/feed2");
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            AJOPayloadHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the feed surface paths
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_NoSurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            AJOPayloadHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the application id only
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_NoValidSurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add(null);
+        surfacePaths.add("");
+        runUsingMockedServiceProvider(() -> {
+            // test
+            AJOPayloadHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch not called
+            verifyNoInteractions(mockExtensionApi);
         });
     }
 

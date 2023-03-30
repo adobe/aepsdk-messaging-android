@@ -196,10 +196,10 @@ public final class Messaging {
      *  @param surfacePaths A {@code List<String>} of surface paths
      */
     public static void updateFeedsForSurfacePaths(final List<String> surfacePaths) {
-        final List<String> validSurfacePaths = new ArrayList<>(surfacePaths);
-        for (final String surfacePath : validSurfacePaths) {
+        final List<String> validSurfacePaths = new ArrayList<>();
+        for (final String surfacePath : surfacePaths) {
             if (!StringUtils.isNullOrEmpty(surfacePath)) {
-                validSurfacePaths.remove(surfacePath);
+                validSurfacePaths.add(surfacePath);
             }
         }
 
