@@ -32,7 +32,7 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FeedTests {
     private static final int SECONDS_IN_A_DAY = 86400;
-    private static final String TITLE = "testTile";
+    private static final String TITLE = "testTitle";
     private static final String BODY = "testBody";
     private static final String IMAGE_URL = "testImageUrl";
     private static final String ACTION_URL = "testActionUrl";
