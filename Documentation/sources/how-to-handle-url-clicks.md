@@ -44,8 +44,12 @@ If the provided URL does not contain a custom scheme, the URL will be loaded in 
 The example below will dismiss the current in-app message, send an `decisioning.propositionInteract` event to edge with an action of `adobe`, and open the adobe.com website on the device's default web browser:
 
 ```
-adbinapp://dismiss?interaction=adobe&link=https://adobe.com
+adbinapp://dismiss?interaction=adobe&link=https%3A%2F%2Fwww.adobe.com%3Fkey%3Dvalue
 ```
+
+> **Warning**
+> 
+> The `link` parameter must be URL encoded. If you are setting this value in the AJO message authoring UI, the value will automatically be encoded. If your message is custom HTML, you must encode the value manually.
 
 ##### Open a deeplink
 
