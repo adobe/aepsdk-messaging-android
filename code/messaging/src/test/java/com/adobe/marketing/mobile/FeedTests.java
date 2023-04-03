@@ -41,11 +41,14 @@ public class FeedTests {
     private static final String FEED_NAME = "testFeedName";
     private static final long PUBLISHED_DATE = TimeUtils.getUnixTimeInSeconds();
     private static final long EXPIRY_DATE = PUBLISHED_DATE + SECONDS_IN_A_DAY;
+    private FeedItem feedItem;
+    private FeedItem feedItem2;
     private final Map<String, Object> metaMap = new HashMap<String, Object>() {
         {
             put("stringKey", "value");
             put("key2", true);
             put("key3", 1000.1111);
+            put("feedName", FEED_NAME);
         }
     };
     private final Map<String, Object> metaMap2 = new HashMap<String, Object>() {
@@ -58,13 +61,13 @@ public class FeedTests {
 
     @Before
     public void setup() {
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, PUBLISHED_DATE, EXPIRY_DATE)
+        feedItem = new FeedItem.Builder(TITLE, BODY, PUBLISHED_DATE, EXPIRY_DATE)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
                 .setMeta(metaMap)
                 .build();
-        FeedItem feedItem2 = new FeedItem.Builder(TITLE + "2", BODY + "2", PUBLISHED_DATE, EXPIRY_DATE)
+        feedItem2 = new FeedItem.Builder(TITLE + "2", BODY + "2", PUBLISHED_DATE, EXPIRY_DATE)
                 .setImageUrl(IMAGE_URL + "2")
                 .setActionUrl(ACTION_URL + "2")
                 .setActionTitle(ACTION_TITLE + "2")
@@ -81,7 +84,7 @@ public class FeedTests {
     @Test
     public void testCreateFeed_AllParametersPresent() {
         // test
-        Feed feed = new Feed(SURFACE_URI, FEED_NAME, feedItems);
+        Feed feed = new Feed(SURFACE_URI, feedItems);
 
         // verify
         assertNotNull(feed);
@@ -92,32 +95,44 @@ public class FeedTests {
 
     @Test
     public void testCreateFeed_NoFeedName() {
+        // setup
+        List<FeedItem> feedItems = new ArrayList<>();
+        metaMap.put("feedName", "");
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, PUBLISHED_DATE, EXPIRY_DATE)
+                .setImageUrl(IMAGE_URL)
+                .setActionUrl(ACTION_URL)
+                .setActionTitle(ACTION_TITLE)
+                .setMeta(metaMap)
+                .build();
+        feedItems.add(feedItem);
+        feedItems.add(feedItem2);
+
         // test
-        Feed feed = new Feed(SURFACE_URI, null, feedItems);
+        Feed feed = new Feed(SURFACE_URI, feedItems);
 
         // verify
         assertNotNull(feed);
         assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertNull(feed.getName());
+        assertEquals("", feed.getName());
         assertEquals(feedItems, feed.getItems());
     }
 
     @Test
     public void testCreateFeed_NoFeedItems() {
         // test
-        Feed feed = new Feed(SURFACE_URI, FEED_NAME, null);
+        Feed feed = new Feed(SURFACE_URI, null);
 
         // verify
         assertNotNull(feed);
         assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertEquals(FEED_NAME, feed.getName());
+        assertEquals("", feed.getName());
         assertNull(feed.getItems());
     }
 
     @Test
     public void testCreateFeed_NoSurfaceUri() {
         // test
-        Feed feed = new Feed(null, FEED_NAME, feedItems);
+        Feed feed = new Feed(null, feedItems);
 
         // verify
         assertNotNull(feed);
