@@ -90,7 +90,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
     private ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
-    private EdgePersonalizationResponseHandler EdgePersonalizationResponseHandler;
+    private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
     @Before
     public void setup() {
@@ -129,7 +129,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mock_applicationId");
 
-            EdgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
             runnable.run();
         }
@@ -149,7 +149,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -168,7 +168,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch not called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -189,7 +189,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -217,7 +217,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -241,7 +241,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -260,7 +260,7 @@ public class EdgePersonalizationResponseHandlerTests {
         surfacePaths.add("");
         runUsingMockedServiceProvider(() -> {
             // test
-            EdgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch not called
             verifyNoInteractions(mockExtensionApi);
@@ -290,7 +290,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -325,7 +325,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -346,7 +346,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify propositions cached again incrementing number of times by 1
                 verify(mockMessagingCacheUtilities, times(2)).cachePropositions(any(List.class));
@@ -359,7 +359,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 assertEquals(4, listArgumentCaptor.getValue().size());
 
                 // verify 7 rules in total have been loaded
-                assertEquals(7, EdgePersonalizationResponseHandler.getRuleCount());
+                assertEquals(7, edgePersonalizationResponseHandler.getRuleCount());
             }
         });
     }
@@ -384,7 +384,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -425,7 +425,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -462,7 +462,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -498,7 +498,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -534,7 +534,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -564,7 +564,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify cached propositions cleared
             verify(mockMessagingCacheUtilities, times(1)).cachePropositions(eq(null));
@@ -593,7 +593,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -626,7 +626,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify proposition not cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -655,7 +655,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -684,7 +684,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -713,7 +713,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            EdgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -754,7 +754,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                EdgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -786,7 +786,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
                 // test
-                EdgePersonalizationResponseHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
                 InternalMessage mockInternalMessage = mockedConstruction.constructed().get(0);
@@ -810,7 +810,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", "", details);
 
                 // test
-                EdgePersonalizationResponseHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -826,7 +826,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
 
                 // test
-                EdgePersonalizationResponseHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -848,7 +848,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", "notCjmIam", details);
 
                 // test
-                EdgePersonalizationResponseHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -862,7 +862,7 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
                 // test
-                EdgePersonalizationResponseHandler.createInAppMessage(null);
+                edgePersonalizationResponseHandler.createInAppMessage(null);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
