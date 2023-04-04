@@ -120,7 +120,7 @@ public class MessagingTestConstants {
             public static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
 
             public static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
-            public static final String REFRESH_MESSAGES = "refreshMessages";
+            public static final String REFRESH_MESSAGES = "refreshmessages";
             public static final String UPDATE_FEEDS = "updatefeeds";
             public static final String SURFACES = "surfaces";
 
