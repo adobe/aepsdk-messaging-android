@@ -81,7 +81,7 @@ public class MessagingExtensionTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
-    AJOPayloadHandler mockAJOPayloadHandler;
+    EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock
     SharedStateResult mockConfigData;
     @Mock
@@ -123,7 +123,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
-        reset(mockAJOPayloadHandler);
+        reset(mockEdgePersonalizationResponseHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
         reset(mockDeviceInfoService);
@@ -147,7 +147,7 @@ public class MessagingExtensionTests {
                 put("key", "value");
             }});
 
-            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockAJOPayloadHandler);
+            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockEdgePersonalizationResponseHandler);
 
             runnable.run();
         }
@@ -160,7 +160,7 @@ public class MessagingExtensionTests {
     public void test_TestableConstructor() {
         runUsingMockedServiceProvider(() -> {
             assertNotNull(messagingExtension.messagingRulesEngine);
-            assertNotNull(messagingExtension.AJOPayloadHandler);
+            assertNotNull(messagingExtension.edgePersonalizationResponseHandler);
         });
     }
 
@@ -169,7 +169,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             messagingExtension = new MessagingExtension(mockExtensionApi);
             assertNotNull(messagingExtension.messagingRulesEngine);
-            assertNotNull(messagingExtension.AJOPayloadHandler);
+            assertNotNull(messagingExtension.edgePersonalizationResponseHandler);
         });
     }
 
@@ -296,7 +296,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleWildcardEvents(mockEvent);
 
             // verify triggered rule consequence passed to InAppNotificationHandler to create a Message
-            verify(mockAJOPayloadHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
+            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
         });
     }
 
@@ -791,7 +791,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
-            eventData.put("refreshMessages", true);
+            eventData.put("refreshmessages", true);
             Event mockEvent = mock(Event.class);
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
@@ -801,7 +801,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockAJOPayloadHandler, times(1)).fetchMessages(null);
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(null);
         });
     }
 
@@ -820,7 +820,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockAJOPayloadHandler, times(1)).handleEdgePersonalizationNotification(any(Event.class));
+            verify(mockEdgePersonalizationResponseHandler, times(1)).handleEdgePersonalizationNotification(any(Event.class));
         });
     }
 
@@ -845,7 +845,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockAJOPayloadHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
             assertEquals(surfacePaths, listArgumentCaptor.getValue());
         });
     }

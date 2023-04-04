@@ -68,6 +68,8 @@ class MessagingUtils {
     // ========================================================================================
 
     /**
+     * Determines if the passed in {@code Event} is a generic identity request content event.
+     *
      * @param event A Generic Identity Request Content {@link Event}.
      * @return {@code boolean} indicating if the passed in event is a generic identity request content event.
      */
@@ -81,6 +83,8 @@ class MessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is a messaging request content event.
+     *
      * @param event A Messaging Request Content {@link Event}.
      * @return {@code boolean} indicating if the passed in event is a messaging request content event.
      */
@@ -94,10 +98,12 @@ class MessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is a refresh messages event.
+     *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a message fetch event.
+     * @return {@code boolean} indicating if the passed in event is a refresh messages event.
      */
-    static boolean isFetchMessagesEvent(final Event event) {
+    static boolean isRefreshMessagesEvent(final Event event) {
         if (event == null || event.getEventData() == null) {
             return false;
         }
@@ -108,6 +114,8 @@ class MessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is an edge personalization decision event.
+     *
      * @param event An Edge Personalization Decision {@link Event}.
      * @return {@code boolean} indicating if the passed in event is an edge personalization decision event.
      */
@@ -121,8 +129,10 @@ class MessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is an update feeds event.
+     *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is a update feeds event.
+     * @return {@code boolean} indicating if the passed in event is an update feeds event.
      */
     static boolean isUpdateFeedsEvent(final Event event) {
         if (event == null || event.getEventData() == null) {
@@ -139,6 +149,8 @@ class MessagingUtils {
     // ========================================================================================
 
     /**
+     * Retrieves the app surface {@code String} from the passed in {@code Event}'s event data.
+     *
      * @param event A Messaging Request Content {@link Event}.
      * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
      */
@@ -150,24 +162,15 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Scope retrieval
+    // Request event id retrieval
     // ========================================================================================
 
     /**
-     * @param propositionPayloads A {@link List<PropositionPayload>} containing propositions retrieved from AJO
-     * @return {@code String} containing the scope retrieved from the proposition payload details
+     * Retrieves the request event id {@code String} from the passed in {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
      */
-    static String getScope(final List<PropositionPayload> propositionPayloads) {
-        PropositionPayload propositionPayload = null;
-        if (propositionPayloads.size() > 0) {
-            propositionPayload = propositionPayloads.get(0);
-        }
-        return propositionPayload == null ? null : propositionPayload.propositionInfo.scope;
-    }
-
-    // ========================================================================================
-    // Request event id retrieval
-    // ========================================================================================
     static String getRequestEventId(final Event event) {
         return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
     }

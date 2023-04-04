@@ -58,7 +58,7 @@ import java.util.Map;
  * This class is used to handle the retrieval and processing of AJO payloads containing in-app or feed messages. It is also
  * responsible for the display of AJO in-app messages.
  */
-class AJOPayloadHandler {
+class EdgePersonalizationResponseHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     final MessagingExtension parent;
     private final MessagingCacheUtilities messagingCacheUtilities;
@@ -77,12 +77,12 @@ class AJOPayloadHandler {
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      */
-    AJOPayloadHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
         this(parent, extensionApi, rulesEngine, null, null);
     }
 
     @VisibleForTesting
-    AJOPayloadHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
@@ -157,7 +157,7 @@ class AJOPayloadHandler {
         messagesRequestEventId = event.getUniqueIdentifier();
 
         // send event
-        Log.debug(LOG_TAG, SELF_TAG, "Dispatching edge event to retrieve AJO message payloads.");
+        Log.debug(LOG_TAG, SELF_TAG, "Dispatching an edge event to retrieve in-app or feed message definitions.");
         extensionApi.dispatch(event);
     }
 

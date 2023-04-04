@@ -47,7 +47,7 @@ public final class Messaging {
     private static final String _XDM = "_xdm";
     private static final String UPDATE_FEEDS = "updatefeeds";
     private static final String SURFACES = "surfaces";
-    private static final String REFRESH_MESSAGES = "refreshMessages";
+    private static final String REFRESH_MESSAGES = "refreshmessages";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
 
