@@ -390,18 +390,18 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
-        Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
         assertEquals(true, messagingEventData.get("refreshmessages"));
 
         // verify edge request content event
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
-        Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
-        Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
-        Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
-        Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
-        List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
+        final Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
+        final Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
+        final Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
+        final Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
+        final List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
         assertEquals("personalization.request", xdmDataMap.get("eventType"));
         assertEquals(1, surfacesList.size());
         assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", surfacesList.get(0));
@@ -413,7 +413,7 @@ public class MessagingPublicAPITests {
     @Test
     public void testUpdateFeedsForSurfacePaths() throws InterruptedException {
         // setup
-        List<String> surfacePaths = new ArrayList<>();
+        final List<String> surfacePaths = new ArrayList<>();
         surfacePaths.add("promos/feed1");
         surfacePaths.add("promos/feed2");
 
@@ -425,7 +425,7 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
-        Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
         assertEquals(true, messagingEventData.get("updatefeeds"));
         assertEquals(surfacePaths, messagingEventData.get("surfaces"));
 
@@ -433,11 +433,11 @@ public class MessagingPublicAPITests {
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
-        Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
-        Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
-        Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
-        Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
-        List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
+        final Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
+        final Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
+        final Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
+        final Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
+        final List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
         assertEquals("personalization.request", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1", surfacesList.get(0));
@@ -447,12 +447,12 @@ public class MessagingPublicAPITests {
     @Test
     public void testUpdateFeedsForSurfacePaths_somePathsInvalid() throws InterruptedException {
         // setup
-        List<String> surfacePaths = new ArrayList<>();
+        final List<String> surfacePaths = new ArrayList<>();
         surfacePaths.add("promos/feed1");
         surfacePaths.add("");
         surfacePaths.add(null);
         surfacePaths.add("promos/feed2");
-        List<String> expectedSurfacePaths = new ArrayList<>(surfacePaths);
+        final List<String> expectedSurfacePaths = new ArrayList<>(surfacePaths);
         expectedSurfacePaths.remove("");
         expectedSurfacePaths.remove(null);
 
@@ -464,7 +464,7 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
-        Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
         assertEquals(true, messagingEventData.get("updatefeeds"));
         assertEquals(expectedSurfacePaths, messagingEventData.get("surfaces"));
 
@@ -472,11 +472,11 @@ public class MessagingPublicAPITests {
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
-        Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
-        Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
-        Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
-        Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
-        List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
+        final Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
+        final Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
+        final Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
+        final Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
+        final List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
         assertEquals("personalization.request", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1", surfacesList.get(0));
@@ -486,7 +486,7 @@ public class MessagingPublicAPITests {
     @Test
     public void testUpdateFeedsForSurfacePaths_emptyPaths() throws InterruptedException {
         // setup
-        List<String> surfacePaths = new ArrayList<>();
+        final List<String> surfacePaths = new ArrayList<>();
         // test
         Messaging.updateFeedsForSurfacePaths(surfacePaths);
         TestHelper.sleep(500);
