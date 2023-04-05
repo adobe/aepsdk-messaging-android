@@ -12,6 +12,10 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import com.adobe.marketing.mobile.util.DataReader;
+
+import java.util.Map;
+
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
@@ -41,6 +45,20 @@ final class MessagingConstants {
         static final String LINK = "link";
 
         private QueryParameters() {
+        }
+    }
+
+    final class MessageFeedKeys {
+        static final String TITLE = "title";
+        static final String BODY = "body";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String IMAGE_URL = "imageUrl";
+        static final String ACTION_TITLE = "actionTitle";
+        static final String ACTION_URL = "actionUrl";
+        static final String METADATA = "meta";
+
+        private MessageFeedKeys() {
         }
     }
 
@@ -198,6 +216,7 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajofeeditem";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";

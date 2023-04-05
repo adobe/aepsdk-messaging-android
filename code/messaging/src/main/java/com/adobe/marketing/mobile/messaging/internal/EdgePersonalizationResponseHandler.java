@@ -20,19 +20,17 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Feed;
+import com.adobe.marketing.mobile.FeedItem;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -40,6 +38,7 @@ import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
@@ -66,6 +65,7 @@ class EdgePersonalizationResponseHandler {
     private final LaunchRulesEngine launchRulesEngine;
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
     private List<PropositionPayload> inMemoryPropositions = new ArrayList<>();
+    private final Map<String, Feed> inMemoryFeeds = new HashMap<>();
     private String messagesRequestEventId;
     private String lastProcessedRequestEventId;
     private InternalMessage message;
@@ -210,6 +210,7 @@ class EdgePersonalizationResponseHandler {
     private void processPropositions(final List<PropositionPayload> propositions, final boolean clearExistingRules, final boolean persistChanges, final String expectedScope) {
         final List<LaunchRule> parsedRules = new ArrayList<>();
         final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>();
+        boolean feedsReset = false;
 
         if (propositions != null && !propositions.isEmpty()) {
             for (final PropositionPayload proposition : propositions) {
@@ -235,7 +236,18 @@ class EdgePersonalizationResponseHandler {
                     cacheImageAssetsFromPayload(ruleJson);
 
                     // store reporting data for this payload for later use
-                    tempPropositionInfo.put(getMessageId(ruleJson), proposition.propositionInfo);
+                    tempPropositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
+
+                    // if we have a valid message feed consequence persist the feed in memory
+                    final String consequenceType = MessagingUtils.getConsequenceType(ruleJson);
+                    if (!StringUtils.isNullOrEmpty(consequenceType) && consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE)) {
+                        // clear existing feeds as needed
+                        if (clearExistingRules && !feedsReset) {
+                            inMemoryFeeds.clear();
+                            feedsReset = true;
+                        }
+                        updateFeeds(MessagingUtils.getConsequenceDetails(ruleJson), proposition.propositionInfo.scope);
+                    }
 
                     parsedRules.add(parsedRule.get(0));
                 }
@@ -243,6 +255,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         if (clearExistingRules) {
+            inMemoryFeeds.clear();
             inMemoryPropositions.clear();
             messagingCacheUtilities.cachePropositions(null);
             propositionInfo = tempPropositionInfo;
@@ -267,19 +280,40 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    /**
-     * Extracts the message id from the provided rule payload's consequence.
-     *
-     * @return a {@code String> containing the consequence id
-     */
-    private String getMessageId(final JSONObject rulePayload) {
-        final JSONObject consequences;
+    private void updateFeeds(final JSONObject consequenceData, final String scope) {
         try {
-            consequences = rulePayload.getJSONArray(JSON_KEY).getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY).getJSONObject(0);
-            return consequences.getString(MESSAGE_CONSEQUENCE_ID);
-        } catch (final JSONException exception) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
-            return null;
+            final Map<String, Object> feedDetails = JSONUtils.toMap(consequenceData);
+            if (!MapUtils.isNullOrEmpty(feedDetails)) {
+                final String title = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.TITLE, "");
+                final String body = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.BODY, "");
+                final long publishedDate = DataReader.optLong(feedDetails, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
+                final long expiryDate = DataReader.optLong(feedDetails, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
+                final String imageUrl = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
+                final String actionTitle = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
+                final String actionUrl = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
+                final Map<String, Object> meta = DataReader.optTypedMap(Object.class, feedDetails, MessagingConstants.MessageFeedKeys.METADATA, null);
+
+                final FeedItem feedItem = new FeedItem.Builder(title, body, publishedDate, expiryDate)
+                        .setImageUrl(imageUrl)
+                        .setActionTitle(actionTitle)
+                        .setActionUrl(actionUrl)
+                        .setMeta(meta)
+                        .build();
+                if (feedItem != null) {
+                    // find the feed to insert the feed item else create a new feed for it
+                    Feed feed = inMemoryFeeds.get(scope);
+                    if (feed != null) {
+                        feed.getItems().add(feedItem);
+                    } else {
+                        final ArrayList<FeedItem> feedItems = new ArrayList<>();
+                        feedItems.add(feedItem);
+                        feed = new Feed(scope, feedItems);
+                    }
+                    inMemoryFeeds.put(scope, feed);
+                }
+            }
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, SELF_TAG, "updateFeeds - Exception occurred when creating message feed detail map from json: %s", jsonException.getMessage());
         }
     }
 
@@ -337,16 +371,19 @@ class EdgePersonalizationResponseHandler {
     private void cacheImageAssetsFromPayload(final JSONObject ruleJsonObject) {
         List<String> remoteAssetsList = new ArrayList<>();
         try {
-            final JSONArray rulesArray = ruleJsonObject.getJSONArray(JSON_KEY);
-            final JSONArray consequence = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
-            final JSONObject details = consequence.getJSONObject(0).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-            final JSONArray remoteAssets = details.getJSONArray(MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
-            if (remoteAssets.length() != 0) {
-                for (int index = 0; index < remoteAssets.length(); index++) {
-                    final String imageAssetUrl = (String) remoteAssets.get(index);
-                    if (UrlUtils.isValidUrl(imageAssetUrl)) {
-                        Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", imageAssetUrl);
-                        remoteAssetsList.add(imageAssetUrl);
+            final JSONObject details = MessagingUtils.getConsequenceDetails(ruleJsonObject);
+            final String messageFeedImageUrl = details.optString(MessagingConstants.MessageFeedKeys.IMAGE_URL);
+            if (!StringUtils.isNullOrEmpty(messageFeedImageUrl)) {
+                remoteAssetsList.add(messageFeedImageUrl);
+            } else {
+                final JSONArray remoteAssets = details.getJSONArray(MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+                if (remoteAssets.length() != 0) {
+                    for (int index = 0; index < remoteAssets.length(); index++) {
+                        final String imageAssetUrl = (String) remoteAssets.get(index);
+                        if (UrlUtils.isValidUrl(imageAssetUrl)) {
+                            Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", imageAssetUrl);
+                            remoteAssetsList.add(imageAssetUrl);
+                        }
                     }
                 }
             }

@@ -23,4 +23,5 @@ public class MessageTestConfig {
     public boolean noValidAppSurfaceInPayload = false;
     public boolean isMissingScopeDetails = false;
     public boolean isMissingScope = false;
+    public boolean isMessageFeedPayoad = false;
 }

@@ -88,7 +88,7 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
 
-    private ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+    private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
@@ -727,8 +727,44 @@ public class EdgePersonalizationResponseHandlerTests {
         });
     }
 
+    @Test
+    public void test_handleEdgePersonalizationNotification_ValidMessageFeedPayloadPresent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                List<LaunchRule> launchRules = new ArrayList<>();
+                LaunchRule mockLaunchRule = mock(LaunchRule.class);
+                launchRules.add(mockLaunchRule);
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
+
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 1;
+                config.isMessageFeedPayoad = true;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // verify proposition cached
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+
+                // verify assets cached
+                verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
+
+                // verify rules replaced
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                assertEquals(1, listArgumentCaptor.getValue().size());
+            }
+        });
+    }
+
     // ========================================================================================
-    // EdgePersonalizationResponseHandler load cached propositions on instantiation
+    // edgePersonalizationResponseHandler load cached propositions on instantiation
     // ========================================================================================
     @Test
     public void test_cachedPropositions_cacheLoadedOnEdgePersonalizationResponseHandlerConstruction() {

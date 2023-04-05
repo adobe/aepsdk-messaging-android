@@ -137,12 +137,7 @@ public class MessagingTestUtils {
         final Event event = new Event.Builder("edge response testing", MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
-        MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.debug(LOG_TAG, "exception occurred in dispatching edge personalization event: %s", extensionError.getErrorName());
-            }
-        });
+        MobileCore.dispatchEvent(event);
     }
 
     /**
@@ -381,7 +376,69 @@ public class MessagingTestUtils {
             scopeDetails.put("scopeDetails", characteristics);
             final int randomInt = random.nextInt(999999);
             data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
-            data.put("content","{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt +"\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
+            if (config.isMessageFeedPayoad) {
+                data.put("content", "{\n" +
+                        "  \"version\": 1,\n" +
+                        "  \"rules\": [{\n" +
+                        "    \"condition\": {\n" +
+                        "      \"type\": \"group\",\n" +
+                        "      \"definition\": {\n" +
+                        "        \"logic\": \"and\",\n" +
+                        "        \"conditions\": [{\n" +
+                        "            \"definition\": {\n" +
+                        "              \"key\": \"action\",\n" +
+                        "              \"matcher\": \"eq\",\n" +
+                        "              \"values\": [\n" +
+                        "                \"feed\"\n" +
+                        "              ]\n" +
+                        "            },\n" +
+                        "            \"type\": \"matcher\"\n" +
+                        "          },\n" +
+                        "          {\n" +
+                        "            \"type\": \"matcher\",\n" +
+                        "            \"definition\": {\n" +
+                        "              \"key\": \"~timestampu\",\n" +
+                        "              \"matcher\": \"ge\",\n" +
+                        "              \"values\": [\n" +
+                        "                1680555536\n" +
+                        "              ]\n" +
+                        "            }\n" +
+                        "          },\n" +
+                        "          {\n" +
+                        "            \"type\": \"matcher\",\n" +
+                        "            \"definition\": {\n" +
+                        "              \"key\": \"~timestampu\",\n" +
+                        "              \"matcher\": \"le\",\n" +
+                        "              \"values\": [\n" +
+                        "                1790873200\n" +
+                        "              ]\n" +
+                        "            }\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      }\n" +
+                        "    },\n" +
+                        "    \"consequences\": [{\n" +
+                        "      \"id\": \"48181acd22b3edaebc8a447868a7df7ce629920a\",\n" +
+                        "      \"type\": \"ajofeeditem\",\n" +
+                        "      \"detail\": {\n" +
+                        "        \"title\": \"Flash sale!\",\n" +
+                        "        \"body\": \"All winter gear is now up to 30% off at checkout.\",\n" +
+                        "        \"imageUrl\": \"https://luma.com/wintersale.png\",\n" +
+                        "        \"actionUrl\": \"https://luma.com/sale\",\n" +
+                        "        \"actionTitle\": \"Shop the sale!\",\n" +
+                        "        \"publishedDate\": 1677190552,\n" +
+                        "        \"expiryDate\": 1677243235,\n" +
+                        "        \"meta\": {\n" +
+                        "          \"feed\": \"mobileApp://com.adobe.myApp/feeds/promos/winterPromo\",\n" +
+                        "          \"feedName\": \"Winter Promo\"\n" +
+                        "        }\n" +
+                        "      }\n" +
+                        "    }]\n" +
+                        "  }]\n" +
+                        "}");
+            } else {
+                data.put("content", "{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt +"\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
+            }
             item.put("data", data);
             items.add(item);
         }
