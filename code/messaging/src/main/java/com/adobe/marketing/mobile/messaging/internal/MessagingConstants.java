@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "2.1.1";
+    static final String EXTENSION_VERSION = "2.2.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_BASE_DIR = "messaging";
@@ -110,8 +110,9 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
-
-            static final String REFRESH_MESSAGES = "refreshMessages";
+            static final String REFRESH_MESSAGES = "refreshmessages";
+            static final String UPDATE_FEEDS = "updatefeeds";
+            static final String SURFACES = "surfaces";
 
             private Messaging() {
             }
@@ -240,6 +241,7 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
+        static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {

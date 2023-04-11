@@ -15,13 +15,13 @@ package com.adobe.marketing.mobile.messaging.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -62,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InAppNotificationHandlerTests {
+public class EdgePersonalizationResponseHandlerTests {
 
     // Mocks
     @Mock
@@ -90,7 +90,7 @@ public class InAppNotificationHandlerTests {
 
     private ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
-    private InAppNotificationHandler inAppNotificationHandler;
+    private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
     @Before
     public void setup() {
@@ -129,7 +129,7 @@ public class InAppNotificationHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mock_applicationId");
 
-            inAppNotificationHandler = new InAppNotificationHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
             runnable.run();
         }
@@ -149,7 +149,7 @@ public class InAppNotificationHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            inAppNotificationHandler.fetchMessages();
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -168,10 +168,102 @@ public class InAppNotificationHandlerTests {
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
             // test
-            inAppNotificationHandler.fetchMessages();
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch not called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_SurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("promos/feed2");
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the feed surface paths
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_SurfacePathsProvided_InvalidPathsDropped() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("");
+        surfacePaths.add(null);
+        surfacePaths.add("promos/feed2");
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the feed surface paths
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_NoSurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            // test
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch called
+            ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event data contains the application id only
+            Event event = eventCaptor.getValue();
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
+
+    @Test
+    public void test_fetchMessages_NoValidSurfacePathsProvided() {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add(null);
+        surfacePaths.add("");
+        runUsingMockedServiceProvider(() -> {
+            // test
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+
+            // verify extensionApi.dispatch not called
+            verifyNoInteractions(mockExtensionApi);
         });
     }
 
@@ -198,7 +290,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -233,7 +325,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -254,7 +346,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify propositions cached again incrementing number of times by 1
                 verify(mockMessagingCacheUtilities, times(2)).cachePropositions(any(List.class));
@@ -267,7 +359,7 @@ public class InAppNotificationHandlerTests {
                 assertEquals(4, listArgumentCaptor.getValue().size());
 
                 // verify 7 rules in total have been loaded
-                assertEquals(7, inAppNotificationHandler.getRuleCount());
+                assertEquals(7, edgePersonalizationResponseHandler.getRuleCount());
             }
         });
     }
@@ -292,7 +384,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -333,7 +425,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -370,7 +462,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -406,7 +498,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
                 verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
@@ -442,7 +534,7 @@ public class InAppNotificationHandlerTests {
                 when(mockEvent.getEventData()).thenReturn(eventData);
 
                 // test
-                inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -472,7 +564,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify cached propositions cleared
             verify(mockMessagingCacheUtilities, times(1)).cachePropositions(eq(null));
@@ -501,7 +593,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -534,7 +626,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify proposition not cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -563,7 +655,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -592,7 +684,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -621,7 +713,7 @@ public class InAppNotificationHandlerTests {
             when(mockEvent.getEventData()).thenReturn(eventData);
 
             // test
-            inAppNotificationHandler.handleEdgePersonalizationNotification(mockEvent);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
             verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -636,10 +728,10 @@ public class InAppNotificationHandlerTests {
     }
 
     // ========================================================================================
-    // inAppNotificationHandler load cached propositions on instantiation
+    // EdgePersonalizationResponseHandler load cached propositions on instantiation
     // ========================================================================================
     @Test
-    public void test_cachedPropositions_cacheLoadedOnInAppNotificationHandlerConstruction() {
+    public void test_cachedPropositions_cacheLoadedOnEdgePersonalizationResponseHandlerConstruction() {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
@@ -662,7 +754,7 @@ public class InAppNotificationHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                inAppNotificationHandler = new InAppNotificationHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
@@ -694,7 +786,7 @@ public class InAppNotificationHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
                 InternalMessage mockInternalMessage = mockedConstruction.constructed().get(0);
@@ -718,7 +810,7 @@ public class InAppNotificationHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", "", details);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -734,7 +826,7 @@ public class InAppNotificationHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -756,7 +848,7 @@ public class InAppNotificationHandlerTests {
                 RuleConsequence consequence = new RuleConsequence("123456789", "notCjmIam", details);
 
                 // test
-                inAppNotificationHandler.createInAppMessage(consequence);
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());
@@ -770,7 +862,7 @@ public class InAppNotificationHandlerTests {
             // setup
             try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
                 // test
-                inAppNotificationHandler.createInAppMessage(null);
+                edgePersonalizationResponseHandler.createInAppMessage(null);
 
                 // verify no message object created
                 assertEquals(0, mockedConstruction.constructed().size());

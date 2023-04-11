@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -25,6 +26,7 @@ import android.content.Intent;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
+import com.adobe.marketing.mobile.util.DataReader;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,7 +38,9 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -51,6 +55,7 @@ public class MessagingTests {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class)) {
             mobileCoreMockedStatic.when(() -> MobileCore.registerExtension(any(), extensionErrorCallbackArgumentCaptor != null ? extensionErrorCallbackArgumentCaptor.capture() : any(ExtensionErrorCallback.class))).thenCallRealMethod();
             mobileCoreMockedStatic.when(() -> MobileCore.dispatchEventWithResponseCallback(eventArgumentCaptor.capture(), anyLong(), callbackWithErrorArgumentCaptor != null ? callbackWithErrorArgumentCaptor.capture() : any(AdobeCallbackWithError.class))).thenCallRealMethod();
+            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEvent(eventArgumentCaptor.capture())).thenCallRealMethod();
             testRunnable.run();
         }
     }
@@ -319,38 +324,92 @@ public class MessagingTests {
             Messaging.refreshInAppMessages();
 
             // verify
-            MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+            MobileCore.dispatchEvent(eventCaptor.capture());
 
             // verify event
-            Event event = eventCaptor.getValue();
+            Event event = eventCaptor.getAllValues().get(0);
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
+            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.REFRESH_MESSAGES, false));
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
             assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
         });
     }
 
+    // ========================================================================================
+    // updateFeedsForSurfacePaths
+    // ========================================================================================
     @Test
-    public void test_refreshInAppMessageEventDispatchError() {
+    public void test_updateFeedsForSurfacePaths() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor = ArgumentCaptor.forClass(AdobeCallbackWithError.class);
-        runWithMockedMobileCore(eventCaptor, callbackCaptor, null, () -> {
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("promos/feed2");
+        runWithMockedMobileCore(eventCaptor, null, null, () -> {
+
             // test
-            Messaging.refreshInAppMessages();
+            Messaging.updateFeedsForSurfacePaths(surfacePaths);
 
             // verify
-            MobileCore.dispatchEventWithResponseCallback(eventCaptor.capture(), anyLong(), callbackCaptor.capture());
+            MobileCore.dispatchEvent(eventCaptor.capture());
 
             // verify event
             Event event = eventCaptor.getAllValues().get(0);
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
+            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false));
+            assertEquals(surfacePaths, DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null));
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-            assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
-            // no exception should occur when triggering unexpected error callback
-            callbackCaptor.getAllValues().get(0).fail(AdobeError.UNEXPECTED_ERROR);
+            assertEquals(MessagingTestConstants.EventName.UPDATE_MESSAGE_FEEDS, event.getName());
+        });
+    }
+
+    @Test
+    public void test_updateFeedsForSurfacePaths_whenSomeSurfacePathsInvalid_thenOnlyValidPathsUsedForFeedRetrieval() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        List<String> surfacePaths = new ArrayList<>();
+        surfacePaths.add("promos/feed1");
+        surfacePaths.add("");
+        surfacePaths.add(null);
+        surfacePaths.add("promos/feed3");
+        List<String> validSurfacePaths = new ArrayList<>();
+        validSurfacePaths.add("promos/feed1");
+        validSurfacePaths.add("promos/feed3");
+        runWithMockedMobileCore(eventCaptor, null, null, () -> {
+
+            // test
+            Messaging.updateFeedsForSurfacePaths(surfacePaths);
+
+            // verify
+            MobileCore.dispatchEvent(eventCaptor.capture());
+
+            // verify event
+            Event event = eventCaptor.getAllValues().get(0);
+            Map<String, Object> eventData = event.getEventData();
+            assertNotNull(eventData);
+            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false));
+            assertEquals(validSurfacePaths, DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null));
+            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+            assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
+            assertEquals(MessagingTestConstants.EventName.UPDATE_MESSAGE_FEEDS, event.getName());
+        });
+    }
+
+    @Test
+    public void test_updateFeedsForSurfacePaths_whenEmptyListProvided_thenNoUpdateMessageFeedsEventDispatched() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(eventCaptor, null, null, () -> {
+
+            // test
+            Messaging.updateFeedsForSurfacePaths(new ArrayList<>());
+
+            // verify
+            MobileCore.dispatchEvent(eventCaptor.capture());
+
+            // verify no event dispatched
+            assertNull(eventCaptor.getValue());
         });
     }
 }

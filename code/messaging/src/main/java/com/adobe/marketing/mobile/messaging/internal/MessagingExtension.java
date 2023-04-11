@@ -77,7 +77,7 @@ import java.util.Map;
 public final class MessagingExtension extends Extension {
     private final static String SELF_TAG = "MessagingExtension";
 
-    final InAppNotificationHandler inAppNotificationHandler;
+    final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
 
@@ -105,10 +105,10 @@ public final class MessagingExtension extends Extension {
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
         this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
+        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
     //region Extension interface methods
@@ -173,7 +173,7 @@ public final class MessagingExtension extends Extension {
 
         // fetch in-app messages on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            inAppNotificationHandler.fetchMessages();
+            edgePersonalizationResponseHandler.fetchMessages(null);
             initialMessageFetchComplete = true;
         }
 
@@ -193,7 +193,7 @@ public final class MessagingExtension extends Extension {
                 final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
                 final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
                 final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-                inAppNotificationHandler.createInAppMessage(new RuleConsequence(id, type, detail));
+                edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
             }
             return;
         }
@@ -213,7 +213,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        inAppNotificationHandler.createInAppMessage(consequences.get(0));
+        edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
     }
 
     //endregion
@@ -231,14 +231,19 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // validate fetch messages event then refresh in-app messages via an Edge extension event
-        if (MessagingUtils.isFetchMessagesEvent(eventToProcess)) {
-            inAppNotificationHandler.fetchMessages();
+        // validate refresh messages event then fetch in-app messages via an Edge extension event
+        if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
+            edgePersonalizationResponseHandler.fetchMessages(null);
+        } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
+            // validate update feeds event then retrieve feeds via an Edge extension event
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
+            edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
         } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
-            // Need experience event dataset id for sending the push token
+            // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
@@ -249,7 +254,7 @@ public final class MessagingExtension extends Extension {
             handleTrackingInfo(eventToProcess, experienceEventDatasetId);
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
-            inAppNotificationHandler.handleEdgePersonalizationNotification(eventToProcess);
+            edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(eventToProcess);
         }
     }
 

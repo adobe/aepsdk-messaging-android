@@ -22,18 +22,20 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.1.1";
+    private static final String EXTENSION_VERSION = "2.2.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-    private static final String REFRESH_MESSAGES = "refreshMessages";
+    private static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
     private static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
@@ -43,6 +45,9 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
     private static final String _XDM = "_xdm";
+    private static final String UPDATE_FEEDS = "updatefeeds";
+    private static final String SURFACES = "surfaces";
+    private static final String REFRESH_MESSAGES = "refreshmessages";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
 
@@ -156,6 +161,7 @@ public final class Messaging {
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
+
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(AdobeError adobeError) {
@@ -180,15 +186,37 @@ public final class Messaging {
                 .setEventData(eventData)
                 .build();
 
-        MobileCore.dispatchEventWithResponseCallback(refreshMessageEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
-            @Override
-            public void fail(AdobeError adobeError) {
-                Log.warning(LOG_TAG, CLASS_NAME, "Failed to refresh in-app messages: Error: %s", adobeError.getErrorName());
-            }
+        MobileCore.dispatchEvent(refreshMessageEvent);
+    }
 
-            @Override
-            public void call(Event event) {
+    // region Message Feed api
+
+    /**
+     *  Dispatches an event to fetch message feeds for the provided surface paths from the Adobe Journey Optimizer via the Experience Edge network.
+     *  @param surfacePaths A {@code List<String>} of surface paths
+     */
+    public static void updateFeedsForSurfacePaths(final List<String> surfacePaths) {
+        final List<String> validSurfacePaths = new ArrayList<>();
+        for (final String surfacePath : surfacePaths) {
+            if (!StringUtils.isNullOrEmpty(surfacePath)) {
+                validSurfacePaths.add(surfacePath);
             }
-        });
+        }
+
+        if (validSurfacePaths.isEmpty()) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot update feeds as the provided surface paths array has no valid items.");
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(UPDATE_FEEDS, true);
+        eventData.put(SURFACES, validSurfacePaths);
+
+        final Event updateFeedsEvent = new Event.Builder(UPDATE_MESSAGE_FEEDS,
+                EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
+
+        MobileCore.dispatchEvent(updateFeedsEvent);
     }
 }

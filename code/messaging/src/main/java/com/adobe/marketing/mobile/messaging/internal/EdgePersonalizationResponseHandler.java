@@ -48,15 +48,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * This class is used to handle the retrieval, processing, and display of AJO in-app messages.
+ * This class is used to handle the retrieval and processing of AJO payloads containing in-app or feed messages. It is also
+ * responsible for the display of AJO in-app messages.
  */
-class InAppNotificationHandler {
+class EdgePersonalizationResponseHandler {
     private final static String SELF_TAG = "InAppNotificationHandler";
     final MessagingExtension parent;
     private final MessagingCacheUtilities messagingCacheUtilities;
@@ -75,12 +77,12 @@ class InAppNotificationHandler {
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      */
-    InAppNotificationHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
         this(parent, extensionApi, rulesEngine, null, null);
     }
 
     @VisibleForTesting
-    InAppNotificationHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
@@ -99,24 +101,40 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Generates and dispatches an event prompting the Edge extension to fetch in-app messages.
+     * Generates and dispatches an event prompting the Edge extension to fetch in-app or feed messages.
      * The app surface used in the request is generated using the application id of the app.
      * If the application id is unavailable, calling this method will do nothing.
+     *
+     * @param surfacePaths A {@code List<String>} of surface path strings for fetching feed messages, if available.
      */
-    void fetchMessages() {
+    void fetchMessages(final List<String> surfacePaths) {
         final String appSurface = getAppSurface();
         if (appSurface.equals("unknown")) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app messages - unable to retrieve the application id.");
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, cannot read the bundle identifier.");
             return;
+        }
+
+        final List<String> surfaceUri = new ArrayList<>();
+        if (surfacePaths != null && !surfacePaths.isEmpty()) {
+            for (final String surfacePath : surfacePaths) {
+                if (!StringUtils.isNullOrEmpty(surfacePath)) {
+                    surfaceUri.add(appSurface + File.separator + surfacePath);
+                }
+            }
+
+            if (surfaceUri.isEmpty()) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve feed messages, no valid surface paths found.");
+                return;
+            }
+        } else {
+            surfaceUri.add(appSurface);
         }
 
         // create event to be handled by the Edge extension
         final Map<String, Object> eventData = new HashMap<>();
         final Map<String, Object> messageRequestData = new HashMap<>();
         final Map<String, Object> personalizationData = new HashMap<>();
-        final List<String> surfaceData = new ArrayList<>();
-        surfaceData.add(appSurface);
-        personalizationData.put(SURFACES, surfaceData);
+        personalizationData.put(SURFACES, surfaceUri);
         messageRequestData.put(PERSONALIZATION, personalizationData);
         eventData.put(QUERY, messageRequestData);
 
@@ -139,7 +157,7 @@ class InAppNotificationHandler {
         messagesRequestEventId = event.getUniqueIdentifier();
 
         // send event
-        Log.debug(LOG_TAG, SELF_TAG, "Dispatching edge event to fetch in-app messages.");
+        Log.debug(LOG_TAG, SELF_TAG, "Dispatching an edge event to retrieve in-app or feed message definitions.");
         extensionApi.dispatch(event);
     }
 
@@ -271,7 +289,7 @@ class InAppNotificationHandler {
     }
 
     /**
-     * Create an in-app message object then attempt to display it.
+     * Creates an in-app message object then attempts to display it.
      *
      * @param triggeredConsequence A {@link RuleConsequence} containing an in-app message definition.
      */
