@@ -222,7 +222,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         if (MessagingUtils.isFeedItem(parsedRules.get(0).getConsequenceList().get(0))) {
-            updateFeeds(parsedRules, requestedSurfacesForEventId.get(getAppSurface()));
+            updateFeeds(parsedRules, requestedSurfacesForEventId.get(requestEventId));
             feedRulesEngine.addRules(parsedRules);
             // TODO: dispatch an event with the feeds received from the remote
         }

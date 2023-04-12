@@ -421,6 +421,9 @@ public class MessagingTestUtils {
                         "      \"id\": \"48181acd22b3edaebc8a447868a7df7ce629920a\",\n" +
                         "      \"type\": \"ajofeeditem\",\n" +
                         "      \"detail\": {\n" +
+                        "        \"mobileParameters\": { \n" +
+                        "           \"type\": \"messagefeed\" \n" +
+                        "          }, \n" +
                         "        \"title\": \"Flash sale!\",\n" +
                         "        \"body\": \"All winter gear is now up to 30% off at checkout.\",\n" +
                         "        \"imageUrl\": \"https://luma.com/wintersale.png\",\n" +

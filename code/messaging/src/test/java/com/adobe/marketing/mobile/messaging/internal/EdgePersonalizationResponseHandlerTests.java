@@ -64,6 +64,7 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.class)
 public class EdgePersonalizationResponseHandlerTests {
 
+    private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     // Mocks
     @Mock
     ExtensionApi mockExtensionApi;
@@ -89,8 +90,6 @@ public class EdgePersonalizationResponseHandlerTests {
     LaunchRulesEngine mockFeedRulesEngine;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
-
-    private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
