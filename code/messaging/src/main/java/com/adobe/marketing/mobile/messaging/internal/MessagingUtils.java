@@ -26,17 +26,25 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.S
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.UrlUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -155,7 +163,7 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Surfaces retrieval
+    // Surfaces retrieval and validation
     // ========================================================================================
 
     /**
@@ -169,6 +177,25 @@ class MessagingUtils {
             return null;
         }
         return DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+    }
+
+    /**
+     * Verifies that the given {@code String} is a valid surface {@code URI}
+     *
+     * @param surfaceUri A {@link String} containing a surface {@link java.net.URI}.
+     * @return {@code boolean} true if the given {@code String} is a valid URI, false otherwise
+     */
+    static boolean isValidSurface(final String surfaceUri) {
+        if (StringUtils.isNullOrEmpty(surfaceUri)) {
+            return false;
+        } else {
+            try {
+                new URI(surfaceUri);
+                return true;
+            } catch (final URISyntaxException exception) {
+                return false;
+            }
+        }
     }
 
     // ========================================================================================
@@ -188,7 +215,6 @@ class MessagingUtils {
     // ========================================================================================
     // Consequence data retrieval from a JSONObject
     // ========================================================================================
-
     /**
      * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
      *
@@ -254,6 +280,16 @@ class MessagingUtils {
             Log.warning(LOG_TAG, "getMessageId", "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
         }
         return messageId;
+    }
+
+    // ========================================================================================
+    // feed item verification using rule consequence object
+    // ========================================================================================
+    static boolean isFeedItem(final RuleConsequence ruleConsequence) {
+        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
+        final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, ruleDetailMap, MessagingConstants.MessageFeedKeys.MOBILE_PARAMETERS, null);
+        final String type = DataReader.optString(mobileParameters, MessagingConstants.MessageFeedKeys.TYPE, "");
+        return type.equals(MessagingConstants.MessageFeedKeys.MESSAGE_FEED);
     }
 
     // ========================================================================================

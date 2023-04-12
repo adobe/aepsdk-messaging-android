@@ -81,6 +81,8 @@ public class MessagingExtensionTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
+    LaunchRulesEngine mockFeedRulesEngine;
+    @Mock
     EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock
     SharedStateResult mockConfigData;
@@ -123,6 +125,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
+        reset(mockFeedRulesEngine);
         reset(mockEdgePersonalizationResponseHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
@@ -147,7 +150,7 @@ public class MessagingExtensionTests {
                 put("key", "value");
             }});
 
-            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockEdgePersonalizationResponseHandler);
+            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockEdgePersonalizationResponseHandler);
 
             runnable.run();
         }

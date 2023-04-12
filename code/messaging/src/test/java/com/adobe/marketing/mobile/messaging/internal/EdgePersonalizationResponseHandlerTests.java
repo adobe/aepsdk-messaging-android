@@ -86,6 +86,8 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
+    LaunchRulesEngine mockFeedRulesEngine;
+    @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
 
     private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
@@ -113,6 +115,7 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingExtension);
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
+        reset(mockFeedRulesEngine);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -129,7 +132,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mock_applicationId");
 
-            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
             runnable.run();
         }
@@ -732,10 +735,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 1;
@@ -790,7 +790,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));

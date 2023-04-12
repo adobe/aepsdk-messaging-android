@@ -80,6 +80,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
+    final LaunchRulesEngine feedRulesEngine;
 
     /**
      * Constructor.
@@ -101,14 +102,16 @@ public final class MessagingExtension extends Extension {
      * @param extensionApi {@link ExtensionApi} instance
      */
     MessagingExtension(final ExtensionApi extensionApi) {
-        this(extensionApi, null, null);
+        this(extensionApi, null, null, null);
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final LaunchRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
         this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine);
+        // TODO: update with FeedRulesEngine
+        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new LaunchRulesEngine(extensionApi);
+        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
     }
 
     //region Extension interface methods

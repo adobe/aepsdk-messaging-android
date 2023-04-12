@@ -63,9 +63,12 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
+    private final LaunchRulesEngine feedRulesEngine;
+    private final Map<String, Feed> inMemoryFeeds = new HashMap<>();
+    private final Map<String, List<String>> requestedSurfacesForEventId = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
     private List<PropositionPayload> inMemoryPropositions = new ArrayList<>();
-    private final Map<String, Feed> inMemoryFeeds = new HashMap<>();
+    private Map<String, PropositionInfo> feedInfo = new HashMap<>();
     private String messagesRequestEventId;
     private String lastProcessedRequestEventId;
     private InternalMessage message;
@@ -73,19 +76,21 @@ class EdgePersonalizationResponseHandler {
     /**
      * Constructor
      *
-     * @param parent       {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
-     * @param extensionApi {@link ExtensionApi} instance
-     * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
+     * @param parent          {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param extensionApi    {@link ExtensionApi} instance
+     * @param rulesEngine     {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
+     * @param feedRulesEngine {@link LaunchRulesEngine} instance to use for loading message feed rule payloads
      */
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
-        this(parent, extensionApi, rulesEngine, null, null);
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine) {
+        this(parent, extensionApi, rulesEngine, feedRulesEngine, null, null);
     }
 
     @VisibleForTesting
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
+        this.feedRulesEngine = feedRulesEngine;
         this.messagesRequestEventId = messagesRequestEventId;
 
         // load cached propositions (if any) when InAppNotificationHandler is instantiated
@@ -95,7 +100,9 @@ class EdgePersonalizationResponseHandler {
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 inMemoryPropositions = cachedMessages;
-                processPropositions(cachedMessages, false, false, getAppSurface());
+                processPropositions(cachedMessages, new ArrayList<String>() {{
+                    add(getAppSurface());
+                }}, false, false);
             }
         }
     }
@@ -118,7 +125,10 @@ class EdgePersonalizationResponseHandler {
         if (surfacePaths != null && !surfacePaths.isEmpty()) {
             for (final String surfacePath : surfacePaths) {
                 if (!StringUtils.isNullOrEmpty(surfacePath)) {
-                    surfaceUri.add(appSurface + File.separator + surfacePath);
+                    final String feedPath = appSurface + File.separator + surfacePath;
+                    if (MessagingUtils.isValidSurface(feedPath)) {
+                        surfaceUri.add(feedPath);
+                    }
                 }
             }
 
@@ -155,6 +165,7 @@ class EdgePersonalizationResponseHandler {
 
         // used for ensuring that the messaging extension is responding to the correct handle
         messagesRequestEventId = event.getUniqueIdentifier();
+        requestedSurfacesForEventId.put(messagesRequestEventId, surfaceUri);
 
         // send event
         Log.debug(LOG_TAG, SELF_TAG, "Dispatching an edge event to retrieve in-app or feed message definitions.");
@@ -164,7 +175,7 @@ class EdgePersonalizationResponseHandler {
     /**
      * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
      * and any loaded rules in the Messaging extension's {@link LaunchRulesEngine} are cleared.
-     * Non-empty payloads are converted into rules within {@link #processPropositions(List, boolean, boolean, String)} )}.
+     * Non-empty payloads are converted into rules within {@link #processPropositions(List, List, boolean, boolean)}.
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
@@ -174,6 +185,10 @@ class EdgePersonalizationResponseHandler {
         // "TESTING_ID" used in unit and functional testing
         if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
+        }
+
+        if (requestEventId.equals("TESTING_ID")) {
+            requestedSurfacesForEventId.put(messagesRequestEventId, new ArrayList<String>() {{ add(getAppSurface()); }});
         }
 
         // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
@@ -193,105 +208,144 @@ class EdgePersonalizationResponseHandler {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
         }
 
-        final String appSurface = getAppSurface();
-        Log.trace(LOG_TAG, SELF_TAG, "Loading in-app message definitions from personalization:decisions network response.");
-        processPropositions(propositions, clearExistingRules, true, appSurface);
+        final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
+        if (clearExistingRules) {
+            launchRulesEngine.replaceRules(parsedRules);
+            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+        } else {
+            if (parsedRules.isEmpty()) {
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring request to load in-app messages for scope %s. The propositions parameter provided was empty.", requestedSurfacesForEventId.get(messagesRequestEventId));
+                return;
+            }
+            launchRulesEngine.addRules(parsedRules);
+            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+        }
+
+        if (MessagingUtils.isFeedItem(parsedRules.get(0).getConsequenceList().get(0))) {
+            updateFeeds(parsedRules, requestedSurfacesForEventId.get(getAppSurface()));
+            feedRulesEngine.addRules(parsedRules);
+            // TODO: dispatch an event with the feeds received from the remote
+        }
     }
 
     /**
-     * Attempts to load in-app message rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@link JSONObject}s
-     * found will be registered with the {@link LaunchRulesEngine}.
+     * Attempts to parse any in-app message or message feed rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@code JSONObject}s
+     * found will be returned as a {code List<LaunchRule>}.
      *
-     * @param propositions       A {@link List<PropositionPayload>} containing in-app message definitions
-     * @param clearExistingRules {@code boolean} if true the existing cached propositions are cleared and new message rules are replaced in the {@code LaunchRulesEngine}
-     * @param persistChanges     {@code boolean} if true the passed in {@code List<PropositionPayload>} are added to the cache
-     * @param expectedScope      {@code String} containing the app surface present in the {@code List<PropositionPayload>}
+     * @param propositions     A {@link List<PropositionPayload>} containing in-app message definitions
+     * @param expectedSurfaces A {@link List<String>} containing the expected app surfaces
+     * @param clearExisting    {@code boolean} if true the existing cached propositions are cleared and new message rules are replaced in the {@code LaunchRulesEngine}
+     * @param persistChanges   {@code boolean} if true the passed in {@code List<PropositionPayload>} are added to the cache
+     *
+     * @return {@link List<LaunchRule>} containing {@link LaunchRule} parsed from the passed in propositions
      */
-    private void processPropositions(final List<PropositionPayload> propositions, final boolean clearExistingRules, final boolean persistChanges, final String expectedScope) {
+    private List<LaunchRule> processPropositions(final List<PropositionPayload> propositions, final List<String> expectedSurfaces, final boolean clearExisting, final boolean persistChanges) {
         final List<LaunchRule> parsedRules = new ArrayList<>();
+        final List<PropositionPayload> tempPropositions = new ArrayList<>();
         final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>();
-        boolean feedsReset = false;
+        final Map<String, PropositionInfo> tempFeedsInfo = new HashMap<>();
+        final String appSurface = getAppSurface();
+        boolean isFeedConsequence = false;
 
-        if (propositions != null && !propositions.isEmpty()) {
-            for (final PropositionPayload proposition : propositions) {
-                if (proposition.propositionInfo != null && !expectedScope.equals(proposition.propositionInfo.scope)) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match expected scope (%s).", proposition.propositionInfo.scope, expectedScope);
+        if (propositions == null || propositions.isEmpty()) {
+            if (clearExisting) {
+                if (expectedSurfaces.equals(new ArrayList<String>() {{
+                    add(appSurface);
+                }})) {
+                    inMemoryPropositions.clear();
+                    propositionInfo.clear();
+                    messagingCacheUtilities.cachePropositions(null);
+                } else {
+                    inMemoryFeeds.clear();
+                    feedInfo.clear();
+                }
+            }
+            return parsedRules;
+        }
+
+        for (final PropositionPayload proposition : propositions) {
+            if (proposition.propositionInfo != null && !expectedSurfaces.contains(proposition.propositionInfo.scope)) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match one of the expected surfaces (%s).", proposition.propositionInfo.scope, expectedSurfaces.toString());
+                continue;
+            }
+
+            for (final PayloadItem payloadItem : proposition.items) {
+                final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
+                if (ruleJson == null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
                     continue;
                 }
 
-                for (final PayloadItem payloadItem : proposition.items) {
-                    final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
-                    if (ruleJson == null) {
-                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
-                        continue;
-                    }
+                final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                if (parsedRule == null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
+                    continue;
+                }
 
-                    final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
-                    if (parsedRule == null) {
-                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
-                        continue;
-                    }
+                // store reporting data for this payload for later use
+                final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
+                propositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
 
+                // if we have a valid message feed consequence persist the feed in memory
+                final String consequenceType = MessagingUtils.getConsequenceType(ruleJson);
+                if (!StringUtils.isNullOrEmpty(consequenceType) && !consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE)) {
                     // cache any image assets present in the current rule json's image assets array
                     cacheImageAssetsFromPayload(ruleJson);
 
-                    // store reporting data for this payload for later use
-                    tempPropositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
-
-                    // if we have a valid message feed consequence persist the feed in memory
-                    final String consequenceType = MessagingUtils.getConsequenceType(ruleJson);
-                    if (!StringUtils.isNullOrEmpty(consequenceType) && consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE)) {
-                        // clear existing feeds as needed
-                        if (clearExistingRules && !feedsReset) {
-                            inMemoryFeeds.clear();
-                            feedsReset = true;
-                        }
-                        updateFeeds(MessagingUtils.getConsequenceDetails(ruleJson), proposition.propositionInfo.scope);
-                    }
-
-                    parsedRules.add(parsedRule.get(0));
+                    // store reporting info for this payload
+                    tempPropositionInfo.putAll(propositionInfo);
+                } else {
+                    isFeedConsequence = true;
+                    tempFeedsInfo.putAll(propositionInfo);
                 }
+                tempPropositions.add(proposition);
+                parsedRules.add(parsedRule.get(0));
             }
         }
 
-        if (clearExistingRules) {
-            inMemoryFeeds.clear();
-            inMemoryPropositions.clear();
-            messagingCacheUtilities.cachePropositions(null);
-            propositionInfo = tempPropositionInfo;
-            launchRulesEngine.replaceRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), expectedScope);
-        } else if (!parsedRules.isEmpty()) {
-            propositionInfo.putAll(tempPropositionInfo);
-            launchRulesEngine.addRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), expectedScope);
-        } else {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring request to load in-app messages for scope %s. The propositions parameter provided was empty.", expectedScope);
-        }
+        if (!isFeedConsequence) {
+            if (clearExisting) {
+                propositionInfo = tempPropositionInfo;
+                inMemoryPropositions = tempPropositions;
+            } else {
+                propositionInfo.putAll(tempPropositionInfo);
+                inMemoryPropositions.addAll(tempPropositions);
+            }
 
-        if (persistChanges) {
-            // save the proposition payload to the messaging cache
-            if (!parsedRules.isEmpty()) {
-                inMemoryPropositions.addAll(propositions);
+            if (persistChanges) {
                 messagingCacheUtilities.cachePropositions(inMemoryPropositions);
             }
         } else {
-            inMemoryPropositions.addAll(propositions);
+            if (clearExisting) {
+                inMemoryFeeds.clear();
+                feedInfo = tempFeedsInfo;
+            } else {
+                feedInfo.putAll(tempFeedsInfo);
+            }
         }
+
+        return parsedRules;
     }
 
-    private void updateFeeds(final JSONObject consequenceData, final String scope) {
-        try {
-            final Map<String, Object> feedDetails = JSONUtils.toMap(consequenceData);
-            if (!MapUtils.isNullOrEmpty(feedDetails)) {
-                final String title = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.TITLE, "");
-                final String body = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.BODY, "");
-                final long publishedDate = DataReader.optLong(feedDetails, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
-                final long expiryDate = DataReader.optLong(feedDetails, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
-                final String imageUrl = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
-                final String actionTitle = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
-                final String actionUrl = DataReader.optString(feedDetails, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
-                final Map<String, Object> meta = DataReader.optTypedMap(Object.class, feedDetails, MessagingConstants.MessageFeedKeys.METADATA, null);
+    private void updateFeeds(final List<LaunchRule> parsedRules, final List<String> expectedSurfaces) {
+        final String appSurface = getAppSurface();
+        if (expectedSurfaces == null || expectedSurfaces.isEmpty() || !expectedSurfaces.equals(new ArrayList<String>() {{
+            add(getAppSurface());
+        }})) {
+            return;
+        }
+
+        for (final LaunchRule parsedRule : parsedRules) {
+            final Map<String, Object> consequenceDetailMap = parsedRule.getConsequenceList().get(0).getDetail();
+            if (!MapUtils.isNullOrEmpty(consequenceDetailMap)) {
+                final String title = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.TITLE, "");
+                final String body = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.BODY, "");
+                final long publishedDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
+                final long expiryDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
+                final String imageUrl = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
+                final String actionTitle = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
+                final String actionUrl = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
+                final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.METADATA, null);
 
                 final FeedItem feedItem = new FeedItem.Builder(title, body, publishedDate, expiryDate)
                         .setImageUrl(imageUrl)
@@ -301,19 +355,13 @@ class EdgePersonalizationResponseHandler {
                         .build();
                 if (feedItem != null) {
                     // find the feed to insert the feed item else create a new feed for it
-                    Feed feed = inMemoryFeeds.get(scope);
-                    if (feed != null) {
-                        feed.getItems().add(feedItem);
-                    } else {
-                        final ArrayList<FeedItem> feedItems = new ArrayList<>();
-                        feedItems.add(feedItem);
-                        feed = new Feed(scope, feedItems);
-                    }
-                    inMemoryFeeds.put(scope, feed);
+                    Feed feed = inMemoryFeeds.get(appSurface);
+                    final List<FeedItem> feedItems = feed == null ? new ArrayList<>() : feed.getItems();
+                    feedItems.add(feedItem);
+                    feed = new Feed(appSurface, feedItems);
+                    inMemoryFeeds.put(appSurface, feed);
                 }
             }
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, SELF_TAG, "updateFeeds - Exception occurred when creating message feed detail map from json: %s", jsonException.getMessage());
         }
     }
 

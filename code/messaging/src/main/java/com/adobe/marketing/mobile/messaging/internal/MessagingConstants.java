@@ -57,6 +57,11 @@ final class MessagingConstants {
         static final String ACTION_TITLE = "actionTitle";
         static final String ACTION_URL = "actionUrl";
         static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String TYPE = "type";
+        static final String SURFACE = "surface";
+        static final String FEED_NAME = "feedName";
+        static final String MESSAGE_FEED = "messagefeed";
 
         private MessageFeedKeys() {
         }
