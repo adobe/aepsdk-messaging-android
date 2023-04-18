@@ -277,11 +277,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 1;
                 List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -312,11 +308,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 3;
                 List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -371,11 +363,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 3;
                 List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
@@ -407,11 +395,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig validPayloadConfig = new MessageTestConfig();
                 validPayloadConfig.count = 2;
                 MessageTestConfig invalidPayloadConfig = new MessageTestConfig();
@@ -437,7 +421,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 // verify rules replaced
                 verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-                assertEquals(3, listArgumentCaptor.getValue().size());
+                assertEquals(2, listArgumentCaptor.getValue().size());
 
             }
         });
@@ -448,11 +432,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 1;
                 config.isMissingMessageId = true;
@@ -484,11 +464,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 1;
                 config.isMissingMessageType = true;
@@ -520,11 +496,7 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
-
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 1;
                 config.isMissingMessageDetail = true;
@@ -749,14 +721,15 @@ public class EdgePersonalizationResponseHandlerTests {
                 // test
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
-                // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                // verify message feed propositions not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
-                // verify rules replaced
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                // TODO: revisit when feed rules engine is available
+                // verify rules added in feed rules engine
+                verify(mockFeedRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
                 assertEquals(1, listArgumentCaptor.getValue().size());
             }
         });
@@ -771,10 +744,8 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(true);
-                List<LaunchRule> launchRules = new ArrayList<>();
-                LaunchRule mockLaunchRule = mock(LaunchRule.class);
-                launchRules.add(mockLaunchRule);
-                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenReturn(launchRules);
+
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 CacheService cacheService = new FileCacheService();
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);

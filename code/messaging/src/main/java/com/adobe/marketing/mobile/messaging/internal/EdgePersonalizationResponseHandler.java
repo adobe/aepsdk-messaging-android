@@ -100,9 +100,10 @@ class EdgePersonalizationResponseHandler {
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 inMemoryPropositions = cachedMessages;
-                processPropositions(cachedMessages, new ArrayList<String>() {{
+                final List<LaunchRule> parsedRules = processPropositions(cachedMessages, new ArrayList<String>() {{
                     add(getAppSurface());
                 }}, false, false);
+                launchRulesEngine.addRules(parsedRules);
             }
         }
     }
@@ -208,23 +209,21 @@ class EdgePersonalizationResponseHandler {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
         }
 
-        final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
-        if (clearExistingRules) {
-            launchRulesEngine.replaceRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
-        } else {
-            if (parsedRules.isEmpty()) {
-                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring request to load in-app messages for scope %s. The propositions parameter provided was empty.", requestedSurfacesForEventId.get(messagesRequestEventId));
-                return;
-            }
-            launchRulesEngine.addRules(parsedRules);
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
-        }
 
-        if (MessagingUtils.isFeedItem(parsedRules.get(0).getConsequenceList().get(0))) {
+        final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
+        final List<RuleConsequence> consequenceList = !parsedRules.isEmpty() ? parsedRules.get(0).getConsequenceList() : new ArrayList<>();
+        if (!consequenceList.isEmpty() && MessagingUtils.isFeedItem(consequenceList.get(0))) {
             updateFeeds(parsedRules, requestedSurfacesForEventId.get(requestEventId));
             feedRulesEngine.addRules(parsedRules);
             // TODO: dispatch an event with the feeds received from the remote
+        } else {
+            if (clearExistingRules) {
+                launchRulesEngine.replaceRules(parsedRules);
+                Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+            } else {
+                launchRulesEngine.addRules(parsedRules);
+                Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+            }
         }
     }
 
@@ -286,15 +285,16 @@ class EdgePersonalizationResponseHandler {
                 final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
                 propositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
 
-                // if we have a valid message feed consequence persist the feed in memory
                 final String consequenceType = MessagingUtils.getConsequenceType(ruleJson);
-                if (!StringUtils.isNullOrEmpty(consequenceType) && !consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE)) {
+                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(consequenceType) && consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE);
+
+                if (!isMessageFeedConsequence) {
                     // cache any image assets present in the current rule json's image assets array
                     cacheImageAssetsFromPayload(ruleJson);
 
                     // store reporting info for this payload
                     tempPropositionInfo.putAll(propositionInfo);
-                } else {
+                } else { // we have a message feed consequence, persist the feed in memory
                     isFeedConsequence = true;
                     tempFeedsInfo.putAll(propositionInfo);
                 }
@@ -303,7 +303,7 @@ class EdgePersonalizationResponseHandler {
             }
         }
 
-        if (!isFeedConsequence) {
+        if (!isFeedConsequence && !parsedRules.isEmpty()) {
             if (clearExisting) {
                 propositionInfo = tempPropositionInfo;
                 inMemoryPropositions = tempPropositions;
@@ -360,6 +360,11 @@ class EdgePersonalizationResponseHandler {
                     feedItems.add(feedItem);
                     feed = new Feed(appSurface, feedItems);
                     inMemoryFeeds.put(appSurface, feed);
+                }
+
+                // cache feed image if one is present
+                if (!StringUtils.isNullOrEmpty(imageUrl)) {
+                    messagingCacheUtilities.cacheImageAssets(new ArrayList<String>() {{ add(imageUrl); }});
                 }
             }
         }
