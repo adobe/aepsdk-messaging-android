@@ -29,6 +29,7 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.messaging.BuildConfig;
+import com.adobe.marketing.mobile.util.DataReader;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -380,9 +381,6 @@ public class MessagingPublicAPITests {
     // --------------------------------------------------------------------------------------------
     @Test
     public void testRefreshInAppMessages() throws InterruptedException {
-        // setup
-        final String expectedMessagingEventData = "{refreshMessages=true}";
-        final String expectedEdgePersonalizationEventData = "{xdm={eventType=personalization.request}, query={personalization={surfaces=[mobileapp://com.adobe.marketing.mobile.messaging.test]}}}";
         // test
         Messaging.refreshInAppMessages();
         TestHelper.sleep(500);
@@ -391,13 +389,21 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
-        assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        assertEquals(true, messagingEventData.get("refreshmessages"));
 
         // verify edge request content event
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
-        assertEquals(expectedEdgePersonalizationEventData.trim(), edgePersonalizationRequestEvents.get(0).getEventData().toString());
+        final Map<String, Object> edgeEventData = edgePersonalizationRequestEvents.get(0).getEventData();
+        final Map<String, Object> xdmDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "xdm", null);
+        final Map<String, Object> queryDataMap = DataReader.optTypedMap(Object.class, edgeEventData, "query", null);
+        final Map<String, Object> personalizationDataMap = DataReader.optTypedMap(Object.class, queryDataMap, "personalization", null);
+        final List<String> surfacesList = DataReader.optStringList(personalizationDataMap, "surfaces", null);
+        assertEquals("personalization.request", xdmDataMap.get("eventType"));
+        assertEquals(1, surfacesList.size());
+        assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", surfacesList.get(0));
     }
 
     // --------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "2.1.1";
+    static final String EXTENSION_VERSION = "2.1.2";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String CACHE_BASE_DIR = "messaging";
@@ -111,7 +111,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
-            static final String REFRESH_MESSAGES = "refreshMessages";
+            static final String REFRESH_MESSAGES = "refreshmessages";
 
             private Messaging() {
             }
