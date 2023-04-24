@@ -142,7 +142,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
 
         final String host = uri.getHost();
         if (host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Captured dismiss button click on In-App Message.");
             message.dismiss(true);
         }
 
@@ -160,7 +159,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     void openUrl(final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Will not open URL, it is null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Will not openURL, url is null or empty.");
             return;
         }
 
