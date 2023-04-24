@@ -33,7 +33,7 @@ public final class Messaging {
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-    private static final String REFRESH_MESSAGES = "refreshMessages";
+    private static final String REFRESH_MESSAGES = "refreshmessages";
     private static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
@@ -180,15 +180,6 @@ public final class Messaging {
                 .setEventData(eventData)
                 .build();
 
-        MobileCore.dispatchEventWithResponseCallback(refreshMessageEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
-            @Override
-            public void fail(AdobeError adobeError) {
-                Log.warning(LOG_TAG, CLASS_NAME, "Failed to refresh in-app messages: Error: %s", adobeError.getErrorName());
-            }
-
-            @Override
-            public void call(Event event) {
-            }
-        });
+        MobileCore.dispatchEvent(refreshMessageEvent);
     }
 }

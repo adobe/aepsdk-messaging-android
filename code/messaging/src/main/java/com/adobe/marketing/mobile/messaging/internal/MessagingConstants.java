@@ -111,7 +111,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
 
-            static final String REFRESH_MESSAGES = "refreshMessages";
+            static final String REFRESH_MESSAGES = "refreshmessages";
 
             private Messaging() {
             }
