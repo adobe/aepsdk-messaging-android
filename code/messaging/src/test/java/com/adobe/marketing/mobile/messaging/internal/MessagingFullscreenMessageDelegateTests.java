@@ -218,6 +218,22 @@ public class MessagingFullscreenMessageDelegateTests {
     }
 
     @Test
+    public void test_overrideUrlLoad_uRLWithNoQueryParameters() {
+        // setup
+        when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
+        when(mockMessageSettings.getParent()).thenReturn(internalMessage);
+
+        // test
+        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss");
+
+        // verify no message tracking call and message settings weren't created
+        verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), eq(internalMessage));
+        verify(mockMessageSettings, times(1)).getParent();
+        // TODO: To verify if that dismiss by mocking FullscreenMessage in internalMessage class
+        //verify(mockFullscreenMessage, times(1)).dismiss();
+    }
+
+    @Test
     public void test_overrideUrlLoadWithJavascriptPayload() {
         // setup
         scriptHandlerMap = new HashMap<>();

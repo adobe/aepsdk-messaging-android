@@ -50,7 +50,8 @@ public class MessagingTests {
                                          final Runnable testRunnable) {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class)) {
             mobileCoreMockedStatic.when(() -> MobileCore.registerExtension(any(), extensionErrorCallbackArgumentCaptor != null ? extensionErrorCallbackArgumentCaptor.capture() : any(ExtensionErrorCallback.class))).thenCallRealMethod();
-            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEventWithResponseCallback(eventArgumentCaptor.capture(), anyLong(), callbackWithErrorArgumentCaptor != null ? callbackWithErrorArgumentCaptor.capture() : any(AdobeCallbackWithError.class))).thenCallRealMethod();
+            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEventWithResponseCallback(eventArgumentCaptor  != null ? eventArgumentCaptor.capture() : any(Event.class), anyLong(), callbackWithErrorArgumentCaptor != null ? callbackWithErrorArgumentCaptor.capture() : any(AdobeCallbackWithError.class))).thenCallRealMethod();
+            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEvent(eventArgumentCaptor  != null ? eventArgumentCaptor.capture() : any(Event.class))).thenCallRealMethod();
             testRunnable.run();
         }
     }
@@ -318,9 +319,6 @@ public class MessagingTests {
             // test
             Messaging.refreshInAppMessages();
 
-            // verify
-            MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
-
             // verify event
             Event event = eventCaptor.getValue();
             Map<String, Object> eventData = event.getEventData();
@@ -328,29 +326,6 @@ public class MessagingTests {
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
             assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
-        });
-    }
-
-    @Test
-    public void test_refreshInAppMessageEventDispatchError() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor = ArgumentCaptor.forClass(AdobeCallbackWithError.class);
-        runWithMockedMobileCore(eventCaptor, callbackCaptor, null, () -> {
-            // test
-            Messaging.refreshInAppMessages();
-
-            // verify
-            MobileCore.dispatchEventWithResponseCallback(eventCaptor.capture(), anyLong(), callbackCaptor.capture());
-
-            // verify event
-            Event event = eventCaptor.getAllValues().get(0);
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-            assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
-            // no exception should occur when triggering unexpected error callback
-            callbackCaptor.getAllValues().get(0).fail(AdobeError.UNEXPECTED_ERROR);
         });
     }
 }
