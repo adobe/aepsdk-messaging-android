@@ -23,11 +23,8 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +41,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message.getAutoTrack()) {
+            message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
     }
 
