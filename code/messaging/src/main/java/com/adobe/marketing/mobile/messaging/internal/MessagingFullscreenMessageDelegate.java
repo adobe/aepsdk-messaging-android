@@ -42,7 +42,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
         final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
-        if (message.getAutoTrack()) {
+        if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
         }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
