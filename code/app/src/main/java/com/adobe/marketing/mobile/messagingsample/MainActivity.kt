@@ -545,6 +545,23 @@ class CustomDelegate : MessagingDelegate {
             this.currentMessage = (fullscreenMessage.parent) as? Message
             this.webview = currentMessage?.webView
 
+            // example: setting a javascript handler on the webview to retrieve javascript output from the loaded in-app html
+            // sample html script:
+            // <script>
+            // function getText() {
+            // var textBox = document.getElementById("myText");
+            // var textValue = textBox.value;
+            // myInappCallback.run(textValue);
+            // window.location.href = "adbinapp://dismiss";
+            // }
+            // </script>
+            currentMessage?.handleJavascriptMessage("myInappCallback") { content ->
+                if (content != null) {
+                    println("Javascript handler content: $content")
+                    currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                }
+            }
+
             // if we're not showing the message now, we can save it for later
             if(!showMessages) {
                 println("message was suppressed: ${currentMessage?.id}")
@@ -557,15 +574,6 @@ class CustomDelegate : MessagingDelegate {
     override fun onShow(fullscreenMessage: FullscreenMessage?) {
         this.currentMessage = fullscreenMessage?.parent as Message?
         this.webview = currentMessage?.webView
-
-        // example: in-line handling of javascript calls in the AJO in-app message html
-        // the content callback will contain the output of (function() { return 'inline js return value'; })();
-        currentMessage?.handleJavascriptMessage("handler_name") { content ->
-            if (content != null) {
-                println("magical handling of our content from js! content is: $content")
-                currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
-            }
-        }
 
         // example: running javascript on the webview created by the Messaging extension.
         // running javascript content must be done on the ui thread

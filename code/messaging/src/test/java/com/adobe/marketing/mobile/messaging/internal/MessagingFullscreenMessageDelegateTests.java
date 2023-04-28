@@ -121,35 +121,80 @@ public class MessagingFullscreenMessageDelegateTests {
     }
 
     @Test
-    public void test_onMessageShow() {
+    public void test_onMessageShow_whenMessageAutoTrackIsTrue() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+            // setup
+            ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
+            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+            when(mockInternalMessage.getAutoTrack()).thenReturn(true);
+            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
+
             // test
             internalMessage.onShow(mockFullscreenMessage);
 
-            // verify
-            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
+            // verify tracking event data
+            verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+            String interaction = interactionArgumentCaptor.getValue();
+            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
+            assertEquals(null, interaction);
+
+            // verify message display logging
+            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
+            assertEquals("Fullscreen message shown.", logArgumentCaptor.getValue());
+        }
+    }
+
+    @Test
+    public void test_onMessageShow_whenMessageAutoTrackIsFalse() {
+        try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+            // setup
+            ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+            when(mockInternalMessage.getAutoTrack()).thenReturn(false);
+            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
+
+            // test
+            internalMessage.onShow(mockFullscreenMessage);
+
+            // verify no tracking event
+            verify(mockInternalMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+
+            // verify message display logging
+            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
+            assertEquals("Fullscreen message shown.", logArgumentCaptor.getValue());
         }
     }
 
     @Test
     public void test_onMessageDismiss() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+            // setup
+            ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+
             // test
             internalMessage.onDismiss(mockFullscreenMessage);
 
-            // verify
-            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
+            // verify message dismiss logging
+            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
+            assertEquals("Fullscreen message dismissed.", logArgumentCaptor.getValue());
         }
     }
 
     @Test
     public void test_onMessageShowFailure() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+            // setup
+            ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+
             // test
             internalMessage.onShowFailure();
 
-            // verify
-            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
+            // verify message failed to show logging
+            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
+            assertEquals("Fullscreen message failed to show.", logArgumentCaptor.getValue());
         }
     }
 
