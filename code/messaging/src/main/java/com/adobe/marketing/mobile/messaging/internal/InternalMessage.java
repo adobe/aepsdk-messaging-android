@@ -240,9 +240,6 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
 
     void show(final boolean withMessagingDelegateControl) {
         if (aepMessage != null) {
-            if (autoTrack) {
-                track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
-            }
             aepMessage.show(withMessagingDelegateControl);
         }
     }
