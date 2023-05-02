@@ -17,6 +17,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
@@ -250,19 +251,20 @@ class MessagingUtils {
     }
 
     /**
-     * Retrieves the consequence type {@code String} from the passed in {@code JSONObject}.
+     * Retrieves the AJO inbound item type {@code String} from the passed in {@code JSONObject}.
      *
      * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return {@link String} containing the consequence type extracted from the rule json
+     * @return {@link String} containing the ajo inbound item type extracted from the rule consequence details
      */
-    static String getConsequenceType(final JSONObject ruleJson) {
-        String consequenceType = null;
+    static String getInboundItemType(final JSONObject ruleJson) {
+        String inboundItemType = null;
         try {
-            consequenceType = getConsequence(ruleJson).getString(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE);
+            final JSONObject details = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            inboundItemType = details.optString(MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE);
         } catch (final JSONException jsonException) {
-            Log.debug(MessagingConstants.LOG_TAG, "getConsequenceType", "Exception occurred retrieving consequence type: %s", jsonException.getLocalizedMessage());
+            Log.debug(MessagingConstants.LOG_TAG, "getInboundItemType", "Exception occurred retrieving ajo inbound item type: %s", jsonException.getLocalizedMessage());
         }
-        return consequenceType;
+        return inboundItemType;
     }
 
     /**
@@ -287,9 +289,8 @@ class MessagingUtils {
     // ========================================================================================
     static boolean isFeedItem(final RuleConsequence ruleConsequence) {
         final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, ruleDetailMap, MessagingConstants.MessageFeedKeys.MOBILE_PARAMETERS, null);
-        final String type = DataReader.optString(mobileParameters, MessagingConstants.MessageFeedKeys.TYPE, "");
-        return type.equals(MessagingConstants.MessageFeedKeys.MESSAGE_FEED);
+        final String type = DataReader.optString(ruleDetailMap, MessagingConstants.MessageFeedKeys.TYPE, "");
+        return type.equals(MessagingConstants.MessageFeedKeys.MESSAGE_FEED_TYPE);
     }
 
     // ========================================================================================

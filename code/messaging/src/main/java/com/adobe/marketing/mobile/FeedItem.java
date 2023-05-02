@@ -57,14 +57,13 @@ public class FeedItem {
          * @param title required {@link String} plain-text title for the feed item
          * @param body required {@link String} plain-text body representing the content for the feed item
          * @param publishedDate required {@code long} represents when this feed item went live
-         * @param expiryDate required {@code long} represents when this feed item expires
          */
-        public Builder(final String title, final String body, final long publishedDate, final long expiryDate) {
+        public Builder(final String title, final String body, final long publishedDate) {
             feedItem = new FeedItem();
             feedItem.title = StringUtils.isNullOrEmpty(title) ? "" : title;
             feedItem.body = StringUtils.isNullOrEmpty(body) ? "" : body;
             feedItem.publishedDate = publishedDate <= 0 ? 0 : publishedDate;
-            feedItem.expiryDate = expiryDate <= 0 ? 0 : expiryDate;
+            feedItem.expiryDate = 0;
             feedItem.imageUrl = "";
             feedItem.actionUrl = "";
             feedItem.actionTitle = "";
@@ -115,6 +114,20 @@ public class FeedItem {
         }
 
         /**
+         * Sets the expiry date for this {@code FeedItem}.
+         *
+         * @param expiryDate {@link long} containing the {@link FeedItem}'s expiry date.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
+        public Builder setExpiryDate(final long expiryDate) {
+            throwIfAlreadyBuilt();
+
+            feedItem.expiryDate = expiryDate;
+            return this;
+        }
+
+        /**
          * Sets the metadata map for this {@code FeedItem}.
          *
          * @param meta {@code Map<String, Object>} containing {@link FeedItem} metadata.
@@ -134,7 +147,8 @@ public class FeedItem {
          * @return {@link FeedItem} object or null.
          */
         public FeedItem build() {
-            if (StringUtils.isNullOrEmpty(feedItem.title) || StringUtils.isNullOrEmpty(feedItem.body) || feedItem.publishedDate <= 0 || feedItem.expiryDate <= 0) {
+            // title, body, and published date are required
+            if (StringUtils.isNullOrEmpty(feedItem.title) || StringUtils.isNullOrEmpty(feedItem.body) || feedItem.publishedDate <= 0) {
                 return null;
             }
 
@@ -156,7 +170,7 @@ public class FeedItem {
      *
      * @return {@link String} containing the {@link FeedItem} title.
      */
-    String getTitle() {
+    public String getTitle() {
         return title;
     }
 
@@ -165,7 +179,7 @@ public class FeedItem {
      *
      * @return {@link String} containing the {@link FeedItem} body.
      */
-    String getBody() {
+    public String getBody() {
         return body;
     }
 
@@ -174,7 +188,7 @@ public class FeedItem {
      *
      * @return {@link String} containing the {@link FeedItem} image url.
      */
-    String getImageUrl() {
+    public String getImageUrl() {
         return imageUrl;
     }
 
@@ -183,7 +197,7 @@ public class FeedItem {
      *
      * @return {@link String} containing the {@link FeedItem} action url.
      */
-    String getActionUrl() {
+    public String getActionUrl() {
         return actionUrl;
     }
 
@@ -192,7 +206,7 @@ public class FeedItem {
      *
      * @return {@link String} containing the {@link FeedItem} action title.
      */
-    String getActionTitle() {
+    public String getActionTitle() {
         return actionTitle;
     }
 
@@ -201,7 +215,7 @@ public class FeedItem {
      *
      * @return {@code long} containing the {@link FeedItem} published date.
      */
-    long getPublishedDate() {
+    public long getPublishedDate() {
         return publishedDate;
     }
 
@@ -210,7 +224,7 @@ public class FeedItem {
      *
      * @return {@code long} containing the {@link FeedItem} expiry date.
      */
-    long getExpiryDate() {
+    public long getExpiryDate() {
         return expiryDate;
     }
 
@@ -219,7 +233,7 @@ public class FeedItem {
      *
      * @return {@code Map<String, Object>} containing the {@link FeedItem} metadata.
      */
-    Map<String, Object> getMeta() {
+    public Map<String, Object> getMeta() {
         return meta;
     }
 }

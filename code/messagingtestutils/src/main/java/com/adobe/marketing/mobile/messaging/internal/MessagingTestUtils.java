@@ -418,23 +418,24 @@ public class MessagingTestUtils {
                         "      }\n" +
                         "    },\n" +
                         "    \"consequences\": [{\n" +
-                        "      \"id\": \"48181acd22b3edaebc8a447868a7df7ce629920a\",\n" +
-                        "      \"type\": \"ajofeeditem\",\n" +
+                        "      \"id\": \"e24c7416-31c2-4734-8c87-ffb8269d28bf\",\n" +
+                        "      \"type\": \"ajoInbound\",\n" +
                         "      \"detail\": {\n" +
-                        "        \"mobileParameters\": { \n" +
-                        "           \"type\": \"messagefeed\" \n" +
-                        "          }, \n" +
-                        "        \"title\": \"Flash sale!\",\n" +
-                        "        \"body\": \"All winter gear is now up to 30% off at checkout.\",\n" +
-                        "        \"imageUrl\": \"https://luma.com/wintersale.png\",\n" +
-                        "        \"actionUrl\": \"https://luma.com/sale\",\n" +
-                        "        \"actionTitle\": \"Shop the sale!\",\n" +
-                        "        \"publishedDate\": 1677190552,\n" +
-                        "        \"expiryDate\": 1677243235,\n" +
+                        "        \"type\": \"ajoFeedItem\",\n" +
+                        "        \"expiryDate\": 1712190456,\n" +
                         "        \"meta\": {\n" +
-                        "          \"feed\": \"mobileApp://com.adobe.myApp/feeds/promos/winterPromo\",\n" +
-                        "          \"feedName\": \"Winter Promo\"\n" +
-                        "        }\n" +
+                        "          \"feedName\": \"Winter Promo\",\n" +
+                        "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "        },\n" +
+                        "        \"content\": {\n" +
+                        "          \"imageUrl\": \"https://luma.com/wintersale.png\",\n" +
+                        "          \"actionTitle\": \"Shop the sale!\",\n" +
+                        "          \"actionUrl\": \"https://luma.com/sale\",\n" +
+                        "          \"publishedDate\": 1680568056,\n" +
+                        "          \"body\": \"All winter gear is now up to 30% off at checkout.\",\n" +
+                        "          \"title\": \"Flash sale!\"\n" +
+                        "        },\n" +
+                        "        \"contentType\": \"application/json\"\n" +
                         "      }\n" +
                         "    }]\n" +
                         "  }]\n" +

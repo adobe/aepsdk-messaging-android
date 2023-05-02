@@ -60,7 +60,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -83,10 +84,9 @@ public class FeedItemTests {
     public void testCreateFeedItem_RequiredParametersOnly() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate).build();
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate).build();
 
         // verify
         assertNotNull(feedItem);
@@ -96,7 +96,6 @@ public class FeedItemTests {
         assertEquals("", feedItem.getActionUrl());
         assertEquals("", feedItem.getActionTitle());
         assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
         assertTrue(feedItem.getMeta().isEmpty());
     }
 
@@ -107,7 +106,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setMeta(metaMap)
@@ -132,7 +132,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionTitle(ACTION_TITLE)
                 .setMeta(metaMap)
@@ -157,7 +158,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -182,7 +184,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
                 .setMeta(metaMap)
@@ -201,13 +204,39 @@ public class FeedItemTests {
     }
 
     @Test
+    public void testCreateFeedItem_ExpiryDateNotRequired() {
+        // setup
+        long publishedDate = TimeUtils.getUnixTimeInSeconds();
+
+        // test
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setImageUrl(IMAGE_URL)
+                .setActionUrl(ACTION_URL)
+                .setActionTitle(ACTION_TITLE)
+                .setMeta(metaMap)
+                .build();
+
+        // verify
+        assertNotNull(feedItem);
+        assertEquals(TITLE, feedItem.getTitle());
+        assertEquals(BODY, feedItem.getBody());
+        assertEquals(IMAGE_URL, feedItem.getImageUrl());
+        assertEquals(ACTION_URL, feedItem.getActionUrl());
+        assertEquals(ACTION_TITLE, feedItem.getActionTitle());
+        assertEquals(publishedDate, feedItem.getPublishedDate());
+        assertEquals(0, feedItem.getExpiryDate());
+        assertEquals(metaMap, feedItem.getMeta());
+    }
+
+    @Test
     public void testCreateFeedItem_TitleRequired() {
         // setup
         long publishedDate = TimeUtils.getUnixTimeInSeconds();
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(null, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(null, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -225,7 +254,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, null, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, null, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -242,24 +272,8 @@ public class FeedItemTests {
         long expiryDate = TimeUtils.getUnixTimeInSeconds() + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, 0, expiryDate)
-                .setImageUrl(IMAGE_URL)
-                .setActionUrl(ACTION_URL)
-                .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
-                .build();
-
-        // verify
-        assertNull(feedItem);
-    }
-
-    @Test
-    public void testCreateFeedItem_InvalidExpiryDate() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-
-        // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, 0)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, 0)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -277,7 +291,8 @@ public class FeedItemTests {
         long expiryDate = publishedDate + SECONDS_IN_A_DAY;
 
         // test
-        FeedItem.Builder builder = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem.Builder builder = new FeedItem.Builder(TITLE, BODY, publishedDate)
+                .setExpiryDate(expiryDate)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)

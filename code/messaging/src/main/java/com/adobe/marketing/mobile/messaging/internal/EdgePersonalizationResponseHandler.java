@@ -20,6 +20,8 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_IAM_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
@@ -58,7 +60,7 @@ import java.util.Map;
  * responsible for the display of AJO in-app messages.
  */
 class EdgePersonalizationResponseHandler {
-    private final static String SELF_TAG = "InAppNotificationHandler";
+    private final static String SELF_TAG = "EdgePersonalizationResponseHandler";
     final MessagingExtension parent;
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
@@ -76,7 +78,7 @@ class EdgePersonalizationResponseHandler {
     /**
      * Constructor
      *
-     * @param parent          {@link MessagingExtension} instance that is the parent of this {@code InAppNotificationHandler}
+     * @param parent          {@link MessagingExtension} instance that is the parent of this {@code EdgePersonalizationResponseHandler}
      * @param extensionApi    {@link ExtensionApi} instance
      * @param rulesEngine     {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      * @param feedRulesEngine {@link LaunchRulesEngine} instance to use for loading message feed rule payloads
@@ -93,7 +95,7 @@ class EdgePersonalizationResponseHandler {
         this.feedRulesEngine = feedRulesEngine;
         this.messagesRequestEventId = messagesRequestEventId;
 
-        // load cached propositions (if any) when InAppNotificationHandler is instantiated
+        // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
         if (this.messagingCacheUtilities.arePropositionsCached()) {
             List<PropositionPayload> cachedMessages = this.messagingCacheUtilities.getCachedPropositions();
@@ -285,8 +287,8 @@ class EdgePersonalizationResponseHandler {
                 final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
                 propositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
 
-                final String consequenceType = MessagingUtils.getConsequenceType(ruleJson);
-                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(consequenceType) && consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE);
+                final String ajoInboundItemType = MessagingUtils.getInboundItemType(ruleJson);
+                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(ajoInboundItemType) && ajoInboundItemType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE);
 
                 if (!isMessageFeedConsequence) {
                     // cache any image assets present in the current rule json's image assets array
@@ -327,44 +329,59 @@ class EdgePersonalizationResponseHandler {
         return parsedRules;
     }
 
+    /**
+     * Attempts to parse any message feed rules contained in the {@code List<LaunchRule>} containing parsed {@code LaunchRule}s.
+     * Any {@link FeedItem} objects created will be added to the in-memory {@link Map<String, Feed>}.
+     *
+     * @param parsedRules       A {@link List<LaunchRule>} containing the rules parsed from the AJO inbound payload
+     * @param expectedSurfaces  A {@link List<String>} containing the expected message feed surfaces
+     */
     private void updateFeeds(final List<LaunchRule> parsedRules, final List<String> expectedSurfaces) {
         final String appSurface = getAppSurface();
         if (expectedSurfaces == null || expectedSurfaces.isEmpty() || !expectedSurfaces.equals(new ArrayList<String>() {{
             add(getAppSurface());
         }})) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping parsed rules which contain unexpected app surfaces: %s.", expectedSurfaces.toString());
             return;
         }
 
         for (final LaunchRule parsedRule : parsedRules) {
             final Map<String, Object> consequenceDetailMap = parsedRule.getConsequenceList().get(0).getDetail();
             if (!MapUtils.isNullOrEmpty(consequenceDetailMap)) {
-                final String title = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.TITLE, "");
-                final String body = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.BODY, "");
-                final long publishedDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
-                final long expiryDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
-                final String imageUrl = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
-                final String actionTitle = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
-                final String actionUrl = DataReader.optString(consequenceDetailMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
-                final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.METADATA, null);
+                FeedItem feedItem = null;
+                final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.CONTENT, null);
+                if (!MapUtils.isNullOrEmpty(contentMap)) {
+                    final String title = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.TITLE, "");
+                    final String body = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.BODY, "");
+                    final long publishedDate = DataReader.optLong(contentMap, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
+                    final long expiryDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
+                    final String imageUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
+                    final String actionTitle = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
+                    final String actionUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
+                    final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.METADATA, null);
 
-                final FeedItem feedItem = new FeedItem.Builder(title, body, publishedDate, expiryDate)
-                        .setImageUrl(imageUrl)
-                        .setActionTitle(actionTitle)
-                        .setActionUrl(actionUrl)
-                        .setMeta(meta)
-                        .build();
+                    feedItem = new FeedItem.Builder(title, body, publishedDate)
+                            .setExpiryDate(expiryDate)
+                            .setImageUrl(imageUrl)
+                            .setActionTitle(actionTitle)
+                            .setActionUrl(actionUrl)
+                            .setMeta(meta)
+                            .build();
+
+                    // cache feed image if one is present
+                    if (!StringUtils.isNullOrEmpty(imageUrl)) {
+                        messagingCacheUtilities.cacheImageAssets(new ArrayList<String>() {{ add(imageUrl); }});
+                    }
+                }
+
                 if (feedItem != null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Adding feed item with title %s to in-memory feeds.", feedItem.getTitle());
                     // find the feed to insert the feed item else create a new feed for it
                     Feed feed = inMemoryFeeds.get(appSurface);
                     final List<FeedItem> feedItems = feed == null ? new ArrayList<>() : feed.getItems();
                     feedItems.add(feedItem);
                     feed = new Feed(appSurface, feedItems);
                     inMemoryFeeds.put(appSurface, feed);
-                }
-
-                // cache feed image if one is present
-                if (!StringUtils.isNullOrEmpty(imageUrl)) {
-                    messagingCacheUtilities.cacheImageAssets(new ArrayList<String>() {{ add(imageUrl); }});
                 }
             }
         }
@@ -394,6 +411,7 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
+        // TODO update this when rules payload coming from AJO is updated: !consequenceType.equals("ajoIam")
         if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;

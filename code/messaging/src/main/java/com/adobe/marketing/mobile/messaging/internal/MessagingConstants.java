@@ -51,17 +51,17 @@ final class MessagingConstants {
     final class MessageFeedKeys {
         static final String TITLE = "title";
         static final String BODY = "body";
+        static final String CONTENT = "content";
         static final String PUBLISHED_DATE = "publishedDate";
         static final String EXPIRY_DATE = "expiryDate";
         static final String IMAGE_URL = "imageUrl";
         static final String ACTION_TITLE = "actionTitle";
         static final String ACTION_URL = "actionUrl";
         static final String METADATA = "meta";
-        static final String MOBILE_PARAMETERS = "mobileParameters";
         static final String TYPE = "type";
         static final String SURFACE = "surface";
         static final String FEED_NAME = "feedName";
-        static final String MESSAGE_FEED = "messagefeed";
+        static final String MESSAGE_FEED_TYPE = "ajoFeedItem";
 
         private MessageFeedKeys() {
         }
@@ -221,7 +221,11 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
-            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajofeeditem";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE = "ajoInbound";
+            static final String MESSAGE_CONSEQUENCE_AJO_IAM_VALUE = "ajoIam";
+            static final String MESSAGE_CONSEQUENCE_AJO_ALERT_VALUE = "ajoAlert";
+            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajoFeedItem";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
