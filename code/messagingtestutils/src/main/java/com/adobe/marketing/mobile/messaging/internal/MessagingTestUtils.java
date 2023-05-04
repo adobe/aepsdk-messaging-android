@@ -420,6 +420,8 @@ public class MessagingTestUtils {
         Map<String, Object> characteristics = new HashMap<>();
         Map<String, Object> cjmEvent = new HashMap<>();
         Map<String, Object> messageExecution = new HashMap<>();
+
+        // generate consequences containing "x = count" number of feed items
         JSONArray consequences = new JSONArray();
         try {
             for (count = 0; count < config.count; count++) {
@@ -448,6 +450,7 @@ public class MessagingTestUtils {
         } catch (JSONException jsonException) {
             Log.debug("MessagingTestUtils", "generateFeedPayload", "exception occurred when creating feed consequences: %s", jsonException.getLocalizedMessage());
         }
+
         item.put("schema", "https://ns.adobe.com/experience/personalization/json-content-item");
         item.put("id", "testItemId");
         messageExecution.put("messageExecutionID", "testExecutionId");

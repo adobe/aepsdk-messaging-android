@@ -729,7 +729,10 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
-                // verify rules added in feed rules engine
+                // verify no interactions are made with the messaging rules engine as a feed payload was provided
+                verifyNoInteractions(mockMessagingRulesEngine);
+
+                // verify rule containing 5 consequences is added to feed rules engine
                 verify(mockFeedRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
                 List<LaunchRule> addedRules = listArgumentCaptor.getValue();
                 assertEquals(1, addedRules.size());
