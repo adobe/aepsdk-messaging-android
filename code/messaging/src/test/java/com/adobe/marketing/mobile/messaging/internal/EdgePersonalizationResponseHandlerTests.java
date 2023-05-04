@@ -701,6 +701,9 @@ public class EdgePersonalizationResponseHandlerTests {
         });
     }
 
+    // ========================================================================================
+    // edgePersonalizationResponseHandler message feed payload
+    // ========================================================================================
     @Test
     public void test_handleEdgePersonalizationNotification_ValidMessageFeedPayloadPresent() {
         runUsingMockedServiceProvider(() -> {
@@ -709,9 +712,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 MessageTestConfig config = new MessageTestConfig();
-                config.count = 1;
-                config.isMessageFeedPayoad = true;
-                List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+                config.count = 5;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
                 Map<String, Object> eventData = new HashMap<>();
                 eventData.put("payload", payload);
                 eventData.put("requestEventId", "TESTING_ID");
@@ -727,10 +729,11 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
 
-                // TODO: revisit when feed rules engine is available
                 // verify rules added in feed rules engine
                 verify(mockFeedRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
-                assertEquals(1, listArgumentCaptor.getValue().size());
+                List<LaunchRule> addedRules = listArgumentCaptor.getValue();
+                assertEquals(1, addedRules.size());
+                assertEquals(5, addedRules.get(0).getConsequenceList().size());
             }
         });
     }
