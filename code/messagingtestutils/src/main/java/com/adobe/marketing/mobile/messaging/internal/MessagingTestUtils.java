@@ -390,9 +390,12 @@ public class MessagingTestUtils {
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://mock_applicationId");
-        } else if (config.nonMatchingAppSurfaceInPayload) {
+        }
+
+        if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }
+
         if (config.isMissingScope) {
             messagePayload.remove("scope");
         }
@@ -432,16 +435,16 @@ public class MessagingTestUtils {
                         "        \"type\": \"ajoFeedItem\",\n" +
                         "        \"expiryDate\": 1712190456,\n" +
                         "        \"meta\": {\n" +
-                        "          \"feedName\": \"Winter Promo " + count + "\",\n" +
+                        "          \"feedName\": \"feed #" + count + "\",\n" +
                         "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
                         "        },\n" +
                         "        \"content\": {\n" +
-                        "          \"imageUrl\": \"https://luma.com/wintersale.png\",\n" +
-                        "          \"actionTitle\": \"Shop the sale!\",\n" +
-                        "          \"actionUrl\": \"https://luma.com/sale\",\n" +
+                        "          \"imageUrl\": \"https://someimage.png\",\n" +
+                        "          \"actionTitle\": \"testTile\",\n" +
+                        "          \"actionUrl\": \"https://someurl.com\",\n" +
                         "          \"publishedDate\": 1680568056,\n" +
-                        "          \"body\": \"All winter gear is now up to 30% off at checkout.\",\n" +
-                        "          \"title\": \"Flash sale!\"\n" +
+                        "          \"body\": \"testBody\",\n" +
+                        "          \"title\": \"testTitle\"\n" +
                         "        },\n" +
                         "        \"contentType\": \"application/json\"\n" +
                         "      }\n" +
@@ -516,9 +519,12 @@ public class MessagingTestUtils {
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://mock_applicationId");
-        } else if (config.nonMatchingAppSurfaceInPayload) {
+        }
+
+        if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }
+
         if (config.isMissingScope) {
             messagePayload.remove("scope");
         }

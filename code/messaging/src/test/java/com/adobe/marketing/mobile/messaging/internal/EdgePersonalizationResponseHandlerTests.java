@@ -705,7 +705,7 @@ public class EdgePersonalizationResponseHandlerTests {
     // edgePersonalizationResponseHandler message feed payload
     // ========================================================================================
     @Test
-    public void test_handleEdgePersonalizationNotification_ValidMessageFeedPayloadPresent() {
+    public void test_handleEdgePersonalizationNotification_HandleValidMessageFeedPayload() {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
@@ -737,6 +737,71 @@ public class EdgePersonalizationResponseHandlerTests {
                 List<LaunchRule> addedRules = listArgumentCaptor.getValue();
                 assertEquals(1, addedRules.size());
                 assertEquals(5, addedRules.get(0).getConsequenceList().size());
+            }
+        });
+    }
+
+    @Test
+    public void test_handleEdgePersonalizationNotification_HandleMessageFeedPayload_when_nonMatchingAppSurfacePresent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 5;
+                config.nonMatchingAppSurfaceInPayload = true;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // verify message feed propositions not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+
+                // verify assets not cached
+                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
+
+                // verify no rules are added to feed rules engine
+                verify(mockFeedRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
+            }
+        });
+    }
+
+    @Test
+    public void test_handleEdgePersonalizationNotification_HandleMessageFeedPayload_when_payloadIsEmpty() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 5;
+                config.hasEmptyPayload = true;
+                config.nonMatchingAppSurfaceInPayload = true;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // verify message feed propositions not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+
+                // verify assets not cached
+                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
+
+                // verify no rules are added to feed rules engine
+                verify(mockFeedRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
             }
         });
     }

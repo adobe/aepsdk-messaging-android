@@ -40,7 +40,6 @@ import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
@@ -51,6 +50,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,9 +102,7 @@ class EdgePersonalizationResponseHandler {
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 inMemoryPropositions = cachedMessages;
-                final List<LaunchRule> parsedRules = processPropositions(cachedMessages, new ArrayList<String>() {{
-                    add(getAppSurface());
-                }}, false, false);
+                final List<LaunchRule> parsedRules = processPropositions(cachedMessages, Collections.singletonList(getAppSurface()), false, false);
                 launchRulesEngine.addRules(parsedRules);
             }
         }
@@ -191,7 +189,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         if (requestEventId.equals("TESTING_ID")) {
-            requestedSurfacesForEventId.put(messagesRequestEventId, new ArrayList<String>() {{ add(getAppSurface()); }});
+            requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(getAppSurface()));
         }
 
         // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
@@ -250,9 +248,7 @@ class EdgePersonalizationResponseHandler {
 
         if (propositions == null || propositions.isEmpty()) {
             if (clearExisting) {
-                if (expectedSurfaces.equals(new ArrayList<String>() {{
-                    add(appSurface);
-                }})) {
+                if (expectedSurfaces.equals(Collections.singletonList(appSurface))) {
                     inMemoryPropositions.clear();
                     propositionInfo.clear();
                     messagingCacheUtilities.cachePropositions(null);
@@ -338,9 +334,7 @@ class EdgePersonalizationResponseHandler {
      */
     private void updateFeeds(final List<LaunchRule> parsedRules, final List<String> expectedSurfaces) {
         final String appSurface = getAppSurface();
-        if (expectedSurfaces == null || expectedSurfaces.isEmpty() || !expectedSurfaces.equals(new ArrayList<String>() {{
-            add(getAppSurface());
-        }})) {
+        if (expectedSurfaces == null || expectedSurfaces.isEmpty() || !expectedSurfaces.equals(Collections.singletonList(appSurface))) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping parsed rules which contain unexpected app surfaces: %s.", expectedSurfaces.toString());
             return;
         }
@@ -370,7 +364,7 @@ class EdgePersonalizationResponseHandler {
 
                     // cache feed image if one is present
                     if (!StringUtils.isNullOrEmpty(imageUrl)) {
-                        messagingCacheUtilities.cacheImageAssets(new ArrayList<String>() {{ add(imageUrl); }});
+                        messagingCacheUtilities.cacheImageAssets(Collections.singletonList(imageUrl));
                     }
                 }
 
