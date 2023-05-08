@@ -39,7 +39,7 @@ public class AdobeAlertTests {
     @Test
     public void testCreateAdobeAlert_WithAlertStyle_AllParametersPresent_ThenAlertBuilt() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -48,20 +48,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_WithActionSheetStyle_AllParametersPresent_ThenAlertBuilt() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -70,20 +70,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_WithNullAlertStyle_AllOtherParametersPresent_ThenAlertNotBuilt() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, null)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, null)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -92,13 +92,13 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNull(adobeAlert);
+        assertNull(internalAdobeAlert);
     }
 
     @Test
     public void testCreateAdobeAlert_WithUnsupportedAlertStyle_AllOtherParametersPresent_ThenAlertNotBuilt() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, "unknown")
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, "unknown")
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -107,30 +107,30 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNull(adobeAlert);
+        assertNull(internalAdobeAlert);
     }
 
     @Test
     public void testCreateAdobeAlert_RequiredParametersOnly_ThenAlertBuilt() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals("", adobeAlert.getTitle());
-        assertEquals("", adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals("", adobeAlert.getDefaultButtonUrl());
-        assertEquals("", adobeAlert.getCancelButton());
-        assertEquals("", adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals("", internalAdobeAlert.getTitle());
+        assertEquals("", internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals("", internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals("", internalAdobeAlert.getCancelButton());
+        assertEquals("", internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_AlertTitleNotRequired() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
                 .setCancelButton(CANCEL_BUTTON_TEXT)
@@ -138,20 +138,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals("", adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals("", internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_AlertMessageBodyNotRequired() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
                 .setCancelButton(CANCEL_BUTTON_TEXT)
@@ -159,20 +159,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals("", adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals("", internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_DefaultButtonUrlNotRequired() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setCancelButton(CANCEL_BUTTON_TEXT)
@@ -180,20 +180,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals("", adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals("", internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_CancelButtonTextNotRequired() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -201,20 +201,20 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals("", adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals("", internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
     @Test
     public void testCreateAdobeAlert_CancelButtonUrlNotRequired() {
         // test
-        AdobeAlert adobeAlert = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert internalAdobeAlert = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
@@ -222,37 +222,37 @@ public class AdobeAlertTests {
                 .build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals("", adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals("", internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
     }
 
 
     @Test(expected = UnsupportedOperationException.class)
     public void testCreateAdobeAlert_CanOnlyBuildOnce() {
         // setup
-        AdobeAlert.Builder builder = new AdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
+        InternalAdobeAlert.Builder builder = new InternalAdobeAlert.Builder(DEFAULT_BUTTON_TEXT, MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT)
                 .setTitle(TITLE)
                 .setMessage(MESSAGE)
                 .setDefaultButtonUrl(DEFAULT_BUTTON_URL)
                 .setCancelButton(CANCEL_BUTTON_TEXT)
                 .setCancelButtonUrl(CANCEL_BUTTON_URL);
-        AdobeAlert adobeAlert = builder.build();
+        InternalAdobeAlert internalAdobeAlert = builder.build();
 
         // verify
-        assertNotNull(adobeAlert);
-        assertEquals(TITLE, adobeAlert.getTitle());
-        assertEquals(MESSAGE, adobeAlert.getMessage());
-        assertEquals(DEFAULT_BUTTON_TEXT, adobeAlert.getDefaultButton());
-        assertEquals(DEFAULT_BUTTON_URL, adobeAlert.getDefaultButtonUrl());
-        assertEquals(CANCEL_BUTTON_TEXT, adobeAlert.getCancelButton());
-        assertEquals(CANCEL_BUTTON_URL, adobeAlert.getCancelButtonUrl());
-        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, adobeAlert.getStyle());
+        assertNotNull(internalAdobeAlert);
+        assertEquals(TITLE, internalAdobeAlert.getTitle());
+        assertEquals(MESSAGE, internalAdobeAlert.getMessage());
+        assertEquals(DEFAULT_BUTTON_TEXT, internalAdobeAlert.getDefaultButton());
+        assertEquals(DEFAULT_BUTTON_URL, internalAdobeAlert.getDefaultButtonUrl());
+        assertEquals(CANCEL_BUTTON_TEXT, internalAdobeAlert.getCancelButton());
+        assertEquals(CANCEL_BUTTON_URL, internalAdobeAlert.getCancelButtonUrl());
+        assertEquals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT, internalAdobeAlert.getStyle());
 
         // test, throws UnsupportedOperationException
         builder.build();

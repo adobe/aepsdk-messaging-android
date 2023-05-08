@@ -12,9 +12,10 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import com.adobe.marketing.mobile.AdobeAlert;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-class AdobeAlert {
+public class InternalAdobeAlert implements AdobeAlert {
     // Optional, plain-text title of the message
     private String title;
     // Optional, plain-text body of the message
@@ -33,9 +34,9 @@ class AdobeAlert {
     /**
      * Private constructor.
      * <p>
-     * Use {@link Builder} to create {@link AdobeAlert} object.
+     * Use {@link Builder} to create {@link InternalAdobeAlert} object.
      */
-    private AdobeAlert() {
+    private InternalAdobeAlert() {
     }
 
     /**
@@ -43,25 +44,25 @@ class AdobeAlert {
      */
     public static class Builder {
         private boolean didBuild;
-        final private AdobeAlert adobeAlert;
+        final private InternalAdobeAlert internalAdobeAlert;
 
         /**
          * Builder constructor with required {@code AdobeAlert} attributes as parameters.
          * <p>
-         * It sets default values for the remaining {@link AdobeAlert} attributes.
+         * It sets default values for the remaining {@link InternalAdobeAlert} attributes.
          *
          * @param defaultButton required {@link String} text to be displayed on the default button
          * @param style         required {@link String} representing whether the alert will be presented as a dialog or an action sheet on the bottom of the screen
          */
         public Builder(final String defaultButton, final String style) {
-            adobeAlert = new AdobeAlert();
-            adobeAlert.defaultButton = StringUtils.isNullOrEmpty(defaultButton) ? "" : defaultButton;
-            adobeAlert.style = StringUtils.isNullOrEmpty(style) ? "" : style;
-            adobeAlert.title = "";
-            adobeAlert.message = "";
-            adobeAlert.defaultButtonUrl = "";
-            adobeAlert.cancelButton = "";
-            adobeAlert.cancelButtonUrl = "";
+            internalAdobeAlert = new InternalAdobeAlert();
+            internalAdobeAlert.defaultButton = StringUtils.isNullOrEmpty(defaultButton) ? "" : defaultButton;
+            internalAdobeAlert.style = StringUtils.isNullOrEmpty(style) ? "" : style;
+            internalAdobeAlert.title = "";
+            internalAdobeAlert.message = "";
+            internalAdobeAlert.defaultButtonUrl = "";
+            internalAdobeAlert.cancelButton = "";
+            internalAdobeAlert.cancelButtonUrl = "";
             didBuild = false;
         }
 
@@ -75,7 +76,7 @@ class AdobeAlert {
         public Builder setTitle(final String title) {
             throwIfAlreadyBuilt();
 
-            adobeAlert.title = title;
+            internalAdobeAlert.title = title;
             return this;
         }
 
@@ -89,7 +90,7 @@ class AdobeAlert {
         public Builder setMessage(final String message) {
             throwIfAlreadyBuilt();
 
-            adobeAlert.message = message;
+            internalAdobeAlert.message = message;
             return this;
         }
 
@@ -103,7 +104,7 @@ class AdobeAlert {
         public Builder setDefaultButtonUrl(final String defaultButtonUrl) {
             throwIfAlreadyBuilt();
 
-            adobeAlert.defaultButtonUrl = defaultButtonUrl;
+            internalAdobeAlert.defaultButtonUrl = defaultButtonUrl;
             return this;
         }
 
@@ -117,7 +118,7 @@ class AdobeAlert {
         public Builder setCancelButton(final String cancelButton) {
             throwIfAlreadyBuilt();
 
-            adobeAlert.cancelButton = cancelButton;
+            internalAdobeAlert.cancelButton = cancelButton;
             return this;
         }
 
@@ -131,27 +132,27 @@ class AdobeAlert {
         public Builder setCancelButtonUrl(final String cancelButtonUrl) {
             throwIfAlreadyBuilt();
 
-            adobeAlert.cancelButtonUrl = cancelButtonUrl;
+            internalAdobeAlert.cancelButtonUrl = cancelButtonUrl;
             return this;
         }
 
         /**
          * Builds and returns the {@code AdobeAlert} object.
          *
-         * @return {@link AdobeAlert} object or null.
+         * @return {@link InternalAdobeAlert} object or null.
          */
-        public AdobeAlert build() {
+        public InternalAdobeAlert build() {
             // default button text and alert style are required. additionally, alert style must be "alert" or "actionSheet".
-            if (StringUtils.isNullOrEmpty(adobeAlert.defaultButton)
-                    || StringUtils.isNullOrEmpty(adobeAlert.style)
-                    || (!adobeAlert.style.equals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT) && !adobeAlert.style.equals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET))) {
+            if (StringUtils.isNullOrEmpty(internalAdobeAlert.defaultButton)
+                    || StringUtils.isNullOrEmpty(internalAdobeAlert.style)
+                    || (!internalAdobeAlert.style.equals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ALERT) && !internalAdobeAlert.style.equals(MessagingConstants.EventDataKeys.RulesEngine.ALERT_STYLE_ACTION_SHEET))) {
                 return null;
             }
 
             throwIfAlreadyBuilt();
             didBuild = true;
 
-            return adobeAlert;
+            return internalAdobeAlert;
         }
 
         private void throwIfAlreadyBuilt() {
@@ -164,7 +165,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} title text.
      *
-     * @return {@link String} containing the {@link AdobeAlert} title text.
+     * @return {@link String} containing the {@link InternalAdobeAlert} title text.
      */
     public String getTitle() {
         return title;
@@ -173,7 +174,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} message body text.
      *
-     * @return {@link String} containing the {@link AdobeAlert} message body text.
+     * @return {@link String} containing the {@link InternalAdobeAlert} message body text.
      */
     public String getMessage() {
         return message;
@@ -182,7 +183,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} default button text.
      *
-     * @return {@link String} containing the {@link AdobeAlert} default button text.
+     * @return {@link String} containing the {@link InternalAdobeAlert} default button text.
      */
     public String getDefaultButton() {
         return defaultButton;
@@ -191,7 +192,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} default button url.
      *
-     * @return {@link String} containing the {@link AdobeAlert} default button url.
+     * @return {@link String} containing the {@link InternalAdobeAlert} default button url.
      */
     public String getDefaultButtonUrl() {
         return defaultButtonUrl;
@@ -200,7 +201,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} cancel button text.
      *
-     * @return {@link String} containing the {@link AdobeAlert} cancel button text.
+     * @return {@link String} containing the {@link InternalAdobeAlert} cancel button text.
      */
     public String getCancelButton() {
         return cancelButton;
@@ -209,7 +210,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} cancel button url.
      *
-     * @return {@link String} containing the {@link AdobeAlert} cancel button url.
+     * @return {@link String} containing the {@link InternalAdobeAlert} cancel button url.
      */
     public String getCancelButtonUrl() {
         return cancelButtonUrl;
@@ -218,7 +219,7 @@ class AdobeAlert {
     /**
      * Gets the {@code AdobeAlert} style.
      *
-     * @return {@link String} containing the {@link AdobeAlert} style.
+     * @return {@link String} containing the {@link InternalAdobeAlert} style.
      */
     public String getStyle() {
         return style;
