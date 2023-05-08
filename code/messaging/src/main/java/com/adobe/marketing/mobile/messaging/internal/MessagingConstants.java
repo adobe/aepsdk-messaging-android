@@ -197,11 +197,18 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE = "ajoInbound";
+            static final String MESSAGE_CONSEQUENCE_AJO_IAM_VALUE = "ajoIam";
+            static final String MESSAGE_CONSEQUENCE_AJO_ALERT_VALUE = "ajoAlert";
+            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajoFeedItem";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+            static final String ALERT_STYLE_ALERT = "alert";
+            static final String ALERT_STYLE_ACTION_SHEET = "actionSheet";
 
             private RulesEngine() {
             }
