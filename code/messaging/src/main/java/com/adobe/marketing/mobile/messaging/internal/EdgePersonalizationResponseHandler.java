@@ -20,8 +20,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_IAM_VALUE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
@@ -235,7 +233,6 @@ class EdgePersonalizationResponseHandler {
      * @param expectedSurfaces A {@link List<String>} containing the expected app surfaces
      * @param clearExisting    {@code boolean} if true the existing cached propositions are cleared and new message rules are replaced in the {@code LaunchRulesEngine}
      * @param persistChanges   {@code boolean} if true the passed in {@code List<PropositionPayload>} are added to the cache
-     *
      * @return {@link List<LaunchRule>} containing {@link LaunchRule} parsed from the passed in propositions
      */
     private List<LaunchRule> processPropositions(final List<PropositionPayload> propositions, final List<String> expectedSurfaces, final boolean clearExisting, final boolean persistChanges) {
@@ -329,8 +326,8 @@ class EdgePersonalizationResponseHandler {
      * Attempts to parse any message feed rules contained in the {@code List<LaunchRule>} containing parsed {@code LaunchRule}s.
      * Any {@link FeedItem} objects created will be added to the in-memory {@link Map<String, Feed>}.
      *
-     * @param parsedRules       A {@link List<LaunchRule>} containing the rules parsed from the AJO inbound payload
-     * @param expectedSurfaces  A {@link List<String>} containing the expected message feed surfaces
+     * @param parsedRules      A {@link List<LaunchRule>} containing the rules parsed from the AJO inbound payload
+     * @param expectedSurfaces A {@link List<String>} containing the expected message feed surfaces
      */
     private void updateFeeds(final List<LaunchRule> parsedRules, final List<String> expectedSurfaces) {
         final String appSurface = getAppSurface();

@@ -26,26 +26,25 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.S
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
-import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.util.UrlUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -216,6 +215,7 @@ class MessagingUtils {
     // ========================================================================================
     // Consequence data retrieval from a JSONObject
     // ========================================================================================
+
     /**
      * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
      *
