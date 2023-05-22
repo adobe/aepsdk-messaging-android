@@ -32,6 +32,8 @@ import java.util.Map;
  * This class is the Messaging extension implementation of {@link FullscreenMessageDelegate}.
  */
 class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
+
+    static final String INTERACTION_BACK_PRESS = "backPress";
     private final static String SELF_TAG = "MessagingFullscreenMessageDelegate";
 
     /**
@@ -55,6 +57,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message != null && message.getAutoTrack()) {
+            message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 
@@ -147,6 +153,14 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         }
 
         return true;
+    }
+
+    @Override
+    public void onBackPressed(FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message != null) {
+            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_DISMISS);
+        }
     }
 
     // ============================================================================================
