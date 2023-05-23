@@ -371,7 +371,7 @@ public class MessagingFullscreenMessageDelegateTests {
             verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
             MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
             String interaction = interactionArgumentCaptor.getValue();
-            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
+            assertEquals(eventType, MessagingEdgeEventType.IN_APP_INTERACT);
             assertEquals("backPress", interaction);
     }
 
