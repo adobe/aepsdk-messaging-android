@@ -169,10 +169,15 @@ public class MessagingFullscreenMessageDelegateTests {
     }
 
     @Test
-    public void test_onMessageDismiss() {
+    public void test_onMessageDismiss_whenAutoTrackTrue() {
         try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
             // setup
             ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
+            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+            when(mockInternalMessage.getAutoTrack()).thenReturn(true);
+            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
 
             // test
             internalMessage.onDismiss(mockFullscreenMessage);
@@ -180,6 +185,34 @@ public class MessagingFullscreenMessageDelegateTests {
             // verify message dismiss logging
             logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
             assertEquals("Fullscreen message dismissed.", logArgumentCaptor.getValue());
+
+            // verify tracking event data
+            verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+            String interaction = interactionArgumentCaptor.getValue();
+            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
+            assertEquals(null, interaction);
+        }
+    }
+
+    @Test
+    public void test_onMessageDismiss_whenAutoTrackFalse() {
+        try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+            // setup
+            ArgumentCaptor<String> logArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+            when(mockInternalMessage.getAutoTrack()).thenReturn(false);
+            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
+
+            // test
+            internalMessage.onDismiss(mockFullscreenMessage);
+
+            // verify message dismiss logging
+            logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), logArgumentCaptor.capture()), times(1));
+            assertEquals("Fullscreen message dismissed.", logArgumentCaptor.getValue());
+
+            // verify tracking event data
+            verify(mockInternalMessage, times(0)).track(any(), any());
         }
     }
 
@@ -322,4 +355,24 @@ public class MessagingFullscreenMessageDelegateTests {
             assertEquals("scheme://parameters?param1=value1&param2=value2", stringArgumentCaptor.getValue());
         });
     }
+
+    @Test
+    public void test_onBackPressed() {
+            // setup
+            ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
+            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
+
+            // test
+            internalMessage.onBackPressed(mockFullscreenMessage);
+
+            // verify tracking event data
+            verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
+            String interaction = interactionArgumentCaptor.getValue();
+            assertEquals(eventType, MessagingEdgeEventType.IN_APP_INTERACT);
+            assertEquals("backPress", interaction);
+    }
+
 }
