@@ -294,18 +294,6 @@ public class MessagingExtensionTests {
         });
     }
 
-    @Test
-    public void test_handleWildcardEvents_when_nullEventReceived() {
-        // setup
-        runUsingMockedServiceProvider(() -> {
-            // test
-            messagingExtension.handleWildcardEvents(null);
-
-            // verify rules engine process event not called
-            verifyNoInteractions(mockMessagingRulesEngine);
-        });
-    }
-
     // =================================================================================================================
     // handleRuleEngineResponseEvents
     // =================================================================================================================

@@ -112,7 +112,7 @@ public final class MessagingExtension extends Extension {
     @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(MessagingConstants.EXTENSION_NAME, extensionApi);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
         this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
@@ -196,11 +196,6 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleWildcardEvents(final Event event) {
-        if (event == null) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleWildcardEvents - ignoring null event received.");
-            return;
-        }
-
         messagingRulesEngine.processEvent(event);
     }
 
