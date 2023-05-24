@@ -217,6 +217,8 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
     }
 }
 
+apply from: 'checkstyle.gradle'
+
 dependencies {
     implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"

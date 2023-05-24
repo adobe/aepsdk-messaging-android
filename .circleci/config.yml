@@ -19,6 +19,17 @@ jobs:
     working_directory: ~/code
     steps:
       - checkout
+
+      - run:
+          name: Checkstyle
+          command: make checkstyle
+
+      - run:
+          name: Javadoc
+          command: make ci-javadoc
+      - store_artifacts:
+          path: ci/javadoc/build/reports
+          
       - run:
           name: Download Codecov Uploader
           command: |

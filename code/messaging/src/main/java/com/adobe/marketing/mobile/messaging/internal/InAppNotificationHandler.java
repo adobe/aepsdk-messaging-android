@@ -105,7 +105,7 @@ class InAppNotificationHandler {
      */
     void fetchMessages() {
         final String appSurface = getAppSurface();
-        if (appSurface.equals("unknown")) {
+        if ("unknown".equals(appSurface)) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app messages - unable to retrieve the application id.");
             return;
         }
@@ -154,7 +154,7 @@ class InAppNotificationHandler {
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
 
         // "TESTING_ID" used in unit and functional testing
-        if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+        if (!messagesRequestEventId.equals(requestEventId) && !"TESTING_ID".equals(requestEventId)) {
             return;
         }
 

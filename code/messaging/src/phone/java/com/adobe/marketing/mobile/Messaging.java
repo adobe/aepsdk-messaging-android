@@ -158,12 +158,12 @@ public final class Messaging {
                 .build();
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
-            public void fail(AdobeError adobeError) {
+            public void fail(final AdobeError adobeError) {
                 Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions: Error: %s", adobeError.getErrorName());
             }
 
             @Override
-            public void call(Event event) {
+            public void call(final Event event) {
             }
         });
     }
