@@ -71,7 +71,6 @@ class EdgePersonalizationResponseHandler {
     private Map<String, PropositionInfo> feedInfo = new HashMap<>();
     private String messagesRequestEventId;
     private String lastProcessedRequestEventId;
-    private InternalMessage message;
 
     /**
      * Constructor
@@ -266,13 +265,13 @@ class EdgePersonalizationResponseHandler {
             for (final PayloadItem payloadItem : proposition.items) {
                 final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
                 if (ruleJson == null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no in-app message content.");
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no json content.");
                     continue;
                 }
 
                 final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
                 if (parsedRule == null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed in-app message content.");
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed rule json content.");
                     continue;
                 }
 
@@ -298,6 +297,7 @@ class EdgePersonalizationResponseHandler {
             }
         }
 
+        // update proposition info for in-app messages and cache the messages if needed
         if (!isFeedConsequence && !parsedRules.isEmpty()) {
             if (clearExisting) {
                 propositionInfo = tempPropositionInfo;
@@ -310,7 +310,7 @@ class EdgePersonalizationResponseHandler {
             if (persistChanges) {
                 messagingCacheUtilities.cachePropositions(inMemoryPropositions);
             }
-        } else {
+        } else { // update proposition info for message feed items
             if (clearExisting) {
                 inMemoryFeeds.clear();
                 feedInfo = tempFeedsInfo;
@@ -416,7 +416,7 @@ class EdgePersonalizationResponseHandler {
             }
 
             final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
-            message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
+            final InternalMessage message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = propositionInfo.get(message.getId());
             message.trigger();
             message.show(true);
