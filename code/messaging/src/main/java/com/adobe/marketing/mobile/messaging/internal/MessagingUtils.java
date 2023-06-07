@@ -159,7 +159,7 @@ class MessagingUtils {
 
         return EventType.MESSAGING.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
-                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS);
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false);
     }
 
     // ========================================================================================
