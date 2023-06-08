@@ -22,6 +22,7 @@ final class MessagingConstants {
     static final String EXTENSION_VERSION = "2.2.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";

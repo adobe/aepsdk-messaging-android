@@ -48,6 +48,7 @@ import java.util.Map;
  */
 class InternalMessage extends MessagingFullscreenMessageDelegate implements Message {
     private final static String SELF_TAG = "Message";
+    private final static int FILL_SCREEN = 100;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
     private final String id;
@@ -278,7 +279,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     }
 
     @Override
-    public void setAutoTrack(boolean useAutoTrack) {
+    public void setAutoTrack(final boolean useAutoTrack) {
         this.autoTrack = useAutoTrack;
     }
 
@@ -319,8 +320,8 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         MessageAnimation displayAnimation, dismissAnimation;
         Map<MessageGesture, String> gestureMap = new HashMap<>();
 
-        width = DataReader.optInt(rawSettings, MobileParametersKeys.WIDTH, 100);
-        height = DataReader.optInt(rawSettings, MobileParametersKeys.HEIGHT, 100);
+        width = DataReader.optInt(rawSettings, MobileParametersKeys.WIDTH, FILL_SCREEN);
+        height = DataReader.optInt(rawSettings, MobileParametersKeys.HEIGHT, FILL_SCREEN);
         verticalAlign = MessageAlignment.valueOf((DataReader.optString(rawSettings, MobileParametersKeys.VERTICAL_ALIGN, "center").toUpperCase()));
         verticalInset = DataReader.optInt(rawSettings, MobileParametersKeys.VERTICAL_INSET, 0);
         horizontalAlign = MessageAlignment.valueOf((DataReader.optString(rawSettings, MobileParametersKeys.HORIZONTAL_ALIGN, "center").toUpperCase()));

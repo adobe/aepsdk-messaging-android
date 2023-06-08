@@ -114,10 +114,8 @@ public final class MessagingExtension extends Extension {
     @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final LaunchRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        // TODO: update with FeedRulesEngine
-        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
+        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
     //region Extension interface methods
@@ -162,6 +160,7 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
+        getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
     }
 
     @Override
@@ -193,24 +192,37 @@ public final class MessagingExtension extends Extension {
 
     //region Event listeners
 
+    /**
+     * Processes all events dispatched to the {@code EventHub} to determine if any rules are matched.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
     void handleWildcardEvents(final Event event) {
-        // handling mock rules delivered from the assurance ui
-        final String eventName = event.getName();
-        if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
-            final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
-            if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
-                final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
-                final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
-                final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-                edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
-            }
+        messagingRulesEngine.processEvent(event);
+    }
+
+    /**
+     * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
+     * The {@link InAppNotificationHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * created from the triggered rule consequence payload.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
+    void handleRuleEngineResponseEvents(final Event event) {
+        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequences found. Will not handle rules response event.");
             return;
         }
 
-        List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
-        final List<RuleConsequence> consequences = new ArrayList<>();
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+        final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
-        if (triggeredRules == null || triggeredRules.isEmpty()) {
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequence details found. Will not handle rules response event.");
             return;
         }
 
