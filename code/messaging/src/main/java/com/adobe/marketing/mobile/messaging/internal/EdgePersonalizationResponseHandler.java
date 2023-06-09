@@ -23,11 +23,14 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_FEEDS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.MessageFeedKeys.FEEDS;
 
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
@@ -52,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This class is used to handle the retrieval and processing of AJO payloads containing in-app or feed messages. It is also
@@ -63,7 +67,6 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private final LaunchRulesEngine feedRulesEngine;
     private final Map<String, Feed> inMemoryFeeds = new HashMap<>();
     private final Map<String, List<String>> requestedSurfacesForEventId = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
@@ -78,24 +81,22 @@ class EdgePersonalizationResponseHandler {
      * @param parent          {@link MessagingExtension} instance that is the parent of this {@code EdgePersonalizationResponseHandler}
      * @param extensionApi    {@link ExtensionApi} instance
      * @param rulesEngine     {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
-     * @param feedRulesEngine {@link LaunchRulesEngine} instance to use for loading message feed rule payloads
      */
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine) {
-        this(parent, extensionApi, rulesEngine, feedRulesEngine, null, null);
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
+        this(parent, extensionApi, rulesEngine, null, null);
     }
 
     @VisibleForTesting
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
-        this.feedRulesEngine = feedRulesEngine;
         this.messagesRequestEventId = messagesRequestEventId;
 
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
         if (this.messagingCacheUtilities.arePropositionsCached()) {
-            List<PropositionPayload> cachedMessages = this.messagingCacheUtilities.getCachedPropositions();
+            final List<PropositionPayload> cachedMessages = this.messagingCacheUtilities.getCachedPropositions();
             if (cachedMessages != null && !cachedMessages.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
                 inMemoryPropositions = cachedMessages;
@@ -115,7 +116,7 @@ class EdgePersonalizationResponseHandler {
     void fetchMessages(final List<String> surfacePaths) {
         final String appSurface = getAppSurface();
         if (appSurface.equals("unknown")) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, cannot read the bundle identifier.");
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, cannot read the application package name.");
             return;
         }
 
@@ -206,22 +207,59 @@ class EdgePersonalizationResponseHandler {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
         }
 
-
         final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
+        if (!parsedRules.isEmpty()) {
+            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Loading %d rule(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+        }
+
+        launchRulesEngine.replaceRules(parsedRules);
+
         final List<RuleConsequence> consequenceList = !parsedRules.isEmpty() ? parsedRules.get(0).getConsequenceList() : new ArrayList<>();
         if (!consequenceList.isEmpty() && MessagingUtils.isFeedItem(consequenceList.get(0))) {
-            updateFeeds(parsedRules, requestedSurfacesForEventId.get(requestEventId));
-            feedRulesEngine.addRules(parsedRules);
-            // TODO: dispatch an event with the feeds received from the remote
-        } else {
-            if (clearExistingRules) {
-                launchRulesEngine.replaceRules(parsedRules);
-                Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully loaded %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+            final Map<String, Feed> feeds = processFeedConsequences(launchRulesEngine.evaluateEvent(edgeResponseEvent));
+            mergeFeedsInMemory(feeds, Objects.requireNonNull(requestedSurfacesForEventId.get(lastProcessedRequestEventId)));
+            // dispatch an event with the feeds received from the remote
+            final Map<String, Object> eventData = new HashMap<>();
+            eventData.put(FEEDS, inMemoryFeeds);
+
+            final Event event = new Event.Builder(MESSAGE_FEEDS_NOTIFICATION,
+                    EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
+                    .setEventData(eventData)
+                    .build();
+
+            extensionApi.dispatch(event);
+        }
+    }
+
+    private void mergeFeedsInMemory(final Map<String, Feed> feeds, final List<String> requestedSurfaces) {
+        for (final String surface : requestedSurfaces) {
+            final Feed feed = feeds.get(surface);
+            if (feed != null) {
+                inMemoryFeeds.put(surface, feed);
             } else {
-                launchRulesEngine.addRules(parsedRules);
-                Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Successfully added %d message(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+                inMemoryFeeds.remove(surface);
             }
         }
+    }
+
+    private Map<String, Feed> processFeedConsequences(final List<RuleConsequence> feedConsequences) {
+        if (!feedConsequences.isEmpty() && MessagingUtils.isFeedItem(feedConsequences.get(0))) {
+            return null;
+        }
+
+        final Map<String, Feed> processedFeeds = new HashMap<>();
+        for (final RuleConsequence consequence : feedConsequences) {
+            final Map details = consequence.getDetail();
+            final FeedItem feedItem = createFeedItemFromConsequenceDetail(details);
+            final String appSurface = getAppSurface();
+            Feed feed = processedFeeds.get(appSurface);
+            final List<FeedItem> feedItems = feed == null ? new ArrayList<>() : feed.getItems();
+            feedItems.add(feedItem);
+            feed = new Feed(appSurface, feedItems);
+            processedFeeds.put(appSurface, feed);
+        }
+
+        return processedFeeds;
     }
 
     /**
@@ -322,61 +360,38 @@ class EdgePersonalizationResponseHandler {
         return parsedRules;
     }
 
-    /**
-     * Attempts to parse any message feed rules contained in the {@code List<LaunchRule>} containing parsed {@code LaunchRule}s.
-     * Any {@link FeedItem} objects created will be added to the in-memory {@link Map<String, Feed>}.
-     *
-     * @param parsedRules      A {@link List<LaunchRule>} containing the rules parsed from the AJO inbound payload
-     * @param expectedSurfaces A {@link List<String>} containing the expected message feed surfaces
-     */
-    private void updateFeeds(final List<LaunchRule> parsedRules, final List<String> expectedSurfaces) {
-        final String appSurface = getAppSurface();
-        if (expectedSurfaces == null || expectedSurfaces.isEmpty() || !expectedSurfaces.equals(Collections.singletonList(appSurface))) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping parsed rules which contain unexpected app surfaces: %s.", expectedSurfaces.toString());
-            return;
+    private FeedItem createFeedItemFromConsequenceDetail(final Map<String, Object> consequenceDetailMap) {
+        if (MapUtils.isNullOrEmpty(consequenceDetailMap)) {
+            return null;
+        }
+        final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.CONTENT, null);
+        if (MapUtils.isNullOrEmpty(contentMap)) {
+            return null;
         }
 
-        for (final LaunchRule parsedRule : parsedRules) {
-            final Map<String, Object> consequenceDetailMap = parsedRule.getConsequenceList().get(0).getDetail();
-            if (!MapUtils.isNullOrEmpty(consequenceDetailMap)) {
-                FeedItem feedItem = null;
-                final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.CONTENT, null);
-                if (!MapUtils.isNullOrEmpty(contentMap)) {
-                    final String title = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.TITLE, "");
-                    final String body = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.BODY, "");
-                    final long publishedDate = DataReader.optLong(contentMap, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
-                    final long expiryDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
-                    final String imageUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
-                    final String actionTitle = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
-                    final String actionUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
-                    final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.METADATA, null);
+        final String title = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.TITLE, "");
+        final String body = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.BODY, "");
+        final long publishedDate = DataReader.optLong(contentMap, MessagingConstants.MessageFeedKeys.PUBLISHED_DATE, 0);
+        final long expiryDate = DataReader.optLong(consequenceDetailMap, MessagingConstants.MessageFeedKeys.EXPIRY_DATE, 0);
+        final String imageUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
+        final String actionTitle = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
+        final String actionUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
+        final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.METADATA, null);
 
-                    feedItem = new FeedItem.Builder(title, body, publishedDate)
-                            .setExpiryDate(expiryDate)
-                            .setImageUrl(imageUrl)
-                            .setActionTitle(actionTitle)
-                            .setActionUrl(actionUrl)
-                            .setMeta(meta)
-                            .build();
-
-                    // cache feed image if one is present
-                    if (!StringUtils.isNullOrEmpty(imageUrl)) {
-                        messagingCacheUtilities.cacheImageAssets(Collections.singletonList(imageUrl));
-                    }
-                }
-
-                if (feedItem != null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Adding feed item with title %s to in-memory feeds.", feedItem.getTitle());
-                    // find the feed to insert the feed item else create a new feed for it
-                    Feed feed = inMemoryFeeds.get(appSurface);
-                    final List<FeedItem> feedItems = feed == null ? new ArrayList<>() : feed.getItems();
-                    feedItems.add(feedItem);
-                    feed = new Feed(appSurface, feedItems);
-                    inMemoryFeeds.put(appSurface, feed);
-                }
-            }
+        // cache feed image if one is present
+        if (!StringUtils.isNullOrEmpty(imageUrl)) {
+            messagingCacheUtilities.cacheImageAssets(Collections.singletonList(imageUrl));
         }
+
+        return new FeedItem.Builder(title, body, publishedDate)
+                .setExpiryDate(expiryDate)
+                .setImageUrl(imageUrl)
+                .setActionTitle(actionTitle)
+                .setActionUrl(actionUrl)
+                .setMeta(meta)
+                .build();
     }
+
 
     private String getAppSurface() {
         final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
@@ -415,7 +430,7 @@ class EdgePersonalizationResponseHandler {
                 return;
             }
 
-            final Map<String, Object> mobileParameters = (Map<String, Object>) details.get(MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS);
+            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, details, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
             final InternalMessage message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = propositionInfo.get(message.getId());
             message.trigger();

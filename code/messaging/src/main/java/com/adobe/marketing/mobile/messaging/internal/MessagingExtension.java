@@ -86,7 +86,6 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
-    final LaunchRulesEngine feedRulesEngine;
 
     /**
      * Constructor.
@@ -203,7 +202,7 @@ public final class MessagingExtension extends Extension {
 
     /**
      * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
-     * The {@link InAppNotificationHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
      * created from the triggered rule consequence payload.
      *
      * @param event incoming {@link Event} object to be processed
@@ -226,15 +225,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        for (final LaunchRule rule : triggeredRules) {
-            consequences.addAll(rule.getConsequenceList());
-        }
-
-        if (consequences.isEmpty()) {
-            return;
-        }
-
-        edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+        edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
     }
 
     //endregion

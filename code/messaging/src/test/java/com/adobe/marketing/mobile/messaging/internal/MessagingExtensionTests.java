@@ -292,9 +292,6 @@ public class MessagingExtensionTests {
             // test
             messagingExtension.handleWildcardEvents(mockEvent);
 
-            // verify triggered rule consequence passed to InAppNotificationHandler to create a Message
-            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
-
             // verify rules engine processes event
             verify(mockMessagingRulesEngine, times(1)).processEvent(eq(mockEvent));
         });
@@ -342,7 +339,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockInAppNotificationHandler, times(1)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 
@@ -368,7 +365,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockInAppNotificationHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 
@@ -403,7 +400,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockInAppNotificationHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 

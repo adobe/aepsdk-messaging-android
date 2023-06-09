@@ -87,8 +87,6 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
-    LaunchRulesEngine mockFeedRulesEngine;
-    @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
@@ -114,7 +112,6 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingExtension);
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
-        reset(mockFeedRulesEngine);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -131,7 +128,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mock_applicationId");
 
-            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
             runnable.run();
         }
@@ -349,7 +346,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 verify(mockMessagingCacheUtilities, times(7)).cacheImageAssets(any(List.class));
 
                 // verify new rules were added and not replaced as the request event id is the same for both personalization events
-                verify(mockMessagingRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
+                verify(mockMessagingRulesEngine, times(2)).replaceRules(listArgumentCaptor.capture());
                 assertEquals(4, listArgumentCaptor.getValue().size());
 
                 // verify 7 rules in total have been loaded
@@ -726,14 +723,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify message feed propositions not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
-                // verify assets cached
-                verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
-
-                // verify no interactions are made with the messaging rules engine as a feed payload was provided
-                verifyNoInteractions(mockMessagingRulesEngine);
-
-                // verify rule containing 5 consequences is added to feed rules engine
-                verify(mockFeedRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
+                // verify rule containing 5 consequences is added to rules engine
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
                 List<LaunchRule> addedRules = listArgumentCaptor.getValue();
                 assertEquals(1, addedRules.size());
                 assertEquals(5, addedRules.get(0).getConsequenceList().size());
@@ -764,11 +755,9 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify message feed propositions not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
-                // verify assets not cached
-                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-                // verify no rules are added to feed rules engine
-                verify(mockFeedRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
+                // verify no rules are added to the rules engine
+                verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
             }
         });
     }
@@ -797,11 +786,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify message feed propositions not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
-                // verify assets not cached
-                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
-
-                // verify no rules are added to feed rules engine
-                verify(mockFeedRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
+                // verify no rules are added to the rules engine
+                verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
             }
         });
     }
@@ -831,7 +817,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
