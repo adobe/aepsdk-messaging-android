@@ -53,6 +53,8 @@ adbinapp://dismiss?interaction=adobe&link=https%3A%2F%2Fwww.adobe.com%3Fkey%3Dva
 
 ##### Open a deeplink
 
+> Android deeplinks require intent filters to be added in the app manifest to correctly handle deeplink URLs. Please see the [Android developer documentation](https://developer.android.com/training/app-links/deep-linking) for more information.
+
 If the provided URL contains a custom scheme, the app that handles the custom scheme will be launched.
 
 The example below will dismiss the current in-app message, then launch an app owned by the same developer which handles the scheme `myAppScheme`:
