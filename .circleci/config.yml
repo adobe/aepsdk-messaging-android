@@ -45,7 +45,7 @@ jobs:
 
       - run:
           name: UnitTests
-          command: make ci-unit-test
+          command: make ci-unit-test-coverage
 
       # code coverage
       - run:
