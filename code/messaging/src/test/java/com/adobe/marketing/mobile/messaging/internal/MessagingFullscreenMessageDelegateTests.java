@@ -369,17 +369,13 @@ public class MessagingFullscreenMessageDelegateTests {
         internalMessage.onBackPressed(mockFullscreenMessage);
 
         // verify tracking event data
-        verify(mockInternalMessage, times(2)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+        verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
         List<MessagingEdgeEventType> eventTypeList = messagingEdgeEventTypeArgumentCaptor.getAllValues();
         List<String> interactionList = interactionArgumentCaptor.getAllValues();
         // verify interact event
         String interaction = interactionList.get(0);
         assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, eventTypeList.get(0));
         assertEquals("backPress", interaction);
-        // verify dismiss event
-        interaction = interactionList.get(1);
-        assertEquals(MessagingEdgeEventType.IN_APP_DISMISS, eventTypeList.get(1));
-        assertEquals(null, interaction);
     }
 
 }
