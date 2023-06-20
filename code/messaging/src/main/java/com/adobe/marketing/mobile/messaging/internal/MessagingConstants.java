@@ -12,10 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import com.adobe.marketing.mobile.util.DataReader;
-
-import java.util.Map;
-
 final class MessagingConstants {
 
     static final String LOG_TAG = "Messaging";

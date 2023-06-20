@@ -96,12 +96,12 @@ class EdgePersonalizationResponseHandler {
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
         if (this.messagingCacheUtilities.arePropositionsCached()) {
-            final List<PropositionPayload> cachedMessages = this.messagingCacheUtilities.getCachedPropositions();
-            if (cachedMessages != null && !cachedMessages.isEmpty()) {
-                Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load in-app messages into the rules engine.");
-                inMemoryPropositions = cachedMessages;
-                final List<LaunchRule> parsedRules = processPropositions(cachedMessages, Collections.singletonList(getAppSurface()), false, false);
-                launchRulesEngine.addRules(parsedRules);
+            final List<PropositionPayload> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
+            if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
+                Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
+                inMemoryPropositions = cachedPropositions;
+                final List<LaunchRule> parsedRules = processPropositions(cachedPropositions, Collections.singletonList(getAppSurface()), false, false);
+                launchRulesEngine.replaceRules(parsedRules);
             }
         }
     }
@@ -111,11 +111,11 @@ class EdgePersonalizationResponseHandler {
      * The app surface used in the request is generated using the application id of the app.
      * If the application id is unavailable, calling this method will do nothing.
      *
-     * @param surfacePaths A {@code List<String>} of surface path strings for fetching feed messages, if available.
+     * @param surfacePaths A {@code List<String>} of surface path strings for fetching feeds or in-app messages, if available.
      */
-    void fetchMessages(final List<String> surfacePaths) {
+    void fetchPropositions(final List<String> surfacePaths) {
         final String appSurface = getAppSurface();
-        if (appSurface.equals("unknown")) {
+        if ("unknown".equals(appSurface)) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, cannot read the application package name.");
             return;
         }
@@ -132,7 +132,7 @@ class EdgePersonalizationResponseHandler {
             }
 
             if (surfaceUri.isEmpty()) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve feed messages, no valid surface paths found.");
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, no valid surface paths found.");
                 return;
             }
         } else {
@@ -182,11 +182,11 @@ class EdgePersonalizationResponseHandler {
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
 
         // "TESTING_ID" used in unit and functional testing
-        if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+        if (!messagesRequestEventId.equals(requestEventId) && !"TESTING_ID".equals(requestEventId)) {
             return;
         }
 
-        if (requestEventId.equals("TESTING_ID")) {
+        if ("TESTING_ID".equals(requestEventId)) {
             requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(getAppSurface()));
         }
 
@@ -209,7 +209,7 @@ class EdgePersonalizationResponseHandler {
 
         final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
         if (!parsedRules.isEmpty()) {
-            Log.debug(LOG_TAG, SELF_TAG, "processPropositions - Loading %d rule(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
         }
 
         launchRulesEngine.replaceRules(parsedRules);
@@ -264,13 +264,13 @@ class EdgePersonalizationResponseHandler {
 
     /**
      * Attempts to parse any in-app message or message feed rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@code JSONObject}s
-     * found will be returned as a {code List<LaunchRule>}.
+     * found will be returned in a {code List<LaunchRule>}.
      *
      * @param propositions     A {@link List<PropositionPayload>} containing in-app message definitions
      * @param expectedSurfaces A {@link List<String>} containing the expected app surfaces
      * @param clearExisting    {@code boolean} if true the existing cached propositions are cleared and new message rules are replaced in the {@code LaunchRulesEngine}
      * @param persistChanges   {@code boolean} if true the passed in {@code List<PropositionPayload>} are added to the cache
-     * @return {@link List<LaunchRule>} containing {@link LaunchRule} parsed from the passed in propositions
+     * @return {@link List<LaunchRule>} containing {@link LaunchRule}s parsed from the passed in propositions
      */
     private List<LaunchRule> processPropositions(final List<PropositionPayload> propositions, final List<String> expectedSurfaces, final boolean clearExisting, final boolean persistChanges) {
         final List<LaunchRule> parsedRules = new ArrayList<>();
@@ -417,7 +417,6 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        // TODO update this when rules payload coming from AJO is updated: !consequenceType.equals("ajoIam")
         if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;

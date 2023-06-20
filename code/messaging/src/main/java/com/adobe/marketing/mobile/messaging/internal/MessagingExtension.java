@@ -61,7 +61,6 @@ import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
-import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
@@ -178,9 +177,9 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        // fetch in-app messages on initial launch once we have configuration and identity state set
+        // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
             initialMessageFetchComplete = true;
         }
 
@@ -246,11 +245,11 @@ public final class MessagingExtension extends Extension {
         // validate refresh messages event then fetch in-app messages via an Edge extension event
         if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
         } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
             // validate update feeds event then retrieve feeds via an Edge extension event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
+            edgePersonalizationResponseHandler.fetchPropositions(MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
@@ -262,7 +261,7 @@ public final class MessagingExtension extends Extension {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
-            // handle the push tracking information from messaging request content event
+            // handle the push tracking information from the messaging request content event
             handleTrackingInfo(eventToProcess, experienceEventDatasetId);
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
