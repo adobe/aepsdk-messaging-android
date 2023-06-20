@@ -135,10 +135,10 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     // ========================================================================================
-    // fetchMessages
+    // fetchPropositions
     // ========================================================================================
     @Test
-    public void test_fetchMessages_appIdPresent() {
+    public void test_fetchPropositions_appIdPresent() {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> expectedEventData = null;
@@ -148,7 +148,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -161,13 +161,13 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchMessages_emptyAppId() {
+    public void test_fetchPropositions_emptyAppId() {
         runUsingMockedServiceProvider(() -> {
             // setup
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
             // test
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
 
             // verify extensionApi.dispatch not called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -175,7 +175,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchMessages_SurfacePathsProvided() {
+    public void test_fetchPropositions_SurfacePathsProvided() {
         List<String> surfacePaths = new ArrayList<>();
         surfacePaths.add("promos/feed1");
         surfacePaths.add("promos/feed2");
@@ -188,7 +188,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -201,7 +201,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchMessages_SurfacePathsProvided_InvalidPathsDropped() {
+    public void test_fetchPropositions_SurfacePathsProvided_InvalidPathsDropped() {
         List<String> surfacePaths = new ArrayList<>();
         surfacePaths.add("promos/feed1");
         surfacePaths.add("");
@@ -216,7 +216,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -229,7 +229,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchMessages_NoSurfacePathsProvided() {
+    public void test_fetchPropositions_NoSurfacePathsProvided() {
         List<String> surfacePaths = new ArrayList<>();
         runUsingMockedServiceProvider(() -> {
             // setup
@@ -240,7 +240,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -253,13 +253,13 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchMessages_NoValidSurfacePathsProvided() {
+    public void test_fetchPropositions_NoValidSurfacePathsProvided() {
         List<String> surfacePaths = new ArrayList<>();
         surfacePaths.add(null);
         surfacePaths.add("");
         runUsingMockedServiceProvider(() -> {
             // test
-            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
+            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
 
             // verify extensionApi.dispatch not called
             verifyNoInteractions(mockExtensionApi);
@@ -825,8 +825,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(5)).cacheImageAssets(any(List.class));
 
-                // verify cached rules added
-                verify(mockMessagingRulesEngine, times(1)).addRules(listArgumentCaptor.capture());
+                // verify cached rules replaced in rules engine
+                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
                 assertEquals(5, listArgumentCaptor.getValue().size());
             }
         });

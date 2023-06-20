@@ -868,7 +868,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_fetchMessagesEvent() {
+    public void test_processEvent_fetchPropositionsEvent() {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
@@ -882,7 +882,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(null);
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchPropositions(null);
         });
     }
 
@@ -926,7 +926,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchPropositions(listArgumentCaptor.capture());
             assertEquals(surfacePaths, listArgumentCaptor.getValue());
         });
     }
