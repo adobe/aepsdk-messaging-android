@@ -160,7 +160,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
         if (message != null) {
             message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
-            message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
         }
     }
 
