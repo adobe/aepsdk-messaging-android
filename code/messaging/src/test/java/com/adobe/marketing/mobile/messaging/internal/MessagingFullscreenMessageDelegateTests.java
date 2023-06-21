@@ -15,12 +15,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.*;
 
 import android.os.Handler;
 import android.webkit.ValueCallback;
@@ -50,6 +50,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -76,7 +77,7 @@ public class MessagingFullscreenMessageDelegateTests {
     ArgumentCaptor<String> urlStringCaptor;
 
     private InternalMessage internalMessage;
-    private Map <String, WebViewJavascriptInterface> scriptHandlerMap;
+    private Map<String, WebViewJavascriptInterface> scriptHandlerMap;
 
     @Before
     public void setup() {
@@ -358,21 +359,23 @@ public class MessagingFullscreenMessageDelegateTests {
 
     @Test
     public void test_onBackPressed() {
-            // setup
-            ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-            ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
-            InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
-            when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
+        // setup
+        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
+        InternalMessage mockInternalMessage = Mockito.mock(InternalMessage.class);
+        when(mockFullscreenMessage.getParent()).thenReturn(mockInternalMessage);
 
-            // test
-            internalMessage.onBackPressed(mockFullscreenMessage);
+        // test
+        internalMessage.onBackPressed(mockFullscreenMessage);
 
-            // verify tracking event data
-            verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
-            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-            String interaction = interactionArgumentCaptor.getValue();
-            assertEquals(eventType, MessagingEdgeEventType.IN_APP_INTERACT);
-            assertEquals("backPress", interaction);
+        // verify tracking event data
+        verify(mockInternalMessage, times(1)).track(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture());
+        List<MessagingEdgeEventType> eventTypeList = messagingEdgeEventTypeArgumentCaptor.getAllValues();
+        List<String> interactionList = interactionArgumentCaptor.getAllValues();
+        // verify interact event
+        String interaction = interactionList.get(0);
+        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, eventTypeList.get(0));
+        assertEquals("backPress", interaction);
     }
 
 }

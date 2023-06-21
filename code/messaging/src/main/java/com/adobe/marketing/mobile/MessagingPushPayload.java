@@ -67,6 +67,7 @@ public class MessagingPushPayload {
         static final String TYPE = "type";
     }
 
+    private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
     private String body;
     private String sound;
@@ -77,7 +78,7 @@ public class MessagingPushPayload {
     private String imageUrl;
     private ActionType actionType;
     private String actionUri;
-    private List<ActionButton> actionButtons = new ArrayList<>(3);
+    private List<ActionButton> actionButtons = new ArrayList<>(ACTION_BUTTON_CAPACITY);
     private Map<String, String> data;
 
     /**
@@ -235,7 +236,7 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
             return null;
         }
-        List<ActionButton> actionButtonList = new ArrayList<>(3);
+        List<ActionButton> actionButtonList = new ArrayList<>(ACTION_BUTTON_CAPACITY);
         try {
             final JSONArray jsonArray = new JSONArray(actionButtons);
             for (int i = 0; i < jsonArray.length(); i++) {
