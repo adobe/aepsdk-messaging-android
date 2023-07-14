@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.HashMap;
@@ -235,5 +236,40 @@ public class FeedItem {
      */
     public Map<String, Object> getMeta() {
         return meta;
+    }
+
+    /**
+     * Converts the {@code FeedItem} into a {@code Map<String, Object>}.
+     *
+     * @return {@code Map<String, Object>} containing the {@link FeedItem} data.
+     */
+    Map<String, Object> toMap() {
+        final Map<String, Object> feedItemAsMap = new HashMap<>();
+        feedItemAsMap.put("title", getTitle());
+        feedItemAsMap.put("body", getBody());
+        feedItemAsMap.put("imageUrl", getImageUrl());
+        feedItemAsMap.put("actionUrl", getActionUrl());
+        feedItemAsMap.put("actionTitle", getActionTitle());
+        feedItemAsMap.put("publishedDate", getPublishedDate());
+        feedItemAsMap.put("expiryDate", getExpiryDate());
+        feedItemAsMap.put("meta", getMeta());
+        return feedItemAsMap;
+    }
+
+    /**
+     * Creates a {@code FeedItem} from a {@code Map<String, Object>} containing feed item data.
+     *
+     * @return {@code FeedItem} created from the feed item data {@code Map<String, Object>}
+     */
+    static FeedItem fromMap(final Map<String, Object> feedItemData) {
+        return new FeedItem.Builder(DataReader.optString(feedItemData, "title", null),
+                DataReader.optString(feedItemData, "body", null),
+                DataReader.optLong(feedItemData, "publishedDate", 0))
+                .setExpiryDate(DataReader.optLong(feedItemData, "expiryDate", 0))
+                .setImageUrl(DataReader.optString(feedItemData, "imageUrl", null))
+                .setActionTitle(DataReader.optString(feedItemData, "actionTitle", null))
+                .setActionUrl(DataReader.optString(feedItemData, "actionUrl", null))
+                .setMeta(DataReader.optTypedMap(Object.class, feedItemData, "meta", null))
+                .build();
     }
 }

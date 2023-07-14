@@ -29,6 +29,8 @@ import android.content.Context;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Feed;
+import com.adobe.marketing.mobile.FeedItem;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -39,7 +41,9 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -132,6 +136,38 @@ public class EdgePersonalizationResponseHandlerTests {
 
             runnable.run();
         }
+    }
+
+    private List<RuleConsequence> createFeedConsequenceList(int size) {
+        List<RuleConsequence> feedConsequences = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            try {
+                JSONObject feedDetails = new JSONObject("{\n" +
+                        "        \"type\": \"ajoFeedItem\",\n" +
+                        "        \"expiryDate\": 1712190456,\n" +
+                        "        \"meta\": {\n" +
+                        "          \"feedName\": \"testFeed\",\n" +
+                        "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "        },\n" +
+                        "        \"content\": {\n" +
+                        "          \"imageUrl\": \"https://someimage"+ i + ".png\",\n" +
+                        "          \"actionTitle\": \"testAction" + i + "\",\n" +
+                        "          \"actionUrl\": \"https://someurl.com\",\n" +
+                        "          \"publishedDate\": 1680568056,\n" +
+                        "          \"body\": \"testBody\",\n" +
+                        "          \"title\": \"testTitle\"\n" +
+                        "        },\n" +
+                        "        \"contentType\": \"application/json\"\n" +
+                        "      }\n" +
+                        "    }");
+                Map<String, Object> detail = JSONUtils.toMap(feedDetails);
+                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE, detail);
+                feedConsequences.add(feedConsequence);
+            } catch (JSONException jsonException) {
+                fail(jsonException.getMessage());
+            }
+        }
+        return feedConsequences;
     }
 
     // ========================================================================================
@@ -706,6 +742,9 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
+                List<RuleConsequence> messageFeedConsequences = createFeedConsequenceList(5);
+                when(mockMessagingRulesEngine.evaluateEvent(any(Event.class))).thenReturn(messageFeedConsequences);
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 MessageTestConfig config = new MessageTestConfig();
@@ -728,6 +767,24 @@ public class EdgePersonalizationResponseHandlerTests {
                 List<LaunchRule> addedRules = listArgumentCaptor.getValue();
                 assertEquals(1, addedRules.size());
                 assertEquals(5, addedRules.get(0).getConsequenceList().size());
+
+                // verify event dispatched containing the message feed
+                verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                Event capturedEvent = eventArgumentCaptor.getValue();
+                Feed returnedFeed = Feed.fromEventData(capturedEvent.getEventData());
+                assertEquals("mobileapp://mock_applicationId", returnedFeed.getSurfaceUri());
+                assertEquals("testFeed", returnedFeed.getName());
+                for(int i = 0; i < returnedFeed.getItems().size(); i++) {
+                    FeedItem feedItem = returnedFeed.getItems().get(i);
+                    assertEquals("https://someimage" + i + ".png", feedItem.getImageUrl());
+                    assertEquals("testAction" + i, feedItem.getActionTitle());
+                    assertEquals("https://someurl.com", feedItem.getActionUrl());
+                    assertEquals(1680568056L, feedItem.getPublishedDate());
+                    assertEquals("testBody", feedItem.getBody());
+                    assertEquals("testTitle", feedItem.getTitle());
+                    assertEquals("testFeed", feedItem.getMeta().get("feedName"));
+                    assertEquals("mobileapp://com.adobe.sampleApp/feed/promos", feedItem.getMeta().get("surface"));
+                }
             }
         });
     }
@@ -755,9 +812,11 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify message feed propositions not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
-
                 // verify no rules are added to the rules engine
                 verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
+
+                // verify no event dispatched containing the message feed
+                verifyNoInteractions(mockExtensionApi);
             }
         });
     }
@@ -788,6 +847,9 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 // verify no rules are added to the rules engine
                 verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
+
+                // verify no event dispatched containing the message feed
+                verifyNoInteractions(mockExtensionApi);
             }
         });
     }

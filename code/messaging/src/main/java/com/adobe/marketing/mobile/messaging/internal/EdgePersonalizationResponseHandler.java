@@ -67,7 +67,7 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private final Map<String, Feed> inMemoryFeeds = new HashMap<>();
+    private final Map<String, Object> inMemoryFeeds = new HashMap<>();
     private final Map<String, List<String>> requestedSurfacesForEventId = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
     private List<PropositionPayload> inMemoryPropositions = new ArrayList<>();
@@ -78,9 +78,9 @@ class EdgePersonalizationResponseHandler {
     /**
      * Constructor
      *
-     * @param parent          {@link MessagingExtension} instance that is the parent of this {@code EdgePersonalizationResponseHandler}
-     * @param extensionApi    {@link ExtensionApi} instance
-     * @param rulesEngine     {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
+     * @param parent       {@link MessagingExtension} instance that is the parent of this {@code EdgePersonalizationResponseHandler}
+     * @param extensionApi {@link ExtensionApi} instance
+     * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
      */
     EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
         this(parent, extensionApi, rulesEngine, null, null);
@@ -235,7 +235,8 @@ class EdgePersonalizationResponseHandler {
         for (final String surface : requestedSurfaces) {
             final Feed feed = feeds.get(surface);
             if (feed != null) {
-                inMemoryFeeds.put(surface, feed);
+                // convert the feed to a map so it can be sent in event data
+                inMemoryFeeds.put(surface, feed.toMap());
             } else {
                 inMemoryFeeds.remove(surface);
             }
@@ -243,7 +244,8 @@ class EdgePersonalizationResponseHandler {
     }
 
     private Map<String, Feed> processFeedConsequences(final List<RuleConsequence> feedConsequences) {
-        if (!feedConsequences.isEmpty() && MessagingUtils.isFeedItem(feedConsequences.get(0))) {
+        if (feedConsequences.isEmpty()) {
+            Log.debug(LOG_TAG, SELF_TAG, "Will not process feed consequences as none were found in the rules engine.");
             return null;
         }
 

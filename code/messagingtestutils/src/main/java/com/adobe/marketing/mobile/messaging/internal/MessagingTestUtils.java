@@ -435,12 +435,12 @@ public class MessagingTestUtils {
                         "        \"type\": \"ajoFeedItem\",\n" +
                         "        \"expiryDate\": 1712190456,\n" +
                         "        \"meta\": {\n" +
-                        "          \"feedName\": \"feed #" + count + "\",\n" +
+                        "          \"feedName\": \"testFeed\",\n" +
                         "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
                         "        },\n" +
                         "        \"content\": {\n" +
-                        "          \"imageUrl\": \"https://someimage.png\",\n" +
-                        "          \"actionTitle\": \"testTile\",\n" +
+                        "          \"imageUrl\": \"https://someimage"+ count + ".png\",\n" +
+                        "          \"actionTitle\": \"testTitle\",\n" +
                         "          \"actionUrl\": \"https://someurl.com\",\n" +
                         "          \"publishedDate\": 1680568056,\n" +
                         "          \"body\": \"testBody\",\n" +
