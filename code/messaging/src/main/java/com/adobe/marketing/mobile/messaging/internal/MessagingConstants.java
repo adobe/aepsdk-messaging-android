@@ -18,6 +18,7 @@ final class MessagingConstants {
     static final String EXTENSION_VERSION = "2.2.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -41,6 +42,26 @@ final class MessagingConstants {
         static final String LINK = "link";
 
         private QueryParameters() {
+        }
+    }
+
+    final class MessageFeedKeys {
+        static final String TITLE = "title";
+        static final String BODY = "body";
+        static final String CONTENT = "content";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String IMAGE_URL = "imageUrl";
+        static final String ACTION_TITLE = "actionTitle";
+        static final String ACTION_URL = "actionUrl";
+        static final String METADATA = "meta";
+        static final String TYPE = "type";
+        static final String SURFACE = "surface";
+        static final String FEED_NAME = "feedName";
+        static final String MESSAGE_FEED_TYPE = "ajoFeedItem";
+        static final String FEEDS = "feeds";
+
+        private MessageFeedKeys() {
         }
     }
 
@@ -83,6 +104,7 @@ final class MessagingConstants {
         static final String DATA = "data";
         static final String CONTENT = "content";
         static final String ID = "id";
+        static final String ITEMS = "items";
         static final String SCOPE = "scope";
         static final String SCOPE_DETAILS = "scopeDetails";
         static final String SCHEMA = "schema";
@@ -112,6 +134,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
             static final String REFRESH_MESSAGES = "refreshmessages";
             static final String UPDATE_FEEDS = "updatefeeds";
+            static final String GET_FEEDS = "getfeeds";
             static final String SURFACES = "surfaces";
 
             private Messaging() {
@@ -198,6 +221,11 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE = "ajoInbound";
+            static final String MESSAGE_CONSEQUENCE_AJO_IAM_VALUE = "ajoIam";
+            static final String MESSAGE_CONSEQUENCE_AJO_ALERT_VALUE = "ajoAlert";
+            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajoFeedItem";
+            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
@@ -241,8 +269,8 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
-        static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
-        static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
+        static final String MESSAGE_FEEDS_NOTIFICATION = "Message feeds notification";
+        static final String MESSAGE_FEEDS_RESPONSE = "Message feeds response";
 
         private EventName() {
         }
@@ -251,6 +279,7 @@ final class MessagingConstants {
     final class EventSource {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        static final String NOTIFICATION = "com.adobe.eventSource.notification";
 
         private EventSource() {
         }

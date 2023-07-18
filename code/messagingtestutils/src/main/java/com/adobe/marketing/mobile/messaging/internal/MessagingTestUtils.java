@@ -137,12 +137,7 @@ public class MessagingTestUtils {
         final Event event = new Event.Builder("edge response testing", MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setEventData(eventData)
                 .build();
-        MobileCore.dispatchEvent(event, new ExtensionErrorCallback<ExtensionError>() {
-            @Override
-            public void error(ExtensionError extensionError) {
-                Log.debug(LOG_TAG, "exception occurred in dispatching edge personalization event: %s", extensionError.getErrorName());
-            }
-        });
+        MobileCore.dispatchEvent(event);
     }
 
     /**
@@ -381,7 +376,7 @@ public class MessagingTestUtils {
             scopeDetails.put("scopeDetails", characteristics);
             final int randomInt = random.nextInt(999999);
             data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
-            data.put("content","{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt +"\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
+            data.put("content", "{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt + "\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
             item.put("data", data);
             items.add(item);
         }
@@ -395,15 +390,147 @@ public class MessagingTestUtils {
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://mock_applicationId");
-        } else if (config.nonMatchingAppSurfaceInPayload) {
+        }
+
+        if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }
+
         if (config.isMissingScope) {
             messagePayload.remove("scope");
         }
 
         messagePayload.put("items", items);
         messagePayload.put("id", "testResponseId" + count);
+        List<Map<String, Object>> payload = new ArrayList<>();
+        if (!config.hasEmptyPayload) {
+            payload.add(messagePayload);
+        }
+        return payload;
+    }
+
+    static List<Map<String, Object>> generateFeedPayload(final MessageTestConfig config) {
+        final Random random = new Random();
+        if (config.count <= 0) {
+            return null;
+        }
+        ArrayList<Map<String, Object>> items = new ArrayList<>();
+        Map<String, Object> scopeDetails = new HashMap<>();
+        int count;
+
+        Map<String, Object> item = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
+        Map<String, Object> characteristics = new HashMap<>();
+        Map<String, Object> cjmEvent = new HashMap<>();
+        Map<String, Object> messageExecution = new HashMap<>();
+
+        // generate consequences containing "x = count" number of feed items
+        JSONArray consequences = new JSONArray();
+        try {
+            for (count = 0; count < config.count; count++) {
+                consequences.put(new JSONObject("{\n" +
+                        "      \"id\": \"e24c7416-31c2-4734-8c87-ffb8269d28b" + count + "\",\n" +
+                        "      \"type\": \"ajoInbound\",\n" +
+                        "      \"detail\": {\n" +
+                        "        \"type\": \"ajoFeedItem\",\n" +
+                        "        \"expiryDate\": 1712190456,\n" +
+                        "        \"meta\": {\n" +
+                        "          \"feedName\": \"testFeed\",\n" +
+                        "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "        },\n" +
+                        "        \"content\": {\n" +
+                        "          \"imageUrl\": \"https://someimage"+ count + ".png\",\n" +
+                        "          \"actionTitle\": \"testTitle\",\n" +
+                        "          \"actionUrl\": \"https://someurl.com\",\n" +
+                        "          \"publishedDate\": 1680568056,\n" +
+                        "          \"body\": \"testBody\",\n" +
+                        "          \"title\": \"testTitle\"\n" +
+                        "        },\n" +
+                        "        \"contentType\": \"application/json\"\n" +
+                        "      }\n" +
+                        "    }"));
+            }
+        } catch (JSONException jsonException) {
+            Log.debug("MessagingTestUtils", "generateFeedPayload", "exception occurred when creating feed consequences: %s", jsonException.getLocalizedMessage());
+        }
+
+        item.put("schema", "https://ns.adobe.com/experience/personalization/json-content-item");
+        item.put("id", "testItemId");
+        messageExecution.put("messageExecutionID", "testExecutionId");
+        cjmEvent.put("messageExecution", messageExecution);
+        characteristics.put("cjmEvent", cjmEvent);
+        scopeDetails.put("scopeDetails", characteristics);
+        final int randomInt = random.nextInt(999999);
+        data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
+        data.put("content", "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"rules\": [{\n" +
+                "    \"condition\": {\n" +
+                "      \"type\": \"group\",\n" +
+                "      \"definition\": {\n" +
+                "        \"logic\": \"and\",\n" +
+                "        \"conditions\": [{\n" +
+                "            \"definition\": {\n" +
+                "              \"key\": \"action\",\n" +
+                "              \"matcher\": \"eq\",\n" +
+                "              \"values\": [\n" +
+                "                \"feed\"\n" +
+                "              ]\n" +
+                "            },\n" +
+                "            \"type\": \"matcher\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"type\": \"matcher\",\n" +
+                "            \"definition\": {\n" +
+                "              \"key\": \"~timestampu\",\n" +
+                "              \"matcher\": \"ge\",\n" +
+                "              \"values\": [\n" +
+                "                1680555536\n" +
+                "              ]\n" +
+                "            }\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"type\": \"matcher\",\n" +
+                "            \"definition\": {\n" +
+                "              \"key\": \"~timestampu\",\n" +
+                "              \"matcher\": \"le\",\n" +
+                "              \"values\": [\n" +
+                "                1790873200\n" +
+                "              ]\n" +
+                "            }\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"consequences\":" +
+                consequences +
+                " }]\n" +
+                "}");
+        item.put("data", data);
+        items.add(item);
+
+        Map<String, Object> messagePayload = new HashMap<>();
+
+        // scope details modification
+        if (!config.isMissingScopeDetails) {
+            messagePayload.put("scopeDetails", scopeDetails);
+        }
+
+        // scope modification
+        if (!config.noValidAppSurfaceInPayload) {
+            messagePayload.put("scope", "mobileapp://mock_applicationId");
+        }
+
+        if (config.nonMatchingAppSurfaceInPayload) {
+            messagePayload.put("scope", "mobileapp://invalidId");
+        }
+
+        if (config.isMissingScope) {
+            messagePayload.remove("scope");
+        }
+
+        messagePayload.put("items", items);
+        messagePayload.put("id", "testResponseId");
         List<Map<String, Object>> payload = new ArrayList<>();
         if (!config.hasEmptyPayload) {
             payload.add(messagePayload);
