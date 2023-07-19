@@ -46,10 +46,11 @@ class Proposition {
         }
         scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
         final List<Map<String, Object>> itemMap = DataReader.getTypedListOfMap(Object.class, propositionInfoMap, ITEMS);
-        propositionItems = new ArrayList<PropositionItem>() {{
-            add(new PropositionItem(itemMap.get(0)));
-        }};
-        propositionItems.get(0).proposition = new WeakReference<>(this);
+        propositionItems = new ArrayList<>();
+        for (int i = 0; i < itemMap.size(); i++) {
+            propositionItems.add(new PropositionItem(itemMap.get(i)));
+            propositionItems.get(i).proposition = new WeakReference<>(this);
+        }
     }
 
     List<PropositionItem> getPropositionItems() {

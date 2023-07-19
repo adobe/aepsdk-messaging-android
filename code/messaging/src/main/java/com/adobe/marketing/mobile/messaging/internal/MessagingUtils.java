@@ -65,16 +65,15 @@ class MessagingUtils {
         return propositionPayloads;
     }
 
-    static List<Inbound> createInboundPayloads(final List<Map<String, Object>> payloads) throws Exception {
-        final List<Inbound> inboundPayloads = new ArrayList<>();
+    static List<Proposition> createPropositions(final List<Map<String, Object>> payloads) throws Exception {
+        final List<Proposition> propositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (!MapUtils.isNullOrEmpty(payload)) {
                 final Proposition proposition = new Proposition(payload);
-                final Inbound inboundPayload = new Inbound(proposition.getPropositionItems().get(0).content);
-                inboundPayloads.add(inboundPayload);
+                propositions.add(proposition);
             }
         }
-        return inboundPayloads;
+        return propositions;
     }
 
     // ========================================================================================
