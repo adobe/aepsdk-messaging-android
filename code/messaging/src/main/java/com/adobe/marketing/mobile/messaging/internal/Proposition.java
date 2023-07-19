@@ -56,4 +56,8 @@ class Proposition {
     List<PropositionItem> getPropositionItems() {
         return propositionItems;
     }
+
+    Map<String, Object> getScopeDetails() {
+        return scopeDetails;
+    }
 }
