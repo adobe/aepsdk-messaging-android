@@ -12,15 +12,18 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-public class Surface {
+/**
+ * An entity uniquely defined by a URI that can be interacted with.
+ */
+class Surface {
 
     private final String uri;
 
-    public Surface(final String uri) {
+    Surface(final String uri) {
         this.uri = uri;
     }
 
-    public String getUri() {
+    String getUri() {
         return uri;
     }
 }

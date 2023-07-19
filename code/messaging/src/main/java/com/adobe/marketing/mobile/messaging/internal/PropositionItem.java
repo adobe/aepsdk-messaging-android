@@ -13,8 +13,11 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.DATA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCHEMA;
 
-import com.adobe.marketing.mobile.Inbound;
 import com.adobe.marketing.mobile.PropositionEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -22,12 +25,14 @@ import com.adobe.marketing.mobile.util.DataReaderException;
 
 import org.json.JSONException;
 
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 
-class PropositionItem implements Serializable {
-    private final static String SELF_TAG = "Proposition";
+/**
+ * A {@link PropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
+ */
+class PropositionItem {
+    private final static String SELF_TAG = "PropositionItem";
     // Unique proposition identifier
     String uniqueId;
     // PropositionItem schema string
@@ -38,15 +43,15 @@ class PropositionItem implements Serializable {
     WeakReference<Proposition> proposition;
 
     PropositionItem(final Map<String, Object> item) throws DataReaderException {
-        this.uniqueId = DataReader.getString(item, "id");
-        this.schema = DataReader.getString(item, "schema");
-        final Map data = DataReader.getTypedMap(Object.class, item, "data");
-        this.content = DataReader.getString(data, "content");
+        this.uniqueId = DataReader.getString(item, ID);
+        this.schema = DataReader.getString(item, SCHEMA);
+        final Map data = DataReader.getTypedMap(Object.class, item, DATA);
+        this.content = DataReader.getString(data, CONTENT);
     }
 
     // Track offer interaction
     void track(final PropositionEventType interaction) {
-
+        // TODO
     }
 
     // Decode data content to generic inbound

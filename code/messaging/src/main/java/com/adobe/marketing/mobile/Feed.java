@@ -14,13 +14,15 @@ package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
-import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A {@link Feed} object aggregates one or more {@link FeedItem}s.
+ */
 public class Feed {
     // Identification for this feed, represented by the AJO Surface URI used to retrieve it
     private final String surfaceUri;

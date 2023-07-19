@@ -18,6 +18,10 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet interactive offer.
+ * Customers can use the Messaging SDK to render the feed item data in a pre-defined format or implement their own rendering.
+ */
 public class FeedItem {
     // Plain-text title for the feed item
     private String title;

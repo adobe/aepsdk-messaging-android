@@ -10,9 +10,9 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging.internal;
 
-public enum InboundType {
+enum InboundType {
     // Unknown inbound type
     UNKNOWN(0),
     // Feed Item
@@ -30,11 +30,11 @@ public enum InboundType {
         this.value = value;
     }
 
-    public int getValue() {
+    int getValue() {
         return value;
     }
 
-    public String getInboundEventType() {
+    String getInboundEventType() {
         switch (this) {
             case FEED:
                 return FEED_EVENT_TYPE;
@@ -43,5 +43,20 @@ public enum InboundType {
             default:
                 return UNKNOWN_EVENT_TYPE;
         }
+    }
+
+    static InboundType getInboundTypeFromString(final String typeString) {
+        InboundType inboundType;
+        switch (typeString) {
+            case InboundType.FEED_EVENT_TYPE:
+                inboundType = InboundType.FEED;
+                break;
+            case InboundType.INAPP_EVENT_TYPE:
+                inboundType = InboundType.INAPP;
+                break;
+            default:
+                inboundType = InboundType.UNKNOWN;
+        }
+        return inboundType;
     }
 }

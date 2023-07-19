@@ -20,13 +20,15 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.P
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-class Proposition implements Serializable {
+/**
+ * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
+ */
+class Proposition {
     // Unique proposition identifier
     final String uniqueId;
     // Scope string
@@ -50,7 +52,7 @@ class Proposition implements Serializable {
         propositionItems.get(0).proposition = new WeakReference<>(this);
     }
 
-    public List<PropositionItem> getPropositionItems() {
+    List<PropositionItem> getPropositionItems() {
         return propositionItems;
     }
 }

@@ -10,17 +10,27 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging.internal;
 
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.Map;
 
-public class Inbound implements Serializable {
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_METADATA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+
+/**
+ * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
+ */
+class Inbound {
     // String representing a unique ID for this inbound item
     private String uniqueId;
     // Enum representing the inbound item type
@@ -39,15 +49,21 @@ public class Inbound implements Serializable {
     /**
      * Constructor.
      */
-    public Inbound(final String content) throws JSONException {
-        final JSONObject jsonObject = new JSONObject(content);
-        this.uniqueId = jsonObject.getString("uniqueId");
-        this.inboundType = InboundType.valueOf(jsonObject.getString("inboundType"));
-        this.content = jsonObject.getString("content");
-        this.contentType = jsonObject.getString("contentType");
-        this.publishedDate = jsonObject.getLong("publishedDate");
-        this.expiryDate = jsonObject.getLong("expiryDate");
-        this.meta = JSONUtils.toMap(jsonObject.getJSONObject("meta"));
+    Inbound(final String ruleString) throws JSONException {
+        final JSONObject ruleJson = new JSONObject(ruleString);
+        final JSONObject ruleConsequence = MessagingUtils.getConsequence(ruleJson);
+        if (ruleConsequence != null) {
+            this.uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
+            this.inboundType = InboundType.getInboundTypeFromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
+            final JSONObject consequenceDetails = MessagingUtils.getConsequenceDetails(ruleJson);
+            if (consequenceDetails != null) {
+                this.content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+                this.publishedDate = ruleConsequence.optLong(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+                this.expiryDate = ruleConsequence.optLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
+                this.contentType = ruleConsequence.optString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
+                this.meta = JSONUtils.toMap(ruleConsequence.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
+            }
+        }
     }
 
     /**
@@ -55,7 +71,7 @@ public class Inbound implements Serializable {
      *
      * @return {@link String} containing the {@link Inbound} unique id.
      */
-    public String getUniqueId() {
+    String getUniqueId() {
         return uniqueId;
     }
 
@@ -64,7 +80,7 @@ public class Inbound implements Serializable {
      *
      * @return {@link String} containing the {@link InboundType}.
      */
-    public InboundType getInboundType() {
+    InboundType getInboundType() {
         return inboundType;
     }
 
@@ -73,7 +89,7 @@ public class Inbound implements Serializable {
      *
      * @return {@link String} containing the {@link Inbound} content.
      */
-    public String getContent() {
+    String getContent() {
         return content;
     }
 
@@ -82,7 +98,7 @@ public class Inbound implements Serializable {
      *
      * @return {@link String} containing the {@link Inbound} content type.
      */
-    public String getContentType() {
+    String getContentType() {
         return contentType;
     }
 
@@ -91,7 +107,7 @@ public class Inbound implements Serializable {
      *
      * @return {@code long} containing the {@link Inbound} published date.
      */
-    public long getPublishedDate() {
+    long getPublishedDate() {
         return publishedDate;
     }
 
@@ -100,7 +116,7 @@ public class Inbound implements Serializable {
      *
      * @return {@code long} containing the {@link Inbound} expiry date.
      */
-    public long getExpiryDate() {
+    long getExpiryDate() {
         return expiryDate;
     }
 
@@ -109,7 +125,7 @@ public class Inbound implements Serializable {
      *
      * @return {@code Map<String, Object>} containing the {@link Inbound} metadata.
      */
-    public Map<String, Object> getMeta() {
+    Map<String, Object> getMeta() {
         return meta;
     }
 }

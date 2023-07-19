@@ -17,8 +17,8 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
@@ -63,6 +63,18 @@ class MessagingUtils {
             }
         }
         return propositionPayloads;
+    }
+
+    static List<Inbound> createInboundPayloads(final List<Map<String, Object>> payloads) throws Exception {
+        final List<Inbound> inboundPayloads = new ArrayList<>();
+        for (final Map<String, Object> payload : payloads) {
+            if (!MapUtils.isNullOrEmpty(payload)) {
+                final Proposition proposition = new Proposition(payload);
+                final Inbound inboundPayload = new Inbound(proposition.getPropositionItems().get(0).content);
+                inboundPayloads.add(inboundPayload);
+            }
+        }
+        return inboundPayloads;
     }
 
     // ========================================================================================
@@ -265,7 +277,7 @@ class MessagingUtils {
             final JSONObject consequence = getConsequence(ruleJson);
             if (consequence != null) {
                 final JSONObject details = consequence.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-                inboundItemType = details.optString(MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE);
+                inboundItemType = details.optString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE);
             }
         } catch (final JSONException jsonException) {
             Log.debug(MessagingConstants.LOG_TAG, "getInboundItemType", "Exception occurred retrieving ajo inbound item type: %s", jsonException.getLocalizedMessage());

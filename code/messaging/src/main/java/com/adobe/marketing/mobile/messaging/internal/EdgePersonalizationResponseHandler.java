@@ -20,7 +20,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.SURFACE_BASE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_FEEDS_NOTIFICATION;
@@ -319,7 +319,7 @@ class EdgePersonalizationResponseHandler {
                 propositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
 
                 final String ajoInboundItemType = MessagingUtils.getInboundItemType(ruleJson);
-                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(ajoInboundItemType) && ajoInboundItemType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE);
+                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(ajoInboundItemType) && ajoInboundItemType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_TYPE_VALUE);
 
                 if (!isMessageFeedConsequence) {
                     // cache any image assets present in the current rule json's image assets array
@@ -412,7 +412,7 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
+        if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE)) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;
         }
