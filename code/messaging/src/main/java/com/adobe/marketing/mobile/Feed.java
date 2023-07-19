@@ -12,18 +12,14 @@
 
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.util.DataReader;
-import com.google.android.gms.common.util.CollectionUtils;
-
 import java.util.List;
-import java.util.Map;
 
+/**
+ * A {@link Feed} object aggregates one or more {@link FeedItem}s.
+ */
 public class Feed {
     // Identification for this feed, represented by the AJO Surface URI used to retrieve it
     private final String surfaceUri;
-
-    // Friendly name for the feed, provided in the AJO UI
-    private final String name;
 
     // List of FeedItem that are members of this Feed
     private final List<FeedItem> items;
@@ -37,12 +33,6 @@ public class Feed {
     public Feed(final String surfaceUri, final List<FeedItem> items) {
         this.surfaceUri = surfaceUri;
         this.items = items;
-        if (!CollectionUtils.isEmpty(items)) {
-            final Map<String, Object> metaMap = items.get(0).getMeta();
-            this.name = DataReader.optString(metaMap, "feedName", "");
-        } else {
-            name = "";
-        }
     }
 
     /**
@@ -52,15 +42,6 @@ public class Feed {
      */
     public String getSurfaceUri() {
         return surfaceUri;
-    }
-
-    /**
-     * Gets the {@code Feed}'s friendly name
-     *
-     * @return {@link String} containing the {@link Feed} friendly name.
-     */
-    public String getName() {
-        return name;
     }
 
     /**

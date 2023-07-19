@@ -83,6 +83,7 @@ final class MessagingConstants {
         static final String DATA = "data";
         static final String CONTENT = "content";
         static final String ID = "id";
+        static final String ITEMS = "items";
         static final String SCOPE = "scope";
         static final String SCOPE_DETAILS = "scopeDetails";
         static final String SCHEMA = "schema";
@@ -112,6 +113,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
             static final String REFRESH_MESSAGES = "refreshmessages";
             static final String UPDATE_FEEDS = "updatefeeds";
+            static final String GET_FEEDS = "getfeeds";
             static final String SURFACES = "surfaces";
 
             private Messaging() {
@@ -197,7 +199,12 @@ final class MessagingConstants {
             static final String JSON_CONSEQUENCES_KEY = "consequences";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
-            static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE = "type";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
@@ -241,7 +248,6 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
-        static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {
@@ -251,6 +257,7 @@ final class MessagingConstants {
     final class EventSource {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        static final String NOTIFICATION = "com.adobe.eventSource.notification";
 
         private EventSource() {
         }

@@ -61,17 +61,15 @@ public class FeedTests {
 
     @Before
     public void setup() {
-        feedItem = new FeedItem.Builder(TITLE, BODY, PUBLISHED_DATE, EXPIRY_DATE)
+        feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
-        feedItem2 = new FeedItem.Builder(TITLE + "2", BODY + "2", PUBLISHED_DATE, EXPIRY_DATE)
+        feedItem2 = new FeedItem.Builder(TITLE + "2", BODY + "2")
                 .setImageUrl(IMAGE_URL + "2")
                 .setActionUrl(ACTION_URL + "2")
                 .setActionTitle(ACTION_TITLE + "2")
-                .setMeta(metaMap2)
                 .build();
         feedItems.add(feedItem);
         feedItems.add(feedItem2);
@@ -89,31 +87,6 @@ public class FeedTests {
         // verify
         assertNotNull(feed);
         assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertEquals(FEED_NAME, feed.getName());
-        assertEquals(feedItems, feed.getItems());
-    }
-
-    @Test
-    public void testCreateFeed_NoFeedName() {
-        // setup
-        List<FeedItem> feedItems = new ArrayList<>();
-        metaMap.put("feedName", "");
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, PUBLISHED_DATE, EXPIRY_DATE)
-                .setImageUrl(IMAGE_URL)
-                .setActionUrl(ACTION_URL)
-                .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
-                .build();
-        feedItems.add(feedItem);
-        feedItems.add(feedItem2);
-
-        // test
-        Feed feed = new Feed(SURFACE_URI, feedItems);
-
-        // verify
-        assertNotNull(feed);
-        assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertEquals("", feed.getName());
         assertEquals(feedItems, feed.getItems());
     }
 
@@ -125,7 +98,6 @@ public class FeedTests {
         // verify
         assertNotNull(feed);
         assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertEquals("", feed.getName());
         assertNull(feed.getItems());
     }
 
@@ -137,7 +109,6 @@ public class FeedTests {
         // verify
         assertNotNull(feed);
         assertNull(feed.getSurfaceUri());
-        assertEquals(FEED_NAME, feed.getName());
         assertEquals(feedItems, feed.getItems());
     }
 }
