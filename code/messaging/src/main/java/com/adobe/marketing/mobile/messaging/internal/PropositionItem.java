@@ -42,11 +42,11 @@ class PropositionItem {
     // Weak reference to Proposition instance
     WeakReference<Proposition> proposition;
 
-    PropositionItem(final Map<String, Object> item) {
-        this.uniqueId = DataReader.optString(item, ID, "");
-        this.schema = DataReader.optString(item, SCHEMA, "");
-        final Map data = DataReader.optTypedMap(Object.class, item, DATA, null);
-        this.content = DataReader.optString(data, CONTENT, "");
+    PropositionItem(final Map<String, Object> item) throws DataReaderException {
+        this.uniqueId = DataReader.getString(item, ID);
+        this.schema = DataReader.getString(item, SCHEMA);
+        final Map data = DataReader.getTypedMap(Object.class, item, DATA);
+        this.content = DataReader.getString(data, CONTENT);
     }
 
     // Track offer interaction
@@ -59,7 +59,7 @@ class PropositionItem {
         try {
             return new Inbound(content);
         } catch (final JSONException e) {
-            Log.trace(LOG_TAG, SELF_TAG, "JSONException thrown while attempting to decode content: %s", e.getLocalizedMessage());
+            Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to decode content: %s", e.getLocalizedMessage());
             return null;
         }
     }

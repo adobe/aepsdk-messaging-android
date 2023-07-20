@@ -12,12 +12,15 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ITEMS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
 
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.lang.ref.WeakReference;
@@ -29,6 +32,8 @@ import java.util.Map;
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 class Proposition {
+    private final static String SELF_TAG = "Proposition";
+
     // Unique proposition identifier
     final String uniqueId;
     // Scope string
@@ -45,8 +50,12 @@ class Proposition {
         final List<Map<String, Object>> itemMap = DataReader.optTypedListOfMap(Object.class, propositionInfoMap, ITEMS, null);
         propositionItems = new ArrayList<>();
         for (int i = 0; i < itemMap.size(); i++) {
-            propositionItems.add(new PropositionItem(itemMap.get(i)));
-            propositionItems.get(i).proposition = new WeakReference<>(this);
+            try {
+                propositionItems.add(new PropositionItem(itemMap.get(i)));
+                propositionItems.get(i).proposition = new WeakReference<>(this);
+            } catch (final DataReaderException dataReaderException) {
+                Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem: %s", dataReaderException.getLocalizedMessage());
+            }
         }
     }
 
