@@ -43,19 +43,15 @@ class Proposition {
     // List containing proposition decision items
     private final List<PropositionItem> propositionItems;
 
-    Proposition(final Map<String, Object> propositionInfoMap) {
-        uniqueId = DataReader.optString(propositionInfoMap, ID, null);
-        scope = DataReader.optString(propositionInfoMap, SCOPE, null);
-        scopeDetails = DataReader.optTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS, null);
-        final List<Map<String, Object>> itemMap = DataReader.optTypedListOfMap(Object.class, propositionInfoMap, ITEMS, null);
+    Proposition(final Map<String, Object> propositionInfoMap) throws DataReaderException {
+        uniqueId = DataReader.getString(propositionInfoMap, ID);
+        scope = DataReader.getString(propositionInfoMap, SCOPE);
+        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
+        final List<Map<String, Object>> itemMap = DataReader.getTypedListOfMap(Object.class, propositionInfoMap, ITEMS);
         propositionItems = new ArrayList<>();
         for (int i = 0; i < itemMap.size(); i++) {
-            try {
-                propositionItems.add(new PropositionItem(itemMap.get(i)));
-                propositionItems.get(i).proposition = new WeakReference<>(this);
-            } catch (final DataReaderException dataReaderException) {
-                Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem: %s", dataReaderException.getLocalizedMessage());
-            }
+            propositionItems.add(new PropositionItem(itemMap.get(i)));
+            propositionItems.get(i).proposition = new WeakReference<>(this);
         }
     }
 
