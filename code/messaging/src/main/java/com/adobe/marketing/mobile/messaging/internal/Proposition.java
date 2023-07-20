@@ -38,14 +38,11 @@ class Proposition {
     // List containing proposition decision items
     private final List<PropositionItem> propositionItems;
 
-    Proposition(final Map<String, Object> propositionInfoMap) throws Exception {
-        uniqueId = DataReader.getString(propositionInfoMap, ID);
-        scope = DataReader.getString(propositionInfoMap, SCOPE);
-        if (StringUtils.isNullOrEmpty(uniqueId) || StringUtils.isNullOrEmpty(scope)) {
-            throw new Exception("id and scope are required for constructing Proposition objects.");
-        }
-        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
-        final List<Map<String, Object>> itemMap = DataReader.getTypedListOfMap(Object.class, propositionInfoMap, ITEMS);
+    Proposition(final Map<String, Object> propositionInfoMap) {
+        uniqueId = DataReader.optString(propositionInfoMap, ID, null);
+        scope = DataReader.optString(propositionInfoMap, SCOPE, null);
+        scopeDetails = DataReader.optTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS, null);
+        final List<Map<String, Object>> itemMap = DataReader.optTypedListOfMap(Object.class, propositionInfoMap, ITEMS, null);
         propositionItems = new ArrayList<>();
         for (int i = 0; i < itemMap.size(); i++) {
             propositionItems.add(new PropositionItem(itemMap.get(i)));

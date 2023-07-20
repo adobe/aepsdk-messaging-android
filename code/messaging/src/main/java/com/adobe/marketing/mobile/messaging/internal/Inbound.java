@@ -58,10 +58,10 @@ class Inbound {
             final JSONObject consequenceDetails = MessagingUtils.getConsequenceDetails(ruleJson);
             if (consequenceDetails != null) {
                 this.content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
-                this.publishedDate = ruleConsequence.optLong(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                this.expiryDate = ruleConsequence.optLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                this.contentType = ruleConsequence.optString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
-                this.meta = JSONUtils.toMap(ruleConsequence.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
+                this.publishedDate = consequenceDetails.optLong(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+                this.expiryDate = consequenceDetails.optLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
+                this.contentType = consequenceDetails.optString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
+                this.meta = JSONUtils.toMap(consequenceDetails.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
             }
         }
     }

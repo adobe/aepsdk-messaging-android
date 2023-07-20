@@ -42,11 +42,11 @@ class PropositionItem {
     // Weak reference to Proposition instance
     WeakReference<Proposition> proposition;
 
-    PropositionItem(final Map<String, Object> item) throws DataReaderException {
-        this.uniqueId = DataReader.getString(item, ID);
-        this.schema = DataReader.getString(item, SCHEMA);
-        final Map data = DataReader.getTypedMap(Object.class, item, DATA);
-        this.content = DataReader.getString(data, CONTENT);
+    PropositionItem(final Map<String, Object> item) {
+        this.uniqueId = DataReader.optString(item, ID, "");
+        this.schema = DataReader.optString(item, SCHEMA, "");
+        final Map data = DataReader.optTypedMap(Object.class, item, DATA, null);
+        this.content = DataReader.optString(data, CONTENT, "");
     }
 
     // Track offer interaction
