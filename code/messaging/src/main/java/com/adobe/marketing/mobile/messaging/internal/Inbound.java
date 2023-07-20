@@ -39,11 +39,11 @@ class Inbound {
     private String content;
     // Contains mime type for this inbound item
     private String contentType;
-    // Represents when this feed item went live. Represented in seconds since January 1, 1970
+    // Represents when this inbound item went live. Represented in seconds since January 1, 1970
     private long publishedDate;
-    // Represents when this feed item expires. Represented in seconds since January 1, 1970
+    // Represents when this inbound item expires. Represented in seconds since January 1, 1970
     private long expiryDate;
-    // Contains additional key-value pairs associated with this feed item
+    // Contains additional key-value pairs associated with this inbound item
     private Map<String, Object> meta;
 
     /**
