@@ -19,10 +19,10 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_METADATA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
@@ -57,10 +57,12 @@ class Inbound {
             this.inboundType = InboundType.getInboundTypeFromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
             final JSONObject consequenceDetails = MessagingUtils.getConsequenceDetails(ruleJson);
             if (consequenceDetails != null) {
-                this.content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML);
+                // content, content type, and expiry date are required
+                this.content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT);
+                this.contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
+                this.expiryDate = consequenceDetails.getLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
+                // published date and meta are optional
                 this.publishedDate = consequenceDetails.optLong(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                this.expiryDate = consequenceDetails.optLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                this.contentType = consequenceDetails.optString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
                 this.meta = JSONUtils.toMap(consequenceDetails.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
             }
         }

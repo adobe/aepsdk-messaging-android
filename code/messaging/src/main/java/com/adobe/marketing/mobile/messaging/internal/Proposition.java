@@ -12,16 +12,13 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ITEMS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
 
-import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
-import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
