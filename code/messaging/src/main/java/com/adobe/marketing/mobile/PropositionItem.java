@@ -10,27 +10,12 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_METADATA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.CONTENT;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCHEMA;
-
-import com.adobe.marketing.mobile.PropositionEventType;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -41,7 +26,19 @@ import java.util.Map;
  * A {@link PropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
  */
 class PropositionItem {
+    private static final String LOG_TAG = "Messaging";
     private final static String SELF_TAG = "PropositionItem";
+    private static final String JSON_KEY = "rules";
+    private static final String JSON_CONSEQUENCES_KEY = "consequences";
+    private static final String MESSAGE_CONSEQUENCE_ID = "id";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE = "type";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
+
     // Unique proposition identifier
     private final String uniqueId;
     // PropositionItem schema string
@@ -51,11 +48,10 @@ class PropositionItem {
     // Weak reference to Proposition instance
     WeakReference<Proposition> proposition;
 
-    PropositionItem(final Map<String, Object> item) throws DataReaderException {
-        this.uniqueId = DataReader.getString(item, ID);
-        this.schema = DataReader.getString(item, SCHEMA);
-        final Map data = DataReader.getTypedMap(Object.class, item, DATA);
-        this.content = DataReader.getString(data, CONTENT);
+    PropositionItem(final String uniqueId, final String schema, final String content) {
+        this.uniqueId = uniqueId;
+        this.schema = schema;
+        this.content = content;
     }
 
     /**
@@ -104,19 +100,17 @@ class PropositionItem {
         Inbound inboundContent = null;
         try {
             final JSONObject ruleJson = new JSONObject(content);
-            final JSONObject ruleConsequence = MessagingUtils.getConsequence(ruleJson);
+            final JSONObject ruleConsequence = getConsequence(ruleJson);
             if (ruleConsequence != null) {
                 final String uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
-                final InboundType inboundType = InboundType.getInboundTypeFromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
-                final JSONObject consequenceDetails = MessagingUtils.getConsequenceDetails(ruleJson);
+                final InboundType inboundType = InboundType.fromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
+                final JSONObject consequenceDetails = getConsequenceDetails(ruleJson);
                 if (consequenceDetails != null) {
-                    // content, content type, and expiry date are required
                     final String content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT);
                     final String contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
                     final int expiryDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                    // published date and meta are optional
-                    final int publishedDate = consequenceDetails.optInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                    final Map<String, Object> meta = JSONUtils.toMap(consequenceDetails.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
+                    final int publishedDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+                    final Map<String, Object> meta = JSONUtils.toMap(consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
                     inboundContent = new Inbound(uniqueId, inboundType, content, contentType, publishedDate, expiryDate, meta);
                 }
             }
@@ -126,5 +120,40 @@ class PropositionItem {
         return inboundContent;
     }
 
+    /**
+     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence extracted from the rule json
+     */
+    static JSONObject getConsequence(final JSONObject ruleJson) {
+        JSONObject consequence = null;
+        try {
+            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            consequence = consequenceArray.getJSONObject(0);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequence", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+        }
+        return consequence;
+    }
 
+    /**
+     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence details extracted from the rule json
+     */
+    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        JSONObject consequenceDetails = null;
+        try {
+            final JSONObject consequence = getConsequence(ruleJson);
+            if (consequence != null) {
+                consequenceDetails = consequence.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            }
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+        }
+        return consequenceDetails;
+    }
 }

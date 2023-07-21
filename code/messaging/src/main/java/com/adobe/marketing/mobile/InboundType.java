@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
 enum InboundType {
     // Unknown inbound type
@@ -34,7 +34,8 @@ enum InboundType {
         return value;
     }
 
-    String getInboundEventType() {
+    @Override
+    public String toString() {
         switch (this) {
             case FEED:
                 return FEED_EVENT_TYPE;
@@ -45,7 +46,7 @@ enum InboundType {
         }
     }
 
-    static InboundType getInboundTypeFromString(final String typeString) {
+    static InboundType fromString(final String typeString) {
         InboundType inboundType;
         switch (typeString) {
             case InboundType.FEED_EVENT_TYPE:

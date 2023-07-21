@@ -10,14 +10,14 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.util.UrlUtils;
 
 /**
  * An entity uniquely defined by a URI that can be interacted with.
  */
-class Surface {
+public class Surface {
 
     private final String uri;
 
@@ -29,7 +29,7 @@ class Surface {
         return uri;
     }
 
-    boolean isValid() {
+    public boolean isValid() {
         return UrlUtils.isValidUrl(uri);
     }
 }

@@ -10,25 +10,16 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
-
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ITEMS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
-
-import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.DataReaderException;
+package com.adobe.marketing.mobile;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
-class Proposition {
+public class Proposition {
     // Unique proposition identifier
     private final String uniqueId;
     // Scope string
@@ -38,15 +29,13 @@ class Proposition {
     // List containing proposition decision items
     private final List<PropositionItem> propositionItems;
 
-    Proposition(final Map<String, Object> propositionInfoMap) throws DataReaderException {
-        uniqueId = DataReader.getString(propositionInfoMap, ID);
-        scope = DataReader.getString(propositionInfoMap, SCOPE);
-        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
-        final List<Map<String, Object>> itemMap = DataReader.getTypedListOfMap(Object.class, propositionInfoMap, ITEMS);
-        propositionItems = new ArrayList<>();
-        for (int i = 0; i < itemMap.size(); i++) {
-            propositionItems.add(new PropositionItem(itemMap.get(i)));
-            propositionItems.get(i).proposition = new WeakReference<>(this);
+    public Proposition(final String uniqueId, final String scope, final Map<String, Object> scopeDetails, final List<PropositionItem> propositionItems) {
+        this.uniqueId = uniqueId;
+        this.scope = scope;
+        this.scopeDetails = scopeDetails;
+        this.propositionItems = propositionItems;
+        if (this.propositionItems != null && !this.propositionItems.isEmpty()) {
+            this.propositionItems.get(0).proposition = new WeakReference<>(this);
         }
     }
 

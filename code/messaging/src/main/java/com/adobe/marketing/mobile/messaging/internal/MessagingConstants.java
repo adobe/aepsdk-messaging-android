@@ -200,12 +200,6 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE = "cjmiam";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE = "type";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";

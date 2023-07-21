@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class Feed {
     // Identification for this feed, represented by the AJO Surface URI used to retrieve it
-    private final String surfaceUri;
+    private final Surface surface;
 
     // List of FeedItem that are members of this Feed
     private final List<FeedItem> items;
@@ -31,7 +31,7 @@ public class Feed {
      * @param items {@link List<FeedItem>} that are members of this {@link Feed}
      */
     public Feed(final String surfaceUri, final List<FeedItem> items) {
-        this.surfaceUri = surfaceUri;
+        this.surface = new Surface(surfaceUri);
         this.items = items;
     }
 
@@ -41,7 +41,7 @@ public class Feed {
      * @return {@link String} containing the {@link Feed} surface uri.
      */
     public String getSurfaceUri() {
-        return surfaceUri;
+        return surface.getUri();
     }
 
     /**

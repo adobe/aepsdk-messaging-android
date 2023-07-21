@@ -10,14 +10,15 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
  */
-class Inbound {
+public class Inbound {
     // String representing a unique ID for this inbound item
     private final String uniqueId;
     // Enum representing the inbound item type
@@ -36,14 +37,14 @@ class Inbound {
     /**
      * Constructor.
      */
-    Inbound(final String uniqueId, final InboundType inboundType, final String content, final String contentType, final int publishedDate, final int expiryDate, final Map<String, Object> meta) {
-        this.uniqueId = uniqueId;
-        this.inboundType = inboundType;
-        this.content = content;
-        this.contentType = contentType;
-        this.expiryDate = expiryDate;
-        this.publishedDate = publishedDate;
-        this.meta = meta;
+    public Inbound(final String uniqueId, final InboundType inboundType, final String content, final String contentType, final int publishedDate, final int expiryDate, final Map<String, Object> meta) {
+        this.uniqueId = uniqueId != null ? uniqueId : "";
+        this.inboundType = inboundType != null ? inboundType : InboundType.UNKNOWN;
+        this.content = content != null ? content : "";
+        this.contentType = contentType != null ? contentType : "";
+        this.expiryDate = Math.max(expiryDate, 0);
+        this.publishedDate = Math.max(publishedDate, 0);
+        this.meta = meta != null ? meta : new HashMap<>();
     }
 
     /**
