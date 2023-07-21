@@ -29,12 +29,10 @@ import java.util.Map;
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 class Proposition {
-    private final static String SELF_TAG = "Proposition";
-
     // Unique proposition identifier
-    final String uniqueId;
+    private final String uniqueId;
     // Scope string
-    final String scope;
+    private final String scope;
     // Scope details map
     private final Map<String, Object> scopeDetails;
     // List containing proposition decision items
@@ -52,11 +50,39 @@ class Proposition {
         }
     }
 
-    List<PropositionItem> getPropositionItems() {
+    /**
+     * Gets the {@code Proposition} identifier.
+     *
+     * @return {@link String} containing the {@link Proposition} identifier.
+     */
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    /**
+     * Gets the {@code Proposition} items.
+     *
+     * @return {@code List<PropositionItem>} containing the {@link Proposition} items.
+     */
+    public List<PropositionItem> getItems() {
         return propositionItems;
     }
 
-    Map<String, Object> getScopeDetails() {
+    /**
+     * Gets the {@code Proposition} scope.
+     *
+     * @return {@link String} containing the encoded {@link Proposition} scope.
+     */
+    public String getScope() {
+        return scope;
+    }
+
+    /**
+     * Gets the {@code Proposition} scope details.
+     *
+     * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
+     */
+    public Map<String, Object> getScopeDetails() {
         return scopeDetails;
     }
 }

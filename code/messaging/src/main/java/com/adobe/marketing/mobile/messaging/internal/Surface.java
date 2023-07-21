@@ -12,6 +12,8 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import com.adobe.marketing.mobile.util.UrlUtils;
+
 /**
  * An entity uniquely defined by a URI that can be interacted with.
  */
@@ -19,11 +21,15 @@ class Surface {
 
     private final String uri;
 
-    Surface(final String uri) {
-        this.uri = uri;
+    public Surface(final String surfaceUri) {
+        this.uri = surfaceUri;
     }
 
-    String getUri() {
+    public String getUri() {
         return uri;
+    }
+
+    boolean isValid() {
+        return UrlUtils.isValidUrl(uri);
     }
 }

@@ -12,77 +12,55 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import com.adobe.marketing.mobile.util.JSONUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Map;
-
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_METADATA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 
 /**
  * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
  */
 class Inbound {
     // String representing a unique ID for this inbound item
-    private String uniqueId;
+    private final String uniqueId;
     // Enum representing the inbound item type
-    private InboundType inboundType;
+    private final InboundType inboundType;
     // Content for this inbound item e.g. inapp html string, or feed item JSON
-    private String content;
+    private final String content;
     // Contains mime type for this inbound item
-    private String contentType;
+    private final String contentType;
     // Represents when this inbound item went live. Represented in seconds since January 1, 1970
-    private long publishedDate;
+    private final int publishedDate;
     // Represents when this inbound item expires. Represented in seconds since January 1, 1970
-    private long expiryDate;
+    private final int expiryDate;
     // Contains additional key-value pairs associated with this inbound item
-    private Map<String, Object> meta;
+    private final Map<String, Object> meta;
 
     /**
      * Constructor.
      */
-    Inbound(final String ruleString) throws JSONException {
-        final JSONObject ruleJson = new JSONObject(ruleString);
-        final JSONObject ruleConsequence = MessagingUtils.getConsequence(ruleJson);
-        if (ruleConsequence != null) {
-            this.uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
-            this.inboundType = InboundType.getInboundTypeFromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
-            final JSONObject consequenceDetails = MessagingUtils.getConsequenceDetails(ruleJson);
-            if (consequenceDetails != null) {
-                // content, content type, and expiry date are required
-                this.content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT);
-                this.contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
-                this.expiryDate = consequenceDetails.getLong(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                // published date and meta are optional
-                this.publishedDate = consequenceDetails.optLong(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                this.meta = JSONUtils.toMap(consequenceDetails.optJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
-            }
-        }
+    Inbound(final String uniqueId, final InboundType inboundType, final String content, final String contentType, final int publishedDate, final int expiryDate, final Map<String, Object> meta) {
+        this.uniqueId = uniqueId;
+        this.inboundType = inboundType;
+        this.content = content;
+        this.contentType = contentType;
+        this.expiryDate = expiryDate;
+        this.publishedDate = publishedDate;
+        this.meta = meta;
     }
 
     /**
-     * Gets the {@code Inbound} unique id.
+     * Gets the {@code Inbound} identifier.
      *
-     * @return {@link String} containing the {@link Inbound} unique id.
+     * @return {@link String} containing the {@link Inbound} identifier.
      */
-    String getUniqueId() {
+    public String getUniqueId() {
         return uniqueId;
     }
 
     /**
-     * Gets the {@code InboundType}.
+     * Gets the {@code Inbound} type.
      *
-     * @return {@link String} containing the {@link InboundType}.
+     * @return {@code InboundType} describing the {@link Inbound}'s type.
      */
-    InboundType getInboundType() {
+    public InboundType getInboundType() {
         return inboundType;
     }
 
@@ -91,7 +69,7 @@ class Inbound {
      *
      * @return {@link String} containing the {@link Inbound} content.
      */
-    String getContent() {
+    public String getContent() {
         return content;
     }
 
@@ -100,34 +78,34 @@ class Inbound {
      *
      * @return {@link String} containing the {@link Inbound} content type.
      */
-    String getContentType() {
+    public String getContentType() {
         return contentType;
     }
 
     /**
-     * Gets the {@code Inbound} published date.
+     * Gets the {@code Inbound} content's publish date.
      *
-     * @return {@code long} containing the {@link Inbound} published date.
+     * @return {@code int} describing when the {@link Inbound} content went live. Represented in seconds since January 1, 1970.
      */
-    long getPublishedDate() {
+    public int getPublishedDate() {
         return publishedDate;
     }
 
     /**
-     * Gets the {@code Inbound} expiry date.
+     * Gets the {@code Inbound} content's expiry date.
      *
-     * @return {@code long} containing the {@link Inbound} expiry date.
+     * @return {@code int} describing when the {@link Inbound} content will expire. Represented in seconds since January 1, 1970.
      */
-    long getExpiryDate() {
+    public int getExpiryDate() {
         return expiryDate;
     }
 
-    /**1
-     * Gets the {@code Inbound} metadata.
+    /**
+     * Gets the {@code Inbound} content meta.
      *
-     * @return {@code Map<String, Object>} containing the {@link Inbound} metadata.
+     * @return {@code Map<String, Object>} containing the {@link Inbound} content meta.
      */
-    Map<String, Object> getMeta() {
+    public Map<String, Object> getMeta() {
         return meta;
     }
 }
