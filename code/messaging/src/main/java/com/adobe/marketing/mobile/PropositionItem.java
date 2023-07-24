@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONArray;
@@ -20,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -27,7 +29,7 @@ import java.util.Map;
  */
 class PropositionItem {
     private static final String LOG_TAG = "Messaging";
-    private final static String SELF_TAG = "PropositionItem";
+    private static final String SELF_TAG = "PropositionItem";
     private static final String JSON_KEY = "rules";
     private static final String JSON_CONSEQUENCES_KEY = "consequences";
     private static final String MESSAGE_CONSEQUENCE_ID = "id";
@@ -38,6 +40,10 @@ class PropositionItem {
     private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
+    private static final String PAYLOAD_ID = "id";
+    private static final String PAYLOAD_DATA = "data";
+    private static final String PAYLOAD_CONTENT = "content";
+    private static final String PAYLOAD_SCHEMA = "schema";
 
     // Unique proposition identifier
     private final String uniqueId;
@@ -122,6 +128,33 @@ class PropositionItem {
             Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to decode content: %s", e.getLocalizedMessage());
         }
         return inboundContent;
+    }
+
+    /**
+     * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
+     *
+     * @param eventData {@link Map<String, Object>} event data
+     * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
+     */
+    static PropositionItem fromEventData(final Map<String, Object> eventData) {
+        final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
+        final String schema = DataReader.optString(eventData, PAYLOAD_SCHEMA, "");
+        final Map<String, Object> data = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
+        final String content = DataReader.optString(data, PAYLOAD_CONTENT, "");
+        return new PropositionItem(uniqueId, schema, content);
+    }
+
+    /**
+     * Creates a {@code Map<String, Object>} object from this {@code PropositionItem}.
+     *
+     * @return {@link Map<String, Object>} object created from this {@link PropositionItem}.
+     */
+    Map<String, Object> toEventData() {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(PAYLOAD_ID, this.uniqueId);
+        eventData.put(PAYLOAD_SCHEMA, this.schema);
+        eventData.put(PAYLOAD_CONTENT, this.content);
+        return eventData;
     }
 
     /**
