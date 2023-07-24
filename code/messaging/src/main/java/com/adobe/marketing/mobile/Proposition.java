@@ -34,8 +34,10 @@ public class Proposition {
         this.scope = scope;
         this.scopeDetails = scopeDetails;
         this.propositionItems = propositionItems;
-        if (this.propositionItems != null && !this.propositionItems.isEmpty()) {
-            this.propositionItems.get(0).proposition = new WeakReference<>(this);
+        for (final PropositionItem item: this.propositionItems) {
+            if (item.getProposition() == null) {
+                item.proposition = new WeakReference<>(this);
+            }
         }
     }
 

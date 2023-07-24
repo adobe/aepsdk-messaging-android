@@ -95,7 +95,11 @@ class PropositionItem {
         // TODO
     }
 
-    // Decode data content to generic inbound
+    /**
+     * Creates an {@code Inbound} object from this {@code PropositionItem}'s content.
+     *
+     * @return {@link Inbound} object created from this {@link PropositionItem}'s content.
+     */
     Inbound decodeContent() {
         Inbound inboundContent = null;
         try {
@@ -126,14 +130,14 @@ class PropositionItem {
      * @param ruleJson A {@link JSONObject} containing an AJO rule payload
      * @return {@code JSONObject> containing the consequence extracted from the rule json
      */
-    static JSONObject getConsequence(final JSONObject ruleJson) {
+    private JSONObject getConsequence(final JSONObject ruleJson) {
         JSONObject consequence = null;
         try {
             final JSONArray rulesArray = ruleJson.getJSONArray(JSON_KEY);
             final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
             consequence = consequenceArray.getJSONObject(0);
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequence", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
         }
         return consequence;
     }
@@ -144,7 +148,7 @@ class PropositionItem {
      * @param ruleJson A {@link JSONObject} containing an AJO rule payload
      * @return {@code JSONObject> containing the consequence details extracted from the rule json
      */
-    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+    private JSONObject getConsequenceDetails(final JSONObject ruleJson) {
         JSONObject consequenceDetails = null;
         try {
             final JSONObject consequence = getConsequence(ruleJson);
