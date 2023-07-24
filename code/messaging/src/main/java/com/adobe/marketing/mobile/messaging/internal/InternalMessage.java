@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
 
 import android.os.Handler;
@@ -90,7 +90,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
 
         final String consequenceType = consequence.getType();
 
-        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
+        if (!MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE.equals(consequenceType)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }

@@ -20,7 +20,10 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.S
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
-import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -141,11 +144,11 @@ class MessagingUtils {
 
         return EventType.MESSAGING.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
-                && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS);
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false);
     }
 
     // ========================================================================================
-    // Surfaces retrieval
+    // Surfaces retrieval and validation
     // ========================================================================================
 
     /**

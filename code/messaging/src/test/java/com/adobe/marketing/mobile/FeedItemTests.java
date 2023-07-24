@@ -55,16 +55,11 @@ public class FeedItemTests {
 
     @Test
     public void testCreateFeedItem_AllParametersPresent() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -74,19 +69,12 @@ public class FeedItemTests {
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertEquals(metaMap, feedItem.getMeta());
     }
 
     @Test
     public void testCreateFeedItem_RequiredParametersOnly() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate).build();
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY).build();
 
         // verify
         assertNotNull(feedItem);
@@ -95,22 +83,14 @@ public class FeedItemTests {
         assertEquals("", feedItem.getImageUrl());
         assertEquals("", feedItem.getActionUrl());
         assertEquals("", feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertTrue(feedItem.getMeta().isEmpty());
     }
 
     @Test
     public void testCreateFeedItem_ActionTitleNotRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -120,22 +100,14 @@ public class FeedItemTests {
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals("", feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertEquals(metaMap, feedItem.getMeta());
     }
 
     @Test
     public void testCreateFeedItem_ActionUrlNotRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -145,19 +117,12 @@ public class FeedItemTests {
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals("", feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertEquals(metaMap, feedItem.getMeta());
     }
 
     @Test
     public void testCreateFeedItem_MetaNotRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
@@ -170,22 +135,14 @@ public class FeedItemTests {
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertTrue(feedItem.getMeta().isEmpty());
     }
 
     @Test
     public void testCreateFeedItem_ImageUrlNotRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -195,23 +152,15 @@ public class FeedItemTests {
         assertEquals("", feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertEquals(metaMap, feedItem.getMeta());
     }
 
     @Test
     public void testCreateFeedItem_TitleRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(null, BODY, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(null, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -220,50 +169,11 @@ public class FeedItemTests {
 
     @Test
     public void testCreateFeedItem_BodyRequired() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, null, publishedDate, expiryDate)
+        FeedItem feedItem = new FeedItem.Builder(TITLE, null)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
                 .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
-                .build();
-
-        // verify
-        assertNull(feedItem);
-    }
-
-    @Test
-    public void testCreateFeedItem_InvalidPublishedDate() {
-        // setup
-        long expiryDate = TimeUtils.getUnixTimeInSeconds() + SECONDS_IN_A_DAY;
-
-        // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, 0, expiryDate)
-                .setImageUrl(IMAGE_URL)
-                .setActionUrl(ACTION_URL)
-                .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
-                .build();
-
-        // verify
-        assertNull(feedItem);
-    }
-
-    @Test
-    public void testCreateFeedItem_InvalidExpiryDate() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-
-        // test
-        FeedItem feedItem = new FeedItem.Builder(TITLE, BODY, publishedDate, 0)
-                .setImageUrl(IMAGE_URL)
-                .setActionUrl(ACTION_URL)
-                .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap)
                 .build();
 
         // verify
@@ -272,16 +182,11 @@ public class FeedItemTests {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testCreateFeedItem_CanOnlyBuildOnce() {
-        // setup
-        long publishedDate = TimeUtils.getUnixTimeInSeconds();
-        long expiryDate = publishedDate + SECONDS_IN_A_DAY;
-
         // test
-        FeedItem.Builder builder = new FeedItem.Builder(TITLE, BODY, publishedDate, expiryDate)
+        FeedItem.Builder builder = new FeedItem.Builder(TITLE, BODY)
                 .setImageUrl(IMAGE_URL)
                 .setActionUrl(ACTION_URL)
-                .setActionTitle(ACTION_TITLE)
-                .setMeta(metaMap);
+                .setActionTitle(ACTION_TITLE);
         FeedItem feedItem = builder.build();
 
         // verify
@@ -291,9 +196,6 @@ public class FeedItemTests {
         assertEquals(IMAGE_URL, feedItem.getImageUrl());
         assertEquals(ACTION_URL, feedItem.getActionUrl());
         assertEquals(ACTION_TITLE, feedItem.getActionTitle());
-        assertEquals(publishedDate, feedItem.getPublishedDate());
-        assertEquals(expiryDate, feedItem.getExpiryDate());
-        assertEquals(metaMap, feedItem.getMeta());
 
         // test, throws UnsupportedOperationException
         builder.build();
