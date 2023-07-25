@@ -15,7 +15,13 @@ package com.adobe.marketing.mobile.messaging.internal;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -24,12 +30,21 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +179,25 @@ class MessagingUtils {
         return DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
     }
 
+    /**
+     * Verifies that the given {@code String} is a valid surface {@code URI}
+     *
+     * @param surfaceUri A {@link String} containing a surface {@link java.net.URI}.
+     * @return {@code boolean} true if the given {@code String} is a valid URI, false otherwise
+     */
+    static boolean isValidSurface(final String surfaceUri) {
+        if (StringUtils.isNullOrEmpty(surfaceUri)) {
+            return false;
+        } else {
+            try {
+                new URI(surfaceUri);
+                return true;
+            } catch (final URISyntaxException exception) {
+                return false;
+            }
+        }
+    }
+
     // ========================================================================================
     // Request event id retrieval
     // ========================================================================================
@@ -176,6 +210,87 @@ class MessagingUtils {
      */
     static String getRequestEventId(final Event event) {
         return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+    }
+
+    // ========================================================================================
+    // Consequence data retrieval from a JSONObject
+    // ========================================================================================
+
+    /**
+     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence extracted from the rule json
+     */
+    static JSONObject getConsequence(final JSONObject ruleJson) {
+        JSONObject consequence = null;
+        try {
+            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            consequence = consequenceArray.getJSONObject(0);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+        }
+        return consequence;
+    }
+
+    /**
+     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence details extracted from the rule json
+     */
+    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        JSONObject consequenceDetails = null;
+        try {
+            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+        }
+        return consequenceDetails;
+    }
+
+    /**
+     * Retrieves the AJO inbound item type {@code String} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@link String} containing the ajo inbound item type extracted from the rule consequence details
+     */
+    static String getInboundItemType(final JSONObject ruleJson) {
+        String inboundItemType = null;
+        try {
+            final JSONObject details = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            inboundItemType = details.optString(MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getInboundItemType", "Exception occurred retrieving ajo inbound item type: %s", jsonException.getLocalizedMessage());
+        }
+        return inboundItemType;
+    }
+
+    /**
+     * Extracts the message id {@code String} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return a {@code String> containing the message id contained in the rule consequence
+     */
+    static String getMessageId(final JSONObject ruleJson) {
+        String messageId = null;
+        try {
+            final JSONObject consequence = getConsequence(ruleJson);
+            messageId = consequence.getString(MESSAGE_CONSEQUENCE_ID);
+        } catch (final JSONException exception) {
+            Log.warning(LOG_TAG, "getMessageId", "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
+        }
+        return messageId;
+    }
+
+    // ========================================================================================
+    // feed item verification using rule consequence object
+    // ========================================================================================
+    static boolean isFeedItem(final RuleConsequence ruleConsequence) {
+        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
+        final String type = DataReader.optString(ruleDetailMap, MessagingConstants.MessageFeedKeys.TYPE, "");
+        return type.equals(MessagingConstants.MessageFeedKeys.MESSAGE_FEED_TYPE);
     }
 
     // ========================================================================================

@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
 
 import android.os.Handler;
@@ -48,6 +48,7 @@ import java.util.Map;
  */
 class InternalMessage extends MessagingFullscreenMessageDelegate implements Message {
     private final static String SELF_TAG = "Message";
+    private final static int FILL_SCREEN = 100;
     private final Map<String, WebViewJavascriptInterface> scriptHandlers;
     private final Handler webViewHandler;
     private final String id;
@@ -90,7 +91,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
 
         final String consequenceType = consequence.getType();
 
-        if (!MESSAGE_CONSEQUENCE_CJM_TYPE_VALUE.equals(consequenceType)) {
+        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
             throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
         }
@@ -240,9 +241,6 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
 
     void show(final boolean withMessagingDelegateControl) {
         if (aepMessage != null) {
-            if (autoTrack) {
-                track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
-            }
             aepMessage.show(withMessagingDelegateControl);
         }
     }
@@ -281,7 +279,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     }
 
     @Override
-    public void setAutoTrack(boolean useAutoTrack) {
+    public void setAutoTrack(final boolean useAutoTrack) {
         this.autoTrack = useAutoTrack;
     }
 
@@ -322,8 +320,8 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         MessageAnimation displayAnimation, dismissAnimation;
         Map<MessageGesture, String> gestureMap = new HashMap<>();
 
-        width = DataReader.optInt(rawSettings, MobileParametersKeys.WIDTH, 100);
-        height = DataReader.optInt(rawSettings, MobileParametersKeys.HEIGHT, 100);
+        width = DataReader.optInt(rawSettings, MobileParametersKeys.WIDTH, FILL_SCREEN);
+        height = DataReader.optInt(rawSettings, MobileParametersKeys.HEIGHT, FILL_SCREEN);
         verticalAlign = MessageAlignment.valueOf((DataReader.optString(rawSettings, MobileParametersKeys.VERTICAL_ALIGN, "center").toUpperCase()));
         verticalInset = DataReader.optInt(rawSettings, MobileParametersKeys.VERTICAL_INSET, 0);
         horizontalAlign = MessageAlignment.valueOf((DataReader.optString(rawSettings, MobileParametersKeys.HORIZONTAL_ALIGN, "center").toUpperCase()));

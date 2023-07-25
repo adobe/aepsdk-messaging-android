@@ -106,7 +106,7 @@ class PropositionItem {
      *
      * @return {@link Inbound} object created from this {@link PropositionItem}'s content.
      */
-    Inbound decodeContent() {
+    public Inbound decodeContent() {
         Inbound inboundContent = null;
         try {
             final JSONObject ruleJson = new JSONObject(content);
@@ -136,7 +136,7 @@ class PropositionItem {
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromEventData(final Map<String, Object> eventData) {
+    public static PropositionItem fromEventData(final Map<String, Object> eventData) {
         final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
         final String schema = DataReader.optString(eventData, PAYLOAD_SCHEMA, "");
         final Map<String, Object> data = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
@@ -149,7 +149,7 @@ class PropositionItem {
      *
      * @return {@link Map<String, Object>} object created from this {@link PropositionItem}.
      */
-    Map<String, Object> toEventData() {
+    public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);

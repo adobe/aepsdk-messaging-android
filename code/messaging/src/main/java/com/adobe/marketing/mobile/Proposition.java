@@ -91,7 +91,7 @@ public class Proposition {
      *
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
-    static Proposition fromEventData(final Map<String, Object> eventData) {
+    public static Proposition fromEventData(final Map<String, Object> eventData) {
         final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
         final String scope = DataReader.optString(eventData, PAYLOAD_SCOPE, "");
         final Map<String, Object> scopeDetails = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS, null);
@@ -108,7 +108,7 @@ public class Proposition {
      *
      * @return {@link Map<String, Object>} object created from this {@link Proposition}.
      */
-    Map<String, Object> toEventData() {
+    public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCOPE, this.scope);

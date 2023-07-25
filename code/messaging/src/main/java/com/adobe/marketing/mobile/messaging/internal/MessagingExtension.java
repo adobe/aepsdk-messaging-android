@@ -153,6 +153,7 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
+        getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
     }
 
     @Override
@@ -171,9 +172,9 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        // fetch in-app messages on initial launch once we have configuration and identity state set
+        // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
             initialMessageFetchComplete = true;
         }
 
@@ -198,22 +199,46 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
+        List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
         final List<RuleConsequence> consequences = new ArrayList<>();
 
-        if (triggeredRules == null || triggeredRules.isEmpty()) {
+        if (triggeredConsequences == null || triggeredConsequences.isEmpty()) {
             return;
         }
 
-        for (final LaunchRule rule : triggeredRules) {
-            consequences.addAll(rule.getConsequenceList());
-        }
-
-        if (consequences.isEmpty()) {
-            return;
+        for (final RuleConsequence consequence : triggeredConsequences) {
+            consequences.add(consequence);
         }
 
         edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+    }
+
+    /**
+     * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
+     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * created from the triggered rule consequence payload.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
+    void handleRuleEngineResponseEvents(final Event event) {
+        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequences found. Will not handle rules response event.");
+            return;
+        }
+
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+        final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
+
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequence details found. Will not handle rules response event.");
+            return;
+        }
+
+        edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
     }
 
     //endregion
@@ -234,11 +259,11 @@ public final class MessagingExtension extends Extension {
         // validate refresh messages event then fetch in-app messages via an Edge extension event
         if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchPropositions(null);
         } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
             // validate update feeds event then retrieve feeds via an Edge extension event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
+            edgePersonalizationResponseHandler.fetchPropositions(MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);

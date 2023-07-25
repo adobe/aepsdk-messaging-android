@@ -12,12 +12,23 @@
 
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A {@link Feed} object aggregates one or more {@link FeedItem}s.
  */
 public class Feed {
+    private static final String FEED_SURFACE_URI_KEY = "surfaceUri";
+    private static final String FEED_ITEMS_KEY = "items";
+    private static final String MAP_FEEDS_KEY = "feeds";
+    private static final String MAP_ITEMS_KEY = "items";
+
     // Identification for this feed, represented by the AJO Surface URI used to retrieve it
     private final Surface surface;
 
@@ -51,5 +62,47 @@ public class Feed {
      */
     public List<FeedItem> getItems() {
         return items;
+    }
+
+    /**
+     * Converts the {@code Feed} into a {@code Map<String, Object>}.
+     *
+     * @return {@code Map<String, Object>} containing the {@link Feed} data.
+     */
+    public Map<String, Object> toEventData() {
+        final Map<String, Object> feedAsMap = new HashMap<>();
+        feedAsMap.put(FEED_SURFACE_URI_KEY, getSurfaceUri());
+
+        final List<Object> feedItemList = new ArrayList<>();
+        for (final FeedItem feedItem : getItems()) {
+            feedItemList.add(feedItem.toEventData());
+        }
+        feedAsMap.put(FEED_ITEMS_KEY, feedItemList);
+        return feedAsMap;
+    }
+
+    /**
+     * Creates a {@code Feed} from the event data {@code Map<String, Object>}.
+     *
+     * @return {@code Feed} created from the event data {@code Map<String, Object>}
+     */
+    public static Feed fromEventData(final Map<String, Object> eventData) {
+        final Map<String, Map> feedData = DataReader.optTypedMap(Map.class, eventData, MAP_FEEDS_KEY, null);
+        if (MapUtils.isNullOrEmpty(feedData)) {
+            return null;
+        }
+        final Map feedMap = feedData.values().iterator().next();
+        if (MapUtils.isNullOrEmpty(feedMap)) {
+            return null;
+        }
+        final List<Map> feedItemObjects = DataReader.optTypedList(Map.class, feedMap, MAP_ITEMS_KEY, null);
+        if (feedItemObjects == null || feedItemObjects.isEmpty()) {
+            return null;
+        }
+        final List<FeedItem> feedItems = new ArrayList<>();
+        for (final Map feedItemObject : feedItemObjects) {
+            feedItems.add(FeedItem.fromEventData(feedItemObject));
+        }
+        return new Feed(DataReader.optString(feedMap, FEED_SURFACE_URI_KEY, ""), feedItems);
     }
 }
