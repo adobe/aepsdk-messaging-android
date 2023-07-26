@@ -12,6 +12,7 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -32,7 +33,7 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionItemTests {
 
-    String testContent = "{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}";
+    String testContent = "{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}";
     String testSchema = "https://ns.adobe.com/personalization/json-content-item";
     String testId = "uniqueId";
     String expectedInboundContent = "{\"actionTitle\":\"test action title\",\"imageUrl\":\"https://adobe.com/image.png\",\"actionUrl\":\"https://adobe.com/\",\"title\":\"test title\",\"body\":\"test body\"}";
@@ -109,6 +110,15 @@ public class PropositionItemTests {
         assertEquals(expectedContentType, inbound.getContentType());
         assertEquals(expectedInboundMetaMap, inbound.getMeta());
         assertEquals(1717688797, inbound.getExpiryDate());
-        assertEquals(0, inbound.getPublishedDate());
+        assertEquals(1717688797, inbound.getPublishedDate());
+    }
+
+    @Test
+    public void test_createInbound_fromPropositionItem_whenContentIsEmpty() {
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, testSchema, "");
+        Inbound inbound = propositionItem.decodeContent();
+        // verify
+        assertNull(inbound);
     }
 }

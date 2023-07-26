@@ -15,9 +15,6 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import com.adobe.marketing.mobile.util.TimeUtils;
 
 import org.junit.After;
 import org.junit.Before;

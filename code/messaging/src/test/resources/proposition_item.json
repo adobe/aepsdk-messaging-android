@@ -32,6 +32,7 @@
                     "detail": {
                         "type": "feed",
                         "expiryDate": 1717688797,
+                        "publishedDate": 1717688797,
                         "meta": {
                             "feedName": "apifeed",
                             "campaignName": "mockCampaign",
