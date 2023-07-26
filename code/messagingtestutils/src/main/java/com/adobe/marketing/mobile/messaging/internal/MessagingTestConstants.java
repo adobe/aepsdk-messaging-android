@@ -162,25 +162,25 @@ public class MessagingTestConstants {
                 }
             }
 
-            final class IAMDetailsDataKeys {
+            public static final class IAMDetailsDataKeys {
                 static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
                 static final String SURFACE_BASE = "mobileapp://";
 
                 private IAMDetailsDataKeys() {
                 }
 
-                final class EventType {
-                    static final String DISMISS = "decisioning.propositionDismiss";
-                    static final String INTERACT = "decisioning.propositionInteract";
-                    static final String TRIGGER = "decisioning.propositionTrigger";
-                    static final String DISPLAY = "decisioning.propositionDisplay";
-                    static final String PERSONALIZATION_REQUEST = "personalization.request";
+                public static final class EventType {
+                    public static final String DISMISS = "decisioning.propositionDismiss";
+                    public static final String INTERACT = "decisioning.propositionInteract";
+                    public static final String TRIGGER = "decisioning.propositionTrigger";
+                    public static final String DISPLAY = "decisioning.propositionDisplay";
+                    public static final String PERSONALIZATION_REQUEST = "personalization.request";
 
                     private EventType() {
                     }
                 }
 
-                final class Key {
+                public static final class Key {
                     static final String PERSONALIZATION = "personalization";
                     static final String CHARACTERISTICS = "characteristics";
                     static final String DECISIONING = "decisioning";
@@ -201,12 +201,12 @@ public class MessagingTestConstants {
                     }
                 }
 
-                final class Value {
-                    static final String TRIGGERED = "triggered";
-                    static final String DISPLAYED = "displayed";
-                    static final String CLICKED = "clicked";
-                    static final String DISMISSED = "dismissed";
-                    static final String EMPTY_CONTENT = "{}";
+                public static final class Value {
+                    public static final String TRIGGERED = "triggered";
+                    public static final String DISPLAYED = "displayed";
+                    public static final String CLICKED = "clicked";
+                    public static final String DISMISSED = "dismissed";
+                    public static final String EMPTY_CONTENT = "{}";
 
                     private Value() {
                     }

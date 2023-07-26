@@ -21,7 +21,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +32,6 @@ import java.util.Map;
 class PropositionItem {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "PropositionItem";
-    private static final String JSON_KEY = "rules";
     private static final String JSON_CONSEQUENCES_KEY = "consequences";
     private static final String MESSAGE_CONSEQUENCE_ID = "id";
     private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
@@ -44,6 +45,8 @@ class PropositionItem {
     private static final String PAYLOAD_DATA = "data";
     private static final String PAYLOAD_CONTENT = "content";
     private static final String PAYLOAD_SCHEMA = "schema";
+    private static final String DATA_RULES_KEY = "rules";
+    private static final String DATA_VERSION_KEY = "version";
 
     // Unique proposition identifier
     private final String uniqueId;
@@ -93,7 +96,7 @@ class PropositionItem {
      * @return {@link Proposition} instance {@link WeakReference}.
      */
     public Proposition getProposition() {
-        return proposition.get();
+        return proposition == null ? null : proposition.get();
     }
 
     // Track offer interaction
@@ -113,13 +116,13 @@ class PropositionItem {
             final JSONObject ruleConsequence = getConsequence(ruleJson);
             if (ruleConsequence != null) {
                 final String uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
-                final InboundType inboundType = InboundType.fromString(ruleConsequence.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
                 final JSONObject consequenceDetails = getConsequenceDetails(ruleJson);
                 if (consequenceDetails != null) {
-                    final String content = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT);
+                    final InboundType inboundType = InboundType.fromString(consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
+                    final String content = consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_CONTENT).toString();
                     final String contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
                     final int expiryDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                    final int publishedDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+                    final int publishedDate = consequenceDetails.optInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
                     final Map<String, Object> meta = JSONUtils.toMap(consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
                     inboundContent = new Inbound(uniqueId, inboundType, content, contentType, publishedDate, expiryDate, meta);
                 }
@@ -139,8 +142,14 @@ class PropositionItem {
     static PropositionItem fromEventData(final Map<String, Object> eventData) {
         final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
         final String schema = DataReader.optString(eventData, PAYLOAD_SCHEMA, "");
-        final Map<String, Object> data = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
-        final String content = DataReader.optString(data, PAYLOAD_CONTENT, "");
+        final Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
+        final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, dataMap, PAYLOAD_CONTENT, null);
+        final List<Map<String, Object>> rulesList = DataReader.optTypedListOfMap(Object.class, contentMap, DATA_RULES_KEY, null);
+        final StringBuilder ruleStringBuilder = new StringBuilder();
+        for (final Map<String, Object> rule : rulesList) {
+            ruleStringBuilder.append(new JSONObject(rule));
+        }
+        final String content = ruleStringBuilder.toString();
         return new PropositionItem(uniqueId, schema, content);
     }
 
@@ -153,7 +162,17 @@ class PropositionItem {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
-        eventData.put(PAYLOAD_CONTENT, this.content);
+        final Map<String, Object> data = new HashMap<>();
+        final List<Map<String, Object>> ruleList = new ArrayList<>();
+        try {
+            final Map<String, Object> rules = JSONUtils.toMap(new JSONObject(this.content));
+            ruleList.add(rules);
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to create map from content: %s", jsonException.getLocalizedMessage());
+        }
+        data.put(DATA_RULES_KEY, ruleList);
+        data.put(DATA_VERSION_KEY, 1);
+        eventData.put(PAYLOAD_CONTENT, data);
         return eventData;
     }
 
@@ -166,8 +185,7 @@ class PropositionItem {
     private JSONObject getConsequence(final JSONObject ruleJson) {
         JSONObject consequence = null;
         try {
-            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_KEY);
-            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            final JSONArray consequenceArray = ruleJson.getJSONArray(JSON_CONSEQUENCES_KEY);
             consequence = consequenceArray.getJSONObject(0);
         } catch (final JSONException jsonException) {
             Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());

@@ -1,0 +1,53 @@
+{
+    "id": "uniqueId",
+    "schema": "https://ns.adobe.com/personalization/json-content-item",
+    "data": {
+        "content": {
+            "version": 1,
+            "rules": [{
+                "condition": {
+                    "type": "group",
+                    "definition": {
+                        "logic": "and",
+                        "conditions": [{
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "ge",
+                                "values": [1686066397]
+                            }
+                        }, {
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "le",
+                                "values": [1717688797]
+                            }
+                        }]
+                    }
+                },
+                "consequences": [{
+                    "id": "consequenceId",
+                    "type": "ajoInbound",
+                    "detail": {
+                        "type": "feed",
+                        "expiryDate": 1717688797,
+                        "meta": {
+                            "feedName": "apifeed",
+                            "campaignName": "mockCampaign",
+                            "surface": "mobileapp://mockApp"
+                        },
+                        "content": {
+                            "title": "test title",
+                            "body": "test body",
+                            "imageUrl": "https://adobe.com/image.png",
+                            "actionUrl": "https://adobe.com/",
+                            "actionTitle": "test action title"
+                        },
+                        "contentType": "application/json"
+                    }
+                }]
+            }]
+        }
+    }
+}

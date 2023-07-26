@@ -12,12 +12,13 @@
 
 package com.adobe.marketing.mobile;
 
-import com.adobe.marketing.mobile.util.UrlUtils;
+import java.net.URI;
 
 /**
  * An entity uniquely defined by a URI that can be interacted with.
  */
 public class Surface {
+    private static final String SURFACE_BASE = "mobileapp";
 
     private final String uri;
 
@@ -30,6 +31,7 @@ public class Surface {
     }
 
     public boolean isValid() {
-        return UrlUtils.isValidUrl(uri);
+        final URI uri = URI.create(this.uri);
+        return SURFACE_BASE.equals(uri.getScheme());
     }
 }
