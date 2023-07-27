@@ -12,18 +12,32 @@
 
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.util.StringUtils;
+
+import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * An entity uniquely defined by a URI that can be interacted with.
  */
 public class Surface {
-    private static final String SURFACE_BASE = "mobileapp";
-
+    private static final String LOG_TAG = "Messaging";
+    private static final String SELF_TAG = "Surface";
+    private static final String SURFACE_BASE = "mobileapp://";
+    private static final String UNKNOWN_SURFACE = "unknown";
     private final String uri;
 
-    public Surface(final String surfaceUri) {
-        this.uri = surfaceUri;
+    public Surface(final String path) {
+        final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
+        final String baseUri = StringUtils.isNullOrEmpty(packageName) ? UNKNOWN_SURFACE : SURFACE_BASE + packageName;
+        this.uri = StringUtils.isNullOrEmpty(path) || baseUri.equals(UNKNOWN_SURFACE) ? baseUri : baseUri + File.separator + path;
+    }
+
+    public Surface() {
+        this(null);
     }
 
     public String getUri() {
@@ -31,7 +45,13 @@ public class Surface {
     }
 
     public boolean isValid() {
-        final URI uri = URI.create(this.uri);
-        return SURFACE_BASE.equals(uri.getScheme());
+        try {
+            new URI(this.uri);
+        } catch (final URISyntaxException uriSyntaxException) {
+            Log.warning(LOG_TAG, SELF_TAG, "Invalid surface URI found: %s", this.uri);
+            return false;
+        }
+
+        return this.uri.startsWith(SURFACE_BASE);
     }
 }

@@ -15,13 +15,20 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
+import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.TimeUtils;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
@@ -31,7 +38,6 @@ import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FeedTests {
-    private static final int SECONDS_IN_A_DAY = 86400;
     private static final String TITLE = "testTitle";
     private static final String BODY = "testBody";
     private static final String IMAGE_URL = "testImageUrl";
@@ -39,8 +45,6 @@ public class FeedTests {
     private static final String ACTION_TITLE = "testActionTitle";
     private static final String SURFACE_URI = "testSurfaceUri";
     private static final String FEED_NAME = "testFeedName";
-    private static final long PUBLISHED_DATE = TimeUtils.getUnixTimeInSeconds();
-    private static final long EXPIRY_DATE = PUBLISHED_DATE + SECONDS_IN_A_DAY;
     private FeedItem feedItem;
     private FeedItem feedItem2;
     private final Map<String, Object> metaMap = new HashMap<String, Object>() {
@@ -58,6 +62,21 @@ public class FeedTests {
         }
     };
     private final List<FeedItem> feedItems = new ArrayList<>();
+
+    @Mock
+    ServiceProvider mockServiceProvider;
+    @Mock
+    DeviceInforming mockDeviceInfoService;
+
+    void runUsingMockedServiceProvider(final Runnable runnable) {
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
+            serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("com.app.appname");
+
+            runnable.run();
+        }
+    }
 
     @Before
     public void setup() {
@@ -77,38 +96,46 @@ public class FeedTests {
 
     @After
     public void tearDown() {
+        reset(mockServiceProvider);
+        reset(mockDeviceInfoService);
     }
 
     @Test
     public void testCreateFeed_AllParametersPresent() {
         // test
-        Feed feed = new Feed(SURFACE_URI, feedItems);
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed(SURFACE_URI, feedItems);
 
-        // verify
-        assertNotNull(feed);
-        assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertEquals(feedItems, feed.getItems());
+            // verify
+            assertNotNull(feed);
+            assertEquals("mobileapp://com.app.appname/testSurfaceUri", feed.getSurfaceUri());
+            assertEquals(feedItems, feed.getItems());
+        });
     }
 
     @Test
     public void testCreateFeed_NoFeedItems() {
         // test
-        Feed feed = new Feed(SURFACE_URI, null);
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed(SURFACE_URI, null);
 
-        // verify
-        assertNotNull(feed);
-        assertEquals(SURFACE_URI, feed.getSurfaceUri());
-        assertNull(feed.getItems());
+            // verify
+            assertNotNull(feed);
+            assertEquals("mobileapp://com.app.appname/testSurfaceUri", feed.getSurfaceUri());
+            assertNull(feed.getItems());
+        });
     }
 
     @Test
     public void testCreateFeed_NoSurfaceUri() {
         // test
-        Feed feed = new Feed(null, feedItems);
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed(null, feedItems);
 
-        // verify
-        assertNotNull(feed);
-        assertNull(feed.getSurfaceUri());
-        assertEquals(feedItems, feed.getItems());
+            // verify
+            assertNotNull(feed);
+            assertEquals("mobileapp://com.app.appname", feed.getSurfaceUri());
+            assertEquals(feedItems, feed.getItems());
+        });
     }
 }
