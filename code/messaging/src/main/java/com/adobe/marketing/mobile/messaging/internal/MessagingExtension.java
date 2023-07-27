@@ -235,9 +235,9 @@ public final class MessagingExtension extends Extension {
         if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
             edgePersonalizationResponseHandler.fetchMessages(null);
-        } else if (MessagingUtils.isUpdateFeedsEvent(eventToProcess)) {
-            // validate update feeds event then retrieve feeds via an Edge extension event
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to update message feed definitions from the remote.");
+        } else if (MessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
+            // validate update propositions event then retrieve propositions via an Edge extension event
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to retrieve propositions from the remote.");
             edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event

@@ -24,6 +24,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -132,19 +133,19 @@ class MessagingUtils {
     }
 
     /**
-     * Determines if the passed in {@code Event} is an update feeds event.
+     * Determines if the passed in {@code Event} is an update propositions event.
      *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is an update feeds event.
+     * @return {@code boolean} indicating if the passed in event is an update propositions event.
      */
-    static boolean isUpdateFeedsEvent(final Event event) {
+    static boolean isUpdatePropositionsEvent(final Event event) {
         if (event == null || event.getEventData() == null) {
             return false;
         }
 
         return EventType.MESSAGING.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
-                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false);
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false);
     }
 
     // ========================================================================================
@@ -152,16 +153,22 @@ class MessagingUtils {
     // ========================================================================================
 
     /**
-     * Retrieves the app surface {@code String} from the passed in {@code Event}'s event data.
+     * Retrieves the app surfaces from the passed in {@code Event}'s event data.
      *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
+     * @return {@code List<Surface>} containing the app surfaces to be used for retrieving propositions
      */
-    static List<String> getSurfaces(final Event event) {
+    static List<Surface> getSurfaces(final Event event) {
         if (event == null || event.getEventData() == null) {
             return null;
         }
-        return DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+        final List<String> surfaceStrings = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+        final List<Surface> surfaces = new ArrayList<>();
+
+        for (final String surfaceString : surfaceStrings) {
+            surfaces.add(new Surface(surfaceString));
+        }
+        return surfaces;
     }
 
     // ========================================================================================

@@ -39,6 +39,7 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.SharedStateStatus;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -47,6 +48,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -825,17 +827,16 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_updateFeedsForSurfacePathsEvent() {
-        ArgumentCaptor<List<String>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("promos/feed2");
-
+    public void test_processEvent_updatePropositionsEvent() {
+        ArgumentCaptor<List<Surface>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+        List<String> surfaces = new ArrayList<>();
+        surfaces.add("promos/feed1");
+        surfaces.add("promos/feed2");
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
-            eventData.put("updatefeeds", true);
-            eventData.put("surfaces", surfacePaths);
+            eventData.put("updatepropositions", true);
+            eventData.put("surfaces", surfaces);
             Event mockEvent = mock(Event.class);
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
@@ -846,7 +847,11 @@ public class MessagingExtensionTests {
 
             // verify
             verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
-            assertEquals(surfacePaths, listArgumentCaptor.getValue());
+            List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
+            assertEquals(2, capturedSurfaces.size());
+            for (Surface surface : capturedSurfaces) {
+                assertTrue(surface.getUri().equals("mobileapp://mockPackageName/promos/feed1") || surface.getUri().equals("mobileapp://mockPackageName/promos/feed2"));
+            }
         });
     }
 

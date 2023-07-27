@@ -14,9 +14,11 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstan
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -26,8 +28,11 @@ import android.content.Intent;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
+import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,17 +52,32 @@ import java.util.Map;
 public class MessagingTests {
     @Mock
     Intent mockIntent;
+    @Mock
+    ServiceProvider mockServiceProvider;
+    @Mock
+    DeviceInforming mockDeviceInfoService;
 
     private void runWithMockedMobileCore(final ArgumentCaptor<Event> eventArgumentCaptor,
                                          final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor,
                                          final ArgumentCaptor<ExtensionErrorCallback<ExtensionError>> extensionErrorCallbackArgumentCaptor,
                                          final Runnable testRunnable) {
-        try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class)) {
+        try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class); MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             mobileCoreMockedStatic.when(() -> MobileCore.registerExtension(any(), extensionErrorCallbackArgumentCaptor != null ? extensionErrorCallbackArgumentCaptor.capture() : any(ExtensionErrorCallback.class))).thenCallRealMethod();
             mobileCoreMockedStatic.when(() -> MobileCore.dispatchEventWithResponseCallback(eventArgumentCaptor.capture(), anyLong(), callbackWithErrorArgumentCaptor != null ? callbackWithErrorArgumentCaptor.capture() : any(AdobeCallbackWithError.class))).thenCallRealMethod();
             mobileCoreMockedStatic.when(() -> MobileCore.dispatchEvent(eventArgumentCaptor.capture())).thenCallRealMethod();
+
+            serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
             testRunnable.run();
         }
+    }
+
+    @After
+    public void tearDown() {
+        reset(mockIntent);
+        reset(mockServiceProvider);
+        reset(mockDeviceInfoService);
     }
 
     // ========================================================================================
@@ -338,18 +358,17 @@ public class MessagingTests {
     }
 
     // ========================================================================================
-    // updateFeedsForSurfacePaths
+    // updatePropositionsForSurfaces
     // ========================================================================================
     @Test
-    public void test_updateFeedsForSurfacePaths() {
+    public void test_updatePropositionsForSurfaces() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("promos/feed2");
         runWithMockedMobileCore(eventCaptor, null, null, () -> {
-
+            List<Surface> surfacePaths = new ArrayList<>();
+            surfacePaths.add(new Surface("promos/feed1"));
+            surfacePaths.add(new Surface("promos/feed2"));
             // test
-            Messaging.updateFeedsForSurfacePaths(surfacePaths);
+            Messaging.updatePropositionsForSurfaces(surfacePaths);
 
             // verify
             MobileCore.dispatchEvent(eventCaptor.capture());
@@ -358,29 +377,30 @@ public class MessagingTests {
             Event event = eventCaptor.getAllValues().get(0);
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
-            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false));
-            assertEquals(surfacePaths, DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null));
+            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
+            List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
+            assertEquals(2, capturedSurfaces.size());
+            for (String surface : capturedSurfaces) {
+                assertTrue(surface.equals("mobileapp://mockPackageName/promos/feed1") || surface.equals("mobileapp://mockPackageName/promos/feed2"));
+            }
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-            assertEquals(MessagingTestConstants.EventName.UPDATE_MESSAGE_FEEDS, event.getName());
+            assertEquals(MessagingTestConstants.EventName.UPDATE_PROPOSITIONS, event.getName());
         });
     }
 
     @Test
-    public void test_updateFeedsForSurfacePaths_whenSomeSurfacePathsInvalid_thenOnlyValidPathsUsedForFeedRetrieval() {
+    public void test_updatePropositionsForSurfaces_whenSomeSurfacePathsInvalid_thenOnlyValidPathsUsedForFeedRetrieval() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("");
-        surfacePaths.add(null);
-        surfacePaths.add("promos/feed3");
-        List<String> validSurfacePaths = new ArrayList<>();
-        validSurfacePaths.add("promos/feed1");
-        validSurfacePaths.add("promos/feed3");
         runWithMockedMobileCore(eventCaptor, null, null, () -> {
+            List<Surface> surfacePaths = new ArrayList<>();
+            surfacePaths.add(new Surface("promos/feed1"));
+            surfacePaths.add(new Surface("##invalid"));
+            surfacePaths.add(new Surface("##alsoinvalid"));
+            surfacePaths.add(new Surface("promos/feed3"));
 
             // test
-            Messaging.updateFeedsForSurfacePaths(surfacePaths);
+            Messaging.updatePropositionsForSurfaces(surfacePaths);
 
             // verify
             MobileCore.dispatchEvent(eventCaptor.capture());
@@ -389,21 +409,25 @@ public class MessagingTests {
             Event event = eventCaptor.getAllValues().get(0);
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
-            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_FEEDS, false));
-            assertEquals(validSurfacePaths, DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null));
+            assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
+            List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
+            assertEquals(2, capturedSurfaces.size());
+            for (String surface : capturedSurfaces) {
+                assertTrue(surface.equals("mobileapp://mockPackageName/promos/feed1") || surface.equals("mobileapp://mockPackageName/promos/feed3"));
+            }
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-            assertEquals(MessagingTestConstants.EventName.UPDATE_MESSAGE_FEEDS, event.getName());
+            assertEquals(MessagingTestConstants.EventName.UPDATE_PROPOSITIONS, event.getName());
         });
     }
 
     @Test
-    public void test_updateFeedsForSurfacePaths_whenEmptyListProvided_thenNoUpdateMessageFeedsEventDispatched() {
+    public void test_updatePropositionsForSurfaces_whenEmptyListProvided_thenNoUpdateMessageFeedsEventDispatched() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(eventCaptor, null, null, () -> {
 
             // test
-            Messaging.updateFeedsForSurfacePaths(new ArrayList<>());
+            Messaging.updatePropositionsForSurfaces(new ArrayList<>());
 
             // verify
             MobileCore.dispatchEvent(eventCaptor.capture());
