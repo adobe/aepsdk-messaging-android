@@ -89,7 +89,7 @@ public class PropositionTests {
             assertEquals(propositionItems.get(0).getUniqueId(), item.getUniqueId());
             assertEquals(propositionItems.get(0).getContent(), item.getContent());
             assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
-            assertNotNull(item.getPropositionReference().get());
+            assertNotNull(item.getProposition());
         }
     }
 

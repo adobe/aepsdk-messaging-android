@@ -27,15 +27,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionItemTests {
 
-    String testJSONStringContent = "{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}";
+    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
     String testContent = "some html string content";
     String testJSONSchema = "https://ns.adobe.com/personalization/json-content-item";
     String testHTMLSchema = "https://ns.adobe.com/personalization/html-content-item";
@@ -56,21 +54,14 @@ public class PropositionItemTests {
         ruleJSON = new JSONObject(testJSONStringContent);
         // setup event data for json content
         final Map<String, Object> jsonDataMap = new HashMap<>();
-        final Map<String, Object> jsonContentMap = new HashMap<>();
-        final List<Map<String, Object>> jsonRuleMapList = new ArrayList<>();
-        jsonRuleMapList.add(JSONUtils.toMap(ruleJSON));
-        jsonContentMap.put("rules", jsonRuleMapList);
-        jsonContentMap.put("version", 1);
-        jsonDataMap.put("content", jsonContentMap);
+        jsonDataMap.put("content", JSONUtils.toMap(ruleJSON));
         eventDataMapForJSON.put("id", testId);
         eventDataMapForJSON.put("schema", testJSONSchema);
         eventDataMapForJSON.put("data", jsonDataMap);
 
         // setup event data for html content
         final Map<String, Object> htmlDataMap = new HashMap<>();
-        final List<String> htmlContentList = new ArrayList<>();
-        htmlContentList.add(testContent);
-        htmlDataMap.put("content", htmlContentList);
+        htmlDataMap.put("content", testContent);
         eventDataMapForHTML.put("id", testId);
         eventDataMapForHTML.put("schema", testHTMLSchema);
         eventDataMapForHTML.put("data", htmlDataMap);
