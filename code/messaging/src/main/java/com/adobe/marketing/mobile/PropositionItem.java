@@ -15,12 +15,13 @@ package com.adobe.marketing.mobile;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +48,7 @@ class PropositionItem {
     private static final String PAYLOAD_SCHEMA = "schema";
     private static final String DATA_RULES_KEY = "rules";
     private static final String DATA_VERSION_KEY = "version";
+    private static final String JSON_CONTENT_SCHEMA_VALUE = "https://ns.adobe.com/personalization/json-content-item";
 
     // Unique proposition identifier
     private final String uniqueId;
@@ -54,8 +56,8 @@ class PropositionItem {
     private final String schema;
     // PropositionItem data content e.g. html or plain-text string or string containing image URL, JSON string
     private final String content;
-    // Weak reference to Proposition instance
-    WeakReference<Proposition> proposition;
+    // Soft reference to Proposition instance
+    SoftReference<Proposition> proposition;
 
     PropositionItem(final String uniqueId, final String schema, final String content) {
         this.uniqueId = uniqueId;
@@ -93,10 +95,10 @@ class PropositionItem {
     /**
      * Gets the {@code Proposition} reference.
      *
-     * @return {@link Proposition} instance {@link WeakReference}.
+     * @return {@link Proposition} instance {@link SoftReference}.
      */
-    public Proposition getProposition() {
-        return proposition == null ? null : proposition.get();
+    public SoftReference<Proposition> getPropositionReference() {
+        return proposition;
     }
 
     // Track offer interaction
@@ -140,17 +142,31 @@ class PropositionItem {
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
     static PropositionItem fromEventData(final Map<String, Object> eventData) {
-        final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
-        final String schema = DataReader.optString(eventData, PAYLOAD_SCHEMA, "");
-        final Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
-        final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, dataMap, PAYLOAD_CONTENT, null);
-        final List<Map<String, Object>> rulesList = DataReader.optTypedListOfMap(Object.class, contentMap, DATA_RULES_KEY, null);
-        final StringBuilder ruleStringBuilder = new StringBuilder();
-        for (final Map<String, Object> rule : rulesList) {
-            ruleStringBuilder.append(new JSONObject(rule));
+        PropositionItem propositionItem = null;
+        try {
+            final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
+            final String schema = DataReader.optString(eventData, PAYLOAD_SCHEMA, "");
+            final Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_DATA, null);
+
+            final StringBuilder contentStringBuilder = new StringBuilder();
+            if (schema.equals(JSON_CONTENT_SCHEMA_VALUE)) {
+                final JSONObject contentJSON = new JSONObject(DataReader.optTypedMap(Object.class, dataMap, PAYLOAD_CONTENT, null));
+                final JSONArray rulesList = contentJSON.getJSONArray(DATA_RULES_KEY);
+                for (int index = 0; index < rulesList.length(); index++) {
+                    contentStringBuilder.append(rulesList.get(index));
+                }
+            } else { // we have html or decision content which will be a string
+                final List<String> stringList = DataReader.optStringList(dataMap, PAYLOAD_CONTENT, null);
+                for (final String string : stringList) {
+                    contentStringBuilder.append(string);
+                }
+            }
+            propositionItem = new PropositionItem(uniqueId, schema, contentStringBuilder.toString());
+        } catch (final Exception exception) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
-        final String content = ruleStringBuilder.toString();
-        return new PropositionItem(uniqueId, schema, content);
+
+        return propositionItem;
     }
 
     /**
@@ -160,19 +176,26 @@ class PropositionItem {
      */
     Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
+        if (StringUtils.isNullOrEmpty(content)) {
+            Log.trace(LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
+            return eventData;
+        }
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
         final Map<String, Object> data = new HashMap<>();
-        final List<Map<String, Object>> ruleList = new ArrayList<>();
-        try {
-            final Map<String, Object> rules = JSONUtils.toMap(new JSONObject(this.content));
-            ruleList.add(rules);
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to create map from content: %s", jsonException.getLocalizedMessage());
+        if (schema.equals(JSON_CONTENT_SCHEMA_VALUE)) {
+            final JSONArray ruleList = new JSONArray();
+            try {
+                ruleList.put(new JSONObject(this.content));
+            } catch (final JSONException jsonException) {
+                Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to create map from content: %s", jsonException.getLocalizedMessage());
+            }
+            data.put(DATA_RULES_KEY, ruleList.toString());
+            data.put(DATA_VERSION_KEY, 1);
+            eventData.put(PAYLOAD_CONTENT, data);
+        } else {
+            eventData.put(PAYLOAD_CONTENT, this.content);
         }
-        data.put(DATA_RULES_KEY, ruleList);
-        data.put(DATA_VERSION_KEY, 1);
-        eventData.put(PAYLOAD_CONTENT, data);
         return eventData;
     }
 
@@ -188,7 +211,7 @@ class PropositionItem {
             final JSONArray consequenceArray = ruleJson.getJSONArray(JSON_CONSEQUENCES_KEY);
             consequence = consequenceArray.getJSONObject(0);
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+            Log.trace(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
         }
         return consequence;
     }
@@ -207,7 +230,7 @@ class PropositionItem {
                 consequenceDetails = consequence.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
             }
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+            Log.trace(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
         }
         return consequenceDetails;
     }
