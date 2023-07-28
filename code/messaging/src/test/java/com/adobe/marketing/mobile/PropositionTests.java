@@ -17,6 +17,7 @@ import com.adobe.marketing.mobile.messaging.internal.MessagingTestUtils;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -83,17 +84,17 @@ public class PropositionTests {
         assertEquals("uniqueId", proposition.getUniqueId());
         assertEquals("mobileapp://mockScope", proposition.getScope());
         assertEquals(scopeDetails, proposition.getScopeDetails());
-        // need to verify proposition items individually as proposition weak references will be different as the proposition is created from a map
+        // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
         for (PropositionItem item : proposition.getItems()) {
             assertEquals(propositionItems.get(0).getUniqueId(), item.getUniqueId());
             assertEquals(propositionItems.get(0).getContent(), item.getContent());
             assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
-            assertNotNull(item.getProposition());
+            assertNotNull(item.getPropositionReference().get());
         }
     }
 
     @Test
-    public void test_createEventData_fromProposition() throws DataReaderException {
+    public void test_createEventData_fromProposition() throws DataReaderException, JSONException {
         // test
         Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         Map<String, Object> propositionMap = proposition.toEventData();
@@ -102,10 +103,11 @@ public class PropositionTests {
         List<Map <String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
         PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
-            Map<String, Object> ruleMap = DataReader.getTypedListOfMap(Object.class, DataReader.getTypedMap(Object.class, item, "content"), "rules").get(0);
-            JSONObject ruleJson = new JSONObject(ruleMap);
+            Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, item, "content");
+            String rules = DataReader.getString(contentMap, "rules");
+            JSONArray expectedContentArray = new JSONArray().put(new JSONObject(propositionItem.getContent()));
             assertEquals(propositionItem.getUniqueId(), item.get("id"));
-            assertEquals(propositionItem.getContent(), ruleJson.toString());
+            assertEquals(expectedContentArray.toString(), rules);
             assertEquals(propositionItem.getSchema(), item.get("schema"));
         }
     }

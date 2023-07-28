@@ -13,11 +13,13 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -33,8 +35,10 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionItemTests {
 
-    String testContent = "{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}";
-    String testSchema = "https://ns.adobe.com/personalization/json-content-item";
+    String testJSONStringContent = "{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}";
+    String testContent = "some html string content";
+    String testJSONSchema = "https://ns.adobe.com/personalization/json-content-item";
+    String testHTMLSchema = "https://ns.adobe.com/personalization/html-content-item";
     String testId = "uniqueId";
     String expectedInboundContent = "{\"actionTitle\":\"test action title\",\"imageUrl\":\"https://adobe.com/image.png\",\"actionUrl\":\"https://adobe.com/\",\"title\":\"test title\",\"body\":\"test body\"}";
     String expectedContentType = "application/json";
@@ -44,63 +48,76 @@ public class PropositionItemTests {
         put("campaignName", "mockCampaign");
     }};
     JSONObject ruleJSON;
-    Map<String, Object> eventDataMap = new HashMap<>();
+    Map<String, Object> eventDataMapForJSON = new HashMap<>();
+    Map<String, Object> eventDataMapForHTML = new HashMap<>();
 
     @Before
     public void setup() throws JSONException {
-        ruleJSON = new JSONObject(testContent);
-        final Map<String, Object> dataMap = new HashMap<>();
-        final Map<String, Object> contentMap = new HashMap<>();
-        final List<Map<String, Object>> ruleMapList = new ArrayList<>();
-        ruleMapList.add(JSONUtils.toMap(ruleJSON));
-        contentMap.put("rules", ruleMapList);
-        contentMap.put("version", 1);
-        dataMap.put("content", contentMap);
-        eventDataMap.put("id", testId);
-        eventDataMap.put("schema", testSchema);
-        eventDataMap.put("data", dataMap);
+        ruleJSON = new JSONObject(testJSONStringContent);
+        // setup event data for json content
+        final Map<String, Object> jsonDataMap = new HashMap<>();
+        final Map<String, Object> jsonContentMap = new HashMap<>();
+        final List<Map<String, Object>> jsonRuleMapList = new ArrayList<>();
+        jsonRuleMapList.add(JSONUtils.toMap(ruleJSON));
+        jsonContentMap.put("rules", jsonRuleMapList);
+        jsonContentMap.put("version", 1);
+        jsonDataMap.put("content", jsonContentMap);
+        eventDataMapForJSON.put("id", testId);
+        eventDataMapForJSON.put("schema", testJSONSchema);
+        eventDataMapForJSON.put("data", jsonDataMap);
+
+        // setup event data for html content
+        final Map<String, Object> htmlDataMap = new HashMap<>();
+        final List<String> htmlContentList = new ArrayList<>();
+        htmlContentList.add(testContent);
+        htmlDataMap.put("content", htmlContentList);
+        eventDataMapForHTML.put("id", testId);
+        eventDataMapForHTML.put("schema", testHTMLSchema);
+        eventDataMapForHTML.put("data", htmlDataMap);
     }
 
+    // json content tests
     @Test
-    public void test_propositionItemConstructor() {
+    public void test_propositionItemConstructor_JSONContent() {
         // test
-        PropositionItem propositionItem = new PropositionItem(testId, testSchema, testContent);
+        PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         // verify
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getUniqueId());
-        assertEquals(testSchema, propositionItem.getSchema());
-        assertEquals(testContent, propositionItem.getContent());
+        assertEquals(testJSONSchema, propositionItem.getSchema());
+        assertEquals(testJSONStringContent, propositionItem.getContent());
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData() {
+    public void test_createPropositionItem_fromEventData_JSONContent() {
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMap);
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
         // verify
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getUniqueId());
-        assertEquals(testSchema, propositionItem.getSchema());
-        assertEquals(testContent, propositionItem.getContent());
+        assertEquals(testJSONSchema, propositionItem.getSchema());
+        assertEquals(testJSONStringContent, propositionItem.getContent());
     }
 
     @Test
-    public void test_createEventData_fromPropositionItem() throws DataReaderException {
+    public void test_createEventData_fromPropositionItem_JSONContent() throws DataReaderException, JSONException {
         // test
-        PropositionItem propositionItem = new PropositionItem(testId, testSchema, testContent);
+        PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
         Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, propositionItemMap, "content");
-        JSONObject ruleJSON = new JSONObject(DataReader.getTypedListOfMap(Object.class, contentMap, "rules").get(0));
+        String rules = DataReader.getString(contentMap, "rules");
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
-        assertEquals(testSchema, propositionItemMap.get("schema"));
-        assertEquals(testContent, ruleJSON.toString());
+        assertEquals(testJSONSchema, propositionItemMap.get("schema"));
+        JSONArray expectedContentArray = new JSONArray().put(new JSONObject(testJSONStringContent));
+        assertEquals(expectedContentArray.toString(), rules);
     }
 
     @Test
-    public void test_createInbound_fromPropositionItem() {
+    public void test_createInbound_fromPropositionItem_JSONContent() {
         // test
-        PropositionItem propositionItem = new PropositionItem(testId, testSchema, testContent);
+        PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         Inbound inbound = propositionItem.decodeContent();
         // verify
         assertNotNull(inbound);
@@ -113,12 +130,91 @@ public class PropositionItemTests {
         assertEquals(1717688797, inbound.getPublishedDate());
     }
 
+    // string content tests
     @Test
-    public void test_createInbound_fromPropositionItem_whenContentIsEmpty() {
+    public void test_propositionItemConstructor_StringContent() {
         // test
-        PropositionItem propositionItem = new PropositionItem(testId, testSchema, "");
+        PropositionItem propositionItem = new PropositionItem(testId, testHTMLSchema, testContent);
+        // verify
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getUniqueId());
+        assertEquals(testHTMLSchema, propositionItem.getSchema());
+        assertEquals(testContent, propositionItem.getContent());
+    }
+
+    @Test
+    public void test_createPropositionItem_fromEventData_StringContent() {
+        // test
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForHTML);
+        // verify
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getUniqueId());
+        assertEquals(testHTMLSchema, propositionItem.getSchema());
+        assertEquals(testContent, propositionItem.getContent());
+    }
+
+    @Test
+    public void test_createEventData_fromPropositionItem_StringContent() throws DataReaderException, JSONException {
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, testHTMLSchema, testContent);
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
+        // verify
+        assertNotNull(propositionItemMap);
+        assertEquals(testId, propositionItemMap.get("id"));
+        assertEquals(testHTMLSchema, propositionItemMap.get("schema"));
+        assertEquals(testContent, propositionItemMap.get("content"));
+    }
+
+    // negative tests
+
+    @Test
+    public void test_createInbound_fromPropositionItem_whenJSONContentIsEmpty() {
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, "");
         Inbound inbound = propositionItem.decodeContent();
         // verify
         assertNull(inbound);
+    }
+
+    @Test
+    public void test_createInbound_fromPropositionItem_whenStringContentIsEmpty() {
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, testHTMLSchema, "");
+        Inbound inbound = propositionItem.decodeContent();
+        // verify
+        assertNull(inbound);
+    }
+
+    @Test
+    public void test_createPropositionItem_fromEventData_NullJSONContent() {
+        // setup
+        final Map<String, Object> jsonDataMap = new HashMap<>();
+        jsonDataMap.put("content", null);
+        eventDataMapForJSON.put("data", jsonDataMap);
+        // test
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        // verify
+        assertNull(propositionItem);
+    }
+
+    @Test
+    public void test_createPropositionItem_fromEventData_NullStringContent() {
+        // setup
+        final Map<String, Object> htmlDataMap = new HashMap<>();
+        htmlDataMap.put("content", null);
+        eventDataMapForHTML.put("data", htmlDataMap);
+        // test
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForHTML);
+        // verify
+        assertNull(propositionItem);
+    }
+
+    @Test
+    public void test_createEventData_fromPropositionItem_NullContent() {
+        // test
+        PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, null);
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
+        // verify
+        assertTrue(propositionItemMap.isEmpty());
     }
 }

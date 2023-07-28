@@ -27,12 +27,13 @@ public class Surface {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "Surface";
     private static final String SURFACE_BASE = "mobileapp://";
+    private static final String UNKNOWN_SURFACE = "unknown";
     private final String uri;
 
     public Surface(final String path) {
         final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
-        final String baseUri = StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + packageName;
-        this.uri = StringUtils.isNullOrEmpty(path) || baseUri.equals("unknown") ? baseUri : baseUri + File.separator + path;
+        final String baseUri = StringUtils.isNullOrEmpty(packageName) ? UNKNOWN_SURFACE : SURFACE_BASE + packageName;
+        this.uri = StringUtils.isNullOrEmpty(path) || baseUri.equals(UNKNOWN_SURFACE) ? baseUri : baseUri + File.separator + path;
     }
 
     public Surface() {

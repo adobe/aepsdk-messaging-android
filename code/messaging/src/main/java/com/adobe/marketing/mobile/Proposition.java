@@ -12,9 +12,11 @@
 
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,8 @@ import java.util.Map;
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 public class Proposition {
+    private static final String LOG_TAG = "Messaging";
+    private static final String SELF_TAG = "Proposition";
     private static final String PAYLOAD_ID = "id";
     private static final String PAYLOAD_ITEMS = "items";
     private static final String PAYLOAD_SCOPE = "scope";
@@ -44,8 +48,8 @@ public class Proposition {
         this.scopeDetails = scopeDetails;
         this.propositionItems = propositionItems;
         for (final PropositionItem item : this.propositionItems) {
-            if (item.getProposition() == null) {
-                item.proposition = new WeakReference<>(this);
+            if (item.getPropositionReference() == null) {
+                item.proposition = new SoftReference<>(this);
             }
         }
     }
@@ -92,15 +96,22 @@ public class Proposition {
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
     static Proposition fromEventData(final Map<String, Object> eventData) {
-        final String uniqueId = DataReader.optString(eventData, PAYLOAD_ID, "");
-        final String scope = DataReader.optString(eventData, PAYLOAD_SCOPE, "");
-        final Map<String, Object> scopeDetails = DataReader.optTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS, null);
-        final List<Map<String, Object>> items = DataReader.optTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS, null);
-        final List<PropositionItem> propositionItems = new ArrayList<>();
-        for (final Map<String, Object> item : items) {
-            propositionItems.add(PropositionItem.fromEventData(item));
+        Proposition proposition = null;
+        try {
+            final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
+            final String scope = DataReader.getString(eventData, PAYLOAD_SCOPE);
+            final Map<String, Object> scopeDetails = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS);
+            final List<Map<String, Object>> items = DataReader.getTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS);
+            final List<PropositionItem> propositionItems = new ArrayList<>();
+            for (final Map<String, Object> item : items) {
+                propositionItems.add(PropositionItem.fromEventData(item));
+            }
+            proposition = new Proposition(uniqueId, scope, scopeDetails, propositionItems);
+        } catch (final DataReaderException dataReaderException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from eventdata map: %s", dataReaderException.getLocalizedMessage());
         }
-        return new Proposition(uniqueId, scope, scopeDetails, propositionItems);
+
+        return proposition;
     }
 
     /**

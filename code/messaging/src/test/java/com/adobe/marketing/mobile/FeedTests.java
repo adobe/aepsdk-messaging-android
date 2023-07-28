@@ -38,7 +38,6 @@ import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FeedTests {
-    private static final int SECONDS_IN_A_DAY = 86400;
     private static final String TITLE = "testTitle";
     private static final String BODY = "testBody";
     private static final String IMAGE_URL = "testImageUrl";
@@ -46,8 +45,6 @@ public class FeedTests {
     private static final String ACTION_TITLE = "testActionTitle";
     private static final String SURFACE_URI = "testSurfaceUri";
     private static final String FEED_NAME = "testFeedName";
-    private static final long PUBLISHED_DATE = TimeUtils.getUnixTimeInSeconds();
-    private static final long EXPIRY_DATE = PUBLISHED_DATE + SECONDS_IN_A_DAY;
     private FeedItem feedItem;
     private FeedItem feedItem2;
     private final Map<String, Object> metaMap = new HashMap<String, Object>() {
