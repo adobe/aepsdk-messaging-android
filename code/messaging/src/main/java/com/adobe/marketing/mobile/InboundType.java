@@ -24,13 +24,13 @@ enum InboundType {
     static final String FEED_EVENT_TYPE = "feed";
     static final String INAPP_EVENT_TYPE = "inapp";
 
-    final int value;
+    private final int value;
 
     InboundType(final int value) {
         this.value = value;
     }
 
-    int getValue() {
+    public int getValue() {
         return value;
     }
 
