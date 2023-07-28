@@ -48,8 +48,8 @@ public class Proposition {
         this.scopeDetails = scopeDetails;
         this.propositionItems = propositionItems;
         for (final PropositionItem item : this.propositionItems) {
-            if (item.getPropositionReference() == null) {
-                item.proposition = new SoftReference<>(this);
+            if (item.propositionReference == null) {
+                item.propositionReference = new SoftReference<>(this);
             }
         }
     }
