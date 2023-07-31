@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -124,5 +125,39 @@ public class SurfaceTests {
             assertEquals("mobileapp://com.app.appname/##invalid##", invalidSurface.getUri());
             assertFalse(invalidSurface.isValid());
         });
+    }
+
+    @Test
+    public void test_fromStringValidString() {
+        // test
+        Surface surface = Surface.fromString("mobileapp://com.app.appname/validpath");
+        // verify
+        assertNotNull(surface);
+        assertEquals("mobileapp://com.app.appname/validpath", surface.getUri());
+        assertTrue(surface.isValid());
+    }
+
+    @Test
+    public void test_fromStringInvalidString() {
+        // test
+        Surface surface = Surface.fromString("invalidstring");
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromStringWhenStringIsEmpty() {
+        // test
+        Surface surface = Surface.fromString("");
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromStringWhenStringIsNull() {
+        // test
+        Surface surface = Surface.fromString(null);
+        // verify
+        assertNull(surface);
     }
 }

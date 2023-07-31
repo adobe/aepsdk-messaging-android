@@ -64,6 +64,7 @@ public class Surface {
     }
 
     public static Surface fromString(final String path) {
-        return new Surface(true, path);
+        final Surface surface = new Surface(true, path);
+        return !surface.isValid() ? null : surface;
     }
 }
