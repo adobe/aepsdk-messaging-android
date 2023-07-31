@@ -35,8 +35,8 @@ public final class Messaging {
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-    private static final String UPDATE_MESSAGE_FEEDS = "Update message feeds";
-    private static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+    private static final String UPDATE_PROPOSITIONS = "Update propositions";
+    private static final String REFRESH_MESSAGES = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
     private static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
@@ -45,9 +45,9 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
     private static final String _XDM = "_xdm";
-    private static final String UPDATE_FEEDS = "updatefeeds";
     private static final String SURFACES = "surfaces";
-    private static final String REFRESH_MESSAGES = "refreshmessages";
+    private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
+    private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
 
@@ -175,13 +175,13 @@ public final class Messaging {
     }
 
     /**
-     * Initiates a network call to retrieve remote In-App Message definitions from Offers.
+     * Initiates a network call to retrieve remote In-App Message definitions from Adobe Journey Optimizer.
      */
     public static void refreshInAppMessages() {
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(REFRESH_MESSAGES, true);
+        eventData.put(REFRESH_MESSAGES_EVENT, true);
 
-        final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
+        final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
@@ -189,34 +189,45 @@ public final class Messaging {
         MobileCore.dispatchEvent(refreshMessageEvent);
     }
 
-    // region Message Feed api
+    // region proposition retrieval api
+
+    // TODO: implement
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
+
+    }
+
+    // TODO: implement
+    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
+
+    }
+
 
     /**
-     *  Dispatches an event to fetch message feeds for the provided surface paths from the Adobe Journey Optimizer via the Experience Edge network.
-     *  @param surfacePaths A {@code List<String>} of surface paths
+     *  Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey Optimizer via the Experience Edge network.
+     *  @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
-    public static void updateFeedsForSurfacePaths(final List<String> surfacePaths) {
+    public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
         final List<String> validSurfacePaths = new ArrayList<>();
-        for (final String surfacePath : surfacePaths) {
-            if (!StringUtils.isNullOrEmpty(surfacePath)) {
-                validSurfacePaths.add(surfacePath);
+        for (final Surface surface : surfaces) {
+            if (surface.isValid()) {
+                validSurfacePaths.add(surface.getUri());
             }
         }
 
         if (validSurfacePaths.isEmpty()) {
-            Log.warning(LOG_TAG, CLASS_NAME, "Cannot update feeds as the provided surface paths array has no valid items.");
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(UPDATE_FEEDS, true);
+        eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
         eventData.put(SURFACES, validSurfacePaths);
 
-        final Event updateFeedsEvent = new Event.Builder(UPDATE_MESSAGE_FEEDS,
+        final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
 
-        MobileCore.dispatchEvent(updateFeedsEvent);
+        MobileCore.dispatchEvent(updatePropositionsEvent);
     }
 }

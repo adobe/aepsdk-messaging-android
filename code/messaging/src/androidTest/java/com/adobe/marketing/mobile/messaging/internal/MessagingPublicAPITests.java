@@ -28,6 +28,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.messaging.BuildConfig;
 import com.adobe.marketing.mobile.util.DataReader;
 
@@ -408,17 +409,20 @@ public class MessagingPublicAPITests {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Tests for Messaging.updateFeedsForSurfacePaths API
+    // Tests for Messaging.updatePropositionsForSurfacePaths API
     // --------------------------------------------------------------------------------------------
     @Test
-    public void testUpdateFeedsForSurfacePaths() throws InterruptedException {
+    public void testUpdatePropositionsForSurfacePaths() throws InterruptedException {
         // setup
-        final List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("promos/feed2");
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(new Surface("promos/feed1"));
+        surfacePaths.add(new Surface("promos/feed2"));
+        final List<String> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
+        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
 
         // test
-        Messaging.updateFeedsForSurfacePaths(surfacePaths);
+        Messaging.updatePropositionsForSurfaces(surfacePaths);
         TestHelper.sleep(500);
 
         // verify messaging request content event
@@ -426,8 +430,8 @@ public class MessagingPublicAPITests {
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
-        assertEquals(true, messagingEventData.get("updatefeeds"));
-        assertEquals(surfacePaths, messagingEventData.get("surfaces"));
+        assertEquals(true, messagingEventData.get("updatepropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
 
         // verify edge request content event
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
@@ -445,19 +449,19 @@ public class MessagingPublicAPITests {
     }
 
     @Test
-    public void testUpdateFeedsForSurfacePaths_somePathsInvalid() throws InterruptedException {
+    public void testUpdatePropositionsForSurfacePaths_somePathsInvalid() throws InterruptedException {
         // setup
-        final List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("");
-        surfacePaths.add(null);
-        surfacePaths.add("promos/feed2");
-        final List<String> expectedSurfacePaths = new ArrayList<>(surfacePaths);
-        expectedSurfacePaths.remove("");
-        expectedSurfacePaths.remove(null);
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(new Surface("promos/feed1"));
+        surfacePaths.add(new Surface("##invalid##"));
+        surfacePaths.add(new Surface("##alsoinvalid!"));
+        surfacePaths.add(new Surface("promos/feed2"));
+        final List<String> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
+        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
 
         // test
-        Messaging.updateFeedsForSurfacePaths(surfacePaths);
+        Messaging.updatePropositionsForSurfaces(surfacePaths);
         TestHelper.sleep(500);
 
         // verify messaging request content event
@@ -465,8 +469,8 @@ public class MessagingPublicAPITests {
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
-        assertEquals(true, messagingEventData.get("updatefeeds"));
-        assertEquals(expectedSurfacePaths, messagingEventData.get("surfaces"));
+        assertEquals(true, messagingEventData.get("updatepropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
 
         // verify edge request content event
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
@@ -484,11 +488,11 @@ public class MessagingPublicAPITests {
     }
 
     @Test
-    public void testUpdateFeedsForSurfacePaths_emptyPaths() throws InterruptedException {
+    public void testUpdatePropositionsForSurfacePaths_emptyPaths() throws InterruptedException {
         // setup
-        final List<String> surfacePaths = new ArrayList<>();
+        final List<Surface> surfacePaths = new ArrayList<>();
         // test
-        Messaging.updateFeedsForSurfacePaths(surfacePaths);
+        Messaging.updatePropositionsForSurfaces(surfacePaths);
         TestHelper.sleep(500);
 
         // verify no messaging request content event

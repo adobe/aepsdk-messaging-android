@@ -31,6 +31,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -211,12 +212,12 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchPropositions_SurfacePathsProvided() {
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("promos/feed2");
+    public void test_fetchMessages_SurfacePathsProvided() {
         runUsingMockedServiceProvider(() -> {
             // setup
+            List<Surface> surfacePaths = new ArrayList<>();
+            surfacePaths.add(new Surface("promos/feed1"));
+            surfacePaths.add(new Surface("promos/feed2"));
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
@@ -237,14 +238,14 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchPropositions_SurfacePathsProvided_InvalidPathsDropped() {
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("");
-        surfacePaths.add(null);
-        surfacePaths.add("promos/feed2");
+    public void test_fetchMessages_SurfacePathsProvided_InvalidPathsDropped() {
         runUsingMockedServiceProvider(() -> {
             // setup
+            List<Surface> surfacePaths = new ArrayList<>();
+            surfacePaths.add(new Surface("promos/feed1"));
+            surfacePaths.add(new Surface("##invalid"));
+            surfacePaths.add(new Surface("alsoinvalid##"));
+            surfacePaths.add(new Surface("promos/feed2"));
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
@@ -265,10 +266,10 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchPropositions_NoSurfacePathsProvided() {
-        List<String> surfacePaths = new ArrayList<>();
+    public void test_fetchMessages_NoSurfacePathsProvided() {
         runUsingMockedServiceProvider(() -> {
             // setup
+            List<Surface> surfacePaths = new ArrayList<>();
             Map<String, Object> expectedEventData = null;
             try {
                 expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}"));
@@ -285,20 +286,6 @@ public class EdgePersonalizationResponseHandlerTests {
             // verify event data contains the application id only
             Event event = eventCaptor.getValue();
             assertEquals(expectedEventData, event.getEventData());
-        });
-    }
-
-    @Test
-    public void test_fetchPropositions_NoValidSurfacePathsProvided() {
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add(null);
-        surfacePaths.add("");
-        runUsingMockedServiceProvider(() -> {
-            // test
-            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
-
-            // verify extensionApi.dispatch not called
-            verifyNoInteractions(mockExtensionApi);
         });
     }
 

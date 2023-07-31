@@ -125,7 +125,7 @@ public class MessagingTestUtils {
      *
      * @param fileName the {@code String} name of a file located in the resource directory
      */
-    static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
+    public static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
         final Map<String, Object> eventData = new HashMap();
         final List<Map<String, Object>> items = new ArrayList<>();
         items.add(getMapFromFile(fileName));
@@ -143,7 +143,7 @@ public class MessagingTestUtils {
      * @param fileName the {@code String} name of a file located in the resource directory
      * @return a {@code Map<String, Object>} containing the file's contents
      */
-    static Map<String, Object> getMapFromFile(final String fileName) {
+    public static Map<String, Object> getMapFromFile(final String fileName) {
         try {
             final JSONObject json = new JSONObject(loadStringFromFile(fileName));
             return toMap(json);

@@ -34,6 +34,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -107,43 +108,39 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Generates and dispatches an event prompting the Edge extension to fetch in-app or feed messages.
-     * The app surface used in the request is generated using the application id of the app.
+     * Generates and dispatches an event prompting the Edge extension to fetch in-app, feed messages, or code-based experiences.
+     * The surface URI's used in the request are generated using the application id of the app.
      * If the application id is unavailable, calling this method will do nothing.
      *
-     * @param surfacePaths A {@code List<String>} of surface path strings for fetching feeds or in-app messages, if available.
+     * @param surfaces A {@code List<Surface>} of surface path strings for fetching propositions, if available.
      */
-    void fetchPropositions(final List<String> surfacePaths) {
-        final String appSurface = getAppSurface();
-        if ("unknown".equals(appSurface)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, cannot read the application package name.");
-            return;
-        }
-
-        final List<String> surfaceUri = new ArrayList<>();
-        if (surfacePaths != null && !surfacePaths.isEmpty()) {
-            for (final String surfacePath : surfacePaths) {
-                if (!StringUtils.isNullOrEmpty(surfacePath)) {
-                    final String feedPath = appSurface + File.separator + surfacePath;
-                    if (MessagingUtils.isValidSurface(feedPath)) {
-                        surfaceUri.add(feedPath);
-                    }
+    void fetchMessages(final List<Surface> surfaces) {
+        final List<String> requestedSurfaceUris = new ArrayList<>();
+        if (surfaces != null && !surfaces.isEmpty()) {
+            for (final Surface surface : surfaces) {
+                if (surface.isValid()) {
+                    requestedSurfaceUris.add(surface.getUri());
                 }
             }
 
-            if (surfaceUri.isEmpty()) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve in-app or feed messages, no valid surface paths found.");
+            if (requestedSurfaceUris.isEmpty()) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to update messages, no valid surfaces found.");
                 return;
             }
         } else {
-            surfaceUri.add(appSurface);
+            final String appSurface = getAppSurface();
+            if (appSurface.equals("unknown")) {
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to update messages, cannot read the application package name.");
+                return;
+            }
+            requestedSurfaceUris.add(appSurface);
         }
 
         // create event to be handled by the Edge extension
         final Map<String, Object> eventData = new HashMap<>();
         final Map<String, Object> messageRequestData = new HashMap<>();
         final Map<String, Object> personalizationData = new HashMap<>();
-        personalizationData.put(SURFACES, surfaceUri);
+        personalizationData.put(SURFACES, requestedSurfaceUris);
         messageRequestData.put(PERSONALIZATION, personalizationData);
         eventData.put(QUERY, messageRequestData);
 
