@@ -166,7 +166,7 @@ class MessagingUtils {
         final List<Surface> surfaces = new ArrayList<>();
 
         for (final String surfaceString : surfaceStrings) {
-            surfaces.add(new Surface(surfaceString));
+            surfaces.add(Surface.fromString(surfaceString));
         }
         return surfaces;
     }

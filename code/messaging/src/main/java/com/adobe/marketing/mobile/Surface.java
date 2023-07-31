@@ -31,13 +31,21 @@ public class Surface {
     private final String uri;
 
     public Surface(final String path) {
-        final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
-        final String baseUri = StringUtils.isNullOrEmpty(packageName) ? UNKNOWN_SURFACE : SURFACE_BASE + packageName;
-        this.uri = StringUtils.isNullOrEmpty(path) || baseUri.equals(UNKNOWN_SURFACE) ? baseUri : baseUri + File.separator + path;
+        this(false, path);
     }
 
     public Surface() {
-        this(null);
+        this(false, null);
+    }
+
+    private Surface(final boolean isFullPathString, final String path) {
+        if (!isFullPathString) {
+            final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
+            final String baseUri = StringUtils.isNullOrEmpty(packageName) ? UNKNOWN_SURFACE : SURFACE_BASE + packageName;
+            this.uri = StringUtils.isNullOrEmpty(path) || baseUri.equals(UNKNOWN_SURFACE) ? baseUri : baseUri + File.separator + path;
+        } else {
+            this.uri = StringUtils.isNullOrEmpty(path) ? UNKNOWN_SURFACE : path;
+        }
     }
 
     public String getUri() {
@@ -53,5 +61,9 @@ public class Surface {
         }
 
         return this.uri.startsWith(SURFACE_BASE);
+    }
+
+    public static Surface fromString(final String path) {
+        return new Surface(true, path);
     }
 }

@@ -830,8 +830,8 @@ public class MessagingExtensionTests {
     public void test_processEvent_updatePropositionsEvent() {
         ArgumentCaptor<List<Surface>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
         List<String> surfaces = new ArrayList<>();
-        surfaces.add("promos/feed1");
-        surfaces.add("promos/feed2");
+        surfaces.add("mobileapp://mockPackageName/promos/feed1");
+        surfaces.add("mobileapp://mockPackageName/promos/feed2");
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
