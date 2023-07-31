@@ -35,8 +35,8 @@ public final class Messaging {
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
-    private static final String UPDATE_PROPOSITIONS_NAME = "Update propositions";
-    private static final String REFRESH_MESSAGES_EVENT_NAME = "Refresh in-app messages";
+    private static final String UPDATE_PROPOSITIONS = "Update propositions";
+    private static final String REFRESH_MESSAGES = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
     private static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
@@ -46,8 +46,8 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
     private static final String _XDM = "_xdm";
     private static final String SURFACES = "surfaces";
-    private static final String UPDATE_PROPOSITIONS_EVENT_KEY = "updatepropositions";
-    private static final String REFRESH_MESSAGES_EVENT_KEY = "refreshmessages";
+    private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
+    private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
 
@@ -179,9 +179,9 @@ public final class Messaging {
      */
     public static void refreshInAppMessages() {
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(REFRESH_MESSAGES_EVENT_KEY, true);
+        eventData.put(REFRESH_MESSAGES_EVENT, true);
 
-        final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES_EVENT_NAME,
+        final Event refreshMessageEvent = new Event.Builder(REFRESH_MESSAGES,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
@@ -192,12 +192,12 @@ public final class Messaging {
     // region proposition retrieval api
 
     // TODO: implement
-    public static void setPropositionsHandler(final AdobeCallback<Map<Surface, Proposition>> callback) {
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
 
     }
 
     // TODO: implement
-    public static void getPropositionsForSurfaces(final List<String> surfaces, final AdobeCallback<Map<Surface, Proposition>> callback) {
+    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
 
     }
 
@@ -206,7 +206,7 @@ public final class Messaging {
      *  Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey Optimizer via the Experience Edge network.
      *  @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
-    public static void updatePropositionsForSurfaces(final List<Surface> surfaces) {
+    public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
         final List<String> validSurfacePaths = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
@@ -220,10 +220,10 @@ public final class Messaging {
         }
 
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(UPDATE_PROPOSITIONS_EVENT_KEY, true);
+        eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
         eventData.put(SURFACES, validSurfacePaths);
 
-        final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS_NAME,
+        final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .build();
