@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -758,7 +759,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
                 Event capturedEvent = eventArgumentCaptor.getValue();
                 Feed returnedFeed = Feed.fromEventData(capturedEvent.getEventData());
-                assertEquals("mobileapp://mock_applicationId", returnedFeed.getSurfaceUri());
+                assertEquals("mobileapp://mockPackageName", returnedFeed.getSurfaceUri());
                 for(int i = 0; i < returnedFeed.getItems().size(); i++) {
                     FeedItem feedItem = returnedFeed.getItems().get(i);
                     assertEquals("https://someimage" + i + ".png", feedItem.getImageUrl());

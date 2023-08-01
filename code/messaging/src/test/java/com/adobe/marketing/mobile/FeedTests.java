@@ -126,14 +126,14 @@ public class FeedTests {
     }
 
     @Test
-    public void testCreateFeed_NoSurfaceUri() {
+    public void testCreateFeed_NullSurfaceUri() {
         // test
         runUsingMockedServiceProvider(() -> {
             Feed feed = new Feed(null, feedItems);
 
             // verify
             assertNotNull(feed);
-            assertEquals("unknown", feed.getSurfaceUri());
+            assertEquals(null, feed.getSurfaceUri());
             assertEquals(feedItems, feed.getItems());
         });
     }
@@ -146,7 +146,7 @@ public class FeedTests {
 
             // verify
             assertNotNull(feed);
-            assertEquals("unknown", feed.getSurfaceUri());
+            assertEquals("", feed.getSurfaceUri());
         });
     }
 }

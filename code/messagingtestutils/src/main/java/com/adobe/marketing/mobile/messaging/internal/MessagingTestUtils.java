@@ -513,7 +513,7 @@ public class MessagingTestUtils {
 
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://mock_applicationId");
+            messagePayload.put("scope", "mobileapp://mockPackageName");
         }
 
         if (config.nonMatchingAppSurfaceInPayload) {
