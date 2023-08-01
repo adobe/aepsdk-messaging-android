@@ -20,7 +20,6 @@ import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.util.TimeUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -72,7 +71,7 @@ public class FeedTests {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
-            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("com.app.appname");
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
             runnable.run();
         }
@@ -134,8 +133,20 @@ public class FeedTests {
 
             // verify
             assertNotNull(feed);
-            assertEquals(null, feed.getSurfaceUri());
+            assertEquals("unknown", feed.getSurfaceUri());
             assertEquals(feedItems, feed.getItems());
+        });
+    }
+
+    @Test
+    public void testCreateFeed_EmptySurfaceUri() {
+        // test
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed("", feedItems);
+
+            // verify
+            assertNotNull(feed);
+            assertEquals("unknown", feed.getSurfaceUri());
         });
     }
 }

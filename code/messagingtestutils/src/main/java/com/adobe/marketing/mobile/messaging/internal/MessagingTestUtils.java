@@ -346,7 +346,7 @@ public class MessagingTestUtils {
         } else {
             messagePayload.put("scopeDetails", scopeDetails);
         }
-        messagePayload.put("scope", "mobileapp://mock_applicationId");
+        messagePayload.put("scope", "mobileapp://mockPackageName");
         messagePayload.put("id", "testResponseId");
         return PropositionInfo.create(messagePayload);
     }
@@ -386,10 +386,8 @@ public class MessagingTestUtils {
 
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://mock_applicationId");
-        }
-
-        if (config.nonMatchingAppSurfaceInPayload) {
+            messagePayload.put("scope", "mobileapp://mockPackageName");
+        } else if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }
 
