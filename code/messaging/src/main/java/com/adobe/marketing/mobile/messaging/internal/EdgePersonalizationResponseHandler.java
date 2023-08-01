@@ -49,7 +49,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +105,7 @@ class EdgePersonalizationResponseHandler {
      * The surface URI's used in the request are generated using the application id of the app.
      * If the application id is unavailable, calling this method will do nothing.
      *
-     * @param surfaces A {@code List<Surface>} of surface path strings for fetching propositions, if available.
+     * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
     void fetchMessages(final List<Surface> surfaces) {
         final List<String> requestedSurfaceUris = new ArrayList<>();

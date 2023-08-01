@@ -14,7 +14,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstan
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -380,9 +379,11 @@ public class MessagingTests {
             assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
             List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
             assertEquals(2, capturedSurfaces.size());
-            for (String surface : capturedSurfaces) {
-                assertTrue(surface.equals("mobileapp://mockPackageName/promos/feed1") || surface.equals("mobileapp://mockPackageName/promos/feed2"));
-            }
+            // need to copy the list as capturedSurfaces is unmodifiable
+            List<String> sortedList = new ArrayList<>(capturedSurfaces);
+            sortedList.sort(null);
+            assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
+            assertEquals("mobileapp://mockPackageName/promos/feed2", sortedList.get(1));
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
             assertEquals(MessagingTestConstants.EventName.UPDATE_PROPOSITIONS, event.getName());
@@ -412,9 +413,11 @@ public class MessagingTests {
             assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
             List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
             assertEquals(2, capturedSurfaces.size());
-            for (String surface : capturedSurfaces) {
-                assertTrue(surface.equals("mobileapp://mockPackageName/promos/feed1") || surface.equals("mobileapp://mockPackageName/promos/feed3"));
-            }
+            // need to copy the list as capturedSurfaces is unmodifiable
+            List<String> sortedList = new ArrayList<>(capturedSurfaces);
+            sortedList.sort(null);
+            assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
+            assertEquals("mobileapp://mockPackageName/promos/feed3", sortedList.get(1));
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
             assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
             assertEquals(MessagingTestConstants.EventName.UPDATE_PROPOSITIONS, event.getName());

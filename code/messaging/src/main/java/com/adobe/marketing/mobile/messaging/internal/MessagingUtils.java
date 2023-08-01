@@ -162,11 +162,15 @@ class MessagingUtils {
         if (event == null || event.getEventData() == null) {
             return null;
         }
-        final List<String> surfaceStrings = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
-        final List<Surface> surfaces = new ArrayList<>();
+        final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        for (final String surfaceString : surfaceStrings) {
-            surfaces.add(Surface.fromString(surfaceString));
+        if (surfaceUris == null || surfaceUris.isEmpty()) {
+            return null;
+        }
+
+        final List<Surface> surfaces = new ArrayList<>();
+        for (final String surfaceUri : surfaceUris) {
+            surfaces.add(Surface.fromUriString(surfaceUri));
         }
         return surfaces;
     }

@@ -21,7 +21,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -128,7 +127,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockServiceProvider.getNetworkService()).thenReturn(mockNetworkService);
 
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
-            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mock_applicationId");
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
             edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
@@ -145,7 +144,7 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mockPackageName\"]}}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -185,7 +184,7 @@ public class EdgePersonalizationResponseHandlerTests {
             surfacePaths.add(new Surface("promos/feed2"));
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mockPackageName/promos/feed1\", \"mobileapp://mockPackageName/promos/feed2\"]}}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -213,7 +212,7 @@ public class EdgePersonalizationResponseHandlerTests {
             surfacePaths.add(new Surface("promos/feed2"));
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId/promos/feed1\", \"mobileapp://mock_applicationId/promos/feed2\"]}}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mockPackageName/promos/feed1\", \"mobileapp://mockPackageName/promos/feed2\"]}}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -237,7 +236,7 @@ public class EdgePersonalizationResponseHandlerTests {
             List<Surface> surfacePaths = new ArrayList<>();
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mock_applicationId\"]}}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"personalization.request\"},\"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mockPackageName\"]}}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }

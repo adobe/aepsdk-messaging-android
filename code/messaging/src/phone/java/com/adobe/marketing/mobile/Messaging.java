@@ -192,12 +192,12 @@ public final class Messaging {
     // region proposition retrieval api
 
     // TODO: implement
-    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
 
     }
 
     // TODO: implement
-    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, Proposition>> callback) {
+    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
 
     }
 
@@ -207,6 +207,11 @@ public final class Messaging {
      *  @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
+        if (surfaces == null || surfaces.isEmpty()) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces is null or empty.");
+            return;
+        }
+
         final List<String> validSurfacePaths = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
