@@ -873,7 +873,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_fetchPropositionsEvent() {
+    public void test_processEvent_fetchMessagesEvent() {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
@@ -887,7 +887,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchPropositions(null);
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(null);
         });
     }
 

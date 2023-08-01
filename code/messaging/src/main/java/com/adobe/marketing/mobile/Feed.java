@@ -30,7 +30,7 @@ public class Feed {
     private static final String MAP_ITEMS_KEY = "items";
 
     // Identification for this feed, represented by the AJO Surface URI used to retrieve it
-    private final Surface surface;
+    private final String surface;
 
     // List of FeedItem that are members of this Feed
     private final List<FeedItem> items;
@@ -42,7 +42,7 @@ public class Feed {
      * @param items {@link List<FeedItem>} that are members of this {@link Feed}
      */
     public Feed(final String surfaceUri, final List<FeedItem> items) {
-        this.surface = new Surface(surfaceUri);
+        this.surface = surfaceUri;
         this.items = items;
     }
 
@@ -52,7 +52,7 @@ public class Feed {
      * @return {@link String} containing the {@link Feed} surface uri.
      */
     public String getSurfaceUri() {
-        return surface.getUri();
+        return surface;
     }
 
     /**

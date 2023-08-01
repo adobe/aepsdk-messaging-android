@@ -43,7 +43,7 @@ public class FeedTests {
     private static final String IMAGE_URL = "testImageUrl";
     private static final String ACTION_URL = "testActionUrl";
     private static final String ACTION_TITLE = "testActionTitle";
-    private static final String SURFACE_URI = "testSurfaceUri";
+    private static final String SURFACE_URI = "mobileapp://com.app.appname/testSurfaceUri";
     private static final String FEED_NAME = "testFeedName";
     private FeedItem feedItem;
     private FeedItem feedItem2;
@@ -108,7 +108,7 @@ public class FeedTests {
 
             // verify
             assertNotNull(feed);
-            assertEquals("mobileapp://com.app.appname/testSurfaceUri", feed.getSurfaceUri());
+            assertEquals(SURFACE_URI, feed.getSurfaceUri());
             assertEquals(feedItems, feed.getItems());
         });
     }
@@ -121,7 +121,7 @@ public class FeedTests {
 
             // verify
             assertNotNull(feed);
-            assertEquals("mobileapp://com.app.appname/testSurfaceUri", feed.getSurfaceUri());
+            assertEquals(SURFACE_URI, feed.getSurfaceUri());
             assertNull(feed.getItems());
         });
     }
@@ -134,7 +134,7 @@ public class FeedTests {
 
             // verify
             assertNotNull(feed);
-            assertEquals("mobileapp://com.app.appname", feed.getSurfaceUri());
+            assertEquals(null, feed.getSurfaceUri());
             assertEquals(feedItems, feed.getItems());
         });
     }

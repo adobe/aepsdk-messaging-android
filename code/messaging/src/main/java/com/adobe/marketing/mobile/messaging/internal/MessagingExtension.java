@@ -174,7 +174,7 @@ public final class MessagingExtension extends Extension {
 
         // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.fetchPropositions(null);
+            edgePersonalizationResponseHandler.fetchMessages(null);
             initialMessageFetchComplete = true;
         }
 

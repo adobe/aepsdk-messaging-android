@@ -172,10 +172,10 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     // ========================================================================================
-    // fetchPropositions
+    // fetchMessages
     // ========================================================================================
     @Test
-    public void test_fetchPropositions_appIdPresent() {
+    public void test_fetchMessages_appIdPresent() {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> expectedEventData = null;
@@ -185,7 +185,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchPropositions(null);
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -198,13 +198,13 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_fetchPropositions_emptyAppId() {
+    public void test_fetchMessages_emptyAppId() {
         runUsingMockedServiceProvider(() -> {
             // setup
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
             // test
-            edgePersonalizationResponseHandler.fetchPropositions(null);
+            edgePersonalizationResponseHandler.fetchMessages(null);
 
             // verify extensionApi.dispatch not called
             verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -225,7 +225,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -253,7 +253,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -277,7 +277,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 fail(e.getMessage());
             }
             // test
-            edgePersonalizationResponseHandler.fetchPropositions(surfacePaths);
+            edgePersonalizationResponseHandler.fetchMessages(surfacePaths);
 
             // verify extensionApi.dispatch called
             ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);

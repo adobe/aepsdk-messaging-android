@@ -431,6 +431,7 @@ public class MessagingTestUtils {
                         "      \"detail\": {\n" +
                         "        \"type\": \"ajoFeedItem\",\n" +
                         "        \"expiryDate\": 1712190456,\n" +
+                        "        \"publishedDate\": 1680568056,\n" +
                         "        \"meta\": {\n" +
                         "          \"feedName\": \"testFeed\",\n" +
                         "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
@@ -439,7 +440,6 @@ public class MessagingTestUtils {
                         "          \"imageUrl\": \"https://someimage"+ count + ".png\",\n" +
                         "          \"actionTitle\": \"testTitle\",\n" +
                         "          \"actionUrl\": \"https://someurl.com\",\n" +
-                        "          \"publishedDate\": 1680568056,\n" +
                         "          \"body\": \"testBody\",\n" +
                         "          \"title\": \"testTitle\"\n" +
                         "        },\n" +

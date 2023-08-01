@@ -161,7 +161,7 @@ class EdgePersonalizationResponseHandler {
 
         // used for ensuring that the messaging extension is responding to the correct handle
         messagesRequestEventId = event.getUniqueIdentifier();
-        requestedSurfacesForEventId.put(messagesRequestEventId, surfaceUri);
+        requestedSurfacesForEventId.put(messagesRequestEventId, requestedSurfaceUris);
 
         // send event
         Log.debug(LOG_TAG, SELF_TAG, "Dispatching an edge event to retrieve in-app or feed message definitions.");
