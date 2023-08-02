@@ -11,8 +11,6 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import com.adobe.marketing.mobile.*;
-import com.adobe.marketing.mobile.messaging.internal.PropositionInfo;
-import com.adobe.marketing.mobile.messaging.internal.PropositionPayload;
 import com.adobe.marketing.mobile.services.*;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
@@ -40,7 +38,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -354,7 +353,7 @@ public class MessagingTestUtils {
         } else {
             messagePayload.put("scopeDetails", scopeDetails);
         }
-        messagePayload.put("scope", "mobileapp://mock_applicationId");
+        messagePayload.put("scope", "mobileapp://mockPackageName");
         messagePayload.put("id", "testResponseId");
         return PropositionInfo.create(messagePayload);
     }
@@ -394,7 +393,7 @@ public class MessagingTestUtils {
 
         // scope modification
         if (!config.noValidAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://mock_applicationId");
+            messagePayload.put("scope", "mobileapp://mockPackageName");
         } else if (config.nonMatchingAppSurfaceInPayload) {
             messagePayload.put("scope", "mobileapp://invalidId");
         }

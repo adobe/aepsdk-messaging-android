@@ -39,6 +39,7 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.SharedStateStatus;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -825,17 +826,16 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_updateFeedsForSurfacePathsEvent() {
-        ArgumentCaptor<List<String>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
-        List<String> surfacePaths = new ArrayList<>();
-        surfacePaths.add("promos/feed1");
-        surfacePaths.add("promos/feed2");
-
+    public void test_processEvent_updatePropositionsEvent() {
+        ArgumentCaptor<List<Surface>> listArgumentCaptor = ArgumentCaptor.forClass(List.class);
+        List<String> surfaces = new ArrayList<>();
+        surfaces.add("mobileapp://mockPackageName/promos/feed1");
+        surfaces.add("mobileapp://mockPackageName/promos/feed2");
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, Object> eventData = new HashMap<>();
-            eventData.put("updatefeeds", true);
-            eventData.put("surfaces", surfacePaths);
+            eventData.put("updatepropositions", true);
+            eventData.put("surfaces", surfaces);
             Event mockEvent = mock(Event.class);
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
@@ -846,7 +846,14 @@ public class MessagingExtensionTests {
 
             // verify
             verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
-            assertEquals(surfacePaths, listArgumentCaptor.getValue());
+            List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
+            assertEquals(2, capturedSurfaces.size());
+            List<String> sortedList = new ArrayList<>();
+            sortedList.add(capturedSurfaces.get(0).getUri());
+            sortedList.add(capturedSurfaces.get(1).getUri());
+            sortedList.sort(null);
+            assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
+            assertEquals("mobileapp://mockPackageName/promos/feed2", sortedList.get(1));
         });
     }
 
@@ -864,7 +871,7 @@ public class MessagingExtensionTests {
             }
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"interact\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"confirm\",\"eventType\":\"interact\"}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionInteract\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"interact\":1},\"propositionAction\":{\"id\":\"confirm\",\"label\":\"confirm\"},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mockPackageName\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"confirm\",\"eventType\":\"interact\"}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -916,7 +923,7 @@ public class MessagingExtensionTests {
             }
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"dismiss\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"dismiss\"}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDismiss\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"dismiss\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mockPackageName\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"dismiss\"}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -950,7 +957,7 @@ public class MessagingExtensionTests {
             }
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"display\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"display\"}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionDisplay\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"display\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mockPackageName\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"display\"}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }
@@ -984,7 +991,7 @@ public class MessagingExtensionTests {
             }
             Map<String, Object> expectedEventData = null;
             try {
-                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"trigger\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mock_applicationId\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"trigger\"}}"));
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"eventType\":\"decisioning.propositionTrigger\",\"_experience\":{\"decisioning\":{\"propositionEventType\":{\"trigger\":1},\"propositions\":[{\"scopeDetails\":{\"scopeDetails\":{\"cjmEvent\":{\"messageExecution\":{\"messageExecutionID\":\"testExecutionId\"}}}},\"scope\":\"mobileapp://mockPackageName\",\"id\":\"testResponseId\"}]}}},\"iam\":{\"id\":\"\",\"action\":\"\",\"eventType\":\"trigger\"}}"));
             } catch (JSONException e) {
                 fail(e.getMessage());
             }

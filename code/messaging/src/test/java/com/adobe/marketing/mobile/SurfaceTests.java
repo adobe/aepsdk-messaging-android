@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -47,56 +48,56 @@ public class SurfaceTests {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
-            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("com.app.appname");
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
             runnable.run();
         }
     }
 
     @Test
-    public void test_createValidSurfaceWithPath() {
+    public void test_createSurfaceWithPath() {
         runUsingMockedServiceProvider(() -> {
             // test
             Surface surface = new Surface("surfacewithfeeds");
             // verify
             assertNotNull(surface);
-            assertEquals("mobileapp://com.app.appname/surfacewithfeeds", surface.getUri());
+            assertEquals("mobileapp://mockPackageName/surfacewithfeeds", surface.getUri());
             assertTrue(surface.isValid());
         });
     }
 
     @Test
-    public void test_createValidSurfaceWithEmptyPath() {
+    public void test_createSurfaceWithEmptyPath() {
         runUsingMockedServiceProvider(() -> {
             // test
             Surface surface = new Surface("");
             // verify
             assertNotNull(surface);
-            assertEquals("mobileapp://com.app.appname", surface.getUri());
-            assertTrue(surface.isValid());
+            assertEquals("unknown", surface.getUri());
+            assertFalse(surface.isValid());
         });
     }
 
     @Test
-    public void test_createValidSurfaceWithNullPath() {
+    public void test_createSurfaceWithNullPath() {
         runUsingMockedServiceProvider(() -> {
             // test
             Surface surface = new Surface(null);
             // verify
             assertNotNull(surface);
-            assertEquals("mobileapp://com.app.appname", surface.getUri());
-            assertTrue(surface.isValid());
+            assertEquals("unknown", surface.getUri());
+            assertFalse(surface.isValid());
         });
     }
 
     @Test
-    public void test_createValidSurfaceWithNoArguments() {
+    public void test_createSurfaceWithNoArguments() {
         runUsingMockedServiceProvider(() -> {
             // test
             Surface surface = new Surface();
             // verify
             assertNotNull(surface);
-            assertEquals("mobileapp://com.app.appname", surface.getUri());
+            assertEquals("mobileapp://mockPackageName", surface.getUri());
             assertTrue(surface.isValid());
         });
     }
@@ -121,8 +122,42 @@ public class SurfaceTests {
             Surface invalidSurface = new Surface("##invalid##");
             // verify
             assertNotNull(invalidSurface);
-            assertEquals("mobileapp://com.app.appname/##invalid##", invalidSurface.getUri());
+            assertEquals("mobileapp://mockPackageName/##invalid##", invalidSurface.getUri());
             assertFalse(invalidSurface.isValid());
         });
+    }
+
+    @Test
+    public void test_fromStringValidString() {
+        // test
+        Surface surface = Surface.fromUriString("mobileapp://mockPackageName/validpath");
+        // verify
+        assertNotNull(surface);
+        assertEquals("mobileapp://mockPackageName/validpath", surface.getUri());
+        assertTrue(surface.isValid());
+    }
+
+    @Test
+    public void test_fromStringInvalidString() {
+        // test
+        Surface surface = Surface.fromUriString("invalidstring");
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromStringWhenStringIsEmpty() {
+        // test
+        Surface surface = Surface.fromUriString("");
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromStringWhenStringIsNull() {
+        // test
+        Surface surface = Surface.fromUriString(null);
+        // verify
+        assertNull(surface);
     }
 }
