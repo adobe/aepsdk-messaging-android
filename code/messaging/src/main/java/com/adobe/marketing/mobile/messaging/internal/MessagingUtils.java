@@ -26,6 +26,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
+    private final static String SELF_TAG = "MessagingUtils";
 
     static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) throws Exception {
         final List<PropositionPayload> propositionPayloads = new ArrayList<>();
@@ -165,6 +167,7 @@ class MessagingUtils {
         final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
         if (surfaceUris == null || surfaceUris.isEmpty()) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 

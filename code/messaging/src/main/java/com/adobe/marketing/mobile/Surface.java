@@ -62,8 +62,8 @@ public class Surface {
         return this.uri.startsWith(SURFACE_BASE);
     }
 
-    public static Surface fromUriString(final String path) {
-        final Surface surface = new Surface(true, path);
+    public static Surface fromUriString(final String uri) {
+        final Surface surface = new Surface(true, uri);
         return !surface.isValid() ? null : surface;
     }
 }
