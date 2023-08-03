@@ -13,6 +13,10 @@
 package com.adobe.marketing.mobile;
 
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -72,7 +76,8 @@ public class MessagingPushPayload {
     private String body;
     private String sound;
     private int badgeCount;
-    private int notificationPriority;
+    private int notificationPriority = Notification.PRIORITY_DEFAULT;
+    private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
     private String channelId;
     private String icon;
     private String imageUrl;
@@ -129,6 +134,9 @@ public class MessagingPushPayload {
 
     public int getNotificationPriority() {
         return notificationPriority;
+    }
+    public int getNotificationImportance() {
+        return notificationImportance;
     }
 
     public String getChannelId() {
@@ -190,7 +198,11 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
         }
 
-        this.notificationPriority = getNotificationPriorityFromString(data.get(NOTIFICATION_PRIORITY));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            this.notificationImportance = getNotificationImportanceFromString(data.get(NOTIFICATION_PRIORITY));
+        } else {
+            this.notificationPriority = getNotificationPriorityFromString(data.get(NOTIFICATION_PRIORITY));
+        }
         this.actionType = getActionTypeFromString(data.get(ACTION_TYPE));
         this.actionButtons = getActionButtonsFromString(data.get(ACTION_BUTTONS));
     }
@@ -210,6 +222,25 @@ public class MessagingPushPayload {
             default:
                 return Notification.PRIORITY_DEFAULT;
         }
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private int getNotificationImportanceFromString(final String priority) {
+        if (priority == null) return Notification.PRIORITY_DEFAULT;
+            switch (priority) {
+                case NotificationPriorities.PRIORITY_MIN:
+                    return NotificationManager.IMPORTANCE_MIN;
+                case NotificationPriorities.PRIORITY_LOW:
+                    return NotificationManager.IMPORTANCE_LOW;
+                case NotificationPriorities.PRIORITY_HIGH:
+                    return NotificationManager.IMPORTANCE_HIGH;
+                case NotificationPriorities.PRIORITY_MAX:
+                    return NotificationManager.IMPORTANCE_MAX;
+                case NotificationPriorities.PRIORITY_DEFAULT:
+                default:
+                    return NotificationManager.IMPORTANCE_NONE;
+            }
     }
 
     private ActionType getActionTypeFromString(final String type) {
@@ -305,5 +336,11 @@ public class MessagingPushPayload {
         public ActionType getType() {
             return type;
         }
+    }
+
+    // Check if the push notification is silent push notification.
+    // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to talk with herald team)
+    public boolean isSilentPushMessage() {
+        return data != null && title == null && body == null;
     }
 }
