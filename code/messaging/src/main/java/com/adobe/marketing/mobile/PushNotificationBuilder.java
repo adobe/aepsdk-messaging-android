@@ -69,21 +69,17 @@ class PushNotificationBuilder {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
-        builder.setContentTitle(payload.getTitle());
-//                .setContentText(payload.getBody())
-//                .setStyle(new NotificationCompat.BigTextStyle().bigText(payload.getBody()))
-//                .setPriority(payload.getNotificationPriority())
-//                .setNumber(payload.getBadgeCount())
-//                .setAutoCancel(true);
-//                .setLargeIcon(utils.download(payload.getImageUrl()))
-//                .setPriority(payload.getNotificationPriority())
-//                .setNumber(payload.getBadgeCount())
-//                .setAutoCancel(true);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setContentTitle(payload.getTitle())
+                .setContentText(payload.getBody())
+                .setLargeIcon(utils.download(payload.getImageUrl()))
+                .setPriority(payload.getNotificationPriority())
+                .setNumber(payload.getBadgeCount())
+                .setAutoCancel(true);
 
-//        setSmallIcon(builder); // Small Icon must be present, otherwise the notification will not be displayed.
-//        addActionButtons(builder); // Add action buttons if any
-//        setSound(builder);
+        setSmallIcon(builder); // Small Icon must be present, otherwise the notification will not be displayed.
+        addActionButtons(builder); // Add action buttons if any
+        setSound(builder);
 
         return builder.build();
     }
