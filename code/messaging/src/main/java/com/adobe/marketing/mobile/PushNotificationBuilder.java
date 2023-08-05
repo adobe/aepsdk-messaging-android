@@ -16,6 +16,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -26,7 +27,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 class PushNotificationBuilder {
 
     private static final String SELF_TAG = "PushNotificationBuilder";
-    private static String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel2";
+    private static String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel";
     // When no channel name is received from the push notification, this default channel name is used.
     // This will appear in the notification settings for the app.
     private static String DEFAULT_CHANNEL_NAME = "General";
@@ -69,14 +70,14 @@ class PushNotificationBuilder {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-                .setContentTitle(payload.getTitle())
-                .setContentText(payload.getBody())
-                .setLargeIcon(utils.download(payload.getImageUrl()))
-                .setPriority(payload.getNotificationPriority())
-                .setNumber(payload.getBadgeCount())
-                .setAutoCancel(true);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
+        builder.setContentTitle(payload.getTitle());
+        builder.setContentText(payload.getBody());
+        builder.setNumber(payload.getBadgeCount());
+        builder.setPriority(payload.getNotificationPriority());
+        builder.setAutoCancel(true);
 
+        setLargeIcon(builder);
         setSmallIcon(builder); // Small Icon must be present, otherwise the notification will not be displayed.
         addActionButtons(builder); // Add action buttons if any
         setSound(builder);
@@ -169,6 +170,25 @@ class PushNotificationBuilder {
             notificationBuilder.setSound(utils.getSoundUriForResourceName(payload.getSound()));
         }
         notificationBuilder.setDefaults(Notification.DEFAULT_ALL);
+    }
+
+    /**
+     * Sets the large icon for the notification.
+     * If a large icon url is received from the payload, the image is downloaded and the notification style is set to BigPictureStyle.
+     * If large icon url is not received from the payload, default style is used for the notification.
+     * @param notificationBuilder the notification builder
+     */
+    private void setLargeIcon(NotificationCompat.Builder notificationBuilder) {
+        if (!StringUtils.isNullOrEmpty(payload.getImageUrl())) {
+            Bitmap bitmap = utils.download(payload.getImageUrl());
+            if (bitmap != null) {
+                notificationBuilder.setLargeIcon(bitmap);
+                NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle();
+                bigPictureStyle.bigLargeIcon(bitmap);
+                notificationBuilder.setStyle(bigPictureStyle);
+            }
+
+        }
     }
 
     private boolean isValidIcon(int icon) {
