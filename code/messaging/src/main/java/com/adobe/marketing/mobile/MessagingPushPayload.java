@@ -12,6 +12,8 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingPushConstants.LOG_TAG;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.os.Build;
@@ -36,20 +38,7 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
-    static final String LOG_TAG = "Messaging";
     static final String SELF_TAG = "MessagingPushPayload";
-    static final String TITLE = "adb_title";
-    static final String BODY = "adb_body";
-    static final String SOUND = "adb_sound";
-    static final String NOTIFICATION_COUNT = "adb_n_count";
-    static final String NOTIFICATION_PRIORITY = "adb_n_priority";
-    static final String CHANNEL_ID = "adb_channel_id";
-    static final String ICON = "adb_icon";
-    static final String IMAGE_URL = "adb_image";
-    static final String ACTION_TYPE = "adb_a_type";
-    static final String ACTION_URI = "adb_uri";
-    static final String ACTION_BUTTONS = "adb_act";
-
     static final class NotificationPriorities {
         static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
         static final String PRIORITY_MIN = "PRIORITY_MIN";
@@ -181,16 +170,16 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
             return;
         }
-        this.title = data.get(TITLE);
-        this.body = data.get(BODY);
-        this.sound = data.get(SOUND);
-        this.channelId = data.get(CHANNEL_ID);
-        this.icon = data.get(ICON);
-        this.actionUri = data.get(ACTION_URI);
-        this.imageUrl = data.get(IMAGE_URL);
+        this.title = data.get(MessagingPushConstants.PayloadKeys.TITLE);
+        this.body = data.get(MessagingPushConstants.PayloadKeys.BODY);
+        this.sound = data.get(MessagingPushConstants.PayloadKeys.SOUND);
+        this.channelId = data.get(MessagingPushConstants.PayloadKeys.CHANNEL_ID);
+        this.icon = data.get(MessagingPushConstants.PayloadKeys.ICON);
+        this.actionUri = data.get(MessagingPushConstants.PayloadKeys.ACTION_URI);
+        this.imageUrl = data.get(MessagingPushConstants.PayloadKeys.IMAGE_URL);
 
         try {
-            String count = data.get(NOTIFICATION_COUNT);
+            String count = data.get(MessagingPushConstants.PayloadKeys.BADGE_NUMBER);
             if (count != null) {
                 this.badgeCount = Integer.parseInt(count);
             }
@@ -199,12 +188,12 @@ public class MessagingPushPayload {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            this.notificationImportance = getNotificationImportanceFromString(data.get(NOTIFICATION_PRIORITY));
+            this.notificationImportance = getNotificationImportanceFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
         } else {
-            this.notificationPriority = getNotificationPriorityFromString(data.get(NOTIFICATION_PRIORITY));
+            this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
         }
-        this.actionType = getActionTypeFromString(data.get(ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(ACTION_BUTTONS));
+        this.actionType = getActionTypeFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_TYPE));
+        this.actionButtons = getActionButtonsFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {

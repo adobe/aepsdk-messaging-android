@@ -14,8 +14,6 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,14 +24,12 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -54,18 +50,18 @@ public class PushNotificationBuilderTests {
     @Mock
     Context context;
     @Mock
-    PushNotificationBuilderUtils utils;
+    MessagingPushUtils utils;
     @Mock
     MessagingPushPayload payload;
     @Mock
     Notification notification;
 
-    PushNotificationBuilder builder;
+    MessagingPushBuilder builder;
     MockedConstruction<NotificationCompat.Builder> mockBuilderConstructor;
 
     @Before
     public void before() {
-        builder = new PushNotificationBuilder(payload, context, utils);
+        builder = new MessagingPushBuilder(payload, context, utils);
         mockBuilderConstructor = mockConstruction(NotificationCompat.Builder.class, (mock, context) -> {
             when(mock.build()).thenReturn(notification);
         });

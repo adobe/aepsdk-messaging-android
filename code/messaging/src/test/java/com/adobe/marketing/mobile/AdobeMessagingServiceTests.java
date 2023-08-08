@@ -54,7 +54,7 @@ public class AdobeMessagingServiceTests {
     Notification notification;
     MockedStatic<MobileCore> mobileCore;
     MockedStatic<NotificationManagerCompat> notificationManagerCompat;
-    MockedConstruction<PushNotificationBuilder> builderConstructor;
+    MockedConstruction<MessagingPushBuilder> builderConstructor;
 
     @Before
     public void before() {
@@ -68,7 +68,7 @@ public class AdobeMessagingServiceTests {
         mobileCore = mockStatic(MobileCore.class);
 
         // Mock PushNotificationBuilder
-        builderConstructor = mockConstruction(PushNotificationBuilder.class, (mock, context) -> {
+        builderConstructor = mockConstruction(MessagingPushBuilder.class, (mock, context) -> {
             when(mock.build()).thenReturn(notification);
         });
 

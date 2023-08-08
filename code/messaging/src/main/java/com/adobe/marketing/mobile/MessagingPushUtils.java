@@ -18,34 +18,30 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-
 import androidx.annotation.NonNull;
-
-import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-class PushNotificationBuilderUtils {
+class MessagingPushUtils {
     private static final String SELF_TAG = "PushNotificationMediaDownloader";
     private final Context context;
 
-    PushNotificationBuilderUtils(Context context) {
+    MessagingPushUtils(final Context context) {
         this.context = context;
     }
 
-    Bitmap download(String url) {
+    Bitmap download(final String url) {
         Bitmap bitmap = null;
         try {
-            URL imageUrl = new URL(url);
-            HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
+            final URL imageUrl = new URL(url);
+            final HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
             bitmap = BitmapFactory.decodeStream(connection.getInputStream());
             connection.disconnect();
         } catch(IOException e) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to download push notification large image from url: %s", url);
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Failed to download push notification large image from url: %s", url);
         }
         return bitmap;
     }
@@ -67,7 +63,7 @@ class PushNotificationBuilderUtils {
      * @param soundName the name of the sound file
      * @return the Uri for the sound file with the given name
      */
-    Uri getSoundUriForResourceName(@NonNull String soundName) {
+    Uri getSoundUriForResourceName(final @NonNull String soundName) {
         return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName()
                 + "/raw/" + soundName);
     }
@@ -80,7 +76,7 @@ class PushNotificationBuilderUtils {
      * @param iconName the name of the icon file
      * @return the resource id for the icon with the given name
      */
-    int getSmallIconWithResourceName(String iconName) {
+    int getSmallIconWithResourceName(final String iconName) {
         if (StringUtils.isNullOrEmpty(iconName)) {
             return 0;
         }

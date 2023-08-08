@@ -16,48 +16,46 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.HashMap;
-import java.util.Random;
 
 public class AdobeMessagingService extends FirebaseMessagingService {
     private static final String SELF_TAG = "AdobeMessagingService";
     private static final String XDM_KEY  = "_xdm";
 
     @Override
-    public void onNewToken(@NonNull String token) {
+    public void onNewToken(final @NonNull String token) {
         super.onNewToken(token);
         MobileCore.setPushIdentifier(token);
     }
 
     @Override
-    public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
+    public void onMessageReceived(final @NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         handleRemoteMessage(this, remoteMessage);
     }
 
-    public static boolean handleRemoteMessage(@NonNull Context context, @NonNull RemoteMessage remoteMessage) {
+    public static boolean handleRemoteMessage(final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
         if (!isAdobePushNotification(remoteMessage)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "The received push message is not generated from Adobe Journey Optimizer, Messaging extension is ignoring to display the push notification.");
+            Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "The received push message is not generated from Adobe Journey Optimizer, Messaging extension is ignoring to display the push notification.");
             return false;
         }
 
-        MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
+        final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
 
         // build notification with payload
-        PushNotificationBuilder builder = new PushNotificationBuilder(payload, context);
+        final MessagingPushBuilder builder = new MessagingPushBuilder(payload, context);
 
         // display notification
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(new Random().nextInt(100), builder.build());
+        final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(remoteMessage.getMessageId().hashCode(), builder.build());
 
         // dispatch Push Notification Displayed event
-        HashMap<String,Object> notificationData = new HashMap<>(remoteMessage.getData());
-        Event pushNotificationReceivedEvent = new Event.Builder("Push Notification Displayed", EventType.MESSAGING, EventSource.REQUEST_CONTENT).setEventData(notificationData).build();
+        final HashMap<String,Object> notificationData = new HashMap<>(remoteMessage.getData());
+        final Event pushNotificationReceivedEvent = new Event.Builder("Push Notification Displayed", EventType.MESSAGING, EventSource.REQUEST_CONTENT).setEventData(notificationData).build();
         MobileCore.dispatchEvent(pushNotificationReceivedEvent);
         return true;
     }
@@ -68,8 +66,8 @@ public class AdobeMessagingService extends FirebaseMessagingService {
     // This is a temporary solution until we have a better way to identify Adobe push notifications.
     // @param remoteMessage the remote message to check
     // @return true if the remote message is an Adobe push notification, false otherwise.
-    private static boolean isAdobePushNotification(@NonNull RemoteMessage remoteMessage) {
-        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingConstants.PushPayloadKeys.TITLE);
+    private static boolean isAdobePushNotification(final @NonNull RemoteMessage remoteMessage) {
+        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingPushConstants.PayloadKeys.TITLE);
     }
 
 }

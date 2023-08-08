@@ -20,11 +20,10 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-class PushNotificationBuilder {
+class MessagingPushBuilder {
 
     private static final String SELF_TAG = "PushNotificationBuilder";
     private static String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel";
@@ -38,24 +37,24 @@ class PushNotificationBuilder {
     private Context context;
 
     @NonNull
-    private PushNotificationBuilderUtils utils;
+    private MessagingPushUtils utils;
 
     /**
      * Constructor.
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
      **/
-    PushNotificationBuilder(@NonNull MessagingPushPayload payload,@NonNull Context context) {
-        this(payload, context, new PushNotificationBuilderUtils(context));
+    MessagingPushBuilder(final @NonNull MessagingPushPayload payload, final @NonNull Context context) {
+        this(payload, context, new MessagingPushUtils(context));
     }
 
     /**
      * Constructor for testing purposes.
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
-     * @param utils {@link PushNotificationBuilderUtils} the utils class
+     * @param utils {@link MessagingPushUtils} the utils class
      */
-    PushNotificationBuilder(@NonNull MessagingPushPayload payload,@NonNull Context context, @NonNull PushNotificationBuilderUtils utils) {
+    MessagingPushBuilder(final @NonNull MessagingPushPayload payload, final @NonNull Context context, final @NonNull MessagingPushUtils utils) {
         this.utils = utils;
         this.payload = payload;
         this.context = context;
@@ -108,19 +107,19 @@ class PushNotificationBuilder {
 
             // if a channel from the payload
             if (channelIdFromPayload != null && notificationManager.getNotificationChannel(channelIdFromPayload) != null) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Channel exists for channel ID: " + channelIdFromPayload + ". Using the same for push notification.");
+                Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel exists for channel ID: " + channelIdFromPayload + ". Using the same for push notification.");
                 return channelIdFromPayload;
             } else {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Channel does not exist for channel ID obtained from payload ( " + channelIdFromPayload + "). Using the Messaging Extension's default channel.");
+                Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel does not exist for channel ID obtained from payload ( " + channelIdFromPayload + "). Using the Messaging Extension's default channel.");
             }
 
             // Use the default channel ID if the channel ID from the payload is null or if a channel does not exist for the channel ID from the payload.
             final String channelId = DEFAULT_CHANNEL_ID;
             if (notificationManager.getNotificationChannel(DEFAULT_CHANNEL_ID) != null) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Channel already exists for the default channel ID: " + channelId);
+                Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel already exists for the default channel ID: " + channelId);
                 return DEFAULT_CHANNEL_ID;
             } else {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Creating a new channel for the default channel ID: " + channelId + ".");
+                Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Creating a new channel for the default channel ID: " + channelId + ".");
                 final NotificationChannel channel = new NotificationChannel(channelId, DEFAULT_CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT);
                 notificationManager.createNotificationChannel(channel);
             }
@@ -129,7 +128,7 @@ class PushNotificationBuilder {
     }
 
 
-    private void addActionButtons(NotificationCompat.Builder builder) {
+    private void addActionButtons(final NotificationCompat.Builder builder) {
         // TODO: Add this in the future Pull Request
     }
 
@@ -141,7 +140,7 @@ class PushNotificationBuilder {
      *
      * @param builder the notification builder
      */
-    private void setSmallIcon(NotificationCompat.Builder builder) {
+    private void setSmallIcon(final NotificationCompat.Builder builder) {
         final int iconFromPayload = utils.getSmallIconWithResourceName(payload.getIcon());
         final int iconFromMobileCore =  -1 ;   //MobileCore.getSmallIconResourceId();
 
@@ -154,7 +153,7 @@ class PushNotificationBuilder {
             if (isValidIcon(iconFromApp)) {
                 builder.setSmallIcon(iconFromApp);
             } else {
-                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "No valid small icon found. Notification will not be displayed.");
+                Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "No valid small icon found. Notification will not be displayed.");
             }
         }
     }
@@ -165,7 +164,7 @@ class PushNotificationBuilder {
      * If a sound is not received from the payload, the default sound is used
      * @param notificationBuilder the notification builder
      */
-    private void setSound(NotificationCompat.Builder notificationBuilder) {
+    private void setSound(final NotificationCompat.Builder notificationBuilder) {
         if(!StringUtils.isNullOrEmpty(payload.getSound())) {
             notificationBuilder.setSound(utils.getSoundUriForResourceName(payload.getSound()));
         }
@@ -178,7 +177,7 @@ class PushNotificationBuilder {
      * If large icon url is not received from the payload, default style is used for the notification.
      * @param notificationBuilder the notification builder
      */
-    private void setLargeIcon(NotificationCompat.Builder notificationBuilder) {
+    private void setLargeIcon(final NotificationCompat.Builder notificationBuilder) {
         if (!StringUtils.isNullOrEmpty(payload.getImageUrl())) {
             Bitmap bitmap = utils.download(payload.getImageUrl());
             if (bitmap != null) {
@@ -191,7 +190,7 @@ class PushNotificationBuilder {
         }
     }
 
-    private boolean isValidIcon(int icon) {
+    private boolean isValidIcon(final int icon) {
         return icon > 0 ? true : false;
     }
 }
