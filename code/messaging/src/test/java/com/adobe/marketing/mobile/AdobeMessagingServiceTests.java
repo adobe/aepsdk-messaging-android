@@ -72,6 +72,8 @@ public class AdobeMessagingServiceTests {
             when(mock.build()).thenReturn(notification);
         });
 
+        when(remoteMessage.getMessageId()).thenReturn("someMessageID");
+
     }
 
     @After

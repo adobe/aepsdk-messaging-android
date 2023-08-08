@@ -25,6 +25,7 @@ import android.net.Uri;
 
 import androidx.core.app.NotificationCompat;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,6 +78,11 @@ public class PushNotificationBuilderTests {
         when(utils.getDefaultAppIcon()).thenReturn(DEFAULT_ICON_RESOURCE_ID);
         when(utils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
         when(utils.getSoundUriForResourceName(CUSTOM_SOUND_NAME)).thenReturn(CUSTOM_SOUND_URI);
+    }
+
+    @After
+    public void after() {
+        mockBuilderConstructor.close();
     }
 
     @Test
