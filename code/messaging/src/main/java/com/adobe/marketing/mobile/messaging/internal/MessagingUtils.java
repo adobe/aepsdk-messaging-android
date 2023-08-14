@@ -13,15 +13,16 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.MessageFeedKeys.SCHEMA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.MESSAGE_FEED_SCHEMA_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -30,6 +31,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.services.DeviceInforming;
@@ -53,18 +55,17 @@ import java.util.Map;
 class MessagingUtils {
     private final static String SELF_TAG = "MessagingUtils";
 
-    static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) throws Exception {
-        final List<PropositionPayload> propositionPayloads = new ArrayList<>();
+    static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final PropositionInfo propositionInfo = PropositionInfo.create(payload);
-                final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
-                if (propositionPayload != null) {
-                    propositionPayloads.add(propositionPayload);
+                final Proposition proposition = Proposition.fromEventData(payload);
+                if (proposition != null) {
+                    propositions.add(proposition);
                 }
             }
         }
-        return propositionPayloads;
+        return propositions;
     }
 
     // ========================================================================================
@@ -264,20 +265,20 @@ class MessagingUtils {
     }
 
     /**
-     * Retrieves the AJO inbound item type {@code String} from the passed in {@code JSONObject}.
+     * Retrieves the rule consequence schema {@code String} from the passed in {@code JSONObject}.
      *
      * @param ruleJson A {@link JSONObject} containing an AJO rule payload
      * @return {@link String} containing the ajo inbound item type extracted from the rule consequence details
      */
-    static String getInboundItemType(final JSONObject ruleJson) {
-        String inboundItemType = null;
+    static String getConsequenceSchema(final JSONObject ruleJson) {
+        String schemaValue = null;
         try {
             final JSONObject details = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-            inboundItemType = details.optString(MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE);
+            schemaValue = details.optString(MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getInboundItemType", "Exception occurred retrieving ajo inbound item type: %s", jsonException.getLocalizedMessage());
+            Log.debug(LOG_TAG, "getConsequenceSchema", "Exception occurred retrieving the message consequence schema value: %s", jsonException.getLocalizedMessage());
         }
-        return inboundItemType;
+        return schemaValue;
     }
 
     /**
@@ -302,8 +303,8 @@ class MessagingUtils {
     // ========================================================================================
     static boolean isFeedItem(final RuleConsequence ruleConsequence) {
         final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String type = DataReader.optString(ruleDetailMap, MessagingConstants.MessageFeedKeys.TYPE, "");
-        return type.equals(MessagingConstants.MessageFeedKeys.MESSAGE_FEED_TYPE);
+        final String schema = DataReader.optString(ruleDetailMap, SCHEMA, "");
+        return schema.equals(MESSAGE_FEED_SCHEMA_VALUE);
     }
 
     // ========================================================================================

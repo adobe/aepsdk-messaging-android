@@ -21,6 +21,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +32,7 @@ import java.util.Map;
 /**
  * A {@link PropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
  */
-class PropositionItem {
+public class PropositionItem implements Serializable {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "PropositionItem";
     private static final String JSON_RULES_KEY = "rules";
@@ -50,15 +54,15 @@ class PropositionItem {
     private static final String JSON_CONTENT_SCHEMA_VALUE = "https://ns.adobe.com/personalization/json-content-item";
 
     // Unique proposition identifier
-    private final String uniqueId;
+    private String uniqueId;
     // PropositionItem schema string
-    private final String schema;
+    private String schema;
     // PropositionItem data content e.g. html or plain-text string or string containing image URL, JSON string
-    private final String content;
+    private String content;
     // Soft reference to Proposition instance
     SoftReference<Proposition> propositionReference;
 
-    PropositionItem(final String uniqueId, final String schema, final String content) {
+    public PropositionItem(final String uniqueId, final String schema, final String content) {
         this.uniqueId = uniqueId;
         this.schema = schema;
         this.content = content;
@@ -140,7 +144,7 @@ class PropositionItem {
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromEventData(final Map<String, Object> eventData) {
+    public static PropositionItem fromEventData(final Map<String, Object> eventData) {
         PropositionItem propositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
@@ -149,9 +153,14 @@ class PropositionItem {
 
             String content = null;
             if (schema.equals(JSON_CONTENT_SCHEMA_VALUE)) {
-                final JSONObject contentJSON = new JSONObject(DataReader.getTypedMap(Object.class, dataMap, PAYLOAD_CONTENT));
-                if (contentJSON.length() > 0) {
-                    content = contentJSON.toString();
+                final Object data = dataMap.get(PAYLOAD_CONTENT);
+                if (data instanceof String) {
+                    content = DataReader.getString(dataMap, PAYLOAD_CONTENT);
+                } else if (data instanceof Map) {
+                    final JSONObject contentJSON = new JSONObject(DataReader.getTypedMap(Object.class, dataMap, PAYLOAD_CONTENT));
+                    if (contentJSON.length() > 0) {
+                        content = contentJSON.toString();
+                    }
                 }
             } else { // we have html or decision content which will be a string
                 content = DataReader.getString(dataMap, PAYLOAD_CONTENT);
@@ -231,5 +240,21 @@ class PropositionItem {
             Log.trace(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
         }
         return consequenceDetails;
+    }
+
+    private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException
+    {
+        uniqueId = objectInputStream.readUTF();
+        schema = objectInputStream.readUTF();
+        content = objectInputStream.readUTF();
+        propositionReference = new SoftReference<>((Proposition) objectInputStream.readObject());
+    }
+
+    private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException
+    {
+        objectOutputStream.writeUTF(uniqueId);
+        objectOutputStream.writeUTF(schema);
+        objectOutputStream.writeUTF(content);
+        objectOutputStream.writeObject(propositionReference.get());
     }
 }

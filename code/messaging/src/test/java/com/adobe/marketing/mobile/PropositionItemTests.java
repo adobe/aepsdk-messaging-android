@@ -17,7 +17,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
-import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,7 +53,7 @@ public class PropositionItemTests {
         ruleJSON = new JSONObject(testJSONStringContent);
         // setup event data for json content
         final Map<String, Object> jsonDataMap = new HashMap<>();
-        jsonDataMap.put("content", JSONUtils.toMap(ruleJSON));
+        jsonDataMap.put("content", ruleJSON.toString());
         eventDataMapForJSON.put("id", testId);
         eventDataMapForJSON.put("schema", testJSONSchema);
         eventDataMapForJSON.put("data", jsonDataMap);
@@ -80,14 +79,16 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_JSONContent() {
+    public void test_createPropositionItem_fromEventData_JSONContent() throws JSONException {
         // test
         PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
         // verify
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getUniqueId());
         assertEquals(testJSONSchema, propositionItem.getSchema());
-        assertEquals(testJSONStringContent, propositionItem.getContent());
+        JSONObject expectedJSON = new JSONObject(testJSONStringContent);
+        JSONObject propositionItemJSON = new JSONObject(propositionItem.getContent());
+        assertEquals(expectedJSON.toString().trim(), propositionItemJSON.toString().trim());
     }
 
     @Test

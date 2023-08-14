@@ -316,19 +316,18 @@ public class MessagingTestUtils {
         return xdmMap;
     }
 
-    static void waitForExecutor(ExecutorService executor, int executorTime) {
-        Future<?> future = executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                // Fake task to check the execution termination
+    static List<PropositionPayload> getPropositionPayloadsFromMaps(final List<Map<String, Object>> payloads) throws Exception {
+        final List<PropositionPayload> propositionPayloads = new ArrayList<>();
+        for (final Map<String, Object> payload : payloads) {
+            if (payload != null) {
+                final PropositionInfo propositionInfo = PropositionInfo.create(payload);
+                final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get("items"));
+                if (propositionPayload != null) {
+                    propositionPayloads.add(propositionPayload);
+                }
             }
-        });
-
-        try {
-            future.get(executorTime, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            Assert.fail(String.format("Executor took longer than %d (sec)", executorTime));
         }
+        return propositionPayloads;
     }
 
     static PropositionInfo generatePropositionInfo(boolean nullScopeDetails) throws Exception {
@@ -365,7 +364,7 @@ public class MessagingTestUtils {
             Map<String, Object> characteristics = new HashMap<>();
             Map<String, Object> cjmEvent = new HashMap<>();
             Map<String, Object> messageExecution = new HashMap<>();
-            item.put("schema", "https://ns.adobe.com/experience/personalization/json-content-item");
+            item.put("schema", "https://ns.adobe.com/personalization/json-content-item");
             item.put("id", "testItemId" + count);
             messageExecution.put("messageExecutionID", "testExecutionId");
             cjmEvent.put("messageExecution", messageExecution);
@@ -424,32 +423,36 @@ public class MessagingTestUtils {
         try {
             for (count = 0; count < config.count; count++) {
                 consequences.put(new JSONObject("{\n" +
-                        "      \"id\": \"e24c7416-31c2-4734-8c87-ffb8269d28b" + count + "\",\n" +
-                        "      \"type\": \"ajoInbound\",\n" +
-                        "      \"detail\": {\n" +
-                        "        \"type\": \"ajoFeedItem\",\n" +
-                        "        \"expiryDate\": 1712190456,\n" +
-                        "        \"publishedDate\": 1680568056,\n" +
-                        "        \"meta\": {\n" +
-                        "          \"feedName\": \"testFeed\",\n" +
-                        "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
-                        "        },\n" +
-                        "        \"content\": {\n" +
-                        "          \"imageUrl\": \"https://someimage"+ count + ".png\",\n" +
-                        "          \"actionTitle\": \"testTitle\",\n" +
-                        "          \"actionUrl\": \"https://someurl.com\",\n" +
-                        "          \"body\": \"testBody\",\n" +
-                        "          \"title\": \"testTitle\"\n" +
-                        "        },\n" +
-                        "        \"contentType\": \"application/json\"\n" +
-                        "      }\n" +
-                        "    }"));
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767eb" + count + "\",\n" +
+                        "\"type\": \"schema\",\n" +
+                        "\"detail\": {\n" +
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767eb" + count + "\",\n" +
+                        "\"schema\": \"https://ns.adobe.com/personalization/inbound/feed-item\",\n" +
+                        "\"data\": {\n" +
+                        "\"expiryDate\": 1723163897,\n" +
+                        "\"meta\": {\n" +
+                        "\"feedName\": \"apifeed\",\n" +
+                        "\"campaignName\": \"testCampaign\",\n" +
+                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "},\n" +
+                        "\"content\": {\n" +
+                        "\"body\": \"testBody\",\n" +
+                        "\"title\": \"testTitle\",\n" +
+                        "\"imageUrl\": \"https://someimage"+ count + ".png\",\n" +
+                        "\"actionTitle\": \"testActionTitle\",\n" +
+                        "\"actionUrl\": \"https://someurl.com\",\n" +
+                        "},\n" +
+                        "\"contentType\": \"application/json\",\n" +
+                        "\"publishedDate\": 1691541497\n" +
+                        "}\n" +
+                        "}\n" +
+                        "}"));
             }
         } catch (JSONException jsonException) {
             Log.debug("MessagingTestUtils", "generateFeedPayload", "exception occurred when creating feed consequences: %s", jsonException.getLocalizedMessage());
         }
 
-        item.put("schema", "https://ns.adobe.com/experience/personalization/json-content-item");
+        item.put("schema", "https://ns.adobe.com/personalization/inbound/feed-item");
         item.put("id", "testItemId");
         messageExecution.put("messageExecutionID", "testExecutionId");
         cjmEvent.put("messageExecution", messageExecution);
@@ -533,7 +536,20 @@ public class MessagingTestUtils {
         return payload;
     }
 
-    static String convertPayloadToString(List<PropositionPayload> propositionPayloads) {
+    static String convertPropositionsToString(List<Proposition> propositions) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(propositions);
+            objectOutputStream.defaultWriteObject();
+            return objectOutputStream.toString();
+        } catch (Exception e) {
+            Log.debug(LOG_TAG, LOG_TAG, "Exception occurred while converting payloads to string: %s", e.getMessage());
+            return "";
+        }
+    }
+
+    static String convertPropositionPayloadsToString(List<PropositionPayload> propositionPayloads) {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);

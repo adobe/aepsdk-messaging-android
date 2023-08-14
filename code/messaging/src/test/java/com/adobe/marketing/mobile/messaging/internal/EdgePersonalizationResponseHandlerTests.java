@@ -31,6 +31,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
+import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -42,9 +43,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
-import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
-import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,6 +91,8 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
+    LaunchRulesEngine mockFeedRulesEngine;
+    @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
@@ -117,6 +118,7 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingExtension);
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
+        reset(mockFeedRulesEngine);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -133,7 +135,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
-            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
             runnable.run();
         }
@@ -144,25 +146,28 @@ public class EdgePersonalizationResponseHandlerTests {
         for (int i = 0; i < size; i++) {
             try {
                 JSONObject feedDetails = new JSONObject("{\n" +
-                        "        \"type\": \"ajoFeedItem\",\n" +
-                        "        \"expiryDate\": 1712190456,\n" +
-                        "        \"meta\": {\n" +
-                        "          \"feedName\": \"testFeed\",\n" +
-                        "          \"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
-                        "        },\n" +
-                        "        \"content\": {\n" +
-                        "          \"imageUrl\": \"https://someimage"+ i + ".png\",\n" +
-                        "          \"actionTitle\": \"testAction" + i + "\",\n" +
-                        "          \"actionUrl\": \"https://someurl.com\",\n" +
-                        "          \"publishedDate\": 1680568056,\n" +
-                        "          \"body\": \"testBody\",\n" +
-                        "          \"title\": \"testTitle\"\n" +
-                        "        },\n" +
-                        "        \"contentType\": \"application/json\"\n" +
-                        "      }\n" +
-                        "    }");
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
+                        "\"schema\": \"https://ns.adobe.com/personalization/inbound/feed-item\",\n" +
+                        "\"data\": {\n" +
+                        "\"expiryDate\": 1723163897,\n" +
+                        "\"meta\": {\n" +
+                        "\"feedName\": \"apifeed\",\n" +
+                        "\"campaignName\": \"testCampaign\",\n" +
+                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "},\n" +
+                        "\"content\": {\n" +
+                        "\"body\": \"testBody\",\n" +
+                        "\"title\": \"testTitle\",\n" +
+                        "\"imageUrl\": \"https://someimage"+ i + ".png\",\n" +
+                        "\"actionTitle\": \"testActionTitle\",\n" +
+                        "\"actionUrl\": \"https://someurl.com\",\n" +
+                        "},\n" +
+                        "\"contentType\": \"application/json\",\n" +
+                        "\"publishedDate\": 1691541497\n" +
+                        "}\n" +
+                        "}");
                 Map<String, Object> detail = JSONUtils.toMap(feedDetails);
-                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE, detail);
+                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.MessageFeedValues.SCHEMA, detail);
                 feedConsequences.add(feedConsequence);
             } catch (JSONException jsonException) {
                 fail(jsonException.getMessage());
@@ -731,7 +736,7 @@ public class EdgePersonalizationResponseHandlerTests {
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
                 List<RuleConsequence> messageFeedConsequences = createFeedConsequenceList(5);
-                when(mockMessagingRulesEngine.evaluateEvent(any(Event.class))).thenReturn(messageFeedConsequences);
+                when(mockFeedRulesEngine.evaluateEvent(any(Event.class))).thenReturn(messageFeedConsequences);
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 MessageTestConfig config = new MessageTestConfig();
@@ -749,8 +754,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify message feed propositions not cached
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
 
-                // verify rule containing 5 consequences is added to rules engine
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
+                // verify rule containing 5 consequences is added to the feed rules engine
+                verify(mockFeedRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
                 List<LaunchRule> addedRules = listArgumentCaptor.getValue();
                 assertEquals(1, addedRules.size());
                 assertEquals(5, addedRules.get(0).getConsequenceList().size());
@@ -763,7 +768,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 for(int i = 0; i < returnedFeed.getItems().size(); i++) {
                     FeedItem feedItem = returnedFeed.getItems().get(i);
                     assertEquals("https://someimage" + i + ".png", feedItem.getImageUrl());
-                    assertEquals("testAction" + i, feedItem.getActionTitle());
+                    assertEquals("testActionTitle", feedItem.getActionTitle());
                     assertEquals("https://someurl.com", feedItem.getActionUrl());
                     assertEquals("testBody", feedItem.getBody());
                     assertEquals("testTitle", feedItem.getTitle());
@@ -853,16 +858,16 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 5;
-                List<PropositionPayload> payload = null;
+                List<Proposition> payload = null;
                 try {
-                    payload = MessagingUtils.getPropositionPayloads(MessagingTestUtils.generateMessagePayload(config));
+                    payload = MessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config));
                 } catch (Exception e) {
                     fail(e.getMessage());
                 }
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));

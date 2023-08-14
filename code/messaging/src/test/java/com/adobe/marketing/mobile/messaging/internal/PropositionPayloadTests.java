@@ -12,13 +12,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-
-import com.adobe.marketing.mobile.messaging.internal.ItemData;
-import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
-import com.adobe.marketing.mobile.messaging.internal.PayloadItem;
-import com.adobe.marketing.mobile.messaging.internal.PropositionPayload;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,14 +33,14 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
         // test
         try {
-            propositionPayload = MessagingUtils.getPropositionPayloads(testPayload).get(0);
+            propositionPayload = MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
         } catch (Exception e) {
             fail(e.getMessage());
         }
         // verify proposition info
         assertEquals("activityId", propositionPayload.propositionInfo.activityId);
         assertEquals("correlationID", propositionPayload.propositionInfo.correlationId);
-        assertEquals("scopeId", propositionPayload.propositionInfo.id);
+        assertEquals("uniqueId", propositionPayload.propositionInfo.id);
         assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", propositionPayload.propositionInfo.scope);
         // verify scope details
         Map<String, Object> scopeDetails = propositionPayload.propositionInfo.scopeDetails;
@@ -84,7 +78,7 @@ public class PropositionPayloadTests {
         // test
         try {
             // verify proposition payload failed to be created
-            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
+            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -98,7 +92,7 @@ public class PropositionPayloadTests {
         // test
         try {
             // verify proposition payload failed to be created
-            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
+            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -112,7 +106,7 @@ public class PropositionPayloadTests {
         // test
         try {
             // verify proposition payload failed to be created
-            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
+            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -126,7 +120,7 @@ public class PropositionPayloadTests {
         // test
         try {
             // verify proposition payload failed to be created
-            assertEquals(0, MessagingUtils.getPropositionPayloads(testPayload).size());
+            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
         } catch (Exception e) {
             fail(e.getMessage());
         }

@@ -21,11 +21,13 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_FEEDS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.MessageFeedKeys.FEEDS;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.MESSAGE_FEED_SCHEMA_VALUE;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -34,6 +36,8 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
+import com.adobe.marketing.mobile.Proposition;
+import com.adobe.marketing.mobile.PropositionItem;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -67,10 +71,11 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private final Map<String, Object> inMemoryFeeds = new HashMap<>();
+    private final LaunchRulesEngine feedRulesEngine;
     private final Map<String, List<String>> requestedSurfacesForEventId = new HashMap<>();
+    private List<Proposition> inMemoryPropositions = new ArrayList<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
-    private List<PropositionPayload> inMemoryPropositions = new ArrayList<>();
+    private final Map<String, Object> inMemoryFeeds = new HashMap<>();
     private Map<String, PropositionInfo> feedInfo = new HashMap<>();
     private String messagesRequestEventId;
     private String lastProcessedRequestEventId;
@@ -81,22 +86,24 @@ class EdgePersonalizationResponseHandler {
      * @param parent       {@link MessagingExtension} instance that is the parent of this {@code EdgePersonalizationResponseHandler}
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading in-app message rule payloads
+     * @param rulesEngine  {@link LaunchRulesEngine} instance to use for loading message feed rule payloads
      */
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine) {
-        this(parent, extensionApi, rulesEngine, null, null);
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine) {
+        this(parent, extensionApi, rulesEngine, feedRulesEngine, null, null);
     }
 
     @VisibleForTesting
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final LaunchRulesEngine feedRulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
+        this.feedRulesEngine = feedRulesEngine;
         this.messagesRequestEventId = messagesRequestEventId;
 
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
         if (this.messagingCacheUtilities.arePropositionsCached()) {
-            final List<PropositionPayload> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
+            final List<Proposition> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 inMemoryPropositions = cachedPropositions;
@@ -195,12 +202,12 @@ class EdgePersonalizationResponseHandler {
 
         final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
 
-        // convert the payload into a list of PropositionPayload(s)
-        List<PropositionPayload> propositions = null;
+        // convert the payload into a list of Proposition(s)
+        List<Proposition> propositions = null;
         try {
-            propositions = MessagingUtils.getPropositionPayloads(payload);
+            propositions = MessagingUtils.getPropositionsFromPayloads(payload);
         } catch (final Exception exception) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create PropositionPayload(s), an exception occurred: %s.", exception.getLocalizedMessage());
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create propositions from the AJO personalization payload, an exception occurred: %s.", exception.getLocalizedMessage());
         }
 
         final List<LaunchRule> parsedRules = processPropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
@@ -208,11 +215,11 @@ class EdgePersonalizationResponseHandler {
             Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine for scope %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
         }
 
-        launchRulesEngine.replaceRules(parsedRules);
-
         final List<RuleConsequence> consequenceList = !parsedRules.isEmpty() ? parsedRules.get(0).getConsequenceList() : new ArrayList<>();
         if (!consequenceList.isEmpty() && MessagingUtils.isFeedItem(consequenceList.get(0))) {
-            final Map<String, Feed> feeds = processFeedConsequences(launchRulesEngine.evaluateEvent(edgeResponseEvent));
+            feedRulesEngine.replaceRules(parsedRules);
+
+            final Map<String, Feed> feeds = processFeedConsequences(feedRulesEngine.evaluateEvent(edgeResponseEvent));
             mergeFeedsInMemory(feeds, Objects.requireNonNull(requestedSurfacesForEventId.get(lastProcessedRequestEventId)));
             // dispatch an event with the feeds received from the remote
             final Map<String, Object> eventData = new HashMap<>();
@@ -224,6 +231,8 @@ class EdgePersonalizationResponseHandler {
                     .build();
 
             extensionApi.dispatch(event);
+        } else {
+            launchRulesEngine.replaceRules(parsedRules);
         }
     }
 
@@ -261,20 +270,20 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Attempts to parse any in-app message or message feed rules contained in the provided {@code List<PropositionPayload>}. Any valid rule {@code JSONObject}s
+     * Attempts to parse any in-app message or message feed rules contained in the provided {@code List<Proposition>}. Any valid rule {@code JSONObject}s
      * found will be returned in a {code List<LaunchRule>}.
      *
-     * @param propositions     A {@link List<PropositionPayload>} containing propositions
+     * @param propositions     A {@link List<Proposition>} propositions to be processed
      * @param expectedSurfaces A {@link List<String>} containing the expected app surfaces
      * @param clearExisting    {@code boolean} if true the existing cached propositions are cleared and new message rules are replaced in the {@code LaunchRulesEngine}
-     * @param persistChanges   {@code boolean} if true the passed in {@code List<PropositionPayload>} are added to the cache
+     * @param persistChanges   {@code boolean} if true the passed in {@code List<Proposition>} are added to the cache
      * @return {@link List<LaunchRule>} containing {@link LaunchRule}s parsed from the passed in propositions
      */
-    private List<LaunchRule> processPropositions(final List<PropositionPayload> propositions, final List<String> expectedSurfaces, final boolean clearExisting, final boolean persistChanges) {
+    private List<LaunchRule> processPropositions(final List<Proposition> propositions, final List<String> expectedSurfaces, final boolean clearExisting, final boolean persistChanges) {
         final List<LaunchRule> parsedRules = new ArrayList<>();
-        final List<PropositionPayload> tempPropositions = new ArrayList<>();
+        final List<Proposition> tempPropositions = new ArrayList<>();
         final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>();
-        final Map<String, PropositionInfo> tempFeedsInfo = new HashMap<>();
+        final Map<String, PropositionInfo> tempFeedInfo = new HashMap<>();
         final String appSurface = getAppSurface();
         boolean isFeedConsequence = false;
 
@@ -292,48 +301,57 @@ class EdgePersonalizationResponseHandler {
             return parsedRules;
         }
 
-        for (final PropositionPayload proposition : propositions) {
-            if (proposition.propositionInfo != null && !expectedSurfaces.contains(proposition.propositionInfo.scope)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match one of the expected surfaces (%s).", proposition.propositionInfo.scope, expectedSurfaces.toString());
+        for (final Proposition proposition : propositions) {
+            final String scope = proposition.getScope();
+            if (StringUtils.isNullOrEmpty(scope) || !expectedSurfaces.contains(scope)) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match one of the expected surfaces (%s).", scope, expectedSurfaces.toString());
                 continue;
             }
 
-            for (final PayloadItem payloadItem : proposition.items) {
-                final JSONObject ruleJson = payloadItem.data.getRuleJsonObject();
-                if (ruleJson == null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with no json content.");
+            for (final PropositionItem propositionItem : proposition.getItems()) {
+                JSONObject ruleJson;
+                try {
+                    ruleJson = new JSONObject(propositionItem.getContent());
+                } catch (final JSONException jsonException) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Skipping proposition with invalid json content.");
                     continue;
                 }
 
-                final List<LaunchRule> parsedRule = JSONRulesParser.parse(ruleJson.toString(), extensionApi);
+                final List<LaunchRule> parsedRule = JSONRulesParser.parse(propositionItem.getContent(), extensionApi);
                 if (parsedRule == null) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed rule json content.");
                     continue;
                 }
 
                 // store reporting data for this payload for later use
-                final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
-                propositionInfo.put(MessagingUtils.getMessageId(ruleJson), proposition.propositionInfo);
+                final PropositionInfo propositionInfo = PropositionInfo.createFromProposition(proposition);
+                if (propositionInfo == null) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with invalid tracking data.");
+                    continue;
+                }
 
-                final String ajoInboundItemType = MessagingUtils.getInboundItemType(ruleJson);
-                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(ajoInboundItemType) && ajoInboundItemType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE);
+                final Map<String, PropositionInfo> localPropositionInfo = new HashMap<>();
+                localPropositionInfo.put(MessagingUtils.getMessageId(ruleJson), propositionInfo);
+
+                final String schemaValue = MessagingUtils.getConsequenceSchema(ruleJson);
+                final boolean isMessageFeedConsequence = !StringUtils.isNullOrEmpty(schemaValue) && schemaValue.equals(MESSAGE_FEED_SCHEMA_VALUE);
 
                 if (!isMessageFeedConsequence) {
                     // cache any image assets present in the current rule json's image assets array
                     cacheImageAssetsFromPayload(ruleJson);
 
                     // store reporting info for this payload
-                    tempPropositionInfo.putAll(propositionInfo);
+                    tempPropositionInfo.putAll(localPropositionInfo);
                 } else { // we have a message feed consequence, persist the feed in memory
                     isFeedConsequence = true;
-                    tempFeedsInfo.putAll(propositionInfo);
+                    tempFeedInfo.putAll(localPropositionInfo);
                 }
                 tempPropositions.add(proposition);
                 parsedRules.add(parsedRule.get(0));
             }
         }
 
-        // update proposition info for in-app messages and cache the messages if needed
+        // update proposition scope details for in-app messages and cache the messages if needed
         if (!isFeedConsequence && !parsedRules.isEmpty()) {
             if (clearExisting) {
                 propositionInfo = tempPropositionInfo;
@@ -349,9 +367,9 @@ class EdgePersonalizationResponseHandler {
         } else { // update proposition info for message feed items
             if (clearExisting) {
                 inMemoryFeeds.clear();
-                feedInfo = tempFeedsInfo;
+                feedInfo = tempFeedInfo;
             } else {
-                feedInfo.putAll(tempFeedsInfo);
+                feedInfo.putAll(tempFeedInfo);
             }
         }
 
@@ -360,10 +378,19 @@ class EdgePersonalizationResponseHandler {
 
     private FeedItem createFeedItemFromConsequenceDetail(final Map<String, Object> consequenceDetailMap) {
         if (MapUtils.isNullOrEmpty(consequenceDetailMap)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create feed item from the consequence details, invalid details map found.");
             return null;
         }
-        final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, consequenceDetailMap, MessagingConstants.MessageFeedKeys.CONTENT, null);
+
+        final Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, consequenceDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
+        if (MapUtils.isNullOrEmpty(dataMap)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create feed item from the consequence details, invalid data map found.");
+            return null;
+        }
+
+        final Map<String, Object> contentMap = DataReader.optTypedMap(Object.class, dataMap, MessagingConstants.MessageFeedKeys.CONTENT, null);
         if (MapUtils.isNullOrEmpty(contentMap)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to create feed item from the consequence details, invalid content map found.");
             return null;
         }
 

@@ -29,10 +29,12 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FEED_RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.FCM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.COLLECT;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
@@ -52,7 +54,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
@@ -80,6 +81,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
+    final LaunchRulesEngine feedRulesEngine;
 
     /**
      * Constructor.
@@ -101,14 +103,15 @@ public final class MessagingExtension extends Extension {
      * @param extensionApi {@link ExtensionApi} instance
      */
     MessagingExtension(final ExtensionApi extensionApi) {
-        this(extensionApi, null, null);
+        this(extensionApi, null, null, null);
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final LaunchRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(RULES_ENGINE_NAME, extensionApi);
+        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new LaunchRulesEngine(FEED_RULES_ENGINE_NAME, extensionApi);
+        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
     }
 
     //region Extension interface methods

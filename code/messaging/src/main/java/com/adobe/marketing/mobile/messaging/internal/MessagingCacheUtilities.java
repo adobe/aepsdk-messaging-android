@@ -18,6 +18,8 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.P
 
 import androidx.annotation.VisibleForTesting;
 
+import com.adobe.marketing.mobile.Proposition;
+import com.adobe.marketing.mobile.PropositionItem;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
@@ -77,11 +79,11 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<PropositionPayload>}.
+     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<Proposition>}.
      *
-     * @return a {@code List<PropositionPayload>} containing the cached proposition payloads.
+     * @return a {@code List<Proposition>} containing the cached proposition payloads.
      */
-    List<PropositionPayload> getCachedPropositions() {
+    List<Proposition> getCachedPropositions() {
         final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cacheResult == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
@@ -93,10 +95,23 @@ final class MessagingCacheUtilities {
             Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
         ObjectInputStream objectInputStream = null;
-        List<PropositionPayload> cachedPropositions;
+        final List<Proposition> cachedPropositions = new ArrayList<>();
         try {
             objectInputStream = new ObjectInputStream(cacheResult.getData());
-            cachedPropositions = (List<PropositionPayload>) objectInputStream.readObject();
+            List<Object> cachedPropositionList = (List<Object>) objectInputStream.readObject();
+            if (cachedPropositionList != null && !cachedPropositionList.isEmpty()) {
+                final Object firstElement = cachedPropositionList.get(0);
+                // handle cached PropositionPayload objects
+                if (firstElement instanceof PropositionPayload) {
+                    for (final Object proposition : cachedPropositionList) {
+                        cachedPropositions.add(convertToProposition((PropositionPayload) proposition));
+                    }
+                } else { // handle cached Proposition objects
+                    for (final Object proposition : cachedPropositionList) {
+                        cachedPropositions.add((Proposition) proposition);
+                    }
+                }
+            }
         } catch (final NullPointerException nullPointerException) {
             Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", nullPointerException.getMessage());
             return null;
@@ -119,13 +134,13 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Caches the {@code List<PropositionPayload>} payload.
+     * Caches the provided {@code List<Proposition>}.
      *
-     * @param propositionPayload the {@link List<PropositionPayload>} containing the message payload to be cached.
+     * @param propositions the {@link List<Proposition>} containing the propositions to be cached.
      */
-    void cachePropositions(final List<PropositionPayload> propositionPayload) {
-        // clean any existing cached propositions first if propositionPayload is null or empty
-        if (propositionPayload == null || propositionPayload.isEmpty()) {
+    void cachePropositions(final List<Proposition> propositions) {
+        // clean any existing cached propositions first if the provided propositions are null or empty
+        if (propositions == null || propositions.isEmpty()) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
             return;
@@ -139,7 +154,7 @@ final class MessagingCacheUtilities {
         try {
             byteArrayOutputStream = new ByteArrayOutputStream();
             objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(propositionPayload);
+            objectOutputStream.writeObject(propositions);
             objectOutputStream.flush();
             inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             final CacheEntry cacheEntry = new CacheEntry(inputStream, CacheExpiry.never(), null);
@@ -161,6 +176,21 @@ final class MessagingCacheUtilities {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to close the ObjectOutputStream (%s) ", e);
             }
         }
+    }
+
+    /**
+     * Converts the provided {@code PropositionPayload} into a {@code Proposition}.
+     *
+     * @param propositionPayload a {@link PropositionPayload} to be converted
+     * @return a {@link Proposition} created from the provided {@code PropositionPayload}
+     */
+    private Proposition convertToProposition(final PropositionPayload propositionPayload) {
+        final List<PropositionItem> propositionItems = new ArrayList<>();
+        for (final PayloadItem payloadItem : propositionPayload.items) {
+            final PropositionItem propositionItem = new PropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+            propositionItems.add(propositionItem);
+        }
+        return new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems);
     }
 
     // ========================================================================================================

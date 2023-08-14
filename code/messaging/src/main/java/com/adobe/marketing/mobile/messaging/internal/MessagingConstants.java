@@ -19,6 +19,7 @@ final class MessagingConstants {
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
+    static final String FEED_RULES_ENGINE_NAME = EXTENSION_NAME + "Feed.rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -30,6 +31,13 @@ final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
 
     private MessagingConstants() {
+    }
+
+    final class SchemaValues {
+        static final String MESSAGE_FEED_SCHEMA_VALUE = "https://ns.adobe.com/personalization/inbound/feed-item";
+
+        private SchemaValues() {
+        }
     }
 
     final class QueryParameters {
@@ -49,19 +57,20 @@ final class MessagingConstants {
         static final String TITLE = "title";
         static final String BODY = "body";
         static final String CONTENT = "content";
-        static final String PUBLISHED_DATE = "publishedDate";
-        static final String EXPIRY_DATE = "expiryDate";
         static final String IMAGE_URL = "imageUrl";
         static final String ACTION_TITLE = "actionTitle";
         static final String ACTION_URL = "actionUrl";
-        static final String METADATA = "meta";
-        static final String TYPE = "type";
-        static final String SURFACE = "surface";
-        static final String FEED_NAME = "feedName";
-        static final String MESSAGE_FEED_TYPE = "ajoFeedItem";
+        static final String SCHEMA = "schema";
         static final String FEEDS = "feeds";
 
         private MessageFeedKeys() {
+        }
+    }
+
+    final class MessageFeedValues {
+        static final String SCHEMA = "schema";
+
+        private MessageFeedValues() {
         }
     }
 
@@ -226,6 +235,8 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajoFeedItem";
             static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";

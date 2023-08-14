@@ -18,6 +18,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.P
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.PayloadKeys.ACTIVITY;
 
+import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -54,6 +55,24 @@ class PropositionInfo implements Serializable {
         }
     }
 
+    private PropositionInfo(final String id, final String scope, final Map<String, Object> scopeDetails) {
+        this.id = id;
+        this.scope = scope;
+        this.scopeDetails = scopeDetails;
+        if (MapUtils.isNullOrEmpty(scopeDetails)) {
+            correlationId = "";
+            activityId = "";
+        } else {
+            correlationId = DataReader.optString(scopeDetails, CORRELATION_ID, "");
+            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, ACTIVITY, null);
+            if (MapUtils.isNullOrEmpty(activityMap)) {
+                activityId = "";
+            } else {
+                activityId = DataReader.optString(activityMap, ID, "");
+            }
+        }
+    }
+
     static PropositionInfo create(final Map<String, Object> propositionInfoMap) throws Exception {
         if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, ID))) {
             return null;
@@ -65,5 +84,25 @@ class PropositionInfo implements Serializable {
             return null;
         }
         return new PropositionInfo(propositionInfoMap);
+    }
+
+    static PropositionInfo createFromProposition(final Proposition proposition) {
+        if (proposition == null) {
+            return null;
+        }
+        final String id = proposition.getUniqueId();
+        if (StringUtils.isNullOrEmpty(id)) {
+            return null;
+        }
+        final String scope = proposition.getScope();
+        if (StringUtils.isNullOrEmpty(scope)) {
+            return null;
+        }
+        final Map scopeDetails = proposition.getScopeDetails();
+        if (MapUtils.isNullOrEmpty(scopeDetails)) {
+            return null;
+        }
+
+        return new PropositionInfo(id, scope, scopeDetails);
     }
 }
