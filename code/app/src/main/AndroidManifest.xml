@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".MessagingApplication"
@@ -12,18 +12,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".DetailsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="demo" android:host="messagingdemoapp" android:pathPrefix="/details" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:exported="true">
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <service
             android:name=".NotificationService"
             android:enabled="true"
@@ -35,12 +45,5 @@
 
         <receiver android:name=".NotificationBroadcastReceiver" />
         <receiver android:name=".NotificationDeleteReceiver" />
-<!--        <meta-data-->
-<!--            android:name="activityId"-->
-<!--            android:value="xcore:offer-activity:13c2593fcbcfacbd"/>-->
-<!--        <meta-data-->
-<!--            android:name="placementId"-->
-<!--            android:value="xcore:offer-placement:13d01b7516bf0613"/>-->
     </application>
-
-        </manifest>
+</manifest>
