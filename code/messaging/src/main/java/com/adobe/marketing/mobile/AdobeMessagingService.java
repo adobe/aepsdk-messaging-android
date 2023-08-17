@@ -40,7 +40,7 @@ public class AdobeMessagingService extends FirebaseMessagingService {
 
     public static boolean handleRemoteMessage(final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
         if (!isAdobePushNotification(remoteMessage)) {
-            Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "The received push message is not generated from Adobe Journey Optimizer, Messaging extension is ignoring to display the push notification.");
+            Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "The received push message is not generated from Adobe Journey Optimizer. Messaging extension is ignoring to display the push notification.");
             return false;
         }
 
@@ -67,6 +67,7 @@ public class AdobeMessagingService extends FirebaseMessagingService {
     // @param remoteMessage the remote message to check
     // @return true if the remote message is an Adobe push notification, false otherwise.
     private static boolean isAdobePushNotification(final @NonNull RemoteMessage remoteMessage) {
+        // TODO: Use the newly introduced key to identify Adobe push notifications.
         return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingPushConstants.PayloadKeys.TITLE);
     }
 

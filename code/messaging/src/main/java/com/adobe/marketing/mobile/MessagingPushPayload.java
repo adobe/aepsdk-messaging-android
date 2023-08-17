@@ -228,7 +228,7 @@ public class MessagingPushPayload {
                     return NotificationManager.IMPORTANCE_MAX;
                 case NotificationPriorities.PRIORITY_DEFAULT:
                 default:
-                    return NotificationManager.IMPORTANCE_NONE;
+                    return NotificationManager.IMPORTANCE_DEFAULT;
             }
     }
 

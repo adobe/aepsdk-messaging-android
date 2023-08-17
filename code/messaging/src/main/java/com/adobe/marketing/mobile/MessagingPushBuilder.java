@@ -19,6 +19,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -54,6 +55,7 @@ class MessagingPushBuilder {
      * @param context the application {@link Context}
      * @param utils {@link MessagingPushUtils} the utils class
      */
+    @VisibleForTesting
     MessagingPushBuilder(final @NonNull MessagingPushPayload payload, final @NonNull Context context, final @NonNull MessagingPushUtils utils) {
         this.utils = utils;
         this.payload = payload;
@@ -105,7 +107,7 @@ class MessagingPushBuilder {
             final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             final String channelIdFromPayload = payload.getChannelId();
 
-            // if a channel from the payload
+            // if a channel from the payload is not null and if a channel exists for the channel ID from the payload, use the same channel ID.
             if (channelIdFromPayload != null && notificationManager.getNotificationChannel(channelIdFromPayload) != null) {
                 Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel exists for channel ID: " + channelIdFromPayload + ". Using the same for push notification.");
                 return channelIdFromPayload;
@@ -162,6 +164,7 @@ class MessagingPushBuilder {
      * Sets the sound for the notification.
      * If a sound is received from the payload, the same is used.
      * If a sound is not received from the payload, the default sound is used
+     * The sound name from the payload should also include the format of the sound file. eg: sound.mp3
      * @param notificationBuilder the notification builder
      */
     private void setSound(final NotificationCompat.Builder notificationBuilder) {
