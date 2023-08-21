@@ -114,15 +114,19 @@ public final class Messaging {
 
     /**
      * Sends the push notification interactions as an experience event to Adobe Experience Edge.
+     * This method will return false if the notification being tracked is not from Adobe Journey Optimizer.
      *
      * @param intent            object which contains the tracking and xdm information.
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
+     *
+     * @return boolean value indicating whether the intent has required details for tracking.
      */
-    public static void handleNotificationResponse(@NonNull final Intent intent, final boolean applicationOpened, @Nullable final String customActionId) {
+    @SuppressWarnings("UnusedReturnValue")
+    public static boolean handleNotificationResponse(@NonNull final Intent intent, final boolean applicationOpened, @Nullable final String customActionId) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
-            return;
+            return false;
         }
         String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
         if (StringUtils.isNullOrEmpty(messageId)) {
@@ -131,14 +135,14 @@ public final class Messaging {
             messageId = intent.getStringExtra(TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (StringUtils.isNullOrEmpty(messageId)) {
                 Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, message id provided is null");
-                return;
+                return false;
             }
         }
 
         final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
         if (StringUtils.isNullOrEmpty(xdmData)) {
             Log.warning(LOG_TAG, CLASS_NAME, "No tracking data found in the intent, Ignoring to track AJO notification interactions.");
-            return;
+            return false;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
@@ -167,6 +171,7 @@ public final class Messaging {
             public void call(final Event event) {
             }
         });
+        return true;
     }
 
     /**

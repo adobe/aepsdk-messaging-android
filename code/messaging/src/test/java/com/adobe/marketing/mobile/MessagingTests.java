@@ -12,8 +12,10 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -102,7 +104,7 @@ public class MessagingTests {
         boolean done = Messaging.addPushTrackingDetails(null, null, null);
 
         // verify
-        Assert.assertFalse(done);
+        assertFalse(done);
     }
 
     @Test
@@ -145,7 +147,7 @@ public class MessagingTests {
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
 
         // verify
-        Assert.assertFalse(done);
+        assertFalse(done);
     }
 
     @Test
@@ -157,7 +159,7 @@ public class MessagingTests {
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
 
         // verify
-        Assert.assertFalse(done);
+        assertFalse(done);
     }
 
     @Test
@@ -171,7 +173,7 @@ public class MessagingTests {
         boolean done = Messaging.addPushTrackingDetails(mockIntent, mockMessageId, mockDataMap);
 
         // verify
-        Assert.assertFalse(done);
+        assertFalse(done);
     }
 
     // ========================================================================================
@@ -182,9 +184,10 @@ public class MessagingTests {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(eventCaptor, null, null, () -> {
             // test
-            Messaging.handleNotificationResponse(null, false, null);
+            boolean result = Messaging.handleNotificationResponse(null, false, null);
 
             // verify
+            assertFalse(result);
             verifyNoInteractions(MobileCore.class);
         });
     }
@@ -224,9 +227,10 @@ public class MessagingTests {
             when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
 
             // test
-            Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
             // verify no event was sent
+            assertFalse(result);
             verifyNoInteractions(MobileCore.class);
         });
     }
@@ -242,10 +246,11 @@ public class MessagingTests {
             when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
 
             // test
-            Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
             // verify
             verify(mockIntent, times(2)).getStringExtra(anyString());
+            assertTrue(result);
 
             MobileCore.dispatchEventWithResponseCallback(eventCaptor.capture(), anyLong(), callbackCaptor.capture());
 
@@ -270,9 +275,10 @@ public class MessagingTests {
             when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
 
             // test
-            Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
             // verify
+            assertFalse(result);
             verify(mockIntent, times(2)).getStringExtra(anyString());
             verifyNoInteractions(MobileCore.class);
         });
