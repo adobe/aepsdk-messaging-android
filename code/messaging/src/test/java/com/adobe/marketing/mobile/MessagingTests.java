@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -225,15 +226,8 @@ public class MessagingTests {
             // test
             Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
-            // verify
-            verify(mockIntent, times(2)).getStringExtra(anyString());
-
-            // verify event
-            Event event = eventCaptor.getValue();
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+            // verify no event was sent
+            verifyNoInteractions(MobileCore.class);
         });
     }
 

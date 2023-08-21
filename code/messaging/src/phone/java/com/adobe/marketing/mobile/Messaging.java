@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.1.4";
+    private static final String EXTENSION_VERSION = "2.1.5";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -136,8 +136,9 @@ public final class Messaging {
         }
 
         final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
-        if (xdmData == null) {
-            Log.warning(LOG_TAG, CLASS_NAME, "XDM data provided is null");
+        if (StringUtils.isNullOrEmpty(xdmData)) {
+            Log.warning(LOG_TAG, CLASS_NAME, "No tracking data found in the intent, Ignoring to track AJO notification interactions.");
+            return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
