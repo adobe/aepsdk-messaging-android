@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 class MessagingPushBuilder {
@@ -170,6 +171,7 @@ class MessagingPushBuilder {
     private void setSound(final NotificationCompat.Builder notificationBuilder) {
         if(!StringUtils.isNullOrEmpty(payload.getSound())) {
             notificationBuilder.setSound(utils.getSoundUriForResourceName(payload.getSound()));
+            return;
         }
         notificationBuilder.setDefaults(Notification.DEFAULT_ALL);
     }
@@ -181,19 +183,19 @@ class MessagingPushBuilder {
      * @param notificationBuilder the notification builder
      */
     private void setLargeIcon(final NotificationCompat.Builder notificationBuilder) {
-        if (!StringUtils.isNullOrEmpty(payload.getImageUrl())) {
-            Bitmap bitmap = utils.download(payload.getImageUrl());
-            if (bitmap != null) {
-                notificationBuilder.setLargeIcon(bitmap);
-                NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle();
-                bigPictureStyle.bigLargeIcon(bitmap);
-                notificationBuilder.setStyle(bigPictureStyle);
-            }
+        // Quick bail out if there is no image url
+        if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return;
+        Bitmap bitmap = utils.download(payload.getImageUrl());
 
-        }
+        // Bail out if the download fails
+        if (bitmap == null) return;
+        notificationBuilder.setLargeIcon(bitmap);
+        NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle();
+        bigPictureStyle.bigLargeIcon(bitmap);
+        notificationBuilder.setStyle(bigPictureStyle);
     }
 
     private boolean isValidIcon(final int icon) {
-        return icon > 0 ? true : false;
+        return icon > 0;
     }
 }

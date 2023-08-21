@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -39,7 +40,7 @@ public class AdobeMessagingService extends FirebaseMessagingService {
     }
 
     public static boolean handleRemoteMessage(final @NonNull Context context, final @NonNull RemoteMessage remoteMessage) {
-        if (!isAdobePushNotification(remoteMessage)) {
+        if (!isAJONotification(remoteMessage)) {
             Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "The received push message is not generated from Adobe Journey Optimizer. Messaging extension is ignoring to display the push notification.");
             return false;
         }
@@ -60,14 +61,14 @@ public class AdobeMessagingService extends FirebaseMessagingService {
         return true;
     }
 
-
-    // This method looks at the remote message and determines if it is an Adobe push notification
-    // by checking if it contains the title and body keys.
-    // This is a temporary solution until we have a better way to identify Adobe push notifications.
-    // @param remoteMessage the remote message to check
-    // @return true if the remote message is an Adobe push notification, false otherwise.
-    private static boolean isAdobePushNotification(final @NonNull RemoteMessage remoteMessage) {
-        // TODO: Use the newly introduced key to identify Adobe push notifications.
+    /**
+     * This method looks at the remote message payload and determines if it is a notification from Adobe Journey Optimizer.
+     *
+     * @param remoteMessage the message received from Firebase
+     * @return true if the remote message originated from Adobe Journey Optimizer, false otherwise
+     */
+    private static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
+        // TODO: Use the newly introduced key "ajo_type" to identify Adobe push notifications.
         return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingPushConstants.PayloadKeys.TITLE);
     }
 
