@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
+import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
@@ -46,13 +47,11 @@ public class AdobeMessagingService extends FirebaseMessagingService {
         }
 
         final MessagingPushPayload payload = new MessagingPushPayload(remoteMessage);
-
-        // build notification with payload
-        final MessagingPushBuilder builder = new MessagingPushBuilder(payload, context);
+        final Notification notification = MessagingPushBuilder.build(payload, context);
 
         // display notification
         final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(remoteMessage.getMessageId().hashCode(), builder.build());
+        notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
         // dispatch Push Notification Displayed event
         final HashMap<String,Object> notificationData = new HashMap<>(remoteMessage.getData());

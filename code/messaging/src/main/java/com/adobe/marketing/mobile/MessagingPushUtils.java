@@ -26,14 +26,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 class MessagingPushUtils {
-    private static final String SELF_TAG = "PushNotificationMediaDownloader";
-    private final Context context;
+    private static final String SELF_TAG = "MessagingPushUtils";
 
-    MessagingPushUtils(final Context context) {
-        this.context = context;
-    }
-
-    Bitmap download(final String url) {
+    static Bitmap download(final String url) {
         Bitmap bitmap = null;
         try {
             final URL imageUrl = new URL(url);
@@ -46,7 +41,7 @@ class MessagingPushUtils {
         return bitmap;
     }
 
-    int getDefaultAppIcon() {
+    static int getDefaultAppIcon(final Context context) {
         final String packageName = context.getPackageName();
         try {
             return context.getPackageManager().getApplicationInfo(packageName, 0).icon;
@@ -61,9 +56,10 @@ class MessagingPushUtils {
      * The sound file should be in format of .mp3, .wav, or .ogg
      *
      * @param soundName the name of the sound file
+     * @param context   the application {@link Context}
      * @return the Uri for the sound file with the given name
      */
-    Uri getSoundUriForResourceName(final @NonNull String soundName) {
+    static Uri getSoundUriForResourceName(final @NonNull String soundName, final Context context) {
         return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName()
                 + "/raw/" + soundName);
     }
@@ -74,9 +70,10 @@ class MessagingPushUtils {
      * If the icon file is not found, 0 is returned.
      *
      * @param iconName the name of the icon file
+     * @param context  the application {@link Context}
      * @return the resource id for the icon with the given name
      */
-    int getSmallIconWithResourceName(final String iconName) {
+    static int getSmallIconWithResourceName(final String iconName, final Context context) {
         if (StringUtils.isNullOrEmpty(iconName)) {
             return 0;
         }

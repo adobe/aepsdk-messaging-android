@@ -19,10 +19,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 class MessagingPushBuilder {
@@ -33,42 +31,17 @@ class MessagingPushBuilder {
     // This will appear in the notification settings for the app.
     private static String DEFAULT_CHANNEL_NAME = "General";
 
-    @NonNull
-    private MessagingPushPayload payload;
-    @NonNull
-    private Context context;
-
-    @NonNull
-    private MessagingPushUtils utils;
-
-    /**
-     * Constructor.
-     * @param payload {@link MessagingPushPayload} the payload received from the push notification
-     * @param context the application {@link Context}
-     **/
-    MessagingPushBuilder(final @NonNull MessagingPushPayload payload, final @NonNull Context context) {
-        this(payload, context, new MessagingPushUtils(context));
-    }
-
-    /**
-     * Constructor for testing purposes.
-     * @param payload {@link MessagingPushPayload} the payload received from the push notification
-     * @param context the application {@link Context}
-     * @param utils {@link MessagingPushUtils} the utils class
-     */
-    @VisibleForTesting
-    MessagingPushBuilder(final @NonNull MessagingPushPayload payload, final @NonNull Context context, final @NonNull MessagingPushUtils utils) {
-        this.utils = utils;
-        this.payload = payload;
-        this.context = context;
-    }
 
     /**
      * Builds a notification for the received payload.
+     *
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param context the application {@link Context}
      * @return the notification
      */
     @NonNull
-    Notification build(){
+    static Notification build(final MessagingPushPayload payload,
+                       final Context context){
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
@@ -79,10 +52,10 @@ class MessagingPushBuilder {
         builder.setPriority(payload.getNotificationPriority());
         builder.setAutoCancel(true);
 
-        setLargeIcon(builder);
-        setSmallIcon(builder); // Small Icon must be present, otherwise the notification will not be displayed.
-        addActionButtons(builder); // Add action buttons if any
-        setSound(builder);
+        setLargeIcon(builder, payload);
+        setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
+        addActionButtons(builder, payload, context); // Add action buttons if any
+        setSound(builder, payload, context);
 
         return builder.build();
     }
@@ -99,7 +72,8 @@ class MessagingPushBuilder {
      * @return the channel ID
      */
     @NonNull
-    private String createChannelAndGetChannelID(final MessagingPushPayload payload, final Context context)  {
+    private static String createChannelAndGetChannelID(final MessagingPushPayload payload,
+                                                final Context context)  {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             // For Android versions below O, no channel is created. Just return the obtained channel ID.
             return payload.getChannelId() == null ? DEFAULT_CHANNEL_ID : payload.getChannelId();
@@ -131,7 +105,9 @@ class MessagingPushBuilder {
     }
 
 
-    private void addActionButtons(final NotificationCompat.Builder builder) {
+    private static void addActionButtons(final NotificationCompat.Builder builder,
+                                  final MessagingPushPayload payload,
+                                  final Context context) {
         // TODO: Add this in the future Pull Request
     }
 
@@ -141,10 +117,14 @@ class MessagingPushBuilder {
      * If a small icon is not received from the payload, we use the icon set using MobileCore.setSmallIcon().
      * If a small icon is not set using MobileCore.setSmallIcon(), we use the default small icon of the application.
      *
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param context the application {@link Context}
      * @param builder the notification builder
      */
-    private void setSmallIcon(final NotificationCompat.Builder builder) {
-        final int iconFromPayload = utils.getSmallIconWithResourceName(payload.getIcon());
+    private static void setSmallIcon(final NotificationCompat.Builder builder,
+                              final MessagingPushPayload payload,
+                              final Context context) {
+        final int iconFromPayload = MessagingPushUtils.getSmallIconWithResourceName(payload.getIcon(), context);
         final int iconFromMobileCore =  -1 ;   //MobileCore.getSmallIconResourceId();
 
         if (isValidIcon(iconFromPayload)) {
@@ -152,7 +132,7 @@ class MessagingPushBuilder {
         } else if (isValidIcon(iconFromMobileCore)) {
             builder.setSmallIcon(iconFromMobileCore);
         } else {
-            final int iconFromApp = utils.getDefaultAppIcon();
+            final int iconFromApp = MessagingPushUtils.getDefaultAppIcon(context);
             if (isValidIcon(iconFromApp)) {
                 builder.setSmallIcon(iconFromApp);
             } else {
@@ -166,11 +146,16 @@ class MessagingPushBuilder {
      * If a sound is received from the payload, the same is used.
      * If a sound is not received from the payload, the default sound is used
      * The sound name from the payload should also include the format of the sound file. eg: sound.mp3
+     *
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param context the application {@link Context}
      * @param notificationBuilder the notification builder
      */
-    private void setSound(final NotificationCompat.Builder notificationBuilder) {
+    private static void setSound(final NotificationCompat.Builder notificationBuilder,
+                          final MessagingPushPayload payload,
+                          final Context context) {
         if(!StringUtils.isNullOrEmpty(payload.getSound())) {
-            notificationBuilder.setSound(utils.getSoundUriForResourceName(payload.getSound()));
+            notificationBuilder.setSound(MessagingPushUtils.getSoundUriForResourceName(payload.getSound(), context));
             return;
         }
         notificationBuilder.setDefaults(Notification.DEFAULT_ALL);
@@ -180,12 +165,15 @@ class MessagingPushBuilder {
      * Sets the large icon for the notification.
      * If a large icon url is received from the payload, the image is downloaded and the notification style is set to BigPictureStyle.
      * If large icon url is not received from the payload, default style is used for the notification.
+     *
      * @param notificationBuilder the notification builder
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
      */
-    private void setLargeIcon(final NotificationCompat.Builder notificationBuilder) {
+    private static void setLargeIcon(final NotificationCompat.Builder notificationBuilder,
+                              final MessagingPushPayload payload) {
         // Quick bail out if there is no image url
         if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return;
-        Bitmap bitmap = utils.download(payload.getImageUrl());
+        Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
 
         // Bail out if the download fails
         if (bitmap == null) return;
@@ -195,7 +183,7 @@ class MessagingPushBuilder {
         notificationBuilder.setStyle(bigPictureStyle);
     }
 
-    private boolean isValidIcon(final int icon) {
+    private static boolean isValidIcon(final int icon) {
         return icon > 0;
     }
 }

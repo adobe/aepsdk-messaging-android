@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,10 +32,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class PushNotificationBuilderTests {
+public class MessagingPushBuilderTests {
 
     private static final String NOTIFICATION_TITLE = "notification title";
     private static final String NOTIFICATION_BODY = "notification body";
@@ -44,25 +46,24 @@ public class PushNotificationBuilderTests {
     private static final int BADGE_COUNT = 10;
     private static final String LARGE_IMAGE_URL = "https://www.sampleimage.com";
     private static final int SAMPLE_PRIORITY = Notification.PRIORITY_HIGH;
-
     private static final String CUSTOM_SOUND_NAME = "customSound";
     private static final Uri CUSTOM_SOUND_URI = Uri.parse("android.resource://com.adobe.sample/raw/customSound");
 
     @Mock
     Context context;
     @Mock
-    MessagingPushUtils utils;
-    @Mock
     MessagingPushPayload payload;
     @Mock
     Notification notification;
-
     MessagingPushBuilder builder;
     MockedConstruction<NotificationCompat.Builder> mockBuilderConstructor;
 
+    MockedStatic<MessagingPushUtils> utils;
+
     @Before
     public void before() {
-        builder = new MessagingPushBuilder(payload, context, utils);
+        utils = mockStatic(MessagingPushUtils.class);
+
         mockBuilderConstructor = mockConstruction(NotificationCompat.Builder.class, (mock, context) -> {
             when(mock.build()).thenReturn(notification);
         });
@@ -75,21 +76,21 @@ public class PushNotificationBuilderTests {
         when(payload.getIcon()).thenReturn(CUSTOM_ICON_RESOURCE_NAME);
         when(payload.getSound()).thenReturn(CUSTOM_SOUND_NAME);
 
-        when(utils.getDefaultAppIcon()).thenReturn(DEFAULT_ICON_RESOURCE_ID);
-        when(utils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
-        when(utils.getSoundUriForResourceName(CUSTOM_SOUND_NAME)).thenReturn(CUSTOM_SOUND_URI);
+        utils.when(() -> MessagingPushUtils.getDefaultAppIcon(context)).thenReturn(DEFAULT_ICON_RESOURCE_ID);
+        utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME,context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
+        utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME ,context)).thenReturn(CUSTOM_SOUND_URI);
     }
 
     @After
     public void after() {
         mockBuilderConstructor.close();
+        utils.close();
     }
 
     @Test
     public void test_notificationBuild() {
-
         // test
-        Notification notification = builder.build();
+        Notification notification = builder.build(payload, context);
         NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
 
         //verify
@@ -108,7 +109,7 @@ public class PushNotificationBuilderTests {
         when(payload.getSound()).thenReturn(null);
 
         // test
-        Notification notification = builder.build();
+        Notification notification = builder.build(payload, context);
         NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
 
         //verify
@@ -123,7 +124,7 @@ public class PushNotificationBuilderTests {
         when(payload.getIcon()).thenReturn(null);
 
         // test
-        Notification notification = builder.build();
+        Notification notification = builder.build(payload, context);
         NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
 
         //verify
@@ -137,7 +138,7 @@ public class PushNotificationBuilderTests {
         when(payload.getNotificationPriority()).thenReturn(Notification.PRIORITY_DEFAULT);
 
         // test
-        Notification notification = builder.build();
+        Notification notification = builder.build(payload, context);
         NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
 
         //verify

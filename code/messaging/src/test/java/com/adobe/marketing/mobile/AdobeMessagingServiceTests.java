@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,7 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import java.util.HashMap;
@@ -54,7 +52,7 @@ public class AdobeMessagingServiceTests {
     Notification notification;
     MockedStatic<MobileCore> mobileCore;
     MockedStatic<NotificationManagerCompat> notificationManagerCompat;
-    MockedConstruction<MessagingPushBuilder> builderConstructor;
+    MockedStatic<MessagingPushBuilder> pushBuilder;
 
     @Before
     public void before() {
@@ -68,19 +66,17 @@ public class AdobeMessagingServiceTests {
         mobileCore = mockStatic(MobileCore.class);
 
         // Mock PushNotificationBuilder
-        builderConstructor = mockConstruction(MessagingPushBuilder.class, (mock, context) -> {
-            when(mock.build()).thenReturn(notification);
-        });
+        pushBuilder = mockStatic(MessagingPushBuilder.class);
+        pushBuilder.when(() -> MessagingPushBuilder.build(any(MessagingPushPayload.class), any(Context.class))).thenReturn(notification);
 
         when(remoteMessage.getMessageId()).thenReturn("someMessageID");
-
     }
 
     @After
     public void clean() {
         mobileCore.close();
+        pushBuilder.close();
         notificationManagerCompat.close();
-        builderConstructor.close();
     }
 
 
@@ -112,6 +108,7 @@ public class AdobeMessagingServiceTests {
 
         // verify notification created from push notification builder is displayed
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
+        pushBuilder.verify(() -> MessagingPushBuilder.build(any(MessagingPushPayload.class), eq(context)));
     }
 
     @Test
