@@ -16,6 +16,7 @@ import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getShared
 import static com.adobe.marketing.mobile.messaging.internal.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +27,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.FeedItem;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.Surface;
@@ -499,6 +502,79 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, messagingRequestEvents.size());
+    }
+
+    // ========================================================================================
+    // Tests for Messaging.setPropositionsHandler API
+    // ========================================================================================
+    private static final String TITLE = "title";
+    private static final String BODY = "body";
+    private static final String IMAGE_URL = "imageUrl";
+    private static final String ACTION_URL = "actionUrl";
+    private static final String ACTION_TITLE = "actionTitle";
+    private static final String TEST_TITLE = "testTitle";
+    private static final String TEST_BODY = "testBody";
+    private static final String TEST_IMAGE_URL = "testImageUrl";
+    private static final String TEST_ACTION_URL = "testActionUrl";
+    private static final String TEST_ACTION_TITLE = "testActionTitle";
+    private static final String EXPECTED_SURFACE_URI = "mobileapp://com.adobe.marketing.mobile.messaging.test";
+
+    Map<String, Object> toEventData(FeedItem feedItem) {
+        final Map<String, Object> feedItemAsMap = new HashMap<>();
+        feedItemAsMap.put(TITLE, feedItem.getTitle());
+        feedItemAsMap.put(BODY, feedItem.getBody());
+        feedItemAsMap.put(IMAGE_URL, feedItem.getImageUrl());
+        feedItemAsMap.put(ACTION_URL, feedItem.getActionUrl());
+        feedItemAsMap.put(ACTION_TITLE, feedItem.getActionTitle());
+        return feedItemAsMap;
+    }
+
+    @Test
+    public void test_setPropositionsHandler() throws InterruptedException {
+        // setup
+        FeedItem feedItem = new FeedItem.Builder(TEST_TITLE, TEST_BODY)
+                .setImageUrl(TEST_IMAGE_URL)
+                .setActionUrl(TEST_ACTION_URL)
+                .setActionTitle(TEST_ACTION_TITLE)
+                .build();
+
+        List<Map<String, Object>> feedItemList = new ArrayList<>();
+        feedItemList.add(toEventData(feedItem));
+        feedItemList.add(toEventData(feedItem));
+        feedItemList.add(toEventData(feedItem));
+        Map<String, Object> feedItemMap = new HashMap<>();
+        feedItemMap.put("items", feedItemList);
+
+        Map<String, Object> messageNotificationEventData = new HashMap<>();
+        messageNotificationEventData.put(EXPECTED_SURFACE_URI, feedItemMap);
+
+        Event messageNotificationEvent = new Event.Builder(MessagingTestConstants.EventName.MESSAGE_FEEDS_NOTIFICATION,
+                EventType.MESSAGING, MessagingTestConstants.EventSource.NOTIFICATION).setEventData(messageNotificationEventData).build();
+
+        // test
+        MobileCore.dispatchEvent(messageNotificationEvent);
+
+        // verify
+        Map<Surface, List<FeedItem>>[] returnedPropositions = new Map[]{new HashMap<>()};
+        CountDownLatch latch = new CountDownLatch(1);
+        Messaging.setPropositionsHandler(value -> {
+            returnedPropositions[0] = value;
+            latch.countDown();
+        });
+        latch.await(5, TimeUnit.SECONDS);
+
+        assertNotNull(returnedPropositions[0]);
+        for (Map.Entry<Surface, List<FeedItem>> returnedProposition : returnedPropositions[0].entrySet()) {
+            assertEquals(EXPECTED_SURFACE_URI, returnedProposition.getKey().getUri());
+            assertEquals(3, returnedProposition.getValue().size());
+            for (FeedItem returnedFeedItem : returnedProposition.getValue()) {
+                assertEquals(TEST_TITLE, returnedFeedItem.getTitle());
+                assertEquals(TEST_BODY, returnedFeedItem.getBody());
+                assertEquals(TEST_ACTION_TITLE, returnedFeedItem.getActionTitle());
+                assertEquals(TEST_ACTION_URL, returnedFeedItem.getActionUrl());
+                assertEquals(TEST_IMAGE_URL, returnedFeedItem.getImageUrl());
+            }
+        }
     }
 
     // --------------------------------------------------------------------------------------------

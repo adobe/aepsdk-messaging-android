@@ -87,11 +87,12 @@ public class Feed {
      * @return {@code Feed} created from the event data {@code Map<String, Object>}
      */
     public static Feed fromEventData(final Map<String, Object> eventData) {
-        final Map<String, Map> feedData = DataReader.optTypedMap(Map.class, eventData, MAP_FEEDS_KEY, null);
-        if (MapUtils.isNullOrEmpty(feedData)) {
+        if (MapUtils.isNullOrEmpty(eventData)) {
             return null;
         }
-        final Map feedMap = feedData.values().iterator().next();
+
+        final Map.Entry<String, Object> feedEntry = eventData.entrySet().iterator().next();
+        final Map<String, Object> feedMap = (Map<String, Object>) feedEntry.getValue();
         if (MapUtils.isNullOrEmpty(feedMap)) {
             return null;
         }

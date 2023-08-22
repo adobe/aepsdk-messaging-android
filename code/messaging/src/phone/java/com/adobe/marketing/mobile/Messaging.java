@@ -19,10 +19,13 @@ import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,7 @@ public final class Messaging {
 
     private static final String EVENT_TYPE_PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
     private static final String EVENT_TYPE_PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
+    private static final String EVENT_SOURCE_NOTIFICATION = "com.adobe.eventSource.notification";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
@@ -46,10 +50,14 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
     private static final String _XDM = "_xdm";
     private static final String SURFACES = "surfaces";
+    private static final String ITEMS = "items";
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
+    private static final String SURFACE_BASE = "mobileapp://";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
+    private static boolean isPropositionsResponseListenerRegistered = false;
+    private static AdobeCallback<Map<Surface, List<FeedItem>>> propositionsResponseHandler;
 
     private Messaging() {
     }
@@ -191,9 +199,29 @@ public final class Messaging {
 
     // region proposition retrieval api
 
-    // TODO: implement
-    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
-
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<FeedItem>>> callback) {
+        propositionsResponseHandler = callback;
+        if (!isPropositionsResponseListenerRegistered && callback != null) {
+            isPropositionsResponseListenerRegistered = true;
+            MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION,  event -> {
+                final List<FeedItem> propositions = new ArrayList<>();
+                final Surface surface = Surface.fromUriString(getAppSurface());
+                final Map<String, Object> eventData = event.getEventData();
+                if (!MapUtils.isNullOrEmpty(eventData)) {
+                    final Map<String, Object> itemMap = DataReader.optTypedMap(Object.class, eventData, surface.getUri(), Collections.emptyMap());
+                    final List<Map<String, Object>> feedItemMaps = DataReader.optTypedListOfMap(Object.class, itemMap, ITEMS, Collections.emptyList());
+                    for (final Map feedItemMap : feedItemMaps) {
+                        final FeedItem feedItem = FeedItem.fromEventData(feedItemMap);
+                        propositions.add(feedItem);
+                    }
+                }
+                propositionsResponseHandler.call(new HashMap<Surface, List<FeedItem>>(){{
+                    put(surface, propositions);
+                }});
+            });
+        } else {
+            isPropositionsResponseListenerRegistered = false;
+        }
     }
 
     // TODO: implement
@@ -234,5 +262,10 @@ public final class Messaging {
                 .build();
 
         MobileCore.dispatchEvent(updatePropositionsEvent);
+    }
+
+    private static String getAppSurface() {
+        final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
+        return StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + packageName;
     }
 }

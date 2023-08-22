@@ -26,7 +26,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_FEEDS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.MessageFeedKeys.FEEDS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.MESSAGE_FEED_SCHEMA_VALUE;
 
 import androidx.annotation.VisibleForTesting;
@@ -190,7 +189,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         if ("TESTING_ID".equals(requestEventId)) {
-            requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(getAppSurface()));
+            requestedSurfacesForEventId.put("TESTING_ID", Collections.singletonList(getAppSurface()));
         }
 
         // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
@@ -217,17 +216,18 @@ class EdgePersonalizationResponseHandler {
 
         final List<RuleConsequence> consequenceList = !parsedRules.isEmpty() ? parsedRules.get(0).getConsequenceList() : new ArrayList<>();
         if (!consequenceList.isEmpty() && MessagingUtils.isFeedItem(consequenceList.get(0))) {
-            feedRulesEngine.replaceRules(parsedRules);
+            if (clearExistingRules) {
+                feedRulesEngine.replaceRules(parsedRules);
+            } else {
+                feedRulesEngine.addRules(parsedRules);
+            }
 
             final Map<String, Feed> feeds = processFeedConsequences(feedRulesEngine.evaluateEvent(edgeResponseEvent));
             mergeFeedsInMemory(feeds, Objects.requireNonNull(requestedSurfacesForEventId.get(lastProcessedRequestEventId)));
             // dispatch an event with the feeds received from the remote
-            final Map<String, Object> eventData = new HashMap<>();
-            eventData.put(FEEDS, inMemoryFeeds);
-
             final Event event = new Event.Builder(MESSAGE_FEEDS_NOTIFICATION,
                     EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
-                    .setEventData(eventData)
+                    .setEventData(inMemoryFeeds)
                     .build();
 
             extensionApi.dispatch(event);
