@@ -24,6 +24,12 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.HashMap;
 
+/**
+ * This class is the entry point for all push notifications received from Firebase.
+ * <p>
+ *  Once the AdobeMessagingService is registered in the AndroidManifest.xml.
+ *  This class will automatically handle display and tracking of Adobe Journey Optimizer push notifications.
+ */
 public class AdobeMessagingService extends FirebaseMessagingService {
     private static final String SELF_TAG = "AdobeMessagingService";
     private static final String XDM_KEY  = "_xdm";

@@ -25,6 +25,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+/**
+ * Utility class for Building AJO push notification.
+ * <p>
+ *     This class is used internally by the Messaging extension's push builder to build the push notification.
+ *     This class is not intended to be used by the customers.
+ */
 class MessagingPushUtils {
     private static final String SELF_TAG = "MessagingPushUtils";
 
