@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,22 @@ public class MessagingPushPayload {
         static final String URI = "uri";
         static final String TYPE = "type";
     }
+
+    static final Map<String,Integer> notificationImportanceMap = new HashMap<String,Integer>() {{
+        put(NotificationPriorities.PRIORITY_MIN, NotificationManager.IMPORTANCE_MIN);
+        put(NotificationPriorities.PRIORITY_LOW, NotificationManager.IMPORTANCE_LOW);
+        put(NotificationPriorities.PRIORITY_DEFAULT, NotificationManager.IMPORTANCE_DEFAULT);
+        put(NotificationPriorities.PRIORITY_HIGH, NotificationManager.IMPORTANCE_HIGH);
+        put(NotificationPriorities.PRIORITY_MAX, NotificationManager.IMPORTANCE_MAX);
+    }};
+
+    static final Map<String,Integer> notificationPriorityMap = new HashMap<String,Integer>() {{
+        put(NotificationPriorities.PRIORITY_MIN, Notification.PRIORITY_MIN);
+        put(NotificationPriorities.PRIORITY_LOW, Notification.PRIORITY_LOW);
+        put(NotificationPriorities.PRIORITY_DEFAULT, Notification.PRIORITY_DEFAULT);
+        put(NotificationPriorities.PRIORITY_HIGH, Notification.PRIORITY_HIGH);
+        put(NotificationPriorities.PRIORITY_MAX, Notification.PRIORITY_MAX);
+    }};
 
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
@@ -198,38 +215,18 @@ public class MessagingPushPayload {
 
     private int getNotificationPriorityFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
-        switch (priority) {
-            case NotificationPriorities.PRIORITY_MIN:
-                return Notification.PRIORITY_MIN;
-            case NotificationPriorities.PRIORITY_LOW:
-                return Notification.PRIORITY_LOW;
-            case NotificationPriorities.PRIORITY_HIGH:
-                return Notification.PRIORITY_HIGH;
-            case NotificationPriorities.PRIORITY_MAX:
-                return Notification.PRIORITY_MAX;
-            case NotificationPriorities.PRIORITY_DEFAULT:
-            default:
-                return Notification.PRIORITY_DEFAULT;
-        }
+        final Integer resolvedPriority = notificationPriorityMap.get(priority);
+        if (resolvedPriority == null) return Notification.PRIORITY_DEFAULT;
+        return resolvedPriority;
     }
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private int getNotificationImportanceFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
-            switch (priority) {
-                case NotificationPriorities.PRIORITY_MIN:
-                    return NotificationManager.IMPORTANCE_MIN;
-                case NotificationPriorities.PRIORITY_LOW:
-                    return NotificationManager.IMPORTANCE_LOW;
-                case NotificationPriorities.PRIORITY_HIGH:
-                    return NotificationManager.IMPORTANCE_HIGH;
-                case NotificationPriorities.PRIORITY_MAX:
-                    return NotificationManager.IMPORTANCE_MAX;
-                case NotificationPriorities.PRIORITY_DEFAULT:
-                default:
-                    return NotificationManager.IMPORTANCE_DEFAULT;
-            }
+        final Integer resolvedImportance = notificationImportanceMap.get(priority);
+        if (resolvedImportance == null) return Notification.PRIORITY_DEFAULT;
+        return resolvedImportance;
     }
 
     private ActionType getActionTypeFromString(final String type) {

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import android.app.Notification;
 import android.content.Context;
+import android.media.RingtoneManager;
 import android.net.Uri;
 
 import androidx.core.app.NotificationCompat;
@@ -114,7 +115,7 @@ public class MessagingPushBuilderTests {
 
         //verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setDefaults(Notification.DEFAULT_ALL);
+        verify(mockNotificationBuilder,times(1)).setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         verify(mockNotificationBuilder,times(0)).setSound(any(Uri.class));
     }
 

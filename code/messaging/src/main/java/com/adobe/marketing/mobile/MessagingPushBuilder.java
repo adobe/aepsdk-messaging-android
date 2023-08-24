@@ -17,12 +17,19 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.media.RingtoneManager;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+/**
+ * Class for building push notification.
+ * <p>
+ *     The build method in this class takes {@link MessagingPushPayload} received from the push notification and builds the notification.
+ *     This class is used internally by AdobeMessagingService to build the push notification.
+ */
 class MessagingPushBuilder {
 
     private static final String SELF_TAG = "PushNotificationBuilder";
@@ -158,7 +165,7 @@ class MessagingPushBuilder {
             notificationBuilder.setSound(MessagingPushUtils.getSoundUriForResourceName(payload.getSound(), context));
             return;
         }
-        notificationBuilder.setDefaults(Notification.DEFAULT_ALL);
+        notificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
     }
 
     /**
@@ -183,6 +190,11 @@ class MessagingPushBuilder {
         notificationBuilder.setStyle(bigPictureStyle);
     }
 
+   /**
+     * Checks if the icon is valid.
+     * @param icon the icon to be checked
+     * @return true if the icon is valid, false otherwise
+     */
     private static boolean isValidIcon(final int icon) {
         return icon > 0;
     }
