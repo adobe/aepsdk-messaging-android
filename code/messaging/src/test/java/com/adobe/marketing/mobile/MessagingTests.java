@@ -10,54 +10,75 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
 
 import android.content.Intent;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingTests {
     @Mock
     Intent mockIntent;
+    MockedStatic<MobileCore> mobileCore;
+    ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor;
+    ArgumentCaptor<Event> dispatchEventCaptor;
+    CountDownLatch latch;
+    MessagingPushTrackingStatus[] capturedStatus = new MessagingPushTrackingStatus[1];
+    @Before
+    public void before() {
+        latch = new CountDownLatch(1);
+        capturedStatus = new MessagingPushTrackingStatus[1];
 
-    private void runWithMockedMobileCore(final ArgumentCaptor<Event> eventArgumentCaptor,
-                                         final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor,
-                                         final ArgumentCaptor<ExtensionErrorCallback<ExtensionError>> extensionErrorCallbackArgumentCaptor,
-                                         final Runnable testRunnable) {
-        try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class)) {
-            mobileCoreMockedStatic.when(() -> MobileCore.registerExtension(any(), extensionErrorCallbackArgumentCaptor != null ? extensionErrorCallbackArgumentCaptor.capture() : any(ExtensionErrorCallback.class))).thenCallRealMethod();
-            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEventWithResponseCallback(eventArgumentCaptor  != null ? eventArgumentCaptor.capture() : any(Event.class), anyLong(), callbackWithErrorArgumentCaptor != null ? callbackWithErrorArgumentCaptor.capture() : any(AdobeCallbackWithError.class))).thenCallRealMethod();
-            mobileCoreMockedStatic.when(() -> MobileCore.dispatchEvent(eventArgumentCaptor  != null ? eventArgumentCaptor.capture() : any(Event.class))).thenCallRealMethod();
-            testRunnable.run();
-        }
+        // Mock MobileCore
+        dispatchEventCaptor = ArgumentCaptor.forClass(Event.class);
+        callbackWithErrorArgumentCaptor = ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+
+        mobileCore = mockStatic(MobileCore.class);
+
+        mobileCore.when(() -> MobileCore.dispatchEventWithResponseCallback(dispatchEventCaptor.capture(), anyLong(),callbackWithErrorArgumentCaptor.capture())).thenCallRealMethod();
+        mobileCore.when(() -> MobileCore.dispatchEvent(dispatchEventCaptor.capture())).thenCallRealMethod();
+
     }
+
+    @After
+    public void after() {
+        mobileCore.close();
+        dispatchEventCaptor = null;
+        callbackWithErrorArgumentCaptor = null;
+        capturedStatus = null;
+        latch = null;
+    }
+
 
     // ========================================================================================
     // extensionVersion
@@ -77,22 +98,21 @@ public class MessagingTests {
 
     @Test
     public void test_registerExtensionAPI() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         final ArgumentCaptor<ExtensionErrorCallback<ExtensionError>> callbackCaptor = ArgumentCaptor.forClass(ExtensionErrorCallback.class);
-        runWithMockedMobileCore(eventCaptor, null, callbackCaptor, () -> {
-            // test
-            Messaging.registerExtension();
 
-            // The monitor extension should register with core
-            MobileCore.registerExtension(ArgumentMatchers.eq(MessagingExtension.class), callbackCaptor.capture());
+        // test
+        Messaging.registerExtension();
 
-            // verify the callback
-            ExtensionErrorCallback extensionErrorCallback = callbackCaptor.getAllValues().get(0);
-            Assert.assertNotNull("The extension callback should not be null", extensionErrorCallback);
+        // The monitor extension should register with core
+        mobileCore.verify(() -> MobileCore.registerExtension(any(), callbackCaptor.capture()));
+        MobileCore.registerExtension(ArgumentMatchers.eq(MessagingExtension.class), callbackCaptor.capture());
 
-            // should not crash on calling the callback
-            extensionErrorCallback.error(ExtensionError.UNEXPECTED_ERROR);
-        });
+        // verify the callback
+        ExtensionErrorCallback extensionErrorCallback = callbackCaptor.getAllValues().get(0);
+        Assert.assertNotNull("The extension callback should not be null", extensionErrorCallback);
+
+        // should not crash on calling the callback
+        extensionErrorCallback.error(ExtensionError.UNEXPECTED_ERROR);
     }
 
     // ========================================================================================
@@ -180,22 +200,27 @@ public class MessagingTests {
     // handleNotificationResponse
     // ========================================================================================
     @Test
-    public void test_handleNotificationResponse_WhenParamsAreNull() {
+    public void test_handleNotificationResponse_WhenParamsAreNull() throws InterruptedException {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
-            // test
-            boolean result = Messaging.handleNotificationResponse(null, false, null);
-
-            // verify
-            assertFalse(result);
-            verifyNoInteractions(MobileCore.class);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final MessagingPushTrackingStatus[] capturedStatus = new MessagingPushTrackingStatus[1];
+        // test
+        Messaging.handleNotificationResponse(null, false, null, new AdobeCallback<MessagingPushTrackingStatus>() {
+            @Override
+            public void call(MessagingPushTrackingStatus trackingStatus) {
+                latch.countDown();
+                capturedStatus[0] = trackingStatus;
+            }
         });
+
+        // verify
+        latch.await(2, TimeUnit.SECONDS);
+        assertEquals(MessagingPushTrackingStatus.INVALID_INTENT, capturedStatus[0]);
+        verifyNoInteractions(MobileCore.class);
     }
 
     @Test
     public void test_handleNotificationResponse() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
             String mockActionId = "mockActionId";
             String mockXdm = "mockXdm";
 
@@ -206,106 +231,111 @@ public class MessagingTests {
 
             // verify
             verify(mockIntent, times(2)).getStringExtra(anyString());
-            MobileCore.dispatchEvent(eventCaptor.capture(), any(ExtensionErrorCallback.class));
+            mobileCore.verify(() -> MobileCore.dispatchEventWithResponseCallback(any(),anyLong(),any()));
 
             // verify event
-            Event event = eventCaptor.getValue();
+            Event event = dispatchEventCaptor.getValue();
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
             assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
-        });
+            assertEquals(eventData.get("actionId"), mockActionId);
     }
 
     @Test
-    public void test_handleNotificationResponseNoXdmData() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
-            String mockActionId = "mockActionId";
-            String messageId = "messageId";
+    public void test_handleNotificationResponseNoXdmData() throws Exception {
+        String mockActionId = "mockActionId";
+        String messageId = "messageId";
+        when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
 
-            when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
-
-            // test
-            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
-
-            // verify no event was sent
-            assertFalse(result);
-            verifyNoInteractions(MobileCore.class);
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+            @Override
+            public void call(MessagingPushTrackingStatus trackingStatus) {
+                latch.countDown();
+                capturedStatus[0] = trackingStatus;
+            }
         });
+
+        // verify no event was sent
+        latch.await(2, TimeUnit.SECONDS);
+        assertEquals(MessagingPushTrackingStatus.NO_TRACKING_DATA, capturedStatus[0]);
+        verifyNoInteractions(MobileCore.class);
     }
 
     @Test
-    public void test_handleNotificationResponseEventDispatchError() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor = ArgumentCaptor.forClass(AdobeCallbackWithError.class);
-        runWithMockedMobileCore(eventCaptor, callbackCaptor, null, () -> {
-            String mockActionId = "mockActionId";
-            String mockXdm = "mockXdm";
+    public void test_handleNotificationResponse_EventDispatchError() throws Exception{
+        String mockActionId = "mockActionId";
+        String mockXdm = "mockXdm";
+        when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
 
-            when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
-
-            // test
-            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
-
-            // verify
-            verify(mockIntent, times(2)).getStringExtra(anyString());
-            assertTrue(result);
-
-            MobileCore.dispatchEventWithResponseCallback(eventCaptor.capture(), anyLong(), callbackCaptor.capture());
-
-            // verify event
-            Event event = eventCaptor.getAllValues().get(0);
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
-            // no exception should occur when triggering unexpected error callback
-            callbackCaptor.getAllValues().get(0).fail(AdobeError.UNEXPECTED_ERROR);
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+            @Override
+            public void call(MessagingPushTrackingStatus trackingStatus) {
+                latch.countDown();
+                capturedStatus[0] = trackingStatus;
+            }
         });
+
+        // verify
+        mobileCore.verify(() -> MobileCore.dispatchEventWithResponseCallback(any(),anyLong(),any()));
+
+        // verify event
+        Event event = dispatchEventCaptor.getAllValues().get(0);
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+        assertEquals(eventData.get("actionId"), mockActionId);
+
+        // no exception should occur when triggering unexpected error callback
+        callbackWithErrorArgumentCaptor.getAllValues().get(0).fail(AdobeError.UNEXPECTED_ERROR);
+
+        // verify the return value
+        latch.await(2, TimeUnit.SECONDS);
+        assertEquals(MessagingPushTrackingStatus.UNKNOWN_ERROR, capturedStatus[0]);
     }
 
     @Test
     public void test_handleNotificationResponseWithEmptyMessageId() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
-            String mockActionId = "mockActionId";
-            String messageId = "";
+        String mockActionId = "mockActionId";
+        String messageId = "";
 
-            when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
+        when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
 
-            // test
-            boolean result = Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
-
-            // verify
-            assertFalse(result);
-            verify(mockIntent, times(2)).getStringExtra(anyString());
-            verifyNoInteractions(MobileCore.class);
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+            @Override
+            public void call(MessagingPushTrackingStatus trackingStatus) {
+                latch.countDown();
+                capturedStatus[0] = trackingStatus;
+            }
         });
+
+        // verify
+        assertEquals(MessagingPushTrackingStatus.INVALID_MESSAGE_ID, capturedStatus[0]);
+        verify(mockIntent, times(2)).getStringExtra(anyString());
+        verifyNoInteractions(MobileCore.class);
     }
 
     @Test
     public void test_handleNotificationResponseWithEmptyAction() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
-            String mockActionId = "";
-            String messageId = "mockXdm";
+        String mockActionId = "";
+        String messageId = "mockXdm";
 
-            when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
+        when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
 
-            // test
-            Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+        // test
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
-            // verify
-            verify(mockIntent, times(2)).getStringExtra(anyString());
+        // verify
+        verify(mockIntent, times(2)).getStringExtra(anyString());
 
-            // verify event
-            Event event = eventCaptor.getAllValues().get(0);
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals("", mockActionId);
-        });
+        // verify event
+        Event event = dispatchEventCaptor.getAllValues().get(0);
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+        assertEquals("", mockActionId);
     }
 
     // ========================================================================================
@@ -313,19 +343,15 @@ public class MessagingTests {
     // ========================================================================================
     @Test
     public void test_refreshInAppMessage() {
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        runWithMockedMobileCore(eventCaptor, null, null, () -> {
+        // test
+        Messaging.refreshInAppMessages();
 
-            // test
-            Messaging.refreshInAppMessages();
-
-            // verify event
-            Event event = eventCaptor.getValue();
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-            assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
-        });
+        // verify event
+        Event event = dispatchEventCaptor.getValue();
+        Map<String, Object> eventData = event.getEventData();
+        assertNotNull(eventData);
+        assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+        assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
+        assertEquals(MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT, event.getName());
     }
 }
