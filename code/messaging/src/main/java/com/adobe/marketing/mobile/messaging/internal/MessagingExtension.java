@@ -59,6 +59,7 @@ import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MessagingPushTrackingStatus;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -309,11 +310,13 @@ public final class MessagingExtension extends Extension {
         final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
+            MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.INVALID_MESSAGE_ID, getApi(),event);
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
             return;
         }
 
         if (StringUtils.isNullOrEmpty(datasetId)) {
+            MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),event);
             Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
             return;
         }
@@ -336,6 +339,8 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> xdmData = new HashMap<>();
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
+
+        MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.TRACKING_INITIATED, getApi(),event);
 
         // dispatch push tracking event
         MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
