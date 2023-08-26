@@ -254,6 +254,7 @@ public final class MessagingExtension extends Extension {
             final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
+                MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),eventToProcess);
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
@@ -298,7 +299,14 @@ public final class MessagingExtension extends Extension {
                 getApi());
     }
 
-    void handleTrackingInfo(final Event event, final String datasetId) {
+    /**
+     * Handles the push tracking information from the messaging request content event.
+     * <p>
+     *   The push tracking information is sent to the platform via configured dataset.
+     * @param event {@link Event} containing the push tracking information
+     * @param datasetId A valid {@link String} containing the dataset id
+     */
+    private void handleTrackingInfo(@NonNull final Event event,@NonNull final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventData is null.");
@@ -312,12 +320,6 @@ public final class MessagingExtension extends Extension {
         if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
             MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.INVALID_MESSAGE_ID, getApi(),event);
             Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
-            return;
-        }
-
-        if (StringUtils.isNullOrEmpty(datasetId)) {
-            MessagingUtils.sendTrackingResponseEvent(MessagingPushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),event);
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
             return;
         }
 
