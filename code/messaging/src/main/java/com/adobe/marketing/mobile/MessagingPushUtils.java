@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -36,14 +37,30 @@ class MessagingPushUtils {
 
     static Bitmap download(final String url) {
         Bitmap bitmap = null;
+        HttpURLConnection connection = null;
+        InputStream inputStream = null;
+
         try {
             final URL imageUrl = new URL(url);
-            final HttpURLConnection connection = (HttpURLConnection) imageUrl.openConnection();
-            bitmap = BitmapFactory.decodeStream(connection.getInputStream());
-            connection.disconnect();
+            connection = (HttpURLConnection) imageUrl.openConnection();
+            inputStream = connection.getInputStream();
+            bitmap = BitmapFactory.decodeStream(inputStream);
         } catch(IOException e) {
-            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Failed to download push notification large image from url: %s", url);
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Failed to download push notification image from url (%s). Exception: %s", url, e.getMessage());
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "IOException during closing Input stream while push notification image from url (%s). Exception: %s ", url, e.getMessage());
+                }
+            }
+
+            if (connection != null) {
+                connection.disconnect();
+            }
         }
+
         return bitmap;
     }
 
@@ -52,6 +69,7 @@ class MessagingPushUtils {
         try {
             return context.getPackageManager().getApplicationInfo(packageName, 0).icon;
         } catch (PackageManager.NameNotFoundException e) {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Package manager NameNotFoundException while reading default application icon. Exception: %s", e.getMessage());
         }
         return -1;
     }

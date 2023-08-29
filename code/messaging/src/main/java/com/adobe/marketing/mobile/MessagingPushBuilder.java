@@ -33,10 +33,10 @@ import com.adobe.marketing.mobile.util.StringUtils;
 class MessagingPushBuilder {
 
     private static final String SELF_TAG = "PushNotificationBuilder";
-    private static String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel";
+    private static final String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel";
     // When no channel name is received from the push notification, this default channel name is used.
     // This will appear in the notification settings for the app.
-    private static String DEFAULT_CHANNEL_NAME = "General";
+    private static final String DEFAULT_CHANNEL_NAME = "General";
 
 
     /**
@@ -52,12 +52,12 @@ class MessagingPushBuilder {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
-        builder.setContentTitle(payload.getTitle());
-        builder.setContentText(payload.getBody());
-        builder.setNumber(payload.getBadgeCount());
-        builder.setPriority(payload.getNotificationPriority());
-        builder.setAutoCancel(true);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setContentTitle(payload.getTitle())
+                .setContentText(payload.getBody())
+                .setNumber(payload.getBadgeCount())
+                .setPriority(payload.getNotificationPriority())
+                .setAutoCancel(true);
 
         setLargeIcon(builder, payload);
         setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
