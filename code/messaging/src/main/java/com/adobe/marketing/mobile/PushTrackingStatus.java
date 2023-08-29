@@ -18,24 +18,24 @@ public enum PushTrackingStatus {
      */
     TRACKING_INITIATED(0, "Tracking initiated"),
     /**
-     * This status is set when the tracking is not initiated because no tracking dataset is configured.
+     * This status is set when tracking is not initiated because no tracking dataset is configured.
      */
     NO_DATASET_CONFIGURED(1, "No dataset configured"),
 
     /**
-     * This status is set when the tracking is not initiated because the intent does not contain tracking data.
+     * This status is set when tracking is not initiated because the intent does not contain tracking data.
      */
     NO_TRACKING_DATA(2, "Missing tracking data in the intent"),
     /**
-     * This status is set when the tracking is not initiated because the intent is invalid.
+     * This status is set when tracking is not initiated because the intent is invalid.
      */
     INVALID_INTENT(3, "Provided intent for tracking is invalid"),
     /**
-     * This status is set when the tracking is not initiated because the message id is invalid.
+     * This status is set when tracking is not initiated because the message id is invalid.
      */
     INVALID_MESSAGE_ID(4, "Provided MessageId for tracking is empty/null"),
     /**
-     * This status is set when the tracking is not initiated because of an unknown error.
+     * This status is set when tracking is not initiated because of an unknown error.
      */
     UNKNOWN_ERROR(5, "Unknown error");
 
@@ -46,14 +46,26 @@ public enum PushTrackingStatus {
     final int value;
     final String description;
 
+    /**
+     * @return  the string description of {@link PushTrackingStatus}
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * @return the enum {@code Integer} value of {@link PushTrackingStatus}
+     */
     public int getValue() {
         return value;
     }
 
+    /**
+     * Returns the {@link PushTrackingStatus} enum for the provided {@code int} value.
+     *
+     * @param value {@code int} value of the enum
+     * @return {@link PushTrackingStatus} enum value
+     */
     public static PushTrackingStatus fromInt(final int value) {
         for (PushTrackingStatus b : PushTrackingStatus.values()) {
             if (b.value == (value)) {

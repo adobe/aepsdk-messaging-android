@@ -189,7 +189,7 @@ class MessagingUtils {
         final Map<String, Object> responseEventData = new HashMap<>();
         responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_STATUS, status.getValue());
         responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_MESSAGE, status.getDescription());
-        final Event event = new Event.Builder("Push tracking status event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+        final Event event = new Event.Builder(MessagingConstants.EventName.PUSH_TRACKING_STATUS_EVENT , EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .setEventData(responseEventData)
                 .inResponseToEvent(requestEvent)
                 .build();

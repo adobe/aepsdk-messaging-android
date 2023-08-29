@@ -116,7 +116,6 @@ public final class Messaging {
 
     /**
      * Sends the push notification interactions as an experience event to Adobe Experience Edge.
-     * This method will return false if the notification being tracked is not from Adobe Journey Optimizer.
      *
      * @param intent            object which contains the tracking and xdm information.
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
@@ -130,12 +129,11 @@ public final class Messaging {
 
     /**
      * Sends the push notification interactions as an experience event to Adobe Experience Edge.
-     * This method will return false if the notification being tracked is not from Adobe Journey Optimizer.
      *
      * @param intent            object which contains the tracking and xdm information.
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
-     * @param callback          Callback which will be invoked with the status of the tracking.
+     * @param callback          Callback which will be invoked with the status of push notification tracking.
      */
     @SuppressWarnings("UnusedReturnValue")
     public static void handleNotificationResponse(@NonNull final Intent intent,

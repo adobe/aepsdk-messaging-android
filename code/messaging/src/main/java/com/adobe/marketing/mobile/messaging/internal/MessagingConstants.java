@@ -241,8 +241,10 @@ final class MessagingConstants {
     final class EventName {
         static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
+
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {

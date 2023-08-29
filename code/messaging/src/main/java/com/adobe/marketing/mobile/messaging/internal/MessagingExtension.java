@@ -309,7 +309,8 @@ public final class MessagingExtension extends Extension {
     private void handleTrackingInfo(@NonNull final Event event,@NonNull final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventData is null.");
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(),event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
             return;
         }
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
@@ -317,9 +318,15 @@ public final class MessagingExtension extends Extension {
         final boolean isApplicationOpened = DataReader.optBoolean(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
         final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
-        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
+        if (StringUtils.isNullOrEmpty(eventType)) {
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(),event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
+            return;
+        }
+
+        if (StringUtils.isNullOrEmpty(messageId)) {
             MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(),event);
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
             return;
         }
 
