@@ -141,10 +141,10 @@ public final class Messaging {
     public static void handleNotificationResponse(@NonNull final Intent intent,
                                                   final boolean applicationOpened,
                                                   @Nullable final String customActionId,
-                                                  @Nullable final AdobeCallback<MessagingPushTrackingStatus> callback) {
+                                                  @Nullable final AdobeCallback<PushTrackingStatus> callback) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
-            callTrackingCallback(MessagingPushTrackingStatus.INVALID_INTENT, callback);
+            callTrackingCallback(PushTrackingStatus.INVALID_INTENT, callback);
             return;
         }
         String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
@@ -154,7 +154,7 @@ public final class Messaging {
             messageId = intent.getStringExtra(TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (StringUtils.isNullOrEmpty(messageId)) {
                 Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, message id provided is null");
-                callTrackingCallback(MessagingPushTrackingStatus.INVALID_MESSAGE_ID, callback);
+                callTrackingCallback(PushTrackingStatus.INVALID_MESSAGE_ID, callback);
                 return;
             }
         }
@@ -162,7 +162,7 @@ public final class Messaging {
         final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
         if (StringUtils.isNullOrEmpty(xdmData)) {
             Log.warning(LOG_TAG, CLASS_NAME, "No tracking data found in the intent, Ignoring to track AJO notification interactions.");
-            callTrackingCallback(MessagingPushTrackingStatus.NO_TRACKING_DATA, callback);
+            callTrackingCallback(PushTrackingStatus.NO_TRACKING_DATA, callback);
             return;
         }
 
@@ -185,7 +185,7 @@ public final class Messaging {
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
-                callTrackingCallback(MessagingPushTrackingStatus.UNKNOWN_ERROR,callback);
+                callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
             }
 
             @Override
@@ -193,16 +193,16 @@ public final class Messaging {
                 final Map<String,Object> responseEventData = event.getEventData();
 
                 if (responseEventData == null) {
-                    callTrackingCallback(MessagingPushTrackingStatus.UNKNOWN_ERROR,callback);
+                    callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
                 }
 
                 try {
                     final int resultStatusInteger = DataReader.getInt(responseEventData,PUSH_NOTIFICATION_TRACKING_STATUS);
-                    final MessagingPushTrackingStatus status = MessagingPushTrackingStatus.fromInt(resultStatusInteger);
+                    final PushTrackingStatus status = PushTrackingStatus.fromInt(resultStatusInteger);
                     callTrackingCallback(status,callback);
 
                 } catch (final DataReaderException e) {
-                    callTrackingCallback(MessagingPushTrackingStatus.UNKNOWN_ERROR,callback);
+                    callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
                 }
             }
         });
@@ -222,7 +222,7 @@ public final class Messaging {
 
         MobileCore.dispatchEvent(refreshMessageEvent);
     }
-    private static void callTrackingCallback(final MessagingPushTrackingStatus trackingStatus, final AdobeCallback<MessagingPushTrackingStatus> callback) {
+    private static void callTrackingCallback(final PushTrackingStatus trackingStatus, final AdobeCallback<PushTrackingStatus> callback) {
         if (callback != null) {
             callback.call(trackingStatus);
         }

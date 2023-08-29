@@ -12,15 +12,34 @@
 
 package com.adobe.marketing.mobile;
 
-public enum MessagingPushTrackingStatus {
+public enum PushTrackingStatus {
+    /**
+     * This status is set when all the required data for tracking is available and when the tracking is initiated.
+     */
     TRACKING_INITIATED(0, "Tracking initiated"),
+    /**
+     * This status is set when the tracking is not initiated because no tracking dataset is configured.
+     */
     NO_DATASET_CONFIGURED(1, "No dataset configured"),
+
+    /**
+     * This status is set when the tracking is not initiated because the intent does not contain tracking data.
+     */
     NO_TRACKING_DATA(2, "Missing tracking data in the intent"),
+    /**
+     * This status is set when the tracking is not initiated because the intent is invalid.
+     */
     INVALID_INTENT(3, "Provided intent for tracking is invalid"),
+    /**
+     * This status is set when the tracking is not initiated because the message id is invalid.
+     */
     INVALID_MESSAGE_ID(4, "Provided MessageId for tracking is empty/null"),
+    /**
+     * This status is set when the tracking is not initiated because of an unknown error.
+     */
     UNKNOWN_ERROR(5, "Unknown error");
 
-    MessagingPushTrackingStatus(final int value, final String description) {
+    PushTrackingStatus(final int value, final String description) {
         this.value = value;
         this.description = description;
     }
@@ -35,8 +54,8 @@ public enum MessagingPushTrackingStatus {
         return value;
     }
 
-    public static MessagingPushTrackingStatus fromInt(final int value) {
-        for (MessagingPushTrackingStatus b : MessagingPushTrackingStatus.values()) {
+    public static PushTrackingStatus fromInt(final int value) {
+        for (PushTrackingStatus b : PushTrackingStatus.values()) {
             if (b.value == (value)) {
                 return b;
             }

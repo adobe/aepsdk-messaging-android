@@ -53,11 +53,11 @@ public class MessagingTests {
     ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor;
     ArgumentCaptor<Event> dispatchEventCaptor;
     CountDownLatch latch;
-    MessagingPushTrackingStatus[] capturedStatus = new MessagingPushTrackingStatus[1];
+    PushTrackingStatus[] capturedStatus = new PushTrackingStatus[1];
     @Before
     public void before() {
         latch = new CountDownLatch(1);
-        capturedStatus = new MessagingPushTrackingStatus[1];
+        capturedStatus = new PushTrackingStatus[1];
 
         // Mock MobileCore
         dispatchEventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -203,11 +203,11 @@ public class MessagingTests {
     public void test_handleNotificationResponse_WhenParamsAreNull() throws InterruptedException {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         final CountDownLatch latch = new CountDownLatch(1);
-        final MessagingPushTrackingStatus[] capturedStatus = new MessagingPushTrackingStatus[1];
+        final PushTrackingStatus[] capturedStatus = new PushTrackingStatus[1];
         // test
-        Messaging.handleNotificationResponse(null, false, null, new AdobeCallback<MessagingPushTrackingStatus>() {
+        Messaging.handleNotificationResponse(null, false, null, new AdobeCallback<PushTrackingStatus>() {
             @Override
-            public void call(MessagingPushTrackingStatus trackingStatus) {
+            public void call(PushTrackingStatus trackingStatus) {
                 latch.countDown();
                 capturedStatus[0] = trackingStatus;
             }
@@ -215,7 +215,7 @@ public class MessagingTests {
 
         // verify
         latch.await(2, TimeUnit.SECONDS);
-        assertEquals(MessagingPushTrackingStatus.INVALID_INTENT, capturedStatus[0]);
+        assertEquals(PushTrackingStatus.INVALID_INTENT, capturedStatus[0]);
         verifyNoInteractions(MobileCore.class);
     }
 
@@ -248,9 +248,9 @@ public class MessagingTests {
         when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
 
         // test
-        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<PushTrackingStatus>() {
             @Override
-            public void call(MessagingPushTrackingStatus trackingStatus) {
+            public void call(PushTrackingStatus trackingStatus) {
                 latch.countDown();
                 capturedStatus[0] = trackingStatus;
             }
@@ -258,7 +258,7 @@ public class MessagingTests {
 
         // verify no event was sent
         latch.await(2, TimeUnit.SECONDS);
-        assertEquals(MessagingPushTrackingStatus.NO_TRACKING_DATA, capturedStatus[0]);
+        assertEquals(PushTrackingStatus.NO_TRACKING_DATA, capturedStatus[0]);
         verifyNoInteractions(MobileCore.class);
     }
 
@@ -269,9 +269,9 @@ public class MessagingTests {
         when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
 
         // test
-        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<PushTrackingStatus>() {
             @Override
-            public void call(MessagingPushTrackingStatus trackingStatus) {
+            public void call(PushTrackingStatus trackingStatus) {
                 latch.countDown();
                 capturedStatus[0] = trackingStatus;
             }
@@ -292,7 +292,7 @@ public class MessagingTests {
 
         // verify the return value
         latch.await(2, TimeUnit.SECONDS);
-        assertEquals(MessagingPushTrackingStatus.UNKNOWN_ERROR, capturedStatus[0]);
+        assertEquals(PushTrackingStatus.UNKNOWN_ERROR, capturedStatus[0]);
     }
 
     @Test
@@ -303,16 +303,16 @@ public class MessagingTests {
         when(mockIntent.getStringExtra(anyString())).thenReturn(messageId);
 
         // test
-        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<MessagingPushTrackingStatus>() {
+        Messaging.handleNotificationResponse(mockIntent, true, mockActionId, new AdobeCallback<PushTrackingStatus>() {
             @Override
-            public void call(MessagingPushTrackingStatus trackingStatus) {
+            public void call(PushTrackingStatus trackingStatus) {
                 latch.countDown();
                 capturedStatus[0] = trackingStatus;
             }
         });
 
         // verify
-        assertEquals(MessagingPushTrackingStatus.INVALID_MESSAGE_ID, capturedStatus[0]);
+        assertEquals(PushTrackingStatus.INVALID_MESSAGE_ID, capturedStatus[0]);
         verify(mockIntent, times(2)).getStringExtra(anyString());
         verifyNoInteractions(MobileCore.class);
     }
