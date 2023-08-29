@@ -18,6 +18,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class InboundTypeTests {
+    private static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/inbound/feed-item";
+    private static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/inbound/in-app-message";
+    private static final String SCHEMA_UNKNOWN = "unknown";
 
     @Test
     public void test_createFeedInboundType() {
@@ -25,7 +28,7 @@ public class InboundTypeTests {
         InboundType inboundType = InboundType.FEED;
         // verify
         assertEquals(1, inboundType.getValue());
-        assertEquals("feed", inboundType.toString());
+        assertEquals(SCHEMA_FEED_ITEM, inboundType.toString());
     }
 
     @Test
@@ -34,7 +37,7 @@ public class InboundTypeTests {
         InboundType inboundType = InboundType.INAPP;
         // verify
         assertEquals(2, inboundType.getValue());
-        assertEquals("inapp", inboundType.toString());
+        assertEquals(SCHEMA_IAM, inboundType.toString());
     }
 
     @Test
@@ -43,25 +46,25 @@ public class InboundTypeTests {
         InboundType inboundType = InboundType.UNKNOWN;
         // verify
         assertEquals(0, inboundType.getValue());
-        assertEquals("unknown", inboundType.toString());
+        assertEquals(SCHEMA_UNKNOWN, inboundType.toString());
     }
 
     @Test
     public void test_createFeedInboundTypeFromString() {
         // test
-        InboundType inboundType = InboundType.fromString("feed");
+        InboundType inboundType = InboundType.fromString(InboundType.SCHEMA_FEED_ITEM);
         // verify
         assertEquals(1, inboundType.getValue());
-        assertEquals("feed", inboundType.toString());
+        assertEquals(SCHEMA_FEED_ITEM, inboundType.toString());
     }
 
     @Test
     public void test_createInAppInboundTypeFromString() {
         // test
-        InboundType inboundType = InboundType.fromString("inapp");
+        InboundType inboundType = InboundType.fromString(InboundType.SCHEMA_IAM);
         // verify
         assertEquals(2, inboundType.getValue());
-        assertEquals("inapp", inboundType.toString());
+        assertEquals(SCHEMA_IAM, inboundType.toString());
     }
 
     @Test
@@ -70,6 +73,6 @@ public class InboundTypeTests {
         InboundType inboundType = InboundType.fromString("unsupported");
         // verify
         assertEquals(0, inboundType.getValue());
-        assertEquals("unknown", inboundType.toString());
+        assertEquals(SCHEMA_UNKNOWN, inboundType.toString());
     }
 }

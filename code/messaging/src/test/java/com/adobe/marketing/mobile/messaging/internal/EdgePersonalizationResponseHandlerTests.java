@@ -91,7 +91,7 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
-    LaunchRulesEngine mockFeedRulesEngine;
+    FeedRulesEngine mockFeedRulesEngine;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
     private File cacheDir;
@@ -136,6 +136,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
             edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler.setMessagesRequestEventId("TESTING_ID");
 
             runnable.run();
         }
@@ -158,7 +159,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         "\"content\": {\n" +
                         "\"body\": \"testBody\",\n" +
                         "\"title\": \"testTitle\",\n" +
-                        "\"imageUrl\": \"https://someimage"+ i + ".png\",\n" +
+                        "\"imageUrl\": \"https://someimage" + i + ".png\",\n" +
                         "\"actionTitle\": \"testActionTitle\",\n" +
                         "\"actionUrl\": \"https://someurl.com\",\n" +
                         "},\n" +
@@ -316,7 +317,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(Map.class));
 
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
@@ -347,7 +348,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(Map.class));
 
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(3)).cacheImageAssets(any(List.class));
@@ -368,7 +369,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify propositions cached again incrementing number of times by 1
-                verify(mockMessagingCacheUtilities, times(2)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(2)).cachePropositions(any(Map.class));
 
                 // verify assets cached 4 additional times as 4 new propositions were received
                 verify(mockMessagingCacheUtilities, times(7)).cacheImageAssets(any(List.class));
@@ -402,7 +403,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(Map.class));
 
                 // verify assets cached for 3 rules
                 verify(mockMessagingCacheUtilities, times(3)).cacheImageAssets(any(List.class));
@@ -439,7 +440,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(Map.class));
 
                 // verify assets cached for 2 rules
                 verify(mockMessagingCacheUtilities, times(2)).cacheImageAssets(any(List.class));
@@ -472,7 +473,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(Map.class));
 
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
@@ -503,15 +504,14 @@ public class EdgePersonalizationResponseHandlerTests {
                 // test
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
-                // verify proposition cached
-                verify(mockMessagingCacheUtilities, times(1)).cachePropositions(any(List.class));
+                // verify propositions not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
-                // verify assets cached
-                verify(mockMessagingCacheUtilities, times(1)).cacheImageAssets(any(List.class));
+                // verify assets not cached
+                verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-                // verify rules replaced
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-                assertEquals(1, listArgumentCaptor.getValue().size());
+                // verify no rules replaced
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
             }
         });
     }
@@ -535,21 +535,20 @@ public class EdgePersonalizationResponseHandlerTests {
                 // test
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
-                // verify proposition not cached
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+                // verify propositions not cached
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
-                // verify no assets cached
+                // verify assets not cached
                 verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-                // verify empty rules replaced
-                verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-                assertEquals(0, listArgumentCaptor.getValue().size());
+                // verify no rules replaced
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
             }
         });
     }
 
     @Test
-    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty_Then_CachedPropositionsAndLoadedRulesCleared() {
+    public void test_handleEdgePersonalizationNotification_IAMPayloadIsEmpty() {
         runUsingMockedServiceProvider(() -> {
             // setup
             MessageTestConfig config = new MessageTestConfig();
@@ -565,18 +564,14 @@ public class EdgePersonalizationResponseHandlerTests {
             // test
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify cached propositions cleared
-            verify(mockMessagingCacheUtilities, times(1)).cachePropositions(eq(null));
+            // verify propositions not cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
-            // verify no assets cached
+            // verify assets not cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify cache not cleared
-            verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
-
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -595,7 +590,7 @@ public class EdgePersonalizationResponseHandlerTests {
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
@@ -603,9 +598,8 @@ public class EdgePersonalizationResponseHandlerTests {
             // verify cache not cleared
             verify(mockMessagingCacheUtilities, times(0)).clearCachedData();
 
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -628,14 +622,13 @@ public class EdgePersonalizationResponseHandlerTests {
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify proposition not cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -657,14 +650,13 @@ public class EdgePersonalizationResponseHandlerTests {
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -686,14 +678,13 @@ public class EdgePersonalizationResponseHandlerTests {
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
             // verify no proposition cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
             // verify no assets cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -714,15 +705,14 @@ public class EdgePersonalizationResponseHandlerTests {
             // test
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
-            // verify no proposition cached
-            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+            // verify propositions not cached
+            verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
-            // verify no assets cached
+            // verify assets not cached
             verify(mockMessagingCacheUtilities, times(0)).cacheImageAssets(any(List.class));
 
-            // verify empty rules replaced
-            verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
-            assertEquals(0, listArgumentCaptor.getValue().size());
+            // verify no rules replaced
+            verify(mockMessagingRulesEngine, times(0)).replaceRules(any(List.class));
         });
     }
 
@@ -752,7 +742,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify message feed propositions not cached
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
                 // verify rule containing 5 consequences is added to the feed rules engine
                 verify(mockFeedRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
@@ -764,8 +754,9 @@ public class EdgePersonalizationResponseHandlerTests {
                 verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
                 Event capturedEvent = eventArgumentCaptor.getValue();
                 Feed returnedFeed = Feed.fromEventData(capturedEvent.getEventData());
+                assertEquals("apifeed", returnedFeed.getName());
                 assertEquals("mobileapp://mockPackageName", returnedFeed.getSurfaceUri());
-                for(int i = 0; i < returnedFeed.getItems().size(); i++) {
+                for (int i = 0; i < returnedFeed.getItems().size(); i++) {
                     FeedItem feedItem = returnedFeed.getItems().get(i);
                     assertEquals("https://someimage" + i + ".png", feedItem.getImageUrl());
                     assertEquals("testActionTitle", feedItem.getActionTitle());
@@ -798,7 +789,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify message feed propositions not cached
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
                 // verify no rules are added to the rules engine
                 verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
@@ -831,7 +822,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify message feed propositions not cached
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
                 // verify no rules are added to the rules engine
                 verify(mockMessagingRulesEngine, times(0)).addRules(listArgumentCaptor.capture());
@@ -858,9 +849,9 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 5;
-                List<Proposition> payload = null;
+                Map<Surface, List<Proposition>> payload = new HashMap<>();
                 try {
-                    payload = MessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config));
+                    payload.put(new Surface(), MessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config)));
                 } catch (Exception e) {
                     fail(e.getMessage());
                 }
@@ -870,7 +861,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
 
                 // verify proposition not cached as we are loading cached propositions
-                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(List.class));
+                verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));
 
                 // verify assets cached
                 verify(mockMessagingCacheUtilities, times(5)).cacheImageAssets(any(List.class));

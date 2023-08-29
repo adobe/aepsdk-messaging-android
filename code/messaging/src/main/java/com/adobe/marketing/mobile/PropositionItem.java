@@ -39,7 +39,7 @@ public class PropositionItem implements Serializable {
     private static final String JSON_CONSEQUENCES_KEY = "consequences";
     private static final String MESSAGE_CONSEQUENCE_ID = "id";
     private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE = "type";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
@@ -123,7 +123,7 @@ public class PropositionItem implements Serializable {
                 final String uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
                 final JSONObject consequenceDetails = getConsequenceDetails(ruleJson);
                 if (consequenceDetails != null) {
-                    final InboundType inboundType = InboundType.fromString(consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_INBOUND_ITEM_TYPE));
+                    final InboundType inboundType = InboundType.fromString(consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_SCHEMA));
                     final String content = consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_CONTENT).toString();
                     final String contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
                     final int expiryDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
@@ -149,22 +149,19 @@ public class PropositionItem implements Serializable {
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
             final String schema = DataReader.getString(eventData, PAYLOAD_SCHEMA);
-            final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_DATA);
+            final Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_DATA);
 
             String content = null;
-            if (schema.equals(JSON_CONTENT_SCHEMA_VALUE)) {
-                final Object data = dataMap.get(PAYLOAD_CONTENT);
-                if (data instanceof String) {
-                    content = DataReader.getString(dataMap, PAYLOAD_CONTENT);
-                } else if (data instanceof Map) {
-                    final JSONObject contentJSON = new JSONObject(DataReader.getTypedMap(Object.class, dataMap, PAYLOAD_CONTENT));
-                    if (contentJSON.length() > 0) {
-                        content = contentJSON.toString();
-                    }
+            final Object data = contentMap.get(PAYLOAD_CONTENT);
+            if (data instanceof String) {
+                content = DataReader.getString(contentMap, PAYLOAD_CONTENT);
+            } else if (data instanceof Map) {
+                final JSONObject contentJSON = new JSONObject(DataReader.getTypedMap(Object.class, contentMap, PAYLOAD_CONTENT));
+                if (contentJSON.length() > 0) {
+                    content = contentJSON.toString();
                 }
-            } else { // we have html or decision content which will be a string
-                content = DataReader.getString(dataMap, PAYLOAD_CONTENT);
             }
+
             if (!StringUtils.isNullOrEmpty(content)) {
                 propositionItem = new PropositionItem(uniqueId, schema, content);
             }
@@ -188,20 +185,19 @@ public class PropositionItem implements Serializable {
         }
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
-        final Map<String, Object> data = new HashMap<>();
-        if (schema.equals(JSON_CONTENT_SCHEMA_VALUE)) {
-            final JSONArray ruleList = new JSONArray();
-            try {
-                ruleList.put(new JSONObject(this.content));
-            } catch (final JSONException jsonException) {
-                Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to create map from content: %s", jsonException.getLocalizedMessage());
-            }
-            data.put(DATA_RULES_KEY, ruleList.toString());
-            data.put(DATA_VERSION_KEY, 1);
-            eventData.put(PAYLOAD_CONTENT, data);
-        } else {
-            eventData.put(PAYLOAD_CONTENT, this.content);
+        final Map<String, Object> dataMap = new HashMap<>();
+        JSONObject content = null;
+        try {
+            content = new JSONObject(this.content);
+            dataMap.put(PAYLOAD_CONTENT, JSONUtils.toMap(content));
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Couldn't create a JSONObject from (%s). Will return the content as a String.");
         }
+        if (content == null) {
+            dataMap.put(PAYLOAD_CONTENT, this.content);
+        }
+
+        eventData.put(PAYLOAD_DATA, dataMap);
         return eventData;
     }
 
@@ -242,16 +238,14 @@ public class PropositionItem implements Serializable {
         return consequenceDetails;
     }
 
-    private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException
-    {
+    private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {
         uniqueId = objectInputStream.readUTF();
         schema = objectInputStream.readUTF();
         content = objectInputStream.readUTF();
         propositionReference = new SoftReference<>((Proposition) objectInputStream.readObject());
     }
 
-    private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException
-    {
+    private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException {
         objectOutputStream.writeUTF(uniqueId);
         objectOutputStream.writeUTF(schema);
         objectOutputStream.writeUTF(content);

@@ -45,9 +45,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Util class used by both Functional and Unit tests
@@ -117,24 +114,6 @@ public class MessagingTestUtils {
             ValueNode valueNode = (ValueNode) jsonNode;
             map.put(currentPath, valueNode.asText());
         }
-    }
-
-    /**
-     * Dispatches a simulated edge response event containing a message payload. The message payload
-     * is loaded from the resources directory using the passed in {@code String} as a filename.
-     *
-     * @param fileName the {@code String} name of a file located in the resource directory
-     */
-    public static void dispatchEdgePersonalizationEventWithMessagePayload(final String fileName) {
-        final Map<String, Object> eventData = new HashMap();
-        final List<Map<String, Object>> items = new ArrayList<>();
-        items.add(getMapFromFile(fileName));
-        eventData.put("payload", items);
-        eventData.put("requestEventId", "TESTING_ID");
-        final Event event = new Event.Builder("edge response testing", MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
-                .setEventData(eventData)
-                .build();
-        MobileCore.dispatchEvent(event);
     }
 
     /**

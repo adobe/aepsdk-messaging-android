@@ -34,7 +34,10 @@ final class MessagingConstants {
     }
 
     final class SchemaValues {
-        static final String MESSAGE_FEED_SCHEMA_VALUE = "https://ns.adobe.com/personalization/inbound/feed-item";
+        static final String SCHEMA_AJO_HTML = "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_AJO_JSON = "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/inbound/feed-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/inbound/in-app-message";
 
         private SchemaValues() {
         }
@@ -60,8 +63,9 @@ final class MessagingConstants {
         static final String IMAGE_URL = "imageUrl";
         static final String ACTION_TITLE = "actionTitle";
         static final String ACTION_URL = "actionUrl";
-        static final String SCHEMA = "schema";
         static final String FEEDS = "feeds";
+        static final String FEED_NAME = "feedName";
+        static final String SURFACE = "surface";
 
         private MessageFeedKeys() {
         }
@@ -142,7 +146,6 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
             static final String REFRESH_MESSAGES = "refreshmessages";
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
-            static final String GET_FEEDS = "getfeeds";
             static final String SURFACES = "surfaces";
 
             private Messaging() {
@@ -229,13 +232,7 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
-            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_VALUE = "ajoInbound";
-            static final String MESSAGE_CONSEQUENCE_AJO_IAM_VALUE = "ajoIam";
-            static final String MESSAGE_CONSEQUENCE_AJO_ALERT_VALUE = "ajoAlert";
-            static final String MESSAGE_CONSEQUENCE_FEED_ITEM_VALUE = "ajoFeedItem";
-            static final String MESSAGE_CONSEQUENCE_AJO_INBOUND_ITEM_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
@@ -279,8 +276,8 @@ final class MessagingConstants {
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
-        static final String MESSAGE_FEEDS_NOTIFICATION = "Message feeds notification";
-        static final String MESSAGE_FEEDS_RESPONSE = "Message feeds response";
+        static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
+        static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {

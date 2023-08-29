@@ -20,12 +20,14 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.PropositionItem;
+import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
@@ -39,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * This class contains functionality to cache the json message payload and any image asset URL's present in an
@@ -81,9 +84,9 @@ final class MessagingCacheUtilities {
     /**
      * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<Proposition>}.
      *
-     * @return a {@code List<Proposition>} containing the cached proposition payloads.
+     * @return a {@code Map<Surface, List<Proposition>>} containing the cached proposition payloads.
      */
-    List<Proposition> getCachedPropositions() {
+    Map<Surface, List<Proposition>> getCachedPropositions() {
         final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cacheResult == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
@@ -95,20 +98,33 @@ final class MessagingCacheUtilities {
             Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
         ObjectInputStream objectInputStream = null;
-        final List<Proposition> cachedPropositions = new ArrayList<>();
+        Map<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
         try {
             objectInputStream = new ObjectInputStream(cacheResult.getData());
-            List<Object> cachedPropositionList = (List<Object>) objectInputStream.readObject();
-            if (cachedPropositionList != null && !cachedPropositionList.isEmpty()) {
-                final Object firstElement = cachedPropositionList.get(0);
+            final Object cachedData = objectInputStream.readObject();
+
+            if (cachedData == null) {
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to read cached data into an object.");
+                return null;
+            }
+
+            Object firstElement;
+            try {
+                firstElement = ((Map<Surface, List<Object>>) cachedData).entrySet().iterator().next().getValue().get(0);
+            } catch (final NoSuchElementException exception) {
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve first element of cached data list.");
+                return null;
+            }
+
+            // handle cached Proposition objects
+            if (firstElement instanceof Proposition) {
+                cachedPropositions = (Map<Surface, List<Proposition>>) cachedData;
+            } else if (firstElement instanceof PropositionPayload) {
                 // handle cached PropositionPayload objects
-                if (firstElement instanceof PropositionPayload) {
-                    for (final Object proposition : cachedPropositionList) {
-                        cachedPropositions.add(convertToProposition((PropositionPayload) proposition));
-                    }
-                } else { // handle cached Proposition objects
-                    for (final Object proposition : cachedPropositionList) {
-                        cachedPropositions.add((Proposition) proposition);
+                final Map<Surface, List<PropositionPayload>> cachedPropositionPayloads = (Map<Surface, List<PropositionPayload>>) cachedData;
+                if (!MapUtils.isNullOrEmpty(cachedPropositionPayloads)) {
+                    for (final Map.Entry<Surface, List<PropositionPayload>> entry : cachedPropositionPayloads.entrySet()) {
+                        cachedPropositions.put(entry.getKey(), convertToPropositions(entry.getValue()));
                     }
                 }
             }
@@ -134,11 +150,11 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Caches the provided {@code List<Proposition>}.
+     * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param propositions the {@link List<Proposition>} containing the propositions to be cached.
+     * @param propositions the {@link Map<Surface, List<Proposition>>} containing the propositions to be cached.
      */
-    void cachePropositions(final List<Proposition> propositions) {
+    void cachePropositions(final Map<Surface, List<Proposition>> propositions) {
         // clean any existing cached propositions first if the provided propositions are null or empty
         if (propositions == null || propositions.isEmpty()) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
@@ -181,16 +197,20 @@ final class MessagingCacheUtilities {
     /**
      * Converts the provided {@code PropositionPayload} into a {@code Proposition}.
      *
-     * @param propositionPayload a {@link PropositionPayload} to be converted
-     * @return a {@link Proposition} created from the provided {@code PropositionPayload}
+     * @param propositionPayloads {@link List<PropositionPayload>} to be converted
+     * @return a {@link List<Proposition>} created from the provided {@code PropositionPayload}
      */
-    private Proposition convertToProposition(final PropositionPayload propositionPayload) {
+    private List<Proposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         final List<PropositionItem> propositionItems = new ArrayList<>();
-        for (final PayloadItem payloadItem : propositionPayload.items) {
-            final PropositionItem propositionItem = new PropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
-            propositionItems.add(propositionItem);
+        for (final PropositionPayload propositionPayload : propositionPayloads) {
+            for (final PayloadItem payloadItem : propositionPayload.items) {
+                final PropositionItem propositionItem = new PropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+                propositionItems.add(propositionItem);
+            }
+            propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
         }
-        return new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems);
+        return propositions;
     }
 
     // ========================================================================================================

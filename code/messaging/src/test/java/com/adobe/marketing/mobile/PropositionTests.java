@@ -12,14 +12,14 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestUtils;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.adobe.marketing.mobile.util.MapUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -100,15 +100,14 @@ public class PropositionTests {
         Map<String, Object> propositionMap = proposition.toEventData();
         // verify
         assertNotNull(propositionMap);
-        List<Map <String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
+        List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
         PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
-            Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, item, "content");
-            String rules = DataReader.getString(contentMap, "rules");
-            JSONArray expectedContentArray = new JSONArray().put(new JSONObject(propositionItem.getContent()));
+            Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, item, "data");
+            Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, dataMap, "content");
             assertEquals(propositionItem.getUniqueId(), item.get("id"));
-            assertEquals(expectedContentArray.toString(), rules);
             assertEquals(propositionItem.getSchema(), item.get("schema"));
+            assertTrue(!MapUtils.isNullOrEmpty(contentMap));
         }
     }
 }

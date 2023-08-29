@@ -82,7 +82,7 @@ public class MessagingExtensionTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
-    LaunchRulesEngine mockFeedRulesEngine;
+    FeedRulesEngine mockFeedRulesEngine;
     @Mock
     EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock

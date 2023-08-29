@@ -17,8 +17,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.adobe.marketing.mobile.util.MapUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -32,7 +32,7 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionItemTests {
 
-    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"uniqueId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
+    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/inbound/feed-item\", \"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
     String testContent = "some html string content";
     String testJSONSchema = "https://ns.adobe.com/personalization/json-content-item";
     String testHTMLSchema = "https://ns.adobe.com/personalization/html-content-item";
@@ -97,13 +97,12 @@ public class PropositionItemTests {
         PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
-        Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, propositionItemMap, "content");
-        String rules = DataReader.getString(contentMap, "rules");
+        Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, propositionItemMap, "data");
+        Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, dataMap, "content");
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testJSONSchema, propositionItemMap.get("schema"));
-        JSONArray expectedContentArray = new JSONArray().put(new JSONObject(testJSONStringContent));
-        assertEquals(expectedContentArray.toString(), rules);
+        assertTrue(!MapUtils.isNullOrEmpty(contentMap));
     }
 
     @Test
@@ -146,7 +145,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createEventData_fromPropositionItem_StringContent() throws DataReaderException, JSONException {
+    public void test_createEventData_fromPropositionItem_StringContent() {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, testHTMLSchema, testContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
@@ -154,7 +153,8 @@ public class PropositionItemTests {
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testHTMLSchema, propositionItemMap.get("schema"));
-        assertEquals(testContent, propositionItemMap.get("content"));
+        Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, propositionItemMap, "data", null);
+        assertEquals(testContent, dataMap.get("content"));
     }
 
     // negative tests

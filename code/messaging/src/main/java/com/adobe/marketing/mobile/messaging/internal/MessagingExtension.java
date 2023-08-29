@@ -14,10 +14,13 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -29,6 +32,9 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FEED_RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.ECID;
@@ -44,28 +50,28 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.T
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
+import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.SharedStateResolution;
+import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.*;
-import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.EventSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -81,7 +87,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
-    final LaunchRulesEngine feedRulesEngine;
+    final FeedRulesEngine feedRulesEngine;
 
     /**
      * Constructor.
@@ -107,10 +113,10 @@ public final class MessagingExtension extends Extension {
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final LaunchRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final FeedRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
         this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(RULES_ENGINE_NAME, extensionApi);
-        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new LaunchRulesEngine(FEED_RULES_ENGINE_NAME, extensionApi);
+        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new FeedRulesEngine(FEED_RULES_ENGINE_NAME, extensionApi);
         this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
     }
 
