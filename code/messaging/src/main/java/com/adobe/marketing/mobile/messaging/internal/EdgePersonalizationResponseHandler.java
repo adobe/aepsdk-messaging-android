@@ -25,7 +25,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.MESSAGE_FEED_SCHEMA_VALUE;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -204,10 +203,6 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        if ("TESTING_ID".equals(requestEventId)) {
-            requestedSurfacesForEventId.put("TESTING_ID", Collections.singletonList(getAppSurface()));
-        }
-
         // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
         boolean clearExistingRules = false;
         if (!requestEventId.equals(lastProcessedRequestEventId)) {
@@ -253,7 +248,7 @@ class EdgePersonalizationResponseHandler {
 
             final Event event = new Event.Builder(MESSAGE_PROPOSITIONS_NOTIFICATION,
                     EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
-                    .setEventData(inMemoryFeeds)
+                    .setEventData(eventData)
                     .build();
 
             extensionApi.dispatch(event);
