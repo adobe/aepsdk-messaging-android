@@ -52,5 +52,5 @@ ext {
     mockitoCoreVersion = "4.5.1"
     buildToolsVersion = "30.0.2"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    jacocoVersion = "0.8.5"
+    jacocoVersion = "0.8.8"
 }

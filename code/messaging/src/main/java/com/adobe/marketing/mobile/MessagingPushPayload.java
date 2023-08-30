@@ -12,7 +12,13 @@
 
 package com.adobe.marketing.mobile;
 
+import static com.adobe.marketing.mobile.MessagingPushConstants.LOG_TAG;
+
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -24,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,20 +39,7 @@ import java.util.Map;
  * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
-    static final String LOG_TAG = "Messaging";
     static final String SELF_TAG = "MessagingPushPayload";
-    static final String TITLE = "adb_title";
-    static final String BODY = "adb_body";
-    static final String SOUND = "adb_sound";
-    static final String NOTIFICATION_COUNT = "adb_n_count";
-    static final String NOTIFICATION_PRIORITY = "adb_n_priority";
-    static final String CHANNEL_ID = "adb_channel_id";
-    static final String ICON = "adb_icon";
-    static final String IMAGE_URL = "adb_image";
-    static final String ACTION_TYPE = "adb_a_type";
-    static final String ACTION_URI = "adb_uri";
-    static final String ACTION_BUTTONS = "adb_act";
-
     static final class NotificationPriorities {
         static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
         static final String PRIORITY_MIN = "PRIORITY_MIN";
@@ -67,12 +61,29 @@ public class MessagingPushPayload {
         static final String TYPE = "type";
     }
 
+    static final Map<String,Integer> notificationImportanceMap = new HashMap<String,Integer>() {{
+        put(NotificationPriorities.PRIORITY_MIN, NotificationManager.IMPORTANCE_MIN);
+        put(NotificationPriorities.PRIORITY_LOW, NotificationManager.IMPORTANCE_LOW);
+        put(NotificationPriorities.PRIORITY_DEFAULT, NotificationManager.IMPORTANCE_DEFAULT);
+        put(NotificationPriorities.PRIORITY_HIGH, NotificationManager.IMPORTANCE_HIGH);
+        put(NotificationPriorities.PRIORITY_MAX, NotificationManager.IMPORTANCE_MAX);
+    }};
+
+    static final Map<String,Integer> notificationPriorityMap = new HashMap<String,Integer>() {{
+        put(NotificationPriorities.PRIORITY_MIN, Notification.PRIORITY_MIN);
+        put(NotificationPriorities.PRIORITY_LOW, Notification.PRIORITY_LOW);
+        put(NotificationPriorities.PRIORITY_DEFAULT, Notification.PRIORITY_DEFAULT);
+        put(NotificationPriorities.PRIORITY_HIGH, Notification.PRIORITY_HIGH);
+        put(NotificationPriorities.PRIORITY_MAX, Notification.PRIORITY_MAX);
+    }};
+
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
     private String body;
     private String sound;
     private int badgeCount;
-    private int notificationPriority;
+    private int notificationPriority = Notification.PRIORITY_DEFAULT;
+    private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
     private String channelId;
     private String icon;
     private String imageUrl;
@@ -130,6 +141,9 @@ public class MessagingPushPayload {
     public int getNotificationPriority() {
         return notificationPriority;
     }
+    public int getNotificationImportance() {
+        return notificationImportance;
+    }
 
     public String getChannelId() {
         return channelId;
@@ -173,16 +187,16 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
             return;
         }
-        this.title = data.get(TITLE);
-        this.body = data.get(BODY);
-        this.sound = data.get(SOUND);
-        this.channelId = data.get(CHANNEL_ID);
-        this.icon = data.get(ICON);
-        this.actionUri = data.get(ACTION_URI);
-        this.imageUrl = data.get(IMAGE_URL);
+        this.title = data.get(MessagingPushConstants.PayloadKeys.TITLE);
+        this.body = data.get(MessagingPushConstants.PayloadKeys.BODY);
+        this.sound = data.get(MessagingPushConstants.PayloadKeys.SOUND);
+        this.channelId = data.get(MessagingPushConstants.PayloadKeys.CHANNEL_ID);
+        this.icon = data.get(MessagingPushConstants.PayloadKeys.ICON);
+        this.actionUri = data.get(MessagingPushConstants.PayloadKeys.ACTION_URI);
+        this.imageUrl = data.get(MessagingPushConstants.PayloadKeys.IMAGE_URL);
 
         try {
-            String count = data.get(NOTIFICATION_COUNT);
+            String count = data.get(MessagingPushConstants.PayloadKeys.BADGE_NUMBER);
             if (count != null) {
                 this.badgeCount = Integer.parseInt(count);
             }
@@ -190,26 +204,29 @@ public class MessagingPushPayload {
             Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
         }
 
-        this.notificationPriority = getNotificationPriorityFromString(data.get(NOTIFICATION_PRIORITY));
-        this.actionType = getActionTypeFromString(data.get(ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(ACTION_BUTTONS));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            this.notificationImportance = getNotificationImportanceFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
+        } else {
+            this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
+        }
+        this.actionType = getActionTypeFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_TYPE));
+        this.actionButtons = getActionButtonsFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {
         if (priority == null) return Notification.PRIORITY_DEFAULT;
-        switch (priority) {
-            case NotificationPriorities.PRIORITY_MIN:
-                return Notification.PRIORITY_MIN;
-            case NotificationPriorities.PRIORITY_LOW:
-                return Notification.PRIORITY_LOW;
-            case NotificationPriorities.PRIORITY_HIGH:
-                return Notification.PRIORITY_HIGH;
-            case NotificationPriorities.PRIORITY_MAX:
-                return Notification.PRIORITY_MAX;
-            case NotificationPriorities.PRIORITY_DEFAULT:
-            default:
-                return Notification.PRIORITY_DEFAULT;
-        }
+        final Integer resolvedPriority = notificationPriorityMap.get(priority);
+        if (resolvedPriority == null) return Notification.PRIORITY_DEFAULT;
+        return resolvedPriority;
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private int getNotificationImportanceFromString(final String priority) {
+        if (priority == null) return Notification.PRIORITY_DEFAULT;
+        final Integer resolvedImportance = notificationImportanceMap.get(priority);
+        if (resolvedImportance == null) return Notification.PRIORITY_DEFAULT;
+        return resolvedImportance;
     }
 
     private ActionType getActionTypeFromString(final String type) {
@@ -305,5 +322,11 @@ public class MessagingPushPayload {
         public ActionType getType() {
             return type;
         }
+    }
+
+    // Check if the push notification is silent push notification.
+    // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to talk with herald team)
+    public boolean isSilentPushMessage() {
+        return data != null && title == null && body == null;
     }
 }
