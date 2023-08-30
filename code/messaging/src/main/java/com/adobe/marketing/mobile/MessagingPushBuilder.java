@@ -52,12 +52,12 @@ class MessagingPushBuilder {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-                .setContentTitle(payload.getTitle())
-                .setContentText(payload.getBody())
-                .setNumber(payload.getBadgeCount())
-                .setPriority(payload.getNotificationPriority())
-                .setAutoCancel(true);
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
+        builder.setContentTitle(payload.getTitle());
+        builder.setContentText(payload.getBody());
+        builder.setNumber(payload.getBadgeCount());
+        builder.setPriority(payload.getNotificationPriority());
+        builder.setAutoCancel(true);
 
         setLargeIcon(builder, payload);
         setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
