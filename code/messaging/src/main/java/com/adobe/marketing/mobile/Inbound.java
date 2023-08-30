@@ -12,6 +12,11 @@
 
 package com.adobe.marketing.mobile;
 
+import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
+
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +24,15 @@ import java.util.Map;
  * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
  */
 public class Inbound {
+    private static final String MESSAGE_CONSEQUENCE_ID = "id";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_DATA = "data";
+
     // String representing a unique ID for this inbound item
     private final String uniqueId;
     // Enum representing the inbound item type
@@ -108,5 +122,25 @@ public class Inbound {
      */
     public Map<String, Object> getMeta() {
         return meta;
+    }
+
+    /**
+     * Creates a {@code Inbound} from the consequence detail {@code Map<String, Object>}.
+     *
+     * @return {@link Inbound} created from the consequence detail {@code Map<String, Object>}
+     */
+    public static Inbound fromConsequenceDetails(final Map<String, Object> consequenceDetails) {
+        final String uniqueId = DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_ID, "");
+        final InboundType inboundType = InboundType.fromString(DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_SCHEMA, ""));
+        final Map<String, Object> data = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_DATA, null);
+        if (MapUtils.isNullOrEmpty(data)) {
+            return null;
+        }
+        final JSONObject content = new JSONObject(DataReader.optTypedMap(Object.class, data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT, null));
+        final String contentType = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE, "");
+        final int expiryDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE, 0);
+        final int publishedDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE, 0);
+        final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_METADATA, null);
+        return new Inbound(uniqueId, inboundType, content.toString(), contentType, publishedDate, expiryDate, meta);
     }
 }

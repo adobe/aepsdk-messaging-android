@@ -16,13 +16,13 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.C
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.MessageFeedKeys.SCHEMA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.MESSAGE_FEED_SCHEMA_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_IAM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -32,22 +32,19 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Proposition;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.Surface;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
-import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -193,25 +190,6 @@ class MessagingUtils {
         return surfaces;
     }
 
-    /**
-     * Verifies that the given {@code String} is a valid surface {@code URI}
-     *
-     * @param surfaceUri A {@link String} containing a surface {@link java.net.URI}.
-     * @return {@code boolean} true if the given {@code String} is a valid URI, false otherwise
-     */
-    static boolean isValidSurface(final String surfaceUri) {
-        if (StringUtils.isNullOrEmpty(surfaceUri)) {
-            return false;
-        } else {
-            try {
-                new URI(surfaceUri);
-                return true;
-            } catch (final URISyntaxException exception) {
-                return false;
-            }
-        }
-    }
-
     // ========================================================================================
     // Request event id retrieval
     // ========================================================================================
@@ -264,47 +242,23 @@ class MessagingUtils {
         return consequenceDetails;
     }
 
-    /**
-     * Retrieves the rule consequence schema {@code String} from the passed in {@code JSONObject}.
-     *
-     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return {@link String} containing the ajo inbound item type extracted from the rule consequence details
-     */
-    static String getConsequenceSchema(final JSONObject ruleJson) {
-        String schemaValue = null;
-        try {
-            final JSONObject details = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-            schemaValue = details.optString(MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceSchema", "Exception occurred retrieving the message consequence schema value: %s", jsonException.getLocalizedMessage());
-        }
-        return schemaValue;
-    }
-
-    /**
-     * Extracts the message id {@code String} from the passed in {@code JSONObject}.
-     *
-     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return a {@code String> containing the message id contained in the rule consequence
-     */
-    static String getMessageId(final JSONObject ruleJson) {
-        String messageId = null;
-        try {
-            final JSONObject consequence = getConsequence(ruleJson);
-            messageId = consequence.getString(MESSAGE_CONSEQUENCE_ID);
-        } catch (final JSONException exception) {
-            Log.warning(LOG_TAG, "getMessageId", "Exception occurred when retrieving MessageId from the rule consequence: %s.", exception.getLocalizedMessage());
-        }
-        return messageId;
-    }
-
     // ========================================================================================
-    // feed item verification using rule consequence object
+    // feed item type verification using rule consequence object
     // ========================================================================================
     static boolean isFeedItem(final RuleConsequence ruleConsequence) {
         final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String schema = DataReader.optString(ruleDetailMap, SCHEMA, "");
-        return schema.equals(MESSAGE_FEED_SCHEMA_VALUE);
+        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        return schema.equals(SCHEMA_FEED_ITEM);
+    }
+
+    // ========================================================================================
+    // in app type verification using rule consequence object
+    // ========================================================================================
+    static boolean isInApp(final RuleConsequence ruleConsequence) {
+        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
+        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        final String consequenceType = ruleConsequence.getType();
+        return schema.equals(SCHEMA_IAM) || consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE);
     }
 
     // ========================================================================================

@@ -11,19 +11,24 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
-import com.adobe.marketing.mobile.Proposition;
-import com.adobe.marketing.mobile.PropositionItem;
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.caching.CacheResult;
-import com.adobe.marketing.mobile.services.caching.CacheService;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.adobe.marketing.mobile.Proposition;
+import com.adobe.marketing.mobile.PropositionItem;
+import com.adobe.marketing.mobile.Surface;
+import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
+import com.adobe.marketing.mobile.services.caching.CacheService;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +42,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -53,12 +59,15 @@ public class PropositionPayloadCachingTests {
     ServiceProvider mockServiceProvider;
     @Mock
     CacheResult mockCacheResult;
+    @Mock
+    DeviceInforming mockDeviceInfoService;
 
     MessagingCacheUtilities messagingCacheUtilities;
     InputStream propositionPayloadInputStream;
     InputStream propositionInputStream;
     Proposition proposition;
     PropositionPayload propositionPayload;
+    File cacheDir = new File("cache");
 
     Map<String, Object> propositionItemMap = new HashMap<>();
     Map<String, Object> eventDataMap = new HashMap<>();
@@ -80,9 +89,11 @@ public class PropositionPayloadCachingTests {
         try {
             propositionPayloadBaos = new ByteArrayOutputStream();
             propositionPayloadOos = new ObjectOutputStream(propositionPayloadBaos);
-            final List<PropositionPayload> list = new ArrayList<>();
-            list.add(propositionPayload);
-            propositionPayloadOos.writeObject(list);
+            final List<PropositionPayload> propositionPayloads = new ArrayList<>();
+            propositionPayloads.add(propositionPayload);
+            final Map<Surface, List<PropositionPayload>> payload = new HashMap<>();
+            payload.put(new Surface(), propositionPayloads);
+            propositionPayloadOos.writeObject(payload);
             propositionPayloadOos.flush();
             propositionPayloadInputStream = new ByteArrayInputStream(propositionPayloadBaos.toByteArray());
         } catch (IOException ex) {
@@ -124,9 +135,11 @@ public class PropositionPayloadCachingTests {
         try {
             propositionBaos = new ByteArrayOutputStream();
             propositionOos = new ObjectOutputStream(propositionBaos);
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            propositionOos.writeObject(list);
+            final List<Proposition> propositions = new ArrayList<>();
+            propositions.add(proposition);
+            final Map<Surface, List<Proposition>> payload = new HashMap<>();
+            payload.put(new Surface(), propositions);
+            propositionOos.writeObject(payload);
             propositionOos.flush();
             propositionInputStream = new ByteArrayInputStream(propositionBaos.toByteArray());
         } catch (IOException ex) {
@@ -149,12 +162,16 @@ public class PropositionPayloadCachingTests {
         Mockito.reset(mockCacheService);
         Mockito.reset(mockServiceProvider);
         Mockito.reset(mockCacheResult);
+        reset(mockDeviceInfoService);
     }
 
     void runWithMockedServiceProvider(final Runnable runnable) {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
             serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
             when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
+            when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
             messagingCacheUtilities = new MessagingCacheUtilities();
 
@@ -171,7 +188,7 @@ public class PropositionPayloadCachingTests {
             when(mockCacheResult.getData()).thenReturn(propositionPayloadInputStream);
 
             // test
-            final List<Proposition> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -189,7 +206,7 @@ public class PropositionPayloadCachingTests {
             when(mockCacheResult.getData()).thenReturn(propositionInputStream);
 
             // test
-            final List<Proposition> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -205,7 +222,7 @@ public class PropositionPayloadCachingTests {
             when(mockCacheService.get(anyString(), anyString())).thenReturn(null);
 
             // test
-            final List<Proposition> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -222,7 +239,7 @@ public class PropositionPayloadCachingTests {
             when(mockCacheResult.getData()).thenReturn(null);
 
             // test
-            final List<Proposition> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -239,7 +256,7 @@ public class PropositionPayloadCachingTests {
             when(mockCacheResult.getData()).thenReturn(MessagingTestUtils.convertResourceFileToInputStream("invalid.json"));
 
             // test
-            final List<Proposition> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -257,9 +274,11 @@ public class PropositionPayloadCachingTests {
 
             final List<Proposition> list = new ArrayList<>();
             list.add(proposition);
+            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+            propositions.put(new Surface(), list);
 
             // test
-            messagingCacheUtilities.cachePropositions(list);
+            messagingCacheUtilities.cachePropositions(propositions);
 
             // verify
             verify(mockCacheService, times(1)).set(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());

@@ -31,9 +31,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FeedTests {
@@ -46,20 +44,7 @@ public class FeedTests {
     private static final String FEED_NAME = "testFeedName";
     private FeedItem feedItem;
     private FeedItem feedItem2;
-    private final Map<String, Object> metaMap = new HashMap<String, Object>() {
-        {
-            put("stringKey", "value");
-            put("key2", true);
-            put("key3", 1000.1111);
-            put("feedName", FEED_NAME);
-        }
-    };
-    private final Map<String, Object> metaMap2 = new HashMap<String, Object>() {
-        {
-            put("key5", "value5");
-            put("key6", 1.2345);
-        }
-    };
+
     private final List<FeedItem> feedItems = new ArrayList<>();
 
     @Mock
@@ -103,7 +88,7 @@ public class FeedTests {
     public void testCreateFeed_AllParametersPresent() {
         // test
         runUsingMockedServiceProvider(() -> {
-            Feed feed = new Feed(SURFACE_URI, feedItems);
+            Feed feed = new Feed(FEED_NAME, Surface.fromUriString(SURFACE_URI), feedItems);
 
             // verify
             assertNotNull(feed);
@@ -116,7 +101,7 @@ public class FeedTests {
     public void testCreateFeed_NoFeedItems() {
         // test
         runUsingMockedServiceProvider(() -> {
-            Feed feed = new Feed(SURFACE_URI, null);
+            Feed feed = new Feed(FEED_NAME, Surface.fromUriString(SURFACE_URI), null);
 
             // verify
             assertNotNull(feed);
@@ -129,7 +114,20 @@ public class FeedTests {
     public void testCreateFeed_NullSurfaceUri() {
         // test
         runUsingMockedServiceProvider(() -> {
-            Feed feed = new Feed(null, feedItems);
+            Feed feed = new Feed(FEED_NAME, Surface.fromUriString(null), feedItems);
+
+            // verify
+            assertNotNull(feed);
+            assertEquals(null, feed.getSurfaceUri());
+            assertEquals(feedItems, feed.getItems());
+        });
+    }
+
+    @Test
+    public void testCreateFeed_NullSurface() {
+        // test
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed(FEED_NAME, null, feedItems);
 
             // verify
             assertNotNull(feed);
@@ -142,11 +140,12 @@ public class FeedTests {
     public void testCreateFeed_EmptySurfaceUri() {
         // test
         runUsingMockedServiceProvider(() -> {
-            Feed feed = new Feed("", feedItems);
+            Feed feed = new Feed(FEED_NAME, Surface.fromUriString(""), feedItems);
 
             // verify
             assertNotNull(feed);
-            assertEquals("", feed.getSurfaceUri());
+            assertEquals(null, feed.getSurfaceUri());
+            assertEquals(feedItems, feed.getItems());
         });
     }
 }

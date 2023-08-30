@@ -17,25 +17,29 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
  * An entity uniquely defined by a URI that can be interacted with.
  */
-public class Surface {
+public class Surface implements Serializable {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "Surface";
     private static final String SURFACE_BASE = "mobileapp://";
     private static final String UNKNOWN_SURFACE = "unknown";
-    private final String uri;
+    private String uri;
 
     public Surface(final String path) {
         this(false, path);
     }
 
     public Surface() {
-        this(true, SURFACE_BASE + ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName());
+        this(true, !StringUtils.isNullOrEmpty(ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName()) ? SURFACE_BASE + ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName() : null);
     }
 
     private Surface(final boolean isFullPathString, final String path) {
@@ -65,5 +69,13 @@ public class Surface {
     public static Surface fromUriString(final String uri) {
         final Surface surface = new Surface(true, uri);
         return !surface.isValid() ? null : surface;
+    }
+
+    private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {
+        uri = objectInputStream.readUTF();
+    }
+
+    private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException {
+        objectOutputStream.writeUTF(uri);
     }
 }
