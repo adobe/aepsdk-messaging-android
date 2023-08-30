@@ -140,7 +140,7 @@ public class Inbound {
         final String contentType = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE, "");
         final int expiryDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE, 0);
         final int publishedDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE, 0);
-        final Map<String, Object> meta = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_METADATA, null);
+        final Map<String, Object> meta = DataReader.optTypedMap(Object.class, data, MESSAGE_CONSEQUENCE_DETAIL_METADATA, null);
         return new Inbound(uniqueId, inboundType, content.toString(), contentType, publishedDate, expiryDate, meta);
     }
 }

@@ -23,7 +23,10 @@ import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,12 +42,12 @@ class FeedRulesEngine extends LaunchRulesEngine {
 
     /**
      * Evaluates the supplied event against the all current rules and returns a {@link
-     * Map<Surface, List<Inbound>>} created from the rules that matched the supplied event.
+     * Map<String, List<Inbound>>} created from the rules that matched the supplied event.
      *
      * @param event the event to be evaluated
-     * @return a {@code Map<Surface ,List<Inbound>>} containing inbound content for the given event
+     * @return a {@code Map<String ,List<Inbound>>} containing inbound content for the given event
      */
-    Map<Surface, List<Inbound>> evaluate(@NonNull final Event event) {
+    Map<String, List<Inbound>> evaluate(@NonNull final Event event) {
         if (event == null) {
             throw new IllegalArgumentException("Cannot evaluate null event.");
         }
@@ -54,18 +57,30 @@ class FeedRulesEngine extends LaunchRulesEngine {
             return null;
         }
 
-        final Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
+        final Map<String, List<Inbound>> inboundMessages = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
             final Map details = consequence.getDetail();
             final Inbound inboundMessage = Inbound.fromConsequenceDetails(details);
+            if (inboundMessage == null) {
+                continue;
+            }
 
-            final String surfaceUri = DataReader.optString(inboundMessage.getMeta(), SURFACE, "");
-            final Surface surface = new Surface(surfaceUri);
+            final Map metadata = inboundMessage.getMeta();
+            if (MapUtils.isNullOrEmpty(metadata)) {
+                continue;
+            }
 
-            if (inboundMessages.get(surface) != null) {
-                inboundMessages.get(surface).add(inboundMessage);
+            final String surfaceUri = DataReader.optString(metadata, SURFACE, "");
+            if (StringUtils.isNullOrEmpty(surfaceUri)) {
+                continue;
+            }
+
+            if (inboundMessages.get(surfaceUri) != null) {
+                final List<Inbound> inboundMessageList = new ArrayList<>(inboundMessages.get(surfaceUri));
+                inboundMessageList.add(inboundMessage);
+                inboundMessages.put(surfaceUri, inboundMessageList);
             } else {
-                inboundMessages.put(surface, Collections.singletonList(inboundMessage));
+                inboundMessages.put(surfaceUri, Collections.singletonList(inboundMessage));
             }
         }
         return inboundMessages;

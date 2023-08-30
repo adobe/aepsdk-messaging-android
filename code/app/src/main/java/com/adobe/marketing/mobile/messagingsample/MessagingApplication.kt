@@ -33,6 +33,17 @@ class MessagingApplication : Application() {
             // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
             MobileCore.lifecycleStart(null)
+
+            Messaging.setPropositionsHandler {
+                println(String.format("\nMessaging.setPropositionsHandler: Handler callback contained %d entry/entries", it.entries.size))
+                for (entry in it.entries) {
+                    println(String.format("Proposition surface: %s", entry.key.uri))
+                    println(String.format("\n Proposition has %d item(s)", entry.value.size))
+                    for (proposition in entry.value) {
+                        println(String.format("Item content: %s", proposition.items.get(0).content))
+                    }
+                }
+            }
         }
 
 

@@ -50,14 +50,14 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
     private static final String _XDM = "_xdm";
     private static final String SURFACES = "surfaces";
-    private static final String ITEMS = "items";
+    private static final String PROPOSITIONS = "propositions";
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String SURFACE_BASE = "mobileapp://";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
-    private static AdobeCallback<Map<Surface, List<FeedItem>>> propositionsResponseHandler;
+    private static AdobeCallback<Map<Surface, List<Proposition>>> propositionsResponseHandler;
 
     private Messaging() {
     }
@@ -199,23 +199,23 @@ public final class Messaging {
 
     // region proposition retrieval api
 
-    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<FeedItem>>> callback) {
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
             isPropositionsResponseListenerRegistered = true;
             MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION,  event -> {
-                final List<FeedItem> propositions = new ArrayList<>();
+                final List<Proposition> propositions = new ArrayList<>();
                 final Surface surface = Surface.fromUriString(getAppSurface());
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
-                    final Map<String, Object> itemMap = DataReader.optTypedMap(Object.class, eventData, surface.getUri(), Collections.emptyMap());
-                    final List<Map<String, Object>> feedItemMaps = DataReader.optTypedListOfMap(Object.class, itemMap, ITEMS, Collections.emptyList());
-                    for (final Map feedItemMap : feedItemMaps) {
-                        final FeedItem feedItem = FeedItem.fromEventData(feedItemMap);
-                        propositions.add(feedItem);
+                    final Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
+                    final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositions, surface.getUri(), Collections.emptyList());
+                    for (final Map<String, Object> propositionMap : propositionMaps) {
+                        final Proposition proposition = Proposition.fromEventData(propositionMap);
+                        propositions.add(proposition);
                     }
                 }
-                propositionsResponseHandler.call(new HashMap<Surface, List<FeedItem>>(){{
+                propositionsResponseHandler.call(new HashMap<Surface, List<Proposition>>(){{
                     put(surface, propositions);
                 }});
             });

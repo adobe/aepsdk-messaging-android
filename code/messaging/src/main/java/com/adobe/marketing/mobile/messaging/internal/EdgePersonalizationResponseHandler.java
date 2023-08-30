@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile.messaging.internal;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
@@ -55,7 +56,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.UUID;
 
 /**
  * This class is used to handle the retrieval and processing of AJO payloads containing in-app or feed messages. It is also
@@ -71,7 +72,7 @@ class EdgePersonalizationResponseHandler {
 
     private Map<Surface, List<Proposition>> propositions = new HashMap<>();
     private final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
-    private Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
+    private Map<String, List<Inbound>> inboundMessages = new HashMap<>();
     private final Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
 
     private String messagesRequestEventId;
@@ -197,7 +198,6 @@ class EdgePersonalizationResponseHandler {
      */
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
-        final Surface appSurface = new Surface();
 
         if (!messagesRequestEventId.equals(requestEventId)) {
             return;
@@ -220,9 +220,11 @@ class EdgePersonalizationResponseHandler {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create propositions from the AJO personalization payload, an exception occurred: %s.", exception.getLocalizedMessage());
         }
 
-        final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfacesForEventId.get(messagesRequestEventId), clearExistingRules, true);
+        final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(messagesRequestEventId);
+
+        final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfaces, clearExistingRules, true);
         if (!parsedRules.isEmpty()) {
-            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine for surface %s.", parsedRules.size(), requestedSurfacesForEventId.get(messagesRequestEventId));
+            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine.", parsedRules.size());
         }
 
         final List<LaunchRule> inAppRules = parsedRules.get(InboundType.INAPP);
@@ -235,16 +237,26 @@ class EdgePersonalizationResponseHandler {
             feedRulesEngine.replaceRules(feedRules);
             inboundMessages = feedRulesEngine.evaluate(edgeResponseEvent);
             if (!MapUtils.isNullOrEmpty(inboundMessages)) {
-                updateInboundMessages(inboundMessages, Objects.requireNonNull(requestedSurfacesForEventId.get(lastProcessedRequestEventId)));
+                updateInboundMessages(inboundMessages, requestedSurfaces);
             }
 
-            // dispatch event containing serialized Map<Surface, List<Proposition>>
-            final Map<String, Object> eventData = new HashMap<>();
-            final List<Map<String, Object>> propositionMaps = new ArrayList<>();
-            for (final Proposition proposition : propositions) {
-                propositionMaps.add(proposition.toEventData());
+            final Map<Surface, List<Proposition>> requestedPropositions = retrievePropositions(requestedSurfaces);
+            if (MapUtils.isNullOrEmpty(requestedPropositions)) {
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Not dispatching a notification event, personalization:decisions response does not contain propositions.");
+                return;
             }
-            eventData.put(appSurface.getUri(), propositionMaps);
+
+            // dispatch an event with the propositions received from the remote
+            final Map<String, Object> eventData = new HashMap<>();
+            final Map<String, Object> requestedPropositionsMap = new HashMap<>();
+            for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositions.entrySet()) {
+                final List<Map <String, Object>> convertedPropositions = new ArrayList<>();
+                for (final Proposition proposition : propositionEntry.getValue()) {
+                    convertedPropositions.add(proposition.toEventData());
+                }
+                requestedPropositionsMap.put(propositionEntry.getKey().getUri(), convertedPropositions);
+            }
+            eventData.put(PROPOSITIONS, requestedPropositionsMap);
 
             final Event event = new Event.Builder(MESSAGE_PROPOSITIONS_NOTIFICATION,
                     EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
@@ -255,17 +267,52 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    private void updateInboundMessages(final Map<Surface, List<Inbound>> newInboundMessages, final List<Surface> requestedSurfaces) {
+    private void updateInboundMessages(final Map<String, List<Inbound>> newInboundMessages, final List<Surface> requestedSurfaces) {
         for (final Surface surface : requestedSurfaces) {
-            final List<Inbound> inboundMessageList = newInboundMessages.get(surface);
+            final String surfaceUri = surface.getUri();
+            final List<Inbound> inboundMessageList = newInboundMessages.get(surfaceUri);
             if (inboundMessageList != null && !inboundMessageList.isEmpty()) {
-                inboundMessages.put(surface, inboundMessageList);
+                inboundMessages.put(surfaceUri, inboundMessageList);
             } else {
-                if (inboundMessages.get(surface) != null) {
-                    inboundMessages.remove(surface);
+                if (inboundMessages.get(surfaceUri) != null) {
+                    inboundMessages.remove(surfaceUri);
                 }
             }
         }
+    }
+
+    private Map<Surface, List<Proposition>> retrievePropositions(final List<Surface> surfaces) {
+        final Map<Surface, List<Proposition>> propositionMap = new HashMap<>();
+        for (final Surface surface : surfaces) {
+            final String surfaceUri = surface.getUri();
+            // add code-based propositions
+            final List<Proposition> propositionsList = propositions.get(surface);
+            if (propositionsList != null && !propositionsList.isEmpty()) {
+                propositionMap.put(surface, propositionsList);
+            }
+
+            final List<Inbound> inboundList = inboundMessages.get(surfaceUri);
+            if (inboundList == null || inboundList.isEmpty()) {
+                continue;
+            }
+
+            final List<Proposition> inboundPropositionList = new ArrayList<>();
+            for (final Inbound message: inboundList) {
+                final PropositionInfo propositionInfo  = this.propositionInfo.get(message.getUniqueId());
+                if (propositionInfo == null) {
+                    continue;
+                }
+
+                final String content = message.getContent();
+                final PropositionItem propositionItem = new PropositionItem(UUID.randomUUID().toString(), "https://ns.adobe.com/personalization/json-content-item", content);
+                final List<PropositionItem> propositionItemList = new ArrayList<>();
+                propositionItemList.add(propositionItem);
+                final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
+                inboundPropositionList.add(proposition);
+            }
+            propositionMap.put(surface, inboundPropositionList);
+        }
+        return propositionMap;
     }
 
     /**
