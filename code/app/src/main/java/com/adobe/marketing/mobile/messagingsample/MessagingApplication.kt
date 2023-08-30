@@ -38,7 +38,7 @@ class MessagingApplication : Application() {
                 println(String.format("\nMessaging.setPropositionsHandler: Handler callback contained %d entry/entries", it.entries.size))
                 for (entry in it.entries) {
                     println(String.format("Proposition surface: %s", entry.key.uri))
-                    println(String.format("\n Proposition has %d item(s)", entry.value.size))
+                    println(String.format("Proposition has %d item(s)", entry.value.size))
                     for (proposition in entry.value) {
                         println(String.format("Item content: %s", proposition.items.get(0).content))
                     }

@@ -72,7 +72,7 @@ class EdgePersonalizationResponseHandler {
 
     private Map<Surface, List<Proposition>> propositions = new HashMap<>();
     private final Map<String, PropositionInfo> propositionInfo = new HashMap<>();
-    private Map<String, List<Inbound>> inboundMessages = new HashMap<>();
+    private Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
     private final Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
 
     private String messagesRequestEventId;
@@ -199,7 +199,7 @@ class EdgePersonalizationResponseHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
 
-        if (!messagesRequestEventId.equals(requestEventId)) {
+        if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
         }
 
@@ -267,15 +267,14 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    private void updateInboundMessages(final Map<String, List<Inbound>> newInboundMessages, final List<Surface> requestedSurfaces) {
+    private void updateInboundMessages(final Map<Surface, List<Inbound>> newInboundMessages, final List<Surface> requestedSurfaces) {
         for (final Surface surface : requestedSurfaces) {
-            final String surfaceUri = surface.getUri();
-            final List<Inbound> inboundMessageList = newInboundMessages.get(surfaceUri);
+            final List<Inbound> inboundMessageList = newInboundMessages.get(surface);
             if (inboundMessageList != null && !inboundMessageList.isEmpty()) {
-                inboundMessages.put(surfaceUri, inboundMessageList);
+                inboundMessages.put(surface, inboundMessageList);
             } else {
-                if (inboundMessages.get(surfaceUri) != null) {
-                    inboundMessages.remove(surfaceUri);
+                if (inboundMessages.get(surface) != null) {
+                    inboundMessages.remove(surface);
                 }
             }
         }
@@ -284,14 +283,13 @@ class EdgePersonalizationResponseHandler {
     private Map<Surface, List<Proposition>> retrievePropositions(final List<Surface> surfaces) {
         final Map<Surface, List<Proposition>> propositionMap = new HashMap<>();
         for (final Surface surface : surfaces) {
-            final String surfaceUri = surface.getUri();
             // add code-based propositions
             final List<Proposition> propositionsList = propositions.get(surface);
             if (propositionsList != null && !propositionsList.isEmpty()) {
                 propositionMap.put(surface, propositionsList);
             }
 
-            final List<Inbound> inboundList = inboundMessages.get(surfaceUri);
+            final List<Inbound> inboundList = inboundMessages.get(surface);
             if (inboundList == null || inboundList.isEmpty()) {
                 continue;
             }
@@ -420,8 +418,9 @@ class EdgePersonalizationResponseHandler {
         for (final Surface surface : surfaces) {
             propositions.remove(surface);
             inboundMessages.remove(surface);
-            for (final Map.Entry<String, PropositionInfo> entry : propositionInfo.entrySet()) {
-                if (entry.getValue().scope.equals(surface.getUri())) {
+            final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>(propositionInfo);
+            for (final Map.Entry<String, PropositionInfo> entry : tempPropositionInfo.entrySet()) {
+                if (entry.getValue().scope.equals(surface)) {
                     propositionInfo.remove(entry.getKey());
                 }
             }

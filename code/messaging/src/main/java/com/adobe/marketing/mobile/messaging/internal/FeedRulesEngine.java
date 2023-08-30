@@ -42,12 +42,12 @@ class FeedRulesEngine extends LaunchRulesEngine {
 
     /**
      * Evaluates the supplied event against the all current rules and returns a {@link
-     * Map<String, List<Inbound>>} created from the rules that matched the supplied event.
+     * Map<Surface, List<Inbound>>} created from the rules that matched the supplied event.
      *
      * @param event the event to be evaluated
      * @return a {@code Map<String ,List<Inbound>>} containing inbound content for the given event
      */
-    Map<String, List<Inbound>> evaluate(@NonNull final Event event) {
+    Map<Surface, List<Inbound>> evaluate(@NonNull final Event event) {
         if (event == null) {
             throw new IllegalArgumentException("Cannot evaluate null event.");
         }
@@ -57,7 +57,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
             return null;
         }
 
-        final Map<String, List<Inbound>> inboundMessages = new HashMap<>();
+        final Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
             final Map details = consequence.getDetail();
             final Inbound inboundMessage = Inbound.fromConsequenceDetails(details);
@@ -70,17 +70,17 @@ class FeedRulesEngine extends LaunchRulesEngine {
                 continue;
             }
 
-            final String surfaceUri = DataReader.optString(metadata, SURFACE, "");
-            if (StringUtils.isNullOrEmpty(surfaceUri)) {
+            final Surface surface = Surface.fromUriString(DataReader.optString(metadata, SURFACE, ""));
+            if (!surface.isValid()) {
                 continue;
             }
 
-            if (inboundMessages.get(surfaceUri) != null) {
-                final List<Inbound> inboundMessageList = new ArrayList<>(inboundMessages.get(surfaceUri));
+            if (inboundMessages.get(surface) != null) {
+                final List<Inbound> inboundMessageList = new ArrayList<>(inboundMessages.get(surface));
                 inboundMessageList.add(inboundMessage);
-                inboundMessages.put(surfaceUri, inboundMessageList);
+                inboundMessages.put(surface, inboundMessageList);
             } else {
-                inboundMessages.put(surfaceUri, Collections.singletonList(inboundMessage));
+                inboundMessages.put(surface, Collections.singletonList(inboundMessage));
             }
         }
         return inboundMessages;
