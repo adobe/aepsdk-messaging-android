@@ -748,8 +748,8 @@ public class MessagingExtensionTests {
             verify(mockExtensionApi, times(1)).dispatch(dispatchEventCaptor.capture());
             final Event pushTrackingStatusEvent = dispatchEventCaptor.getAllValues().get(0);
             assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(PushTrackingStatus.INVALID_MESSAGE_ID.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.INVALID_MESSAGE_ID.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
+            assertEquals(PushTrackingStatus.UNKNOWN_ERROR.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
+            assertEquals(PushTrackingStatus.UNKNOWN_ERROR.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
         });
     }
 
