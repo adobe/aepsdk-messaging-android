@@ -15,14 +15,18 @@ package com.adobe.marketing.mobile;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.util.List;
 
 /**
  * Class for building push notification.
@@ -37,7 +41,6 @@ class MessagingPushBuilder {
     // When no channel name is received from the push notification, this default channel name is used.
     // This will appear in the notification settings for the app.
     private static final String DEFAULT_CHANNEL_NAME = "General";
-
 
     /**
      * Builds a notification for the received payload.
@@ -63,6 +66,8 @@ class MessagingPushBuilder {
         setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
         addActionButtons(builder, payload, context); // Add action buttons if any
         setSound(builder, payload, context);
+        setNotificationClickAction(builder, payload, context);
+        setNotificationDeleteAction(builder, payload, context);
 
         return builder.build();
     }
@@ -89,7 +94,7 @@ class MessagingPushBuilder {
             final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             final String channelIdFromPayload = payload.getChannelId();
 
-            // if a channel from the payload is not null and if a channel exists for the channel ID from the payload, use the same channel ID.
+            // if a channel from the payload
             if (channelIdFromPayload != null && notificationManager.getNotificationChannel(channelIdFromPayload) != null) {
                 Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel exists for channel ID: " + channelIdFromPayload + ". Using the same for push notification.");
                 return channelIdFromPayload;
@@ -109,13 +114,6 @@ class MessagingPushBuilder {
             }
             return channelId;
         }
-    }
-
-
-    private static void addActionButtons(final NotificationCompat.Builder builder,
-                                  final MessagingPushPayload payload,
-                                  final Context context) {
-        // TODO: Add this in the future Pull Request
     }
 
     /**
@@ -152,10 +150,13 @@ class MessagingPushBuilder {
      * Sets the sound for the notification.
      * If a sound is received from the payload, the same is used.
      * If a sound is not received from the payload, the default sound is used
+<<<<<<< HEAD
      * The sound name from the payload should also include the format of the sound file. eg: sound.mp3
      *
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
+=======
+>>>>>>> 1e31646 (Auto track notifications - Dispactch launch intents and make use of Core Lifecycle listner's)
      * @param notificationBuilder the notification builder
      */
     private static void setSound(final NotificationCompat.Builder notificationBuilder,
@@ -190,7 +191,72 @@ class MessagingPushBuilder {
         notificationBuilder.setStyle(bigPictureStyle);
     }
 
-   /**
+    private static void setNotificationClickAction(final NotificationCompat.Builder notificationBuilder,
+                                            final MessagingPushPayload payload,
+                                            final Context context) {
+        if (payload.getActionType() == MessagingPushPayload.ActionType.DEEPLINK || payload.getActionType() == MessagingPushPayload.ActionType.WEBURL) {
+            notificationBuilder.setContentIntent(createDeepLinkIntent(payload, context,payload.getActionUri(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED));
+        } else {
+            notificationBuilder.setContentIntent(createOpenAppIntent(payload,context));
+        }
+    }
+
+    private static void addActionButtons(final NotificationCompat.Builder builder,
+                                  final MessagingPushPayload payload,
+                                  final Context context) {
+        final List<MessagingPushPayload.ActionButton> actionButtons = payload.getActionButtons();
+        if (actionButtons == null || actionButtons.isEmpty()) {
+            return;
+        }
+
+        for(MessagingPushPayload.ActionButton eachButton : actionButtons) {
+            final PendingIntent pendingIntent;
+            if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK|| eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {
+                pendingIntent = createDeepLinkIntent(payload, context, eachButton.getLink(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
+            } else {
+                pendingIntent = createOpenAppIntent(payload,context);
+            }
+            builder.addAction(0, eachButton.getLabel(), pendingIntent);
+        }
+    }
+
+    private static PendingIntent createOpenAppIntent(final MessagingPushPayload payload,
+                                              final Context context) {
+        final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Messaging.addPushTrackingDetails(launchIntent,payload.getMessageId(), payload.getData());
+        launchIntent.putExtra("AJOPushInteraction", true);
+        launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
+        launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
+        return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private static PendingIntent createDeepLinkIntent(final MessagingPushPayload payload,
+                                               final Context context,
+                                               final String actionUri,
+                                               final String eventType) {
+        if(StringUtils.isNullOrEmpty(actionUri)) {
+            return createOpenAppIntent(payload,context);
+        }
+        final Intent deeplinkIntent = new Intent(Intent.ACTION_VIEW);
+        deeplinkIntent.putExtra("AJOPushInteraction", true);
+        deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, eventType);
+        deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
+        deeplinkIntent.setData(Uri.parse(actionUri));
+        Messaging.addPushTrackingDetails(deeplinkIntent,payload.getMessageId(), payload.getData());
+        return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private static void setNotificationDeleteAction(final NotificationCompat.Builder builder,
+                                             final MessagingPushPayload payload,
+                                             final Context context) {
+        final Intent deleteIntent = new Intent(context, MessagingDeleteIntentReceiver.class);
+        Messaging.addPushTrackingDetails(deleteIntent,payload.getMessageId(), payload.getData());
+        final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setDeleteIntent(intent);
+    }
+
+    /**
      * Checks if the icon is valid.
      * @param icon the icon to be checked
      * @return true if the icon is valid, false otherwise

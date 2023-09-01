@@ -31,5 +31,28 @@ class MessagingPushConstants {
         private PayloadKeys() {
         }
     }
+    class Tracking {
+        class Keys {
+            static final String ADOBE_XDM = "adobe_xdm";
+            static final String APPLICATION_OPENED = "applicationOpened";
+            static final String EVENT_TYPE = "eventType";
+            static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            static final String MESSAGE_ID = "messageId";
+
+            private Keys() {
+            }
+        }
+
+        class Values {
+            static final String PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
+            static final String PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
+            private Values() {
+            }
+        }
+
+
+        private Tracking() {
+        }
+    }
 
 }
