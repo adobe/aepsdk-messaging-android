@@ -150,14 +150,11 @@ class MessagingPushBuilder {
      * Sets the sound for the notification.
      * If a sound is received from the payload, the same is used.
      * If a sound is not received from the payload, the default sound is used
-<<<<<<< HEAD
      * The sound name from the payload should also include the format of the sound file. eg: sound.mp3
      *
+     * @param notificationBuilder the notification builder
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
-=======
->>>>>>> 1e31646 (Auto track notifications - Dispactch launch intents and make use of Core Lifecycle listner's)
-     * @param notificationBuilder the notification builder
      */
     private static void setSound(final NotificationCompat.Builder notificationBuilder,
                           final MessagingPushPayload payload,
@@ -225,10 +222,9 @@ class MessagingPushBuilder {
         final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         Messaging.addPushTrackingDetails(launchIntent,payload.getMessageId(), payload.getData());
-        launchIntent.putExtra("AJOPushInteraction", true);
         launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
         launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
-        return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static PendingIntent createDeepLinkIntent(final MessagingPushPayload payload,
@@ -239,12 +235,11 @@ class MessagingPushBuilder {
             return createOpenAppIntent(payload,context);
         }
         final Intent deeplinkIntent = new Intent(Intent.ACTION_VIEW);
-        deeplinkIntent.putExtra("AJOPushInteraction", true);
         deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, eventType);
         deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
         deeplinkIntent.setData(Uri.parse(actionUri));
         Messaging.addPushTrackingDetails(deeplinkIntent,payload.getMessageId(), payload.getData());
-        return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static void setNotificationDeleteAction(final NotificationCompat.Builder builder,
@@ -252,7 +247,7 @@ class MessagingPushBuilder {
                                              final Context context) {
         final Intent deleteIntent = new Intent(context, MessagingDeleteIntentReceiver.class);
         Messaging.addPushTrackingDetails(deleteIntent,payload.getMessageId(), payload.getData());
-        final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         builder.setDeleteIntent(intent);
     }
 
