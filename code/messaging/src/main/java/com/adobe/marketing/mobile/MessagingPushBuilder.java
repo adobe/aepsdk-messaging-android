@@ -22,17 +22,20 @@ import android.graphics.Bitmap;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
+
 import java.util.List;
 
 /**
  * Class for building push notification.
  * <p>
- *     The build method in this class takes {@link MessagingPushPayload} received from the push notification and builds the notification.
- *     This class is used internally by AdobeMessagingService to build the push notification.
+ * The build method in this class takes {@link MessagingPushPayload} received from the push notification and builds the notification.
+ * This class is used internally by AdobeMessagingService to build the push notification.
  */
 class MessagingPushBuilder {
 
@@ -51,7 +54,7 @@ class MessagingPushBuilder {
      */
     @NonNull
     static Notification build(final MessagingPushPayload payload,
-                       final Context context){
+                              final Context context) {
         final String channelId = createChannelAndGetChannelID(payload, context);
 
         // Create the notification
@@ -85,7 +88,7 @@ class MessagingPushBuilder {
      */
     @NonNull
     private static String createChannelAndGetChannelID(final MessagingPushPayload payload,
-                                                final Context context)  {
+                                                       final Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             // For Android versions below O, no channel is created. Just return the obtained channel ID.
             return payload.getChannelId() == null ? DEFAULT_CHANNEL_ID : payload.getChannelId();
@@ -127,10 +130,10 @@ class MessagingPushBuilder {
      * @param builder the notification builder
      */
     private static void setSmallIcon(final NotificationCompat.Builder builder,
-                              final MessagingPushPayload payload,
-                              final Context context) {
+                                     final MessagingPushPayload payload,
+                                     final Context context) {
         final int iconFromPayload = MessagingPushUtils.getSmallIconWithResourceName(payload.getIcon(), context);
-        final int iconFromMobileCore =  -1 ;   //MobileCore.getSmallIconResourceId();
+        final int iconFromMobileCore = -1;   //MobileCore.getSmallIconResourceId();
 
         if (isValidIcon(iconFromPayload)) {
             builder.setSmallIcon(iconFromPayload);
@@ -153,13 +156,13 @@ class MessagingPushBuilder {
      * The sound name from the payload should also include the format of the sound file. eg: sound.mp3
      *
      * @param notificationBuilder the notification builder
-     * @param payload {@link MessagingPushPayload} the payload received from the push notification
-     * @param context the application {@link Context}
+     * @param payload             {@link MessagingPushPayload} the payload received from the push notification
+     * @param context             the application {@link Context}
      */
     private static void setSound(final NotificationCompat.Builder notificationBuilder,
-                          final MessagingPushPayload payload,
-                          final Context context) {
-        if(!StringUtils.isNullOrEmpty(payload.getSound())) {
+                                 final MessagingPushPayload payload,
+                                 final Context context) {
+        if (!StringUtils.isNullOrEmpty(payload.getSound())) {
             notificationBuilder.setSound(MessagingPushUtils.getSoundUriForResourceName(payload.getSound(), context));
             return;
         }
@@ -172,10 +175,10 @@ class MessagingPushBuilder {
      * If large icon url is not received from the payload, default style is used for the notification.
      *
      * @param notificationBuilder the notification builder
-     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param payload             {@link MessagingPushPayload} the payload received from the push notification
      */
     private static void setLargeIcon(final NotificationCompat.Builder notificationBuilder,
-                              final MessagingPushPayload payload) {
+                                     final MessagingPushPayload payload) {
         // Quick bail out if there is no image url
         if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return;
         Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
@@ -189,12 +192,12 @@ class MessagingPushBuilder {
     }
 
     private static void setNotificationClickAction(final NotificationCompat.Builder notificationBuilder,
-                                            final MessagingPushPayload payload,
-                                            final Context context) {
+                                                   final MessagingPushPayload payload,
+                                                   final Context context) {
         if (payload.getActionType() == MessagingPushPayload.ActionType.DEEPLINK || payload.getActionType() == MessagingPushPayload.ActionType.WEBURL) {
-            notificationBuilder.setContentIntent(createDeepLinkIntent(payload, context,payload.getActionUri(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED));
+            notificationBuilder.setContentIntent(createDeepLinkIntent(payload, context, payload.getActionUri(), null));
         } else {
-            notificationBuilder.setContentIntent(createOpenAppIntent(payload,context, null));
+            notificationBuilder.setContentIntent(createOpenAppIntent(payload, context, null));
         }
     }
 
@@ -206,12 +209,12 @@ class MessagingPushBuilder {
             return;
         }
 
-        for(MessagingPushPayload.ActionButton eachButton : actionButtons) {
+        for (MessagingPushPayload.ActionButton eachButton : actionButtons) {
             final PendingIntent pendingIntent;
-            if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK|| eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {
+            if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK || eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {
                 pendingIntent = createDeepLinkIntent(payload, context, eachButton.getLink(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
             } else {
-                pendingIntent = createOpenAppIntent(payload,context, eachButton.getLabel());
+                pendingIntent = createOpenAppIntent(payload, context, eachButton.getLabel());
             }
             builder.addAction(0, eachButton.getLabel(), pendingIntent);
         }
@@ -222,7 +225,7 @@ class MessagingPushBuilder {
                                                      final String action) {
         final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        Messaging.addPushTrackingDetails(launchIntent,payload.getMessageId(), payload.getData());
+        Messaging.addPushTrackingDetails(launchIntent, payload.getMessageId(), payload.getData());
         addTrackingMetricsToIntent(launchIntent, action);
         return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
@@ -231,13 +234,13 @@ class MessagingPushBuilder {
                                                       final Context context,
                                                       final String actionUri,
                                                       final String action) {
-        if(StringUtils.isNullOrEmpty(actionUri)) {
-            return createOpenAppIntent(payload,context,action);
+        if (StringUtils.isNullOrEmpty(actionUri)) {
+            return createOpenAppIntent(payload, context, action);
         }
         final Intent deeplinkIntent = new Intent(Intent.ACTION_VIEW);
         addTrackingMetricsToIntent(deeplinkIntent, action);
         deeplinkIntent.setData(Uri.parse(actionUri));
-        Messaging.addPushTrackingDetails(deeplinkIntent,payload.getMessageId(), payload.getData());
+        Messaging.addPushTrackingDetails(deeplinkIntent, payload.getMessageId(), payload.getData());
         return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
@@ -245,13 +248,13 @@ class MessagingPushBuilder {
                                                     final MessagingPushPayload payload,
                                                     final Context context) {
         final Intent deleteIntent = new Intent(context, MessagingDeleteIntentReceiver.class);
-        Messaging.addPushTrackingDetails(deleteIntent,payload.getMessageId(), payload.getData());
+        Messaging.addPushTrackingDetails(deleteIntent, payload.getMessageId(), payload.getData());
         final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         builder.setDeleteIntent(intent);
     }
 
     private static void addTrackingMetricsToIntent(final Intent intent, final String action) {
-        intent.putExtra(MessagingPushConstants.Tracking.Keys.CONTAINS_AJO_PUSH_TRACKING_DATA,true);
+        intent.putExtra(MessagingPushConstants.Tracking.Keys.CONTAINS_AJO_PUSH_TRACKING_DATA, true);
         intent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
         if (StringUtils.isNullOrEmpty(action)) {
             intent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
@@ -263,6 +266,7 @@ class MessagingPushBuilder {
 
     /**
      * Checks if the icon is valid.
+     *
      * @param icon the icon to be checked
      * @return true if the icon is valid, false otherwise
      */
