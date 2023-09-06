@@ -231,34 +231,36 @@ public class MessagingPushBuilderTests {
         assertEquals(returnedPendingIntent, pendingIntentCaptor.getValue());
 
         // verify deeplink intent created
+        verify(deeplinkIntent,times(1)).putExtra("containsAjoPushTrackingData", true);
         verify(deeplinkIntent,times(1)).putExtra("applicationOpened", true);
         verify((deeplinkIntent), times(1)).putExtra(eq("eventType"), eq("pushTracking.applicationOpened"));
         verify((deeplinkIntent), times(1)).setData(sampleUri);
         assertEquals("sampleapp://test.com",mockUriStringCaptor.getValue());
     }
 
-//    @Test
-//    public void test_notificationBuild_with_notificationButtons() {
-//        // setup
-//        ArgumentCaptor<Integer> buttonIconCaptor = ArgumentCaptor.forClass(Integer.class);
-//        ArgumentCaptor<String> buttonLabelCaptor = ArgumentCaptor.forClass(String.class);
-//
-//        final ArgumentCaptor<PendingIntent> pendingIntentCaptor = ArgumentCaptor.forClass(PendingIntent.class);
-//        when(payload.getActionType()).thenReturn(MessagingPushPayload.ActionType.OPENAPP);
-//        when(payload.getActionButtons()).thenReturn(new ArrayList<MessagingPushPayload.ActionButton>() {{
-//        }});
-//
-//        // test
-//        Notification notification = builder.build(payload, context);
-//        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
-//        Intent deeplinkIntent = intentConstructor.constructed().get(0);
-//
-//        //verify
-//        assertNotNull(notification);
-//        verify(mockNotificationBuilder,times(3)).addAction(buttonIconCaptor.capture(), buttonLabelCaptor.capture(), pendingIntentCaptor.capture());
-//
-//        //verify Button 1
-//        assertEquals("Button 1", buttonLabelCaptor.getAllValues().get(0));
-//
-//    }
+    @Test
+    public void test_notificationBuild_with_notificationButtons() {
+        // setup
+        ArgumentCaptor<Integer> buttonIconCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<String> buttonLabelCaptor = ArgumentCaptor.forClass(String.class);
+
+        final ArgumentCaptor<PendingIntent> pendingIntentCaptor = ArgumentCaptor.forClass(PendingIntent.class);
+        when(payload.getActionType()).thenReturn(MessagingPushPayload.ActionType.OPENAPP);
+        when(payload.getActionButtons()).thenReturn(new ArrayList<MessagingPushPayload.ActionButton>() {{
+        }});
+
+        // test
+        Notification notification = builder.build(payload, context);
+        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
+        Intent deeplinkIntent = intentConstructor.constructed().get(0);
+
+        //verify
+        assertNotNull(notification);
+        verify(mockNotificationBuilder,times(3)).addAction(buttonIconCaptor.capture(), buttonLabelCaptor.capture(), pendingIntentCaptor.capture());
+
+        //verify Button 1
+        assertEquals("Button 1", buttonLabelCaptor.getAllValues().get(0));
+    }
+
+
 }

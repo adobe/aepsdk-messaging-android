@@ -310,8 +310,7 @@ class MainActivity : ComponentActivity() {
         }
 
         btn_detailpage.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setData(Uri.parse("demo://messagingdemoapp/details"));
+            val intent = Intent(applicationContext, DetailsActivity::class.java)
             startActivity(intent)
         }
 

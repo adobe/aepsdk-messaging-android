@@ -194,13 +194,13 @@ class MessagingPushBuilder {
         if (payload.getActionType() == MessagingPushPayload.ActionType.DEEPLINK || payload.getActionType() == MessagingPushPayload.ActionType.WEBURL) {
             notificationBuilder.setContentIntent(createDeepLinkIntent(payload, context,payload.getActionUri(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED));
         } else {
-            notificationBuilder.setContentIntent(createOpenAppIntent(payload,context));
+            notificationBuilder.setContentIntent(createOpenAppIntent(payload,context, null));
         }
     }
 
     private static void addActionButtons(final NotificationCompat.Builder builder,
-                                  final MessagingPushPayload payload,
-                                  final Context context) {
+                                         final MessagingPushPayload payload,
+                                         final Context context) {
         final List<MessagingPushPayload.ActionButton> actionButtons = payload.getActionButtons();
         if (actionButtons == null || actionButtons.isEmpty()) {
             return;
@@ -211,44 +211,54 @@ class MessagingPushBuilder {
             if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK|| eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {
                 pendingIntent = createDeepLinkIntent(payload, context, eachButton.getLink(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
             } else {
-                pendingIntent = createOpenAppIntent(payload,context);
+                pendingIntent = createOpenAppIntent(payload,context, eachButton.getLabel());
             }
             builder.addAction(0, eachButton.getLabel(), pendingIntent);
         }
     }
 
     private static PendingIntent createOpenAppIntent(final MessagingPushPayload payload,
-                                              final Context context) {
+                                                     final Context context,
+                                                     final String action) {
         final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         Messaging.addPushTrackingDetails(launchIntent,payload.getMessageId(), payload.getData());
-        launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
-        launchIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
+        addTrackingMetricsToIntent(launchIntent, action);
         return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static PendingIntent createDeepLinkIntent(final MessagingPushPayload payload,
-                                               final Context context,
-                                               final String actionUri,
-                                               final String eventType) {
+                                                      final Context context,
+                                                      final String actionUri,
+                                                      final String action) {
         if(StringUtils.isNullOrEmpty(actionUri)) {
-            return createOpenAppIntent(payload,context);
+            return createOpenAppIntent(payload,context,action);
         }
         final Intent deeplinkIntent = new Intent(Intent.ACTION_VIEW);
-        deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, eventType);
-        deeplinkIntent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
+        addTrackingMetricsToIntent(deeplinkIntent, action);
         deeplinkIntent.setData(Uri.parse(actionUri));
         Messaging.addPushTrackingDetails(deeplinkIntent,payload.getMessageId(), payload.getData());
         return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private static void setNotificationDeleteAction(final NotificationCompat.Builder builder,
-                                             final MessagingPushPayload payload,
-                                             final Context context) {
+                                                    final MessagingPushPayload payload,
+                                                    final Context context) {
         final Intent deleteIntent = new Intent(context, MessagingDeleteIntentReceiver.class);
         Messaging.addPushTrackingDetails(deleteIntent,payload.getMessageId(), payload.getData());
         final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
         builder.setDeleteIntent(intent);
+    }
+
+    private static void addTrackingMetricsToIntent(final Intent intent, final String action) {
+        intent.putExtra(MessagingPushConstants.Tracking.Keys.CONTAINS_AJO_PUSH_TRACKING_DATA,true);
+        intent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
+        if (StringUtils.isNullOrEmpty(action)) {
+            intent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
+        } else {
+            intent.putExtra(MessagingPushConstants.Tracking.Keys.ACTION_ID, action);
+            intent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
+        }
     }
 
     /**

@@ -36,9 +36,10 @@ class MessagingPushConstants {
             static final String ADOBE_XDM = "adobe_xdm";
             static final String APPLICATION_OPENED = "applicationOpened";
             static final String EVENT_TYPE = "eventType";
-            static final String GOOGLE_MESSAGE_ID = "google.message_id";
+            static final String ACTION_ID = "actionId";
             static final String MESSAGE_ID = "messageId";
 
+            static final String CONTAINS_AJO_PUSH_TRACKING_DATA = "containsAjoPushTrackingData";
             private Keys() {
             }
         }
