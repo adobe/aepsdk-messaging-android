@@ -318,17 +318,10 @@ public class MessagingPublicAPITests {
         // test
         Messaging.handleNotificationResponse(intent, true, null);
 
-        // verify messaging event
+        // verify no messaging request event is sent
         List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-        assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
-
-        // verify push tracking edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
-                EventSource.REQUEST_CONTENT);
-        assertEquals(1, edgeRequestEvents.size());
-        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getEventData().toString());
+        assertEquals(0, messagingRequestEvents.size());
     }
 
     @Test
