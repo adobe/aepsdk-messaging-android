@@ -306,10 +306,10 @@ public final class MessagingExtension extends Extension {
      * @param event {@link Event} containing the push tracking information
      * @param datasetId A valid {@link String} containing the dataset id
      */
-    private void handleTrackingInfo(@NonNull final Event event,@NonNull final String datasetId) {
+    private void handleTrackingInfo(@NonNull final Event event, @NonNull final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
-            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(),event);
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
             Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
             return;
         }
@@ -319,13 +319,13 @@ public final class MessagingExtension extends Extension {
         final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
         if (StringUtils.isNullOrEmpty(eventType)) {
-            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(),event);
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
             Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
             return;
         }
 
         if (StringUtils.isNullOrEmpty(messageId)) {
-            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(),event);
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(), event);
             Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
             return;
         }
@@ -349,7 +349,7 @@ public final class MessagingExtension extends Extension {
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
 
-        MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.TRACKING_INITIATED, getApi(),event);
+        MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.TRACKING_INITIATED, getApi(), event);
 
         // dispatch push tracking event
         MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,

@@ -67,7 +67,7 @@ public enum PushTrackingStatus {
      * @return {@link PushTrackingStatus} enum value
      */
     public static PushTrackingStatus fromInt(final int value) {
-        for (PushTrackingStatus b : PushTrackingStatus.values()) {
+        for (final PushTrackingStatus b : PushTrackingStatus.values()) {
             if (b.value == (value)) {
                 return b;
             }
