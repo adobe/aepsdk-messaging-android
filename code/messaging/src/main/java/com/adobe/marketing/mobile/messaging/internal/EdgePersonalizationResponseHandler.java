@@ -223,17 +223,15 @@ class EdgePersonalizationResponseHandler {
         final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(messagesRequestEventId);
 
         final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfaces, clearExistingRules, true);
-        if (!parsedRules.isEmpty()) {
-            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine.", parsedRules.size());
-        }
-
         final List<LaunchRule> inAppRules = parsedRules.get(InboundType.INAPP);
         final List<LaunchRule> feedRules = parsedRules.get(InboundType.FEED);
         if (inAppRules != null && !inAppRules.isEmpty()) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains InApp message definitions.");
+            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine.", inAppRules.size());
             launchRulesEngine.replaceRules(inAppRules);
         } else if (feedRules != null && !feedRules.isEmpty()) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains feed message definitions.");
+            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the feed rules engine.", feedRules.size());
             feedRulesEngine.replaceRules(feedRules);
             inboundMessages = feedRulesEngine.evaluate(edgeResponseEvent);
             if (!MapUtils.isNullOrEmpty(inboundMessages)) {

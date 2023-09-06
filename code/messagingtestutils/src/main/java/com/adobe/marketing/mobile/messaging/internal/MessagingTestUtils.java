@@ -659,4 +659,8 @@ public class MessagingTestUtils {
         }
     }
 
+    static Inbound createInbound() {
+        return new Inbound("183639c4-cb37-458e-a8ef-4e130d767eb0", InboundType.FEED, "content", "feed", 1234, 1234, Collections.EMPTY_MAP);
+    }
+
 }

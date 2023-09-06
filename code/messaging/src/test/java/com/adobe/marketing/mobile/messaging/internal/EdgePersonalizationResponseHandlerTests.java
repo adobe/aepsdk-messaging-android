@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -31,7 +32,9 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Feed;
 import com.adobe.marketing.mobile.FeedItem;
+import com.adobe.marketing.mobile.Inbound;
 import com.adobe.marketing.mobile.Proposition;
+import com.adobe.marketing.mobile.PropositionItem;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -43,7 +46,9 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,6 +66,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +101,7 @@ public class EdgePersonalizationResponseHandlerTests {
     FeedRulesEngine mockFeedRulesEngine;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
@@ -140,41 +148,6 @@ public class EdgePersonalizationResponseHandlerTests {
 
             runnable.run();
         }
-    }
-
-    private List<RuleConsequence> createFeedConsequenceList(int size) {
-        List<RuleConsequence> feedConsequences = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            try {
-                JSONObject feedDetails = new JSONObject("{\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
-                        "\"schema\": \"https://ns.adobe.com/personalization/inbound/feed-item\",\n" +
-                        "\"data\": {\n" +
-                        "\"expiryDate\": 1723163897,\n" +
-                        "\"meta\": {\n" +
-                        "\"feedName\": \"apifeed\",\n" +
-                        "\"campaignName\": \"testCampaign\",\n" +
-                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
-                        "},\n" +
-                        "\"content\": {\n" +
-                        "\"body\": \"testBody\",\n" +
-                        "\"title\": \"testTitle\",\n" +
-                        "\"imageUrl\": \"https://someimage" + i + ".png\",\n" +
-                        "\"actionTitle\": \"testActionTitle\",\n" +
-                        "\"actionUrl\": \"https://someurl.com\",\n" +
-                        "},\n" +
-                        "\"contentType\": \"application/json\",\n" +
-                        "\"publishedDate\": 1691541497\n" +
-                        "}\n" +
-                        "}");
-                Map<String, Object> detail = JSONUtils.toMap(feedDetails);
-                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.MessageFeedValues.SCHEMA, detail);
-                feedConsequences.add(feedConsequence);
-            } catch (JSONException jsonException) {
-                fail(jsonException.getMessage());
-            }
-        }
-        return feedConsequences;
     }
 
     // ========================================================================================
@@ -725,8 +698,15 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
-                List<RuleConsequence> messageFeedConsequences = createFeedConsequenceList(5);
-                when(mockFeedRulesEngine.evaluateEvent(any(Event.class))).thenReturn(messageFeedConsequences);
+                Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
+                List<Inbound> inboundList = new ArrayList<>();
+                inboundList.add(MessagingTestUtils.createInbound());
+                inboundList.add(MessagingTestUtils.createInbound());
+                inboundList.add(MessagingTestUtils.createInbound());
+                inboundList.add(MessagingTestUtils.createInbound());
+                inboundList.add(MessagingTestUtils.createInbound());
+                inboundMessages.put(new Surface(), inboundList);
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(inboundMessages);
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
 
                 MessageTestConfig config = new MessageTestConfig();
@@ -750,19 +730,24 @@ public class EdgePersonalizationResponseHandlerTests {
                 assertEquals(1, addedRules.size());
                 assertEquals(5, addedRules.get(0).getConsequenceList().size());
 
-                // verify event dispatched containing the message feed
+                // verify event dispatched containing the message feed data
                 verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
                 Event capturedEvent = eventArgumentCaptor.getValue();
-                Feed returnedFeed = Feed.fromEventData(capturedEvent.getEventData());
-                assertEquals("apifeed", returnedFeed.getName());
-                assertEquals("mobileapp://mockPackageName", returnedFeed.getSurfaceUri());
-                for (int i = 0; i < returnedFeed.getItems().size(); i++) {
-                    FeedItem feedItem = returnedFeed.getItems().get(i);
-                    assertEquals("https://someimage" + i + ".png", feedItem.getImageUrl());
-                    assertEquals("testActionTitle", feedItem.getActionTitle());
-                    assertEquals("https://someurl.com", feedItem.getActionUrl());
-                    assertEquals("testBody", feedItem.getBody());
-                    assertEquals("testTitle", feedItem.getTitle());
+                Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, capturedEvent.getEventData(), "propositions", Collections.emptyMap());
+                String surfaceUri = retrievedPropositions.keySet().stream().findFirst().get();
+                Collection<Object> feedItemDataList = retrievedPropositions.values();
+                List<Map<String, Object>> propositionList = (List<Map<String, Object>>) feedItemDataList.stream().findFirst().get();
+                assertEquals(5, propositionList.size());
+                for (Map<String, Object> propositionData : propositionList) {
+                    Proposition proposition = Proposition.fromEventData(propositionData);
+                    assertEquals("mobileapp://mockPackageName", proposition.getScope());
+                    assertEquals("testResponseId", proposition.getUniqueId());
+                    assertEquals(1, proposition.getItems().size());
+                    PropositionItem propositionItem = proposition.getItems().get(0);
+                    assertEquals("content", propositionItem.getContent());
+                    assertEquals("https://ns.adobe.com/personalization/json-content-item", propositionItem.getSchema());
+                    assertNotNull(propositionItem.getUniqueId()); // the proposition item unique id is random, just verify it is present
+                    assertEquals(proposition, propositionItem.getProposition());
                 }
             }
         });

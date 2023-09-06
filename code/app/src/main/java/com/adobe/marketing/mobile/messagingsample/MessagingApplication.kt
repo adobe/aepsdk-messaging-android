@@ -23,29 +23,26 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        Messaging.registerExtension()
-        Identity.registerExtension()
-        Edge.registerExtension()
-        Assurance.registerExtension()
         //Assurance.startSession("YOUR-SESSION-ID")
-
-        MobileCore.start {
+        val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
+        MobileCore.registerExtensions(extensions) {
             // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
             MobileCore.lifecycleStart(null)
 
             Messaging.setPropositionsHandler {
-                println(String.format("\nMessaging.setPropositionsHandler: Handler callback contained %d entry/entries", it.entries.size))
+                println("Messaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
                 for (entry in it.entries) {
-                    println(String.format("Proposition surface: %s", entry.key.uri))
-                    println(String.format("Proposition has %d item(s)", entry.value.size))
-                    for (proposition in entry.value) {
-                        println(String.format("Item content: %s", proposition.items.get(0).content))
+                    val surface = entry.key.uri
+                    val propositions = entry.value
+                    println("Proposition surface: $surface")
+                    println("Proposition has ${propositions.size} item(s)")
+                    for (proposition in propositions) {
+                        println("Item content: ${proposition.items[0].content}")
                     }
                 }
             }
         }
-
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast
