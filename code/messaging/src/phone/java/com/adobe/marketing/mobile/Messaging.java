@@ -19,6 +19,8 @@ import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -42,6 +44,7 @@ public final class Messaging {
     private static final String TRACK_INFO_KEY_EVENT_TYPE = "eventType";
     private static final String TRACK_INFO_KEY_GOOGLE_MESSAGE_ID = "google.message_id";
     private static final String TRACK_INFO_KEY_MESSAGE_ID = "messageId";
+    private static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
     private static final String _XDM = "_xdm";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
@@ -97,7 +100,6 @@ public final class Messaging {
             return false;
         }
 
-
         // Adding message id as extras in intent
         intent.putExtra(TRACK_INFO_KEY_MESSAGE_ID, messageId);
 
@@ -119,9 +121,28 @@ public final class Messaging {
      * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
      * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
      */
-    public static void handleNotificationResponse(@NonNull final Intent intent, final boolean applicationOpened, @Nullable final String customActionId) {
+    public static void handleNotificationResponse(@NonNull final Intent intent,
+                                                     final boolean applicationOpened,
+                                                     @Nullable final String customActionId) {
+        Messaging.handleNotificationResponse(intent,applicationOpened,customActionId,null);
+    }
+
+    /**
+     * Sends the push notification interactions as an experience event to Adobe Experience Edge.
+     *
+     * @param intent            object which contains the tracking and xdm information.
+     * @param applicationOpened Boolean values denoting whether the application was opened when notification was clicked
+     * @param customActionId    String value of the custom action (e.g button id on the notification) which was clicked.
+     * @param callback          Callback which will be invoked with the status of push notification tracking.
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public static void handleNotificationResponse(@NonNull final Intent intent,
+                                                  final boolean applicationOpened,
+                                                  @Nullable final String customActionId,
+                                                  @Nullable final AdobeCallback<PushTrackingStatus> callback) {
         if (intent == null) {
             Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, intent provided is null");
+            callTrackingCallback(PushTrackingStatus.INVALID_INTENT, callback);
             return;
         }
         String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
@@ -131,13 +152,16 @@ public final class Messaging {
             messageId = intent.getStringExtra(TRACK_INFO_KEY_GOOGLE_MESSAGE_ID);
             if (StringUtils.isNullOrEmpty(messageId)) {
                 Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions, message id provided is null");
+                callTrackingCallback(PushTrackingStatus.INVALID_MESSAGE_ID, callback);
                 return;
             }
         }
 
         final String xdmData = intent.getStringExtra(TRACK_INFO_KEY_ADOBE_XDM);
-        if (xdmData == null) {
-            Log.warning(LOG_TAG, CLASS_NAME, "XDM data provided is null");
+        if (StringUtils.isNullOrEmpty(xdmData)) {
+            Log.warning(LOG_TAG, CLASS_NAME, "No tracking data found in the intent, Ignoring to track AJO notification interactions.");
+            callTrackingCallback(PushTrackingStatus.NO_TRACKING_DATA, callback);
+            return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
@@ -159,11 +183,25 @@ public final class Messaging {
         MobileCore.dispatchEventWithResponseCallback(messagingEvent, TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
-                Log.warning(LOG_TAG, CLASS_NAME, "Failed to track notification interactions: Error: %s", adobeError.getErrorName());
+                callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
             }
 
             @Override
             public void call(final Event event) {
+                final Map<String,Object> responseEventData = event.getEventData();
+
+                if (responseEventData == null) {
+                    callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
+                }
+
+                try {
+                    final int resultStatusInteger = DataReader.getInt(responseEventData,PUSH_NOTIFICATION_TRACKING_STATUS);
+                    final PushTrackingStatus status = PushTrackingStatus.fromInt(resultStatusInteger);
+                    callTrackingCallback(status,callback);
+
+                } catch (final DataReaderException e) {
+                    callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR,callback);
+                }
             }
         });
     }
@@ -181,5 +219,10 @@ public final class Messaging {
                 .build();
 
         MobileCore.dispatchEvent(refreshMessageEvent);
+    }
+    private static void callTrackingCallback(final PushTrackingStatus trackingStatus, final AdobeCallback<PushTrackingStatus> callback) {
+        if (callback != null) {
+            callback.call(trackingStatus);
+        }
     }
 }
