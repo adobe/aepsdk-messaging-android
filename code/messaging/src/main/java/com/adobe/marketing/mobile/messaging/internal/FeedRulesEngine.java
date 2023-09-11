@@ -53,12 +53,16 @@ class FeedRulesEngine extends LaunchRulesEngine {
         }
 
         final List<RuleConsequence> consequences = evaluateEvent(event);
-        if (consequences == null || consequences.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(consequences)) {
             return null;
         }
 
         final Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
+            if (consequence == null) {
+                continue;
+            }
+
             final Map details = consequence.getDetail();
             final Inbound inboundMessage = Inbound.fromConsequenceDetails(details);
             if (inboundMessage == null) {

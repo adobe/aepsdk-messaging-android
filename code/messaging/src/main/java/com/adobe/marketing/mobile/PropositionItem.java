@@ -185,19 +185,7 @@ public class PropositionItem implements Serializable {
         }
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
-        final Map<String, Object> dataMap = new HashMap<>();
-        JSONObject content = null;
-        try {
-            content = new JSONObject(this.content);
-            dataMap.put(PAYLOAD_CONTENT, JSONUtils.toMap(content));
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Couldn't create a JSONObject from (%s). Will return the content as a String.");
-        }
-        if (content == null) {
-            dataMap.put(PAYLOAD_CONTENT, this.content);
-        }
-
-        eventData.put(PAYLOAD_DATA, dataMap);
+        eventData.put(PAYLOAD_CONTENT, this.content);
         return eventData;
     }
 

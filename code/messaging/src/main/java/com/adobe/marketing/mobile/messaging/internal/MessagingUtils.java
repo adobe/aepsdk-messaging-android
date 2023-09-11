@@ -46,6 +46,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -178,7 +179,7 @@ class MessagingUtils {
         }
         final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (surfaceUris == null || surfaceUris.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(surfaceUris)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
@@ -309,5 +310,19 @@ class MessagingUtils {
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
+    }
+
+    // ========================================================================================
+    // Collection object validation
+    // ========================================================================================
+
+    /**
+     * Checks if the given {@code collection} is null or empty.
+     *
+     * @param collection input {@code Collection<?>} to be tested.
+     * @return {@code boolean} result indicating whether the provided {@code collection} is null or empty.
+     */
+    static boolean isNullOrEmpty(final Collection<?> collection) {
+        return collection == null || collection.isEmpty();
     }
 }

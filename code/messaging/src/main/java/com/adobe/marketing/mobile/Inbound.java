@@ -13,8 +13,10 @@
 package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -137,10 +139,14 @@ public class Inbound {
             return null;
         }
         final JSONObject content = new JSONObject(DataReader.optTypedMap(Object.class, data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT, null));
-        final String contentType = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE, "");
-        final int expiryDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE, 0);
-        final int publishedDate = DataReader.optInt(data, MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE, 0);
-        final Map<String, Object> meta = DataReader.optTypedMap(Object.class, data, MESSAGE_CONSEQUENCE_DETAIL_METADATA, null);
-        return new Inbound(uniqueId, inboundType, content.toString(), contentType, publishedDate, expiryDate, meta);
+        try {
+            final String contentType = DataReader.getString(data, MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
+            final int expiryDate = DataReader.getInt(data, MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
+            final int publishedDate = DataReader.getInt(data, MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+            final Map<String, Object> meta = DataReader.getTypedMap(Object.class, data, MESSAGE_CONSEQUENCE_DETAIL_METADATA);
+            return new Inbound(uniqueId, inboundType, content.toString(), contentType, publishedDate, expiryDate, meta);
+        } catch (final DataReaderException dataReaderException) {
+            return null;
+        }
     }
 }

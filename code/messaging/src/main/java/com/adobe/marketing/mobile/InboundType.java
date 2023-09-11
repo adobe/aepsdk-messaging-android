@@ -20,8 +20,8 @@ public enum InboundType {
     // InApp
     INAPP(2);
 
-    static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/inbound/feed-item";
-    static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/inbound/in-app-message";
+    static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+    static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
     static final String SCHEMA_UNKNOWN = "unknown";
 
     private final int value;
