@@ -26,7 +26,6 @@ import android.os.SystemClock
 import android.util.Log
 import android.webkit.WebView
 import android.widget.AdapterView
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,7 +40,6 @@ import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     private val customMessagingDelegate = CustomDelegate()
-    private lateinit var spinner: Spinner
     private var triggerKey = "key"
     private var triggerValue = "value"
     
@@ -242,7 +240,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-
+    var propositions = mutableListOf<Proposition>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -264,6 +262,26 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
+
+        // Setup proposition handler for feed messages
+        Messaging.setPropositionsHandler {
+            println("\nMessaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
+            for (entry in it.entries) {
+                val surface = entry.key.uri
+                propositions = entry.value
+                println("Proposition surface: $surface")
+                println("Proposition has ${propositions.size} item(s)")
+                for (proposition in propositions) {
+                    println("Item content: ${proposition.items[0].content}")
+                }
+            }
+        }
+
+        // fetch message feed and code based experiences
+        val surfaceList = mutableListOf<Surface>()
+        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/cbeoffers3"))
+        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/feeds/apifeed"))
+        Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
     private fun setupButtonClickListeners() {
@@ -284,46 +302,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        btnHistoricalEvent1.setOnClickListener {
-            val triggerEvent1 =
-                    Event.Builder("messaging event 1", "iamtest", "iamtest", arrayOf("firstEvent"))
-                            .let {
-                                val eventData: HashMap<String, Any?> = hashMapOf("firstEvent" to "true")
-                                it.setEventData(eventData)
-                                it.build()
-                            }
-            MobileCore.dispatchEvent(triggerEvent1, null)
+        btnCheckFeedMessages.setOnClickListener {
+            startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }
 
-        btnHistoricalEvent2.setOnClickListener {
-            val triggerEvent2 =
-                    Event.Builder("messaging event 2", "iamtest", "iamtest", arrayOf("secondEvent"))
-                            .let {
-                                val eventData: HashMap<String, Any?> = hashMapOf("secondEvent" to "true")
-                                it.setEventData(eventData)
-                                it.build()
-                            }
-            MobileCore.dispatchEvent(triggerEvent2, null)
-        }
-
-        btnHistoricalEvent3.setOnClickListener {
-            val triggerEvent3 =
-                    Event.Builder("messaging event 3", "iamtest", "iamtest", arrayOf("thirdEvent"))
-                            .let {
-                                val eventData: HashMap<String, Any?> = hashMapOf("thirdEvent" to "true")
-                                it.setEventData(eventData)
-                                it.build()
-                            }
-            MobileCore.dispatchEvent(triggerEvent3, null)
-        }
-
-        btnCheckSequence.setOnClickListener {
-            val checkSequenceEvent = Event.Builder("check sequence", "iamtest", "iamtest").let {
-                val eventData: HashMap<String, Any?> = hashMapOf("checkSequence" to "true")
-                it.setEventData(eventData)
-                it.build()
-            }
-            MobileCore.dispatchEvent(checkSequenceEvent, null)
+        btnCheckCodeBased.setOnClickListener {
+            startActivity(Intent(this, CodeBasedExperienceActivity::class.java))
         }
 
         btnTriggerLastIAM.setOnClickListener {
@@ -339,37 +323,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setupSpinnerItemSelectedListener() {
-//        spinner = findViewById(R.id.iamTypeSpinner)
-//        // Create an ArrayAdapter using the string array and a default spinner layout
-//        ArrayAdapter.createFromResource(
-//                this,
-//                R.array.iam_types_array,
-//                android.R.layout.simple_spinner_item
-//        ).also { adapter ->
-//            // Specify the layout to use when the list of choices appears
-//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//            // Apply the adapter to the spinner
-//            spinner.adapter = adapter
-//        }
-//        // spinner selection handling
-//        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-//            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-//
-//                // TODO: restore after generating new i18N messages for testing
-//                // first check for i18n selections which are created then downloaded from AJO
-////                handleI18nSpinnerValues(parent, pos)
-////                if (triggerValue.isNotEmpty()) { // we found an i18n iam, quick out
-////                    return
-////                }
-//                // otherwise check if a locally generated IAM was selected
-//                handleGeneratedIamValues(parent, pos)
-//            }
-//
-//            override fun onNothingSelected(parent: AdapterView<*>) {}
-//        }
-    }
-
     private fun setupSwitchListeners() {
         allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
             val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
@@ -380,24 +333,6 @@ class MainActivity : ComponentActivity() {
             customMessagingDelegate.showMessages = isChecked
         }
     }
-
-    // TODO: restore after generating new i18N messages for testing
-//    private fun handleI18nSpinnerValues(parent: AdapterView<*>, pos: Int) {
-//        triggerKey = "ryan"
-//        triggerValue = ""
-//        when (parent.getItemAtPosition(pos)) {
-//            i18NSpinnerValues.KOREAN.value -> triggerValue = "korean"
-//            i18NSpinnerValues.CYRILLIC.value -> triggerValue = "cyrillic"
-//            i18NSpinnerValues.SURROGATE.value -> triggerValue = "surrogate"
-//            i18NSpinnerValues.CHINESE.value -> triggerValue = "sctest"
-//            i18NSpinnerValues.HIGH_ASCII.value -> triggerValue = "highascii"
-//            i18NSpinnerValues.JAPANESE.value -> triggerValue = "japanese"
-//            i18NSpinnerValues.CHINESE_FOUR_BYTE.value -> triggerValue = "chinese"
-//            i18NSpinnerValues.FOUR_BYTE.value -> triggerValue = "4byte"
-//            i18NSpinnerValues.HEBREW.value -> triggerValue = "hebrew"
-//            else -> print("Testing locally generated IAM")
-//        }
-//    }
 
     private fun handleGeneratedIamValues(parent: AdapterView<*>, pos: Int) {
         triggerKey = "foo"

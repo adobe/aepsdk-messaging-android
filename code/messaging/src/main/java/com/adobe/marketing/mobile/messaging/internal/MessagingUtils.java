@@ -163,6 +163,22 @@ class MessagingUtils {
                 && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a get propositions event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a get propositions event.
+     */
+    static boolean isGetPropositionsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, false);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -313,7 +329,7 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Collection object validation
+    // Collection utils
     // ========================================================================================
 
     /**
@@ -324,5 +340,19 @@ class MessagingUtils {
      */
     static boolean isNullOrEmpty(final Collection<?> collection) {
         return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     *
+     * @param proposition A {@link Proposition} to be added to the mutable list
+     * @return the mutable {@link List<Proposition>} list
+     */
+    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
+        return new ArrayList<Proposition>() {
+            {
+                add(proposition);
+            }
+        };
     }
 }

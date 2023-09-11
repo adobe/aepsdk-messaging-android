@@ -40,6 +40,7 @@ public final class Messaging {
     private static final String EVENT_SOURCE_NOTIFICATION = "com.adobe.eventSource.notification";
     private static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
+    private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
@@ -52,6 +53,7 @@ public final class Messaging {
     private static final String SURFACES = "surfaces";
     private static final String PROPOSITIONS = "propositions";
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
+    private static final String GET_PROPOSITIONS_EVENT = "getpropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String SURFACE_BASE = "mobileapp://";
 
@@ -67,7 +69,8 @@ public final class Messaging {
      *
      * @return A {@link String} representing the Messaging extension version
      */
-    @NonNull public static String extensionVersion() {
+    @NonNull
+    public static String extensionVersion() {
         return EXTENSION_VERSION;
     }
 
@@ -199,40 +202,119 @@ public final class Messaging {
 
     // region proposition retrieval api
 
+    /**
+     * Registers a permanent event listener with the Mobile Core for listening to personalization decisions events received upon a personalization query to the Experience Edge network.
+     * If a new {@code AdobeCallback} is provided, it will replace the existing one and it will be invoked when propositions are received from the Edge network.
+     *
+     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing the {@link Surface}s and the corresponding list of {@link Proposition} objects.
+     */
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
             isPropositionsResponseListenerRegistered = true;
-            MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION,  event -> {
-                final List<Proposition> propositions = new ArrayList<>();
-                final Surface surface = Surface.fromUriString(getAppSurface());
+            MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION, event -> {
+                final Map<Surface, List<Proposition>> convertedPropositions = new HashMap<>();
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
-                    final Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
-                    final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositions, surface.getUri(), Collections.emptyList());
-                    for (final Map<String, Object> propositionMap : propositionMaps) {
-                        final Proposition proposition = Proposition.fromEventData(propositionMap);
-                        propositions.add(proposition);
+                    final Map<String, Object> retrievedPropositionData = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
+                    for (final String surfaceUri : retrievedPropositionData.keySet()) {
+                        final Surface surface = Surface.fromUriString(surfaceUri);
+                        final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositionData, surface.getUri(), Collections.emptyList());
+                        final List<Proposition> propositions = new ArrayList<>();
+                        for (final Map<String, Object> propositionMap : propositionMaps) {
+                            final Proposition proposition = Proposition.fromEventData(propositionMap);
+                            propositions.add(proposition);
+                            convertedPropositions.put(surface, propositions);
+                        }
                     }
                 }
-                propositionsResponseHandler.call(new HashMap<Surface, List<Proposition>>(){{
-                    put(surface, propositions);
-                }});
+                propositionsResponseHandler.call(convertedPropositions);
             });
         } else {
             isPropositionsResponseListenerRegistered = false;
         }
     }
 
-    // TODO: implement
+    /**
+     * Dispatches an event to retrieve the previously fetched (and cached) feeds content from the SDK for the provided surfaces.
+     * If the feeds content for one or more surfaces isn't previously cached in the SDK, it will not be retrieved from Adobe Journey Optimizer via the Experience Edge network.
+     *
+     * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving previously fetched propositions
+     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing previously fetched feeds content
+     */
     public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
+        if (callback == null ) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided callback is null.");
+            return;
+        }
 
+        if (surfaces == null || surfaces.isEmpty()) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided list of surfaces is null or empty.");
+            return;
+        }
+
+        final List<String> validSurfacePaths = new ArrayList<>();
+        for (final Surface surface : surfaces) {
+            if (surface.isValid()) {
+                validSurfacePaths.add(surface.getUri());
+            }
+        }
+
+        if (validSurfacePaths.isEmpty()) {
+            Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided list of surfaces has no valid items.");
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(GET_PROPOSITIONS_EVENT, true);
+        eventData.put(SURFACES, validSurfacePaths);
+
+        final Event getPropositionsEvent = new Event.Builder(GET_PROPOSITIONS,
+                EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
+
+        MobileCore.dispatchEventWithResponseCallback(getPropositionsEvent, 2000, new AdobeCallbackWithError<Event>() {
+            @Override
+            public void fail(final AdobeError adobeError) {
+                callback.call(null);
+            }
+
+            @Override
+            public void call(final Event event) {
+                final Map<String, Object> eventData = event.getEventData();
+                if (MapUtils.isNullOrEmpty(eventData)) {
+                    callback.call(null);
+                }
+                final List<Proposition> propositions = new ArrayList<>();
+                final HashMap<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
+                for (final Surface surface : surfaces) {
+                    final Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
+                    if (MapUtils.isNullOrEmpty(retrievedPropositions)) {
+                        continue;
+                    }
+
+                    final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositions, surface.getUri(), Collections.emptyList());
+                    if (propositionMaps == null || propositionMaps.isEmpty()) {
+                        continue;
+                    }
+
+                    for (final Map<String, Object> propositionMap : propositionMaps) {
+                        final Proposition proposition = Proposition.fromEventData(propositionMap);
+                        propositions.add(proposition);
+                    }
+                    cachedPropositions.put(surface, propositions);
+                }
+                callback.call(cachedPropositions);
+            }
+        });
     }
 
 
     /**
-     *  Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey Optimizer via the Experience Edge network.
-     *  @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
+     * Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey Optimizer via the Experience Edge network.
+     *
+     * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
         if (surfaces == null || surfaces.isEmpty()) {

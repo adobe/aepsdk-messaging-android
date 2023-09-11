@@ -43,6 +43,7 @@ import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
@@ -772,9 +773,12 @@ public class EdgePersonalizationResponseHandlerTests {
                     Map<String, Object> feedMap = feedPropositions.get(i);
                     List<Map<String, Object>> feedItems = (List<Map<String, Object>>) feedMap.get("items");
                     Map<String, Object> feedItemMap = feedItems.get(0);
+                    Map<String, Object> data = DataReader.getTypedMap(Object.class, feedItemMap, "data");
                     assertEquals("https://ns.adobe.com/personalization/json-content-item", feedItemMap.get("schema"));
-                    assertEquals("{\"actionUrl\":\"https://someurl.com\",\"actionTitle\":\"testActionTitle\",\"body\":\"testBody\",\"title\":\"testTitle\",\"imageUrl\":\"https://someimage" + i + ".png\"}", feedItemMap.get("content"));
+                    assertEquals("{\"actionUrl\":\"https://someurl.com\",\"actionTitle\":\"testActionTitle\",\"body\":\"testBody\",\"title\":\"testTitle\",\"imageUrl\":\"https://someimage" + i + ".png\"}", data.get("content"));
                 }
+            } catch (DataReaderException e) {
+                throw new RuntimeException(e);
             }
         });
     }

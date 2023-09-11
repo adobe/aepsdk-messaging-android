@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/feedActivityTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:textColor="@color/colorPrimaryDark"
+            android:textStyle="bold"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/feedActivityImage"
+            android:layout_width="320dp"
+            android:layout_height="240dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/feedActivityTitle"
+            android:contentDescription="feed image" />
+
+        <TextView
+            android:id="@+id/feedActivityBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/feedActivityImage"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/feedActivityActionButton"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="160dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/feedActivityBody"
+            android:layout_centerHorizontal="true"
+            android:background="@color/colorAccent"
+            android:text="action button"
+            android:textSize="12sp" />
+    </RelativeLayout>
+</androidx.appcompat.widget.LinearLayoutCompat>

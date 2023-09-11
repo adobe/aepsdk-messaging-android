@@ -273,6 +273,10 @@ public final class MessagingExtension extends Extension {
             // validate update propositions event then retrieve propositions via an Edge extension event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to retrieve propositions from the remote.");
             edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
+        } else if (MessagingUtils.isGetPropositionsEvent(eventToProcess)) {
+            // validate get propositions event then retrieve cached feed content and return them in a response event
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached feed content.");
+            edgePersonalizationResponseHandler.retrieveMessages(MessagingUtils.getSurfaces(eventToProcess), eventToProcess);
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);

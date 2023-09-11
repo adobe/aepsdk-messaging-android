@@ -146,6 +146,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
             static final String REFRESH_MESSAGES = "refreshmessages";
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
+            static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
 
             private Messaging() {

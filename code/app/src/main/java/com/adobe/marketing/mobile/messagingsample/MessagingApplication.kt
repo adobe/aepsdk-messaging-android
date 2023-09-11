@@ -29,19 +29,6 @@ class MessagingApplication : Application() {
             // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
             MobileCore.lifecycleStart(null)
-
-            Messaging.setPropositionsHandler {
-                println("Messaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
-                for (entry in it.entries) {
-                    val surface = entry.key.uri
-                    val propositions = entry.value
-                    println("Proposition surface: $surface")
-                    println("Proposition has ${propositions.size} item(s)")
-                    for (proposition in propositions) {
-                        println("Item content: ${proposition.items[0].content}")
-                    }
-                }
-            }
         }
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
