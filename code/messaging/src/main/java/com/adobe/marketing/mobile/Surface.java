@@ -66,6 +66,19 @@ public class Surface implements Serializable {
         return this.uri.startsWith(SURFACE_BASE);
     }
 
+    public int hashCode(){
+        return uri.hashCode();
+    }
+
+    public boolean equals(final Object object){
+        if (object instanceof Surface) {
+            final Surface surface = (Surface) object;
+            return (surface.getUri().equals(this.uri));
+        } else {
+            return false;
+        }
+    }
+
     public static Surface fromUriString(final String uri) {
         final Surface surface = new Surface(true, uri);
         return !surface.isValid() ? null : surface;

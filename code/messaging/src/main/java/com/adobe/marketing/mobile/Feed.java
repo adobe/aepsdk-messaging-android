@@ -34,8 +34,6 @@ public class Feed {
     private static final String FEED_SURFACE_URI_KEY = "surfaceUri";
     private static final String FEED_ITEMS_KEY = "items";
     private static final String FEED_NAME_KEY = "feedName";
-    private static final String MAP_FEEDS_KEY = "feeds";
-    private static final String MAP_ITEMS_KEY = "items";
 
     // Friendly name for the feed, provided in the AJO UI
     private final String name;

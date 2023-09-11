@@ -18,8 +18,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class InboundTypeTests {
-    private static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/inbound/feed-item";
-    private static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/inbound/in-app-message";
+    private static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+    private static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
     private static final String SCHEMA_UNKNOWN = "unknown";
 
     @Test

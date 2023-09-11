@@ -156,7 +156,7 @@ final class MessagingCacheUtilities {
      */
     void cachePropositions(final Map<Surface, List<Proposition>> propositions) {
         // clean any existing cached propositions first if the provided propositions are null or empty
-        if (propositions == null || propositions.isEmpty()) {
+        if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
             return;

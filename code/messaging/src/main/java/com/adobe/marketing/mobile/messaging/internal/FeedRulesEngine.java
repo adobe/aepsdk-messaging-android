@@ -23,7 +23,10 @@ import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,20 +53,36 @@ class FeedRulesEngine extends LaunchRulesEngine {
         }
 
         final List<RuleConsequence> consequences = evaluateEvent(event);
-        if (consequences == null || consequences.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(consequences)) {
             return null;
         }
 
         final Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
+            if (consequence == null) {
+                continue;
+            }
+
             final Map details = consequence.getDetail();
             final Inbound inboundMessage = Inbound.fromConsequenceDetails(details);
+            if (inboundMessage == null) {
+                continue;
+            }
 
-            final String surfaceUri = DataReader.optString(inboundMessage.getMeta(), SURFACE, "");
-            final Surface surface = new Surface(surfaceUri);
+            final Map metadata = inboundMessage.getMeta();
+            if (MapUtils.isNullOrEmpty(metadata)) {
+                continue;
+            }
+
+            final Surface surface = Surface.fromUriString(DataReader.optString(metadata, SURFACE, ""));
+            if (!surface.isValid()) {
+                continue;
+            }
 
             if (inboundMessages.get(surface) != null) {
-                inboundMessages.get(surface).add(inboundMessage);
+                final List<Inbound> inboundMessageList = new ArrayList<>(inboundMessages.get(surface));
+                inboundMessageList.add(inboundMessage);
+                inboundMessages.put(surface, inboundMessageList);
             } else {
                 inboundMessages.put(surface, Collections.singletonList(inboundMessage));
             }

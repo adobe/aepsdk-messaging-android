@@ -36,8 +36,8 @@ final class MessagingConstants {
     final class SchemaValues {
         static final String SCHEMA_AJO_HTML = "https://ns.adobe.com/personalization/html-content-item";
         static final String SCHEMA_AJO_JSON = "https://ns.adobe.com/personalization/json-content-item";
-        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/inbound/feed-item";
-        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/inbound/in-app-message";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
 
         private SchemaValues() {
         }
@@ -149,6 +149,31 @@ final class MessagingConstants {
             static final String SURFACES = "surfaces";
 
             private Messaging() {
+            }
+
+            final class Data {
+                final class AdobeKeys {
+                    static final String NAMESPACE = "__adobe";
+                    static final String AJO = "ajo";
+                    static final String INAPP_RESPONSE_FORMAT = "in-app-response-format";
+
+                    private AdobeKeys() {}
+                }
+
+                final class Key {
+                    static final String DATA = "data";
+
+                    private Key() {}
+                }
+
+                final class Value {
+                    static final int NEW_IAM = 2;
+
+                    private Value() {}
+                }
+
+                private Data() {
+                }
             }
 
             final class XDMDataKeys {

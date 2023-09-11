@@ -32,7 +32,7 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionItemTests {
 
-    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/inbound/feed-item\", \"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
+    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\", \"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
     String testContent = "some html string content";
     String testJSONSchema = "https://ns.adobe.com/personalization/json-content-item";
     String testHTMLSchema = "https://ns.adobe.com/personalization/html-content-item";
@@ -92,17 +92,16 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createEventData_fromPropositionItem_JSONContent() throws DataReaderException, JSONException {
+    public void test_createEventData_fromPropositionItem_JSONContent() throws DataReaderException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
-        Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, propositionItemMap, "data");
-        Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, dataMap, "content");
+        String content = DataReader.getString(propositionItemMap, "content");
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testJSONSchema, propositionItemMap.get("schema"));
-        assertTrue(!MapUtils.isNullOrEmpty(contentMap));
+        assertEquals("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\", \"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}", content);
     }
 
     @Test
@@ -145,7 +144,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createEventData_fromPropositionItem_StringContent() {
+    public void test_createEventData_fromPropositionItem_StringContent() throws DataReaderException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, testHTMLSchema, testContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
@@ -153,8 +152,8 @@ public class PropositionItemTests {
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testHTMLSchema, propositionItemMap.get("schema"));
-        Map<String, Object> dataMap = DataReader.optTypedMap(Object.class, propositionItemMap, "data", null);
-        assertEquals(testContent, dataMap.get("content"));
+        String content = DataReader.getString(propositionItemMap, "content");
+        assertEquals("some html string content", content);
     }
 
     // negative tests

@@ -402,11 +402,11 @@ public class MessagingTestUtils {
         try {
             for (count = 0; count < config.count; count++) {
                 consequences.put(new JSONObject("{\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767eb" + count + "\",\n" +
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + count + "\",\n" +
                         "\"type\": \"schema\",\n" +
                         "\"detail\": {\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767eb" + count + "\",\n" +
-                        "\"schema\": \"https://ns.adobe.com/personalization/inbound/feed-item\",\n" +
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + count + "\",\n" +
+                        "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
                         "\"data\": {\n" +
                         "\"expiryDate\": 1723163897,\n" +
                         "\"meta\": {\n" +

@@ -103,11 +103,10 @@ public class PropositionTests {
         List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
         PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
-            Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, item, "data");
-            Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, dataMap, "content");
+            String content = DataReader.getString(item, "content");
             assertEquals(propositionItem.getUniqueId(), item.get("id"));
             assertEquals(propositionItem.getSchema(), item.get("schema"));
-            assertTrue(!MapUtils.isNullOrEmpty(contentMap));
+            assertEquals("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"consequenceId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}", content);
         }
     }
 }
