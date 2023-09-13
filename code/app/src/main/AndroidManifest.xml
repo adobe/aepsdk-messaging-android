@@ -12,14 +12,33 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
-            android:name=".DetailsActivity"
-            android:exported="true">
+            android:name=".ThirdLevelActivity"
+            android:exported="true"
+            android:parentActivityName=".SecondLevelActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="demo" android:host="messagingdemoapp" android:pathPrefix="/details" />
+                <data
+                    android:host="thirdpage"
+                    android:scheme="demoapp" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".SecondLevelActivity"
+            android:exported="true"
+            android:parentActivityName=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="secondpage"
+                    android:scheme="demoapp" />
             </intent-filter>
         </activity>
 
@@ -46,4 +65,5 @@
         <receiver android:name=".NotificationBroadcastReceiver" />
         <receiver android:name=".NotificationDeleteReceiver" />
     </application>
+
 </manifest>

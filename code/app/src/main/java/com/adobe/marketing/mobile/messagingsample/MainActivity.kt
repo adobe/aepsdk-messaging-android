@@ -20,7 +20,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -36,7 +35,6 @@ import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
-import com.adobe.marketing.mobile.services.ui.UIService
 import com.adobe.marketing.mobile.util.StringUtils
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
@@ -310,7 +308,7 @@ class MainActivity : ComponentActivity() {
         }
 
         btn_detailpage.setOnClickListener {
-            val intent = Intent(applicationContext, DetailsActivity::class.java)
+            val intent = Intent(applicationContext, SecondLevelActivity::class.java)
             startActivity(intent)
         }
 

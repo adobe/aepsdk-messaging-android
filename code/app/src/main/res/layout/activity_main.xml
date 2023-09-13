@@ -78,6 +78,6 @@
         android:id="@+id/btn_detailpage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Detail Page " />
+        android:text="Second Activity " />
 
 </androidx.appcompat.widget.LinearLayoutCompat>
