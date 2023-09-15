@@ -97,7 +97,8 @@ public class PropositionItemTests {
         PropositionItem propositionItem = new PropositionItem(testId, testJSONSchema, testJSONStringContent);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
-        String content = DataReader.getString(propositionItemMap, "content");
+        Map<String, Object> data = DataReader.getTypedMap(Object.class, propositionItemMap, "data");
+        String content = DataReader.getString(data, "content");
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testJSONSchema, propositionItemMap.get("schema"));
@@ -152,7 +153,8 @@ public class PropositionItemTests {
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testHTMLSchema, propositionItemMap.get("schema"));
-        String content = DataReader.getString(propositionItemMap, "content");
+        Map<String, Object> data = DataReader.getTypedMap(Object.class, propositionItemMap, "data");
+        String content = DataReader.getString(data, "content");
         assertEquals("some html string content", content);
     }
 

@@ -29,8 +29,6 @@ import android.content.Context;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
-import com.adobe.marketing.mobile.Feed;
-import com.adobe.marketing.mobile.FeedItem;
 import com.adobe.marketing.mobile.Inbound;
 import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.Surface;
@@ -98,6 +96,7 @@ public class EdgePersonalizationResponseHandlerTests {
     FeedRulesEngine mockFeedRulesEngine;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
 
@@ -774,9 +773,12 @@ public class EdgePersonalizationResponseHandlerTests {
                     Map<String, Object> feedMap = feedPropositions.get(i);
                     List<Map<String, Object>> feedItems = (List<Map<String, Object>>) feedMap.get("items");
                     Map<String, Object> feedItemMap = feedItems.get(0);
+                    Map<String, Object> data = DataReader.getTypedMap(Object.class, feedItemMap, "data");
                     assertEquals("https://ns.adobe.com/personalization/json-content-item", feedItemMap.get("schema"));
-                    assertEquals("{\"actionUrl\":\"https://someurl.com\",\"actionTitle\":\"testActionTitle\",\"body\":\"testBody\",\"title\":\"testTitle\",\"imageUrl\":\"https://someimage" + i + ".png\"}", feedItemMap.get("content"));
+                    assertEquals("{\"actionUrl\":\"https://someurl.com\",\"actionTitle\":\"testActionTitle\",\"body\":\"testBody\",\"title\":\"testTitle\",\"imageUrl\":\"https://someimage" + i + ".png\"}", data.get("content"));
                 }
+            } catch (DataReaderException e) {
+                throw new RuntimeException(e);
             }
         });
     }

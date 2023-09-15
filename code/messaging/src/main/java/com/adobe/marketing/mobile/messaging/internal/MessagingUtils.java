@@ -313,7 +313,7 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Collection object validation
+    // Collection utils
     // ========================================================================================
 
     /**
@@ -324,5 +324,19 @@ class MessagingUtils {
      */
     static boolean isNullOrEmpty(final Collection<?> collection) {
         return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     *
+     * @param proposition A {@link Proposition} to be added to the mutable list
+     * @return the mutable {@link List<Proposition>} list
+     */
+    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
+        return new ArrayList<Proposition>() {
+            {
+                add(proposition);
+            }
+        };
     }
 }

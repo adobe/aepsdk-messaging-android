@@ -179,13 +179,15 @@ public class PropositionItem implements Serializable {
      */
     public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
+        final Map<String, Object> data = new HashMap<>();
         if (StringUtils.isNullOrEmpty(content)) {
             Log.trace(LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
-        eventData.put(PAYLOAD_CONTENT, this.content);
+        data.put(PAYLOAD_CONTENT, content);
+        eventData.put(PAYLOAD_DATA, data);
         return eventData;
     }
 
