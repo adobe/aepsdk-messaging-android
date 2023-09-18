@@ -252,8 +252,7 @@ public final class MessagingExtension extends Extension {
             handlePushToken(eventToProcess);
         } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // Need experience event dataset id for sending the push token
-            final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
-            final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
+            final String experienceEventDatasetId = getPushTrackingDatasetId(eventToProcess);
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
                 MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),eventToProcess);
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");

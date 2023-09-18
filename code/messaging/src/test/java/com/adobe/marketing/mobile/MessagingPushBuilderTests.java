@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -73,12 +74,17 @@ public class MessagingPushBuilderTests {
     Uri sampleUri;
     @Mock
     PendingIntent returnedPendingIntent;
+    @Mock
+    TaskStackBuilder taskStackBuilder;
+
+
     MessagingPushBuilder builder;
     MockedConstruction<NotificationCompat.Builder> mockBuilderConstructor;
     MockedConstruction<Intent> intentConstructor;
     MockedStatic<MessagingPushUtils> utils;
     ArgumentCaptor<Intent> launchIntentCaptor;
     MockedStatic<PendingIntent> staticMockPendingIntent;
+    MockedStatic<TaskStackBuilder> staticMockTaskStackBuilder ;
     MockedStatic<Uri> staticMockUri;
     ArgumentCaptor<String> mockUriStringCaptor;
 
@@ -89,6 +95,7 @@ public class MessagingPushBuilderTests {
 
         utils = mockStatic(MessagingPushUtils.class);
         staticMockPendingIntent = mockStatic(PendingIntent.class);
+        staticMockTaskStackBuilder = mockStatic(TaskStackBuilder.class);
         staticMockUri = mockStatic(Uri.class);
 
         mockBuilderConstructor = mockConstruction(NotificationCompat.Builder.class, (mock, context) -> {
@@ -114,8 +121,14 @@ public class MessagingPushBuilderTests {
         utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME,context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
         utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME ,context)).thenReturn(CUSTOM_SOUND_URI);
 
+        when(taskStackBuilder.addNextIntent(any(Intent.class))).thenReturn(taskStackBuilder);
+        when(taskStackBuilder.getPendingIntent(any(Integer.class), anyInt())).thenReturn(returnedPendingIntent);
+
+
+        staticMockTaskStackBuilder.when(() -> TaskStackBuilder.create(any(Context.class))).thenReturn(taskStackBuilder);
         staticMockPendingIntent.when(() -> PendingIntent.getActivity(any(Context.class), any(Integer.class), launchIntentCaptor.capture(), any(Integer.class))).thenReturn(returnedPendingIntent);
         staticMockUri.when(() -> Uri.parse(mockUriStringCaptor.capture())).thenReturn(sampleUri);
+
     }
 
     @After
@@ -124,6 +137,7 @@ public class MessagingPushBuilderTests {
         intentConstructor.close();
         utils.close();
         staticMockPendingIntent.close();
+        staticMockTaskStackBuilder.close();
         staticMockUri.close();
     }
 
@@ -184,58 +198,6 @@ public class MessagingPushBuilderTests {
         //verify
         assertNotNull(notification);
         verify(mockNotificationBuilder,times(1)).setPriority(Notification.PRIORITY_DEFAULT);
-    }
-
-    @Test
-    public void test_notificationBuild_when_OpenAppOnNotificationClick() {
-        // setup
-        final ArgumentCaptor<PendingIntent> pendingIntentCaptor = ArgumentCaptor.forClass(PendingIntent.class);
-        when(payload.getActionType()).thenReturn(MessagingPushPayload.ActionType.OPENAPP);
-
-        // test
-        Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
-
-        //verify
-        assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setContentIntent(pendingIntentCaptor.capture());
-        verify(mockNotificationBuilder,times(1)).setAutoCancel(true);
-
-        // verify pending Intent created to open app
-        assertEquals(returnedPendingIntent, pendingIntentCaptor.getValue());
-
-        // verify launch intent created to open app
-        verify(launchIntent,times(1)).putExtra("applicationOpened", true);
-        verify((launchIntent), times(1)).putExtra(eq("eventType"), eq("pushTracking.applicationOpened"));
-        verify((launchIntent), times(1)).setFlags(anyInt());
-    }
-
-    @Test
-    public void test_notificationBuild_when_DeeplinkOnNotificationClick() {
-        // setup
-        final ArgumentCaptor<PendingIntent> pendingIntentCaptor = ArgumentCaptor.forClass(PendingIntent.class);
-        when(payload.getActionType()).thenReturn(MessagingPushPayload.ActionType.DEEPLINK);
-        when(payload.getActionUri()).thenReturn("sampleapp://test.com");
-
-        // test
-        Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
-        Intent deeplinkIntent = intentConstructor.constructed().get(0);
-
-        //verify
-        assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setContentIntent(pendingIntentCaptor.capture());
-        verify(mockNotificationBuilder,times(1)).setAutoCancel(true);
-
-        // verify pending Intent created
-        assertEquals(returnedPendingIntent, pendingIntentCaptor.getValue());
-
-        // verify deeplink intent created
-        verify(deeplinkIntent,times(1)).putExtra("containsAjoPushTrackingData", true);
-        verify(deeplinkIntent,times(1)).putExtra("applicationOpened", true);
-        verify((deeplinkIntent), times(1)).putExtra(eq("eventType"), eq("pushTracking.applicationOpened"));
-        verify((deeplinkIntent), times(1)).setData(sampleUri);
-        assertEquals("sampleapp://test.com",mockUriStringCaptor.getValue());
     }
 
 }

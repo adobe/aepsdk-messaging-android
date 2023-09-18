@@ -111,7 +111,6 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
             static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
-            static final String CONTAINS_AJO_PUSH_TRACKING_DATA = "containsAjoPushTrackingData";
             static final String REFRESH_MESSAGES = "refreshmessages";
 
             static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
