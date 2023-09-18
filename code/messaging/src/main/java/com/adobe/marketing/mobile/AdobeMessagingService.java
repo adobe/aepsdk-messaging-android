@@ -58,7 +58,8 @@ public class AdobeMessagingService extends FirebaseMessagingService {
         final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         notificationManager.notify(remoteMessage.getMessageId().hashCode(), notification);
 
-        // dispatch Push Notification Displayed event
+
+        // dispatch Push notification displayed event
         final HashMap<String,Object> notificationData = new HashMap<>(remoteMessage.getData());
         final Event pushNotificationReceivedEvent = new Event.Builder("Push Notification Displayed", EventType.MESSAGING, EventSource.RESPONSE_CONTENT).setEventData(notificationData).build();
         MobileCore.dispatchEvent(pushNotificationReceivedEvent);

@@ -16,11 +16,11 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -30,6 +30,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * Class for building push notification.
@@ -71,7 +72,6 @@ class MessagingPushBuilder {
         setSound(builder, payload, context);
         setNotificationClickAction(builder, payload, context);
         setNotificationDeleteAction(builder, payload, context);
-
         return builder.build();
     }
 
@@ -187,20 +187,50 @@ class MessagingPushBuilder {
         if (bitmap == null) return;
         notificationBuilder.setLargeIcon(bitmap);
         NotificationCompat.BigPictureStyle bigPictureStyle = new NotificationCompat.BigPictureStyle();
-        bigPictureStyle.bigLargeIcon(bitmap);
+        bigPictureStyle.bigPicture(bitmap);
+        bigPictureStyle.bigLargeIcon(null);
+        bigPictureStyle.setBigContentTitle(payload.getTitle());
+        bigPictureStyle.setSummaryText(payload.getBody());
         notificationBuilder.setStyle(bigPictureStyle);
     }
 
+    /**
+     * Sets the click action for the notification.
+     * If an action type is received from the payload, the same is used.
+     * If an action type is not received from the payload, the default action type is used.
+     * If an action type is received from the payload, but the action type is not supported, the default action type is used.
+     *
+     * @param notificationBuilder the notification builder
+     * @param payload             {@link MessagingPushPayload} the payload received from the push notification
+     * @param context             the application {@link Context}
+     */
     private static void setNotificationClickAction(final NotificationCompat.Builder notificationBuilder,
                                                    final MessagingPushPayload payload,
                                                    final Context context) {
+        final PendingIntent pendingIntent;
         if (payload.getActionType() == MessagingPushPayload.ActionType.DEEPLINK || payload.getActionType() == MessagingPushPayload.ActionType.WEBURL) {
-            notificationBuilder.setContentIntent(createDeepLinkIntent(payload, context, payload.getActionUri(), null));
+            pendingIntent = createPendingIntent(payload,
+                    context,
+                    MessagingPushConstants.NotificationAction.OPENED,
+                    payload.getActionUri(),
+                    null);
         } else {
-            notificationBuilder.setContentIntent(createOpenAppIntent(payload, context, null));
+            pendingIntent = createPendingIntent(payload,
+                    context,
+                    MessagingPushConstants.NotificationAction.OPENED,
+                    null,
+                    null);
         }
+        notificationBuilder.setContentIntent(pendingIntent);
     }
 
+    /**
+     * Adds action buttons for the notification.
+     *
+     * @param builder the notification builder
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param context the application {@link Context}
+     */
     private static void addActionButtons(final NotificationCompat.Builder builder,
                                          final MessagingPushPayload payload,
                                          final Context context) {
@@ -210,57 +240,81 @@ class MessagingPushBuilder {
         }
 
         for (MessagingPushPayload.ActionButton eachButton : actionButtons) {
+
             final PendingIntent pendingIntent;
             if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK || eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {
-                pendingIntent = createDeepLinkIntent(payload, context, eachButton.getLink(), MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
+                pendingIntent = createPendingIntent(payload, context,
+                        MessagingPushConstants.NotificationAction.BUTTON_CLICKED,
+                        eachButton.getLink(),
+                        eachButton.getLabel());
             } else {
-                pendingIntent = createOpenAppIntent(payload, context, eachButton.getLabel());
+                pendingIntent = createPendingIntent(payload, context,
+                        MessagingPushConstants.NotificationAction.BUTTON_CLICKED,
+                        null,
+                        eachButton.getLabel());
             }
             builder.addAction(0, eachButton.getLabel(), pendingIntent);
         }
     }
 
-    private static PendingIntent createOpenAppIntent(final MessagingPushPayload payload,
+    /**
+     * Creates a pending intent for the notification.
+     *
+     * @param payload             {@link MessagingPushPayload} the payload received from the push notification
+     * @param context             the application {@link Context}
+     * @param notificationAction  the notification action
+     * @param actionUri           the action uri
+     * @param actionID            the action ID
+     * @return the pending intent
+     */
+    private static PendingIntent createPendingIntent(final MessagingPushPayload payload,
                                                      final Context context,
-                                                     final String action) {
-        final Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        Messaging.addPushTrackingDetails(launchIntent, payload.getMessageId(), payload.getData());
-        addTrackingMetricsToIntent(launchIntent, action);
-        return PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+                                                     final String notificationAction,
+                                                     final String actionUri,
+                                                     final String actionID) {
+        final Intent intent = new Intent(notificationAction);
+        intent.setClass(context.getApplicationContext(), MessagingPushTrackerActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        addActionDetailsToIntent(intent, actionUri, actionID);
+        Messaging.addPushTrackingDetails(intent, payload.getMessageId(), payload.getData());
+        // adding tracking details
+        PendingIntent resultIntent = TaskStackBuilder.create(context)
+                .addNextIntentWithParentStack(intent)
+                .getPendingIntent(new Random().nextInt(), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        return resultIntent;
     }
 
-    private static PendingIntent createDeepLinkIntent(final MessagingPushPayload payload,
-                                                      final Context context,
-                                                      final String actionUri,
-                                                      final String action) {
-        if (StringUtils.isNullOrEmpty(actionUri)) {
-            return createOpenAppIntent(payload, context, action);
-        }
-        final Intent deeplinkIntent = new Intent(Intent.ACTION_VIEW);
-        addTrackingMetricsToIntent(deeplinkIntent, action);
-        deeplinkIntent.setData(Uri.parse(actionUri));
-        Messaging.addPushTrackingDetails(deeplinkIntent, payload.getMessageId(), payload.getData());
-        return PendingIntent.getActivity(context, 0, deeplinkIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
-    }
-
+    /**
+     * Sets the delete action for the notification.
+     *
+     * @param builder the notification builder
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @param context the application {@link Context}
+     */
     private static void setNotificationDeleteAction(final NotificationCompat.Builder builder,
                                                     final MessagingPushPayload payload,
                                                     final Context context) {
-        final Intent deleteIntent = new Intent(context, MessagingDeleteIntentReceiver.class);
+        final Intent deleteIntent = new Intent(MessagingPushConstants.NotificationAction.DISMISSED);
+        deleteIntent.setClass(context, MessagingPushTrackerActivity.class);
         Messaging.addPushTrackingDetails(deleteIntent, payload.getMessageId(), payload.getData());
-        final PendingIntent intent = PendingIntent.getBroadcast(context, 0, deleteIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        final PendingIntent intent = PendingIntent.getActivity(context, new Random().nextInt(), deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         builder.setDeleteIntent(intent);
     }
 
-    private static void addTrackingMetricsToIntent(final Intent intent, final String action) {
-        intent.putExtra(MessagingPushConstants.Tracking.Keys.CONTAINS_AJO_PUSH_TRACKING_DATA, true);
-        intent.putExtra(MessagingPushConstants.Tracking.Keys.APPLICATION_OPENED, true);
-        if (StringUtils.isNullOrEmpty(action)) {
-            intent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_APPLICATION_OPENED);
-        } else {
-            intent.putExtra(MessagingPushConstants.Tracking.Keys.ACTION_ID, action);
-            intent.putExtra(MessagingPushConstants.Tracking.Keys.EVENT_TYPE, MessagingPushConstants.Tracking.Values.PUSH_TRACKING_CUSTOM_ACTION);
+    /**
+     * Adds action details to the intent.
+     *
+     * @param intent    the intent
+     * @param actionUri the action uri
+     * @param actionId  the action ID
+     */
+    private static void addActionDetailsToIntent(final Intent intent, final String actionUri, final String actionId) {
+        if (!StringUtils.isNullOrEmpty(actionUri)) {
+            intent.putExtra(MessagingPushConstants.Tracking.Keys.ACTION_URI, actionUri);
+        }
+
+        if (!StringUtils.isNullOrEmpty(actionId)) {
+            intent.putExtra(MessagingPushConstants.Tracking.Keys.ACTION_ID, actionId);
         }
     }
 
