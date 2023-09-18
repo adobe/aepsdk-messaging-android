@@ -67,6 +67,7 @@ import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -160,7 +161,6 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
         getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
-        getApi().registerEventListener(EventType.GENERIC_DATA, EventSource.OS, this::handleAutoPushTracking);
     }
 
     @Override
@@ -298,29 +298,6 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 eventData,
                 getApi());
-    }
-
-
-    void handleAutoPushTracking(final Event event) {
-        final Map<String, Object> eventData = event.getEventData();
-        if (eventData == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleAutoPushTracking - Unable to track push notification interaction, eventData is null.");
-            return;
-        }
-
-        final boolean containsAJOTrackingData = DataReader.optBoolean(eventData,MessagingConstants.EventDataKeys.Messaging.CONTAINS_AJO_PUSH_TRACKING_DATA, false);
-        if (!containsAJOTrackingData) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleAutoPushTracking - Messaging extension stopped processing OS GENERIC_DATA event. It does not contain data to AJO track push notification.");
-            return;
-        }
-
-        final String experienceEventDatasetId = getPushTrackingDatasetId(event);
-        if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
-            return;
-        }
-
-        handleTrackingInfo(event,experienceEventDatasetId);
     }
 
     /**
