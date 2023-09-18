@@ -14,7 +14,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 public class MessagingPushTrackerActivity extends Activity {
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(final @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final Intent intent = getIntent();
         if (intent == null) {
