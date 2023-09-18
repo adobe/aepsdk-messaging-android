@@ -211,7 +211,7 @@ public class MessagingPushPayload {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
+            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification badge count to int - %s", e.getLocalizedMessage());
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -314,6 +314,7 @@ public class MessagingPushPayload {
         private final String label;
         private final String link;
         private final ActionType type;
+
 
         public ActionButton(final String label, final String link, final String type) {
             this.label = label;

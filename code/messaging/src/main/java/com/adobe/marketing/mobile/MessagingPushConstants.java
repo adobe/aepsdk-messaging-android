@@ -31,26 +31,22 @@ class MessagingPushConstants {
         private PayloadKeys() {
         }
     }
+    class NotificationAction {
+        static final String DISMISSED = "Notification Dismissed";
+        static final String OPENED = "Notification Opened";
+        static final String BUTTON_CLICKED = "Notification Button Clicked";
+        private NotificationAction() {}
+    }
+
     class Tracking {
         class Keys {
-            static final String ADOBE_XDM = "adobe_xdm";
-            static final String APPLICATION_OPENED = "applicationOpened";
-            static final String EVENT_TYPE = "eventType";
             static final String ACTION_ID = "actionId";
+            static final String ACTION_URI = "actionUri";
             static final String MESSAGE_ID = "messageId";
 
-            static final String CONTAINS_AJO_PUSH_TRACKING_DATA = "containsAjoPushTrackingData";
             private Keys() {
             }
         }
-
-        class Values {
-            static final String PUSH_TRACKING_APPLICATION_OPENED = "pushTracking.applicationOpened";
-            static final String PUSH_TRACKING_CUSTOM_ACTION = "pushTracking.customAction";
-            private Values() {
-            }
-        }
-
 
         private Tracking() {
         }
