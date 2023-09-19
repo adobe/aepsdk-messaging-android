@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
+
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -121,8 +121,8 @@ public class MessagingPushBuilderTests {
         utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME,context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
         utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME ,context)).thenReturn(CUSTOM_SOUND_URI);
 
-        when(taskStackBuilder.addNextIntent(any(Intent.class))).thenReturn(taskStackBuilder);
-        when(taskStackBuilder.getPendingIntent(any(Integer.class), anyInt())).thenReturn(returnedPendingIntent);
+        when(taskStackBuilder.addNextIntentWithParentStack(any(Intent.class))).thenReturn(taskStackBuilder);
+        when(taskStackBuilder.getPendingIntent(anyInt(), anyInt())).thenReturn(returnedPendingIntent);
 
 
         staticMockTaskStackBuilder.when(() -> TaskStackBuilder.create(any(Context.class))).thenReturn(taskStackBuilder);
@@ -199,5 +199,4 @@ public class MessagingPushBuilderTests {
         assertNotNull(notification);
         verify(mockNotificationBuilder,times(1)).setPriority(Notification.PRIORITY_DEFAULT);
     }
-
 }
