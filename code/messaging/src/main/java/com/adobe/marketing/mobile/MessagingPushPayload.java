@@ -110,11 +110,13 @@ public class MessagingPushPayload {
             return;
         }
 
-        if(StringUtils.isNullOrEmpty(message.getMessageId())) {
+        final String messageId = message.getMessageId();
+        if(StringUtils.isNullOrEmpty(messageId)) {
             Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, message id is null or empty");
             return;
         }
-        messageId = message.getMessageId();
+
+        this.messageId = messageId;
         init(message.getData());
     }
 

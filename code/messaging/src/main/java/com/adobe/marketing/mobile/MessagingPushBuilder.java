@@ -97,7 +97,7 @@ class MessagingPushBuilder {
             final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             final String channelIdFromPayload = payload.getChannelId();
 
-            // if a channel from the payload
+            // if a channel from the payload is not null and if a channel exists for the channel ID from the payload, use the same channel ID.
             if (channelIdFromPayload != null && notificationManager.getNotificationChannel(channelIdFromPayload) != null) {
                 Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "Channel exists for channel ID: " + channelIdFromPayload + ". Using the same for push notification.");
                 return channelIdFromPayload;
@@ -239,7 +239,7 @@ class MessagingPushBuilder {
             return;
         }
 
-        for (MessagingPushPayload.ActionButton eachButton : actionButtons) {
+        for (final MessagingPushPayload.ActionButton eachButton : actionButtons) {
 
             final PendingIntent pendingIntent;
             if (eachButton.getType() == MessagingPushPayload.ActionType.DEEPLINK || eachButton.getType() == MessagingPushPayload.ActionType.WEBURL) {

@@ -8,20 +8,31 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 public class MessagingPushTrackerActivity extends Activity {
+
+    private static final String SELF_TAG = "MessagingPushTrackerActivity";
 
     @Override
     protected void onCreate(final @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final Intent intent = getIntent();
         if (intent == null) {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Intent is null. Ignoring to track or take action on push notification interaction.");
             finish();
             return;
         }
-        switch (intent.getAction()) {
+        final String action = intent.getAction();
+        if (StringUtils.isNullOrEmpty(action)) {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Intent action is null or empty. Ignoring to track or take action on push notification interaction.");
+            finish();
+            return;
+        }
+
+        switch (action) {
             case MessagingPushConstants.NotificationAction.OPENED:
                 handlePushOpen(intent);
                 break;
@@ -59,8 +70,12 @@ public class MessagingPushTrackerActivity extends Activity {
 
         // Dismiss the notification once interacted
         final String messageId = intent.getStringExtra(MessagingPushConstants.Tracking.Keys.MESSAGE_ID);
-        NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(messageId.hashCode());
+        if(!StringUtils.isNullOrEmpty(messageId)) {
+            NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(messageId.hashCode());
+        } else {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Message ID is null or empty. Unable to dismiss the notification.");
+        }
 
         executePushAction(intent);
     }
@@ -100,11 +115,14 @@ public class MessagingPushTrackerActivity extends Activity {
         if (currentActivity != null) {
             launchIntent = new Intent(currentActivity, currentActivity.getClass());
         } else {
+            Log.debug(MessagingPushConstants.LOG_TAG, SELF_TAG, "There is no active activity. Starting the launcher Activity.");
             launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
         }
         if (launchIntent != null) {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(launchIntent);
+        } else {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Unable to create an intent to open the application from the notification interaction.");
         }
     }
 
