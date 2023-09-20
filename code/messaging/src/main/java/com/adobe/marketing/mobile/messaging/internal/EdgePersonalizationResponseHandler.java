@@ -288,9 +288,9 @@ class EdgePersonalizationResponseHandler {
         final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(messagesRequestEventId);
         final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfaces, clearExistingRules, true);
         final List<LaunchRule> inAppRules = parsedRules.get(InboundType.INAPP);
-        //final List<LaunchRule> feedRules = parsedRules.get(InboundType.FEED);
+        final List<LaunchRule> feedRules = parsedRules.get(InboundType.FEED);
         // TODO: remove this workaround once ajo payload is using new schema https://ns.adobe.com/personalization/message/feed-item
-        final List<LaunchRule> feedRules = parsedRules.get(InboundType.UNKNOWN);
+        // final List<LaunchRule> feedRules = parsedRules.get(InboundType.UNKNOWN);
 
         // handle in-app message rules
         if (!MessagingUtils.isNullOrEmpty(inAppRules)) {
