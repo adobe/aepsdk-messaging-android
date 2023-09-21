@@ -103,7 +103,7 @@ public class AdobeMessagingServiceTests {
         assertNotNull(event);
         assertEquals(event.getName(), "Push Notification Displayed");
         assertEquals(event.getType(), EventType.MESSAGING);
-        assertEquals(event.getSource(), EventSource.REQUEST_CONTENT);
+        assertEquals(event.getSource(), EventSource.RESPONSE_CONTENT);
         assertEquals(event.getEventData(), remoteMessage.getData());
 
         // verify notification created from push notification builder is displayed

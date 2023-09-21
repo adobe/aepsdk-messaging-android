@@ -91,6 +91,7 @@ public class MessagingPushPayload {
     private String actionUri;
     private List<ActionButton> actionButtons = new ArrayList<>(ACTION_BUTTON_CAPACITY);
     private Map<String, String> data;
+    private String messageId;
 
     /**
      * Constructor
@@ -108,6 +109,14 @@ public class MessagingPushPayload {
             Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message data payload is null");
             return;
         }
+
+        final String messageId = message.getMessageId();
+        if(StringUtils.isNullOrEmpty(messageId)) {
+            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, message id is null or empty");
+            return;
+        }
+
+        this.messageId = messageId;
         init(message.getData());
     }
 
@@ -156,6 +165,9 @@ public class MessagingPushPayload {
     public String getImageUrl() {
         return imageUrl;
     }
+    public String getMessageId() {
+        return messageId;
+    }
 
     /**
      * @return an {@link ActionType}
@@ -201,7 +213,7 @@ public class MessagingPushPayload {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification count to int - %s", e.getLocalizedMessage());
+            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification badge count to int - %s", e.getLocalizedMessage());
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -304,6 +316,7 @@ public class MessagingPushPayload {
         private final String label;
         private final String link;
         private final ActionType type;
+
 
         public ActionButton(final String label, final String link, final String type) {
             this.label = label;

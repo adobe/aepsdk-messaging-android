@@ -51,6 +51,7 @@ public class MessagingPushPayloadTests {
     public void test_Constructor_with_RemoteMessage() {
         mockData = getMockData(false);
         final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getMessageId()).thenReturn("mockMessageId");
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
@@ -68,8 +69,8 @@ public class MessagingPushPayloadTests {
     @Test
     public void test_Constructor_with_RemoteMessage_MalformedActionButtons() {
         mockData = getMockData(true);
-        Bundle bundle = Mockito.mock(Bundle.class);
         final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getMessageId()).thenReturn("mockMessageId");
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);

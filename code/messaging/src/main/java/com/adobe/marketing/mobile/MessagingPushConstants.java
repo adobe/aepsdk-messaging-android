@@ -31,5 +31,25 @@ class MessagingPushConstants {
         private PayloadKeys() {
         }
     }
+    class NotificationAction {
+        static final String DISMISSED = "Notification Dismissed";
+        static final String OPENED = "Notification Opened";
+        static final String BUTTON_CLICKED = "Notification Button Clicked";
+        private NotificationAction() {}
+    }
+
+    class Tracking {
+        class Keys {
+            static final String ACTION_ID = "actionId";
+            static final String ACTION_URI = "actionUri";
+            static final String MESSAGE_ID = "messageId";
+
+            private Keys() {
+            }
+        }
+
+        private Tracking() {
+        }
+    }
 
 }

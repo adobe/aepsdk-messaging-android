@@ -39,6 +39,7 @@ import com.adobe.marketing.mobile.util.StringUtils
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
+
 class MainActivity : ComponentActivity() {
     private val customMessagingDelegate = CustomDelegate()
     private lateinit var spinner: Spinner
@@ -304,6 +305,11 @@ class MainActivity : ComponentActivity() {
                                 it.build()
                             }
             MobileCore.dispatchEvent(triggerEvent2, null)
+        }
+
+        btn_detailpage.setOnClickListener {
+            val intent = Intent(applicationContext, SecondLevelActivity::class.java)
+            startActivity(intent)
         }
 
         btnHistoricalEvent3.setOnClickListener {
