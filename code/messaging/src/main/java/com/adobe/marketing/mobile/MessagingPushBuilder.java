@@ -36,7 +36,7 @@ import java.util.Random;
  * Class for building push notification.
  * <p>
  * The build method in this class takes {@link MessagingPushPayload} received from the push notification and builds the notification.
- * This class is used internally by AdobeMessagingService to build the push notification.
+ * This class is used internally by AJOMessagingService to build the push notification.
  */
 class MessagingPushBuilder {
 
@@ -133,7 +133,7 @@ class MessagingPushBuilder {
                                      final MessagingPushPayload payload,
                                      final Context context) {
         final int iconFromPayload = MessagingPushUtils.getSmallIconWithResourceName(payload.getIcon(), context);
-        final int iconFromMobileCore = -1;   //MobileCore.getSmallIconResourceId();
+        final int iconFromMobileCore = MobileCore.getSmallIconResourceID();
 
         if (isValidIcon(iconFromPayload)) {
             builder.setSmallIcon(iconFromPayload);

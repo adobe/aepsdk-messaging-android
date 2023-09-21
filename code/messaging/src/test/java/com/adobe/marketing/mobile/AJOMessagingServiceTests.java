@@ -41,7 +41,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.HashMap;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class AdobeMessagingServiceTests {
+public class AJOMessagingServiceTests {
     @Mock
     RemoteMessage remoteMessage;
     @Mock
@@ -92,7 +92,7 @@ public class AdobeMessagingServiceTests {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // test
-        boolean isHandled = AdobeMessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = AJOMessagingService.handleRemoteMessage(context,remoteMessage);
 
         // verify
         assertTrue(isHandled);
@@ -120,7 +120,7 @@ public class AdobeMessagingServiceTests {
         }});
 
         // test
-        assertTrue(AdobeMessagingService.handleRemoteMessage(context,remoteMessage));
+        assertTrue(AJOMessagingService.handleRemoteMessage(context,remoteMessage));
     }
 
 
@@ -133,7 +133,7 @@ public class AdobeMessagingServiceTests {
         }});
 
         // test
-        boolean isHandled = AdobeMessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = AJOMessagingService.handleRemoteMessage(context,remoteMessage);
 
         // verify
         assertFalse(isHandled);
