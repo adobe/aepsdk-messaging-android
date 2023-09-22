@@ -32,11 +32,11 @@ import java.util.HashMap;
 /**
  * This class is the entry point for all push notifications received from Firebase.
  * <p>
- *  Once the AJOMessagingService is registered in the AndroidManifest.xml.
+ *  Once the MessagingService is registered in the AndroidManifest.xml.
  *  This class will automatically handle display and tracking of Adobe Journey Optimizer push notifications.
  */
-public class AJOMessagingService extends FirebaseMessagingService {
-    private static final String SELF_TAG = "AJOMessagingService";
+public class MessagingService extends FirebaseMessagingService {
+    private static final String SELF_TAG = "MessagingService";
     private static final String XDM_KEY  = "_xdm";
 
     @Override

@@ -39,7 +39,7 @@ import java.util.Random;
  * Class for building push notification.
  * <p>
  * The build method in this class takes {@link MessagingPushPayload} received from the push notification and builds the notification.
- * This class is used internally by AJOMessagingService to build the push notification.
+ * This class is used internally by MessagingService to build the push notification.
  */
 class MessagingPushBuilder {
 

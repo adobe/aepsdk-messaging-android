@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.adobe.marketing.mobile.messaging.AJOMessagingService
+import com.adobe.marketing.mobile.messaging.MessagingService
 
 class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -24,7 +24,7 @@ class NotificationService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        if (!AJOMessagingService.handleRemoteMessage(this, message)) {
+        if (!MessagingService.handleRemoteMessage(this, message)) {
             // Handle messages from other services here
         }
     }
