@@ -765,12 +765,10 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify event dispatched containing message feed propositions
                 verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
                 Event capturedEvent = eventArgumentCaptor.getValue();
-                Map<String, Object> propositions = DataReader.optTypedMap(Object.class, capturedEvent.getEventData(), "propositions", Collections.emptyMap());
-                assertEquals(1, propositions.size());
-                assertEquals("mobileapp://mockPackageName", propositions.keySet().iterator().next());
-                List<Map<String, Object>> feedPropositions = (List<Map<String, Object>>) propositions.values().stream().iterator().next();
-                for (int i = 0; i < feedPropositions.size(); i++) {
-                    Map<String, Object> feedMap = feedPropositions.get(i);
+                List<Map<String, Object>> propositions = DataReader.optTypedListOfMap(Object.class, capturedEvent.getEventData(), "propositions", Collections.emptyList());
+                assertEquals(5, propositions.size());
+                for (int i = 0; i < propositions.size(); i++) {
+                    Map<String, Object> feedMap = propositions.get(i);
                     List<Map<String, Object>> feedItems = (List<Map<String, Object>>) feedMap.get("items");
                     Map<String, Object> feedItemMap = feedItems.get(0);
                     Map<String, Object> data = DataReader.getTypedMap(Object.class, feedItemMap, "data");
