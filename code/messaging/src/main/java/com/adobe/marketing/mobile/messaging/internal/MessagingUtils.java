@@ -355,4 +355,14 @@ class MessagingUtils {
             }
         };
     }
+
+    /**
+     * Returns a mutable {@code List<Proposition>} list containing the contents of the passed in {@code List<Proposition>}.
+     *
+     * @param propositions A {@link List<Proposition>} to convert to a mutable list
+     * @return the mutable {@link List<Proposition>} list
+     */
+    static List<Proposition> createMutablePropositionList(final List<Proposition> propositions) {
+        return new ArrayList<>(propositions);
+    }
 }
