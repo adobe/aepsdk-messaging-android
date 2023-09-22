@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.Intent;
 
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
 

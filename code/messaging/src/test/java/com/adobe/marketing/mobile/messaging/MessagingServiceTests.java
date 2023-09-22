@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +28,12 @@ import static org.mockito.Mockito.when;
 import android.app.Notification;
 import android.content.Context;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.junit.After;
@@ -41,7 +47,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.HashMap;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class AJOMessagingServiceTests {
+public class MessagingServiceTests {
     @Mock
     RemoteMessage remoteMessage;
     @Mock
@@ -92,7 +98,7 @@ public class AJOMessagingServiceTests {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // test
-        boolean isHandled = AJOMessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = MessagingService.handleRemoteMessage(context,remoteMessage);
 
         // verify
         assertTrue(isHandled);
@@ -120,7 +126,7 @@ public class AJOMessagingServiceTests {
         }});
 
         // test
-        assertTrue(AJOMessagingService.handleRemoteMessage(context,remoteMessage));
+        assertTrue(MessagingService.handleRemoteMessage(context,remoteMessage));
     }
 
 
@@ -133,7 +139,7 @@ public class AJOMessagingServiceTests {
         }});
 
         // test
-        boolean isHandled = AJOMessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = MessagingService.handleRemoteMessage(context,remoteMessage);
 
         // verify
         assertFalse(isHandled);

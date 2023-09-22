@@ -10,12 +10,14 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static org.mockito.Mockito.when;
 
 import android.os.Bundle;
 
+import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.junit.Assert;
@@ -116,20 +118,20 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingPushConstants.PayloadKeys.TITLE, mockTitle);
-        mockData.put(MessagingPushConstants.PayloadKeys.BODY, mockBody);
-        mockData.put(MessagingPushConstants.PayloadKeys.SOUND, mockSound);
-        mockData.put(MessagingPushConstants.PayloadKeys.BADGE_NUMBER, mockBadgeCount);
-        mockData.put(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingPushConstants.PayloadKeys.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingPushConstants.PayloadKeys.ICON, mockIcon);
-        mockData.put(MessagingPushConstants.PayloadKeys.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingPushConstants.PayloadKeys.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingPushConstants.PayloadKeys.ACTION_URI, mockActionUri);
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, mockTitle);
+        mockData.put(MessagingConstants.Push.PayloadKeys.BODY, mockBody);
+        mockData.put(MessagingConstants.Push.PayloadKeys.SOUND, mockSound);
+        mockData.put(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER, mockBadgeCount);
+        mockData.put(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingConstants.Push.PayloadKeys.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ICON, mockIcon);
+        mockData.put(MessagingConstants.Push.PayloadKeys.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, mockActionUri);
         if (testingMalformedButtonString) {
-            mockData.put(MessagingPushConstants.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
+            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
         } else {
-            mockData.put(MessagingPushConstants.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
+            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
         }
 
         return mockData;

@@ -10,27 +10,11 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 class MessagingPushConstants {
     static final String LOG_TAG = "Messaging";
 
-    class PayloadKeys {
-        static final String TITLE = "adb_title";
-        static final String BODY = "adb_body";
-        static final String SOUND = "adb_sound";
-        static final String BADGE_NUMBER = "adb_n_count";
-        static final String NOTIFICATION_PRIORITY = "adb_n_priority";
-        static final String CHANNEL_ID = "adb_channel_id";
-        static final String ICON = "adb_icon";
-        static final String IMAGE_URL = "adb_image";
-        static final String ACTION_TYPE = "adb_a_type";
-        static final String ACTION_URI = "adb_uri";
-        static final String ACTION_BUTTONS = "adb_act";
-
-        private PayloadKeys() {
-        }
-    }
     class NotificationAction {
         static final String DISMISSED = "Notification Dismissed";
         static final String OPENED = "Notification Opened";

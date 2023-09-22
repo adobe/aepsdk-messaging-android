@@ -12,14 +12,13 @@
 
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.MessagingPushConstants.LOG_TAG;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import com.adobe.marketing.mobile.services.Log;
@@ -102,17 +101,17 @@ public class MessagingPushPayload {
      */
     public MessagingPushPayload(final RemoteMessage message) {
         if (message == null) {
-            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message is null");
+            Log.error(MessagingConstants.LOG_TAG , SELF_TAG, "Failed to create MessagingPushPayload, remote message is null");
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message data payload is null");
+            Log.error(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message data payload is null");
             return;
         }
 
         final String messageId = message.getMessageId();
         if(StringUtils.isNullOrEmpty(messageId)) {
-            Log.error(LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, message id is null or empty");
+            Log.error(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, message id is null or empty");
             return;
         }
 
@@ -196,33 +195,33 @@ public class MessagingPushPayload {
     private void init(final Map<String, String> data) {
         this.data = data;
         if (data == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
             return;
         }
-        this.title = data.get(MessagingPushConstants.PayloadKeys.TITLE);
-        this.body = data.get(MessagingPushConstants.PayloadKeys.BODY);
-        this.sound = data.get(MessagingPushConstants.PayloadKeys.SOUND);
-        this.channelId = data.get(MessagingPushConstants.PayloadKeys.CHANNEL_ID);
-        this.icon = data.get(MessagingPushConstants.PayloadKeys.ICON);
-        this.actionUri = data.get(MessagingPushConstants.PayloadKeys.ACTION_URI);
-        this.imageUrl = data.get(MessagingPushConstants.PayloadKeys.IMAGE_URL);
+        this.title = data.get(MessagingConstants.Push.PayloadKeys.TITLE);
+        this.body = data.get(MessagingConstants.Push.PayloadKeys.BODY);
+        this.sound = data.get(MessagingConstants.Push.PayloadKeys.SOUND);
+        this.channelId = data.get(MessagingConstants.Push.PayloadKeys.CHANNEL_ID);
+        this.icon = data.get(MessagingConstants.Push.PayloadKeys.ICON);
+        this.actionUri = data.get(MessagingConstants.Push.PayloadKeys.ACTION_URI);
+        this.imageUrl = data.get(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
 
         try {
-            String count = data.get(MessagingPushConstants.PayloadKeys.BADGE_NUMBER);
+            String count = data.get(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
             if (count != null) {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting notification badge count to int - %s", e.getLocalizedMessage());
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting notification badge count to int - %s", e.getLocalizedMessage());
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            this.notificationImportance = getNotificationImportanceFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
+            this.notificationImportance = getNotificationImportanceFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         } else {
-            this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingPushConstants.PayloadKeys.NOTIFICATION_PRIORITY));
+            this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         }
-        this.actionType = getActionTypeFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(MessagingPushConstants.PayloadKeys.ACTION_BUTTONS));
+        this.actionType = getActionTypeFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_TYPE));
+        this.actionButtons = getActionButtonsFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {
@@ -262,7 +261,7 @@ public class MessagingPushPayload {
 
     private List<ActionButton> getActionButtonsFromString(final String actionButtons) {
         if (actionButtons == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
             return null;
         }
         List<ActionButton> actionButtonList = new ArrayList<>(ACTION_BUTTON_CAPACITY);
@@ -275,7 +274,7 @@ public class MessagingPushPayload {
                 actionButtonList.add(button);
             }
         } catch (final JSONException e) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
             return null;
         }
         return actionButtonList;
@@ -285,7 +284,7 @@ public class MessagingPushPayload {
         try {
             final String label = jsonObject.getString(ActionButtons.LABEL);
             if (label.isEmpty()) {
-                Log.debug(LOG_TAG, SELF_TAG, "Label is empty");
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Label is empty");
                 return null;
             }
             String uri = null;
@@ -294,10 +293,10 @@ public class MessagingPushPayload {
                 uri = jsonObject.optString(ActionButtons.URI);
             }
 
-            Log.trace(LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
             return new ActionButton(label, uri, type);
         } catch (final JSONException e) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
             return null;
         }
     }

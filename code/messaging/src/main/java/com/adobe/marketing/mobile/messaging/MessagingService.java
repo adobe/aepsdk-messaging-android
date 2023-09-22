@@ -10,13 +10,19 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -26,11 +32,11 @@ import java.util.HashMap;
 /**
  * This class is the entry point for all push notifications received from Firebase.
  * <p>
- *  Once the AJOMessagingService is registered in the AndroidManifest.xml.
+ *  Once the MessagingService is registered in the AndroidManifest.xml.
  *  This class will automatically handle display and tracking of Adobe Journey Optimizer push notifications.
  */
-public class AJOMessagingService extends FirebaseMessagingService {
-    private static final String SELF_TAG = "AJOMessagingService";
+public class MessagingService extends FirebaseMessagingService {
+    private static final String SELF_TAG = "MessagingService";
     private static final String XDM_KEY  = "_xdm";
 
     @Override
@@ -74,7 +80,7 @@ public class AJOMessagingService extends FirebaseMessagingService {
      */
     private static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
         // TODO: Use the newly introduced key "ajo_type" to identify Adobe push notifications.
-        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingPushConstants.PayloadKeys.TITLE);
+        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingConstants.Push.PayloadKeys.TITLE);
     }
 
 }
