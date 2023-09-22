@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-public class MessagingPushConstants {
+class MessagingPushConstants {
     static final String LOG_TAG = "Messaging";
 
     class NotificationAction {
