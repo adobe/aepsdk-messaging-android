@@ -1,4 +1,4 @@
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.app.TaskStackBuilder;
@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.StringUtils;

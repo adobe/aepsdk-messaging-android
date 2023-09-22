@@ -10,13 +10,19 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import android.app.Notification;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.services.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -74,7 +80,7 @@ public class AJOMessagingService extends FirebaseMessagingService {
      */
     private static boolean isAJONotification(final @NonNull RemoteMessage remoteMessage) {
         // TODO: Use the newly introduced key "ajo_type" to identify Adobe push notifications.
-        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingPushConstants.PayloadKeys.TITLE);
+        return remoteMessage.getData().containsKey(XDM_KEY) || remoteMessage.getData().containsKey(MessagingConstants.Push.PayloadKeys.TITLE);
     }
 
 }

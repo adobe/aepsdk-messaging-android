@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -26,6 +26,9 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
+import com.adobe.marketing.mobile.Messaging;
+import com.adobe.marketing.mobile.MessagingPushPayload;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -40,11 +43,11 @@ import java.util.Random;
  */
 class MessagingPushBuilder {
 
-    private static final String SELF_TAG = "PushNotificationBuilder";
-    private static final String DEFAULT_CHANNEL_ID = "AdobeAJOPushChannel";
+    private static final String SELF_TAG = "MessagingPushBuilder";
+    private static final String DEFAULT_CHANNEL_ID = "AJOPushChannel";
     // When no channel name is received from the push notification, this default channel name is used.
     // This will appear in the notification settings for the app.
-    private static final String DEFAULT_CHANNEL_NAME = "General";
+    private static final String DEFAULT_CHANNEL_NAME = "General Notifications";
 
     /**
      * Builds a notification for the received payload.

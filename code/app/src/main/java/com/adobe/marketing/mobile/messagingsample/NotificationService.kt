@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.adobe.marketing.mobile.AJOMessagingService
+import com.adobe.marketing.mobile.messaging.AJOMessagingService
 
 class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {

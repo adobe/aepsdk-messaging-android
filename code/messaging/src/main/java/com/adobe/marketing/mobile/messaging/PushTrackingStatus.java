@@ -10,8 +10,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
-
+package com.adobe.marketing.mobile.messaging;
 public enum PushTrackingStatus {
     /**
      * This status is set when all the required data for tracking is available and when the tracking is initiated.

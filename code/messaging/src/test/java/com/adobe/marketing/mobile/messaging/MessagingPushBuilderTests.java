@@ -10,9 +10,8 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -34,6 +33,8 @@ import android.net.Uri;
 
 import androidx.core.app.NotificationCompat;
 
+import com.adobe.marketing.mobile.MessagingPushPayload;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,9 +44,6 @@ import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.ArrayList;
-
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushBuilderTests {
 

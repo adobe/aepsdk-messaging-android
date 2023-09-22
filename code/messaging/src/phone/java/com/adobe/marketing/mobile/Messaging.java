@@ -17,6 +17,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
