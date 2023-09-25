@@ -56,6 +56,8 @@ public final class Messaging {
     private static final String GET_PROPOSITIONS_EVENT = "getpropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
     private static final String SURFACE_BASE = "mobileapp://";
+    private static final String SCOPE = "scope";
+    private static final String ITEMS = "items";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -216,16 +218,13 @@ public final class Messaging {
                 final Map<Surface, List<Proposition>> convertedPropositions = new HashMap<>();
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
-                    final Map<String, Object> retrievedPropositionData = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
-                    for (final String surfaceUri : retrievedPropositionData.keySet()) {
-                        final Surface surface = Surface.fromUriString(surfaceUri);
-                        final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositionData, surface.getUri(), Collections.emptyList());
+                    final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
+                    for (final Map<String, Object> propositionData : retrievedPropositionData) {
+                        final Surface surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
                         final List<Proposition> propositions = new ArrayList<>();
-                        for (final Map<String, Object> propositionMap : propositionMaps) {
-                            final Proposition proposition = Proposition.fromEventData(propositionMap);
-                            propositions.add(proposition);
-                            convertedPropositions.put(surface, propositions);
-                        }
+                        final Proposition proposition = Proposition.fromEventData(propositionData);
+                        propositions.add(proposition);
+                        convertedPropositions.put(surface, propositions);
                     }
                 }
                 propositionsResponseHandler.call(convertedPropositions);

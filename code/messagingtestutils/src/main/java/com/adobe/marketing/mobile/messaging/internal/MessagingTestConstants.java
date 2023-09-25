@@ -39,7 +39,7 @@ public class MessagingTestConstants {
         public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
-        public static final String MESSAGE_FEEDS_NOTIFICATION = "Message feeds notification";
+        public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
 
         private EventName() {
         }
