@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile;
 
-enum InboundType {
+public enum InboundType {
     // Unknown inbound type
     UNKNOWN(0),
     // Feed Item
@@ -20,9 +20,9 @@ enum InboundType {
     // InApp
     INAPP(2);
 
-    static final String UNKNOWN_EVENT_TYPE = "unknown";
-    static final String FEED_EVENT_TYPE = "feed";
-    static final String INAPP_EVENT_TYPE = "inapp";
+    static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+    static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+    static final String SCHEMA_UNKNOWN = "unknown";
 
     private final int value;
 
@@ -38,21 +38,21 @@ enum InboundType {
     public String toString() {
         switch (this) {
             case FEED:
-                return FEED_EVENT_TYPE;
+                return SCHEMA_FEED_ITEM;
             case INAPP:
-                return INAPP_EVENT_TYPE;
+                return SCHEMA_IAM;
             default:
-                return UNKNOWN_EVENT_TYPE;
+                return SCHEMA_UNKNOWN;
         }
     }
 
-    static InboundType fromString(final String typeString) {
+    public static InboundType fromString(final String typeString) {
         InboundType inboundType;
         switch (typeString) {
-            case InboundType.FEED_EVENT_TYPE:
+            case SCHEMA_FEED_ITEM:
                 inboundType = InboundType.FEED;
                 break;
-            case InboundType.INAPP_EVENT_TYPE:
+            case SCHEMA_IAM:
                 inboundType = InboundType.INAPP;
                 break;
             default:

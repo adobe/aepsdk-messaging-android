@@ -82,6 +82,8 @@ public class MessagingExtensionTests {
     @Mock
     LaunchRulesEngine mockMessagingRulesEngine;
     @Mock
+    FeedRulesEngine mockFeedRulesEngine;
+    @Mock
     EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock
     SharedStateResult mockConfigData;
@@ -124,6 +126,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
+        reset(mockFeedRulesEngine);
         reset(mockEdgePersonalizationResponseHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
@@ -148,7 +151,7 @@ public class MessagingExtensionTests {
                 put("key", "value");
             }});
 
-            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockEdgePersonalizationResponseHandler);
+            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockEdgePersonalizationResponseHandler);
 
             runnable.run();
         }
@@ -275,20 +278,16 @@ public class MessagingExtensionTests {
     // handleWildcardEvents
     // =================================================================================================================
     @Test
-    public void test_handleWildcardEvents_when_triggeredRulesReturnedFromRulesEngine() {
+    public void test_handleWildcardEvents_when_validEventReceived() {
         // setup
-        List<RuleConsequence> ruleConsequenceList = new ArrayList<>();
-        ruleConsequenceList.add(mockRuleConsequence);
-        when(mockLaunchRule.getConsequenceList()).thenReturn(ruleConsequenceList);
-        List<LaunchRule> launchRuleList = new ArrayList<>();
-        launchRuleList.add(mockLaunchRule);
-        when(mockMessagingRulesEngine.process(any(Event.class))).thenReturn(launchRuleList);
-
         runUsingMockedServiceProvider(() -> {
             Map<String, Object> eventData = new HashMap<>();
             eventData.put("key", "value");
             Event mockEvent = mock(Event.class);
+            List<RuleConsequence> mockRuleConsequenceList = new ArrayList<>();
+            mockRuleConsequenceList.add(mockRuleConsequence);
 
+            when(mockMessagingRulesEngine.evaluateEvent(any())).thenReturn(mockRuleConsequenceList);
             when(mockEvent.getEventData()).thenReturn(eventData);
             when(mockEvent.getType()).thenReturn(EventType.GENERIC_TRACK);
             when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
@@ -296,31 +295,118 @@ public class MessagingExtensionTests {
             // test
             messagingExtension.handleWildcardEvents(mockEvent);
 
-            // verify triggered rule consequence passed to InAppNotificationHandler to create a Message
-            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(eq(mockRuleConsequence));
+            // verify rules engine processes event
+            verify(mockMessagingRulesEngine, times(1)).evaluateEvent(eq(mockEvent));
+
+            // verify in-app message created
+            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(mockRuleConsequence);
+        });
+    }
+
+    // =================================================================================================================
+    // handleRuleEngineResponseEvents
+    // =================================================================================================================
+    @Test
+    public void test_handleRuleEngineResponseEvents_when_validConsequence_then_createInAppMessageCalled() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> detail =
+                    new HashMap<String, Object>() {
+                        {
+                            put("remoteAssets", assetList);
+                            put("mobileParameters", new HashMap<String, Object>());
+                            put("html", "iam html content");
+                        }
+                    };
+            Map<String, Object> triggeredConsequence =
+                    new HashMap<String, Object>() {
+                        {
+                            put("id", "testId");
+                            put("type", "cjmiam");
+                            put("detail", detail);
+                        }
+                    };
+
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", triggeredConsequence);
+                    }
+                }
+            };
+
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
+
+            // test
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+            // verify
+            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 
     @Test
-    public void test_handleWildcardEvents_when_noTriggeredRulesReturnedFromRulesEngine() {
+    public void test_handleRuleEngineResponseEvents_when_nullTriggeredConsequence_then_createInAppMessageNotCalled() {
         // setup
-        when(mockMessagingRulesEngine.process(any(Event.class))).thenReturn(new ArrayList<>());
-
         runUsingMockedServiceProvider(() -> {
-            Map<String, Object> eventData = new HashMap<>();
-            eventData.put("key", "value");
-            Event mockEvent = mock(Event.class);
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", null);
+                    }
+                }
+            };
 
-            when(mockEvent.getEventData()).thenReturn(eventData);
-            when(mockEvent.getType()).thenReturn(EventType.GENERIC_TRACK);
-            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
 
             // test
-            messagingExtension.handleWildcardEvents(mockEvent);
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            // no event dispatched: rules response event
-            verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+        });
+    }
+
+    @Test
+    public void test_handleRuleEngineResponseEvents_when_nullDetailsPresentInConsequence_then_createInAppMessageNotCalled() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> triggeredConsequence =
+                    new HashMap<String, Object>() {
+                        {
+                            put("id", "testId");
+                            put("type", "cjmiam");
+                            put("detail", null);
+                        }
+                    };
+
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", triggeredConsequence);
+                    }
+                }
+            };
+
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
+
+            // test
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+            // verify
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 

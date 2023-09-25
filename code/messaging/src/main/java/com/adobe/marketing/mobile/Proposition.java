@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 
+import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ import java.util.Map;
 /**
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
-public class Proposition {
+public class Proposition implements Serializable {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "Proposition";
     private static final String PAYLOAD_ID = "id";
@@ -95,7 +96,7 @@ public class Proposition {
      *
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
-    static Proposition fromEventData(final Map<String, Object> eventData) {
+    public static Proposition fromEventData(final Map<String, Object> eventData) {
         Proposition proposition = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
@@ -104,7 +105,10 @@ public class Proposition {
             final List<Map<String, Object>> items = DataReader.getTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS);
             final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
-                propositionItems.add(PropositionItem.fromEventData(item));
+                final PropositionItem propositionItem = PropositionItem.fromEventData(item);
+                if (propositionItem != null) {
+                    propositionItems.add(propositionItem);
+                }
             }
             proposition = new Proposition(uniqueId, scope, scopeDetails, propositionItems);
         } catch (final DataReaderException dataReaderException) {
@@ -119,7 +123,7 @@ public class Proposition {
      *
      * @return {@link Map<String, Object>} object created from this {@link Proposition}.
      */
-    Map<String, Object> toEventData() {
+    public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCOPE, this.scope);

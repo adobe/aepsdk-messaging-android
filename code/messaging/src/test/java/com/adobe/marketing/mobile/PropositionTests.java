@@ -12,14 +12,14 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingTestUtils;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.adobe.marketing.mobile.util.MapUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -100,15 +100,14 @@ public class PropositionTests {
         Map<String, Object> propositionMap = proposition.toEventData();
         // verify
         assertNotNull(propositionMap);
-        List<Map <String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
+        List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
         PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
-            Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, item, "content");
-            String rules = DataReader.getString(contentMap, "rules");
-            JSONArray expectedContentArray = new JSONArray().put(new JSONObject(propositionItem.getContent()));
+            Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
+            String content = DataReader.getString(data, "content");
             assertEquals(propositionItem.getUniqueId(), item.get("id"));
-            assertEquals(expectedContentArray.toString(), rules);
             assertEquals(propositionItem.getSchema(), item.get("schema"));
+            assertEquals("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"consequenceId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}", content);
         }
     }
 }

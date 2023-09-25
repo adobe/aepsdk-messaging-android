@@ -340,8 +340,6 @@ public class InternalMessageTests {
     @Test
     public void test_messageShow() {
         // setup
-        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             try {
                 internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>());
@@ -353,21 +351,12 @@ public class InternalMessageTests {
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
-
-            // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
-            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-            String interaction = interactionArgumentCaptor.getValue();
-            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
-            assertEquals(null, interaction);
         });
     }
 
     @Test
     public void test_messageShow_withShowMessageTrueInCustomDelegate() {
         // setup
-        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             // setup custom delegate, show message is true by default
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
@@ -383,21 +372,12 @@ public class InternalMessageTests {
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
-
-            // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
-            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-            String interaction = interactionArgumentCaptor.getValue();
-            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
-            assertEquals(null, interaction);
         });
     }
 
     @Test
     public void test_messageShow_withShowMessageFalseInCustomDelegate() {
         // setup
-        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
         runUsingMockedServiceProvider(() -> {
             // setup custom delegate, show message is true by default
             CustomMessagingDelegate customMessageDelegate = new CustomMessagingDelegate();
@@ -415,13 +395,6 @@ public class InternalMessageTests {
 
             // verify fullscreen message show called
             verify(mockFullscreenMessage, times(1)).show(eq(false));
-
-            // verify tracking event data
-            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(InternalMessage.class));
-            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-            String interaction = interactionArgumentCaptor.getValue();
-            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISPLAY);
-            assertEquals(null, interaction);
         });
     }
 

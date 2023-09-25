@@ -13,9 +13,16 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ITEMS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_IAM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
@@ -24,33 +31,39 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.Surface;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 class MessagingUtils {
     private final static String SELF_TAG = "MessagingUtils";
 
-    static List<PropositionPayload> getPropositionPayloads(final List<Map<String, Object>> payloads) throws Exception {
-        final List<PropositionPayload> propositionPayloads = new ArrayList<>();
+    static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final PropositionInfo propositionInfo = PropositionInfo.create(payload);
-                final PropositionPayload propositionPayload = PropositionPayload.create(propositionInfo, (List<Map<String, Object>>) payload.get(ITEMS));
-                if (propositionPayload != null) {
-                    propositionPayloads.add(propositionPayload);
+                final Proposition proposition = Proposition.fromEventData(payload);
+                if (proposition != null) {
+                    propositions.add(proposition);
                 }
             }
         }
-        return propositionPayloads;
+        return propositions;
     }
 
     // ========================================================================================
@@ -166,7 +179,7 @@ class MessagingUtils {
         }
         final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (surfaceUris == null || surfaceUris.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(surfaceUris)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
@@ -190,6 +203,63 @@ class MessagingUtils {
      */
     static String getRequestEventId(final Event event) {
         return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+    }
+
+    // ========================================================================================
+    // Consequence data retrieval from a JSONObject
+    // ========================================================================================
+
+    /**
+     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence extracted from the rule json
+     */
+    static JSONObject getConsequence(final JSONObject ruleJson) {
+        JSONObject consequence = null;
+        try {
+            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            consequence = consequenceArray.getJSONObject(0);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+        }
+        return consequence;
+    }
+
+    /**
+     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence details extracted from the rule json
+     */
+    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        JSONObject consequenceDetails = null;
+        try {
+            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+        }
+        return consequenceDetails;
+    }
+
+    // ========================================================================================
+    // feed item type verification using rule consequence object
+    // ========================================================================================
+    static boolean isFeedItem(final RuleConsequence ruleConsequence) {
+        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
+        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        return schema.equals(SCHEMA_FEED_ITEM);
+    }
+
+    // ========================================================================================
+    // in app type verification using rule consequence object
+    // ========================================================================================
+    static boolean isInApp(final RuleConsequence ruleConsequence) {
+        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
+        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        final String consequenceType = ruleConsequence.getType();
+        return schema.equals(SCHEMA_IAM) || consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE);
     }
 
     // ========================================================================================
@@ -240,5 +310,43 @@ class MessagingUtils {
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
+    }
+
+    // ========================================================================================
+    // Collection utils
+    // ========================================================================================
+
+    /**
+     * Checks if the given {@code collection} is null or empty.
+     *
+     * @param collection input {@code Collection<?>} to be tested.
+     * @return {@code boolean} result indicating whether the provided {@code collection} is null or empty.
+     */
+    static boolean isNullOrEmpty(final Collection<?> collection) {
+        return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     *
+     * @param proposition A {@link Proposition} to be added to the mutable list
+     * @return the mutable {@link List<Proposition>} list
+     */
+    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
+        return new ArrayList<Proposition>() {
+            {
+                add(proposition);
+            }
+        };
+    }
+
+    /**
+     * Returns a mutable {@code List<Proposition>} list containing the contents of the passed in {@code List<Proposition>}.
+     *
+     * @param propositions A {@link List<Proposition>} to convert to a mutable list
+     * @return the mutable {@link List<Proposition>} list
+     */
+    static List<Proposition> createMutablePropositionList(final List<Proposition> propositions) {
+        return new ArrayList<>(propositions);
     }
 }

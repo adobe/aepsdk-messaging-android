@@ -14,10 +14,13 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -29,10 +32,15 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FEED_RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.FCM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CJM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.COLLECT;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
@@ -42,29 +50,28 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.T
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
+import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.SharedStateResolution;
+import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.*;
-import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.EventSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -80,6 +87,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
+    final FeedRulesEngine feedRulesEngine;
 
     /**
      * Constructor.
@@ -101,14 +109,15 @@ public final class MessagingExtension extends Extension {
      * @param extensionApi {@link ExtensionApi} instance
      */
     MessagingExtension(final ExtensionApi extensionApi) {
-        this(extensionApi, null, null);
+        this(extensionApi, null, null, null);
     }
 
     @VisibleForTesting
-    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
+    MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final FeedRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
-        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(RULES_ENGINE_NAME, extensionApi);
+        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new FeedRulesEngine(FEED_RULES_ENGINE_NAME, extensionApi);
+        this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
     }
 
     //region Extension interface methods
@@ -153,6 +162,7 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
+        getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
     }
 
     @Override
@@ -171,7 +181,7 @@ public final class MessagingExtension extends Extension {
             return false;
         }
 
-        // fetch in-app messages on initial launch once we have configuration and identity state set
+        // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
             edgePersonalizationResponseHandler.fetchMessages(null);
             initialMessageFetchComplete = true;
@@ -198,22 +208,46 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
+        List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
         final List<RuleConsequence> consequences = new ArrayList<>();
 
-        if (triggeredRules == null || triggeredRules.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
             return;
         }
 
-        for (final LaunchRule rule : triggeredRules) {
-            consequences.addAll(rule.getConsequenceList());
-        }
-
-        if (consequences.isEmpty()) {
-            return;
+        for (final RuleConsequence consequence : triggeredConsequences) {
+            consequences.add(consequence);
         }
 
         edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+    }
+
+    /**
+     * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
+     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * created from the triggered rule consequence payload.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
+    void handleRuleEngineResponseEvents(final Event event) {
+        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequences found. Will not handle rules response event.");
+            return;
+        }
+
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+        final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
+
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequence details found. Will not handle rules response event.");
+            return;
+        }
+
+        edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
     }
 
     //endregion
