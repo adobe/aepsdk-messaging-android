@@ -379,10 +379,6 @@ class EdgePersonalizationResponseHandler {
                 propositionMap.put(surface, propositionsList);
             }
 
-            if (MapUtils.isNullOrEmpty(inboundMessages)) {
-                continue;
-            }
-
             final List<Inbound> inboundList = inboundMessages.get(surface);
             if (MessagingUtils.isNullOrEmpty(inboundList)) {
                 continue;
@@ -452,8 +448,9 @@ class EdgePersonalizationResponseHandler {
             final Surface surface = Surface.fromUriString(scope);
             for (final PropositionItem propositionItem : proposition.getItems()) {
                 parsedRules = JSONRulesParser.parse(propositionItem.getContent(), extensionApi);
+                // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                 if (MessagingUtils.isNullOrEmpty(parsedRules)) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with malformed rule json content.");
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
                     tempPropositions = updatePropositionMapForSurface(surface, proposition, tempPropositions);
                     continue;
                 }
