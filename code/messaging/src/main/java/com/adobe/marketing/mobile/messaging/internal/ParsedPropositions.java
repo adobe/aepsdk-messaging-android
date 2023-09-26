@@ -69,7 +69,7 @@ class ParsedPropositions {
                     // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                     if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                        MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToCache);
+                        propositionsToCache = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToCache);
                         continue;
                     }
 
@@ -90,16 +90,16 @@ class ParsedPropositions {
                             propositionInfoToCache.put(messageId, PropositionInfo.createFromProposition(proposition));
                         }
 
-                        InboundType inboundType = InboundType.UNKNOWN;
+                        InboundType inboundType;
                         final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
                         if (isInAppConsequence) {
                             inboundType = InboundType.INAPP;
-                            propositionsToPersist = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToPersist);
+                            propositionsToPersist = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToPersist);
                         } else {
                             final String inboundTypeString = DataReader.optString(consequence.getDetail(), MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
                             inboundType = InboundType.fromString(inboundTypeString);
                             if (!MessagingUtils.isFeedItem(consequence)) {
-                                propositionsToCache = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToCache);
+                                propositionsToCache = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToCache);
                             }
                         }
 
@@ -112,10 +112,10 @@ class ParsedPropositions {
 
     private void mergeRules(final List<LaunchRule> rules, final Surface surface, final InboundType inboundType) {
         // get rules we may already have for this inboundType
-        final Map<Surface, List<LaunchRule>> tempRulesByInboundType = surfaceRulesByInboundType.get(inboundType) != null ? surfaceRulesByInboundType.get(inboundType) : Collections.EMPTY_MAP;
+        Map<Surface, List<LaunchRule>> tempRulesByInboundType = surfaceRulesByInboundType.get(inboundType) != null ? surfaceRulesByInboundType.get(inboundType) : Collections.EMPTY_MAP;
 
         // combine rules with existing
-        MessagingUtils.updateRuleMapForSurface(surface, rules, tempRulesByInboundType);
+        tempRulesByInboundType = MessagingUtils.updateMapForSurface(surface, rules, tempRulesByInboundType);
 
         // apply up to surfaceRulesByInboundType
         surfaceRulesByInboundType.put(inboundType, tempRulesByInboundType);

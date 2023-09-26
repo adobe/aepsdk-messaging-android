@@ -279,8 +279,7 @@ class MainActivity : ComponentActivity() {
 
         // fetch message feed and code based experiences
         val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/cbeoffers3"))
-        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/feeds/apifeed"))
+        surfaceList.add(Surface("rymorale-cbe"))
         Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 

@@ -156,7 +156,8 @@ final class MessagingCacheUtilities {
      * @param surfacesToRemove {@link List<Surface>} containing surfaces to be removed from the cache
      */
     void cachePropositions(final Map<Surface, List<Proposition>> newPropositions, final List<Surface> surfacesToRemove) {
-        final Map<Surface, List<Proposition>> updatedPropositions = getCachedPropositions();
+        final Map<Surface, List<Proposition>> cachedPropositions = getCachedPropositions();
+        final Map<Surface, List<Proposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
         updatedPropositions.putAll(newPropositions);
         for (final Map.Entry<Surface, List<Proposition>> entry : updatedPropositions.entrySet()) {
             if (surfacesToRemove.contains(entry.getKey())) {

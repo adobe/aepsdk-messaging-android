@@ -31,10 +31,10 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.REFRESH_MESSAGES_EVENT;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.RESPONSE_CALLBACK_TIMEOUT;
 
@@ -55,7 +55,6 @@ import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -63,6 +62,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -88,12 +88,10 @@ class EdgePersonalizationResponseHandler {
     // keeps a list of all surfaces requested per personalization request event by event id
     private final Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
     // used while processing streaming payloads for a single request
-    private final Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
+    private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> feedRulesBySurface = new HashMap<>();
-
     private String messagesRequestEventId;
-    private String lastProcessedRequestEventId;
 
     /**
      * Constructor
@@ -213,8 +211,8 @@ class EdgePersonalizationResponseHandler {
         eventData.put(REQUEST, request);
         // end construction of event data
 
-        final Event newEvent = new Event.Builder(MESSAGE_PROPOSITIONS_NOTIFICATION,
-                EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
+        final Event newEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
+                EventType.EDGE, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .chainToParentEvent(event)
                 .build();
@@ -223,7 +221,7 @@ class EdgePersonalizationResponseHandler {
         beginRequestForSurfaces(newEvent, requestedSurfaces);
 
         // dispatch the event and handle the response callback
-        MobileCore.dispatchEventWithResponseCallback(event, RESPONSE_CALLBACK_TIMEOUT, new AdobeCallbackWithError<Event>() {
+        MobileCore.dispatchEventWithResponseCallback(newEvent, RESPONSE_CALLBACK_TIMEOUT, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
                 // response event failed or timed out, need to remove this event from the queue
@@ -364,93 +362,12 @@ class EdgePersonalizationResponseHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         // validate this is one of our events
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
-        if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+        if (!requestedSurfacesForEventId.containsKey(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
         }
 
         Log.trace(LOG_TAG, SELF_TAG, "Processing propositions from personalization:decisions network response for event %s.", requestEventId);
         updateInProgressPropositionsWithEvent(edgeResponseEvent);
-//        final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
-//
-//        if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
-//            return;
-//        }
-//
-//        // if this is an event for a new request, purge cache and update lastProcessedRequestEventId
-//        boolean clearExistingRules = false;
-//        if (!requestEventId.equals(lastProcessedRequestEventId)) {
-//            clearExistingRules = true;
-//            lastProcessedRequestEventId = requestEventId;
-//        }
-//
-//        final List<Map<String, Object>> payload = DataReader.optTypedListOfMap(Object.class, edgeResponseEvent.getEventData(), PAYLOAD, null);
-//
-//        // convert the payload into a list of Proposition(s)
-//        List<Proposition> propositions = null;
-//        try {
-//            propositions = MessagingUtils.getPropositionsFromPayloads(payload);
-//        } catch (final Exception exception) {
-//            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create propositions from the AJO personalization payload, an exception occurred: %s.", exception.getLocalizedMessage());
-//        }
-//
-//        final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(messagesRequestEventId);
-//        final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfaces, clearExistingRules, true);
-//        final List<LaunchRule> inAppRules = parsedRules.get(InboundType.INAPP);
-//        final List<LaunchRule> feedRules = parsedRules.get(InboundType.FEED);
-//        // TODO: remove this workaround once ajo payload is using new schema https://ns.adobe.com/personalization/message/feed-item
-//        // final List<LaunchRule> feedRules = parsedRules.get(InboundType.UNKNOWN);
-//
-//        // handle in-app message rules
-//        if (!MessagingUtils.isNullOrEmpty(inAppRules)) {
-//            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains InApp message definitions.");
-//        }
-//        if (clearExistingRules) {
-//            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the rules engine.", inAppRules != null ? inAppRules.size() : 0);
-//            launchRulesEngine.replaceRules(inAppRules);
-//        } else {
-//            Log.debug(LOG_TAG, SELF_TAG, "Added %d rule(s) into the rules engine.", inAppRules != null ? inAppRules.size() : 0);
-//            launchRulesEngine.addRules(inAppRules);
-//        }
-//
-//        // handle feed rules
-//        if (!MessagingUtils.isNullOrEmpty(feedRules)) {
-//            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains feed message definitions.");
-//        }
-//        if (clearExistingRules) {
-//            Log.debug(LOG_TAG, SELF_TAG, "Loading %d rule(s) into the feed rules engine.", feedRules != null ? feedRules.size() : 0);
-//            feedRulesEngine.replaceRules(feedRules);
-//        } else {
-//            Log.debug(LOG_TAG, SELF_TAG, "Added %d rule(s) into the feed rules engine.", feedRules != null ? feedRules.size() : 0);
-//            feedRulesEngine.addRules(feedRules);
-//        }
-//
-//        inboundMessages = feedRulesEngine.evaluate(edgeResponseEvent);
-//        if (!MapUtils.isNullOrEmpty(inboundMessages)) {
-//            updateInboundMessages(inboundMessages, requestedSurfaces);
-//        }
-//
-//        final Map<Surface, List<Proposition>> requestedPropositions = retrievePropositions(requestedSurfaces);
-//        if (MapUtils.isNullOrEmpty(requestedPropositions)) {
-//            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Not dispatching a notification event, personalization:decisions response does not contain propositions.");
-//            return;
-//        }
-//
-//        // dispatch an event with the propositions received from the remote
-//        final Map<String, Object> eventData = new HashMap<>();
-//        final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
-//        for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositions.entrySet()) {
-//            for (final Proposition proposition : propositionEntry.getValue()) {
-//                convertedPropositions.add(proposition.toEventData());
-//            }
-//        }
-//        eventData.put(PROPOSITIONS, convertedPropositions);
-//
-//        final Event event = new Event.Builder(MESSAGE_PROPOSITIONS_NOTIFICATION,
-//                EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
-//                .setEventData(eventData)
-//                .build();
-//
-//        extensionApi.dispatch(event);
     }
 
     private void updateInProgressPropositionsWithEvent(final Event event) {
@@ -476,7 +393,7 @@ class EdgePersonalizationResponseHandler {
         // loop through propositions for this event and add them to existing props by surface
         for (final Proposition proposition : propositions) {
             final Surface surface = Surface.fromUriString(proposition.getScope());
-            MessagingUtils.updatePropositionMapForSurface(surface, proposition, inProgressPropositions);
+            inProgressPropositions = MessagingUtils.updateMapForSurface(surface, proposition, inProgressPropositions);
         }
     }
 
@@ -523,11 +440,74 @@ class EdgePersonalizationResponseHandler {
         messagingCacheUtilities.cachePropositions(parsedPropositions.propositionsToPersist, surfacesToRemove);
 
         // apply rules
-        updateRulesEngines(parsedPropositions.surfaceRulesByInboundType, requestedSurfaces)
+        updateRulesEngines(parsedPropositions.surfaceRulesByInboundType, requestedSurfaces);
     }
 
-    private void updateRulesEngines(final Map<InboundType, Map<Surface, List<LaunchRule>>> rules, final List<Surface> requestedSurfaces) {
-       // TODO
+    private void updateRulesEngines(final Map<InboundType, Map<Surface, List<LaunchRule>>> surfaceRulesByInboundType, final List<Surface> requestedSurfaces) {
+        for (final Map.Entry<InboundType, Map<Surface, List<LaunchRule>>> newRules : surfaceRulesByInboundType.entrySet()) {
+            final Set<Surface> newSurfaces = newRules.getValue().keySet();
+            final List<Surface> surfacesToRemove = new ArrayList<>(requestedSurfaces);
+            surfacesToRemove.removeAll(newSurfaces);
+
+            final InboundType inboundType = newRules.getKey();
+            final Map<Surface, List<LaunchRule>> rules = newRules.getValue();
+            switch (inboundType) {
+                case INAPP:
+                    Log.trace(LOG_TAG, SELF_TAG, "Updating in-app message definitions for surfaces %s.", newSurfaces);
+
+                    // replace rules for each in-app surface we got back
+                    inAppRulesBySurface.putAll(rules);
+
+                    // remove any surfaces that were requested but had no in-app content returned
+                    for (final Surface surface : surfacesToRemove) {
+                        inAppRulesBySurface.remove(surface);
+                    }
+
+                    // combine all our rules
+                    final Collection<List<LaunchRule>> allInAppRules = inAppRulesBySurface.values();
+                    final List<LaunchRule> collectedInAppRules = new ArrayList<>();
+                    for (final List<LaunchRule> inAppRules : allInAppRules) {
+                        collectedInAppRules.addAll(inAppRules);
+                    }
+
+                    // pre-fetch the assets for this message if there are any defined
+                    for (final LaunchRule rule : collectedInAppRules) {
+                        final List<RuleConsequence> consequences = rule.getConsequenceList();
+                        for (final RuleConsequence consequence : consequences) {
+                            cacheImageAssetsFromPayload(consequence);
+                        }
+                    }
+
+                    // update rules in in-app engine
+                    launchRulesEngine.replaceRules(collectedInAppRules);
+                    break;
+                case FEED:
+                    Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Updating feed definitions for surfaces %s", newSurfaces);
+
+                    // replace rules for each feed surface we got back
+                    feedRulesBySurface.putAll(rules);
+
+                    // remove any surfaces that were requested but had no in-app content returned
+                    for (final Surface surface : surfacesToRemove) {
+                        feedRulesBySurface.remove(surface);
+                    }
+
+                    // combine all our rules
+                    final Collection<List<LaunchRule>> allFeedRules = feedRulesBySurface.values();
+                    final List<LaunchRule> collectedFeedRules = new ArrayList<>();
+                    for (final List<LaunchRule> feedRules : allFeedRules) {
+                        collectedFeedRules.addAll(feedRules);
+                    }
+
+                    // update rules in feed rules engine
+                    feedRulesEngine.replaceRules(collectedFeedRules);
+                    break;
+                default:
+                    // no-op
+                    Log.trace(LOG_TAG, SELF_TAG, "No action will be taken updating messaging rules - the InboundType provided is not supported.");
+                    break;
+            }
+        }
     }
 
     private void updateInboundMessages(final Map<Surface, List<Inbound>> newInboundMessages, final List<Surface> requestedSurfaces) {
@@ -564,15 +544,17 @@ class EdgePersonalizationResponseHandler {
 
     private void updatePropositions(final Map<Surface, List<Proposition>> newPropositions, final List<Surface> surfacesToRemove) {
         // add new surfaces or update replace existing surfaces
-        Map<Surface, List<Proposition>> tempPropositions = new HashMap<>(newPropositions);
-        for (final Map.Entry<Surface, List<Proposition>> entry : tempPropositions.entrySet()) {
-            MessagingUtils.updatePropositionMapForSurface(entry.getKey(), entry.getValue(), tempPropositions);
+        Map<Surface, List<Proposition>> tempPropositions = new HashMap<>(propositions);
+        for (final Map.Entry<Surface, List<Proposition>> entry : newPropositions.entrySet()) {
+            tempPropositions = MessagingUtils.updateMapForSurface(entry.getKey(), entry.getValue(), tempPropositions);
         }
 
         // remove any surfaces if necessary
         for (final Surface surface : surfacesToRemove) {
             tempPropositions.remove(surface);
         }
+
+        propositions = tempPropositions;
     }
 
     /**
@@ -590,7 +572,11 @@ class EdgePersonalizationResponseHandler {
                 propositionMap.put(surface, propositionsList);
             }
 
-            final List<Inbound> inboundList = inboundMessages.get(surface);
+            List<Inbound> inboundList = null;
+            if (inboundMessages != null) {
+                inboundList = inboundMessages.get(surface);
+            }
+
             if (MessagingUtils.isNullOrEmpty(inboundList)) {
                 continue;
             }
@@ -609,7 +595,7 @@ class EdgePersonalizationResponseHandler {
                 final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
                 inboundPropositionList.add(proposition);
             }
-            propositionMap = MessagingUtils.updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
+            propositionMap = MessagingUtils.updateMapForSurface(surface, inboundPropositionList, propositionMap);
         }
         return propositionMap;
     }
