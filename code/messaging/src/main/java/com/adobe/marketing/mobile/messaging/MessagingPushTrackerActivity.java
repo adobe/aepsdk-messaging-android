@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
 public class MessagingPushTrackerActivity extends Activity {
 
     private static final String SELF_TAG = "MessagingPushTrackerActivity";
+    private static final String DISMISS_ACTION = "Dismiss";
 
     @Override
     protected void onCreate(final @Nullable Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class MessagingPushTrackerActivity extends Activity {
      * @param intent the intent received from the push notification
      */
     private void handlePushDismiss(final Intent intent) {
-        Messaging.handleNotificationResponse(intent, false, null);
+        Messaging.handleNotificationResponse(intent, false, DISMISS_ACTION);
     }
 
     /**

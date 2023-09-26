@@ -1,4 +1,4 @@
-#  MessagingPushPayload Usage
+#  MessagingPushPayload
 This document explains how to use `MessagingPushPayload` class for getting the notification attributes like title, body, actions etc for creating a push notification from a received AJO push payload.
 
 ## Creating the MessagingPushPayload object
@@ -7,7 +7,7 @@ Use the below constructors in the `FirebaseMessagingService` class's `onMessageR
 ### Constructor
 
 ```java
-    public MessagingPushPayload(RemoteMessage message)
+public MessagingPushPayload(RemoteMessage message)
 ```
 
 ```java
@@ -77,8 +77,8 @@ Provides the type of action which needs to be performed when push notification i
     public ActionType getActionType()
 ```
 #### Enum `ActionType`
-There are 5 types of action available. These are used to determine which action needs to be performed when push notification is clicked.
-`DEEPLINK`, `WEBURL`, `DISMISS`, `OPENAPP`, and `NONE`
+There are 4 types of action available. These are used to determine which action needs to be performed when push notification is clicked.
+`DEEPLINK`, `WEBURL`, `OPENAPP`, and `NONE`
 
 ### Get action buttons
 Provides the list of buttons with label, type of action and uri/url.

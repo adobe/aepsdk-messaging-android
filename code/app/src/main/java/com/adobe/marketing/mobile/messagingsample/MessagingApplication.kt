@@ -13,7 +13,8 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.edge.identity.Identity
+import com.adobe.marketing.mobile.Identity
+
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
@@ -23,18 +24,18 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        Messaging.registerExtension()
-        Identity.registerExtension()
-        Edge.registerExtension()
-        Assurance.registerExtension()
-        //Assurance.startSession("YOUR-SESSION-ID")
+        MobileCore.configureWithAppID("")
 
-        MobileCore.start {
-            // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
-            MobileCore.lifecycleStart(null)
+        val extensions = listOf(Analytics.EXTENSION,
+            Identity.EXTENSION,
+            Edge.EXTENSION,
+            Messaging.EXTENSION,
+            Assurance.EXTENSION,
+            com.adobe.marketing.mobile.edge.identity.Identity.EXTENSION,
+            Identity.EXTENSION);
+        MobileCore.registerExtensions(extensions) {
+            // all the extensions are successfully registered
         }
-
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast

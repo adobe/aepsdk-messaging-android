@@ -15,7 +15,7 @@ public enum MessagingEdgeEventType {
     PUSH_APPLICATION_OPENED(4),
     PUSH_CUSTOM_ACTION(5);
 
-    final int value;
+final int value;
 
     MessagingEdgeEventType(final int value) {
         this.value = value;

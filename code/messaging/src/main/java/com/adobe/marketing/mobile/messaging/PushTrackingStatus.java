@@ -11,6 +11,10 @@
 */
 
 package com.adobe.marketing.mobile.messaging;
+
+/**
+ * Enum representing the status of push tracking.
+ */
 public enum PushTrackingStatus {
     /**
      * This status is set when all the required data for tracking is available and when the tracking is initiated.
