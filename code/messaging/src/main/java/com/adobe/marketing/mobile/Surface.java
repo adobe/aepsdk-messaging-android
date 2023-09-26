@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.io.File;
@@ -23,6 +25,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An entity uniquely defined by a URI that can be interacted with.
@@ -32,6 +36,7 @@ public class Surface implements Serializable {
     private static final String SELF_TAG = "Surface";
     private static final String SURFACE_BASE = "mobileapp://";
     private static final String UNKNOWN_SURFACE = "unknown";
+    private static final String URI_KEY = "uri";
     private String uri;
 
     public Surface(final String path) {
@@ -84,12 +89,25 @@ public class Surface implements Serializable {
         return !surface.isValid() ? null : surface;
     }
 
-    public String toEventData() {
-        return this.getUri();
+    public Map<String, Object> toEventData() {
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(URI_KEY, this.uri);
+        return eventData;
     }
 
-    static Surface fromEventData(final String surfaceUri) {
-        return Surface.fromUriString(surfaceUri);
+    public static Surface fromEventData(final Map<String, Object> data) {
+        if (MapUtils.isNullOrEmpty(data) || !data.containsKey(URI_KEY)) {
+            Log.debug(LOG_TAG, SELF_TAG,"Cannot create Surface object, provided data Map is empty or null.");
+            return null;
+        }
+
+        final String uri = DataReader.optString(data, URI_KEY, null);
+        if (StringUtils.isNullOrEmpty(uri)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Cannot create Surface object, provided data does not contain a valid uri.");
+            return null;
+        }
+
+        return Surface.fromUriString(uri);
     }
 
     private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {

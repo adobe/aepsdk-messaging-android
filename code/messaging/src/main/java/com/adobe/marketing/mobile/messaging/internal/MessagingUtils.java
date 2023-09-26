@@ -19,6 +19,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.URI;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
@@ -38,6 +39,7 @@ import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONArray;
@@ -193,18 +195,19 @@ class MessagingUtils {
         if (event == null || event.getEventData() == null) {
             return null;
         }
-        final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+        final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (MessagingUtils.isNullOrEmpty(surfaceUris)) {
+        if (MessagingUtils.isNullOrEmpty(surfaces)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 
-        final List<Surface> surfaces = new ArrayList<>();
-        for (final String surfaceUri : surfaceUris) {
-            surfaces.add(Surface.fromUriString(surfaceUri));
+        final List<Surface> retrievedSurfaces = new ArrayList<>();
+        for (final Map<String, Object> surfaceData : surfaces) {
+            final Surface surface = Surface.fromEventData(surfaceData);
+            retrievedSurfaces.add(surface);
         }
-        return surfaces;
+        return retrievedSurfaces;
     }
 
     // ========================================================================================

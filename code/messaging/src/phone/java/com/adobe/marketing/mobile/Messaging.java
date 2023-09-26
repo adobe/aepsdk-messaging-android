@@ -218,12 +218,14 @@ public final class Messaging {
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
                     final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
-                    for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                        final Surface surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
-                        final List<Proposition> propositions = new ArrayList<>();
-                        final Proposition proposition = Proposition.fromEventData(propositionData);
-                        propositions.add(proposition);
-                        convertedPropositions.put(surface, propositions);
+                    if (retrievedPropositionData != null && !retrievedPropositionData.isEmpty()) {
+                        for (final Map<String, Object> propositionData : retrievedPropositionData) {
+                            final Surface surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
+                            final List<Proposition> propositions = new ArrayList<>();
+                            final Proposition proposition = Proposition.fromEventData(propositionData);
+                            propositions.add(proposition);
+                            convertedPropositions.put(surface, propositions);
+                        }
                     }
                 }
 
@@ -254,21 +256,21 @@ public final class Messaging {
             return;
         }
 
-        final List<String> validSurfacePaths = new ArrayList<>();
+        final List<Map<String, Object>> validSurfaces = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacePaths.add(surface.toEventData());
+                validSurfaces.add(surface.toEventData());
             }
         }
 
-        if (validSurfacePaths.isEmpty()) {
+        if (validSurfaces.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(GET_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfacePaths);
+        eventData.put(SURFACES, validSurfaces);
 
         final Event getPropositionsEvent = new Event.Builder(GET_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
@@ -305,13 +307,17 @@ public final class Messaging {
                         return;
                     }
 
-                    for (final Surface surface : surfaces) {
-                        for (final Map<String, Object> propositionMap : retrievedPropositions) {
-                            final Proposition proposition = Proposition.fromEventData(propositionMap);
-                            propositions.add(proposition);
-                        }
+                    Surface surface = null;
+                    for (final Map<String, Object> propositionMap : retrievedPropositions) {
+                        final Proposition proposition = Proposition.fromEventData(propositionMap);
+                        surface = Surface.fromUriString(proposition.getScope());
+                        propositions.add(proposition);
+                    }
+
+                    if (surface != null) {
                         requestedPropositions.put(surface, propositions);
                     }
+
                     callback.call(requestedPropositions);
                 } catch (final DataReaderException ignored) {
                     failWithError(callback, AdobeError.UNEXPECTED_ERROR);
@@ -332,21 +338,21 @@ public final class Messaging {
             return;
         }
 
-        final List<String> validSurfacePaths = new ArrayList<>();
+        final List<Map<String, Object>> validSurfaces = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacePaths.add(surface.getUri());
+                validSurfaces.add(surface.toEventData());
             }
         }
 
-        if (validSurfacePaths.isEmpty()) {
+        if (validSurfaces.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfacePaths);
+        eventData.put(SURFACES, validSurfaces);
 
         final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
