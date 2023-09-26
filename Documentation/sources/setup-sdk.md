@@ -20,7 +20,7 @@ public void onCreate() {
 
     MobileCore.registerExtensions(
         Arrays.asList(Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION),
-            o -> Log.d("MainApp", "Adobe Experience Platform Mobile SDK was initialized.")
+            // callback to be notified when the registration is complete
     );
 }
 ```

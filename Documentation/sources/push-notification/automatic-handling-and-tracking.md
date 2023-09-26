@@ -83,19 +83,3 @@ When no custom small icon is specified, the Messaging extension will automatical
 
 ## Notification Actions
 Messaging extension will automatically handle any click behaviour that is configured while [designing the push notification in Adobe Journey Optimizer](https://experienceleague.adobe.com/docs/journey-optimizer/using/push/design-push.html) or Assurance.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
