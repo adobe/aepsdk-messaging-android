@@ -27,7 +27,7 @@ class MessagingApplication : Application() {
         val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
         MobileCore.registerExtensions(extensions) {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
+            MobileCore.configureWithAppID("")
             MobileCore.lifecycleStart(null)
         }
 

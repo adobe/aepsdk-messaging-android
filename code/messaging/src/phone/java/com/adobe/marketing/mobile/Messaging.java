@@ -19,8 +19,8 @@ import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -55,9 +55,8 @@ public final class Messaging {
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
     private static final String GET_PROPOSITIONS_EVENT = "getpropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
-    private static final String SURFACE_BASE = "mobileapp://";
+    private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
-    private static final String ITEMS = "items";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -227,7 +226,10 @@ public final class Messaging {
                         convertedPropositions.put(surface, propositions);
                     }
                 }
-                propositionsResponseHandler.call(convertedPropositions);
+
+                if (!convertedPropositions.isEmpty()) {
+                    propositionsResponseHandler.call(convertedPropositions);
+                }
             });
         } else {
             isPropositionsResponseListenerRegistered = false;
@@ -255,7 +257,7 @@ public final class Messaging {
         final List<String> validSurfacePaths = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacePaths.add(surface.getUri());
+                validSurfacePaths.add(surface.toEventData());
             }
         }
 
@@ -276,35 +278,44 @@ public final class Messaging {
         MobileCore.dispatchEventWithResponseCallback(getPropositionsEvent, 2000, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
-                callback.call(null);
+                failWithError(callback, adobeError);
             }
 
             @Override
             public void call(final Event event) {
-                final Map<String, Object> eventData = event.getEventData();
-                if (MapUtils.isNullOrEmpty(eventData)) {
-                    callback.call(null);
-                }
-                final List<Proposition> propositions = new ArrayList<>();
-                final HashMap<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
-                for (final Surface surface : surfaces) {
-                    final Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
-                    if (MapUtils.isNullOrEmpty(retrievedPropositions)) {
-                        continue;
+                try {
+                    final Map<String, Object> eventData = event.getEventData();
+                    if (MapUtils.isNullOrEmpty(eventData)) {
+                        failWithError(callback, AdobeError.UNEXPECTED_ERROR);
+                        return;
                     }
 
-                    final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositions, surface.getUri(), Collections.emptyList());
-                    if (propositionMaps == null || propositionMaps.isEmpty()) {
-                        continue;
+                    if (eventData.containsKey(RESPONSE_ERROR)) {
+                        final int errorCode = DataReader.getInt(eventData, RESPONSE_ERROR);
+                        failWithError(callback, convertToAdobeError(errorCode));
+                        return;
                     }
 
-                    for (final Map<String, Object> propositionMap : propositionMaps) {
-                        final Proposition proposition = Proposition.fromEventData(propositionMap);
-                        propositions.add(proposition);
+                    final List<Proposition> propositions = new ArrayList<>();
+                    final HashMap<Surface, List<Proposition>> requestedPropositions = new HashMap<>();
+
+                    final List<Map<String, Object>> retrievedPropositions = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
+                    if (retrievedPropositions == null || retrievedPropositions.isEmpty()) {
+                        failWithError(callback, AdobeError.UNEXPECTED_ERROR);
+                        return;
                     }
-                    cachedPropositions.put(surface, propositions);
+
+                    for (final Surface surface : surfaces) {
+                        for (final Map<String, Object> propositionMap : retrievedPropositions) {
+                            final Proposition proposition = Proposition.fromEventData(propositionMap);
+                            propositions.add(proposition);
+                        }
+                        requestedPropositions.put(surface, propositions);
+                    }
+                    callback.call(requestedPropositions);
+                } catch (final DataReaderException ignored) {
+                    failWithError(callback, AdobeError.UNEXPECTED_ERROR);
                 }
-                callback.call(cachedPropositions);
             }
         });
     }
@@ -345,8 +356,46 @@ public final class Messaging {
         MobileCore.dispatchEvent(updatePropositionsEvent);
     }
 
-    private static String getAppSurface() {
-        final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
-        return StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + packageName;
+    /**
+     * Invokes fail method with the provided {@code error}, if the callback is an instance of {@code AdobeCallbackWithError}.
+     *
+     * @param callback can be an instance of {@link AdobeCallback} or {@link AdobeCallbackWithError}.
+     * @param error {@link AdobeError} indicating the error name and code.
+     */
+    private static void failWithError(final AdobeCallback<?> callback, final AdobeError error) {
+
+        final AdobeCallbackWithError<?> callbackWithError = callback instanceof AdobeCallbackWithError ?
+                (AdobeCallbackWithError<?>) callback : null;
+
+        if (callbackWithError != null) {
+            callbackWithError.fail(error);
+        }
+    }
+
+    /**
+     * Determines the {@code AdobeError} provided the error code.
+     *
+     * @return {@link AdobeError} corresponding to the given error code, or {@link AdobeError#UNEXPECTED_ERROR} otherwise.
+     */
+    @SuppressWarnings("magicnumber")
+    private static AdobeError convertToAdobeError(final int errorCode) {
+        final AdobeError error;
+        switch (errorCode) {
+            case 0:
+                error = AdobeError.UNEXPECTED_ERROR;
+                break;
+            case 1:
+                error = AdobeError.CALLBACK_TIMEOUT;
+                break;
+            case 2:
+                error = AdobeError.CALLBACK_NULL;
+                break;
+            case 11:
+                error = AdobeError.EXTENSION_NOT_INITIALIZED;
+                break;
+            default:
+                error = AdobeError.UNEXPECTED_ERROR;
+        }
+        return error;
     }
 }

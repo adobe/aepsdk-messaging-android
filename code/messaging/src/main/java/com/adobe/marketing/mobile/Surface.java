@@ -84,6 +84,14 @@ public class Surface implements Serializable {
         return !surface.isValid() ? null : surface;
     }
 
+    public String toEventData() {
+        return this.getUri();
+    }
+
+    static Surface fromEventData(final String surfaceUri) {
+        return Surface.fromUriString(surfaceUri);
+    }
+
     private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {
         uri = objectInputStream.readUTF();
     }

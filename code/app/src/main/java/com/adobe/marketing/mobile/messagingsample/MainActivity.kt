@@ -276,12 +276,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        // fetch message feed and code based experiences
-        val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/cbeoffers3"))
-        surfaceList.add(Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/feeds/apifeed"))
-        Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
     private fun setupButtonClickListeners() {
@@ -321,6 +315,11 @@ class MainActivity : ComponentActivity() {
         btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
+
+        // fetch code based experiences
+        val surfaceList = mutableListOf<Surface>()
+        surfaceList.add(Surface("codeBasedPath"))
+        Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
     private fun setupSwitchListeners() {

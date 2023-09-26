@@ -28,7 +28,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         // retrieve any cached code based experiences
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/cbeoffers3")
+        val surface = Surface("codeBasedPath")
         surfaces.add(surface)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")

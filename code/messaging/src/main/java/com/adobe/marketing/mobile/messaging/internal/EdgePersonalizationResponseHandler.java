@@ -241,15 +241,13 @@ class EdgePersonalizationResponseHandler {
 
         // dispatch an event with the cached feed propositions
         final Map<String, Object> eventData = new HashMap<>();
-        final Map<String, Object> requestedPropositionsMap = new HashMap<>();
+        final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
         for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositions.entrySet()) {
-            final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
             for (final Proposition proposition : propositionEntry.getValue()) {
                 convertedPropositions.add(proposition.toEventData());
             }
-            requestedPropositionsMap.put(propositionEntry.getKey().getUri(), convertedPropositions);
         }
-        eventData.put(PROPOSITIONS, requestedPropositionsMap);
+        eventData.put(PROPOSITIONS, convertedPropositions);
 
         final Event responseEvent = new Event.Builder(MESSAGE_PROPOSITIONS_RESPONSE,
                 EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
@@ -379,7 +377,11 @@ class EdgePersonalizationResponseHandler {
                 propositionMap.put(surface, propositionsList);
             }
 
-            final List<Inbound> inboundList = inboundMessages.get(surface);
+            List<Inbound> inboundList = new ArrayList<>();
+            if (!MapUtils.isNullOrEmpty(inboundMessages)) {
+                inboundList = inboundMessages.get(surface);
+            }
+
             if (MessagingUtils.isNullOrEmpty(inboundList)) {
                 continue;
             }
@@ -557,8 +559,12 @@ class EdgePersonalizationResponseHandler {
      */
     private void clearSurfaces(final List<Surface> surfaces) {
         for (final Surface surface : surfaces) {
-            propositions.remove(surface);
-            inboundMessages.remove(surface);
+            if (!MapUtils.isNullOrEmpty(propositions)) {
+                propositions.remove(surface);
+            }
+            if (!MapUtils.isNullOrEmpty(inboundMessages)) {
+                inboundMessages.remove(surface);
+            }
             final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>(propositionInfo);
             for (final Map.Entry<String, PropositionInfo> entry : tempPropositionInfo.entrySet()) {
                 if (entry.getValue().scope.equals(surface.getUri())) {
@@ -579,6 +585,10 @@ class EdgePersonalizationResponseHandler {
     private void removeCachedPropositions(final List<Surface> surfaces) {
         if (messagingCacheUtilities.arePropositionsCached()) {
             final Map<Surface, List<Proposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+            if (MapUtils.isNullOrEmpty(cachedPropositions)) {
+                return;
+            }
+
             for (final Surface surface : surfaces) {
                 cachedPropositions.remove(surface);
             }
