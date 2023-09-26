@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.CACHE_BASE_DIR;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
@@ -33,6 +34,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Proposition;
 import com.adobe.marketing.mobile.Surface;
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
@@ -47,6 +49,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -148,6 +151,21 @@ class MessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is an edge personalization complete event.
+     *
+     * @param event An Edge Personalization Complete {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an edge personalization complete event.
+     */
+    static boolean isPersonalizationRequestCompleteEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.EDGE.equalsIgnoreCase(event.getType()) &&
+                EventSource.CONTENT_COMPLETE.equalsIgnoreCase(event.getSource());
+    }
+
+    /**
      * Determines if the passed in {@code Event} is an update propositions event.
      *
      * @param event A Messaging Request Content {@link Event}.
@@ -208,17 +226,27 @@ class MessagingUtils {
     }
 
     // ========================================================================================
-    // Request event id retrieval
+    // Event id retrieval
     // ========================================================================================
 
     /**
      * Retrieves the request event id {@code String} from the passed in {@code Event}'s event data.
      *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
+     * @return {@code String} containing the request event id
      */
     static String getRequestEventId(final Event event) {
         return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+    }
+
+    /**
+     * Retrieves the ending event id {@code String} from the passed in {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code String} containing the ending event id
+     */
+    static String getEndingEventId(final Event event) {
+        return DataReader.optString(event.getEventData(), ENDING_EVENT_ID, null);
     }
 
     // ========================================================================================
@@ -343,17 +371,27 @@ class MessagingUtils {
     }
 
     /**
-     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     * Returns a mutable {@code List<?>} list containing a single element.
      *
-     * @param proposition A {@link Proposition} to be added to the mutable list
-     * @return the mutable {@link List<Proposition>} list
+     * @param element A {@link Object} to be added to the mutable list
+     * @return the mutable {@link List<?>} list
      */
-    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
-        return new ArrayList<Proposition>() {
+    static List<?> createMutableList(final Object element) {
+        return new ArrayList<Object>() {
             {
-                add(proposition);
+                add(element);
             }
         };
+    }
+
+    /**
+     * Returns a mutable {@code List<?>} list containing a single element.
+     *
+     * @param list A {@link List<?>} to be converted to a mutable list
+     * @return the mutable {@link List<?>} list
+     */
+    static List<?> createMutableList(final List<?> list) {
+        return new ArrayList<>(list);
     }
 
     /**
@@ -365,4 +403,66 @@ class MessagingUtils {
     static List<Proposition> createMutablePropositionList(final List<Proposition> propositions) {
         return new ArrayList<>(propositions);
     }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code Proposition} objects.
+     *
+     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
+     * @param proposition     A {@link Proposition} value to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param propositionsMap The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
+     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
+     */
+    static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, final Map<Surface, List<Proposition>> propositionsMap) {
+        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
+        final List<Proposition> propositionList = tempPropositionsMap.get(surface) != null ? tempPropositionsMap.get(surface) : (List<Proposition>) createMutableList(proposition);
+        if (tempPropositionsMap.get(surface) == null) {
+            tempPropositionsMap.put(surface, propositionList);
+        } else {
+            tempPropositionsMap.get(surface).add(proposition);
+        }
+        return tempPropositionsMap;
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code List<Proposition>} objects.
+     *
+     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
+     * @param newPropositions A {@link List<Proposition>} to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param propositionsMap The {@link Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
+     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
+     */
+    static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> newPropositions, final Map<Surface, List<Proposition>> propositionsMap) {
+        if (MessagingUtils.isNullOrEmpty(newPropositions)) {
+            return propositionsMap;
+        }
+
+        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
+        final List<Proposition> propositionList = tempPropositionsMap.get(surface) != null ? tempPropositionsMap.get(surface) : (List<Proposition>) createMutableList(newPropositions);
+        if (tempPropositionsMap.get(surface) == null) {
+            tempPropositionsMap.put(surface, propositionList);
+        } else {
+            tempPropositionsMap.get(surface).addAll(newPropositions);
+        }
+        return tempPropositionsMap;
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<LaunchRule>>} rule map with the provided {@code Surface} and {@code LaunchRule} objects.
+     *
+     * @param surface         A {@link Surface} key used to update a {@link List<LaunchRule>} value in the provided {@link Map<Surface, List<LaunchRule>>}
+     * @param rules     A {@link List<LaunchRule>} list to add in the provided {@code Map<Surface, List<LaunchRule>>}
+     * @param ruleMap The {@code Map<Surface, List<LaunchRule>>} to be updated with the provided {@code Surface} and {@code List<LaunchRule>} objects
+     * @return the updated {@link Map<Surface, List<LaunchRule>>} rule maps
+     */
+    static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(final Surface surface, final List<LaunchRule> rules, final Map<Surface, List<LaunchRule>> ruleMap) {
+        final Map<Surface, List<LaunchRule>> tempRulesMap = new HashMap<>(ruleMap);
+        final List<LaunchRule> ruleList = tempRulesMap.get(surface) != null ? tempRulesMap.get(surface) : (List<LaunchRule>) MessagingUtils.createMutableList(rules);
+        if (tempRulesMap.get(surface) == null) {
+            tempRulesMap.put(surface, ruleList);
+        } else {
+            tempRulesMap.get(surface).addAll(ruleList);
+        }
+        return tempRulesMap;
+    }
+
 }

@@ -163,6 +163,7 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
         getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
+        getApi().registerEventListener(EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
     }
 
     @Override
@@ -183,7 +184,7 @@ public final class MessagingExtension extends Extension {
 
         // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchMessages(event, null);
             initialMessageFetchComplete = true;
         }
 
@@ -268,11 +269,11 @@ public final class MessagingExtension extends Extension {
         // validate refresh messages event then fetch in-app messages via an Edge extension event
         if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(null);
+            edgePersonalizationResponseHandler.fetchMessages(eventToProcess, null);
         } else if (MessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
             // validate update propositions event then retrieve propositions via an Edge extension event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to retrieve propositions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
+            edgePersonalizationResponseHandler.fetchMessages(eventToProcess, MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // validate get propositions event then retrieve cached feed content and return them in a response event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached feed content.");
@@ -293,6 +294,9 @@ public final class MessagingExtension extends Extension {
         } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(eventToProcess);
+        } else if (MessagingUtils.isPersonalizationRequestCompleteEvent(eventToProcess)) {
+            // validate the personalization request complete event then process the personalization request data
+            edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
         }
     }
 
