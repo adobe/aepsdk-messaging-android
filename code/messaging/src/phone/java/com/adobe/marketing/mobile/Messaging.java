@@ -16,6 +16,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
@@ -210,12 +211,13 @@ public final class Messaging {
      *
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing the {@link Surface}s and the corresponding list of {@link Proposition} objects.
      */
+    @VisibleForTesting
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
             isPropositionsResponseListenerRegistered = true;
             MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION, event -> {
-                final Map<Surface, List<Proposition>> convertedPropositions = new HashMap<>();
+                Map<Surface, List<Proposition>> convertedPropositionsMap = new HashMap<>();
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
                     final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
@@ -227,12 +229,12 @@ public final class Messaging {
                             final Proposition proposition = Proposition.fromEventData(propositionData);
                             propositions.add(proposition);
                         }
-                        convertedPropositions.put(surface, propositions);
+                        convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, propositions, convertedPropositionsMap);
                     }
                 }
 
-                if (!convertedPropositions.isEmpty()) {
-                    propositionsResponseHandler.call(convertedPropositions);
+                if (!convertedPropositionsMap.isEmpty()) {
+                    propositionsResponseHandler.call(convertedPropositionsMap);
                 }
             });
         } else {
@@ -300,30 +302,22 @@ public final class Messaging {
                         return;
                     }
 
-                    final HashMap<Surface, List<Proposition>> requestedPropositions = new HashMap<>();
-
+                    Map<Surface, List<Proposition>> requestedPropositionsMap = new HashMap<>();
                     final List<Map<String, Object>> retrievedPropositions = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
                     if (retrievedPropositions == null || retrievedPropositions.isEmpty()) {
                         failWithError(callback, AdobeError.UNEXPECTED_ERROR);
                         return;
                     }
 
-                    Map<Surface, List<Proposition>> propositions = new HashMap<>();
-                    Surface surface = null;
                     for (final Map<String, Object> propositionMap : retrievedPropositions) {
-
                         final Proposition proposition = Proposition.fromEventData(propositionMap);
                         if (proposition != null) {
-                            surface = Surface.fromUriString(proposition.getScope());
-                            propositions = MessagingUtils.updateMapForSurface(surface, proposition, propositions);
+                            final Surface surface = Surface.fromUriString(proposition.getScope());
+                            requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, proposition, requestedPropositionsMap);
                         }
                     }
 
-                    if (surface != null) {
-                        requestedPropositions.put(surface, propositions.get(surface));
-                    }
-
-                    callback.call(requestedPropositions);
+                    callback.call(requestedPropositionsMap);
                 } catch (final DataReaderException ignored) {
                     failWithError(callback, AdobeError.UNEXPECTED_ERROR);
                 }

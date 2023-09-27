@@ -400,7 +400,7 @@ class EdgePersonalizationResponseHandler {
                 final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
                 inboundPropositionList.add(proposition);
             }
-            propositionMap = MessagingUtils.updateMapForSurface(surface, inboundPropositionList, propositionMap);
+            propositionMap = MessagingUtils.updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
         }
         return propositionMap;
     }
@@ -453,7 +453,7 @@ class EdgePersonalizationResponseHandler {
                 // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                 if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                    tempPropositions = MessagingUtils.updateMapForSurface(surface, proposition, tempPropositions);
+                    tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                     continue;
                 }
 
@@ -476,12 +476,12 @@ class EdgePersonalizationResponseHandler {
 
                     final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
                     if (isInAppConsequence) {
-                        inAppPropositions = MessagingUtils.updateMapForSurface(surface, proposition, inAppPropositions);
+                        inAppPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, inAppPropositions);
                         // cache any in-app image assets present in the current rule json's image assets array
                         cacheImageAssetsFromPayload(consequence);
                     } else {
                         if (!MessagingUtils.isFeedItem(consequence)) {
-                            tempPropositions = MessagingUtils.updateMapForSurface(surface, proposition, tempPropositions);
+                            tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                         }
                     }
 
