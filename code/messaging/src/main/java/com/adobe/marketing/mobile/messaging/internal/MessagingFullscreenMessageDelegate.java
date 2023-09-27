@@ -156,7 +156,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
     }
 
     @Override
-    public void onBackPressed(FullscreenMessage fullscreenMessage) {
+    public void onBackPressed(final FullscreenMessage fullscreenMessage) {
         final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
         if (message != null) {
             message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);

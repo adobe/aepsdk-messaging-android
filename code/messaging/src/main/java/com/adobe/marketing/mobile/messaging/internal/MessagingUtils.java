@@ -21,6 +21,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.S
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 import com.adobe.marketing.mobile.*;
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -28,6 +29,7 @@ import com.adobe.marketing.mobile.util.MapUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -175,6 +177,24 @@ class MessagingUtils {
      */
     static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final ExtensionApi extensionApi) {
         sendEvent(eventName, eventType, eventSource, data, null, extensionApi);
+    }
+
+    /**
+     * Sends a tracking status response event with the given parameters.
+     *
+     * @param status a {@link PushTrackingStatus} containing the status of the tracking request
+     * @param extensionApi {@link ExtensionApi} to use for dispatching the event
+     * @param requestEvent {@link Event} to be used as the request event
+     */
+    static void sendTrackingResponseEvent(final PushTrackingStatus status, final ExtensionApi extensionApi, final Event requestEvent) {
+        final Map<String, Object> responseEventData = new HashMap<>();
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_STATUS, status.getValue());
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_MESSAGE, status.getDescription());
+        final Event event = new Event.Builder(MessagingConstants.EventName.PUSH_TRACKING_STATUS_EVENT , EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(responseEventData)
+                .inResponseToEvent(requestEvent)
+                .build();
+        extensionApi.dispatch(event);
     }
 
     // ========================================================================================

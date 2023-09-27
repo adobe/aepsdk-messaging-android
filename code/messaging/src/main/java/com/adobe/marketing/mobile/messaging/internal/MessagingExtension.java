@@ -14,10 +14,13 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EXTENSION_VERSION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
@@ -29,6 +32,9 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.ECID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.JsonValues.FCM;
@@ -42,29 +48,29 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.T
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.META;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.MIXINS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.TrackingKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
+import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.SharedStateResolution;
+import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.*;
-import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.EventSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -107,7 +113,7 @@ public final class MessagingExtension extends Extension {
     @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final InAppNotificationHandler inAppNotificationHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(extensionApi);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
         this.inAppNotificationHandler = inAppNotificationHandler != null ? inAppNotificationHandler : new InAppNotificationHandler(this, extensionApi, this.messagingRulesEngine);
     }
 
@@ -153,6 +159,7 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT, this::processEvent);
         getApi().registerEventListener(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, this::processEvent);
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
+        getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
     }
 
     @Override
@@ -184,36 +191,41 @@ public final class MessagingExtension extends Extension {
 
     //region Event listeners
 
+    /**
+     * Processes all events dispatched to the {@code EventHub} to determine if any rules are matched.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
     void handleWildcardEvents(final Event event) {
-        // handling mock rules delivered from the assurance ui
-        final String eventName = event.getName();
-        if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
-            final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
-            if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
-                final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
-                final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
-                final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-                inAppNotificationHandler.createInAppMessage(new RuleConsequence(id, type, detail));
-            }
+        messagingRulesEngine.processEvent(event);
+    }
+
+    /**
+     * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
+     * The {@link InAppNotificationHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * created from the triggered rule consequence payload.
+     *
+     * @param event incoming {@link Event} object to be processed
+     */
+    void handleRuleEngineResponseEvents(final Event event) {
+        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequences found. Will not handle rules response event.");
             return;
         }
 
-        List<LaunchRule> triggeredRules = messagingRulesEngine.process(event);
-        final List<RuleConsequence> consequences = new ArrayList<>();
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+        final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
-        if (triggeredRules == null || triggeredRules.isEmpty()) {
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequence details found. Will not handle rules response event.");
             return;
         }
 
-        for (final LaunchRule rule : triggeredRules) {
-            consequences.addAll(rule.getConsequenceList());
-        }
-
-        if (consequences.isEmpty()) {
-            return;
-        }
-
-        inAppNotificationHandler.createInAppMessage(consequences.get(0));
+        inAppNotificationHandler.createInAppMessage(new RuleConsequence(id, type, detail));
     }
 
     //endregion
@@ -239,9 +251,9 @@ public final class MessagingExtension extends Extension {
             handlePushToken(eventToProcess);
         } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // Need experience event dataset id for sending the push token
-            final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
-            final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
+            final String experienceEventDatasetId = getPushTrackingDatasetId(eventToProcess);
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
+                MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),eventToProcess);
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
@@ -286,10 +298,18 @@ public final class MessagingExtension extends Extension {
                 getApi());
     }
 
-    void handleTrackingInfo(final Event event, final String datasetId) {
+    /**
+     * Handles the push tracking information from the messaging request content event.
+     * <p>
+     *   The push tracking information is sent to the platform via configured dataset.
+     * @param event {@link Event} containing the push tracking information
+     * @param datasetId A valid {@link String} containing the dataset id
+     */
+    private void handleTrackingInfo(@NonNull final Event event, @NonNull final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventData is null.");
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
             return;
         }
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
@@ -297,13 +317,15 @@ public final class MessagingExtension extends Extension {
         final boolean isApplicationOpened = DataReader.optBoolean(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
         final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
-        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
+        if (StringUtils.isNullOrEmpty(eventType)) {
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
             return;
         }
 
-        if (StringUtils.isNullOrEmpty(datasetId)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
             return;
         }
 
@@ -325,6 +347,8 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> xdmData = new HashMap<>();
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
+
+        MessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.TRACKING_INITIATED, getApi(), event);
 
         // dispatch push tracking event
         MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
@@ -537,6 +561,11 @@ public final class MessagingExtension extends Extension {
         } catch (final JSONException | ClassCastException e) {
             Log.warning(LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe data is malformed : %s", e.getMessage());
         }
+    }
+
+    private String getPushTrackingDatasetId(final Event event) {
+        final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
+        return DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
     }
 
     private boolean hasValidSharedState(final String extensionName, final Event event) {
