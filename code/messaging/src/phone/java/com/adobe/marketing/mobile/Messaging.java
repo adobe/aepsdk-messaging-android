@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -219,13 +220,14 @@ public final class Messaging {
                 if (!MapUtils.isNullOrEmpty(eventData)) {
                     final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
                     if (retrievedPropositionData != null && !retrievedPropositionData.isEmpty()) {
+                        Surface surface = null;
+                        final List<Proposition> propositions = new ArrayList<>();
                         for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                            final Surface surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
-                            final List<Proposition> propositions = new ArrayList<>();
+                            surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
                             final Proposition proposition = Proposition.fromEventData(propositionData);
                             propositions.add(proposition);
-                            convertedPropositions.put(surface, propositions);
                         }
+                        convertedPropositions.put(surface, propositions);
                     }
                 }
 
@@ -256,21 +258,21 @@ public final class Messaging {
             return;
         }
 
-        final List<Map<String, Object>> validSurfaces = new ArrayList<>();
+        final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfaces.add(surface.toEventData());
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 
-        if (validSurfaces.isEmpty()) {
+        if (validSurfacesFlattened.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(GET_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfaces);
+        eventData.put(SURFACES, validSurfacesFlattened);
 
         final Event getPropositionsEvent = new Event.Builder(GET_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
@@ -298,7 +300,6 @@ public final class Messaging {
                         return;
                     }
 
-                    final List<Proposition> propositions = new ArrayList<>();
                     final HashMap<Surface, List<Proposition>> requestedPropositions = new HashMap<>();
 
                     final List<Map<String, Object>> retrievedPropositions = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
@@ -307,15 +308,19 @@ public final class Messaging {
                         return;
                     }
 
+                    Map<Surface, List<Proposition>> propositions = new HashMap<>();
                     Surface surface = null;
                     for (final Map<String, Object> propositionMap : retrievedPropositions) {
+
                         final Proposition proposition = Proposition.fromEventData(propositionMap);
-                        surface = Surface.fromUriString(proposition.getScope());
-                        propositions.add(proposition);
+                        if (proposition != null) {
+                            surface = Surface.fromUriString(proposition.getScope());
+                            propositions = MessagingUtils.updateMapForSurface(surface, proposition, propositions);
+                        }
                     }
 
                     if (surface != null) {
-                        requestedPropositions.put(surface, propositions);
+                        requestedPropositions.put(surface, propositions.get(surface));
                     }
 
                     callback.call(requestedPropositions);
@@ -338,21 +343,21 @@ public final class Messaging {
             return;
         }
 
-        final List<Map<String, Object>> validSurfaces = new ArrayList<>();
+        final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfaces.add(surface.toEventData());
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 
-        if (validSurfaces.isEmpty()) {
+        if (validSurfacesFlattened.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfaces);
+        eventData.put(SURFACES, validSurfacesFlattened);
 
         final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)

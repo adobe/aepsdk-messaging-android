@@ -400,7 +400,7 @@ class EdgePersonalizationResponseHandler {
                 final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
                 inboundPropositionList.add(proposition);
             }
-            propositionMap = updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
+            propositionMap = MessagingUtils.updateMapForSurface(surface, inboundPropositionList, propositionMap);
         }
         return propositionMap;
     }
@@ -453,7 +453,7 @@ class EdgePersonalizationResponseHandler {
                 // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                 if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                    tempPropositions = updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                    tempPropositions = MessagingUtils.updateMapForSurface(surface, proposition, tempPropositions);
                     continue;
                 }
 
@@ -476,12 +476,12 @@ class EdgePersonalizationResponseHandler {
 
                     final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
                     if (isInAppConsequence) {
-                        inAppPropositions = updatePropositionMapForSurface(surface, proposition, inAppPropositions);
+                        inAppPropositions = MessagingUtils.updateMapForSurface(surface, proposition, inAppPropositions);
                         // cache any in-app image assets present in the current rule json's image assets array
                         cacheImageAssetsFromPayload(consequence);
                     } else {
                         if (!MessagingUtils.isFeedItem(consequence)) {
-                            tempPropositions = updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                            tempPropositions = MessagingUtils.updateMapForSurface(surface, proposition, tempPropositions);
                         }
                     }
 
@@ -508,48 +508,6 @@ class EdgePersonalizationResponseHandler {
         }
 
         return rules;
-    }
-
-    /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code Proposition} objects.
-     *
-     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param proposition     A {@link Proposition} value to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param propositionsMap The {@link Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
-     */
-    private Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, final Map<Surface, List<Proposition>> propositionsMap) {
-        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
-        final List<Proposition> propositionList = propositions.get(surface) != null ? propositions.get(surface) : MessagingUtils.createMutablePropositionList(proposition);
-        if (tempPropositionsMap.get(surface) == null) {
-            tempPropositionsMap.put(surface, propositionList);
-        } else {
-            tempPropositionsMap.get(surface).add(proposition);
-        }
-        return tempPropositionsMap;
-    }
-
-    /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code List<Proposition>} objects.
-     *
-     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param newPropositions A {@link List<Proposition>} to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param propositionsMap The {@link Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
-     */
-    private Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> newPropositions, final Map<Surface, List<Proposition>> propositionsMap) {
-        if (MessagingUtils.isNullOrEmpty(newPropositions)) {
-            return propositionsMap;
-        }
-
-        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
-        final List<Proposition> propositionList = propositions.get(surface) != null ? propositions.get(surface) : MessagingUtils.createMutablePropositionList(newPropositions);
-        if (tempPropositionsMap.get(surface) == null) {
-            tempPropositionsMap.put(surface, propositionList);
-        } else {
-            tempPropositionsMap.get(surface).addAll(newPropositions);
-        }
-        return tempPropositionsMap;
     }
 
     /**

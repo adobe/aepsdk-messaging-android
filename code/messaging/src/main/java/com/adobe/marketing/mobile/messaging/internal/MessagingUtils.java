@@ -19,7 +19,6 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.URI;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
@@ -39,7 +38,6 @@ import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONArray;
@@ -49,10 +47,11 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MessagingUtils {
+public class MessagingUtils {
     private final static String SELF_TAG = "MessagingUtils";
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
@@ -195,7 +194,8 @@ class MessagingUtils {
         if (event == null || event.getEventData() == null) {
             return null;
         }
-        final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+        final Map<String, Object> eventData = event.getEventData();
+        final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
@@ -346,26 +346,70 @@ class MessagingUtils {
     }
 
     /**
-     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     * Returns a mutable {@code List<T>} list containing a single element.
      *
-     * @param proposition A {@link Proposition} to be added to the mutable list
-     * @return the mutable {@link List<Proposition>} list
+     * @param element A {@link T} to be added to the mutable list
+     * @return the mutable {@link List<T>} list
      */
-    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
-        return new ArrayList<Proposition>() {
+    public static <T> List<T> createMutableList(final T element) {
+        return new ArrayList<T>() {
             {
-                add(proposition);
+                add(element);
             }
         };
     }
 
     /**
-     * Returns a mutable {@code List<Proposition>} list containing the contents of the passed in {@code List<Proposition>}.
+     * Returns a mutable {@code List<T>} list containing a single element.
      *
-     * @param propositions A {@link List<Proposition>} to convert to a mutable list
-     * @return the mutable {@link List<Proposition>} list
+     * @param list A {@link List<T>} to be converted to a mutable list
+     * @return the mutable {@link List<T>} list
      */
-    static List<Proposition> createMutablePropositionList(final List<Proposition> propositions) {
-        return new ArrayList<>(propositions);
+    public static <T> List<T> createMutableList(final List<T> list) {
+        return new ArrayList<>(list);
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<T>>} with the provided {@code Surface} and {@code List<T>} objects.
+     *
+     * @param surface     A {@link Surface} key used to update a {@link List<T>} in the provided {@link Map<Surface, List<T>>}
+     * @param listToAdd   A {@link List<T>} list to add in the provided {@code Map<Surface, List<T>>}
+     * @param mapToUpdate The {@code Map<Surface, List<T>>} to be updated with the provided {@code Surface} and {@code List<T>} objects
+     * @return the updated {@link Map<Surface, List<T>>} map
+     */
+    public static <T> Map<Surface, List<T>> updateMapForSurface(final Surface surface, final List<T> listToAdd, Map<Surface, List<T>> mapToUpdate) {
+        if (isNullOrEmpty(listToAdd)) {
+            return mapToUpdate;
+        }
+        final Map<Surface, List<T>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<T> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(listToAdd);
+        if (updatedMap.get(surface) == null) {
+            updatedMap.put(surface, list);
+        } else {
+            updatedMap.get(surface).addAll(listToAdd);
+        }
+        return updatedMap;
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<T>>} map with the provided {@code Surface} and {@code List<T>} objects.
+     *
+     * @param surface     A {@link Surface} key used to update a {@link T} value in the provided {@link Map<Surface, List<T>>}
+     * @param element     A {@link T} element to add in the provided {@code Map<Surface, List<T>>}
+     * @param mapToUpdate The {@code Map<Surface, List<T>>} to be updated with the provided {@code Surface} and {@code List<T>} objects
+     * @return the updated {@link Map<Surface, List<T>>} map
+     */
+    public static <T> Map<Surface, List<T>> updateMapForSurface(final Surface surface, final T element, Map<Surface, List<T>> mapToUpdate) {
+        if (element == null) {
+            return mapToUpdate;
+        }
+        final Map<Surface, List<T>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<T> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(element);
+        if (updatedMap.get(surface) == null) {
+            updatedMap.put(surface, list);
+        } else {
+            updatedMap.get(surface).add(element);
+        }
+        return updatedMap;
     }
 }
