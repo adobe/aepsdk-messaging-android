@@ -7,7 +7,7 @@ Use the below constructors in the `FirebaseMessagingService` class's `onMessageR
 ### Constructor
 
 ```java
-public MessagingPushPayload(RemoteMessage message)
+    public MessagingPushPayload(RemoteMessage message)
 ```
 
 ```java
