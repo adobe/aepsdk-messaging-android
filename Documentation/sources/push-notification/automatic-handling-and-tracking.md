@@ -32,7 +32,7 @@ public class YourApp extends Application {
 #### Register Messaging extension's FirebaseMessagingService
 
 > **_NOTE:_** 
- If your application already registered a FirebaseMessagingService class, then you can skip this step and move to [Using your own FirebaseMessagingService](#using-your-own-firebasemessagingservice) section.
+ If your application already registered a `FirebaseMessagingService` class, then you can skip this step and move to the [Using your own FirebaseMessagingService](#using-your-own-firebasemessagingservice) section.
 
 Messaging extension uses `MessagingService` to receive, display and track push notifications. To register the `MessagingService` add the following code to the `AndroidManifest.xml` file:
 
@@ -49,7 +49,7 @@ Messaging extension uses `MessagingService` to receive, display and track push n
 
 #### Using your own FirebaseMessagingService
 
-If your application already registered a FirebaseMessagingService class, then you can use the following API to display and track push notifications originated from Adobe Journey Optimizer.
+If your application already registered a `FirebaseMessagingService` class, then you can use the following API to display and track push notifications originated from Adobe Journey Optimizer.
 
 ```java
 public class YourAppFirebaseMessagingService extends FirebaseMessagingService {

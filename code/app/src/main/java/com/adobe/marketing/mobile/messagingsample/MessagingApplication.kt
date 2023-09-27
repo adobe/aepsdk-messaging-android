@@ -13,7 +13,7 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.Identity
+import com.adobe.marketing.mobile.edge.identity.Identity
 
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -26,12 +26,10 @@ class MessagingApplication : Application() {
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
         MobileCore.configureWithAppID("")
 
-        val extensions = listOf(Analytics.EXTENSION,
-            Identity.EXTENSION,
+        val extensions = listOf(
             Edge.EXTENSION,
             Messaging.EXTENSION,
             Assurance.EXTENSION,
-            com.adobe.marketing.mobile.edge.identity.Identity.EXTENSION,
             Identity.EXTENSION);
         MobileCore.registerExtensions(extensions) {
             // all the extensions are successfully registered

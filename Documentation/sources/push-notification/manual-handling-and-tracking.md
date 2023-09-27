@@ -1,7 +1,7 @@
 # Manual display and tracking of push notification
 
 ## Overview
-This document provides instructions on understanding notification from Adobe Journey Optimizer and subsequently building, displaying, and monitoring push notifications manually with the AEPMessaging extension.
+This document describes how to manually build, display and track push notifications from Adobe Journey Optimizer using the AEPMessaging extension. We highly recommend to use the [automatic display and tracking](./automatic-handling-and-tracking.md) method unless you have a specific requirement to manually display and track push notifications.
 
 ## Sync the push token
 
@@ -27,7 +27,7 @@ public class YourApp extends Application {
 }
 ```
 
-## Buidling and displaying notification
+## Building and displaying notification
 
 1. In `onMessageReceived` method of `YourAppFirebaseMessagingService` class, create a `MessagingPushPayload` object from the remoteMessage. `MessagingPushPayload` will unpack the remoteMessage and provide APIs for getting attributes used for creating the push notification.
 

@@ -24,8 +24,10 @@ class NotificationService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        if (!MessagingService.handleRemoteMessage(this, message)) {
-            // Handle messages from other services here
+        if (MessagingService.handleRemoteMessage(this, message)) {
+            // Messaging extension has handled the notification
+        } else {
+            // Handle notification from other sources
         }
     }
 
