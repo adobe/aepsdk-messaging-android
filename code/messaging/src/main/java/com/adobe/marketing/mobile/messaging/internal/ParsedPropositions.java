@@ -59,7 +59,7 @@ class ParsedPropositions {
                 }
 
                 if (!found) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "processPropositions - Ignoring proposition where scope (%s) does not match one of the expected surfaces (%s).", scope, requestedSurfaces.toString());
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring proposition where scope (%s) does not match one of the expected surfaces (%s).", scope, requestedSurfaces.toString());
                     continue;
                 }
 
@@ -112,7 +112,7 @@ class ParsedPropositions {
 
     private void mergeRules(final List<LaunchRule> rules, final Surface surface, final InboundType inboundType) {
         // get rules we may already have for this inboundType
-        Map<Surface, List<LaunchRule>> tempRulesByInboundType = surfaceRulesByInboundType.get(inboundType) != null ? surfaceRulesByInboundType.get(inboundType) : Collections.EMPTY_MAP;
+        Map<Surface, List<LaunchRule>> tempRulesByInboundType = surfaceRulesByInboundType.get(inboundType) != null ? surfaceRulesByInboundType.get(inboundType) : new HashMap<>();
 
         // combine rules with existing
         tempRulesByInboundType = MessagingUtils.updateMapForSurface(surface, rules, tempRulesByInboundType);

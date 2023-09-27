@@ -390,7 +390,7 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        // loop through propositions for this event and add them to existing props by surface
+        // loop through propositions for this event and add them to existing proposition map by surface
         for (final Proposition proposition : propositions) {
             final Surface surface = Surface.fromUriString(proposition.getScope());
             inProgressPropositions = MessagingUtils.updateMapForSurface(surface, proposition, inProgressPropositions);
