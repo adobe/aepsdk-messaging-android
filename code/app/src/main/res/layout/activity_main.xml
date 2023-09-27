@@ -51,27 +51,15 @@
         android:text="refresh in app messages" />
 
     <Button
-        android:id="@+id/btnHistoricalEvent1"
+        android:id="@+id/btnCheckFeedMessages"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Historical Event 1" />
+        android:text="Check Feed Messages" />
 
     <Button
-        android:id="@+id/btnHistoricalEvent2"
+        android:id="@+id/btnCheckCodeBased"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Historical Event 2" />
-
-    <Button
-        android:id="@+id/btnHistoricalEvent3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Historical Event 3" />
-
-    <Button
-        android:id="@+id/btnCheckSequence"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Check sequence" />
+        android:text="Check Code Based Experiences" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

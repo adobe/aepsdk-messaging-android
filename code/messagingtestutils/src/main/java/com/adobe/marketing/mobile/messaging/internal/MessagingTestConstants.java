@@ -39,6 +39,7 @@ public class MessagingTestConstants {
         public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
+        public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
 
         private EventName() {
         }
@@ -53,6 +54,8 @@ public class MessagingTestConstants {
         public static final String UNREGISTER = "com.adobe.eventSource.unregister";
         public static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         public static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
+        public static final String NOTIFICATION = "com.adobe.eventSource.notification";
+
 
         private EventSource() {
         }

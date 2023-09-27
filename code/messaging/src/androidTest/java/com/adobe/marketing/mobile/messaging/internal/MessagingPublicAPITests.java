@@ -11,11 +11,13 @@
 
 package com.adobe.marketing.mobile.messaging.internal;
 
+import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
 import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getDispatchedEventsWith;
 import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getSharedStateFor;
 import static com.adobe.marketing.mobile.messaging.internal.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,8 +28,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.FeedItem;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.Proposition;
+import com.adobe.marketing.mobile.PropositionItem;
 import com.adobe.marketing.mobile.Surface;
 import com.adobe.marketing.mobile.messaging.BuildConfig;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -499,6 +505,65 @@ public class MessagingPublicAPITests {
         final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(0, messagingRequestEvents.size());
+    }
+
+    // ========================================================================================
+    // Tests for Messaging.setPropositionsHandler API
+    // ========================================================================================
+    private static final String EXPECTED_SURFACE_URI = "mobileapp://com.adobe.marketing.mobile.messaging.test";
+
+    @Test
+    public void test_setPropositionsHandler() throws InterruptedException {
+        // setup
+        Map<String, Object> characteristics = new HashMap<String, Object>() {{
+            put("eventToken", "eventToken");
+        }};
+        Map<String, Object> activity = new HashMap<String, Object>() {{
+            put("id", "activityId");
+        }};
+        Map<String, Object> scopeDetails = new HashMap<String, Object>() {{
+            put("decisionProvider", "AJO");
+            put("correlationID", "correlationID");
+            put("characteristics", characteristics);
+            put("activity", activity);
+        }};
+
+        PropositionItem propositionItem = new PropositionItem("propositionItemId", "schema", "content");
+        List<PropositionItem> propositionItems = new ArrayList<>();
+        propositionItems.add(propositionItem);
+        Proposition proposition = new Proposition("propositionId", EXPECTED_SURFACE_URI, scopeDetails, propositionItems);
+        List<Map<String, Object>> propositions = new ArrayList<>();
+        propositions.add(proposition.toEventData());
+
+        Map<String, Object> messageNotificationEventData = new HashMap<>();
+        messageNotificationEventData.put(PROPOSITIONS, propositions);
+
+        Event messageNotificationEvent = new Event.Builder(MessagingTestConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION,
+                EventType.MESSAGING, MessagingTestConstants.EventSource.NOTIFICATION).setEventData(messageNotificationEventData).build();
+
+        // test
+        MobileCore.dispatchEvent(messageNotificationEvent);
+
+        // verify
+        Map<Surface, List<Proposition>>[] returnedPropositions = new Map[]{new HashMap<>()};
+        CountDownLatch latch = new CountDownLatch(1);
+        Messaging.setPropositionsHandler(value -> {
+            returnedPropositions[0] = value;
+            latch.countDown();
+        });
+        latch.await(5, TimeUnit.SECONDS);
+
+        assertNotNull(returnedPropositions[0]);
+        for (Map.Entry<Surface, List<Proposition>> returnedProposition : returnedPropositions[0].entrySet()) {
+            assertEquals(EXPECTED_SURFACE_URI, returnedProposition.getKey().getUri());
+            assertEquals(1, returnedProposition.getValue().size());
+            for (Proposition returnedPropositionValue : returnedProposition.getValue()) {
+                assertEquals(EXPECTED_SURFACE_URI, returnedPropositionValue.getScope());
+                assertEquals(propositionItems.get(0).toEventData(), returnedPropositionValue.getItems().get(0).toEventData());
+                assertEquals(scopeDetails, returnedPropositionValue.getScopeDetails());
+                assertEquals("propositionId", returnedPropositionValue.getUniqueId());
+            }
+        }
     }
 
     // --------------------------------------------------------------------------------------------

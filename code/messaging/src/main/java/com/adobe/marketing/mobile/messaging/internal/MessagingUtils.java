@@ -47,10 +47,11 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MessagingUtils {
+public class MessagingUtils {
     private final static String SELF_TAG = "MessagingUtils";
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
@@ -163,6 +164,22 @@ class MessagingUtils {
                 && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a get propositions event.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a get propositions event.
+     */
+    static boolean isGetPropositionsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, false);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -177,18 +194,20 @@ class MessagingUtils {
         if (event == null || event.getEventData() == null) {
             return null;
         }
-        final List<String> surfaceUris = DataReader.optTypedList(String.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
+        final Map<String, Object> eventData = event.getEventData();
+        final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (MessagingUtils.isNullOrEmpty(surfaceUris)) {
+        if (MessagingUtils.isNullOrEmpty(surfaces)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 
-        final List<Surface> surfaces = new ArrayList<>();
-        for (final String surfaceUri : surfaceUris) {
-            surfaces.add(Surface.fromUriString(surfaceUri));
+        final List<Surface> retrievedSurfaces = new ArrayList<>();
+        for (final Map<String, Object> surfaceData : surfaces) {
+            final Surface surface = Surface.fromEventData(surfaceData);
+            retrievedSurfaces.add(surface);
         }
-        return surfaces;
+        return retrievedSurfaces;
     }
 
     // ========================================================================================
@@ -327,26 +346,68 @@ class MessagingUtils {
     }
 
     /**
-     * Returns a mutable {@code List<Proposition>} list containing a single {@code Proposition} element.
+     * Returns a mutable {@code List<T>} list containing a single element.
      *
-     * @param proposition A {@link Proposition} to be added to the mutable list
-     * @return the mutable {@link List<Proposition>} list
+     * @param element A {@link T} to be added to the mutable list
+     * @return the mutable {@link List<T>} list
      */
-    static List<Proposition> createMutablePropositionList(final Proposition proposition) {
-        return new ArrayList<Proposition>() {
+    public static <T> List<T> createMutableList(final T element) {
+        return new ArrayList<T>() {
             {
-                add(proposition);
+                add(element);
             }
         };
     }
 
     /**
-     * Returns a mutable {@code List<Proposition>} list containing the contents of the passed in {@code List<Proposition>}.
+     * Returns a mutable {@code List<T>} list containing a single element.
      *
-     * @param propositions A {@link List<Proposition>} to convert to a mutable list
-     * @return the mutable {@link List<Proposition>} list
+     * @param list A {@link List<T>} to be converted to a mutable list
+     * @return the mutable {@link List<T>} list
      */
-    static List<Proposition> createMutablePropositionList(final List<Proposition> propositions) {
-        return new ArrayList<>(propositions);
+    public static <T> List<T> createMutableList(final List<T> list) {
+        return new ArrayList<>(list);
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code Surface} and {@code List<Proposition>} objects.
+     *
+     * @param surface           A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
+     * @param propositionsToAdd A {@link List<Proposition>} list to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
+     * @return the updated {@link Map<Surface, List<Proposition>>} map
+     */
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> propositionsToAdd, Map<Surface, List<Proposition>> mapToUpdate) {
+        if (isNullOrEmpty(propositionsToAdd)) {
+            return mapToUpdate;
+        }
+        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(propositionsToAdd);
+        if (updatedMap.get(surface) != null) {
+            list.addAll(propositionsToAdd);
+        }
+        updatedMap.put(surface, list);
+        return updatedMap;
+    }
+
+    /**
+     * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code Surface} and {@code Proposition} objects.
+     *
+     * @param surface     A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
+     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
+     * @return the updated {@link Map<Surface, List<Proposition>>} map
+     */
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, Map<Surface, List<Proposition>> mapToUpdate) {
+        if (proposition == null) {
+            return mapToUpdate;
+        }
+        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(proposition);
+        if (updatedMap.get(surface) != null) {
+            list.add(proposition);
+        }
+        updatedMap.put(surface, list);
+        return updatedMap;
     }
 }

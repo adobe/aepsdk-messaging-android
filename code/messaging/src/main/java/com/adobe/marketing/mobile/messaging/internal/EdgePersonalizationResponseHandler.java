@@ -30,11 +30,13 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.E
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.LOG_TAG;
 
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Inbound;
@@ -203,6 +205,60 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
+     * Retrieves the previously fetched (and cached) feeds content from the SDK for the provided surfaces.
+     *
+     * @param surfaces A {@code List<Surface>} of surfaces to use for retrieving cached content
+     * @param event    The retrieve message {@link Event}
+     */
+    void retrieveMessages(final List<Surface> surfaces, final Event event) {
+        final List<Surface> requestedSurfaces = new ArrayList<>();
+        if (surfaces != null && !surfaces.isEmpty()) {
+            for (final Surface surface : surfaces) {
+                if (surface.isValid()) {
+                    requestedSurfaces.add(surface);
+                }
+            }
+
+            if (requestedSurfaces.isEmpty()) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve messages, no valid surfaces found.");
+                return;
+            }
+        } else {
+            final Surface appSurface = new Surface();
+            if (appSurface.getUri().equals("unknown")) {
+                Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve messages, couldn't create a valid app surface.");
+                return;
+            }
+            requestedSurfaces.add(appSurface);
+        }
+
+        inboundMessages = feedRulesEngine.evaluate(event);
+        if (!MapUtils.isNullOrEmpty(inboundMessages)) {
+            updateInboundMessages(inboundMessages, requestedSurfaces);
+        }
+
+        final Map<Surface, List<Proposition>> requestedPropositions = retrievePropositions(requestedSurfaces);
+
+        // dispatch an event with the cached feed propositions
+        final Map<String, Object> eventData = new HashMap<>();
+        final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
+        for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositions.entrySet()) {
+            for (final Proposition proposition : propositionEntry.getValue()) {
+                convertedPropositions.add(proposition.toEventData());
+            }
+        }
+        eventData.put(PROPOSITIONS, convertedPropositions);
+
+        final Event responseEvent = new Event.Builder(MESSAGE_PROPOSITIONS_RESPONSE,
+                EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(eventData)
+                .inResponseToEvent(event)
+                .build();
+
+        extensionApi.dispatch(responseEvent);
+    }
+
+    /**
      * Validates that the edge response event is a response that we are waiting for. If the returned payload is empty then the Messaging cache
      * and any loaded rules in the Messaging extension's {@link LaunchRulesEngine} are cleared.
      * Non-empty payloads are converted into rules within {@link #parsePropositions(List, List, boolean, boolean)}.
@@ -237,6 +293,8 @@ class EdgePersonalizationResponseHandler {
         final Map<InboundType, List<LaunchRule>> parsedRules = parsePropositions(propositions, requestedSurfaces, clearExistingRules, true);
         final List<LaunchRule> inAppRules = parsedRules.get(InboundType.INAPP);
         final List<LaunchRule> feedRules = parsedRules.get(InboundType.FEED);
+        // TODO: remove this workaround once ajo payload is using new schema https://ns.adobe.com/personalization/message/feed-item
+        // final List<LaunchRule> feedRules = parsedRules.get(InboundType.UNKNOWN);
 
         // handle in-app message rules
         if (!MessagingUtils.isNullOrEmpty(inAppRules)) {
@@ -319,7 +377,11 @@ class EdgePersonalizationResponseHandler {
                 propositionMap.put(surface, propositionsList);
             }
 
-            final List<Inbound> inboundList = inboundMessages.get(surface);
+            List<Inbound> inboundList = new ArrayList<>();
+            if (!MapUtils.isNullOrEmpty(inboundMessages)) {
+                inboundList = inboundMessages.get(surface);
+            }
+
             if (MessagingUtils.isNullOrEmpty(inboundList)) {
                 continue;
             }
@@ -338,7 +400,7 @@ class EdgePersonalizationResponseHandler {
                 final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
                 inboundPropositionList.add(proposition);
             }
-            propositionMap = updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
+            propositionMap = MessagingUtils.updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
         }
         return propositionMap;
     }
@@ -391,7 +453,7 @@ class EdgePersonalizationResponseHandler {
                 // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                 if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                    tempPropositions = updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                    tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                     continue;
                 }
 
@@ -414,12 +476,12 @@ class EdgePersonalizationResponseHandler {
 
                     final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
                     if (isInAppConsequence) {
-                        inAppPropositions = updatePropositionMapForSurface(surface, proposition, inAppPropositions);
+                        inAppPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, inAppPropositions);
                         // cache any in-app image assets present in the current rule json's image assets array
                         cacheImageAssetsFromPayload(consequence);
                     } else {
                         if (!MessagingUtils.isFeedItem(consequence)) {
-                            tempPropositions = updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                            tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                         }
                     }
 
@@ -449,56 +511,18 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code Proposition} objects.
-     *
-     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param proposition     A {@link Proposition} value to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param propositionsMap The {@link Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
-     */
-    private Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, final Map<Surface, List<Proposition>> propositionsMap) {
-        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
-        final List<Proposition> propositionList = propositions.get(surface) != null ? propositions.get(surface) : MessagingUtils.createMutablePropositionList(proposition);
-        if (tempPropositionsMap.get(surface) == null) {
-            tempPropositionsMap.put(surface, propositionList);
-        } else {
-            tempPropositionsMap.get(surface).add(proposition);
-        }
-        return tempPropositionsMap;
-    }
-
-    /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} propositions map with the provided {@code Surface} and {@code List<Proposition>} objects.
-     *
-     * @param surface         A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param newPropositions A {@link List<Proposition>} to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param propositionsMap The {@link Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code Proposition} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} proposition maps
-     */
-    private Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> newPropositions, final Map<Surface, List<Proposition>> propositionsMap) {
-        if (MessagingUtils.isNullOrEmpty(newPropositions)) {
-            return propositionsMap;
-        }
-
-        final Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositionsMap);
-        final List<Proposition> propositionList = propositions.get(surface) != null ? propositions.get(surface) : MessagingUtils.createMutablePropositionList(newPropositions);
-        if (tempPropositionsMap.get(surface) == null) {
-            tempPropositionsMap.put(surface, propositionList);
-        } else {
-            tempPropositionsMap.get(surface).addAll(newPropositions);
-        }
-        return tempPropositionsMap;
-    }
-
-    /**
      * Clear in-memory data for each {@code Surface} in the provided {@code List<Surface>}
      *
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s which need to have in-memory data cleared
      */
     private void clearSurfaces(final List<Surface> surfaces) {
         for (final Surface surface : surfaces) {
-            propositions.remove(surface);
-            inboundMessages.remove(surface);
+            if (!MapUtils.isNullOrEmpty(propositions)) {
+                propositions.remove(surface);
+            }
+            if (!MapUtils.isNullOrEmpty(inboundMessages)) {
+                inboundMessages.remove(surface);
+            }
             final Map<String, PropositionInfo> tempPropositionInfo = new HashMap<>(propositionInfo);
             for (final Map.Entry<String, PropositionInfo> entry : tempPropositionInfo.entrySet()) {
                 if (entry.getValue().scope.equals(surface.getUri())) {
@@ -519,6 +543,10 @@ class EdgePersonalizationResponseHandler {
     private void removeCachedPropositions(final List<Surface> surfaces) {
         if (messagingCacheUtilities.arePropositionsCached()) {
             final Map<Surface, List<Proposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+            if (MapUtils.isNullOrEmpty(cachedPropositions)) {
+                return;
+            }
+
             for (final Surface surface : surfaces) {
                 cachedPropositions.remove(surface);
             }

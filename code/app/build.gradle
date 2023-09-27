@@ -21,6 +21,9 @@ android {
         }
     }
     namespace 'com.adobe.marketing.mobile.messagingsample'
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 buildscript {
@@ -39,6 +42,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
     // constraint layout dependency for assurance
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.8.0'
 
     testImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"

@@ -23,18 +23,13 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        Messaging.registerExtension()
-        Identity.registerExtension()
-        Edge.registerExtension()
-        Assurance.registerExtension()
         //Assurance.startSession("YOUR-SESSION-ID")
-
-        MobileCore.start {
+        val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
+        MobileCore.registerExtensions(extensions) {
             // Necessary property id which has the edge configuration id needed by aep sdk
-            MobileCore.configureWithAppID("3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development")
+            MobileCore.configureWithAppID("")
             MobileCore.lifecycleStart(null)
         }
-
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast

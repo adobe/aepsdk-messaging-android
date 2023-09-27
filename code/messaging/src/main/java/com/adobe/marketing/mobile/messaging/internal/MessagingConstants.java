@@ -130,6 +130,7 @@ final class MessagingConstants {
     final class EventDataKeys {
         static final String REQUEST_EVENT_ID = "requestEventId";
         static final String IAM_HISTORY = "iam";
+        static final String URI = "uri";
 
         final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
@@ -146,6 +147,7 @@ final class MessagingConstants {
             static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
             static final String REFRESH_MESSAGES = "refreshmessages";
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
+            static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
 
             private Messaging() {
