@@ -47,6 +47,12 @@ public class MessagingPushPayload {
         static final String PRIORITY_MAX = "PRIORITY_MAX";
     }
 
+    static final class NotificationVisibility {
+        static final String PUBLIC = "PUBLIC";
+        static final String PRIVATE = "PRIVATE";
+        static final String SECRET = "SECRET";
+    }
+
     static final class ActionButtonType {
         static final String DEEPLINK = "DEEPLINK";
         static final String WEBURL = "WEBURL";
@@ -60,12 +66,21 @@ public class MessagingPushPayload {
         static final String TYPE = "type";
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     static final Map<String,Integer> notificationImportanceMap = new HashMap<String,Integer>() {{
         put(NotificationPriorities.PRIORITY_MIN, NotificationManager.IMPORTANCE_MIN);
         put(NotificationPriorities.PRIORITY_LOW, NotificationManager.IMPORTANCE_LOW);
         put(NotificationPriorities.PRIORITY_DEFAULT, NotificationManager.IMPORTANCE_DEFAULT);
         put(NotificationPriorities.PRIORITY_HIGH, NotificationManager.IMPORTANCE_HIGH);
         put(NotificationPriorities.PRIORITY_MAX, NotificationManager.IMPORTANCE_MAX);
+    }};
+
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    static final Map<String,Integer> notificationVisibilityMap = new HashMap<String,Integer>() {{
+        put(NotificationVisibility.PRIVATE, Notification.VISIBILITY_PRIVATE);
+        put(NotificationVisibility.PUBLIC, Notification.VISIBILITY_PUBLIC);
+        put(NotificationVisibility.SECRET, Notification.VISIBILITY_SECRET);
     }};
 
     static final Map<String,Integer> notificationPriorityMap = new HashMap<String,Integer>() {{
@@ -83,6 +98,8 @@ public class MessagingPushPayload {
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
     private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
     private String channelId;
     private String icon;
     private String imageUrl;
@@ -149,6 +166,12 @@ public class MessagingPushPayload {
     public int getNotificationPriority() {
         return notificationPriority;
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public int getNotificationVisibility() {
+        return notificationVisibility;
+    }
+
     public int getNotificationImportance() {
         return notificationImportance;
     }
@@ -220,6 +243,11 @@ public class MessagingPushPayload {
         } else {
             this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            this.notificationVisibility = getNotificationVisibilityFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY));
+        }
+
         this.actionType = getActionTypeFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_TYPE));
         this.actionButtons = getActionButtonsFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS));
     }
@@ -234,10 +262,23 @@ public class MessagingPushPayload {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private int getNotificationImportanceFromString(final String priority) {
-        if (priority == null) return Notification.PRIORITY_DEFAULT;
+        if (StringUtils.isNullOrEmpty(priority)) return Notification.PRIORITY_DEFAULT;
         final Integer resolvedImportance = notificationImportanceMap.get(priority);
         if (resolvedImportance == null) return Notification.PRIORITY_DEFAULT;
         return resolvedImportance;
+    }
+
+    // Returns the notification visibility from the string
+    // If the string is null or not a valid visibility, returns Notification.VISIBILITY_PRIVATE
+    //
+    // @param visibility string representing the visibility of the notification
+    // @return int representing the visibility of the notification
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private int getNotificationVisibilityFromString(final String visibility) {
+        if (StringUtils.isNullOrEmpty(visibility)) return Notification.VISIBILITY_PRIVATE;
+        final Integer resolvedVisibility = notificationVisibilityMap.get(visibility);
+        if (resolvedVisibility == null) return Notification.VISIBILITY_PRIVATE;
+        return resolvedVisibility;
     }
 
     private ActionType getActionTypeFromString(final String type) {
@@ -338,7 +379,7 @@ public class MessagingPushPayload {
 
     // Check if the push notification is silent push notification.
     // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to talk with herald team)
-    public boolean isSilentPushMessage() {
+    boolean isSilentPushMessage() {
         return data != null && title == null && body == null;
     }
 }
