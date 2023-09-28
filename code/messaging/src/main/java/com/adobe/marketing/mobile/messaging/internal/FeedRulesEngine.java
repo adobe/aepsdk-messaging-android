@@ -44,7 +44,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
      * Map<Surface, List<Inbound>>} created from the rules that matched the supplied event.
      *
      * @param event the event to be evaluated
-     * @return a {@code Map<Surface ,List<Inbound>>} containing inbound content for the given event
+     * @return a {@code Map<String ,List<Inbound>>} containing inbound content for the given event
      */
     Map<Surface, List<Inbound>> evaluate(@NonNull final Event event) {
         if (event == null) {

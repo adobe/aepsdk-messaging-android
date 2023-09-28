@@ -131,6 +131,7 @@ final class MessagingConstants {
     final class EventDataKeys {
         static final String REQUEST_EVENT_ID = "requestEventId";
         static final String IAM_HISTORY = "iam";
+        static final String URI = "uri";
 
         final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
