@@ -235,19 +235,7 @@ class MessagingPushBuilder {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private static void setVisibility(final NotificationCompat.Builder notificationBuilder,
                                       final MessagingPushPayload payload) {
-        int visibility = payload.getNotificationVisibility();
-        notificationBuilder.setVisibility(visibility);
-        switch (visibility) {
-            case Notification.VISIBILITY_PRIVATE:
-                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
-            case Notification.VISIBILITY_PUBLIC:
-                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-            case Notification.VISIBILITY_SECRET:
-                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_SECRET);
-                break;
-            default:
-                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
-        }
+        notificationBuilder.setVisibility(payload.getNotificationVisibility());
     }
 
     /**

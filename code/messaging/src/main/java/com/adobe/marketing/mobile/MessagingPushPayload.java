@@ -17,7 +17,6 @@ import android.app.NotificationManager;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -99,7 +98,8 @@ public class MessagingPushPayload {
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
     private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
-    private int notificationVisibility = NotificationCompat.VISIBILITY_PRIVATE;
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
     private String channelId;
     private String icon;
     private String imageUrl;
@@ -379,7 +379,7 @@ public class MessagingPushPayload {
 
     // Check if the push notification is silent push notification.
     // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to talk with herald team)
-    public boolean isSilentPushMessage() {
+    boolean isSilentPushMessage() {
         return data != null && title == null && body == null;
     }
 }
