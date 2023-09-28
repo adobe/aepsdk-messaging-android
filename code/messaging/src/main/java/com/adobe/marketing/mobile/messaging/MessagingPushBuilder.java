@@ -237,9 +237,13 @@ class MessagingPushBuilder {
         final int visibility = payload.getNotificationVisibility();
         switch (visibility) {
             case NotificationCompat.VISIBILITY_PUBLIC:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                break;
             case NotificationCompat.VISIBILITY_PRIVATE:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+                break;
             case NotificationCompat.VISIBILITY_SECRET:
-                notificationBuilder.setVisibility(visibility);
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_SECRET);
                 break;
             default:
                 notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
