@@ -318,6 +318,7 @@ public final class MessagingConstants {
             public static final String BODY = "adb_body";
             public static final String SOUND = "adb_sound";
             public static final String BADGE_NUMBER = "adb_n_count";
+            public static final String NOTIFICATION_VISIBILITY = "adb_n_visibility";
             public static final String NOTIFICATION_PRIORITY = "adb_n_priority";
             public static final String CHANNEL_ID = "adb_channel_id";
             public static final String ICON = "adb_icon";

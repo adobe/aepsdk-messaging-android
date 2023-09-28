@@ -24,6 +24,8 @@ import android.media.RingtoneManager;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 
 import com.adobe.marketing.mobile.Messaging;
@@ -71,6 +73,9 @@ class MessagingPushBuilder {
 
         setLargeIcon(builder, payload);
         setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
+        if (isLollipopOrGreater()) {
+            setVisibility(builder, payload);
+        }
         addActionButtons(builder, payload, context); // Add action buttons if any
         setSound(builder, payload, context);
         setNotificationClickAction(builder, payload, context);
@@ -227,6 +232,24 @@ class MessagingPushBuilder {
         notificationBuilder.setContentIntent(pendingIntent);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static void setVisibility(final NotificationCompat.Builder notificationBuilder,
+                                      final MessagingPushPayload payload) {
+        int visibility = payload.getNotificationVisibility();
+        notificationBuilder.setVisibility(visibility);
+        switch (visibility) {
+            case Notification.VISIBILITY_PRIVATE:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+            case Notification.VISIBILITY_PUBLIC:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            case Notification.VISIBILITY_SECRET:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_SECRET);
+                break;
+            default:
+                notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+        }
+    }
+
     /**
      * Adds action buttons for the notification.
      *
@@ -329,5 +352,10 @@ class MessagingPushBuilder {
      */
     private static boolean isValidIcon(final int icon) {
         return icon > 0;
+    }
+
+    @VisibleForTesting
+    static boolean isLollipopOrGreater() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
     }
 }
