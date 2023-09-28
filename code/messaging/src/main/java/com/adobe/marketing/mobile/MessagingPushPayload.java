@@ -262,7 +262,7 @@ public class MessagingPushPayload {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private int getNotificationImportanceFromString(final String priority) {
-        if (priority == null) return Notification.PRIORITY_DEFAULT;
+        if (StringUtils.isNullOrEmpty(priority)) return Notification.PRIORITY_DEFAULT;
         final Integer resolvedImportance = notificationImportanceMap.get(priority);
         if (resolvedImportance == null) return Notification.PRIORITY_DEFAULT;
         return resolvedImportance;
@@ -275,7 +275,7 @@ public class MessagingPushPayload {
     // @return int representing the visibility of the notification
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private int getNotificationVisibilityFromString(final String visibility) {
-        if (visibility == null) return Notification.VISIBILITY_PRIVATE;
+        if (StringUtils.isNullOrEmpty(visibility)) return Notification.VISIBILITY_PRIVATE;
         final Integer resolvedVisibility = notificationVisibilityMap.get(visibility);
         if (resolvedVisibility == null) return Notification.VISIBILITY_PRIVATE;
         return resolvedVisibility;
