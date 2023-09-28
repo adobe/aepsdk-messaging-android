@@ -24,6 +24,7 @@ import android.media.RingtoneManager;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.adobe.marketing.mobile.Messaging;
@@ -71,6 +72,9 @@ class MessagingPushBuilder {
 
         setLargeIcon(builder, payload);
         setSmallIcon(builder, payload, context); // Small Icon must be present, otherwise the notification will not be displayed.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            setVisibility(builder, payload);
+        }
         addActionButtons(builder, payload, context); // Add action buttons if any
         setSound(builder, payload, context);
         setNotificationClickAction(builder, payload, context);
@@ -225,6 +229,12 @@ class MessagingPushBuilder {
                     null);
         }
         notificationBuilder.setContentIntent(pendingIntent);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static void setVisibility(final NotificationCompat.Builder notificationBuilder,
+                                      final MessagingPushPayload payload) {
+        notificationBuilder.setVisibility(payload.getNotificationVisibility());
     }
 
     /**
