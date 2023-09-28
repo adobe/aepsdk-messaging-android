@@ -16,11 +16,13 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -31,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.2.0";
+    private static final String EXTENSION_VERSION = "2.3.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -55,9 +57,8 @@ public final class Messaging {
     private static final String UPDATE_PROPOSITIONS_EVENT = "updatepropositions";
     private static final String GET_PROPOSITIONS_EVENT = "getpropositions";
     private static final String REFRESH_MESSAGES_EVENT = "refreshmessages";
-    private static final String SURFACE_BASE = "mobileapp://";
+    private static final String RESPONSE_ERROR = "responseerror";
     private static final String SCOPE = "scope";
-    private static final String ITEMS = "items";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
@@ -210,24 +211,31 @@ public final class Messaging {
      *
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing the {@link Surface}s and the corresponding list of {@link Proposition} objects.
      */
+    @VisibleForTesting
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
             isPropositionsResponseListenerRegistered = true;
             MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION, event -> {
-                final Map<Surface, List<Proposition>> convertedPropositions = new HashMap<>();
+                Map<Surface, List<Proposition>> convertedPropositionsMap = new HashMap<>();
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
                     final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
-                    for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                        final Surface surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
+                    if (retrievedPropositionData != null && !retrievedPropositionData.isEmpty()) {
+                        Surface surface = null;
                         final List<Proposition> propositions = new ArrayList<>();
-                        final Proposition proposition = Proposition.fromEventData(propositionData);
-                        propositions.add(proposition);
-                        convertedPropositions.put(surface, propositions);
+                        for (final Map<String, Object> propositionData : retrievedPropositionData) {
+                            surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
+                            final Proposition proposition = Proposition.fromEventData(propositionData);
+                            propositions.add(proposition);
+                        }
+                        convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, propositions, convertedPropositionsMap);
                     }
                 }
-                propositionsResponseHandler.call(convertedPropositions);
+
+                if (!convertedPropositionsMap.isEmpty()) {
+                    propositionsResponseHandler.call(convertedPropositionsMap);
+                }
             });
         } else {
             isPropositionsResponseListenerRegistered = false;
@@ -252,21 +260,21 @@ public final class Messaging {
             return;
         }
 
-        final List<String> validSurfacePaths = new ArrayList<>();
+        final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacePaths.add(surface.getUri());
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 
-        if (validSurfacePaths.isEmpty()) {
+        if (validSurfacesFlattened.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(GET_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfacePaths);
+        eventData.put(SURFACES, validSurfacesFlattened);
 
         final Event getPropositionsEvent = new Event.Builder(GET_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
@@ -276,35 +284,43 @@ public final class Messaging {
         MobileCore.dispatchEventWithResponseCallback(getPropositionsEvent, 2000, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
-                callback.call(null);
+                failWithError(callback, adobeError);
             }
 
             @Override
             public void call(final Event event) {
-                final Map<String, Object> eventData = event.getEventData();
-                if (MapUtils.isNullOrEmpty(eventData)) {
-                    callback.call(null);
-                }
-                final List<Proposition> propositions = new ArrayList<>();
-                final HashMap<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
-                for (final Surface surface : surfaces) {
-                    final Map<String, Object> retrievedPropositions = DataReader.optTypedMap(Object.class, eventData, PROPOSITIONS, Collections.emptyMap());
-                    if (MapUtils.isNullOrEmpty(retrievedPropositions)) {
-                        continue;
+                try {
+                    final Map<String, Object> eventData = event.getEventData();
+                    if (MapUtils.isNullOrEmpty(eventData)) {
+                        failWithError(callback, AdobeError.UNEXPECTED_ERROR);
+                        return;
                     }
 
-                    final List<Map<String, Object>> propositionMaps = DataReader.optTypedListOfMap(Object.class, retrievedPropositions, surface.getUri(), Collections.emptyList());
-                    if (propositionMaps == null || propositionMaps.isEmpty()) {
-                        continue;
+                    if (eventData.containsKey(RESPONSE_ERROR)) {
+                        final int errorCode = DataReader.getInt(eventData, RESPONSE_ERROR);
+                        failWithError(callback, convertToAdobeError(errorCode));
+                        return;
                     }
 
-                    for (final Map<String, Object> propositionMap : propositionMaps) {
+                    Map<Surface, List<Proposition>> requestedPropositionsMap = new HashMap<>();
+                    final List<Map<String, Object>> retrievedPropositions = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
+                    if (retrievedPropositions == null || retrievedPropositions.isEmpty()) {
+                        failWithError(callback, AdobeError.UNEXPECTED_ERROR);
+                        return;
+                    }
+
+                    for (final Map<String, Object> propositionMap : retrievedPropositions) {
                         final Proposition proposition = Proposition.fromEventData(propositionMap);
-                        propositions.add(proposition);
+                        if (proposition != null) {
+                            final Surface surface = Surface.fromUriString(proposition.getScope());
+                            requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, proposition, requestedPropositionsMap);
+                        }
                     }
-                    cachedPropositions.put(surface, propositions);
+
+                    callback.call(requestedPropositionsMap);
+                } catch (final DataReaderException ignored) {
+                    failWithError(callback, AdobeError.UNEXPECTED_ERROR);
                 }
-                callback.call(cachedPropositions);
             }
         });
     }
@@ -321,21 +337,21 @@ public final class Messaging {
             return;
         }
 
-        final List<String> validSurfacePaths = new ArrayList<>();
+        final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacePaths.add(surface.getUri());
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 
-        if (validSurfacePaths.isEmpty()) {
+        if (validSurfacesFlattened.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces has no valid items.");
             return;
         }
 
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(UPDATE_PROPOSITIONS_EVENT, true);
-        eventData.put(SURFACES, validSurfacePaths);
+        eventData.put(SURFACES, validSurfacesFlattened);
 
         final Event updatePropositionsEvent = new Event.Builder(UPDATE_PROPOSITIONS,
                 EventType.MESSAGING, EventSource.REQUEST_CONTENT)
@@ -345,8 +361,46 @@ public final class Messaging {
         MobileCore.dispatchEvent(updatePropositionsEvent);
     }
 
-    private static String getAppSurface() {
-        final String packageName = ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName();
-        return StringUtils.isNullOrEmpty(packageName) ? "unknown" : SURFACE_BASE + packageName;
+    /**
+     * Invokes fail method with the provided {@code error}, if the callback is an instance of {@code AdobeCallbackWithError}.
+     *
+     * @param callback can be an instance of {@link AdobeCallback} or {@link AdobeCallbackWithError}.
+     * @param error {@link AdobeError} indicating the error name and code.
+     */
+    private static void failWithError(final AdobeCallback<?> callback, final AdobeError error) {
+
+        final AdobeCallbackWithError<?> callbackWithError = callback instanceof AdobeCallbackWithError ?
+                (AdobeCallbackWithError<?>) callback : null;
+
+        if (callbackWithError != null) {
+            callbackWithError.fail(error);
+        }
+    }
+
+    /**
+     * Determines the {@code AdobeError} provided the error code.
+     *
+     * @return {@link AdobeError} corresponding to the given error code, or {@link AdobeError#UNEXPECTED_ERROR} otherwise.
+     */
+    @SuppressWarnings("magicnumber")
+    private static AdobeError convertToAdobeError(final int errorCode) {
+        final AdobeError error;
+        switch (errorCode) {
+            case 0:
+                error = AdobeError.UNEXPECTED_ERROR;
+                break;
+            case 1:
+                error = AdobeError.CALLBACK_TIMEOUT;
+                break;
+            case 2:
+                error = AdobeError.CALLBACK_NULL;
+                break;
+            case 11:
+                error = AdobeError.EXTENSION_NOT_INITIALIZED;
+                break;
+            default:
+                error = AdobeError.UNEXPECTED_ERROR;
+        }
+        return error;
     }
 }

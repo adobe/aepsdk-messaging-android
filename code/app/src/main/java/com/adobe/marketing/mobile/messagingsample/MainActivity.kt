@@ -279,7 +279,7 @@ class MainActivity : ComponentActivity() {
 
         // fetch message feed and code based experiences
         val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("rymorale-cbe"))
+        surfaceList.add(Surface("cbe-path"))
         Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 

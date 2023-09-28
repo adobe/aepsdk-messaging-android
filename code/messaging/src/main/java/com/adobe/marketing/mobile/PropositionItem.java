@@ -49,9 +49,6 @@ public class PropositionItem implements Serializable {
     private static final String PAYLOAD_DATA = "data";
     private static final String PAYLOAD_CONTENT = "content";
     private static final String PAYLOAD_SCHEMA = "schema";
-    private static final String DATA_RULES_KEY = "rules";
-    private static final String DATA_VERSION_KEY = "version";
-    private static final String JSON_CONTENT_SCHEMA_VALUE = "https://ns.adobe.com/personalization/json-content-item";
 
     // Unique proposition identifier
     private String uniqueId;

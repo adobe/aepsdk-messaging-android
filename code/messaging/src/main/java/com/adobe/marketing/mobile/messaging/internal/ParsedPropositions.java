@@ -26,7 +26,6 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +68,7 @@ class ParsedPropositions {
                     // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                     if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                        propositionsToCache = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToCache);
+                        propositionsToCache = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToCache);
                         continue;
                     }
 
@@ -94,12 +93,12 @@ class ParsedPropositions {
                         final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
                         if (isInAppConsequence) {
                             inboundType = InboundType.INAPP;
-                            propositionsToPersist = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToPersist);
+                            propositionsToPersist = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToPersist);
                         } else {
                             final String inboundTypeString = DataReader.optString(consequence.getDetail(), MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
                             inboundType = InboundType.fromString(inboundTypeString);
                             if (!MessagingUtils.isFeedItem(consequence)) {
-                                propositionsToCache = MessagingUtils.updateMapForSurface(surface, proposition, propositionsToCache);
+                                propositionsToCache = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToCache);
                             }
                         }
 
@@ -115,7 +114,7 @@ class ParsedPropositions {
         Map<Surface, List<LaunchRule>> tempRulesByInboundType = surfaceRulesByInboundType.get(inboundType) != null ? surfaceRulesByInboundType.get(inboundType) : new HashMap<>();
 
         // combine rules with existing
-        tempRulesByInboundType = MessagingUtils.updateMapForSurface(surface, rules, tempRulesByInboundType);
+        tempRulesByInboundType = MessagingUtils.updateRuleMapForSurface(surface, rules, tempRulesByInboundType);
 
         // apply up to surfaceRulesByInboundType
         surfaceRulesByInboundType.put(inboundType, tempRulesByInboundType);

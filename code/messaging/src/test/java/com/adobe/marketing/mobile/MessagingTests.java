@@ -14,6 +14,7 @@ import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstan
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,6 +31,7 @@ import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -377,10 +379,17 @@ public class MessagingTests {
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
             assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
-            List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
+            List<Map<String, Object>> capturedSurfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
             assertEquals(2, capturedSurfaces.size());
             // need to copy the list as capturedSurfaces is unmodifiable
-            List<String> sortedList = new ArrayList<>(capturedSurfaces);
+            List<String> sortedList = new ArrayList<>();
+            for (Map<String, Object> flattenedSurface : capturedSurfaces) {
+                try {
+                    sortedList.add(DataReader.getString(flattenedSurface, "uri"));
+                } catch (DataReaderException e) {
+                    fail(e.getMessage());
+                }
+            }
             sortedList.sort(null);
             assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
             assertEquals("mobileapp://mockPackageName/promos/feed2", sortedList.get(1));
@@ -411,10 +420,17 @@ public class MessagingTests {
             Map<String, Object> eventData = event.getEventData();
             assertNotNull(eventData);
             assertEquals(true, DataReader.optBoolean(eventData, MessagingTestConstants.EventDataKeys.Messaging.UPDATE_PROPOSITIONS, false));
-            List<String> capturedSurfaces = DataReader.optTypedList(String.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
+            List<Map<String, Object>> capturedSurfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingTestConstants.EventDataKeys.Messaging.SURFACES, null);
             assertEquals(2, capturedSurfaces.size());
             // need to copy the list as capturedSurfaces is unmodifiable
-            List<String> sortedList = new ArrayList<>(capturedSurfaces);
+            List<String> sortedList = new ArrayList<>();
+            for (Map<String, Object> flattenedSurface : capturedSurfaces) {
+                try {
+                    sortedList.add(DataReader.getString(flattenedSurface, "uri"));
+                } catch (DataReaderException e) {
+                    fail(e.getMessage());
+                }
+            }
             sortedList.sort(null);
             assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
             assertEquals("mobileapp://mockPackageName/promos/feed3", sortedList.get(1));
