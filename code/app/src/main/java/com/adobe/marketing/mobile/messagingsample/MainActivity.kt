@@ -318,7 +318,7 @@ class MainActivity : ComponentActivity() {
 
         // fetch code based experiences
         val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("codeBasedPath"))
+        surfaceList.add(Surface("<your-surface-path>"))
         Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
