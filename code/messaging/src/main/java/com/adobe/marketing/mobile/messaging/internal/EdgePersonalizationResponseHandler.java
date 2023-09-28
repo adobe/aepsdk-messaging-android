@@ -484,7 +484,7 @@ class EdgePersonalizationResponseHandler {
                     // replace rules for each feed surface we got back
                     feedRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no in-app content returned
+                    // remove any surfaces that were requested but had no feed content returned
                     for (final Surface surface : surfacesToRemove) {
                         feedRulesBySurface.remove(surface);
                     }

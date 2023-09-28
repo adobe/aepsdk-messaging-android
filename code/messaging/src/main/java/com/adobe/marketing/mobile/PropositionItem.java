@@ -41,6 +41,7 @@ public class PropositionItem implements Serializable {
     private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
+    private static final String MESSAGE_CONSEQUENCE_DETAIL_DATA = "data";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
@@ -121,11 +122,12 @@ public class PropositionItem implements Serializable {
                 final JSONObject consequenceDetails = getConsequenceDetails(ruleJson);
                 if (consequenceDetails != null) {
                     final InboundType inboundType = InboundType.fromString(consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_SCHEMA));
-                    final String content = consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_CONTENT).toString();
-                    final String contentType = consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
-                    final int expiryDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                    final int publishedDate = consequenceDetails.getInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                    final Map<String, Object> meta = JSONUtils.toMap(consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
+                    final JSONObject data = consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_DATA);
+                    final String content = data.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_CONTENT).toString();
+                    final String contentType = data.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
+                    final int expiryDate = data.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
+                    final int publishedDate = data.getInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
+                    final Map<String, Object> meta = JSONUtils.toMap(data.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
                     inboundContent = new Inbound(uniqueId, inboundType, content, contentType, publishedDate, expiryDate, meta);
                 }
             }
