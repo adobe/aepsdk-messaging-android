@@ -32,7 +32,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // retrieve any cached feed propositions
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/feeds/apifeed")
+        val surface = Surface("api-feed")
         surfaces.add(surface)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
