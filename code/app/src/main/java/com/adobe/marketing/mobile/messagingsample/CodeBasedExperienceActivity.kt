@@ -28,7 +28,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         // retrieve any cached code based experiences
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface("codeBasedPath")
+        val surface = Surface("<your-surface-path>")
         surfaces.add(surface)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")

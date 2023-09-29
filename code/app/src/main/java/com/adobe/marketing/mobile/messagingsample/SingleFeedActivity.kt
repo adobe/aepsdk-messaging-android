@@ -11,15 +11,12 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.services.ServiceProvider
-import kotlinx.android.synthetic.main.card_feeditem.feedItemTitle
 import org.json.JSONObject
 
 class SingleFeedActivity : AppCompatActivity() {
