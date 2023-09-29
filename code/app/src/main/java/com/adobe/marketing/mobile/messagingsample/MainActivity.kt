@@ -32,6 +32,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import com.adobe.marketing.mobile.util.StringUtils

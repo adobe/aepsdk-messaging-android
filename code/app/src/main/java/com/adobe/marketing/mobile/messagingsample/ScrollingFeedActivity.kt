@@ -15,9 +15,9 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.Proposition
-import com.adobe.marketing.mobile.Surface
+import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 
 class ScrollingFeedActivity : AppCompatActivity() {
@@ -32,7 +32,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // retrieve any cached feed propositions
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface.fromUriString("feeds/apifeed")
+        val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")

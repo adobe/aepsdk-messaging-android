@@ -12,8 +12,6 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,15 +19,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.MobileCore
-import com.adobe.marketing.mobile.Proposition
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.services.ServiceProvider
 import org.json.JSONObject
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class FeedCardAdapter(propositions: MutableList<Proposition>) :
     RecyclerView.Adapter<FeedCardAdapter.ViewHolder>() {

@@ -14,9 +14,9 @@ package com.adobe.marketing.mobile.messagingsample
 import android.os.Bundle
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
-import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.Proposition
-import com.adobe.marketing.mobile.Surface
+import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.Surface
 import java.nio.charset.StandardCharsets
 
 class CodeBasedExperienceActivity : AppCompatActivity() {
@@ -27,7 +27,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
 
         var propositions = mutableListOf<Proposition>()
         val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("<your-surface-path>"))
+        surfaceList.add(Surface("rymorale-cbe"))
 
         // fetch message feed and code based experiences
         Messaging.updatePropositionsForSurfaces(surfaceList)
