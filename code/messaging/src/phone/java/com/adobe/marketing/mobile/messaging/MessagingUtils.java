@@ -14,11 +14,19 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.RestrictTo;
 
+import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,10 +117,11 @@ public class MessagingUtils {
     // ========================================================================================
     // Proposition and Surface object creation wrappers
     // ========================================================================================
+
     /**
      * Wraps the internal {@link Proposition#fromEventData(Map)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param propositionData     A {@link Map<String, Object>} map containing {@link Proposition} data
+     * @param propositionData A {@link Map<String, Object>} map containing {@link Proposition} data
      * @return the created {@code Proposition}
      */
     @RestrictTo(RestrictTo.Scope.SUBCLASSES)
@@ -126,7 +135,7 @@ public class MessagingUtils {
     /**
      * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param scope     A {@link String} containing a {@link Proposition} scope
+     * @param scope A {@link String} containing a {@link Proposition} scope
      * @return the created {@link Surface}
      */
     @RestrictTo(RestrictTo.Scope.SUBCLASSES)
@@ -140,7 +149,7 @@ public class MessagingUtils {
     /**
      * Wraps the internal {@link Surface#toEventData()} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param surface     A {@link Surface} containing a surface to be converted to an event data {@link Map}
+     * @param surface A {@link Surface} containing a surface to be converted to an event data {@link Map}
      * @return the created event data {@code Map}
      */
     @RestrictTo(RestrictTo.Scope.SUBCLASSES)

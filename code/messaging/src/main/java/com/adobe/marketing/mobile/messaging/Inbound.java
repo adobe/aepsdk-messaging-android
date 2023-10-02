@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
  */
-class Inbound {
+public class Inbound {
     private static final String MESSAGE_CONSEQUENCE_ID = "id";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
@@ -130,7 +130,7 @@ class Inbound {
      *
      * @return {@link Inbound} created from the consequence detail {@code Map<String, Object>}
      */
-    static Inbound fromConsequenceDetails(final Map<String, Object> consequenceDetails) {
+    public static Inbound fromConsequenceDetails(final Map<String, Object> consequenceDetails) {
         final String uniqueId = DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_ID, "");
         final InboundType inboundType = InboundType.fromString(DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_SCHEMA, ""));
         final Map<String, Object> data = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_DATA, null);

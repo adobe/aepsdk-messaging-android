@@ -35,17 +35,20 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = propositions[position]
         for (item in proposition.items) {
-            val jsonContent = JSONObject(item.content)
-            holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(jsonContent.getString("imageUrl")))
-            holder.feedItemImage.refreshDrawableState()
-            holder.feedItemTitle.text = jsonContent.getString("title")
-            holder.feedBody.text = jsonContent.getString("body")
-            holder.itemView.setOnClickListener {
-                val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                MobileCore.getApplication()?.startActivity(intent.apply {
-                    putExtra("content", item.content)
-                })
+            val inbound = item.decodeContent()
+            if (inbound != null) {
+                val jsonContent = JSONObject(inbound.content)
+                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(jsonContent.getString("imageUrl")))
+                holder.feedItemImage.refreshDrawableState()
+                holder.feedItemTitle.text = jsonContent.getString("title")
+                holder.feedBody.text = jsonContent.getString("body")
+                holder.itemView.setOnClickListener {
+                    val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    MobileCore.getApplication()?.startActivity(intent.apply {
+                        putExtra("content", jsonContent.toString())
+                    })
+                }
             }
         }
     }

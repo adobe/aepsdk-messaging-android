@@ -34,6 +34,8 @@ class ScrollingFeedActivity : AppCompatActivity() {
         val surfaces = mutableListOf<Surface>()
         val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
+        Messaging.updatePropositionsForSurfaces(surfaces)
+        Thread.sleep(500)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
             for (entry in it.entries) {
