@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * An {@link Inbound} object represents the common response (consequence) for AJO Campaigns targeting inbound channels.
  */
-public class Inbound {
+class Inbound {
     private static final String MESSAGE_CONSEQUENCE_ID = "id";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";

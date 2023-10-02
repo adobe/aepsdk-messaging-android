@@ -861,7 +861,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 config.count = 5;
                 Map<Surface, List<Proposition>> payload = new HashMap<>();
                 try {
-                    payload.put(new Surface(), MessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config)));
+                    payload.put(new Surface(), InternalMessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config)));
                 } catch (Exception e) {
                     fail(e.getMessage());
                 }

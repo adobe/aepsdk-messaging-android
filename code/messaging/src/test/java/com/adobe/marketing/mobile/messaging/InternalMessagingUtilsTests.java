@@ -21,7 +21,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Map;
 
-public class MessagingUtilsTests {
+public class InternalMessagingUtilsTests {
     private final String mockJsonObj = "{\n" +
             "   \"messageProfile\":{\n" +
             "      \"channel\":{\n" +

@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * A {@link Feed} object aggregates one or more {@link FeedItem}s.
  */
-public class Feed {
+class Feed {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "Feed";
     private static final String FEED_SURFACE_URI_KEY = "surfaceUri";

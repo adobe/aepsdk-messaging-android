@@ -10,22 +10,19 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.adobe.marketing.mobile.AdobeCallback;
-import com.adobe.marketing.mobile.AdobeCallbackWithError;
-import com.adobe.marketing.mobile.AdobeError;
-import com.adobe.marketing.mobile.Event;
-import com.adobe.marketing.mobile.EventSource;
-import com.adobe.marketing.mobile.EventType;
-import com.adobe.marketing.mobile.Extension;
-import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.messaging.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.MessagingUtils;
+import com.adobe.marketing.mobile.messaging.Proposition;
+import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -217,7 +214,7 @@ public final class Messaging {
      *
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing the {@link Surface}s and the corresponding list of {@link Proposition} objects.
      */
-    @VisibleForTesting
+    @SuppressLint("RestrictedApi")
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
@@ -231,8 +228,8 @@ public final class Messaging {
                         Surface surface = null;
                         final List<Proposition> propositions = new ArrayList<>();
                         for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                            surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
-                            final Proposition proposition = Proposition.fromEventData(propositionData);
+                            surface = MessagingUtils.scopeToSurface(DataReader.optString(propositionData, SCOPE, null));
+                            final Proposition proposition = MessagingUtils.eventDataToProposition(propositionData);
                             propositions.add(proposition);
                         }
                         convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, propositions, convertedPropositionsMap);
@@ -255,6 +252,7 @@ public final class Messaging {
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving previously fetched propositions
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing previously fetched feeds content
      */
+    @SuppressLint("RestrictedApi")
     public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
         if (callback == null ) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided callback is null.");
@@ -269,7 +267,7 @@ public final class Messaging {
         final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacesFlattened.add(surface.toEventData());
+                validSurfacesFlattened.add(MessagingUtils.surfaceToEventData(surface));
             }
         }
 
@@ -316,9 +314,9 @@ public final class Messaging {
                     }
 
                     for (final Map<String, Object> propositionMap : retrievedPropositions) {
-                        final Proposition proposition = Proposition.fromEventData(propositionMap);
+                        final Proposition proposition = MessagingUtils.eventDataToProposition(propositionMap);
                         if (proposition != null) {
-                            final Surface surface = Surface.fromUriString(proposition.getScope());
+                            final Surface surface = MessagingUtils.scopeToSurface(proposition.getScope());
                             requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, proposition, requestedPropositionsMap);
                         }
                     }
@@ -337,6 +335,7 @@ public final class Messaging {
      *
      * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
+    @SuppressLint("RestrictedApi")
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
         if (surfaces == null || surfaces.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces is null or empty.");
@@ -346,7 +345,7 @@ public final class Messaging {
         final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacesFlattened.add(surface.toEventData());
+                validSurfacesFlattened.add(MessagingUtils.surfaceToEventData(surface));
             }
         }
 

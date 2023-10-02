@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,9 +20,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
-import com.adobe.marketing.mobile.Proposition;
-import com.adobe.marketing.mobile.Surface;
-import com.adobe.marketing.mobile.messaging.BuildConfig;
 
 import org.junit.After;
 import org.junit.Before;
@@ -103,7 +100,7 @@ public class MessageCachingFunctionalTests {
         final Map<Surface, List<Proposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
         final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
         expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-        final String expectedPropositionString = MessagingTestUtils.convertPropositionsToString(MessagingUtils.getPropositionsFromPayloads(expectedPropositions));
+        final String expectedPropositionString = MessagingTestUtils.convertPropositionsToString(InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));
         assertEquals(expectedPropositionString, MessagingTestUtils.convertPropositionsToString(cachedPropositions.get(surface)));
     }
 }

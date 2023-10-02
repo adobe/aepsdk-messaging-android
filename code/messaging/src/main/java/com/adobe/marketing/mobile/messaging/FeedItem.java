@@ -22,7 +22,7 @@ import java.util.Map;
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet interactive offer.
  * Customers can use the Messaging SDK to render the feed item data in a pre-defined format or implement their own rendering.
  */
-public class FeedItem {
+class FeedItem {
     private static final String TITLE = "title";
     private static final String BODY = "body";
     private static final String IMAGE_URL = "imageUrl";

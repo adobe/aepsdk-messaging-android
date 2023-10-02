@@ -261,7 +261,7 @@ class EdgePersonalizationResponseHandler {
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
-        final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
+        final String requestEventId = InternalMessagingUtils.getRequestEventId(edgeResponseEvent);
 
         if (!messagesRequestEventId.equals(requestEventId) && !requestEventId.equals("TESTING_ID")) {
             return;
@@ -279,7 +279,7 @@ class EdgePersonalizationResponseHandler {
         // convert the payload into a list of Proposition(s)
         List<Proposition> propositions = null;
         try {
-            propositions = MessagingUtils.getPropositionsFromPayloads(payload);
+            propositions = InternalMessagingUtils.getPropositionsFromPayloads(payload);
         } catch (final Exception exception) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create propositions from the AJO personalization payload, an exception occurred: %s.", exception.getLocalizedMessage());
         }
@@ -292,7 +292,7 @@ class EdgePersonalizationResponseHandler {
         // final List<LaunchRule> feedRules = parsedRules.get(InboundType.UNKNOWN);
 
         // handle in-app message rules
-        if (!MessagingUtils.isNullOrEmpty(inAppRules)) {
+        if (!InternalMessagingUtils.isNullOrEmpty(inAppRules)) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains InApp message definitions.");
         }
         if (clearExistingRules) {
@@ -304,7 +304,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         // handle feed rules
-        if (!MessagingUtils.isNullOrEmpty(feedRules)) {
+        if (!InternalMessagingUtils.isNullOrEmpty(feedRules)) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "The personalization:decisions response contains feed message definitions.");
         }
         if (clearExistingRules) {
@@ -368,7 +368,7 @@ class EdgePersonalizationResponseHandler {
         for (final Surface surface : surfaces) {
             // add code-based propositions
             final List<Proposition> propositionsList = propositions.get(surface);
-            if (!MessagingUtils.isNullOrEmpty(propositionsList)) {
+            if (!InternalMessagingUtils.isNullOrEmpty(propositionsList)) {
                 propositionMap.put(surface, propositionsList);
             }
 
@@ -377,7 +377,7 @@ class EdgePersonalizationResponseHandler {
                 inboundList = inboundMessages.get(surface);
             }
 
-            if (MessagingUtils.isNullOrEmpty(inboundList)) {
+            if (InternalMessagingUtils.isNullOrEmpty(inboundList)) {
                 continue;
             }
 
@@ -395,7 +395,7 @@ class EdgePersonalizationResponseHandler {
                 final Proposition proposition = new Proposition(propositionInfo.id, propositionInfo.scope, propositionInfo.scopeDetails, propositionItemList);
                 inboundPropositionList.add(proposition);
             }
-            propositionMap = MessagingUtils.updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
+            propositionMap = InternalMessagingUtils.updatePropositionMapForSurface(surface, inboundPropositionList, propositionMap);
         }
         return propositionMap;
     }
@@ -420,7 +420,7 @@ class EdgePersonalizationResponseHandler {
             clearSurfaces(expectedSurfaces);
         }
 
-        if (MessagingUtils.isNullOrEmpty(propositions)) {
+        if (InternalMessagingUtils.isNullOrEmpty(propositions)) {
             return rules;
         }
 
@@ -446,14 +446,14 @@ class EdgePersonalizationResponseHandler {
             for (final PropositionItem propositionItem : proposition.getItems()) {
                 parsedRules = JSONRulesParser.parse(propositionItem.getContent(), extensionApi);
                 // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
-                if (MessagingUtils.isNullOrEmpty(parsedRules)) {
+                if (InternalMessagingUtils.isNullOrEmpty(parsedRules)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
-                    tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                    tempPropositions = InternalMessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                     continue;
                 }
 
                 final List<RuleConsequence> consequences = parsedRules.get(0).getConsequenceList();
-                if (MessagingUtils.isNullOrEmpty(consequences)) {
+                if (InternalMessagingUtils.isNullOrEmpty(consequences)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with null or empty consequences.");
                     continue;
                 }
@@ -469,14 +469,14 @@ class EdgePersonalizationResponseHandler {
                         tempPropositionInfo.put(messageId, PropositionInfo.createFromProposition(proposition));
                     }
 
-                    final boolean isInAppConsequence = MessagingUtils.isInApp(consequence);
+                    final boolean isInAppConsequence = InternalMessagingUtils.isInApp(consequence);
                     if (isInAppConsequence) {
-                        inAppPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, inAppPropositions);
+                        inAppPropositions = InternalMessagingUtils.updatePropositionMapForSurface(surface, proposition, inAppPropositions);
                         // cache any in-app image assets present in the current rule json's image assets array
                         cacheImageAssetsFromPayload(consequence);
                     } else {
-                        if (!MessagingUtils.isFeedItem(consequence)) {
-                            tempPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
+                        if (!InternalMessagingUtils.isFeedItem(consequence)) {
+                            tempPropositions = InternalMessagingUtils.updatePropositionMapForSurface(surface, proposition, tempPropositions);
                         }
                     }
 
@@ -485,7 +485,7 @@ class EdgePersonalizationResponseHandler {
                 }
 
                 List<LaunchRule> tempRules = rules.get(inboundType);
-                if (!MessagingUtils.isNullOrEmpty(tempRules)) {
+                if (!InternalMessagingUtils.isNullOrEmpty(tempRules)) {
                     tempRules.addAll(new ArrayList<>(parsedRules));
                 } else {
                     tempRules = new ArrayList<>(parsedRules);
@@ -599,7 +599,7 @@ class EdgePersonalizationResponseHandler {
         final List<String> remoteAssetsList = new ArrayList<>();
         final Map<String, Object> details = ruleConsequence.getDetail();
         final List<String> remoteAssets = DataReader.optStringList(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, null);
-        if (!MessagingUtils.isNullOrEmpty(remoteAssets)) {
+        if (!InternalMessagingUtils.isNullOrEmpty(remoteAssets)) {
             for (final String remoteAsset : remoteAssets) {
                 if (UrlUtils.isValidUrl(remoteAsset)) {
                     Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", remoteAsset);

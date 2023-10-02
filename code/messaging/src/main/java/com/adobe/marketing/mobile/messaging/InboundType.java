@@ -12,7 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-public enum InboundType {
+enum InboundType {
     // Unknown inbound type
     UNKNOWN(0),
     // Feed Item

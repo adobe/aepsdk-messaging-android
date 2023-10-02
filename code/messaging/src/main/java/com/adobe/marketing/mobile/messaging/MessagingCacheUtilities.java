@@ -53,7 +53,7 @@ final class MessagingCacheUtilities {
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
-        this.assetCacheLocation = MessagingUtils.getAssetCacheLocation();
+        this.assetCacheLocation = InternalMessagingUtils.getAssetCacheLocation();
     }
     // ========================================================================================================
     // Message payload caching

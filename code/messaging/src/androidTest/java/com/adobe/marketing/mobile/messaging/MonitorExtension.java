@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile.messaging;
 
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.Extension;

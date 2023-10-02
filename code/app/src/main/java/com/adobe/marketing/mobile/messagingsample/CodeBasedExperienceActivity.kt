@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import android.os.Bundle
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
-import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.Surface
 import java.nio.charset.StandardCharsets
@@ -49,7 +49,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
             val codeBasedExperienceWebView: WebView = findViewById(R.id.codeBasedExperienceWebView)
             val htmlContentString = propositions[0].items[0].content
             val mimeType =
-                if (propositions[0].items[0].schema.equals("https://ns.adobe.com/personalization/json-content-item")) "text/json" else "text/html"
+                if (propositions[0].items[0].schema.equals("https://ns.adobe.com/personalization/json-content-item")) "application/json" else "text/html"
             runOnUiThread {
                 codeBasedExperienceWebView.loadData(
                     htmlContentString,

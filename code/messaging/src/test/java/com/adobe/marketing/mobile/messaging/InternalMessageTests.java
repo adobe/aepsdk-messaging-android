@@ -34,6 +34,7 @@ import android.webkit.WebView;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.WebViewJavascriptInterface;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.DeviceInforming;

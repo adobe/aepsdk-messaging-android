@@ -32,7 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.services.MessagingDelegate
@@ -298,7 +298,6 @@ class MainActivity : ComponentActivity() {
                 MobileCore.trackAction(trigger, null)
             }
         }
-
         btnCheckFeedMessages.setOnClickListener {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }

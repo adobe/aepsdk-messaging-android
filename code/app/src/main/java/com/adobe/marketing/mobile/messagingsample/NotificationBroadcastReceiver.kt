@@ -18,7 +18,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.Messaging
 
 
 class NotificationBroadcastReceiver : BroadcastReceiver() {

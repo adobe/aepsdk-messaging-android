@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messagingsample
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.Messaging
 
 class NotificationDeleteReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {

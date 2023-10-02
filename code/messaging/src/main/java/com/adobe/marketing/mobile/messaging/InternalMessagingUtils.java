@@ -17,7 +17,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
@@ -49,8 +48,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MessagingUtils {
-    private final static String SELF_TAG = "MessagingUtils";
+class InternalMessagingUtils {
+    private final static String SELF_TAG = "InternalMessagingUtils";
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
@@ -195,7 +194,7 @@ class MessagingUtils {
         final Map<String, Object> eventData = event.getEventData();
         final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (MessagingUtils.isNullOrEmpty(surfaces)) {
+        if (InternalMessagingUtils.isNullOrEmpty(surfaces)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
@@ -242,22 +241,6 @@ class MessagingUtils {
             Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
         }
         return consequence;
-    }
-
-    /**
-     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
-     *
-     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return {@code JSONObject> containing the consequence details extracted from the rule json
-     */
-    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
-        JSONObject consequenceDetails = null;
-        try {
-            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
-        }
-        return consequenceDetails;
     }
 
     // ========================================================================================
@@ -349,7 +332,7 @@ class MessagingUtils {
      * @param element A {@link T} to be added to the mutable list
      * @return the mutable {@link List<T>} list
      */
-    static <T> List<T> createMutableList(final T element) {
+    private static <T> List<T> createMutableList(final T element) {
         return new ArrayList<T>() {
             {
                 add(element);
@@ -363,7 +346,7 @@ class MessagingUtils {
      * @param list A {@link List<T>} to be converted to a mutable list
      * @return the mutable {@link List<T>} list
      */
-    static <T> List<T> createMutableList(final List<T> list) {
+    private static <T> List<T> createMutableList(final List<T> list) {
         return new ArrayList<>(list);
     }
 
@@ -380,7 +363,7 @@ class MessagingUtils {
             return mapToUpdate;
         }
         final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(propositionsToAdd);
+        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : InternalMessagingUtils.createMutableList(propositionsToAdd);
         if (updatedMap.get(surface) != null) {
             list.addAll(propositionsToAdd);
         }
@@ -401,7 +384,7 @@ class MessagingUtils {
             return mapToUpdate;
         }
         final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(proposition);
+        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : InternalMessagingUtils.createMutableList(proposition);
         if (updatedMap.get(surface) != null) {
             list.add(proposition);
         }

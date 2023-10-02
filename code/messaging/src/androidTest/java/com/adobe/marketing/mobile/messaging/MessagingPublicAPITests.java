@@ -9,12 +9,12 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.internal;
+package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.messaging.internal.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.messaging.internal.TestHelper.resetTestExpectations;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
+import static com.adobe.marketing.mobile.messaging.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.messaging.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.messaging.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -31,10 +31,6 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
-import com.adobe.marketing.mobile.Proposition;
-import com.adobe.marketing.mobile.PropositionItem;
-import com.adobe.marketing.mobile.Surface;
-import com.adobe.marketing.mobile.messaging.BuildConfig;
 import com.adobe.marketing.mobile.util.DataReader;
 
 import org.junit.Assert;
@@ -422,9 +418,9 @@ public class MessagingPublicAPITests {
         final List<Surface> surfacePaths = new ArrayList<>();
         surfacePaths.add(new Surface("promos/feed1"));
         surfacePaths.add(new Surface("promos/feed2"));
-        final List<String> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -456,14 +452,15 @@ public class MessagingPublicAPITests {
     @Test
     public void testUpdatePropositionsForSurfacePaths_somePathsInvalid() throws InterruptedException {
         // setup
+        MonitorExtension.reset();
         final List<Surface> surfacePaths = new ArrayList<>();
         surfacePaths.add(new Surface("promos/feed1"));
         surfacePaths.add(new Surface("##invalid##"));
         surfacePaths.add(new Surface("##alsoinvalid!"));
         surfacePaths.add(new Surface("promos/feed2"));
-        final List<String> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);

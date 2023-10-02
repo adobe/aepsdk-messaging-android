@@ -211,7 +211,7 @@ public final class MessagingExtension extends Extension {
         List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
         final List<RuleConsequence> consequences = new ArrayList<>();
 
-        if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
+        if (InternalMessagingUtils.isNullOrEmpty(triggeredConsequences)) {
             return;
         }
 
@@ -266,21 +266,21 @@ public final class MessagingExtension extends Extension {
         }
 
         // validate refresh messages event then fetch in-app messages via an Edge extension event
-        if (MessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
+        if (InternalMessagingUtils.isRefreshMessagesEvent(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing manual request to refresh In-App Message definitions from the remote.");
             edgePersonalizationResponseHandler.fetchMessages(null);
-        } else if (MessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
+        } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
             // validate update propositions event then retrieve propositions via an Edge extension event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to retrieve propositions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(MessagingUtils.getSurfaces(eventToProcess));
-        } else if (MessagingUtils.isGetPropositionsEvent(eventToProcess)) {
+            edgePersonalizationResponseHandler.fetchMessages(InternalMessagingUtils.getSurfaces(eventToProcess));
+        } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // validate get propositions event then retrieve cached proposition content and return them in a response event
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached proposition content.");
-            edgePersonalizationResponseHandler.retrieveMessages(MessagingUtils.getSurfaces(eventToProcess), eventToProcess);
-        } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
+            edgePersonalizationResponseHandler.retrieveMessages(InternalMessagingUtils.getSurfaces(eventToProcess), eventToProcess);
+        } else if (InternalMessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
-        } else if (MessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
+        } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
@@ -290,7 +290,7 @@ public final class MessagingExtension extends Extension {
             }
             // handle the push tracking information from messaging request content event
             handleTrackingInfo(eventToProcess, experienceEventDatasetId);
-        } else if (MessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
+        } else if (InternalMessagingUtils.isEdgePersonalizationDecisionEvent(eventToProcess)) {
             // validate the edge response event then load any iam rules present
             edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(eventToProcess);
         }
@@ -305,7 +305,7 @@ public final class MessagingExtension extends Extension {
         }
 
         final Map<String, Object> edgeIdentitySharedState = getXDMSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
-        final String ecid = MessagingUtils.getSharedStateEcid(edgeIdentitySharedState);
+        final String ecid = InternalMessagingUtils.getSharedStateEcid(edgeIdentitySharedState);
         if (StringUtils.isNullOrEmpty(ecid)) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to sync the push token. ECID is unavailable for the user.");
             return;
@@ -322,7 +322,7 @@ public final class MessagingExtension extends Extension {
         getApi().createSharedState(messagingSharedState, event);
 
         // Send an edge event with profile data as event data
-        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+        InternalMessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 eventData,
@@ -370,7 +370,7 @@ public final class MessagingExtension extends Extension {
         xdmData.put(META, metaMap);
 
         // dispatch push tracking event
-        MessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
+        InternalMessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmData,
@@ -435,7 +435,7 @@ public final class MessagingExtension extends Extension {
         xdmEventData.put(IAM_HISTORY, iamHistoryMap);
 
         // dispatch in-app tracking event
-        MessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
+        InternalMessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmEventData,

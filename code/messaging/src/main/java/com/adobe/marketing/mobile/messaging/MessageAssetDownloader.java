@@ -54,7 +54,7 @@ class MessageAssetDownloader {
     MessageAssetDownloader(final List<String> assets) {
         this.assetsCollection = assets;
         this.cacheService = ServiceProvider.getInstance().getCacheService();
-        this.assetCacheLocation = MessagingUtils.getAssetCacheLocation();
+        this.assetCacheLocation = InternalMessagingUtils.getAssetCacheLocation();
         createAssetCacheDirectory();
     }
 

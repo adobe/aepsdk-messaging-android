@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import android.content.Intent;
 
-import com.adobe.marketing.mobile.messaging.Messaging;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.Surface;

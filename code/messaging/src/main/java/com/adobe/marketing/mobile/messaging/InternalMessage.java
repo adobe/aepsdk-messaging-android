@@ -24,6 +24,7 @@ import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.WebViewJavascriptInterface;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;

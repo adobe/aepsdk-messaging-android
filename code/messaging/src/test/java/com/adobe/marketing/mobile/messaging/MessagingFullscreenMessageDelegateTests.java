@@ -28,6 +28,7 @@ import android.webkit.WebView;
 
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.WebViewJavascriptInterface;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;

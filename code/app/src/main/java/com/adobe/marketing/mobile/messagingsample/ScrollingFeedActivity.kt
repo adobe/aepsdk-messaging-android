@@ -15,7 +15,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.adobe.marketing.mobile.messaging.Messaging
+import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
