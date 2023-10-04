@@ -360,7 +360,7 @@ class EdgePersonalizationResponseHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         // validate this is one of our events
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
-        if (!requestedSurfacesForEventId.containsKey(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+        if (!requestedSurfacesForEventId.containsKey(requestEventId)) {
             return;
         }
 
@@ -670,5 +670,10 @@ class EdgePersonalizationResponseHandler {
     void setMessagesRequestEventId(final String messagesRequestEventId) {
         this.messagesRequestEventId = messagesRequestEventId;
         requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(new Surface()));
+    }
+
+    @VisibleForTesting
+    Map<Surface, List<Proposition>> getInProgressPropositions () {
+        return inProgressPropositions;
     }
 }
