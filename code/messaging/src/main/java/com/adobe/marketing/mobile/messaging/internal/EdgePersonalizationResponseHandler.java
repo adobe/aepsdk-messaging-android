@@ -673,6 +673,11 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
+    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
+        return requestedSurfacesForEventId;
+    }
+
+    @VisibleForTesting
     Map<Surface, List<Proposition>> getInProgressPropositions () {
         return inProgressPropositions;
     }
