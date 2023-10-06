@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
@@ -753,8 +754,15 @@ public class EdgePersonalizationResponseHandlerTests {
                 // test retrieveMessages
                 edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
 
-                // verify no message propositions response event dispatched
-                verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+                // verify error response event dispatched
+                verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                Event propositionsResponseEvent = eventArgumentCaptor.getValue();
+                assertEquals(MESSAGE_PROPOSITIONS_RESPONSE, propositionsResponseEvent.getName());
+                assertEquals(EventType.MESSAGING, propositionsResponseEvent.getType());
+                assertEquals(EventSource.RESPONSE_CONTENT, propositionsResponseEvent.getSource());
+                eventData = propositionsResponseEvent.getEventData();
+                assertEquals(RESPONSE_ERROR, eventData.keySet().stream().findFirst().get());
+                assertEquals(AdobeError.UNEXPECTED_ERROR.getErrorName(), eventData.get(RESPONSE_ERROR));
             }
         });
     }
