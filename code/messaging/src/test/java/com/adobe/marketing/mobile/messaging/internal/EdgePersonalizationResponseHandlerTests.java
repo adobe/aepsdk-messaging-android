@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile.messaging.internal;
 
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
+import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -51,6 +53,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
@@ -210,7 +213,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     private List<Inbound> createInboundList(int size) {
-        List<RuleConsequence> consequences = createFeedConsequenceList(5);
+        List<RuleConsequence> consequences = createFeedConsequenceList(size);
         List<Inbound> inboundMessages = new ArrayList<>();
         for (RuleConsequence consequence : consequences) {
             inboundMessages.add(Inbound.fromConsequenceDetails(consequence.getDetail()));
@@ -600,7 +603,11 @@ public class EdgePersonalizationResponseHandlerTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                Surface surface = new Surface();
+                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, createInboundList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
                 // setup in progress in-app propositions
                 MessageTestConfig config = new MessageTestConfig();
@@ -621,6 +628,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 // test
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
+                // setup processing completed event
                 eventData = new HashMap<>();
                 eventData.put(ENDING_EVENT_ID, "TESTING_ID");
                 mockEvent = mock(Event.class);
@@ -636,6 +644,117 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify parsed rules replaced in feed rules engine
                 verify(mockFeedRulesEngine, times(1)).replaceRules(feedRulesListCaptor.capture());
                 assertEquals(4, feedRulesListCaptor.getValue().size());
+
+                // verify received propositions event dispatched with 4 feed propositions
+                verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                Event receivedPersonalizationEvent = eventArgumentCaptor.getValue();
+                assertEquals(MESSAGE_PROPOSITIONS_NOTIFICATION, receivedPersonalizationEvent.getName());
+                assertEquals(EventType.MESSAGING, receivedPersonalizationEvent.getType());
+                assertEquals(MessagingConstants.EventSource.NOTIFICATION, receivedPersonalizationEvent.getSource());
+                eventData = receivedPersonalizationEvent.getEventData();
+                assertEquals("propositions", eventData.keySet().stream().findFirst().get());
+                List<Map<String, Object>> propositions = DataReader.optTypedListOfMap(Object.class, eventData, "propositions", null);
+                assertEquals(4, propositions.size());
+            }
+        });
+    }
+
+    // ========================================================================================
+    // edgePersonalizationResponseHandler retrieveMessages
+    // ========================================================================================
+    @Test
+    public void test_retrieveMessages() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // setup valid surfaces
+                Surface surface = new Surface();
+                List<Surface> surfaces = new ArrayList<Surface>(){{ add(surface); }};
+
+                // setup feed rules engine
+                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, createInboundList(3));
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
+
+                // setup in progress feed propositions
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 4;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // setup processing completed event
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+                reset(mockExtensionApi);
+
+                // test retrieveMessages
+                edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+
+                // verify message propositions response event dispatched with 4 feed propositions
+                verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                Event propositionsResponseEvent = eventArgumentCaptor.getValue();
+                assertEquals(MESSAGE_PROPOSITIONS_RESPONSE, propositionsResponseEvent.getName());
+                assertEquals(EventType.MESSAGING, propositionsResponseEvent.getType());
+                assertEquals(EventSource.RESPONSE_CONTENT, propositionsResponseEvent.getSource());
+                eventData = propositionsResponseEvent.getEventData();
+                assertEquals("propositions", eventData.keySet().stream().findFirst().get());
+                List<Map<String, Object>> propositions = DataReader.optTypedListOfMap(Object.class, eventData, "propositions", null);
+                assertEquals(3, propositions.size());
+            }
+        });
+    }
+
+    @Test
+    public void test_retrieveMessages_invalidSurfacesProvided() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // setup invalid surfaces
+                List<Surface> surfaces = new ArrayList<>();
+                surfaces.add(new Surface("##invalid"));
+                surfaces.add(new Surface("alsoinvalid##"));
+
+                // setup feed rules engine
+                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(new Surface(), createInboundList(3));
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
+
+                // setup in progress feed propositions
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 4;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // setup processing completed event
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+                reset(mockExtensionApi);
+
+                // test retrieveMessages
+                edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+
+                // verify no message propositions response event dispatched
+                verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
             }
         });
     }
