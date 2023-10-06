@@ -305,24 +305,19 @@ class EdgePersonalizationResponseHandler {
      */
     void retrieveMessages(final List<Surface> surfaces, final Event event) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
-        if (surfaces != null && !surfaces.isEmpty()) {
-            for (final Surface surface : surfaces) {
-                if (surface.isValid()) {
-                    requestedSurfaces.add(surface);
-                }
-            }
+        if (surfaces == null || surfaces.isEmpty()) {
+            return;
+        }
 
-            if (requestedSurfaces.isEmpty()) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve messages, no valid surfaces found.");
-                return;
+        for (final Surface surface : surfaces) {
+            if (surface.isValid()) {
+                requestedSurfaces.add(surface);
             }
-        } else {
-            final Surface appSurface = new Surface();
-            if (appSurface.getUri().equals("unknown")) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve messages, couldn't create a valid app surface.");
-                return;
-            }
-            requestedSurfaces.add(appSurface);
+        }
+
+        if (requestedSurfaces.isEmpty()) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve messages, no valid surfaces found.");
+            return;
         }
 
         inboundMessages = feedRulesEngine.evaluate(event);
