@@ -762,7 +762,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 assertEquals(EventSource.RESPONSE_CONTENT, propositionsResponseEvent.getSource());
                 eventData = propositionsResponseEvent.getEventData();
                 assertEquals(RESPONSE_ERROR, eventData.keySet().stream().findFirst().get());
-                assertEquals(AdobeError.UNEXPECTED_ERROR.getErrorName(), eventData.get(RESPONSE_ERROR));
+                assertEquals(AdobeErrorExt.INVALID_REQUEST.getErrorName(), eventData.get(RESPONSE_ERROR));
             }
         });
     }
