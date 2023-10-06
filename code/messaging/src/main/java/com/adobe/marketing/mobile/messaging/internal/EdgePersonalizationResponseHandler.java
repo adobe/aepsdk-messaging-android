@@ -317,6 +317,7 @@ class EdgePersonalizationResponseHandler {
 
         if (requestedSurfaces.isEmpty()) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve messages, no valid surfaces found.");
+            extensionApi.dispatch(MessagingUtils.createErrorResponseEvent(event, AdobeError.UNEXPECTED_ERROR));
             return;
         }
 

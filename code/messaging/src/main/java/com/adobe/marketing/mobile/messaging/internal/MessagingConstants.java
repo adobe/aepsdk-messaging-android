@@ -151,6 +151,7 @@ final class MessagingConstants {
             static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
             static final String ENDING_EVENT_ID = "endingEventId";
+            static final String RESPONSE_ERROR = "responseerror";
 
             private Messaging() {
             }
