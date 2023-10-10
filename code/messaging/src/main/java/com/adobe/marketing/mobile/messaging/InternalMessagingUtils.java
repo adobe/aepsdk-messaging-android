@@ -51,17 +51,17 @@ import java.util.Map;
 class InternalMessagingUtils {
     private final static String SELF_TAG = "InternalMessagingUtils";
 
-    static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
-        final List<Proposition> propositions = new ArrayList<>();
+    static List<MessagingProposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
+        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final Proposition proposition = Proposition.fromEventData(payload);
-                if (proposition != null) {
-                    propositions.add(proposition);
+                final MessagingProposition messagingProposition = MessagingProposition.fromEventData(payload);
+                if (messagingProposition != null) {
+                    messagingPropositions.add(messagingProposition);
                 }
             }
         }
-        return propositions;
+        return messagingPropositions;
     }
 
     // ========================================================================================
@@ -194,7 +194,7 @@ class InternalMessagingUtils {
         final Map<String, Object> eventData = event.getEventData();
         final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
-        if (InternalMessagingUtils.isNullOrEmpty(surfaces)) {
+        if (MessagingUtils.isNullOrEmpty(surfaces)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
@@ -310,85 +310,5 @@ class InternalMessagingUtils {
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
-    }
-
-    // ========================================================================================
-    // Collection utils
-    // ========================================================================================
-
-    /**
-     * Checks if the given {@code collection} is null or empty.
-     *
-     * @param collection input {@code Collection<?>} to be tested.
-     * @return {@code boolean} result indicating whether the provided {@code collection} is null or empty.
-     */
-    static boolean isNullOrEmpty(final Collection<?> collection) {
-        return collection == null || collection.isEmpty();
-    }
-
-    /**
-     * Returns a mutable {@code List<T>} list containing a single element.
-     *
-     * @param element A {@link T} to be added to the mutable list
-     * @return the mutable {@link List<T>} list
-     */
-    private static <T> List<T> createMutableList(final T element) {
-        return new ArrayList<T>() {
-            {
-                add(element);
-            }
-        };
-    }
-
-    /**
-     * Returns a mutable {@code List<T>} list containing a single element.
-     *
-     * @param list A {@link List<T>} to be converted to a mutable list
-     * @return the mutable {@link List<T>} list
-     */
-    private static <T> List<T> createMutableList(final List<T> list) {
-        return new ArrayList<>(list);
-    }
-
-    /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code Surface} and {@code List<Proposition>} objects.
-     *
-     * @param surface           A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param propositionsToAdd A {@link List<Proposition>} list to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} map
-     */
-    static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> propositionsToAdd, Map<Surface, List<Proposition>> mapToUpdate) {
-        if (isNullOrEmpty(propositionsToAdd)) {
-            return mapToUpdate;
-        }
-        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : InternalMessagingUtils.createMutableList(propositionsToAdd);
-        if (updatedMap.get(surface) != null) {
-            list.addAll(propositionsToAdd);
-        }
-        updatedMap.put(surface, list);
-        return updatedMap;
-    }
-
-    /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code Surface} and {@code Proposition} objects.
-     *
-     * @param surface     A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} map
-     */
-    static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, Map<Surface, List<Proposition>> mapToUpdate) {
-        if (proposition == null) {
-            return mapToUpdate;
-        }
-        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : InternalMessagingUtils.createMutableList(proposition);
-        if (updatedMap.get(surface) != null) {
-            list.add(proposition);
-        }
-        updatedMap.put(surface, list);
-        return updatedMap;
     }
 }

@@ -12,6 +12,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import com.adobe.marketing.mobile.PropositionEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
@@ -30,9 +31,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A {@link PropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
+ * A {@link MessagingPropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
  */
-public class PropositionItem implements Serializable {
+public class MessagingPropositionItem implements Serializable {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "PropositionItem";
     private static final String JSON_RULES_KEY = "rules";
@@ -58,9 +59,9 @@ public class PropositionItem implements Serializable {
     // PropositionItem data content e.g. html or plain-text string or string containing image URL, JSON string
     private String content;
     // Soft reference to Proposition instance
-    SoftReference<Proposition> propositionReference;
+    SoftReference<MessagingProposition> propositionReference;
 
-    public PropositionItem(final String uniqueId, final String schema, final String content) {
+    public MessagingPropositionItem(final String uniqueId, final String schema, final String content) {
         this.uniqueId = uniqueId;
         this.schema = schema;
         this.content = content;
@@ -69,7 +70,7 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code PropositionItem} identifier.
      *
-     * @return {@link String} containing the {@link PropositionItem} identifier.
+     * @return {@link String} containing the {@link MessagingPropositionItem} identifier.
      */
     public String getUniqueId() {
         return uniqueId;
@@ -78,7 +79,7 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code PropositionItem} content schema.
      *
-     * @return {@code String} containing the {@link PropositionItem} content schema.
+     * @return {@code String} containing the {@link MessagingPropositionItem} content schema.
      */
     public String getSchema() {
         return schema;
@@ -87,7 +88,7 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code PropositionItem} content.
      *
-     * @return {@link String} containing the {@link PropositionItem} content.
+     * @return {@link String} containing the {@link MessagingPropositionItem} content.
      */
     public String getContent() {
         return content;
@@ -96,9 +97,9 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code Proposition} referenced by the Proposition {@code SoftReference}.
      *
-     * @return {@link Proposition} referenced by the Proposition {@link SoftReference}.
+     * @return {@link MessagingProposition} referenced by the Proposition {@link SoftReference}.
      */
-    public Proposition getProposition() {
+    public MessagingProposition getProposition() {
         return propositionReference.get();
     }
 
@@ -110,7 +111,7 @@ public class PropositionItem implements Serializable {
     /**
      * Creates an {@code Inbound} object from this {@code PropositionItem}'s content.
      *
-     * @return {@link Inbound} object created from this {@link PropositionItem}'s content.
+     * @return {@link Inbound} object created from this {@link MessagingPropositionItem}'s content.
      */
     public Inbound decodeContent() {
         Inbound inboundContent = null;
@@ -141,10 +142,10 @@ public class PropositionItem implements Serializable {
      * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
      *
      * @param eventData {@link Map<String, Object>} event data
-     * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
+     * @return {@link MessagingPropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromEventData(final Map<String, Object> eventData) {
-        PropositionItem propositionItem = null;
+    static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
+        MessagingPropositionItem messagingPropositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
             final String schema = DataReader.getString(eventData, PAYLOAD_SCHEMA);
@@ -162,19 +163,19 @@ public class PropositionItem implements Serializable {
             }
 
             if (!StringUtils.isNullOrEmpty(content)) {
-                propositionItem = new PropositionItem(uniqueId, schema, content);
+                messagingPropositionItem = new MessagingPropositionItem(uniqueId, schema, content);
             }
         } catch (final Exception exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
-        return propositionItem;
+        return messagingPropositionItem;
     }
 
     /**
      * Creates a {@code Map<String, Object>} object from this {@code PropositionItem}.
      *
-     * @return {@link Map<String, Object>} object created from this {@link PropositionItem}.
+     * @return {@link Map<String, Object>} object created from this {@link MessagingPropositionItem}.
      */
     Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
@@ -231,7 +232,7 @@ public class PropositionItem implements Serializable {
         uniqueId = objectInputStream.readUTF();
         schema = objectInputStream.readUTF();
         content = objectInputStream.readUTF();
-        propositionReference = new SoftReference<>((Proposition) objectInputStream.readObject());
+        propositionReference = new SoftReference<>((MessagingProposition) objectInputStream.readObject());
     }
 
     private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException {

@@ -50,7 +50,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
         }
 
         final List<RuleConsequence> consequences = evaluateEvent(event);
-        if (InternalMessagingUtils.isNullOrEmpty(consequences)) {
+        if (MessagingUtils.isNullOrEmpty(consequences)) {
             return null;
         }
 

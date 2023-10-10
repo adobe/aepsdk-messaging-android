@@ -19,13 +19,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.MobileCore
-import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.services.ServiceProvider
-import org.json.JSONObject
 
-class FeedCardAdapter(propositions: MutableList<Proposition>) :
+class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
     RecyclerView.Adapter<FeedCardAdapter.ViewHolder>() {
-    private var propositions = mutableListOf<Proposition>()
+    private var messagingPropositions = mutableListOf<MessagingProposition>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view: View =
             LayoutInflater.from(parent.context).inflate(R.layout.card_feeditem, parent, false)
@@ -33,20 +32,20 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val proposition = propositions[position]
+        val proposition = messagingPropositions[position]
         for (item in proposition.items) {
-            val inbound = item.decodeContent()
-            if (inbound != null) {
-                val jsonContent = JSONObject(inbound.content)
-                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(jsonContent.getString("imageUrl")))
+            val inboundContent = item.decodeContent()
+            val feedItem = inboundContent.toFeedItem()
+            if (feedItem != null) {
+                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(feedItem.imageUrl))
                 holder.feedItemImage.refreshDrawableState()
-                holder.feedItemTitle.text = jsonContent.getString("title")
-                holder.feedBody.text = jsonContent.getString("body")
+                holder.feedItemTitle.text = feedItem.title
+                holder.feedBody.text = feedItem.body
                 holder.itemView.setOnClickListener {
                     val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     MobileCore.getApplication()?.startActivity(intent.apply {
-                        putExtra("content", jsonContent.toString())
+                        putExtra("content", inboundContent.content)
                     })
                 }
             }
@@ -54,7 +53,7 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     }
 
     override fun getItemCount(): Int {
-        return propositions.size
+        return messagingPropositions.size
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -70,6 +69,6 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     }
 
     init {
-        this.propositions = propositions
+        this.messagingPropositions = messagingPropositions
     }
 }

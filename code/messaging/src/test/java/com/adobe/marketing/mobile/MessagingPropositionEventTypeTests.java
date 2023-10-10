@@ -9,13 +9,16 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 
+import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
+
+import org.junit.Assert;
 import org.junit.Test;
 
-public class PropositionEventTypeTests {
+public class MessagingPropositionEventTypeTests {
 
     @Test
     public void test_PropositionEventType_valueOf() {
@@ -35,7 +38,7 @@ public class PropositionEventTypeTests {
 
     @Test
     public void test_PropositionEventType_toString() {
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, PropositionEventType.IN_APP_DISMISS.toString());
+        Assert.assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, PropositionEventType.IN_APP_DISMISS.toString());
         assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT, PropositionEventType.IN_APP_INTERACT.toString());
         assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER, PropositionEventType.IN_APP_TRIGGER.toString());
         assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY, PropositionEventType.IN_APP_DISPLAY.toString());

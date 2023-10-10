@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -147,5 +148,18 @@ public class Inbound {
         } catch (final DataReaderException dataReaderException) {
             return null;
         }
+    }
+
+    public FeedItem toFeedItem() {
+        FeedItem feedItem = null;
+        try {
+            final JSONObject jsonContent = new JSONObject(getContent());
+            feedItem = new FeedItem.Builder(jsonContent.getString("title"), jsonContent.getString("body"))
+                    .setActionTitle(jsonContent.getString("actionTitle"))
+                    .setActionUrl("actionUrl")
+                    .setImageUrl(jsonContent.getString("imageUrl"))
+                    .build();
+        } catch (final JSONException ignored) {}
+        return feedItem;
     }
 }

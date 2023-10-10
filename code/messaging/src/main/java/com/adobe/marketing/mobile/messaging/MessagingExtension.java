@@ -211,7 +211,7 @@ public final class MessagingExtension extends Extension {
         List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
         final List<RuleConsequence> consequences = new ArrayList<>();
 
-        if (InternalMessagingUtils.isNullOrEmpty(triggeredConsequences)) {
+        if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
             return;
         }
 

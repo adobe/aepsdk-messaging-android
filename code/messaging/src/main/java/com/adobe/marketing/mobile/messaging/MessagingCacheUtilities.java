@@ -79,11 +79,11 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<Proposition>}.
+     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List< MessagingProposition >}.
      *
      * @return a {@code Map<Surface, List<Proposition>>} containing the cached proposition payloads.
      */
-    Map<Surface, List<Proposition>> getCachedPropositions() {
+    Map<Surface, List<MessagingProposition>> getCachedPropositions() {
         final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cacheResult == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
@@ -95,7 +95,7 @@ final class MessagingCacheUtilities {
             Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
         ObjectInputStream objectInputStream = null;
-        Map<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
+        Map<Surface, List<MessagingProposition>> cachedPropositions = new HashMap<>();
         try {
             objectInputStream = new ObjectInputStream(cacheResult.getData());
             final Object cachedData = objectInputStream.readObject();
@@ -114,8 +114,8 @@ final class MessagingCacheUtilities {
             }
 
             // handle cached Proposition objects
-            if (firstElement instanceof Proposition) {
-                cachedPropositions = (Map<Surface, List<Proposition>>) cachedData;
+            if (firstElement instanceof MessagingProposition) {
+                cachedPropositions = (Map<Surface, List<MessagingProposition>>) cachedData;
             } else if (firstElement instanceof PropositionPayload) {
                 // handle cached PropositionPayload objects
                 final Map<Surface, List<PropositionPayload>> cachedPropositionPayloads = (Map<Surface, List<PropositionPayload>>) cachedData;
@@ -149,9 +149,9 @@ final class MessagingCacheUtilities {
     /**
      * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param propositions the {@link Map<Surface, List<Proposition>>} containing the propositions to be cached.
+     * @param propositions the {@link Map<Surface, List< MessagingProposition >>} containing the propositions to be cached.
      */
-    void cachePropositions(final Map<Surface, List<Proposition>> propositions) {
+    void cachePropositions(final Map<Surface, List<MessagingProposition>> propositions) {
         // clean any existing cached propositions first if the provided propositions are null or empty
         if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
@@ -195,19 +195,19 @@ final class MessagingCacheUtilities {
      * Converts the provided {@code PropositionPayload} into a {@code Proposition}.
      *
      * @param propositionPayloads {@link List<PropositionPayload>} to be converted
-     * @return a {@link List<Proposition>} created from the provided {@code PropositionPayload}
+     * @return a {@link List< MessagingProposition >} created from the provided {@code PropositionPayload}
      */
-    private List<Proposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
-        final List<Proposition> propositions = new ArrayList<>();
-        final List<PropositionItem> propositionItems = new ArrayList<>();
+    private List<MessagingProposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
+        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
+        final List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
-                final PropositionItem propositionItem = new PropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
-                propositionItems.add(propositionItem);
+                final MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+                messagingPropositionItems.add(messagingPropositionItem);
             }
-            propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+            messagingPropositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, messagingPropositionItems));
         }
-        return propositions;
+        return messagingPropositions;
     }
 
     // ========================================================================================================

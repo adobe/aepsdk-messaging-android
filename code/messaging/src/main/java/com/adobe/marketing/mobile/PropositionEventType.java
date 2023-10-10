@@ -10,9 +10,9 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging;
+package com.adobe.marketing.mobile;
 
-enum PropositionEventType {
+public enum PropositionEventType {
     IN_APP_DISMISS(0),
     IN_APP_INTERACT(1),
     IN_APP_TRIGGER(2),

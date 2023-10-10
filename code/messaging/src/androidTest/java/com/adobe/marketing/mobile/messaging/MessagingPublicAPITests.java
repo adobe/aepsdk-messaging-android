@@ -524,12 +524,12 @@ public class MessagingPublicAPITests {
             put("activity", activity);
         }};
 
-        PropositionItem propositionItem = new PropositionItem("propositionItemId", "schema", "content");
-        List<PropositionItem> propositionItems = new ArrayList<>();
-        propositionItems.add(propositionItem);
-        Proposition proposition = new Proposition("propositionId", EXPECTED_SURFACE_URI, scopeDetails, propositionItems);
+        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem("propositionItemId", "schema", "content");
+        List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+        messagingPropositionItems.add(messagingPropositionItem);
+        MessagingProposition messagingProposition = new MessagingProposition("propositionId", EXPECTED_SURFACE_URI, scopeDetails, messagingPropositionItems);
         List<Map<String, Object>> propositions = new ArrayList<>();
-        propositions.add(proposition.toEventData());
+        propositions.add(messagingProposition.toEventData());
 
         Map<String, Object> messageNotificationEventData = new HashMap<>();
         messageNotificationEventData.put(PROPOSITIONS, propositions);
@@ -541,7 +541,7 @@ public class MessagingPublicAPITests {
         MobileCore.dispatchEvent(messageNotificationEvent);
 
         // verify
-        Map<Surface, List<Proposition>>[] returnedPropositions = new Map[]{new HashMap<>()};
+        Map<Surface, List<MessagingProposition>>[] returnedPropositions = new Map[]{new HashMap<>()};
         CountDownLatch latch = new CountDownLatch(1);
         Messaging.setPropositionsHandler(value -> {
             returnedPropositions[0] = value;
@@ -550,14 +550,14 @@ public class MessagingPublicAPITests {
         latch.await(5, TimeUnit.SECONDS);
 
         assertNotNull(returnedPropositions[0]);
-        for (Map.Entry<Surface, List<Proposition>> returnedProposition : returnedPropositions[0].entrySet()) {
+        for (Map.Entry<Surface, List<MessagingProposition>> returnedProposition : returnedPropositions[0].entrySet()) {
             assertEquals(EXPECTED_SURFACE_URI, returnedProposition.getKey().getUri());
             assertEquals(1, returnedProposition.getValue().size());
-            for (Proposition returnedPropositionValue : returnedProposition.getValue()) {
-                assertEquals(EXPECTED_SURFACE_URI, returnedPropositionValue.getScope());
-                assertEquals(propositionItems.get(0).toEventData(), returnedPropositionValue.getItems().get(0).toEventData());
-                assertEquals(scopeDetails, returnedPropositionValue.getScopeDetails());
-                assertEquals("propositionId", returnedPropositionValue.getUniqueId());
+            for (MessagingProposition returnedMessagingPropositionValue : returnedProposition.getValue()) {
+                assertEquals(EXPECTED_SURFACE_URI, returnedMessagingPropositionValue.getScope());
+                assertEquals(messagingPropositionItems.get(0).toEventData(), returnedMessagingPropositionValue.getItems().get(0).toEventData());
+                assertEquals(scopeDetails, returnedMessagingPropositionValue.getScopeDetails());
+                assertEquals("propositionId", returnedMessagingPropositionValue.getUniqueId());
             }
         }
     }

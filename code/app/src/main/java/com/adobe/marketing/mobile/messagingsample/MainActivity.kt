@@ -32,8 +32,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.MessagingUtils
-import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
@@ -243,7 +242,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    var propositions = mutableListOf<Proposition>()
+    var messagingPropositions = mutableListOf<MessagingProposition>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -271,10 +270,10 @@ class MainActivity : ComponentActivity() {
             println("\nMessaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
             for (entry in it.entries) {
                 val surface = entry.key.uri
-                propositions = entry.value
+                messagingPropositions = entry.value
                 println("Proposition surface: $surface")
-                println("Proposition has ${propositions.size} item(s)")
-                for (proposition in propositions) {
+                println("Proposition has ${messagingPropositions.size} item(s)")
+                for (proposition in messagingPropositions) {
                     println("Item content: ${proposition.items[0].content}")
                 }
             }

@@ -127,8 +127,8 @@ public class Feed {
         final List<FeedItem> feedItems = new ArrayList<>();
         String feedName = null;
         for (final Map feedItemObject : feedMaps) {
-            final Proposition proposition = Proposition.fromEventData(feedItemObject);
-            final String ruleContentString = proposition.getItems().get(0).getContent();
+            final MessagingProposition messagingProposition = MessagingProposition.fromEventData(feedItemObject);
+            final String ruleContentString = messagingProposition.getItems().get(0).getContent();
             feedItems.add(FeedItem.fromEventData(getFeedItemData(ruleContentString)));
             feedName = getFeedName(ruleContentString);
         }

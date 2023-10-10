@@ -859,7 +859,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
                 MessageTestConfig config = new MessageTestConfig();
                 config.count = 5;
-                Map<Surface, List<Proposition>> payload = new HashMap<>();
+                Map<Surface, List<MessagingProposition>> payload = new HashMap<>();
                 try {
                     payload.put(new Surface(), InternalMessagingUtils.getPropositionsFromPayloads(MessagingTestUtils.generateMessagePayload(config)));
                 } catch (Exception e) {

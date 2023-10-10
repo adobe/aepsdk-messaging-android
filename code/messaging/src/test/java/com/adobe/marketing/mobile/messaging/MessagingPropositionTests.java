@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class PropositionTests {
+public class MessagingPropositionTests {
 
     Map<String, Object> characteristics = new HashMap<String, Object>() {{
         put("eventToken", "eventToken");
@@ -45,14 +45,14 @@ public class PropositionTests {
 
     Map<String, Object> propositionItemMap = new HashMap<>();
     Map<String, Object> eventDataMap = new HashMap<>();
-    List<PropositionItem> propositionItems = new ArrayList<>();
+    List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
     List<Map<String, Object>> propositionItemMaps = new ArrayList<>();
 
     @Before
     public void setup() throws JSONException {
         propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
-        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
-        propositionItems.add(propositionItem);
+        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
+        messagingPropositionItems.add(messagingPropositionItem);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");
         eventDataMap.put("scope", "mobileapp://mockScope");
@@ -63,29 +63,29 @@ public class PropositionTests {
     @Test
     public void test_propositionConstructor() {
         // test
-        Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
         // verify
-        assertNotNull(proposition);
-        assertEquals("uniqueId", proposition.getUniqueId());
-        assertEquals("mobileapp://mockScope", proposition.getScope());
-        assertEquals(scopeDetails, proposition.getScopeDetails());
-        assertEquals(propositionItems, proposition.getItems());
+        assertNotNull(messagingProposition);
+        assertEquals("uniqueId", messagingProposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", messagingProposition.getScope());
+        assertEquals(scopeDetails, messagingProposition.getScopeDetails());
+        assertEquals(messagingPropositionItems, messagingProposition.getItems());
     }
 
     @Test
     public void test_createProposition_fromEventData() {
         // test
-        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        MessagingProposition messagingProposition = MessagingProposition.fromEventData(eventDataMap);
         // verify
-        assertNotNull(proposition);
-        assertEquals("uniqueId", proposition.getUniqueId());
-        assertEquals("mobileapp://mockScope", proposition.getScope());
-        assertEquals(scopeDetails, proposition.getScopeDetails());
+        assertNotNull(messagingProposition);
+        assertEquals("uniqueId", messagingProposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", messagingProposition.getScope());
+        assertEquals(scopeDetails, messagingProposition.getScopeDetails());
         // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
-        for (PropositionItem item : proposition.getItems()) {
-            assertEquals(propositionItems.get(0).getUniqueId(), item.getUniqueId());
-            assertEquals(propositionItems.get(0).getContent(), item.getContent());
-            assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
+        for (MessagingPropositionItem item : messagingProposition.getItems()) {
+            assertEquals(messagingPropositionItems.get(0).getUniqueId(), item.getUniqueId());
+            assertEquals(messagingPropositionItems.get(0).getContent(), item.getContent());
+            assertEquals(messagingPropositionItems.get(0).getSchema(), item.getSchema());
             assertNotNull(item.getProposition());
         }
     }
@@ -93,17 +93,17 @@ public class PropositionTests {
     @Test
     public void test_createEventData_fromProposition() throws DataReaderException, JSONException {
         // test
-        Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
-        Map<String, Object> propositionMap = proposition.toEventData();
+        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        Map<String, Object> propositionMap = messagingProposition.toEventData();
         // verify
         assertNotNull(propositionMap);
         List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
-        PropositionItem propositionItem = propositionItems.get(0);
+        MessagingPropositionItem messagingPropositionItem = messagingPropositionItems.get(0);
         for (Map<String, Object> item : itemList) {
             Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
             String content = DataReader.getString(data, "content");
-            assertEquals(propositionItem.getUniqueId(), item.get("id"));
-            assertEquals(propositionItem.getSchema(), item.get("schema"));
+            assertEquals(messagingPropositionItem.getUniqueId(), item.get("id"));
+            assertEquals(messagingPropositionItem.getSchema(), item.get("schema"));
             assertEquals("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"ajoInbound\",\"id\":\"consequenceId\",\"detail\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"type\":\"feed\",\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}", content);
         }
     }

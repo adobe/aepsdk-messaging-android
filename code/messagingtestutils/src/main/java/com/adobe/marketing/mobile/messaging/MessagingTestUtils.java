@@ -10,7 +10,6 @@
 */
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.*;
 import com.adobe.marketing.mobile.services.*;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
@@ -515,11 +514,11 @@ public class MessagingTestUtils {
         return payload;
     }
 
-    static String convertPropositionsToString(List<Proposition> propositions) {
+    static String convertPropositionsToString(List<MessagingProposition> messagingPropositions) {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(propositions);
+            objectOutputStream.writeObject(messagingPropositions);
             objectOutputStream.defaultWriteObject();
             return objectOutputStream.toString();
         } catch (Exception e) {

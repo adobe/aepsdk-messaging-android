@@ -12,21 +12,11 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import androidx.annotation.RestrictTo;
-
-import com.adobe.marketing.mobile.MobileCore;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +32,7 @@ public class MessagingUtils {
      * @param collection input {@code Collection<?>} to be tested.
      * @return {@code boolean} result indicating whether the provided {@code collection} is null or empty.
      */
-    private static boolean isNullOrEmpty(final Collection<?> collection) {
+    static boolean isNullOrEmpty(final Collection<?> collection) {
         return collection == null || collection.isEmpty();
     }
 
@@ -52,7 +42,7 @@ public class MessagingUtils {
      * @param element A {@link T} to be added to the mutable list
      * @return the mutable {@link List<T>} list
      */
-    private static <T> List<T> createMutableList(final T element) {
+    static <T> List<T> createMutableList(final T element) {
         return new ArrayList<T>() {
             {
                 add(element);
@@ -66,51 +56,51 @@ public class MessagingUtils {
      * @param list A {@link List<T>} to be converted to a mutable list
      * @return the mutable {@link List<T>} list
      */
-    private static <T> List<T> createMutableList(final List<T> list) {
+    static <T> List<T> createMutableList(final List<T> list) {
         return new ArrayList<>(list);
     }
 
     /**
      * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code Surface} and {@code List<Proposition>} objects.
      *
-     * @param surface           A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param propositionsToAdd A {@link List<Proposition>} list to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param surface           A {@link Surface} key used to update a {@link List< MessagingProposition >} value in the provided {@link Map<Surface, List< MessagingProposition >>}
+     * @param propositionsToAdd A {@link List< MessagingProposition >} list to add in the provided {@code Map<Surface, List<Proposition>>}
      * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} map
+     * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
-    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
-    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> propositionsToAdd, Map<Surface, List<Proposition>> mapToUpdate) {
+    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final List<MessagingProposition> propositionsToAdd, Map<Surface, List<MessagingProposition>> mapToUpdate) {
         if (isNullOrEmpty(propositionsToAdd)) {
             return mapToUpdate;
         }
-        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : createMutableList(propositionsToAdd);
-        if (updatedMap.get(surface) != null) {
-            list.addAll(propositionsToAdd);
+        final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<MessagingProposition> existingList = updatedMap.get(surface);
+        final List<MessagingProposition> updatedList = existingList != null ? existingList : createMutableList(propositionsToAdd);
+        if (existingList != null) {
+            updatedList.addAll(propositionsToAdd);
         }
-        updatedMap.put(surface, list);
+        updatedMap.put(surface, updatedList);
         return updatedMap;
     }
 
     /**
      * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code Surface} and {@code Proposition} objects.
      *
-     * @param surface     A {@link Surface} key used to update a {@link List<Proposition>} value in the provided {@link Map<Surface, List<Proposition>>}
-     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param surface     A {@link Surface} key used to update a {@link List< MessagingProposition >} value in the provided {@link Map<Surface, List< MessagingProposition >>}
+     * @param messagingProposition A {@link MessagingProposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
      * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<Proposition>>} map
+     * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
-    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
-    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, Map<Surface, List<Proposition>> mapToUpdate) {
-        if (proposition == null) {
+    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final MessagingProposition messagingProposition, Map<Surface, List<MessagingProposition>> mapToUpdate) {
+        if (messagingProposition == null) {
             return mapToUpdate;
         }
-        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : createMutableList(proposition);
-        if (updatedMap.get(surface) != null) {
-            list.add(proposition);
+        final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<MessagingProposition> existingList = updatedMap.get(surface);
+        final List<MessagingProposition> updatedList = existingList != null ? existingList : createMutableList(messagingProposition);
+        if (existingList != null) {
+            updatedList.add(messagingProposition);
         }
-        updatedMap.put(surface, list);
+        updatedMap.put(surface, updatedList);
         return updatedMap;
     }
 
@@ -119,26 +109,24 @@ public class MessagingUtils {
     // ========================================================================================
 
     /**
-     * Wraps the internal {@link Proposition#fromEventData(Map)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
+     * Wraps the internal {@link MessagingProposition#fromEventData(Map)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param propositionData A {@link Map<String, Object>} map containing {@link Proposition} data
+     * @param propositionData A {@link Map<String, Object>} map containing {@link MessagingProposition} data
      * @return the created {@code Proposition}
      */
-    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
-    public static Proposition eventDataToProposition(final Map<String, Object> propositionData) {
+    public static MessagingProposition eventDataToProposition(final Map<String, Object> propositionData) {
         if (MapUtils.isNullOrEmpty(propositionData)) {
             return null;
         }
-        return Proposition.fromEventData(propositionData);
+        return MessagingProposition.fromEventData(propositionData);
     }
 
     /**
      * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param scope A {@link String} containing a {@link Proposition} scope
+     * @param scope A {@link String} containing a {@link MessagingProposition} scope
      * @return the created {@link Surface}
      */
-    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
     public static Surface scopeToSurface(final String scope) {
         if (StringUtils.isNullOrEmpty(scope)) {
             return null;
@@ -152,7 +140,6 @@ public class MessagingUtils {
      * @param surface A {@link Surface} containing a surface to be converted to an event data {@link Map}
      * @return the created event data {@code Map}
      */
-    @RestrictTo(RestrictTo.Scope.SUBCLASSES)
     public static Map<String, Object> surfaceToEventData(final Surface surface) {
         if (surface == null) {
             return null;
