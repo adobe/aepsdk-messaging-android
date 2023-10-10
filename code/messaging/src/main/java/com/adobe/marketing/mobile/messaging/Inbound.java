@@ -154,10 +154,15 @@ public class Inbound {
         FeedItem feedItem = null;
         try {
             final JSONObject jsonContent = new JSONObject(getContent());
-            feedItem = new FeedItem.Builder(jsonContent.getString("title"), jsonContent.getString("body"))
-                    .setActionTitle(jsonContent.getString("actionTitle"))
-                    .setActionUrl("actionUrl")
-                    .setImageUrl(jsonContent.getString("imageUrl"))
+            final String title = jsonContent.getString("title");
+            final String body = jsonContent.getString("body");
+            final String actionTitle = jsonContent.optString("actionTitle");
+            final String actionUrl = jsonContent.optString("actionUrl");
+            final String imageUrl = jsonContent.optString("imageUrl");
+            feedItem = new FeedItem.Builder(title, body)
+                    .setActionTitle(actionTitle)
+                    .setActionUrl(actionUrl)
+                    .setImageUrl(imageUrl)
                     .build();
         } catch (final JSONException ignored) {}
         return feedItem;
