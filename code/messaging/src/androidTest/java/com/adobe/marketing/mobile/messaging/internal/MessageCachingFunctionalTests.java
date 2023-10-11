@@ -32,6 +32,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +84,7 @@ public class MessageCachingFunctionalTests {
 
     @After
     public void tearDown() {
-        // clear cache and loaded rules
-        messagingCacheUtilities.cachePropositions(null);
+        messagingCacheUtilities.clearCachedData();
     }
 
     @Test
@@ -95,7 +95,7 @@ public class MessageCachingFunctionalTests {
         propositionList.add(Proposition.fromEventData(MessagingTestUtils.getMapFromFile("personalization_payload.json")));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
-        messagingCacheUtilities.cachePropositions(propositions);
+        messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
         // wait for event and rules processing
         TestHelper.sleep(1000);
         // verify message payload was cached

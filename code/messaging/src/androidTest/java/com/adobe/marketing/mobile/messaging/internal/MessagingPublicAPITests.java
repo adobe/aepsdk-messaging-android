@@ -423,9 +423,9 @@ public class MessagingPublicAPITests {
         final List<Surface> surfacePaths = new ArrayList<>();
         surfacePaths.add(new Surface("promos/feed1"));
         surfacePaths.add(new Surface("promos/feed2"));
-        final List<String> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -462,9 +462,9 @@ public class MessagingPublicAPITests {
         surfacePaths.add(new Surface("##invalid##"));
         surfacePaths.add(new Surface("##alsoinvalid!"));
         surfacePaths.add(new Surface("promos/feed2"));
-        final List<String> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
-        expectedSurfaces.add("mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);
