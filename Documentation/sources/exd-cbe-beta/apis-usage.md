@@ -40,7 +40,7 @@ Messaging.updatePropositionsForSurfaces(surfaces)
 
 ### getPropositionsForSurfaces
 
-Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The completion handler is invoked with the decision propositions corresponding to the given surfaces or AEPError, if it occurs. 
+Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The callback is invoked with the decision propositions corresponding to the given surfaces or AdobeError, if it occurs. 
 
 If a requested surface was not previously cached prior to calling `getPropositionsForSurfaces` (using the `updatePropositionsForSurfaces` API), no propositions will be returned for that surface.
 
@@ -138,18 +138,6 @@ Represents the decision propositions received from the remote, upon a personaliz
 
 ```java
 public class MessagingProposition implements Serializable {
-    /// Unique proposition identifier
-    public let uniqueId: String
-
-    /// Scope string
-    public let scope: String
-
-    /// Scope details dictionary
-    var scopeDetails: [String: Any]
-
-    /// Array containing proposition decision items
-    public lazy var items: [MessagingPropositionItem] = {...}()
-
     /**
      * Constructor
      */
