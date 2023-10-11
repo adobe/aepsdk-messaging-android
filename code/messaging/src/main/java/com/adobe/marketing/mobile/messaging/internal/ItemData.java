@@ -35,13 +35,4 @@ class ItemData implements Serializable {
         this.id = id;
         this.content = content;
     }
-
-    JSONObject getRuleJsonObject() {
-        try {
-            return new JSONObject(content);
-        } catch (final JSONException e) {
-            Log.warning(LOG_TAG, SELF_TAG, "JSONException thrown while attempting to create object: %s", e.getLocalizedMessage());
-            return null;
-        }
-    }
 }

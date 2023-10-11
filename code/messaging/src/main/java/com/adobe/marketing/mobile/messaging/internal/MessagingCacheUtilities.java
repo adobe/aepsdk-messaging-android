@@ -53,6 +53,8 @@ final class MessagingCacheUtilities {
     private final String assetCacheLocation;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
     private final Map<String, String> assetMap = new HashMap<>();
+    private ObjectInputStream objectInputStream;
+    private ObjectOutputStream objectOutputStream;
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
@@ -97,12 +99,14 @@ final class MessagingCacheUtilities {
         if (fileMetadata != null && !fileMetadata.isEmpty()) {
             Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
-        ObjectInputStream objectInputStream = null;
+
         Map<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
         try {
-            objectInputStream = new ObjectInputStream(cacheResult.getData());
-            final Object cachedData = objectInputStream.readObject();
+            if (objectInputStream == null) {
+                objectInputStream = new ObjectInputStream(cacheResult.getData());
+            }
 
+            final Object cachedData = objectInputStream.readObject();
             if (cachedData == null) {
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to read cached data into an object.");
                 return null;
@@ -175,12 +179,13 @@ final class MessagingCacheUtilities {
 
         Log.debug(LOG_TAG, SELF_TAG, "Creating new cached propositions");
         ByteArrayOutputStream byteArrayOutputStream = null;
-        ObjectOutputStream objectOutputStream = null;
         InputStream inputStream = null;
 
         try {
             byteArrayOutputStream = new ByteArrayOutputStream();
-            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            if (objectOutputStream == null) {
+                objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            }
             objectOutputStream.writeObject(propositions);
             objectOutputStream.flush();
             inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
@@ -281,5 +286,15 @@ final class MessagingCacheUtilities {
      */
     Map<String, String> getAssetsMap() {
         return assetMap;
+    }
+
+    @VisibleForTesting
+    void setObjectInputStream(final ObjectInputStream objectInputStream) {
+        this.objectInputStream = objectInputStream;
+    }
+
+    @VisibleForTesting
+    void setObjectOutputStream(final ObjectOutputStream objectOutputStream) {
+        this.objectOutputStream = objectOutputStream;
     }
 }

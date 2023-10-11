@@ -520,7 +520,7 @@ class EdgePersonalizationResponseHandler {
         propositionInfo.putAll(newPropositionInfo);
 
         // currently, we can't remove entries that pre-exist by message id since they are not linked to surfaces
-        // need to get surface uri from propositionInfo.scope and remove entry based on incoming `surfaces`
+        // need to get surface uri from propositionInfo.scope and remove entry based on incoming surfaces
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
             return;
         }
@@ -654,12 +654,6 @@ class EdgePersonalizationResponseHandler {
             }
         }
         messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
-    }
-
-    // for testing, the size of the proposition info map should always mirror the number of rules currently loaded
-    @VisibleForTesting
-    int getRuleCount() {
-        return propositionInfo.size();
     }
 
     @VisibleForTesting

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -596,6 +597,29 @@ public class EdgePersonalizationResponseHandlerTests {
         });
     }
 
+    @Test
+    public void test_handleEdgePersonalizationNotification_EmptyRequestEventId() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // need to add an empty request event id for testing purposes
+                edgePersonalizationResponseHandler.setMessagesRequestEventId("");
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", Collections.emptyList());
+                eventData.put("requestEventId", "");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // verify in progress propositions map not updated
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                assertEquals(0, inProgressPropositions.size());
+            }
+        });
+    }
+
     // ========================================================================================
     // edgePersonalizationResponseHandler handleProcessCompletedEvent
     // ========================================================================================
@@ -656,6 +680,145 @@ public class EdgePersonalizationResponseHandlerTests {
                 assertEquals("propositions", eventData.keySet().stream().findFirst().get());
                 List<Map<String, Object>> propositions = DataReader.optTypedListOfMap(Object.class, eventData, "propositions", null);
                 assertEquals(4, propositions.size());
+            }
+        });
+    }
+
+    @Test
+    public void test_handleProcessCompletedEvent_EmptyPayload() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // setup an empty payload
+                List<Map<String, Object>> payload = new ArrayList<>();
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // setup processing completed event
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+
+                // verify rules not replaced in in-app rules engine
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify rules not replaced in feed rules engine
+                verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify received propositions event not dispatched
+                verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+            }
+        });
+    }
+
+    @Test
+    public void test_handleProcessCompletedEvent_ProcessCompletedEventMissingRequestId() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                Surface surface = new Surface();
+                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, createInboundList(4));
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
+
+                // setup in progress in-app propositions
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 3;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+
+                // setup in progress feed propositions and add them to the payload
+                config = new MessageTestConfig();
+                config.count = 4;
+                payload.addAll(MessagingTestUtils.generateFeedPayload(config));
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+
+                // setup processing completed event missing request event id
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, null);
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+
+                // verify rules not replaced in in-app rules engine
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify rules not replaced in feed rules engine
+                verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify received propositions event not dispatched
+                verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+            }
+        });
+    }
+
+    @Test
+    public void test_handleProcessCompletedEvent_NoValidRulesInPayload() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // setup in progress invalid in-app propositions
+                MessageTestConfig config = new MessageTestConfig();
+                config.isMissingRulesKey = true;
+                config.count = 1;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateMessagePayload(config);
+
+                // setup in progress invalid feed propositions and add them to the payload
+                config = new MessageTestConfig();
+                config.isMissingRulesKey = true;
+                config.count = 1;
+                payload.addAll(MessagingTestUtils.generateFeedPayload(config));
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // setup processing completed event
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+
+                // test
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+
+                // verify rules not replaced in in-app rules engine
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify rules not replaced in feed rules engine
+                verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+
+                // verify received propositions event dispatched with the received propositions
+                verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                Event receivedPersonalizationEvent = eventArgumentCaptor.getValue();
+                assertEquals(MESSAGE_PROPOSITIONS_NOTIFICATION, receivedPersonalizationEvent.getName());
+                assertEquals(EventType.MESSAGING, receivedPersonalizationEvent.getType());
+                assertEquals(MessagingConstants.EventSource.NOTIFICATION, receivedPersonalizationEvent.getSource());
+                eventData = receivedPersonalizationEvent.getEventData();
+                assertEquals("propositions", eventData.keySet().stream().findFirst().get());
+                List<Map<String, Object>> propositions = DataReader.optTypedListOfMap(Object.class, eventData, "propositions", null);
+                assertEquals(2, propositions.size());
             }
         });
     }
@@ -767,6 +930,49 @@ public class EdgePersonalizationResponseHandlerTests {
         });
     }
 
+    @Test
+    public void test_retrieveMessages_emptySurfacesProvided() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                // setup empty surfaces
+                List<Surface> surfaces = new ArrayList<>();
+
+                // setup feed rules engine
+                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(new Surface(), createInboundList(3));
+                when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
+                when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
+
+                // setup in progress feed propositions
+                MessageTestConfig config = new MessageTestConfig();
+                config.count = 4;
+                List<Map<String, Object>> payload = MessagingTestUtils.generateFeedPayload(config);
+
+                Map<String, Object> eventData = new HashMap<>();
+                eventData.put("payload", payload);
+                eventData.put("requestEventId", "TESTING_ID");
+                Event mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
+
+                // setup processing completed event
+                eventData = new HashMap<>();
+                eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                mockEvent = mock(Event.class);
+                when(mockEvent.getEventData()).thenReturn(eventData);
+                edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+                reset(mockExtensionApi);
+
+                // test retrieveMessages
+                edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+
+                // verify no response event dispatched
+                verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+            }
+        });
+    }
+
     // ========================================================================================
     // edgePersonalizationResponseHandler load cached propositions on instantiation
     // ========================================================================================
@@ -797,6 +1003,22 @@ public class EdgePersonalizationResponseHandlerTests {
                 // verify cached rules replaced in rules engine
                 verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());
                 assertEquals(5, listArgumentCaptor.getValue().size());
+            }
+        });
+    }
+
+    @Test
+    public void test_cachedPropositions_cacheLoadedOnEdgePersonalizationResponseHandlerConstruction_whenPropositionsNotCached() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
+                when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(false);;
+
+                // test
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+
+                // verify cached rules not replaced in rules engine
+                verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
             }
         });
     }

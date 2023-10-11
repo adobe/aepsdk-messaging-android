@@ -14,10 +14,12 @@ package com.adobe.marketing.mobile.messaging.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,6 +48,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,6 +66,10 @@ public class PropositionPayloadCachingTests {
     CacheResult mockCacheResult;
     @Mock
     DeviceInforming mockDeviceInfoService;
+    @Mock
+    ObjectInputStream mockObjectInputStream;
+    @Mock
+    ObjectOutputStream mockObjectOutputStream;
 
     MessagingCacheUtilities messagingCacheUtilities;
     InputStream propositionPayloadInputStream;
@@ -164,6 +171,7 @@ public class PropositionPayloadCachingTests {
         Mockito.reset(mockCacheService);
         Mockito.reset(mockServiceProvider);
         Mockito.reset(mockCacheResult);
+        Mockito.reset(mockObjectInputStream);
         reset(mockDeviceInfoService);
     }
 
@@ -250,6 +258,95 @@ public class PropositionPayloadCachingTests {
     }
 
     @Test
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenReadCacheDataIsNull() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            try {
+                when(mockObjectInputStream.readObject()).thenReturn(null);
+                messagingCacheUtilities.setObjectInputStream(mockObjectInputStream);
+            } catch (ClassNotFoundException | IOException e) {
+                fail(e.getLocalizedMessage());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+
+            // test
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenCachedDataElementsAreEmpty() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            Map<Surface, List<Object>> cachedData = new HashMap<>();
+            try {
+                when(mockObjectInputStream.readObject()).thenReturn(cachedData);
+                messagingCacheUtilities.setObjectInputStream(mockObjectInputStream);
+            } catch (ClassNotFoundException | IOException e) {
+                fail(e.getLocalizedMessage());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+
+            // test
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenClassNotFoundExceptionOccurs() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            try {
+                when(mockObjectInputStream.readObject()).thenThrow(new ClassNotFoundException());
+                messagingCacheUtilities.setObjectInputStream(mockObjectInputStream);
+            } catch (ClassNotFoundException | IOException exception) {
+                assertEquals(ClassCastException.class, exception.getClass());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+
+            // test
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
+    public void testGetCachedPropositionPayload_ReturnsNullPayload_WheIOExceptionOccurs() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            try {
+                doThrow(new IOException()).when(mockObjectInputStream).close();
+                messagingCacheUtilities.setObjectInputStream(mockObjectInputStream);
+            } catch (IOException exception) {
+                assertEquals(IOException.class, exception.getClass());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+
+            // test
+            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+
+            // verify
+            verify(mockCacheService, times(1)).get(anyString(), anyString());
+            assertNull(retrievedPayload);
+        });
+    }
+
+    @Test
     public void testGetCachedPropositionPayload_ReturnsNullPayload_WhenCachedPropositionsAreInvalid() {
         runWithMockedServiceProvider(() -> {
             // setup
@@ -278,6 +375,78 @@ public class PropositionPayloadCachingTests {
             list.add(proposition);
             final Map<Surface, List<Proposition>> propositions = new HashMap<>();
             propositions.put(new Surface(), list);
+
+            // test
+            messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
+
+            // verify
+            verify(mockCacheService, times(1)).set(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());
+        });
+    }
+
+    @Test
+    public void testCachePropositionPayload_EmptyPropositions() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(null);
+
+            final List<Proposition> list = new ArrayList<>();
+            list.add(proposition);
+            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+
+            // test
+            messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
+
+            // verify cache cleared as no propositions were present
+            verify(mockCacheService, times(1)).remove(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+        });
+    }
+
+    @Test
+    public void testCachePropositionPayload_DoesNotSetCache_WhenIOExceptionOccursWhenWritingObject() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            try {
+                doThrow(new IOException()).when(mockObjectOutputStream).writeObject(any(Object.class));
+                messagingCacheUtilities.setObjectOutputStream(mockObjectOutputStream);
+            } catch (IOException exception) {
+                assertEquals(IOException.class, exception.getClass());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(propositionInputStream);
+
+            final List<Proposition> list = new ArrayList<>();
+            list.add(proposition);
+            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+
+            // test
+            messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
+
+            // verify cache not set
+            verify(mockCacheService, times(0)).set(anyString(), anyString(), any());
+        });
+    }
+
+    @Test
+    public void testCachePropositionPayload_SetsCache_WhenIOExceptionOccursWhenClosingObjectOutputStream() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            try {
+                doThrow(new IOException()).when(mockObjectOutputStream).close();
+                messagingCacheUtilities.setObjectOutputStream(mockObjectOutputStream);
+            } catch (IOException exception) {
+                assertEquals(IOException.class, exception.getClass());
+            }
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
+            when(mockCacheResult.getData()).thenReturn(propositionInputStream);
+
+            final List<Proposition> list = new ArrayList<>();
+            list.add(proposition);
+            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
 
             // test
             messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
