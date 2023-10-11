@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MessagingPropositionPayloadTests {
+public class PropositionPayloadTests {
     private PropositionPayload propositionPayload;
 
     @Test

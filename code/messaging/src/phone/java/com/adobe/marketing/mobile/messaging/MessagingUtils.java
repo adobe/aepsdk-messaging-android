@@ -69,7 +69,7 @@ public class MessagingUtils {
      * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
     public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final List<MessagingProposition> propositionsToAdd, Map<Surface, List<MessagingProposition>> mapToUpdate) {
-        if (isNullOrEmpty(propositionsToAdd)) {
+        if (isNullOrEmpty(propositionsToAdd) || mapToUpdate == null) {
             return mapToUpdate;
         }
         final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
@@ -91,7 +91,7 @@ public class MessagingUtils {
      * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
     public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final MessagingProposition messagingProposition, Map<Surface, List<MessagingProposition>> mapToUpdate) {
-        if (messagingProposition == null) {
+        if (messagingProposition == null || mapToUpdate == null) {
             return mapToUpdate;
         }
         final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
@@ -105,21 +105,8 @@ public class MessagingUtils {
     }
 
     // ========================================================================================
-    // Proposition and Surface object creation wrappers
+    // Surface object creation wrapper
     // ========================================================================================
-
-    /**
-     * Wraps the internal {@link MessagingProposition#fromEventData(Map)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
-     *
-     * @param propositionData A {@link Map<String, Object>} map containing {@link MessagingProposition} data
-     * @return the created {@code Proposition}
-     */
-    public static MessagingProposition eventDataToProposition(final Map<String, Object> propositionData) {
-        if (MapUtils.isNullOrEmpty(propositionData)) {
-            return null;
-        }
-        return MessagingProposition.fromEventData(propositionData);
-    }
 
     /**
      * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
@@ -132,18 +119,5 @@ public class MessagingUtils {
             return null;
         }
         return Surface.fromUriString(scope);
-    }
-
-    /**
-     * Wraps the internal {@link Surface#toEventData()} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
-     *
-     * @param surface A {@link Surface} containing a surface to be converted to an event data {@link Map}
-     * @return the created event data {@code Map}
-     */
-    public static Map<String, Object> surfaceToEventData(final Surface surface) {
-        if (surface == null) {
-            return null;
-        }
-        return surface.toEventData();
     }
 }

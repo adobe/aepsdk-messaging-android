@@ -151,7 +151,6 @@ public class Inbound {
     }
 
     public FeedItem toFeedItem() {
-        FeedItem feedItem = null;
         try {
             final JSONObject jsonContent = new JSONObject(getContent());
             final String title = jsonContent.getString("title");
@@ -159,12 +158,13 @@ public class Inbound {
             final String actionTitle = jsonContent.optString("actionTitle");
             final String actionUrl = jsonContent.optString("actionUrl");
             final String imageUrl = jsonContent.optString("imageUrl");
-            feedItem = new FeedItem.Builder(title, body)
+            return new FeedItem.Builder(title, body)
                     .setActionTitle(actionTitle)
                     .setActionUrl(actionUrl)
                     .setImageUrl(imageUrl)
                     .build();
-        } catch (final JSONException ignored) {}
-        return feedItem;
+        } catch (final JSONException ignored) {
+            return null;
+        }
     }
 }

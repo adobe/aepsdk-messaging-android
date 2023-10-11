@@ -228,7 +228,7 @@ public final class Messaging {
                         final List<MessagingProposition> messagingPropositions = new ArrayList<>();
                         for (final Map<String, Object> propositionData : retrievedPropositionData) {
                             surface = MessagingUtils.scopeToSurface(DataReader.optString(propositionData, SCOPE, null));
-                            final MessagingProposition messagingProposition = MessagingUtils.eventDataToProposition(propositionData);
+                            final MessagingProposition messagingProposition = MessagingProposition.fromEventData(propositionData);
                             messagingPropositions.add(messagingProposition);
                         }
                         convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, messagingPropositions, convertedPropositionsMap);
@@ -266,7 +266,7 @@ public final class Messaging {
         final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacesFlattened.add(MessagingUtils.surfaceToEventData(surface));
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 
@@ -313,7 +313,7 @@ public final class Messaging {
                     }
 
                     for (final Map<String, Object> propositionMap : retrievedPropositions) {
-                        final MessagingProposition messagingProposition = MessagingUtils.eventDataToProposition(propositionMap);
+                        final MessagingProposition messagingProposition = MessagingProposition.fromEventData(propositionMap);
                         if (messagingProposition != null) {
                             final Surface surface = MessagingUtils.scopeToSurface(messagingProposition.getScope());
                             requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, messagingProposition, requestedPropositionsMap);
@@ -344,7 +344,7 @@ public final class Messaging {
         final List<Map<String, Object>> validSurfacesFlattened = new ArrayList<>();
         for (final Surface surface : surfaces) {
             if (surface.isValid()) {
-                validSurfacesFlattened.add(MessagingUtils.surfaceToEventData(surface));
+                validSurfacesFlattened.add(surface.toEventData());
             }
         }
 

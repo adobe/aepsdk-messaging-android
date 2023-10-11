@@ -144,7 +144,7 @@ public class MessagingPropositionItem implements Serializable {
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link MessagingPropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
+    public static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
         MessagingPropositionItem messagingPropositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
@@ -177,7 +177,7 @@ public class MessagingPropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} object created from this {@link MessagingPropositionItem}.
      */
-    Map<String, Object> toEventData() {
+    public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         final Map<String, Object> data = new HashMap<>();
         if (StringUtils.isNullOrEmpty(content)) {

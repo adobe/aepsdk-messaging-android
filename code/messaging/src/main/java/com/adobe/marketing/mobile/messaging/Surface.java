@@ -89,13 +89,13 @@ public class Surface implements Serializable {
         return !surface.isValid() ? null : surface;
     }
 
-    Map<String, Object> toEventData() {
+    public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(URI_KEY, this.uri);
         return eventData;
     }
 
-    static Surface fromEventData(final Map<String, Object> data) {
+    public static Surface fromEventData(final Map<String, Object> data) {
         if (MapUtils.isNullOrEmpty(data) || !data.containsKey(URI_KEY)) {
             Log.debug(LOG_TAG, SELF_TAG,"Cannot create Surface object, provided data Map is empty or null.");
             return null;
