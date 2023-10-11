@@ -15,8 +15,6 @@ package com.adobe.marketing.mobile;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import com.adobe.marketing.mobile.messaging.internal.WebViewJavascriptInterface;
-
 public interface Message {
     /**
      * Dispatch tracking information via a Messaging request content event.

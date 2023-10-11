@@ -10,7 +10,7 @@
 */
 package com.adobe.marketing.mobile;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -26,8 +26,9 @@ import static org.mockito.Mockito.when;
 
 import android.content.Intent;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
-import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
+import com.adobe.marketing.mobile.messaging.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
+import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
