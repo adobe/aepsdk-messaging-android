@@ -213,7 +213,6 @@ public final class Messaging {
      *
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing the {@link Surface}s and the corresponding list of {@link MessagingProposition} objects.
      */
-    @SuppressLint("RestrictedApi")
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
@@ -251,7 +250,6 @@ public final class Messaging {
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving previously fetched propositions
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing previously fetched feeds content
      */
-    @SuppressLint("RestrictedApi")
     public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
         if (callback == null ) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided callback is null.");
@@ -334,7 +332,6 @@ public final class Messaging {
      *
      * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving propositions
      */
-    @SuppressLint("RestrictedApi")
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
         if (surfaces == null || surfaces.isEmpty()) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot update propositions as the provided list of surfaces is null or empty.");
