@@ -2,6 +2,10 @@
 
 ### Prerequisites
 
+- Code-based Experiences (Beta)
+  - [Getting started](./sources/exd-cbe-beta/getting-started.md)
+  - [APIs usage](./sources/exd-cbe-beta/apis-usage.md)
+  - [Test app setup](./sources/exd-cbe-beta/testapp-setup.md)
 - Push Messaging
   - Enable push notifications in your app by [adding the Firebase dependency.](https://firebase.google.com/docs/cloud-messaging/android/client)
 - Push and In-app Messaging
