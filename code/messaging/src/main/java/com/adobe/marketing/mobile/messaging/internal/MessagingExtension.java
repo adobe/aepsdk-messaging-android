@@ -71,6 +71,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONException;
@@ -164,6 +165,18 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::handleWildcardEvents);
         getApi().registerEventListener(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, this::handleRuleEngineResponseEvents);
         getApi().registerEventListener(EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
+
+        // Handler function called for each queued event. If the queued event is a get propositions event, process it
+        // otherwise if it is an Edge event to update propositions, process it only if it is completed.
+        edgePersonalizationResponseHandler.serialWorkDispatcher = new SerialWorkDispatcher<>("MessagingEvents", event -> {
+            if (MessagingUtils.isGetPropositionsEvent(event)) {
+                edgePersonalizationResponseHandler.retrieveMessages(MessagingUtils.getSurfaces(event), event);
+            } else if (event.getType().equals(EventType.EDGE)) {
+                return !edgePersonalizationResponseHandler.getRequestedSurfacesForEventId().containsKey(event.getUniqueIdentifier());
+            }
+            return true;
+        });
+        edgePersonalizationResponseHandler.serialWorkDispatcher.start();
     }
 
     @Override
@@ -275,9 +288,10 @@ public final class MessagingExtension extends Extension {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to retrieve propositions from the remote.");
             edgePersonalizationResponseHandler.fetchMessages(eventToProcess, MessagingUtils.getSurfaces(eventToProcess));
         } else if (MessagingUtils.isGetPropositionsEvent(eventToProcess)) {
-            // validate get propositions event then retrieve cached proposition content and return them in a response event
+            // Queue the get propositions event in the edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update requests are completed
+            // before it is processed.
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached proposition content.");
-            edgePersonalizationResponseHandler.retrieveMessages(MessagingUtils.getSurfaces(eventToProcess), eventToProcess);
+            edgePersonalizationResponseHandler.serialWorkDispatcher.offer(eventToProcess);
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);

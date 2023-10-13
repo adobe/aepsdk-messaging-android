@@ -44,6 +44,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -247,7 +248,11 @@ public class MessagingUtils {
      * @return {@code String} containing the request event id
      */
     static String getRequestEventId(final Event event) {
-        return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+        String requestEventId = event.getParentID();
+        if (StringUtils.isNullOrEmpty(requestEventId)) {
+            requestEventId = DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+        }
+        return requestEventId;
     }
 
     /**
@@ -441,7 +446,11 @@ public class MessagingUtils {
         final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
         final List<Proposition> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : createMutableList(propositionsToAdd);
         if (updatedMap.get(surface) != null) {
-            list.addAll(propositionsToAdd);
+            for (final Proposition proposition : propositionsToAdd) {
+                if (!list.contains(proposition)) {
+                    list.add(proposition);
+                }
+            }
         }
         updatedMap.put(surface, list);
         return updatedMap;

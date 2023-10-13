@@ -58,6 +58,7 @@ import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
 import com.adobe.marketing.mobile.util.UrlUtils;
 
@@ -91,7 +92,7 @@ class EdgePersonalizationResponseHandler {
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> feedRulesBySurface = new HashMap<>();
-    private String messagesRequestEventId;
+    SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
      * Constructor
@@ -102,16 +103,15 @@ class EdgePersonalizationResponseHandler {
      * @param feedRulesEngine {@link FeedRulesEngine} instance to use for loading message feed rule payloads
      */
     EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final FeedRulesEngine feedRulesEngine) {
-        this(parent, extensionApi, rulesEngine, feedRulesEngine, null, null);
+        this(parent, extensionApi, rulesEngine, feedRulesEngine, null);
     }
 
     @VisibleForTesting
-    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final FeedRulesEngine feedRulesEngine, final MessagingCacheUtilities messagingCacheUtilities, final String messagesRequestEventId) {
+    EdgePersonalizationResponseHandler(final MessagingExtension parent, final ExtensionApi extensionApi, final LaunchRulesEngine rulesEngine, final FeedRulesEngine feedRulesEngine, final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
         this.feedRulesEngine = feedRulesEngine;
-        this.messagesRequestEventId = messagesRequestEventId;
 
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
@@ -226,20 +226,21 @@ class EdgePersonalizationResponseHandler {
             public void fail(final AdobeError adobeError) {
                 // response event failed or timed out, need to remove this event from the queue
                 requestedSurfacesForEventId.remove(newEvent.getUniqueIdentifier());
+                serialWorkDispatcher.resume();
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to run completion logic for a personalization request event - error occurred: %s", adobeError.getErrorName());
             }
 
             // the callback is called by Edge extension when a request's stream has been closed
             @Override
-            public void call(final Event responseEvent) {
+            public void call(final Event responseCompleteEvent) {
                 // dispatch an event signaling messaging extension needs to finalize this event
                 // it must be dispatched to the event queue to avoid a race with the events containing propositions
-                final String endingEventId = responseEvent.getResponseID();
+                final String endingEventId = MessagingUtils.getRequestEventId(responseCompleteEvent);
                 final Map<String, Object> eventData = new HashMap<>();
                 eventData.put(ENDING_EVENT_ID, endingEventId);
                 final Event processCompletedEvent = new Event.Builder(FINALIZE_PROPOSITIONS_RESPONSE, EventType.MESSAGING, EventSource.CONTENT_COMPLETE)
                         .setEventData(eventData)
-                        .chainToParentEvent(responseEvent)
+                        .chainToParentEvent(responseCompleteEvent)
                         .build();
                 extensionApi.dispatch(processCompletedEvent);
             }
@@ -253,12 +254,12 @@ class EdgePersonalizationResponseHandler {
      */
     void handleProcessCompletedEvent(final Event event) {
         final String endingEventId = MessagingUtils.getEndingEventId(event);
-        if (StringUtils.isNullOrEmpty(endingEventId) || requestedSurfacesForEventId.get(endingEventId) == null) {
+        final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(endingEventId);
+        if (StringUtils.isNullOrEmpty(endingEventId) || MessagingUtils.isNullOrEmpty(requestedSurfaces)) {
             // shouldn't ever get here, but if we do, we don't have anything to process so we should bail
             return;
         }
 
-        final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(endingEventId);
         Log.trace(LOG_TAG, SELF_TAG, "End of streaming response events for requesting event %s", endingEventId);
         endRequestForEventId(endingEventId);
 
@@ -270,6 +271,9 @@ class EdgePersonalizationResponseHandler {
 
         // dispatch notification event for request
         dispatchNotificationEventForSurfaces(requestedSurfaces);
+        // resume processing the internal events queue after processing is completed for an update propositions request
+        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "handleProcessCompletedEvent - Starting serial work dispatcher.");
+        serialWorkDispatcher.resume();
     }
 
     private void dispatchNotificationEventForSurfaces(final List<Surface> requestedSurfaces) {
@@ -393,6 +397,9 @@ class EdgePersonalizationResponseHandler {
 
     private void beginRequestForSurfaces(final Event event, final List<Surface> surfaces) {
         requestedSurfacesForEventId.put(event.getUniqueIdentifier(), surfaces);
+
+        // add the Edge request event to update propositions in the events queue.
+        serialWorkDispatcher.offer(event);
     }
 
     private void endRequestForEventId(final String eventId) {
@@ -656,6 +663,10 @@ class EdgePersonalizationResponseHandler {
         messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
     }
 
+    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
+        return requestedSurfacesForEventId;
+    }
+
     // for testing, the size of the proposition info map should always mirror the number of rules currently loaded
     @VisibleForTesting
     int getRuleCount() {
@@ -664,7 +675,6 @@ class EdgePersonalizationResponseHandler {
 
     @VisibleForTesting
     void setMessagesRequestEventId(final String messagesRequestEventId) {
-        this.messagesRequestEventId = messagesRequestEventId;
         requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(new Surface()));
     }
 }

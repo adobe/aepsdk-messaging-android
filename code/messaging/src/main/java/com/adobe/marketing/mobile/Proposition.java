@@ -135,4 +135,15 @@ public class Proposition implements Serializable {
         eventData.put(PAYLOAD_ITEMS, items);
         return eventData;
     }
+
+    public boolean equals(final Object object){
+        if (object instanceof Proposition) {
+            final Proposition proposition = (Proposition) object;
+            final String newPropositionContent = proposition.getItems().get(0).getContent();
+            final String propositionContent = this.getItems().get(0).getContent();
+            return newPropositionContent.equals(propositionContent);
+        } else {
+            return false;
+        }
+    }
 }
