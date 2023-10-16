@@ -24,6 +24,7 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
+        //
         MobileCore.configureWithAppID("")
 
         val extensions = listOf(
@@ -32,7 +33,11 @@ class MessagingApplication : Application() {
             Assurance.EXTENSION,
             Identity.EXTENSION);
         MobileCore.registerExtensions(extensions) {
-            // all the extensions are successfully registered
+            // use cjm stage
+            val cjmStageConfig: HashMap<String, Any> = hashMapOf(
+                "edge.environment" to "int"
+            )
+            MobileCore.updateConfiguration(cjmStageConfig)
         }
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
