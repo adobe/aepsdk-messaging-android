@@ -24,7 +24,7 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        MobileCore.configureWithAppID("1b50a869c4a2/eabbaa346d96/launch-c814676db5bb-staging")
+        MobileCore.configureWithAppID("staging/1b50a869c4a2/eabbaa346d96/launch-d66dc409a75e-development")
         // add your assurance session url
         Assurance.startSession("")
 
