@@ -57,6 +57,7 @@ import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.services.internal.caching.FileCacheService;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -119,6 +120,8 @@ public class EdgePersonalizationResponseHandlerTests {
     FeedRulesEngine mockFeedRulesEngine;
     @Mock
     MessagingCacheUtilities mockMessagingCacheUtilities;
+    @Mock
+    SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
 
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
@@ -148,6 +151,7 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
         reset(mockFeedRulesEngine);
+        reset(mockSerialWorkDispatcher);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -168,9 +172,10 @@ public class EdgePersonalizationResponseHandlerTests {
 
             edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
             edgePersonalizationResponseHandler.setMessagesRequestEventId("TESTING_ID");
+            edgePersonalizationResponseHandler.setSerialWorkDispatcher(mockSerialWorkDispatcher);
             
             when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
-            when(mockResponseEvent.getResponseID()).thenReturn("mockParentResponseId");
+            when(mockResponseEvent.getParentID()).thenReturn("mockParentResponseId");
             when(mockResponseEvent.getName()).thenReturn("fetch message response");
             when(mockResponseEvent.getType()).thenReturn(EventType.EDGE);
             when(mockResponseEvent.getSource()).thenReturn(EventSource.RESPONSE_CONTENT);
@@ -333,7 +338,6 @@ public class EdgePersonalizationResponseHandlerTests {
             assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
             assertEquals(MessagingConstants.EventName.REFRESH_MESSAGES_EVENT, edgeRequestEvent.getName());
             assertEquals(expectedEventData, edgeRequestEvent.getEventData());
-
 
             // answer adobe callback with a response event
             adobeCallbackWithErrorArgumentCaptor.getValue().call(mockResponseEvent);
@@ -1015,7 +1019,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.arePropositionsCached()).thenReturn(false);;
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
 
                 // verify cached rules not replaced in rules engine
                 verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
