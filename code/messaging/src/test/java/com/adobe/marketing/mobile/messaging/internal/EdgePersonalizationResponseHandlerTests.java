@@ -166,7 +166,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
-            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
             edgePersonalizationResponseHandler.setMessagesRequestEventId("TESTING_ID");
             
             when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
@@ -998,7 +998,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
 
                 // verify cached rules replaced in rules engine
                 verify(mockMessagingRulesEngine, times(1)).replaceRules(listArgumentCaptor.capture());

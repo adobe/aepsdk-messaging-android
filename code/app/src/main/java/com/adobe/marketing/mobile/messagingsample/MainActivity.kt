@@ -262,25 +262,6 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
-
-        // Setup proposition handler for feed messages
-        Messaging.setPropositionsHandler {
-            println("\nMessaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
-            for (entry in it.entries) {
-                val surface = entry.key.uri
-                propositions = entry.value
-                println("Proposition surface: $surface")
-                println("Proposition has ${propositions.size} item(s)")
-                for (proposition in propositions) {
-                    println("Item content: ${proposition.items[0].content}")
-                }
-            }
-        }
-
-        // fetch message feed and code based experiences
-        val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("cbe-path"))
-        Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
     private fun setupButtonClickListeners() {
