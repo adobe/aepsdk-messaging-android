@@ -89,6 +89,7 @@ public final class MessagingExtension extends Extension {
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
     final FeedRulesEngine feedRulesEngine;
+    SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
      * Constructor.
@@ -168,7 +169,7 @@ public final class MessagingExtension extends Extension {
 
         // Handler function called for each queued event. If the queued event is a get propositions event, process it
         // otherwise if it is an Edge event to update propositions, process it only if it is completed.
-        edgePersonalizationResponseHandler.serialWorkDispatcher = new SerialWorkDispatcher<>("MessagingEvents", event -> {
+        serialWorkDispatcher = new SerialWorkDispatcher<>("MessagingEvents", event -> {
             if (MessagingUtils.isGetPropositionsEvent(event)) {
                 edgePersonalizationResponseHandler.retrieveMessages(MessagingUtils.getSurfaces(event), event);
             } else if (event.getType().equals(EventType.EDGE)) {
@@ -176,7 +177,8 @@ public final class MessagingExtension extends Extension {
             }
             return true;
         });
-        edgePersonalizationResponseHandler.serialWorkDispatcher.start();
+        edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
+        serialWorkDispatcher.start();
     }
 
     @Override
@@ -291,7 +293,7 @@ public final class MessagingExtension extends Extension {
             // Queue the get propositions event in the edgePersonalizationResponseHandler.serialWorkDispatcher to ensure any prior update requests are completed
             // before it is processed.
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached proposition content.");
-            edgePersonalizationResponseHandler.serialWorkDispatcher.offer(eventToProcess);
+            serialWorkDispatcher.offer(eventToProcess);
         } else if (MessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
