@@ -92,7 +92,7 @@ class EdgePersonalizationResponseHandler {
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> feedRulesBySurface = new HashMap<>();
-    SerialWorkDispatcher<Event> serialWorkDispatcher;
+    private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
      * Constructor
@@ -639,6 +639,10 @@ class EdgePersonalizationResponseHandler {
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }
+    }
+
+    void setSerialWorkDispatcher (final SerialWorkDispatcher<Event> serialWorkDispatcher) {
+        this.serialWorkDispatcher = serialWorkDispatcher;
     }
 
     /**
