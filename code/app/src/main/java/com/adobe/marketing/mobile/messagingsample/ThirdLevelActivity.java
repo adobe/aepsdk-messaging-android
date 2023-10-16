@@ -10,7 +10,7 @@
   governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messagingsample;
+package com.adobe.marketing.mobile.messagingsample.push;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;

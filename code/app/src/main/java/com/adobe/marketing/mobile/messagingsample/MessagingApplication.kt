@@ -9,7 +9,7 @@
  governing permissions and limitations under the License.
  */
 
-package com.adobe.marketing.mobile.messagingsample
+package com.adobe.marketing.mobile.messagingsample.push
 
 import android.app.Application
 import com.adobe.marketing.mobile.*
@@ -24,8 +24,9 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        //
-        MobileCore.configureWithAppID("")
+        MobileCore.configureWithAppID("1b50a869c4a2/eabbaa346d96/launch-c814676db5bb-staging")
+        // add your assurance session url
+        Assurance.startSession("")
 
         val extensions = listOf(
             Edge.EXTENSION,
