@@ -13,7 +13,7 @@ package com.adobe.marketing.mobile;
 
 import static org.junit.Assert.assertEquals;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingTestConstants;
+import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 
 import org.junit.Test;
 

@@ -32,6 +32,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import com.adobe.marketing.mobile.util.StringUtils
@@ -240,7 +242,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    var propositions = mutableListOf<Proposition>()
+    var messagingPropositions = mutableListOf<MessagingProposition>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -281,7 +283,6 @@ class MainActivity : ComponentActivity() {
                 MobileCore.trackAction(trigger, null)
             }
         }
-
         btnCheckFeedMessages.setOnClickListener {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }
