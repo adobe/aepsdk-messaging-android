@@ -12,41 +12,44 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.os.Bundle
-import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.Proposition
-import com.adobe.marketing.mobile.Surface
-import java.nio.charset.StandardCharsets
+import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Surface
+import com.adobe.marketing.mobile.messagingsample.databinding.ActivityCodebasedBinding
 
 class CodeBasedExperienceActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityCodebasedBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_codebased)
+        binding = ActivityCodebasedBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
+        // create list of code based surface paths
+        var messagingPropositions = mutableListOf<MessagingProposition>()
+        val surfaces = mutableListOf<Surface>()
+        surfaces.add(Surface("cbe-path1"))
+        surfaces.add(Surface("cbe-path2"))
+
+        // fetch code based experiences
+        Messaging.updatePropositionsForSurfaces(surfaces)
         // retrieve any cached code based experiences
-        var propositions = mutableListOf<Proposition>()
-        val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("cbe-path"))
-        Messaging.updatePropositionsForSurfaces(surfaceList)
-        Messaging.getPropositionsForSurfaces(surfaceList) {
-            println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surfaces ${surfaceList.get(0).uri}")
+        Messaging.getPropositionsForSurfaces(surfaces) {
+            println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries")
             for (entry in it.entries) {
-                propositions = entry.value
+                println("Adding ${entry.value.size} proposition(s) from surface ${entry.key.uri}")
+                messagingPropositions.addAll(entry.value)
             }
 
             // show code based experiences
-            val codeBasedExperienceWebView: WebView = findViewById(R.id.codeBasedExperienceWebView)
-            val htmlContentString = propositions[0].items[0].content
-            runOnUiThread {
-                val mimeType = if (propositions[0].items[0].schema.equals("https://ns.adobe.com/personalization/json-content-item")) "text/json" else "text/html"
-                codeBasedExperienceWebView.loadData(
-                    htmlContentString,
-                    mimeType,
-                    StandardCharsets.UTF_8.toString()
-                )
-            }
+            val codeBasedRecyclerView = findViewById<RecyclerView>(R.id.codeBasedContentView)
+            val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+            val codeBasedCardAdapter = CodeBasedCardAdapter(messagingPropositions)
+            codeBasedRecyclerView.layoutManager = linearLayoutManager
+            codeBasedRecyclerView.adapter = codeBasedCardAdapter
         }
     }
 }

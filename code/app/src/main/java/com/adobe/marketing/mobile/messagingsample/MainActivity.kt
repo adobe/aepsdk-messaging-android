@@ -32,6 +32,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import com.adobe.marketing.mobile.util.StringUtils
@@ -240,7 +242,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    var propositions = mutableListOf<Proposition>()
+    var messagingPropositions = mutableListOf<MessagingProposition>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -262,6 +264,20 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
+
+        // Setup proposition handler for feed messages
+        Messaging.setPropositionsHandler {
+            println("\nMessaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
+            for (entry in it.entries) {
+                val surface = entry.key.uri
+                messagingPropositions = entry.value
+                println("Proposition surface: $surface")
+                println("Proposition has ${messagingPropositions.size} item(s)")
+                for (proposition in messagingPropositions) {
+                    println("Item content: ${proposition.items[0].content}")
+                }
+            }
+        }
     }
 
     private fun setupButtonClickListeners() {
@@ -281,7 +297,6 @@ class MainActivity : ComponentActivity() {
                 MobileCore.trackAction(trigger, null)
             }
         }
-
         btnCheckFeedMessages.setOnClickListener {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }

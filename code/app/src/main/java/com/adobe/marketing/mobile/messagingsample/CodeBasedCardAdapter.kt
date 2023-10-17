@@ -11,42 +11,48 @@
 
 package com.adobe.marketing.mobile.messagingsample
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
+import android.webkit.WebView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.services.ServiceProvider
+import org.json.JSONObject
+import java.nio.charset.StandardCharsets
 
-class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
-    RecyclerView.Adapter<FeedCardAdapter.ViewHolder>() {
+class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
+    RecyclerView.Adapter<CodeBasedCardAdapter.ViewHolder>() {
     private var messagingPropositions = mutableListOf<MessagingProposition>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view: View =
-            LayoutInflater.from(parent.context).inflate(R.layout.card_feeditem, parent, false)
+        val view =
+            LayoutInflater.from(parent.context).inflate(R.layout.card_codebaseditem, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = messagingPropositions[position]
         for (item in proposition.items) {
-            val inboundContent = item.decodeContent()
-            val feedItem = inboundContent.toFeedItem()
-            if (feedItem != null) {
-                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(feedItem.imageUrl))
-                holder.feedItemImage.refreshDrawableState()
-                holder.feedItemTitle.text = feedItem.title
-                holder.feedBody.text = feedItem.body
-                holder.itemView.setOnClickListener {
-                    val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    MobileCore.getApplication()?.startActivity(intent.apply {
-                        putExtra("content", inboundContent.content)
-                    })
+            val mimeType =
+                if (item.schema.equals("https://ns.adobe.com/personalization/json-content-item")) "application/json" else "text/html"
+            val contentString = item.content
+            // show code based experiences with html content in a webview
+            if (mimeType == "text/html") {
+                ServiceProvider.getInstance().uiService.run {
+                    holder.webView.loadData(
+                        contentString,
+                        mimeType,
+                        StandardCharsets.UTF_8.toString()
+                    )
+                }
+            } else { // show code based experiences with text or json content in a text view
+                if (mimeType == "application/json") {
+                    val json = JSONObject(contentString)
+                    holder.textView.text = json.toString(5)
+                } else {
+                    holder.textView.text = contentString
                 }
             }
         }
@@ -57,14 +63,12 @@ class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) 
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val feedItemImage: ImageView
-        val feedItemTitle: TextView
-        val feedBody: TextView
+        var webView: WebView
+        var textView: TextView
 
         init {
-            feedItemImage = itemView.findViewById(R.id.feedItemImage)
-            feedItemTitle = itemView.findViewById(R.id.feedItemTitle)
-            feedBody = itemView.findViewById(R.id.feedBody)
+            webView = itemView.findViewById(R.id.codeBasedHtmlContent)
+            textView = itemView.findViewById(R.id.codeBasedTextContent)
         }
     }
 

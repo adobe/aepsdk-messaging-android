@@ -15,8 +15,8 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
     <include
-        android:id="@+id/scrollingView"
-        layout="@layout/content_scrolling"
+        android:id="@+id/scrollingFeedView"
+        layout="@layout/feed_content_scrolling"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/app_bar_height"

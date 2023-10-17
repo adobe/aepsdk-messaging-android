@@ -16,8 +16,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.Proposition
-import com.adobe.marketing.mobile.Surface
+import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 
 class ScrollingFeedActivity : AppCompatActivity() {
@@ -30,9 +30,9 @@ class ScrollingFeedActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // retrieve any cached feed propositions
-        var messagingPropositions = mutableListOf<Proposition>()
+        var messagingPropositions = mutableListOf<MessagingProposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface.fromUriString("feeds/apifeed")
+        val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
         Messaging.updatePropositionsForSurfaces(surfaces)
         Messaging.getPropositionsForSurfaces(surfaces) {
@@ -45,10 +45,8 @@ class ScrollingFeedActivity : AppCompatActivity() {
             val feedInboxRecyclerView = findViewById<RecyclerView>(R.id.feedInboxView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             val feedCardAdapter = FeedCardAdapter(messagingPropositions)
-            runOnUiThread {
-                feedInboxRecyclerView.layoutManager = linearLayoutManager
-                feedInboxRecyclerView.adapter = feedCardAdapter
-            }
+            feedInboxRecyclerView.layoutManager = linearLayoutManager
+            feedInboxRecyclerView.adapter = feedCardAdapter
         }
     }
 }

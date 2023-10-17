@@ -16,10 +16,11 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
-import com.adobe.marketing.mobile.messaging.internal.MessagingExtension;
-import com.adobe.marketing.mobile.messaging.internal.MessagingUtils;
+import com.adobe.marketing.mobile.messaging.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.MessagingUtils;
+import com.adobe.marketing.mobile.messaging.MessagingProposition;
+import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -63,7 +64,7 @@ public final class Messaging {
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
     private static boolean isPropositionsResponseListenerRegistered = false;
-    private static AdobeCallback<Map<Surface, List<Proposition>>> propositionsResponseHandler;
+    private static AdobeCallback<Map<Surface, List<MessagingProposition>>> propositionsResponseHandler;
 
     private Messaging() {
     }
@@ -210,27 +211,26 @@ public final class Messaging {
      * Registers a permanent event listener with the Mobile Core for listening to personalization decisions events received upon a personalization query to the Experience Edge network.
      * If a new {@code AdobeCallback} is provided, it will replace the existing one and it will be invoked when propositions are received from the Edge network.
      *
-     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing the {@link Surface}s and the corresponding list of {@link Proposition} objects.
+     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing the {@link Surface}s and the corresponding list of {@link MessagingProposition} objects.
      */
-    @VisibleForTesting
-    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
+    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
             isPropositionsResponseListenerRegistered = true;
             MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION, event -> {
-                Map<Surface, List<Proposition>> convertedPropositionsMap = new HashMap<>();
+                Map<Surface, List<MessagingProposition>> convertedPropositionsMap = new HashMap<>();
                 final Map<String, Object> eventData = event.getEventData();
                 if (!MapUtils.isNullOrEmpty(eventData)) {
                     final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
                     if (retrievedPropositionData != null && !retrievedPropositionData.isEmpty()) {
                         Surface surface = null;
-                        final List<Proposition> propositions = new ArrayList<>();
+                        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
                         for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                            surface = Surface.fromUriString(DataReader.optString(propositionData, SCOPE, null));
-                            final Proposition proposition = Proposition.fromEventData(propositionData);
-                            propositions.add(proposition);
+                            surface = MessagingUtils.scopeToSurface(DataReader.optString(propositionData, SCOPE, null));
+                            final MessagingProposition messagingProposition = MessagingProposition.fromEventData(propositionData);
+                            messagingPropositions.add(messagingProposition);
                         }
-                        convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, propositions, convertedPropositionsMap);
+                        convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, messagingPropositions, convertedPropositionsMap);
                     }
                 }
 
@@ -248,9 +248,9 @@ public final class Messaging {
      * If the feeds content for one or more surfaces isn't previously cached in the SDK, it will not be retrieved from Adobe Journey Optimizer via the Experience Edge network.
      *
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving previously fetched propositions
-     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List<Proposition>>} containing previously fetched feeds content
+     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing previously fetched feeds content
      */
-    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
+    public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfaces, @NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
         if (callback == null ) {
             Log.warning(LOG_TAG, CLASS_NAME, "Cannot get propositions as the provided callback is null.");
             return;
@@ -303,7 +303,7 @@ public final class Messaging {
                         return;
                     }
 
-                    Map<Surface, List<Proposition>> requestedPropositionsMap = new HashMap<>();
+                    Map<Surface, List<MessagingProposition>> requestedPropositionsMap = new HashMap<>();
                     final List<Map<String, Object>> retrievedPropositions = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
                     if (retrievedPropositions == null || retrievedPropositions.isEmpty()) {
                         failWithError(callback, AdobeError.UNEXPECTED_ERROR);
@@ -311,10 +311,10 @@ public final class Messaging {
                     }
 
                     for (final Map<String, Object> propositionMap : retrievedPropositions) {
-                        final Proposition proposition = Proposition.fromEventData(propositionMap);
-                        if (proposition != null) {
-                            final Surface surface = Surface.fromUriString(proposition.getScope());
-                            requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, proposition, requestedPropositionsMap);
+                        final MessagingProposition messagingProposition = MessagingProposition.fromEventData(propositionMap);
+                        if (messagingProposition != null) {
+                            final Surface surface = MessagingUtils.scopeToSurface(messagingProposition.getScope());
+                            requestedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, messagingProposition, requestedPropositionsMap);
                         }
                     }
 
