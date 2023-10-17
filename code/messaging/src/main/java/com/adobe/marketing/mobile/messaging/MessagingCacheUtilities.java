@@ -79,7 +79,7 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List< MessagingProposition >}.
+     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<MessagingProposition>}.
      *
      * @return a {@code Map<Surface, List<Proposition>>} containing the cached proposition payloads.
      */
@@ -149,10 +149,21 @@ final class MessagingCacheUtilities {
     /**
      * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param propositions the {@link Map<Surface, List< MessagingProposition >>} containing the propositions to be cached.
+     * @param newPropositions the {@link Map<Surface, List<MessagingProposition>>} containing the propositions to be cached.
+     * @param surfacesToRemove {@link List<Surface>} containing surfaces to be removed from the cache
      */
-    void cachePropositions(final Map<Surface, List<MessagingProposition>> propositions) {
+    void cachePropositions(final Map<Surface, List<MessagingProposition>> newPropositions, final List<Surface> surfacesToRemove) {
+        final Map<Surface, List<MessagingProposition>> cachedPropositions = getCachedPropositions();
+        final Map<Surface, List<MessagingProposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
+        updatedPropositions.putAll(newPropositions);
+        for (final Map.Entry<Surface, List<MessagingProposition>> entry : updatedPropositions.entrySet()) {
+            if (surfacesToRemove.contains(entry.getKey())) {
+                updatedPropositions.remove(entry);
+            }
+        }
+
         // clean any existing cached propositions first if the provided propositions are null or empty
+        final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>(updatedPropositions);
         if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
@@ -195,19 +206,19 @@ final class MessagingCacheUtilities {
      * Converts the provided {@code PropositionPayload} into a {@code Proposition}.
      *
      * @param propositionPayloads {@link List<PropositionPayload>} to be converted
-     * @return a {@link List< MessagingProposition >} created from the provided {@code PropositionPayload}
+     * @return a {@link List<MessagingProposition>} created from the provided {@code PropositionPayload}
      */
     private List<MessagingProposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
-        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
-        final List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+        final List<MessagingProposition> propositions = new ArrayList<>();
+        final List<MessagingPropositionItem> propositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
-                final MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
-                messagingPropositionItems.add(messagingPropositionItem);
+                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+                propositionItems.add(propositionItem);
             }
-            messagingPropositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, messagingPropositionItems));
+            propositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
         }
-        return messagingPropositions;
+        return propositions;
     }
 
     // ========================================================================================================

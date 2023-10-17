@@ -35,7 +35,6 @@ class ScrollingFeedActivity : AppCompatActivity() {
         val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
         Messaging.updatePropositionsForSurfaces(surfaces)
-        Thread.sleep(500)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
             for (entry in it.entries) {
@@ -46,8 +45,10 @@ class ScrollingFeedActivity : AppCompatActivity() {
             val feedInboxRecyclerView = findViewById<RecyclerView>(R.id.feedInboxView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             val feedCardAdapter = FeedCardAdapter(messagingPropositions)
-            feedInboxRecyclerView.layoutManager = linearLayoutManager
-            feedInboxRecyclerView.adapter = feedCardAdapter
+            runOnUiThread {
+                feedInboxRecyclerView.layoutManager = linearLayoutManager
+                feedInboxRecyclerView.adapter = feedCardAdapter
+            }
         }
     }
 }

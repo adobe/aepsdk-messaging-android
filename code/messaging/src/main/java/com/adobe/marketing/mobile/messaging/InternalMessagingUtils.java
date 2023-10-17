@@ -13,11 +13,14 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_BASE_DIR;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
@@ -26,16 +29,19 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedStat
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
+import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +49,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +151,21 @@ class InternalMessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is an messaging personalization complete event.
+     *
+     * @param event A Messaging Personalization Complete {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an edge personalization complete event.
+     */
+    static boolean isPersonalizationRequestCompleteEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType()) &&
+                EventSource.CONTENT_COMPLETE.equalsIgnoreCase(event.getSource());
+    }
+
+    /**
      * Determines if the passed in {@code Event} is an update propositions event.
      *
      * @param event A Messaging Request Content {@link Event}.
@@ -187,6 +207,12 @@ class InternalMessagingUtils {
      * @param event A Messaging Request Content {@link Event}.
      * @return {@code List<Surface>} containing the app surfaces to be used for retrieving propositions
      */
+    /**
+     * Retrieves the app surfaces from the passed in {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code List<Surface>} containing the app surfaces to be used for retrieving propositions
+     */
     static List<Surface> getSurfaces(final Event event) {
         if (event == null || event.getEventData() == null) {
             return null;
@@ -208,17 +234,31 @@ class InternalMessagingUtils {
     }
 
     // ========================================================================================
-    // Request event id retrieval
+    // Event id retrieval
     // ========================================================================================
 
     /**
      * Retrieves the request event id {@code String} from the passed in {@code Event}'s event data.
      *
      * @param event A Messaging Request Content {@link Event}.
-     * @return {@code List<String>} containing the app surfaces to be used for retrieving feeds
+     * @return {@code String} containing the request event id
      */
     static String getRequestEventId(final Event event) {
-        return DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+        String requestEventId = event.getParentID();
+        if (StringUtils.isNullOrEmpty(requestEventId)) {
+            requestEventId = DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+        }
+        return requestEventId;
+    }
+
+    /**
+     * Retrieves the ending event id {@code String} from the passed in {@code Event}'s event data.
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code String} containing the ending event id
+     */
+    static String getEndingEventId(final Event event) {
+        return DataReader.optString(event.getEventData(), ENDING_EVENT_ID, null);
     }
 
     // ========================================================================================
@@ -260,6 +300,27 @@ class InternalMessagingUtils {
         final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
         final String consequenceType = ruleConsequence.getType();
         return schema.equals(SCHEMA_IAM) || consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE);
+    }
+
+    // ========================================================================================
+    // Error Event creation
+    // ========================================================================================
+
+    /**
+     * Creates a response event with specified AdobeError type added in the Event data.
+     *
+     * @param event a {@link Event} to create a response event containing the specified {@link AdobeError}
+     * @param error the {@code AdobeError} type
+     * @return the created response event
+     */
+    static Event createErrorResponseEvent(final Event event, final AdobeError error) {
+        final Map<String, Object> eventData = new HashMap<String, Object>() {{
+            put(RESPONSE_ERROR, error.getErrorName());
+        }};
+        return new Event.Builder(MESSAGE_PROPOSITIONS_RESPONSE, EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .inResponseToEvent(event)
+                .setEventData(eventData)
+                .build();
     }
 
     // ========================================================================================
@@ -310,5 +371,29 @@ class InternalMessagingUtils {
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, ID, null);
+    }
+
+    // ========================================================================================
+    // Collection utils
+    // ========================================================================================
+    /**
+     * Updates the provided {@code Map<Surface, List<LaunchRule>>} with the provided {@code Surface} and {@code List<LaunchRule>} objects.
+     *
+     * @param surface     A {@link Surface} key used to update a {@link List<LaunchRule>} value in the provided {@link Map<Surface, List<LaunchRule>>}
+     * @param rulesToAdd  A {@link List<LaunchRule>} list to add in the provided {@code Map<Surface, List<LaunchRule>>}
+     * @param mapToUpdate The {@code Map<Surface, List<LaunchRule>>} to be updated with the provided {@code Surface} and {@code List<LaunchRule>} objects
+     * @return the updated {@link Map<Surface, List<LaunchRule>>} map
+     */
+    public static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(final Surface surface, final List<LaunchRule> rulesToAdd, Map<Surface, List<LaunchRule>> mapToUpdate) {
+        if (MessagingUtils.isNullOrEmpty(rulesToAdd)) {
+            return mapToUpdate;
+        }
+        final Map<Surface, List<LaunchRule>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<LaunchRule> list = updatedMap.get(surface) != null ? updatedMap.get(surface) : MessagingUtils.createMutableList(rulesToAdd);
+        if (updatedMap.get(surface) != null) {
+            list.addAll(rulesToAdd);
+        }
+        updatedMap.put(surface, list);
+        return updatedMap;
     }
 }

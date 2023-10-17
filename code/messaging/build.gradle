@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: "jacoco"
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply plugin: 'kotlin-android'
 
 ext {
     srcFolders = file("./").listFiles().findAll {
@@ -53,6 +54,12 @@ android {
     compileOptions {
         sourceCompatibility rootProject.ext.sourceCompatibility
         targetCompatibility rootProject.ext.targetCompatibility
+    }
+
+    kotlinOptions {
+        jvmTarget = rootProject.ext.kotlinJvmTarget
+        languageVersion = rootProject.ext.kotlinLanguageVersion
+        apiVersion = rootProject.ext.kotlinApiVersion
     }
 
     libraryVariants.all { variant ->
@@ -216,6 +223,7 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
 }
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
     implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
