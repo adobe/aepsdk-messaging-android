@@ -118,7 +118,6 @@ class EdgePersonalizationResponseHandler {
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 propositions = cachedPropositions;
-                final List<MessagingProposition> messagingPropositions = new ArrayList<>();
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
                 for (final Map.Entry<Surface, List<MessagingProposition>> cacheEntry : cachedPropositions.entrySet()) {

@@ -11,6 +11,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.adobe.marketing.mobile.util.DataReader;
@@ -46,15 +47,20 @@ public class MessagingPropositionTests {
     }};
 
     Map<String, Object> propositionItemMap = new HashMap<>();
+    Map<String, Object> propositionItemMap2 = new HashMap<>();
     Map<String, Object> eventDataMap = new HashMap<>();
     List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+    List<MessagingPropositionItem> messagingPropositionItems2 = new ArrayList<>();
     List<Map<String, Object>> propositionItemMaps = new ArrayList<>();
 
     @Before
     public void setup() throws JSONException {
         propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
+        propositionItemMap2 = MessagingTestUtils.getMapFromFile("proposition_item2.json");
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
+        MessagingPropositionItem messagingPropositionItem2 = MessagingPropositionItem.fromEventData(propositionItemMap2);
         messagingPropositionItems.add(messagingPropositionItem);
+        messagingPropositionItems2.add(messagingPropositionItem2);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");
         eventDataMap.put("scope", "mobileapp://mockScope");
@@ -109,5 +115,19 @@ public class MessagingPropositionTests {
             Map<String, Object> expectedContent = JSONUtils.toMap(new JSONObject("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"consequenceId\",\"detail\":{\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\",\"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp/feeds/testFeed\",\"feedName\":\"testFeed\",\"campaignName\":\"testCampaign\"},\"content\":{\"actionUrl\":\"actionUrl\",\"actionTitle\":\"actionTitle\",\"title\":\"title\",\"body\":\"body\",\"imageUrl\":\"imageUrl\"}},\"id\":\"uniqueDetailId\"}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}"));
             assertEquals(expectedContent, content);
         }
+    }
+
+    @Test
+    public void test_equals() {
+        // test
+        MessagingProposition messagingProposition1 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition2 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition3 = new MessagingProposition("uniqueId2", "mobileapp://mockScope2", scopeDetails, messagingPropositionItems2);
+
+        Object notAMessagingProposition = new Object();
+        // verify
+        assertEquals(messagingProposition1, messagingProposition2);
+        assertNotEquals(messagingProposition1, notAMessagingProposition);
+        assertNotEquals(messagingProposition1, messagingProposition3);
     }
 }
