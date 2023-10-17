@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.ArrayList;
@@ -76,7 +75,11 @@ public class MessagingUtils {
         final List<MessagingProposition> existingList = updatedMap.get(surface);
         final List<MessagingProposition> updatedList = existingList != null ? existingList : createMutableList(propositionsToAdd);
         if (existingList != null) {
-            updatedList.addAll(propositionsToAdd);
+            for (final MessagingProposition proposition : propositionsToAdd) {
+                if (!updatedList.contains(proposition)) {
+                    updatedList.add(proposition);
+                }
+            }
         }
         updatedMap.put(surface, updatedList);
         return updatedMap;

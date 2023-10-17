@@ -12,8 +12,11 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
 import android.os.Handler;
 import android.webkit.ValueCallback;
@@ -90,26 +93,31 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
         this.scriptHandlers = scriptHandlers != null ? scriptHandlers : new HashMap<>();
 
-        final String consequenceType = consequence.getType();
-
-        if (!MESSAGE_CONSEQUENCE_CJM_VALUE.equals(consequenceType)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"type\" is (%s) should be of type (cjmiam).", consequence.toString(), consequenceType);
-            throw new MessageRequiredFieldMissingException("Required field: \"type\" is not equal to \"cjmiam\".");
-        }
-
         details = consequence.getDetail();
         if (MapUtils.isNullOrEmpty(details)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
         }
 
-        id = consequence.getId();
+        final String schemaType = DataReader.optString(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        if (!SCHEMA_IAM.equals(schemaType)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"schema\" is (%s) should be of type (%S).", consequence.toString(), schemaType, SCHEMA_IAM);
+            throw new MessageRequiredFieldMissingException("Required field: \"schema\" is not equal to \"https://ns.adobe.com/personalization/message/in-app\".");
+        }
+
+        final Map<String, Object> data = DataReader.optTypedMap(Object.class, details, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
+        if (MapUtils.isNullOrEmpty(data)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"data\" is null or empty.", consequence.toString());
+            throw new MessageRequiredFieldMissingException("Required field: \"data\" is null or empty.");
+        }
+
+        id = DataReader.optString(data, MESSAGE_CONSEQUENCE_ID, "");
         if (StringUtils.isNullOrEmpty(id)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
-        final String html = DataReader.optString(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, null);
+        final String html = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "");
         if (StringUtils.isNullOrEmpty(html)) {
             Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
             throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");

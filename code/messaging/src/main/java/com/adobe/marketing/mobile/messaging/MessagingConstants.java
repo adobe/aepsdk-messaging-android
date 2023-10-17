@@ -29,15 +29,17 @@ final class MessagingConstants {
     static final String HTTP_HEADER_ETAG = "Etag";
     static final String METADATA_PATH = "pathToFile";
     static final int DEFAULT_TIMEOUT = 5;
+    static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
 
     private MessagingConstants() {
     }
 
     final class SchemaValues {
-        static final String SCHEMA_AJO_HTML = "https://ns.adobe.com/personalization/html-content-item";
-        static final String SCHEMA_AJO_JSON = "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
         static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
         static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
 
         private SchemaValues() {
         }
@@ -149,6 +151,8 @@ final class MessagingConstants {
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
             static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
+            static final String ENDING_EVENT_ID = "endingEventId";
+            static final String RESPONSE_ERROR = "responseerror";
 
             private Messaging() {
             }
@@ -186,6 +190,8 @@ final class MessagingConstants {
                 static final String PUSH_PROVIDER = "pushProvider";
                 static final String EVENT_TYPE = "eventType";
                 static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String REQUEST = "request";
+                static final String SEND_COMPLETION = "sendCompletion";
 
                 private XDMDataKeys() {
                 }
@@ -260,8 +266,10 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
@@ -305,6 +313,7 @@ final class MessagingConstants {
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
+        static final String FINALIZE_PROPOSITIONS_RESPONSE = "Finalize propositions response";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {

@@ -264,20 +264,6 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
-
-        // Setup proposition handler for feed messages
-        Messaging.setPropositionsHandler {
-            println("\nMessaging.setPropositionsHandler: Handler callback contained ${it.entries.size} entry/entries")
-            for (entry in it.entries) {
-                val surface = entry.key.uri
-                messagingPropositions = entry.value
-                println("Proposition surface: $surface")
-                println("Proposition has ${messagingPropositions.size} item(s)")
-                for (proposition in messagingPropositions) {
-                    println("Item content: ${proposition.items[0].content}")
-                }
-            }
-        }
     }
 
     private fun setupButtonClickListeners() {
@@ -316,11 +302,6 @@ class MainActivity : ComponentActivity() {
         btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
-
-        // fetch code based experiences
-        val surfaceList = mutableListOf<Surface>()
-        surfaceList.add(Surface("<your-surface-path>"))
-        Messaging.updatePropositionsForSurfaces(surfaceList)
     }
 
     private fun setupSwitchListeners() {

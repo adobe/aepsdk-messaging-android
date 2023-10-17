@@ -36,7 +36,6 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
 
         // fetch code based experiences
         Messaging.updatePropositionsForSurfaces(surfaces)
-        Thread.sleep(500)
         // retrieve any cached code based experiences
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries")
@@ -49,8 +48,10 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
             val codeBasedRecyclerView = findViewById<RecyclerView>(R.id.codeBasedContentView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             val codeBasedCardAdapter = CodeBasedCardAdapter(messagingPropositions)
-            codeBasedRecyclerView.layoutManager = linearLayoutManager
-            codeBasedRecyclerView.adapter = codeBasedCardAdapter
+            runOnUiThread {
+                codeBasedRecyclerView.layoutManager = linearLayoutManager
+                codeBasedRecyclerView.adapter = codeBasedCardAdapter
+            }
         }
     }
 }
