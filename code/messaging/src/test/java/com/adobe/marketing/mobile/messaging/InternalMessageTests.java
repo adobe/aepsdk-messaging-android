@@ -199,12 +199,16 @@ public class InternalMessageTests {
     }
 
     @Test
-    public void test_messageConstructor_NotCJMConsequenceType() {
+    public void test_messageConstructor_MissingConsequenceId() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
-        RuleConsequence consequence = new RuleConsequence("123456789", "otherRuleType", details);
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
+        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
         runUsingMockedServiceProvider(() -> {
             // test
@@ -220,11 +224,15 @@ public class InternalMessageTests {
     }
 
     @Test
-    public void test_messageConstructor_MissingConsequenceId() {
+    public void test_messageConstructor_InvalidSchema() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, html);
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
+        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "notASchema");
         RuleConsequence consequence = new RuleConsequence("", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
         runUsingMockedServiceProvider(() -> {
@@ -244,13 +252,56 @@ public class InternalMessageTests {
     public void test_messageConstructor_DetailsMissingHtml() {
         // setup
         Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, null);
+        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
         RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
         runUsingMockedServiceProvider(() -> {
             // test
             try {
                 internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+            } catch (Exception exception) {
+                assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
+            }
+
+            // verify
+            verify(mockUIService, times(0)).createFullscreenMessage(anyString(), any(FullscreenMessageDelegate.class), anyBoolean(), any(MessageSettings.class));
+        });
+    }
+
+    @Test
+    public void test_messageConstructor_DetailsMissingData() {
+        // setup
+        Map<String, Object> details = new HashMap<>();
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
+        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
+        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+
+        runUsingMockedServiceProvider(() -> {
+            // test
+            try {
+                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+            } catch (Exception exception) {
+                assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
+            }
+
+            // verify
+            verify(mockUIService, times(0)).createFullscreenMessage(anyString(), any(FullscreenMessageDelegate.class), anyBoolean(), any(MessageSettings.class));
+        });
+    }
+
+    @Test
+    public void test_messageConstructor_NullUIService() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            when(mockServiceProvider.getUIService()).thenReturn(null);
+            // test
+            try {
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -625,13 +676,14 @@ public class InternalMessageTests {
         AdobeCallback<String> callback = s -> assertEquals("hello world", s);
         runUsingMockedServiceProvider(() -> {
             try {
-                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null, mockHandler, new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), mockWebView, mockHandler, new HashMap<>());
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // test
             internalMessage.handleJavascriptMessage("test", callback);
+            internalMessage.setWebView(null);
             internalMessage.evaluateJavascript("(function test(hello world) { return(arg); })()");
 
             // verify evaluate javascript not called
