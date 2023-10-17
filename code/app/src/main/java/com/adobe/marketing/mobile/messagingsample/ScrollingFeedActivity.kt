@@ -45,8 +45,10 @@ class ScrollingFeedActivity : AppCompatActivity() {
             val feedInboxRecyclerView = findViewById<RecyclerView>(R.id.feedInboxView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             val feedCardAdapter = FeedCardAdapter(messagingPropositions)
-            feedInboxRecyclerView.layoutManager = linearLayoutManager
-            feedInboxRecyclerView.adapter = feedCardAdapter
+            runOnUiThread {
+                feedInboxRecyclerView.layoutManager = linearLayoutManager
+                feedInboxRecyclerView.adapter = feedCardAdapter
+            }
         }
     }
 }

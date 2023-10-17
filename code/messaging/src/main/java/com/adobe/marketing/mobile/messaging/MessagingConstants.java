@@ -35,10 +35,11 @@ final class MessagingConstants {
     }
 
     final class SchemaValues {
-        static final String SCHEMA_AJO_HTML = "https://ns.adobe.com/personalization/html-content-item";
-        static final String SCHEMA_AJO_JSON = "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
         static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
         static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
 
         private SchemaValues() {
         }
@@ -265,8 +266,10 @@ final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
             static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";

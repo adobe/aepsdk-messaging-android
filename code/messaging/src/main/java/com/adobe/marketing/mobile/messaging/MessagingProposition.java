@@ -112,7 +112,7 @@ public class MessagingProposition implements Serializable {
             }
             messagingProposition = new MessagingProposition(uniqueId, scope, scopeDetails, messagingPropositionItems);
         } catch (final DataReaderException dataReaderException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from eventdata map: %s", dataReaderException.getLocalizedMessage());
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from event data map: %s", dataReaderException.getLocalizedMessage());
         }
 
         return messagingProposition;

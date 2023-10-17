@@ -12,6 +12,10 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM;
+
 import com.adobe.marketing.mobile.PropositionEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -145,31 +149,41 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link MessagingPropositionItem} object created from the provided {@code Map<String, Object>}.
      */
     public static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
-        MessagingPropositionItem messagingPropositionItem = null;
+        MessagingPropositionItem propositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
             final String schema = DataReader.getString(eventData, PAYLOAD_SCHEMA);
             final Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_DATA);
 
             String content = null;
-            final Object data = contentMap.get(PAYLOAD_CONTENT);
-            if (data instanceof String) {
-                content = DataReader.getString(contentMap, PAYLOAD_CONTENT);
-            } else if (data instanceof Map) {
-                final JSONObject contentJSON = new JSONObject(DataReader.getTypedMap(Object.class, contentMap, PAYLOAD_CONTENT));
-                if (contentJSON.length() > 0) {
-                    content = contentJSON.toString();
+            JSONObject jsonContent = null;
+            if (schema.equals(SCHEMA_RULESET_ITEM)) { // in-app content
+                jsonContent = new JSONObject(contentMap);
+            } else if (schema.equals(SCHEMA_JSON_CONTENT)) { // feed or code based json content
+                final Object contentObject = contentMap.get(PAYLOAD_CONTENT);
+                if (contentObject != null) {
+                    if (contentObject instanceof Map) {
+                        jsonContent = new JSONObject(contentMap.toString());
+                    } else {
+                        jsonContent = new JSONObject(contentObject.toString());
+                    }
                 }
+            } else { // html or text content
+                content = DataReader.getString(contentMap, PAYLOAD_CONTENT);
+            }
+
+            if (jsonContent != null && jsonContent.length() > 0) {
+                content = jsonContent.toString();
             }
 
             if (!StringUtils.isNullOrEmpty(content)) {
-                messagingPropositionItem = new MessagingPropositionItem(uniqueId, schema, content);
+                propositionItem = new MessagingPropositionItem(uniqueId, schema, content);
             }
         } catch (final Exception exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
-        return messagingPropositionItem;
+        return propositionItem;
     }
 
     /**
@@ -186,7 +200,22 @@ public class MessagingPropositionItem implements Serializable {
         }
         eventData.put(PAYLOAD_ID, this.uniqueId);
         eventData.put(PAYLOAD_SCHEMA, this.schema);
-        data.put(PAYLOAD_CONTENT, content);
+
+        try {
+            JSONObject jsonContent;
+            if (schema.equals(SCHEMA_RULESET_ITEM)) { // in-app content
+                jsonContent = new JSONObject(content);
+                data.put(PAYLOAD_CONTENT, jsonContent);
+            } else if (schema.equals(SCHEMA_JSON_CONTENT)) { // feed or code based json content
+                jsonContent = new JSONObject(content);
+                data.put(PAYLOAD_CONTENT, jsonContent.getJSONObject(PAYLOAD_CONTENT));
+            } else { // html or text content
+                data.put(PAYLOAD_CONTENT, content);
+            }
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create event data from a Proposition Item: %s", jsonException.getLocalizedMessage());
+        }
+
         eventData.put(PAYLOAD_DATA, data);
         return eventData;
     }

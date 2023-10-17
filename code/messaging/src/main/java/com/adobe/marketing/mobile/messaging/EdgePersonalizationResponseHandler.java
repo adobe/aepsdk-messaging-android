@@ -28,7 +28,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
@@ -38,6 +37,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.REFRESH_MESSAGES_EVENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.RESPONSE_CALLBACK_TIMEOUT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -51,9 +51,9 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.internal.AdobeErrorExt;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -607,7 +607,13 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        final String consequenceType = triggeredConsequence.getType();
+        final Map<String, Object> consequenceDetails = triggeredConsequence.getDetail();
+        if (MapUtils.isNullOrEmpty(consequenceDetails)) {
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
+            return;
+        }
+
+        final String consequenceType = DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
 
         // ensure we have a AJO IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
@@ -615,19 +621,13 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        if (!consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE)) {
+        if (!consequenceType.equals(SCHEMA_IAM)) {
             Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;
         }
 
         try {
-            final Map<String, Object> details = triggeredConsequence.getDetail();
-            if (MapUtils.isNullOrEmpty(details)) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
-                return;
-            }
-
-            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, details, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
+            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
             final InternalMessage message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
             message.propositionInfo = propositionInfo.get(message.getId());
             message.trigger();
@@ -648,19 +648,24 @@ class EdgePersonalizationResponseHandler {
      */
     private void cacheImageAssetsFromPayload(final List<RuleConsequence> ruleConsequences) {
         final List<String> remoteAssetsList = new ArrayList<>();
-        for (final RuleConsequence consequence : ruleConsequences) {
-            final Map<String, Object> details = consequence.getDetail();
-            final List<String> remoteAssets = DataReader.optStringList(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, null);
-            if (!MessagingUtils.isNullOrEmpty(remoteAssets)) {
-                for (final String remoteAsset : remoteAssets) {
-                    if (UrlUtils.isValidUrl(remoteAsset) && !remoteAssetsList.contains(remoteAsset)) {
-                        Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", remoteAsset);
-                        remoteAssetsList.add(remoteAsset);
+        try {
+            for (final RuleConsequence consequence : ruleConsequences) {
+                final Map<String, Object> details = consequence.getDetail();
+                final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, DATA);
+                final List<String> remoteAssets = DataReader.getStringList(data, MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+                if (!MessagingUtils.isNullOrEmpty(remoteAssets)) {
+                    for (final String remoteAsset : remoteAssets) {
+                        if (UrlUtils.isValidUrl(remoteAsset) && !remoteAssetsList.contains(remoteAsset)) {
+                            Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", remoteAsset);
+                            remoteAssetsList.add(remoteAsset);
+                        }
                     }
                 }
             }
+            messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
+        } catch (final DataReaderException exception) {
+            Log.warning(LOG_TAG, SELF_TAG, "Failed to cache image asset, exception occurred %s", exception.getLocalizedMessage());
         }
-        messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
     }
 
     Map<String, List<Surface>> getRequestedSurfacesForEventId() {

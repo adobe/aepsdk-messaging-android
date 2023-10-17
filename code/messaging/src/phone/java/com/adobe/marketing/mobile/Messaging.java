@@ -16,6 +16,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
@@ -213,6 +214,7 @@ public final class Messaging {
      *
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing the {@link Surface}s and the corresponding list of {@link MessagingProposition} objects.
      */
+    @VisibleForTesting
     public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
         propositionsResponseHandler = callback;
         if (!isPropositionsResponseListenerRegistered && callback != null) {
