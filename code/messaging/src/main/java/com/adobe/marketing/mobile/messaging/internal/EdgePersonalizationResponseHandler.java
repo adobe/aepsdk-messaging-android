@@ -120,15 +120,10 @@ class EdgePersonalizationResponseHandler {
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 propositions = cachedPropositions;
-                final List<Proposition> propositions = new ArrayList<>();
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
                 for (final Map.Entry<Surface, List<Proposition>> cacheEntry : cachedPropositions.entrySet()) {
                     surfaces.add(cacheEntry.getKey());
-                }
-                // get propositions
-                for (final List<Proposition> propositionList : cachedPropositions.values()) {
-                    propositions.addAll(propositionList);
                 }
 
                 final ParsedPropositions parsedPropositions = new ParsedPropositions(cachedPropositions, surfaces, extensionApi);
@@ -360,7 +355,8 @@ class EdgePersonalizationResponseHandler {
     void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         // validate this is one of our events
         final String requestEventId = MessagingUtils.getRequestEventId(edgeResponseEvent);
-        if (!requestedSurfacesForEventId.containsKey(requestEventId) && !requestEventId.equals("TESTING_ID")) {
+
+        if (StringUtils.isNullOrEmpty(requestEventId) || (!requestedSurfacesForEventId.containsKey(requestEventId) && !requestEventId.equals("TESTING_ID"))) {
             return;
         }
 

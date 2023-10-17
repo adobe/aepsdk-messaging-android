@@ -29,6 +29,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         var propositions = mutableListOf<Proposition>()
         val surfaceList = mutableListOf<Surface>()
         surfaceList.add(Surface("cbe-path"))
+        Messaging.updatePropositionsForSurfaces(surfaceList)
         Messaging.getPropositionsForSurfaces(surfaceList) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surfaces ${surfaceList.get(0).uri}")
             for (entry in it.entries) {
