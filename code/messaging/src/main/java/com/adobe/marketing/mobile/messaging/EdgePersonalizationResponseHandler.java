@@ -687,7 +687,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
-    Map<Surface, List<Proposition>> getInProgressPropositions () {
+    Map<Surface, List<MessagingProposition>> getInProgressPropositions () {
         return inProgressPropositions;
     }
 }

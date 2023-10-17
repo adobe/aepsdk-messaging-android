@@ -268,7 +268,7 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
 
             // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -291,7 +291,7 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
 
             // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -313,7 +313,7 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
 
             // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -335,7 +335,7 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
 
             // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
             // verify
             verify(mockCacheService, times(1)).get(anyString(), anyString());
@@ -389,9 +389,9 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
             when(mockCacheResult.getData()).thenReturn(null);
 
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+            final List<MessagingProposition> list = new ArrayList<>();
+            list.add(messagingProposition);
+            final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
 
             // test
             messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -415,9 +415,9 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
             when(mockCacheResult.getData()).thenReturn(propositionInputStream);
 
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+            final List<MessagingProposition> list = new ArrayList<>();
+            list.add(messagingProposition);
+            final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
 
             // test
             messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -441,9 +441,9 @@ public class MessagingPropositionPayloadCachingTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
             when(mockCacheResult.getData()).thenReturn(propositionInputStream);
 
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+            final List<MessagingProposition> list = new ArrayList<>();
+            list.add(messagingProposition);
+            final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
 
             // test
             messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);

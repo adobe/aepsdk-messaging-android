@@ -12,11 +12,11 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
-import static com.adobe.marketing.mobile.messaging.internal.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -41,6 +41,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -468,13 +469,13 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(1, inProgressPropositions.size());
                 Surface surface = inProgressPropositions.keySet().stream().findFirst().get();
                 assertEquals("mobileapp://mockPackageName", surface.getUri());
-                List<Proposition> propositions = inProgressPropositions.get(surface);
+                List<MessagingProposition> propositions = inProgressPropositions.get(surface);
                 assertEquals(1, propositions.size());
-                Proposition proposition = propositions.get(0);
+                MessagingProposition proposition = propositions.get(0);
                 assertNotNull(proposition);
                 assertEquals(1, proposition.getItems().size());
             }
@@ -499,13 +500,13 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(1, inProgressPropositions.size());
                 Surface surface = inProgressPropositions.keySet().stream().findFirst().get();
                 assertEquals("mobileapp://mockPackageName", surface.getUri());
-                List<Proposition> propositions = inProgressPropositions.get(surface);
+                List<MessagingProposition> propositions = inProgressPropositions.get(surface);
                 assertEquals(1, propositions.size());
-                Proposition proposition = propositions.get(0);
+                MessagingProposition proposition = propositions.get(0);
                 assertNotNull(proposition);
                 assertEquals(3, proposition.getItems().size());
 
@@ -549,7 +550,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -570,7 +571,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -591,7 +592,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -614,7 +615,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -683,7 +684,7 @@ public class EdgePersonalizationResponseHandlerTests {
             }
         });
     }
-
+    
     @Test
     public void test_handleProcessCompletedEvent_EmptyPayload() {
         runUsingMockedServiceProvider(() -> {
@@ -1032,11 +1033,14 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
                 Map<String, Object> details = new HashMap<>();
+                Map<String, Object> data = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
-                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
-                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
                 // test
