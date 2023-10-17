@@ -12,8 +12,6 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,12 +22,6 @@ import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.Proposition
 import com.adobe.marketing.mobile.services.ServiceProvider
 import org.json.JSONObject
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class FeedCardAdapter(propositions: MutableList<Proposition>) :
     RecyclerView.Adapter<FeedCardAdapter.ViewHolder>() {
@@ -43,17 +35,20 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = propositions[position]
         for (item in proposition.items) {
-            val jsonContent = JSONObject(item.content)
-            holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(jsonContent.getString("imageUrl")))
-            holder.feedItemImage.refreshDrawableState()
-            holder.feedItemTitle.text = jsonContent.getString("title")
-            holder.feedBody.text = jsonContent.getString("body")
-            holder.itemView.setOnClickListener {
-                val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                MobileCore.getApplication()?.startActivity(intent.apply {
-                    putExtra("content", item.content)
-                })
+            val feed = item.decodeContent()
+            if (feed != null) {
+                val content = JSONObject(feed.content)
+                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(content.getString("imageUrl")))
+                holder.feedItemImage.refreshDrawableState()
+                holder.feedItemTitle.text = content.getString("title")
+                holder.feedBody.text = content.getString("body")
+                holder.itemView.setOnClickListener {
+                    val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    MobileCore.getApplication()?.startActivity(intent.apply {
+                        putExtra("content", feed.content)
+                    })
+                }
             }
         }
     }

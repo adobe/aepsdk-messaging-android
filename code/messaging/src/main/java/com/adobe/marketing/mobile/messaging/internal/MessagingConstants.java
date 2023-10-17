@@ -29,6 +29,7 @@ final class MessagingConstants {
     static final String HTTP_HEADER_ETAG = "Etag";
     static final String METADATA_PATH = "pathToFile";
     static final int DEFAULT_TIMEOUT = 5;
+    static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
 
     private MessagingConstants() {
     }
@@ -149,6 +150,8 @@ final class MessagingConstants {
             static final String UPDATE_PROPOSITIONS = "updatepropositions";
             static final String GET_PROPOSITIONS = "getpropositions";
             static final String SURFACES = "surfaces";
+            static final String ENDING_EVENT_ID = "endingEventId";
+            static final String RESPONSE_ERROR = "responseerror";
 
             private Messaging() {
             }
@@ -186,6 +189,8 @@ final class MessagingConstants {
                 static final String PUSH_PROVIDER = "pushProvider";
                 static final String EVENT_TYPE = "eventType";
                 static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String REQUEST = "request";
+                static final String SEND_COMPLETION = "sendCompletion";
 
                 private XDMDataKeys() {
                 }
@@ -305,6 +310,7 @@ final class MessagingConstants {
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
+        static final String FINALIZE_PROPOSITIONS_RESPONSE = "Finalize propositions response";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
 
         private EventName() {

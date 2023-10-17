@@ -152,10 +152,21 @@ final class MessagingCacheUtilities {
     /**
      * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param propositions the {@link Map<Surface, List<Proposition>>} containing the propositions to be cached.
+     * @param newPropositions the {@link Map<Surface, List<Proposition>>} containing the propositions to be cached.
+     * @param surfacesToRemove {@link List<Surface>} containing surfaces to be removed from the cache
      */
-    void cachePropositions(final Map<Surface, List<Proposition>> propositions) {
+    void cachePropositions(final Map<Surface, List<Proposition>> newPropositions, final List<Surface> surfacesToRemove) {
+        final Map<Surface, List<Proposition>> cachedPropositions = getCachedPropositions();
+        final Map<Surface, List<Proposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
+        updatedPropositions.putAll(newPropositions);
+        for (final Map.Entry<Surface, List<Proposition>> entry : updatedPropositions.entrySet()) {
+            if (surfacesToRemove.contains(entry.getKey())) {
+                updatedPropositions.remove(entry);
+            }
+        }
+
         // clean any existing cached propositions first if the provided propositions are null or empty
+        final Map<Surface, List<Proposition>> propositions = new HashMap<>(updatedPropositions);
         if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");

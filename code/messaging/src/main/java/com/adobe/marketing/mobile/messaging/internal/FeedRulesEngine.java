@@ -24,7 +24,6 @@ import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
-import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -27,11 +27,11 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
 
         // retrieve any cached code based experiences
         var propositions = mutableListOf<Proposition>()
-        val surfaces = mutableListOf<Surface>()
-        val surface = Surface("codeBasedPath")
-        surfaces.add(surface)
-        Messaging.getPropositionsForSurfaces(surfaces) {
-            println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
+        val surfaceList = mutableListOf<Surface>()
+        surfaceList.add(Surface("cbe-path"))
+        Messaging.updatePropositionsForSurfaces(surfaceList)
+        Messaging.getPropositionsForSurfaces(surfaceList) {
+            println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surfaces ${surfaceList.get(0).uri}")
             for (entry in it.entries) {
                 propositions = entry.value
             }
@@ -40,9 +40,10 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
             val codeBasedExperienceWebView: WebView = findViewById(R.id.codeBasedExperienceWebView)
             val htmlContentString = propositions[0].items[0].content
             runOnUiThread {
+                val mimeType = if (propositions[0].items[0].schema.equals("https://ns.adobe.com/personalization/json-content-item")) "text/json" else "text/html"
                 codeBasedExperienceWebView.loadData(
                     htmlContentString,
-                    "text/html",
+                    mimeType,
                     StandardCharsets.UTF_8.toString()
                 )
             }

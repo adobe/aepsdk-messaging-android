@@ -138,7 +138,7 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
-            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+            edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
             edgePersonalizationResponseHandler.setMessagesRequestEventId("TESTING_ID");
 
             runnable.run();
@@ -871,7 +871,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 when(mockMessagingCacheUtilities.getCachedPropositions()).thenReturn(payload);
 
                 // test
-                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities, "TESTING_ID");
+                edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
 
                 // verify proposition not cached as we are loading cached propositions
                 verify(mockMessagingCacheUtilities, times(0)).cachePropositions(any(Map.class));

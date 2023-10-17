@@ -30,22 +30,25 @@ class ScrollingFeedActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // retrieve any cached feed propositions
-        var propositions = mutableListOf<Proposition>()
+        var messagingPropositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface.fromUriString("mobileapp://com.steveb.iamStagingTester/feeds/apifeed")
+        val surface = Surface.fromUriString("feeds/apifeed")
         surfaces.add(surface)
+        Messaging.updatePropositionsForSurfaces(surfaces)
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
             for (entry in it.entries) {
-                propositions = entry.value
+                messagingPropositions = entry.value
             }
 
             // show feed items
             val feedInboxRecyclerView = findViewById<RecyclerView>(R.id.feedInboxView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-            val feedCardAdapter = FeedCardAdapter(propositions)
-            feedInboxRecyclerView.layoutManager = linearLayoutManager
-            feedInboxRecyclerView.adapter = feedCardAdapter
+            val feedCardAdapter = FeedCardAdapter(messagingPropositions)
+            runOnUiThread {
+                feedInboxRecyclerView.layoutManager = linearLayoutManager
+                feedInboxRecyclerView.adapter = feedCardAdapter
+            }
         }
     }
 }

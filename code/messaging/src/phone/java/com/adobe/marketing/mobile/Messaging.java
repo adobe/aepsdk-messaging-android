@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.2.0";
+    private static final String EXTENSION_VERSION = "2.3.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -45,6 +45,7 @@ public final class Messaging {
     private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
     private static final long TIMEOUT_MILLIS = 5000L;
+    private static final long GET_PROPOSITIONS_TIMEOUT_MILLIS = 10000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
     private static final String TRACK_INFO_KEY_ADOBE_XDM = "adobe_xdm";
     private static final String TRACK_INFO_KEY_APPLICATION_OPENED = "applicationOpened";
@@ -281,7 +282,7 @@ public final class Messaging {
                 .setEventData(eventData)
                 .build();
 
-        MobileCore.dispatchEventWithResponseCallback(getPropositionsEvent, 2000, new AdobeCallbackWithError<Event>() {
+        MobileCore.dispatchEventWithResponseCallback(getPropositionsEvent, GET_PROPOSITIONS_TIMEOUT_MILLIS, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
                 failWithError(callback, adobeError);
