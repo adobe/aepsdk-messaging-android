@@ -163,7 +163,7 @@ public class MessagingPropositionItem implements Serializable {
                 final Object contentObject = contentMap.get(PAYLOAD_CONTENT);
                 if (contentObject != null) {
                     if (contentObject instanceof Map) {
-                        jsonContent = new JSONObject(contentMap.toString());
+                        jsonContent = new JSONObject((Map) contentObject);
                     } else {
                         jsonContent = new JSONObject(contentObject.toString());
                     }
@@ -202,13 +202,9 @@ public class MessagingPropositionItem implements Serializable {
         eventData.put(PAYLOAD_SCHEMA, this.schema);
 
         try {
-            JSONObject jsonContent;
-            if (schema.equals(SCHEMA_RULESET_ITEM)) { // in-app content
-                jsonContent = new JSONObject(content);
-                data.put(PAYLOAD_CONTENT, jsonContent);
-            } else if (schema.equals(SCHEMA_JSON_CONTENT)) { // feed or code based json content
-                jsonContent = new JSONObject(content);
-                data.put(PAYLOAD_CONTENT, jsonContent.getJSONObject(PAYLOAD_CONTENT));
+            if (schema.equals(SCHEMA_RULESET_ITEM) || schema.equals(SCHEMA_JSON_CONTENT)) { // in-app, feed, or code based content
+                final JSONObject jsonContent = new JSONObject(content);
+                data.put(PAYLOAD_CONTENT, JSONUtils.toMap(jsonContent));
             } else { // html or text content
                 data.put(PAYLOAD_CONTENT, content);
             }

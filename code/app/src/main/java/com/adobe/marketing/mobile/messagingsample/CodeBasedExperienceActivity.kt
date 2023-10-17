@@ -48,8 +48,10 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
             val codeBasedRecyclerView = findViewById<RecyclerView>(R.id.codeBasedContentView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
             val codeBasedCardAdapter = CodeBasedCardAdapter(messagingPropositions)
-            codeBasedRecyclerView.layoutManager = linearLayoutManager
-            codeBasedRecyclerView.adapter = codeBasedCardAdapter
+            runOnUiThread {
+                codeBasedRecyclerView.layoutManager = linearLayoutManager
+                codeBasedRecyclerView.adapter = codeBasedCardAdapter
+            }
         }
     }
 }
