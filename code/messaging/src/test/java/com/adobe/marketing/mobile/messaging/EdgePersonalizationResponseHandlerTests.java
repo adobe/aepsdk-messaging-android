@@ -181,50 +181,6 @@ public class EdgePersonalizationResponseHandlerTests {
         }
     }
 
-    private List<RuleConsequence> createFeedConsequenceList(int size) {
-        List<RuleConsequence> feedConsequences = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            try {
-                JSONObject feedDetails = new JSONObject("{\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
-                        "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
-                        "\"data\": {\n" +
-                        "\"expiryDate\": 1723163897,\n" +
-                        "\"meta\": {\n" +
-                        "\"feedName\": \"apifeed\",\n" +
-                        "\"campaignName\": \"testCampaign\",\n" +
-                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
-                        "},\n" +
-                        "\"content\": {\n" +
-                        "\"body\": \"testBody\",\n" +
-                        "\"title\": \"testTitle\",\n" +
-                        "\"imageUrl\": \"https://someimage" + i + ".png\",\n" +
-                        "\"actionTitle\": \"testActionTitle\",\n" +
-                        "\"actionUrl\": \"https://someurl.com\",\n" +
-                        "},\n" +
-                        "\"contentType\": \"application/json\",\n" +
-                        "\"publishedDate\": 1691541497\n" +
-                        "}\n" +
-                        "}");
-                Map<String, Object> detail = JSONUtils.toMap(feedDetails);
-                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.MessageFeedValues.SCHEMA, detail);
-                feedConsequences.add(feedConsequence);
-            } catch (JSONException jsonException) {
-                fail(jsonException.getMessage());
-            }
-        }
-        return feedConsequences;
-    }
-
-    private List<Inbound> createInboundList(int size) {
-        List<RuleConsequence> consequences = createFeedConsequenceList(size);
-        List<Inbound> inboundMessages = new ArrayList<>();
-        for (RuleConsequence consequence : consequences) {
-            inboundMessages.add(Inbound.fromConsequenceDetails(consequence.getDetail()));
-        }
-        return inboundMessages;
-    }
-
     // ========================================================================================
     // fetchMessages
     // ========================================================================================
@@ -631,7 +587,7 @@ public class EdgePersonalizationResponseHandlerTests {
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
                 Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, createInboundList(4));
+                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -730,7 +686,7 @@ public class EdgePersonalizationResponseHandlerTests {
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
                 Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, createInboundList(4));
+                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -838,7 +794,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 // setup feed rules engine
                 Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, createInboundList(3));
+                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -891,7 +847,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 // setup feed rules engine
                 Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(new Surface(), createInboundList(3));
+                matchedFeedRules.put(new Surface(), MessagingTestUtils.createInboundList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -941,7 +897,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 // setup feed rules engine
                 Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(new Surface(), createInboundList(3));
+                matchedFeedRules.put(new Surface(), MessagingTestUtils.createInboundList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 

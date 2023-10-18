@@ -47,6 +47,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -96,6 +97,8 @@ public class MessagingExtensionTests {
     LaunchRule mockLaunchRule;
     @Mock
     RuleConsequence mockRuleConsequence;
+    @Mock
+    SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
 
     private static final String mockCJMData = "{\n" +
             "        \"mixins\" :{\n" +
@@ -134,6 +137,7 @@ public class MessagingExtensionTests {
         reset(mockInternalMessage);
         reset(mockLaunchRule);
         reset(mockRuleConsequence);
+        reset(mockSerialWorkDispatcher);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -179,17 +183,91 @@ public class MessagingExtensionTests {
     @Test
     public void test_onRegistered() {
         runUsingMockedServiceProvider(() -> {
+            // setup
+            messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
+
             // test
             messagingExtension.onRegistered();
 
-            // verify 4 listeners are registered
+            // verify 6 listeners are registered
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.GENERIC_IDENTITY), eq(EventSource.REQUEST_CONTENT), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.EDGE), eq(MessagingConstants.EventSource.PERSONALIZATION_DECISIONS), any());
             verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.WILDCARD), eq(EventSource.WILDCARD), any());
-            verify(mockExtensionApi, times(1)).registerEventListener(eq(MessagingConstants.EventType.MESSAGING), eq(EventSource.REQUEST_CONTENT), any());
+            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.MESSAGING), eq(EventSource.REQUEST_CONTENT), any());
+            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.RULES_ENGINE), eq(EventSource.RESPONSE_CONTENT), any());
+            verify(mockExtensionApi, times(1)).registerEventListener(eq(EventType.MESSAGING), eq(EventSource.CONTENT_COMPLETE), any());
+
+            // verify serial dispatcher started
+            verify(mockSerialWorkDispatcher, times(1)).start();
         });
     }
 
+    // ========================================================================================
+    // SerialWorkDispatcher tests
+    // ========================================================================================
+    @Test
+    public void test_serialWorkDispatcher_offerRetrieveMessageEvent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Event event = new Event.Builder("Test Get propositions", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                    .setEventData(new HashMap<String, Object>() {{ put(MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, true); }})
+                    .build();
+
+            // test
+            messagingExtension.onRegistered();
+            try {
+                messagingExtension.getSerialWorkDispatcher().offer(event);
+                Thread.sleep(100);
+            } catch (InterruptedException exception) {
+                fail(exception.getLocalizedMessage());
+            }
+
+            // verify EdgePersonalizationResponseHandler.retrieveMessages called
+            verify(mockEdgePersonalizationResponseHandler, times(1)).retrieveMessages(any(), any());
+        });
+    }
+
+    @Test
+    public void test_serialWorkDispatcher_offerEdgeContentCompletedEvent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
+            requestedSurfacesForEventId.put("testEventId", new ArrayList<Surface>() {{ add(new Surface()); }});
+            when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId()).thenReturn(requestedSurfacesForEventId);
+            messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockEdgePersonalizationResponseHandler);
+
+            Event event = Mockito.mock(Event.class);
+            when(event.getType()).thenReturn(EventType.EDGE);
+            when(event.getSource()).thenReturn(EventSource.CONTENT_COMPLETE);
+            when(event.getUniqueIdentifier()).thenReturn("testEventId");
+
+            // test
+            messagingExtension.onRegistered();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException exception) {
+                fail(exception.getLocalizedMessage());
+            }
+
+            // verify serialWorkDispatcher.offer returns false as this is a content complete event with a matching event id
+            assertEquals(true, messagingExtension.getSerialWorkDispatcher().offer(event));
+        });
+    }
+
+    @Test
+    public void test_serialWorkDispatcher_offerNonEdgeEvent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Event event = new Event.Builder("Not an Edge Content Complete event", EventType.WILDCARD, EventSource.RESPONSE_CONTENT)
+                    .build();
+
+            // test
+            messagingExtension.onRegistered();
+
+            // verify serialWorkDispatcher.offer returns true as this is an unhandled event type
+            assertEquals(true, messagingExtension.getSerialWorkDispatcher().offer(event));
+        });
+    }
 
     // ========================================================================================
     // getName
