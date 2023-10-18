@@ -60,7 +60,13 @@ public class ParsedPropositions {
 
                 final Surface surface = Surface.fromUriString(scope);
                 for (final MessagingPropositionItem propositionItem : proposition.getItems()) {
-                    final List<LaunchRule> parsedRules = JSONRulesParser.parse(propositionItem.getContent(), extensionApi);
+                    final String content = propositionItem.getContent();
+                    if (StringUtils.isNullOrEmpty(content)) {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring Proposition with empty content.");
+                        continue;
+                    }
+
+                    final List<LaunchRule> parsedRules = JSONRulesParser.parse(content, extensionApi);
                     // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                     if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
