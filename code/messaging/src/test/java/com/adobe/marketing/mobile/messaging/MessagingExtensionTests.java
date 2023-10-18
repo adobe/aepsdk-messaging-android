@@ -887,7 +887,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(null);
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(mockEvent, null);
         });
     }
 
@@ -934,7 +934,7 @@ public class MessagingExtensionTests {
             messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(listArgumentCaptor.capture());
+            verify(mockEdgePersonalizationResponseHandler, times(1)).fetchMessages(any(Event.class), listArgumentCaptor.capture());
             List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
             assertEquals(2, capturedSurfaces.size());
             List<String> sortedList = new ArrayList<>();

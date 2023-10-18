@@ -28,24 +28,27 @@
                 },
                 "consequences": [{
                     "id": "consequenceId",
-                    "type": "ajoInbound",
+                    "type": "schema",
                     "detail": {
-                        "type": "feed",
-                        "expiryDate": 1717688797,
-                        "publishedDate": 1717688797,
-                        "meta": {
-                            "feedName": "apifeed",
-                            "campaignName": "mockCampaign",
-                            "surface": "mobileapp://mockApp"
-                        },
-                        "content": {
-                            "title": "test title",
-                            "body": "test body",
-                            "imageUrl": "https://adobe.com/image.png",
-                            "actionUrl": "https://adobe.com/",
-                            "actionTitle": "test action title"
-                        },
-                        "contentType": "application/json"
+                        "id": "uniqueDetailId",
+                        "schema": "https://ns.adobe.com/personalization/message/feed-item",
+                        "data": {
+                            "expiryDate": 1717688797,
+                            "meta": {
+                                "feedName": "testFeed",
+                                "campaignName": "testCampaign",
+                                "surface": "mobileapp://mockApp/feeds/testFeed"
+                            },
+                            "content": {
+                                "title": "title",
+                                "body": "body",
+                                "imageUrl": "imageUrl",
+                                "actionUrl": "actionUrl",
+                                "actionTitle": "actionTitle"
+                            },
+                            "contentType": "application/json",
+                            "publishedDate": 1717688797
+                        }
                     }
                 }]
             }]

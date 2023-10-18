@@ -440,7 +440,7 @@ public class MessagingTestUtils {
         data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
         data.put("content", "{\n" +
                 "  \"version\": 1,\n" +
-                "  \"rules\": [{\n" +
+                (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\n" +
                 "    \"condition\": {\n" +
                 "      \"type\": \"group\",\n" +
                 "      \"definition\": {\n" +

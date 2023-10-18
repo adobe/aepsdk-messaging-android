@@ -218,43 +218,13 @@ public class MessagingTestConstants {
         }
 
         public static final class RulesEngine {
-            public static final String JSON_KEY = "rules";
-            public static final String JSON_CONDITION_KEY = "condition";
-            public static final String JSON_CONSEQUENCES_KEY = "consequences";
-            public static final String MESSAGE_CONSEQUENCE_ID = "id";
-            public static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             public static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
-            public static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
-            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
             public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
-            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_TEMPLATE = "template";
-            public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
-            public static final String MESSAGE_CONSEQUENCE_DETAIL_XDM = "_xdm";
-            public static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
             private RulesEngine() {
-            }
-        }
-
-        final class MobileParametersKeys {
-            static final String MOBILE_PARAMETERS = "mobileParameters";
-            static final String SCHEMA_VERSION = "schemaVersion";
-            static final String WIDTH = "width";
-            static final String HEIGHT = "height";
-            static final String VERTICAL_ALIGN = "verticalAlign";
-            static final String VERTICAL_INSET = "verticalInset";
-            static final String HORIZONTAL_ALIGN = "horizontalAlign";
-            static final String HORIZONTAL_INSET = "horizontalInset";
-            static final String UI_TAKEOVER = "uiTakeover";
-            static final String DISPLAY_ANIMATION = "displayAnimation";
-            static final String DISMISS_ANIMATION = "dismissAnimation";
-            static final String BACKDROP_COLOR = "backdropColor";
-            static final String BACKDROP_OPACITY = "backdropOpacity";
-            static final String CORNER_RADIUS = "cornerRadius";
-            static final String GESTURES = "gestures";
-            static final String BODY = "body";
-
-            private MobileParametersKeys() {
             }
         }
     }

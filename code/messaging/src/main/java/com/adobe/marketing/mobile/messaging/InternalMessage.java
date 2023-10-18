@@ -368,4 +368,9 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
 
         return settings;
     }
+
+    @VisibleForTesting
+    void setWebView(final WebView webView) {
+        this.webView = webView;
+    }
 }
