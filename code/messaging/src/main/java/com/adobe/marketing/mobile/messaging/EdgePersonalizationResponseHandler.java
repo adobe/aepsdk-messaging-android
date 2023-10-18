@@ -642,6 +642,10 @@ class EdgePersonalizationResponseHandler {
         this.serialWorkDispatcher = serialWorkDispatcher;
     }
 
+    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
+        return requestedSurfacesForEventId;
+    }
+
     /**
      * Cache any asset URL's present in each {@code RuleConsequence} {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} detail.
      *
@@ -678,11 +682,6 @@ class EdgePersonalizationResponseHandler {
     @VisibleForTesting
     void setMessagesRequestEventId(final String messagesRequestEventId) {
         requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(new Surface()));
-    }
-
-    @VisibleForTesting
-    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
-        return requestedSurfacesForEventId;
     }
 
     @VisibleForTesting
