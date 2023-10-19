@@ -33,9 +33,6 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         val surfaces = mutableListOf<Surface>()
         surfaces.add(Surface("cbe-path1"))
         surfaces.add(Surface("cbe-path2"))
-        surfaces.add(Surface("cbe-new"))
-        surfaces.add(Surface("rymorale-cbe-json-long"))
-        surfaces.add(Surface("rymorale-cbe"))
 
         // fetch code based experiences
         Messaging.updatePropositionsForSurfaces(surfaces)
