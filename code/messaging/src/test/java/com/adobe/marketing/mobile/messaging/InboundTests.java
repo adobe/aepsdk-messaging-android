@@ -17,7 +17,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.reset;
 
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.util.DataReader;
+
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -70,6 +74,87 @@ public class InboundTests {
         assertEquals(0, inbound.getPublishedDate());
         assertEquals(0, inbound.getExpiryDate());
         assertEquals(new HashMap<>(), inbound.getMeta());
+    }
+
+    @Test
+    public void testCreateInbound_FromValidConsequenceDetails() {
+        // setup
+        Map<String, Object> metaMap = new HashMap<>();
+        metaMap.put("surface", "mobileapp://com.adobe.sampleApp/feed/promos");
+        metaMap.put("feedName", "apifeed");
+        metaMap.put("campaignName", "testCampaign");
+        RuleConsequence feedConsequence = MessagingTestUtils.createFeedConsequenceList(1).get(0);
+
+        // test
+        Inbound inbound = Inbound.fromConsequenceDetails(feedConsequence.getDetail());
+
+        // verify
+        assertNotNull(inbound);
+        assertEquals("183639c4-cb37-458e-a8ef-4e130d767ebf0", inbound.getUniqueId());
+        assertEquals(InboundType.FEED, inbound.getInboundType());
+        assertEquals("{\"actionUrl\":\"https://someurl.com\",\"actionTitle\":\"testActionTitle\",\"body\":\"testBody\",\"title\":\"testTitle\",\"imageUrl\":\"https://someimage0.png\"}", inbound.getContent());
+        assertEquals("application/json", inbound.getContentType());
+        assertEquals(1691541497, inbound.getPublishedDate());
+        assertEquals(1723163897, inbound.getExpiryDate());
+        assertEquals(metaMap, inbound.getMeta());
+    }
+
+    @Ignore
+    @Test
+    public void testCreateInbound_FromInvalidConsequenceDetails_DetailDataMissingContentType() {
+        // setup
+        RuleConsequence feedConsequence = MessagingTestUtils.createFeedConsequenceList(1).get(0);
+        Map<String, Object> consequenceDetail = feedConsequence.getDetail();
+        Map<String, Object> data = DataReader.optTypedMap(Object.class, consequenceDetail,"data",null);
+        data.remove("contentType");
+        consequenceDetail.put("data", data);
+
+        // test
+        Inbound inbound = Inbound.fromConsequenceDetails(consequenceDetail);
+
+        // verify
+        assertNull(inbound);
+    }
+
+    @Test
+    public void testCreateInbound_FromInvalidConsequenceDetails_DetailDataMissingExpiryDate() {
+        // setup
+        RuleConsequence feedConsequence = MessagingTestUtils.createFeedConsequenceList(1).get(0);
+        Map<String, Object> consequenceDetail = feedConsequence.getDetail();
+        Map<String, Object> data = DataReader.optTypedMap(Object.class, consequenceDetail,"data",null);
+        data.remove("expiryDate");
+        consequenceDetail.put("data", data);
+
+        // test
+        Inbound inbound = Inbound.fromConsequenceDetails(consequenceDetail);
+
+        // verify
+        assertNull(inbound);
+    }
+
+    @Test
+    public void testCreateInbound_FromInvalidConsequenceDetails_DetailDataMissingPublishedDate() {
+        // setup
+        RuleConsequence feedConsequence = MessagingTestUtils.createFeedConsequenceList(1).get(0);
+        Map<String, Object> consequenceDetail = feedConsequence.getDetail();
+        Map<String, Object> data = DataReader.optTypedMap(Object.class, consequenceDetail,"data",null);
+        data.remove("publishedDate");
+        consequenceDetail.put("data", data);
+
+        // test
+        Inbound inbound = Inbound.fromConsequenceDetails(consequenceDetail);
+
+        // verify
+        assertNull(inbound);
+    }
+
+    @Test
+    public void testCreateInbound_FromEmptyConsequenceDetails() {
+        // test
+        Inbound inbound = Inbound.fromConsequenceDetails(new HashMap<>());
+
+        // verify
+        assertNull(inbound);
     }
 
     @Test
