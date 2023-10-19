@@ -662,7 +662,7 @@ public class MessagingTestUtils {
         }
     }
 
-    private static List<RuleConsequence> createFeedConsequenceList(int size) {
+    static List<RuleConsequence> createFeedConsequenceList(int size) {
         List<RuleConsequence> feedConsequences = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             try {

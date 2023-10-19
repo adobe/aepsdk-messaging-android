@@ -12,23 +12,13 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.StringUtils;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet interactive offer.
  * Customers can use the Messaging SDK to render the feed item data in a pre-defined format or implement their own rendering.
  */
 public class FeedItem {
-    private static final String TITLE = "title";
-    private static final String BODY = "body";
-    private static final String IMAGE_URL = "imageUrl";
-    private static final String ACTION_TITLE = "actionTitle";
-    private static final String ACTION_URL = "actionUrl";
-
     // Plain-text title for the feed item
     private String title;
     // Plain-text body representing the content for the feed item
@@ -181,34 +171,5 @@ public class FeedItem {
      */
     public String getActionTitle() {
         return actionTitle;
-    }
-
-    /**
-     * Converts the {@code FeedItem} into a {@code Map<String, Object>}.
-     *
-     * @return {@code Map<String, Object>} containing the {@link FeedItem} data.
-     */
-    Map<String, Object> toEventData() {
-        final Map<String, Object> feedItemAsMap = new HashMap<>();
-        feedItemAsMap.put(TITLE, getTitle());
-        feedItemAsMap.put(BODY, getBody());
-        feedItemAsMap.put(IMAGE_URL, getImageUrl());
-        feedItemAsMap.put(ACTION_URL, getActionUrl());
-        feedItemAsMap.put(ACTION_TITLE, getActionTitle());
-        return feedItemAsMap;
-    }
-
-    /**
-     * Creates a {@code FeedItem} from a {@code Map<String, Object>} containing feed item data.
-     *
-     * @return {@code FeedItem} created from the feed item data {@code Map<String, Object>}
-     */
-    static FeedItem fromEventData(final Map<String, Object> feedItemData) {
-        return new FeedItem.Builder(DataReader.optString(feedItemData, TITLE, null),
-                DataReader.optString(feedItemData, BODY, null))
-                .setImageUrl(DataReader.optString(feedItemData, IMAGE_URL, null))
-                .setActionTitle(DataReader.optString(feedItemData, ACTION_TITLE, null))
-                .setActionUrl(DataReader.optString(feedItemData, ACTION_URL, null))
-                .build();
     }
 }
