@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM;
 

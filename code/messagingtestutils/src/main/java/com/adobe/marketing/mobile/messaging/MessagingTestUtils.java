@@ -10,6 +10,9 @@
 */
 package com.adobe.marketing.mobile.messaging;
 
+import static org.junit.Assert.fail;
+
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.*;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
 import com.adobe.marketing.mobile.services.caching.CacheExpiry;
@@ -19,6 +22,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.adobe.marketing.mobile.util.JSONUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -440,7 +444,7 @@ public class MessagingTestUtils {
         data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
         data.put("content", "{\n" +
                 "  \"version\": 1,\n" +
-                "  \"rules\": [{\n" +
+                (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\n" +
                 "    \"condition\": {\n" +
                 "      \"type\": \"group\",\n" +
                 "      \"definition\": {\n" +
@@ -658,8 +662,48 @@ public class MessagingTestUtils {
         }
     }
 
-    static Inbound createInbound() {
-        return new Inbound("183639c4-cb37-458e-a8ef-4e130d767eb0", InboundType.FEED, "content", "feed", 1234, 1234, Collections.EMPTY_MAP);
+    static List<RuleConsequence> createFeedConsequenceList(int size) {
+        List<RuleConsequence> feedConsequences = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            try {
+                JSONObject feedDetails = new JSONObject("{\n" +
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
+                        "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
+                        "\"data\": {\n" +
+                        "\"expiryDate\": 1723163897,\n" +
+                        "\"meta\": {\n" +
+                        "\"feedName\": \"apifeed\",\n" +
+                        "\"campaignName\": \"testCampaign\",\n" +
+                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
+                        "},\n" +
+                        "\"content\": {\n" +
+                        "\"body\": \"testBody\",\n" +
+                        "\"title\": \"testTitle\",\n" +
+                        "\"imageUrl\": \"https://someimage" + i + ".png\",\n" +
+                        "\"actionTitle\": \"testActionTitle\",\n" +
+                        "\"actionUrl\": \"https://someurl.com\",\n" +
+                        "},\n" +
+                        "\"contentType\": \"application/json\",\n" +
+                        "\"publishedDate\": 1691541497\n" +
+                        "}\n" +
+                        "}");
+                Map<String, Object> detail = JSONUtils.toMap(feedDetails);
+                RuleConsequence feedConsequence = new RuleConsequence(Integer.toString(size), MessagingConstants.MessageFeedValues.SCHEMA, detail);
+                feedConsequences.add(feedConsequence);
+            } catch (JSONException jsonException) {
+                fail(jsonException.getMessage());
+            }
+        }
+        return feedConsequences;
+    }
+
+    static List<Inbound> createInboundList(int size) {
+        List<RuleConsequence> consequences = createFeedConsequenceList(size);
+        List<Inbound> inboundMessages = new ArrayList<>();
+        for (RuleConsequence consequence : consequences) {
+            inboundMessages.add(Inbound.fromConsequenceDetails(consequence.getDetail()));
+        }
+        return inboundMessages;
     }
 
 }

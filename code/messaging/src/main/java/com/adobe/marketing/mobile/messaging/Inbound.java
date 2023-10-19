@@ -34,6 +34,11 @@ public class Inbound {
     private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
     private static final String MESSAGE_CONSEQUENCE_DETAIL_DATA = "data";
+    private static final String TITLE = "title";
+    private static final String BODY = "body";
+    private static final String IMAGE_URL = "imageUrl";
+    private static final String ACTION_TITLE = "actionTitle";
+    private static final String ACTION_URL = "actionUrl";
 
     // String representing a unique ID for this inbound item
     private final String uniqueId;
@@ -153,11 +158,11 @@ public class Inbound {
     public FeedItem toFeedItem() {
         try {
             final JSONObject jsonContent = new JSONObject(getContent());
-            final String title = jsonContent.getString("title");
-            final String body = jsonContent.getString("body");
-            final String actionTitle = jsonContent.optString("actionTitle");
-            final String actionUrl = jsonContent.optString("actionUrl");
-            final String imageUrl = jsonContent.optString("imageUrl");
+            final String title = jsonContent.getString(TITLE);
+            final String body = jsonContent.getString(BODY);
+            final String actionTitle = jsonContent.optString(ACTION_TITLE);
+            final String actionUrl = jsonContent.optString(ACTION_URL);
+            final String imageUrl = jsonContent.optString(IMAGE_URL);
             return new FeedItem.Builder(title, body)
                     .setActionTitle(actionTitle)
                     .setActionUrl(actionUrl)
