@@ -56,36 +56,52 @@
                 "type": "group"
             },
             "consequences": [
-
                 {
-                    "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+                    "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
                     "type": "schema",
                     "detail": {
-                        "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
-                        "schema": "https://ns.adobe.com/personalization/message/in-app",
+                        "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
+                        "schema": "https://ns.adobe.com/personalization/message/feed-item",
                         "data": {
-                            "content": "<html>message here</html>",
-                            "contentType": "text/html",
+                            "expiryDate": 1723163897,
+                            "meta": {
+                                "feedName": "testFeed",
+                                "campaignName": "testCampaign",
+                                "surface": "mobileapp://com.feeds.testing/feeds/apifeed"
+                            },
+                            "content": {
+                                "title": "Guacamole!",
+                                "body": "I'm the queen of Nacho Picchu and I'm really glad to meet you. To spice up this big tortilla chip, I command you to find a big dip.",
+                                "imageUrl": "https://d14dq8eoa1si34.cloudfront.net/2a6ef2f0-1167-11eb-88c6-b512a5ef09a7/urn:aaid:aem:d4b77a01-610a-4c3f-9be6-5ebe1bd13da3/oak:1.0::ci:fa54b394b6f987d974d8619833083519/8933c829-3ab2-38e8-a1ee-00d4f562fff8",
+                                "actionUrl": "https://luma.com/guacamolethemusical",
+                                "actionTitle": "guacamole!"
+                            },
+                            "contentType": "application/json",
+                            "publishedDate": 1691541497
+                        }
+                    }
+                },
+                {
+                    "id": "e24c7416-31c2-4734-8c87-ffb8269d28bf",
+                    "type": "schema",
+                    "detail": {
+                        "id": "e24c7416-31c2-4734-8c87-ffb8269d28bf",
+                        "schema": "https://ns.adobe.com/personalization/message/feed-item",
+                        "data": {
                             "publishedDate": 1701538942,
                             "expiryDate": 1712190456,
-                            "meta": {},
-                            "mobileParameters": {
-                                "verticalAlign": "center",
-                                "dismissAnimation": "bottom",
-                                "verticalInset": 0,
-                                "backdropOpacity": 0.2,
-                                "cornerRadius": 15,
-                                "gestures": {},
-                                "horizontalInset": 0,
-                                "uiTakeover": true,
-                                "horizontalAlign": "center",
-                                "width": 100,
-                                "displayAnimation": "bottom",
-                                "backdropColor": "#000000",
-                                "height": 100
+                            "meta": {
+                                "feedName": "Winter Promo",
+                                "surface": "mobileapp://com.feeds.testing/feeds/apifeed"
                             },
-                            "webParameters": {},
-                            "remoteAssets": []
+                            "contentType": "application/json",
+                            "content": {
+                                "imageUrl": "https://luma.com/wintersale.png",
+                                "actionTitle": "Shop the sale!",
+                                "actionUrl": "https://luma.com/sale",
+                                "body": "All winter gear is now up to 30% off at checkout.",
+                                "title": "Flash sale!"
+                            }
                         }
                     }
                 }

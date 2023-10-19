@@ -67,25 +67,13 @@ public class ParsedPropositionsTests {
 
     @Mock
     private ExtensionApi mockExtensionApi;
-    @Mock
-    private DeviceInforming mockDeviceInfoService;
-    @Mock
-    private ServiceProvider mockServiceProvider;
-    private MockedStatic<ServiceProvider> mockedStaticServiceProvider;
 
     @Before
     public void setup() throws JSONException {
-        MockitoAnnotations.openMocks(this);
-        mockedStaticServiceProvider = Mockito.mockStatic(ServiceProvider.class);
-        mockedStaticServiceProvider
-                .when(ServiceProvider::getInstance)
-                .thenReturn(mockServiceProvider);
-        when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
-        when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
 
-        mockInAppSurface = new Surface("inapp");
+        mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp");
         final String inappPropositionV1Content = MessagingTestUtils.loadStringFromFile("inappPropositionV1Content.json");
         mockInAppPropositionItem = new MessagingPropositionItem("inapp", "inapp", inappPropositionV1Content);
         mockInAppProposition = new MessagingProposition("inapp",
@@ -95,7 +83,7 @@ public class ParsedPropositionsTests {
                     add(mockInAppPropositionItem);
                 }});
 
-        mockInAppSurfaceV2 = new Surface("inapp2");
+        mockInAppSurfaceV2 = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
         final String inappPropositionV2Content = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
         mockInAppPropositionItemV2 = new MessagingPropositionItem("inapp2", "inapp2", inappPropositionV2Content);
         mockInAppPropositionV2 = new MessagingProposition("inapp2",
@@ -105,7 +93,7 @@ public class ParsedPropositionsTests {
                     add(mockInAppPropositionItemV2);
                 }});
 
-        mockFeedSurface = new Surface("feed");
+        mockFeedSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
         mockFeedContent = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
         mockFeedPropositionItem = new MessagingPropositionItem("feed", "feed", mockFeedContent);
         mockFeedProposition = new MessagingProposition("feed",
@@ -115,7 +103,7 @@ public class ParsedPropositionsTests {
                     add(mockFeedPropositionItem);
                 }});
 
-        mockCodeBasedSurface = new Surface("codebased");
+        mockCodeBasedSurface = Surface.fromUriString("mobileapp://mockPackageName/codebased");
         mockCodeBasedContent = MessagingTestUtils.loadStringFromFile("codeBasedPropositionContent.json");
         mockCodeBasedPropositionItem = new MessagingPropositionItem("codebased", "codebased", mockCodeBasedContent);
         mockCodeBasedProposition = new MessagingProposition("codebased",
@@ -124,11 +112,6 @@ public class ParsedPropositionsTests {
                 new ArrayList<MessagingPropositionItem>() {{
                     add(mockCodeBasedPropositionItem);
                 }});
-    }
-
-    @After
-    public void tearDown() {
-        mockedStaticServiceProvider.close();
     }
 
     @Test
