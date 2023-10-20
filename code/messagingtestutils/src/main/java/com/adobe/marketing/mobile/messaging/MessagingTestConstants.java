@@ -40,6 +40,7 @@ public class MessagingTestConstants {
         public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
         public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
+        public static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
 
         private EventName() {
         }
@@ -55,7 +56,7 @@ public class MessagingTestConstants {
         public static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         public static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
         public static final String NOTIFICATION = "com.adobe.eventSource.notification";
-
+        public static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
 
         private EventSource() {
         }
@@ -126,6 +127,9 @@ public class MessagingTestConstants {
             public static final String REFRESH_MESSAGES = "refreshmessages";
             public static final String UPDATE_PROPOSITIONS = "updatepropositions";
             public static final String SURFACES = "surfaces";
+            public static final String GET_PROPOSITIONS = "getpropositions";
+            public static final String PROPOSITIONS = "propositions";
+            public static final String RESPONSE_ERROR = "responseerror";
 
             private Messaging() {
             }
