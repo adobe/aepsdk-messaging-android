@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "rules": [
+        {
+            "condition": {
+                "type": "group",
+                "definition": {
+                    "logic": "and",
+                    "conditions": [
+                        {
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "ge",
+                                "values": [
+                                    1691541497
+                                ]
+                            }
+                        },
+                        {
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "le",
+                                "values": [
+                                    1723163897
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "consequences": []
+        }
+    ]
+}

@@ -24,6 +24,7 @@ import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -163,6 +164,17 @@ public class SurfaceTests {
         Surface surface = Surface.fromUriString(null);
         // verify
         assertNull(surface);
+    }
+
+    @Test
+    public void test_toEventData() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            Map<String, Object> eventData = new Surface().toEventData();
+
+            // verify
+            Assert.assertEquals("mobileapp://mockPackageName", eventData.get("uri"));
+        });
     }
 
     @Test
