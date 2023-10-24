@@ -163,7 +163,7 @@ public class MessagingTestUtils {
     /**
      * Cleans Messaging extension payload and image asset cache files.
      */
-    static void cleanCache() {
+    public static void cleanCache() {
         final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
         cacheService.remove(MessagingTestConstants.CACHE_NAME, MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY);
         cacheService.remove(MessagingTestConstants.CACHE_NAME, MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
@@ -172,7 +172,7 @@ public class MessagingTestUtils {
     /**
      * Adds a test image to the Messaging extension image asset cache.
      */
-    static void addImageAssetToCache() {
+    public static void addImageAssetToCache() {
         final InputStream adobePng = convertResourceFileToInputStream("adobe.png");
         final CacheEntry mockCachedImage = new CacheEntry(adobePng, CacheExpiry.never(), null);
         ServiceProvider.getInstance().getCacheService().set(MessagingTestConstants.CACHE_NAME, REMOTE_URL, mockCachedImage);
@@ -242,7 +242,7 @@ public class MessagingTestUtils {
     /**
      * Set the persistence data for Edge Identity extension.
      */
-    static void setEdgeIdentityPersistence(final Map<String, Object> persistedData, final Application application) {
+    public static void setEdgeIdentityPersistence(final Map<String, Object> persistedData, final Application application) {
         if (persistedData != null) {
             final JSONObject persistedJSON = new JSONObject(persistedData);
             updatePersistence("com.adobe.edge.identity",
@@ -280,7 +280,7 @@ public class MessagingTestUtils {
         editor.apply();
     }
 
-    static Map<String, Object> createIdentityMap(final String namespace, final String id) {
+    public static Map<String, Object> createIdentityMap(final String namespace, final String id) {
         Map<String, Object> namespaceObj = new HashMap<>();
         namespaceObj.put("authenticationState", "ambiguous");
         namespaceObj.put("id", id);

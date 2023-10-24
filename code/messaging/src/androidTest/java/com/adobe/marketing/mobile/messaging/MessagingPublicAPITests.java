@@ -12,9 +12,9 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.messaging.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.messaging.TestHelper.resetTestExpectations;
+import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.util.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -32,6 +32,8 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MonitorExtension;
+import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,7 +66,7 @@ public class MessagingPublicAPITests {
 
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
                 put("messaging.eventDataset", "somedatasetid");
@@ -419,8 +421,12 @@ public class MessagingPublicAPITests {
         surfacePaths.add(new Surface("promos/feed1"));
         surfacePaths.add(new Surface("promos/feed2"));
         final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
-        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{
+            put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
+        }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{
+            put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -459,8 +465,12 @@ public class MessagingPublicAPITests {
         surfacePaths.add(new Surface("##alsoinvalid!"));
         surfacePaths.add(new Surface("promos/feed2"));
         final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
-        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"); }});
-        expectedSurfaces.add(new HashMap<String, Object>() {{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2"); }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{
+            put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1");
+        }});
+        expectedSurfaces.add(new HashMap<String, Object>() {{
+            put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2");
+        }});
 
         // test
         Messaging.updatePropositionsForSurfaces(surfacePaths);

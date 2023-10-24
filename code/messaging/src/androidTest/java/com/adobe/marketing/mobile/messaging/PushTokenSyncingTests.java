@@ -11,9 +11,9 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.messaging.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.messaging.TestHelper.resetTestExpectations;
+import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.util.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -26,6 +26,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
+import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +53,7 @@ public class PushTokenSyncingTests {
 
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
                 put("someconfig", "someConfigValue");
