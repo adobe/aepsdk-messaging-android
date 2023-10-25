@@ -25,12 +25,14 @@ import android.content.Intent;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
@@ -73,11 +75,15 @@ public class MessagingPublicAPITests {
             }
         };
         MobileCore.updateConfiguration(config);
-        Messaging.registerExtension();
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
 
         final CountDownLatch latch = new CountDownLatch(1);
-        MobileCore.start((AdobeCallback) o -> latch.countDown());
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
+
+        MobileCore.registerExtensions(extensions, o -> latch.countDown());
 
         // wait for the initial edge personalization request to be made before resetting the monitor extension
         List<Event> dispatchedEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,

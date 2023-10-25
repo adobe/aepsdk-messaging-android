@@ -27,12 +27,14 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
 import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
+import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
@@ -69,13 +71,15 @@ public class E2EFunctionalTests {
         MessagingTestUtils.cleanCache();
         MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "80195814545200720557089495418993853789"), TestHelper.getDefaultApplication());
 
-        Messaging.registerExtension();
-        Identity.registerExtension();
-        Edge.registerExtension();
-
         final CountDownLatch latch = new CountDownLatch(1);
-        MobileCore.start((AdobeCallback) o -> {
-            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
+
+        MobileCore.registerExtensions(extensions, o -> {
+            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
             MobileCore.updateConfiguration(testConfig);
             // wait for configuration to be set
             try {
@@ -132,30 +136,31 @@ public class E2EFunctionalTests {
     @Test
     public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
         // setup
+        String edgePersonalizationRequestEventID;
         Map<String, Object> expectedEdgePersonalizationEventData = createExpectedEdgePersonalizationEventData();
 
         // test
         Messaging.refreshInAppMessages();
 
         // verify messaging request content event from refreshInAppMessages API call
-        final List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
+        final List<Event> messagingRequestEvents = getDispatchedEventsWith(EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         final Event messagingRequestEvent = messagingRequestEvents.get(0);
         assertEquals(true, messagingRequestEvent.getEventData().get("refreshmessages"));
 
         // verify edge personalization request content event
-        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
+        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
         assertEquals(expectedEdgePersonalizationEventData, edgePersonalizationRequestEvent.getEventData());
+        edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
 
-        // TODO: restore after creating a valid prod in-app message campaign
-        // verify edge personalization decision event
-//        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE, MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS);
-//        assertEquals(1, edgePersonalizationDecisionsEvents.size()); // refreshInAppMessage api
-//        final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
-//        assertNotNull(edgePersonalizationDecisionEvent.getEventData());
+        // verify edge personalization content complete event
+        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
+        assertEquals(1, edgePersonalizationDecisionsEvents.size());
+        final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
+        assertEquals(edgePersonalizationRequestEventID, edgePersonalizationDecisionEvent.getParentID());
     }
 }

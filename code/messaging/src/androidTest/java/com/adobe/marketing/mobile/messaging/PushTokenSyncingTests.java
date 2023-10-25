@@ -20,12 +20,15 @@ import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
+import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.After;
@@ -35,6 +38,7 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,10 +66,13 @@ public class PushTokenSyncingTests {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        Messaging.registerExtension();
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
 
-        MobileCore.start(o -> {
+        MobileCore.registerExtensions(extensions, o -> {
             MobileCore.updateConfiguration(config);
             // wait for configuration to be set
             try {
