@@ -127,6 +127,55 @@ public class TestHelper {
     }
 
     /**
+     * {@code TestRule} which sets up the MobileCore for testing before each test execution, and
+     * tearsdown the MobileCore after test execution. This version of the class uses the actual
+     * network service.
+     * <p>
+     * To use, add the following to your test class:
+     * <pre>
+     * 	&#064;Rule
+     * 	public FunctionalTestHelper.SetupCoreRuleWithRealNetworkService coreRule = new FunctionalTestHelper.SetupCoreRuleWithRealNetworkService();
+     * </pre>
+     */
+    public static class SetupCoreRuleWithRealNetworkService implements TestRule {
+        private static final String LOG_SOURCE = "SetupCoreRuleWithRealNetworkService";
+
+        @Override
+        public Statement apply(@NonNull final Statement base, @NonNull final Description description) {
+            return new Statement() {
+                @Override
+                public void evaluate() throws Throwable {
+                    if (defaultApplication == null) {
+                        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+                        defaultApplication = Instrumentation.newApplication(CustomApplication.class, context);
+                    }
+
+                    SDKHelper.resetSDK();
+                    MobileCore.setLogLevel(LoggingMode.VERBOSE);
+                    MobileCore.setApplication(defaultApplication);
+                    clearAllDatastores();
+                    Log.debug(LOG_TAG, LOG_SOURCE, "Execute '%s'", description.getMethodName());
+
+                    try {
+                        base.evaluate();
+                    } catch (Throwable e) {
+                        Log.debug(LOG_TAG, LOG_SOURCE, "Wait after test failure.");
+                        throw e; // rethrow test failure
+                    } finally {
+                        // After test execution
+                        Log.debug(LOG_TAG, LOG_SOURCE, "Finished '%s'", description.getMethodName());
+                        waitForThreads(5000); // wait to allow thread to run after test execution
+                        SDKHelper.resetSDK();
+                        clearAllDatastores();
+                        resetTestExpectations();
+                        resetServiceProvider();
+                    }
+                }
+            };
+        }
+    }
+
+    /**
      * Reset the {@link MobileCore} and {@link com.adobe.marketing.mobile.services.ServiceProvider} without clearing persistence or database.
      * Initializes {@code MobileCore} and {@code ServiceProvider} for testing after resetting by,
      * setting the {@link FunctionalTestNetworkService} to the {@code ServiceProvider}, and setting

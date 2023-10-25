@@ -27,7 +27,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
 import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.adobe.marketing.mobile.Edge;
@@ -60,7 +59,7 @@ public class E2EFunctionalTests {
     }
 
     @Rule
-    public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
+    public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRuleWithRealNetworkService())
             .around(new TestHelper.RegisterMonitorExtensionRule());
 
     // --------------------------------------------------------------------------------------------
@@ -137,7 +136,7 @@ public class E2EFunctionalTests {
     public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
         // setup
         String edgePersonalizationRequestEventID;
-        Map<String, Object> expectedEdgePersonalizationEventData = createExpectedEdgePersonalizationEventData();
+        final Map<String, Object> expectedEdgePersonalizationEventData = createExpectedEdgePersonalizationEventData();
 
         // test
         Messaging.refreshInAppMessages();
@@ -149,7 +148,7 @@ public class E2EFunctionalTests {
         final Event messagingRequestEvent = messagingRequestEvents.get(0);
         assertEquals(true, messagingRequestEvent.getEventData().get("refreshmessages"));
 
-        // verify edge personalization request content event
+        // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
@@ -157,10 +156,23 @@ public class E2EFunctionalTests {
         assertEquals(expectedEdgePersonalizationEventData, edgePersonalizationRequestEvent.getEventData());
         edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
 
-        // verify edge personalization content complete event
-        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
+        // verify edge personalization decision event
+        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
         assertEquals(1, edgePersonalizationDecisionsEvents.size());
         final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
-        assertEquals(edgePersonalizationRequestEventID, edgePersonalizationDecisionEvent.getParentID());
+        final Map<String, Object> expectedInAppPayload = MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
+        final Map<String, Object> payload = (Map<String, Object>) ((List) edgePersonalizationDecisionEvent.getEventData().get("payload")).get(0);
+        final Map<String, Object> expectedScopeDetails = (Map<String, Object>) expectedInAppPayload.get("scopeDetails");
+        final Map<String, Object> scopeDetails = (Map<String, Object>) payload.get("scopeDetails");
+        assertEquals(expectedScopeDetails.get("activity"), scopeDetails.get("activity"));
+        assertEquals(expectedScopeDetails.get("correlationID"), scopeDetails.get("correlationID"));
+        assertEquals(expectedScopeDetails.get("decisionProvider"), scopeDetails.get("decisionProvider"));
+        assertEquals(expectedInAppPayload.get("scope"), payload.get("scope"));
+
+        // verify edge content complete event
+        final List<Event> edgeContentCompleteEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
+        assertEquals(1, edgeContentCompleteEvents.size());
+        final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
+        assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
     }
 }
