@@ -11,10 +11,7 @@
 
 package com.adobe.marketing.mobile.services;
 
-
 import android.content.Context;
-
-import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 
 import java.io.File;
 

@@ -79,7 +79,10 @@ public class MessagingPublicAPITests {
         final CountDownLatch latch = new CountDownLatch(1);
         MobileCore.start((AdobeCallback) o -> latch.countDown());
 
-        latch.await(2, TimeUnit.SECONDS);
+        // wait for the initial edge personalization request to be made before resetting the monitor extension
+        List<Event> dispatchedEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
+                EventSource.REQUEST_CONTENT);
+        assertEquals(1, dispatchedEvents.size());
         resetTestExpectations();
     }
 

@@ -101,7 +101,9 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedEdgePersonalizationEventData = new HashMap<>();
         final Map<String, Object> messageRequestData = new HashMap<>();
         final Map<String, Object> personalizationData = new HashMap<>();
-        personalizationData.put(SURFACES, new ArrayList<String>() {{ add("mobileapp://com.adobe.marketing.mobile.messaging.test"); }});
+        personalizationData.put(SURFACES, new ArrayList<String>() {{
+            add("mobileapp://com.adobe.marketing.mobile.messaging.test");
+        }});
         messageRequestData.put(PERSONALIZATION, personalizationData);
         expectedEdgePersonalizationEventData.put(QUERY, messageRequestData);
 
