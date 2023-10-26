@@ -17,9 +17,12 @@ import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.Edge;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -53,13 +56,17 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
-        Messaging.registerExtension();
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        MobileCore.start((AdobeCallback) o -> {
-            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
+
+        MobileCore.registerExtensions(extensions, o -> {
+            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
             MobileCore.updateConfiguration(testConfig);
             // wait for configuration to be set
             try {

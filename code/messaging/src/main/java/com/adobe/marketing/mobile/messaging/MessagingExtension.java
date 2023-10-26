@@ -61,6 +61,7 @@ import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -643,6 +644,7 @@ public final class MessagingExtension extends Extension {
         return serialWorkDispatcher;
     }
 
+    @VisibleForTesting
     void setSerialWorkDispatcher(final SerialWorkDispatcher<Event> serialWorkDispatcher) {
         this.serialWorkDispatcher = serialWorkDispatcher;
     }
