@@ -93,6 +93,12 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         this.webViewHandler = webViewHandler != null ? webViewHandler : new Handler(ServiceProvider.getInstance().getAppContextService().getApplication().getMainLooper());
         this.scriptHandlers = scriptHandlers != null ? scriptHandlers : new HashMap<>();
 
+        id = consequence.getId();
+        if (StringUtils.isNullOrEmpty(id)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
+            throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
+        }
+
         details = consequence.getDetail();
         if (MapUtils.isNullOrEmpty(details)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
@@ -109,12 +115,6 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         if (MapUtils.isNullOrEmpty(data)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"data\" is null or empty.", consequence.toString());
             throw new MessageRequiredFieldMissingException("Required field: \"data\" is null or empty.");
-        }
-
-        id = DataReader.optString(data, MESSAGE_CONSEQUENCE_ID, "");
-        if (StringUtils.isNullOrEmpty(id)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
-            throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
         }
 
         final String html = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "");
