@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -201,19 +202,21 @@ public class InternalMessageTests {
     @Test
     public void test_messageConstructor_MissingConsequenceId() {
         // setup
+        RuleConsequence mockConsequence = mock(RuleConsequence.class);
         Map<String, Object> details = new HashMap<>();
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
         data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
         details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        when(mockConsequence.getId()).thenReturn(null);
+        when(mockConsequence.getDetail()).thenReturn(details);
+        when(mockConsequence.getType()).thenReturn(MessagingConstants.SchemaValues.SCHEMA_IAM);
 
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = new InternalMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>());
+                internalMessage = new InternalMessage(mockMessagingExtension, mockConsequence, new HashMap<>(), new HashMap<>());
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
