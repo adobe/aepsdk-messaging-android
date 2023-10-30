@@ -37,11 +37,46 @@ final class MessagingConstants {
     final class SchemaValues {
         static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
         static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
-        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
-        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
         static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
 
         private SchemaValues() {
+        }
+    }
+
+    final class ContentTypes {
+        static final String APPLICATION_JSON = "application/json";
+        static final String TEXT_HTML = "text/html";
+        static final String TEXT_XML = "text/xml";
+        static final String TEXT_PLAIN = "text/plain";
+        static final String UNKNOWN = "unknown";
+
+        private ContentTypes() {
+        }
+    }
+
+    final class ConsequenceDetailKeys {
+        static final String ID = "id";
+        static final String SCHEMA = "schema";
+
+        private ConsequenceDetailKeys() {
+        }
+    }
+
+    final class ConsequenceDetailDataKeys {
+        static final String CONTENT = "content";
+        static final String CONTENT_TYPE = "contentType";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String WEB_PARAMETERS = "webParameters";
+        static final String REMOTE_ASSETS = "remoteAssets";
+
+        private ConsequenceDetailDataKeys() {
         }
     }
 
@@ -163,19 +198,22 @@ final class MessagingConstants {
                     static final String AJO = "ajo";
                     static final String INAPP_RESPONSE_FORMAT = "in-app-response-format";
 
-                    private AdobeKeys() {}
+                    private AdobeKeys() {
+                    }
                 }
 
                 final class Key {
                     static final String DATA = "data";
 
-                    private Key() {}
+                    private Key() {
+                    }
                 }
 
                 final class Value {
                     static final int NEW_IAM = 2;
 
-                    private Value() {}
+                    private Value() {
+                    }
                 }
 
                 private Data() {
