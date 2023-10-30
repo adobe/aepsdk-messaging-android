@@ -18,13 +18,15 @@ import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
-
+    private val ENVIRONMENT_FILE_ID = "3149c49c3910/afbd4e5232c5/launch-cf9ec24f55ed-development"
+    private val ASSURANCE_SESSION_ID = "messagingdemo://foo?adb_validation_sessionid=248cbbdf-71cb-417e-9b1c-746fb4d59190"
     override fun onCreate() {
         super.onCreate()
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        MobileCore.configureWithAppID("")
+        Assurance.startSession(ASSURANCE_SESSION_ID)
+        MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
 
         val extensions = listOf(
             Edge.EXTENSION,
