@@ -80,4 +80,12 @@
         android:layout_height="wrap_content"
         android:text="Second Activity " />
 
+    <TextView
+        android:id="@+id/textViewPushToken"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fcm token"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textSize="20sp" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>
