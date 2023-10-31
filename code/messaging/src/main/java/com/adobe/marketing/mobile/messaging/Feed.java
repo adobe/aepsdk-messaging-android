@@ -12,29 +12,12 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.util.JSONUtils;
-import com.adobe.marketing.mobile.util.MapUtils;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A {@link Feed} object aggregates one or more {@link FeedItem}s.
  */
 public class Feed {
-    private static final String LOG_TAG = "Messaging";
-    private static final String SELF_TAG = "Feed";
-    private static final String FEED_SURFACE_URI_KEY = "surfaceUri";
-    private static final String FEED_ITEMS_KEY = "items";
-    private static final String FEED_NAME_KEY = "feedName";
-
     // Friendly name for the feed, provided in the AJO UI
     private final String name;
 
@@ -82,96 +65,5 @@ public class Feed {
      */
     public List<FeedItem> getItems() {
         return items;
-    }
-
-    /**
-     * Converts the {@code Feed} into a {@code Map<String, Object>}.
-     *
-     * @return {@code Map<String, Object>} containing the {@link Feed} data.
-     */
-    Map<String, Object> toEventData() {
-        final Map<String, Object> feedAsMap = new HashMap<>();
-        feedAsMap.put(FEED_SURFACE_URI_KEY, getSurfaceUri());
-
-        final List<Map<String, Object>> feedItemEventDataList = new ArrayList<>();
-        final List<FeedItem> feedItemList = getItems();
-        if (feedItemList == null || feedItemList.isEmpty()) {
-            return feedAsMap;
-        }
-        for (final FeedItem feedItem : feedItemList) {
-            if (feedItem != null) {
-                feedItemEventDataList.add(feedItem.toEventData());
-            }
-        }
-        feedAsMap.put(FEED_ITEMS_KEY, feedItemEventDataList);
-        feedAsMap.put(FEED_NAME_KEY, getName());
-        return feedAsMap;
-    }
-
-    /**
-     * Creates a {@code Feed} from the event data {@code Map<String, Object>}.
-     *
-     * @return {@code Feed} created from the event data {@code Map<String, Object>}
-     */
-    static Feed fromEventData(final Map<String, Object> eventData) {
-        if (MapUtils.isNullOrEmpty(eventData)) {
-            return null;
-        }
-
-        final Map.Entry<String, Object> feedEntry = eventData.entrySet().iterator().next();
-        final Surface surface = Surface.fromUriString(feedEntry.getKey());
-        final List<Map<String, Object>> feedMaps = (List<Map<String, Object>>) feedEntry.getValue();
-        if (feedMaps == null || feedMaps.isEmpty()) {
-            return null;
-        }
-        final List<FeedItem> feedItems = new ArrayList<>();
-        String feedName = null;
-        for (final Map feedItemObject : feedMaps) {
-            final MessagingProposition messagingProposition = MessagingProposition.fromEventData(feedItemObject);
-            final String ruleContentString = messagingProposition.getItems().get(0).getContent();
-            feedItems.add(FeedItem.fromEventData(getFeedItemData(ruleContentString)));
-            feedName = getFeedName(ruleContentString);
-        }
-
-        return new Feed(feedName, surface, feedItems);
-    }
-
-    static JSONObject getData(final String ruleContent) {
-        JSONObject data = null;
-        try {
-            final JSONObject ruleContentJSON = new JSONObject(ruleContent);
-            final JSONArray rules = ruleContentJSON.getJSONArray("rules");
-            final JSONObject ruleJSON = rules.getJSONObject(0);
-            final JSONArray consequenceArray = ruleJSON.getJSONArray("consequences");
-            final JSONObject consequence = consequenceArray.getJSONObject(0);
-            final JSONObject details = consequence.getJSONObject("detail");
-            data = details.getJSONObject("data");
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception occurred retrieving rule consequence data: %s", jsonException.getLocalizedMessage());
-        }
-        return data;
-    }
-
-    private static String getFeedName(final String ruleContent) {
-        try {
-            final JSONObject data = getData(ruleContent);
-            final JSONObject metadata = data.getJSONObject("meta");
-            return metadata.getString("feedName");
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception occurred retrieving feed item data: %s", jsonException.getLocalizedMessage());
-        }
-        return null;
-    }
-
-    private static Map<String, Object> getFeedItemData(final String ruleContent) {
-        JSONObject feedItemData;
-        try {
-            final JSONObject data = getData(ruleContent);
-            feedItemData = data.getJSONObject("content");
-            return JSONUtils.toMap(feedItemData);
-        } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, SELF_TAG, "Exception occurred retrieving feed item data: %s", jsonException.getLocalizedMessage());
-        }
-        return null;
     }
 }

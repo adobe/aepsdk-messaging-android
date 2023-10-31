@@ -17,9 +17,12 @@ import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.adobe.marketing.mobile.AdobeCallback;
+import com.adobe.marketing.mobile.Edge;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
+import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,6 +32,7 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,13 +56,17 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
-        Messaging.registerExtension();
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        MobileCore.start((AdobeCallback) o -> {
-            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfigStage.json");
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
+
+        MobileCore.registerExtensions(extensions, o -> {
+            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
             MobileCore.updateConfiguration(testConfig);
             // wait for configuration to be set
             try {
@@ -80,8 +88,7 @@ public class MessageCachingFunctionalTests {
 
     @After
     public void tearDown() {
-        // clear cache and loaded rules
-        messagingCacheUtilities.cachePropositions(null);
+        messagingCacheUtilities.clearCachedData();
     }
 
     @Test
@@ -92,7 +99,7 @@ public class MessageCachingFunctionalTests {
         messagingPropositionList.add(MessagingProposition.fromEventData(MessagingTestUtils.getMapFromFile("personalization_payload.json")));
         propositions.put(surface, messagingPropositionList);
         // add a messaging payload to the cache
-        messagingCacheUtilities.cachePropositions(propositions);
+        messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
         // wait for event and rules processing
         TestHelper.sleep(1000);
         // verify message payload was cached
