@@ -24,9 +24,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +38,7 @@ import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import com.adobe.marketing.mobile.util.StringUtils
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
@@ -265,6 +268,16 @@ class MainActivity : ComponentActivity() {
 
         // Request push permissions for Android 33
         askNotificationPermission()
+
+        // add a listener for the token refresh so we can update the push token text view
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // Get new FCM registration token
+                val token = task.result
+                val pushTokenTextView = findViewById<TextView>(R.id.textViewPushToken)
+                pushTokenTextView.text = token
+            }
+        }
     }
 
     private fun setupButtonClickListeners() {
