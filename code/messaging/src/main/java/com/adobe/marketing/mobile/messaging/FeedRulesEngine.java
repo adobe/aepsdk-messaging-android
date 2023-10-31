@@ -72,7 +72,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
             }
 
             final Surface surface = Surface.fromUriString(DataReader.optString(metadata, SURFACE, ""));
-            if (!surface.isValid()) {
+            if (surface == null) {
                 continue;
             }
 

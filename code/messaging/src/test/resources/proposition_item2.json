@@ -1,0 +1,57 @@
+{
+  "id": "uniqueId",
+  "schema": "https://ns.adobe.com/personalization/json-content-item",
+  "data": {
+    "content": {
+      "version": 1,
+      "rules": [{
+        "condition": {
+          "type": "group",
+          "definition": {
+            "logic": "and",
+            "conditions": [{
+              "type": "matcher",
+              "definition": {
+                "key": "~timestampu",
+                "matcher": "ge",
+                "values": [1686066397]
+              }
+            }, {
+              "type": "matcher",
+              "definition": {
+                "key": "~timestampu",
+                "matcher": "le",
+                "values": [1717688797]
+              }
+            }]
+          }
+        },
+        "consequences": [{
+          "id": "consequenceId",
+          "type": "schema",
+          "detail": {
+            "id": "uniqueDetailId",
+            "schema": "https://ns.adobe.com/personalization/message/feed-item",
+            "data": {
+              "expiryDate": 1717688797,
+              "meta": {
+                "feedName": "testFeed",
+                "campaignName": "testCampaign",
+                "surface": "mobileapp://mockApp/feeds/testFeed"
+              },
+              "content": {
+                "title": "title2",
+                "body": "body2",
+                "imageUrl": "imageUrl2",
+                "actionUrl": "actionUrl2",
+                "actionTitle": "actionTitle2"
+              },
+              "contentType": "application/json",
+              "publishedDate": 1717688797
+            }
+          }
+        }]
+      }]
+    }
+  }
+}

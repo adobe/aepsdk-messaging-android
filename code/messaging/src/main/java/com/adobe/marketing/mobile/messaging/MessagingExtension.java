@@ -61,6 +61,7 @@ import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -89,7 +90,7 @@ public final class MessagingExtension extends Extension {
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
     final FeedRulesEngine feedRulesEngine;
-    SerialWorkDispatcher<Event> serialWorkDispatcher;
+    private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
      * Constructor.
@@ -169,14 +170,17 @@ public final class MessagingExtension extends Extension {
 
         // Handler function called for each queued event. If the queued event is a get propositions event, process it
         // otherwise if it is an Edge event to update propositions, process it only if it is completed.
-        serialWorkDispatcher = new SerialWorkDispatcher<>("MessagingEvents", event -> {
-            if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
-                edgePersonalizationResponseHandler.retrieveMessages(InternalMessagingUtils.getSurfaces(event), event);
-            } else if (event.getType().equals(EventType.EDGE)) {
-                return !edgePersonalizationResponseHandler.getRequestedSurfacesForEventId().containsKey(event.getUniqueIdentifier());
-            }
-            return true;
-        });
+        if (serialWorkDispatcher == null) {
+            serialWorkDispatcher = new SerialWorkDispatcher<>("MessagingEvents", event -> {
+                if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
+                    edgePersonalizationResponseHandler.retrieveMessages(InternalMessagingUtils.getSurfaces(event), event);
+                } else if (event.getType().equals(EventType.EDGE)) {
+                    return !edgePersonalizationResponseHandler.getRequestedSurfacesForEventId().containsKey(event.getUniqueIdentifier());
+                }
+                return true;
+            });
+        }
+
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
     }
@@ -633,6 +637,15 @@ public final class MessagingExtension extends Extension {
     private boolean eventIsValid(final Event event) {
         return event != null && event.getEventData() != null;
     }
-
     //endregion
+
+    @VisibleForTesting
+    SerialWorkDispatcher<Event> getSerialWorkDispatcher() {
+        return serialWorkDispatcher;
+    }
+
+    @VisibleForTesting
+    void setSerialWorkDispatcher(final SerialWorkDispatcher<Event> serialWorkDispatcher) {
+        this.serialWorkDispatcher = serialWorkDispatcher;
+    }
 }

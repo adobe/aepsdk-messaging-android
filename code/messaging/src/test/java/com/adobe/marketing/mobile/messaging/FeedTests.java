@@ -148,4 +148,17 @@ public class FeedTests {
             assertEquals(feedItems, feed.getItems());
         });
     }
+
+    @Test
+    public void testFeedGetters() {
+        // test
+        runUsingMockedServiceProvider(() -> {
+            Feed feed = new Feed(FEED_NAME, Surface.fromUriString(SURFACE_URI), feedItems);
+
+            // verify
+            assertEquals(FEED_NAME, feed.getName());
+            assertEquals(feedItems, feed.getItems());
+            assertEquals(SURFACE_URI, feed.getSurfaceUri());
+        });
+    }
 }

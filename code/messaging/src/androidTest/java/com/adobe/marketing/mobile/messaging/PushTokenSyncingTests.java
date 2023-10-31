@@ -11,21 +11,25 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.messaging.TestHelper.getSharedStateFor;
-import static com.adobe.marketing.mobile.messaging.TestHelper.resetTestExpectations;
+import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.util.TestHelper.getSharedStateFor;
+import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
+import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
+import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.util.TestHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,6 +38,7 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +57,7 @@ public class PushTokenSyncingTests {
 
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.defaultApplication);
+        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
         HashMap<String, Object> config = new HashMap<String, Object>() {
             {
                 put("someconfig", "someConfigValue");
@@ -61,10 +66,13 @@ public class PushTokenSyncingTests {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        Messaging.registerExtension();
-        com.adobe.marketing.mobile.edge.identity.Identity.registerExtension();
+        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
+            add(Messaging.EXTENSION);
+            add(Identity.EXTENSION);
+            add(Edge.EXTENSION);
+        }};
 
-        MobileCore.start(o -> {
+        MobileCore.registerExtensions(extensions, o -> {
             MobileCore.updateConfiguration(config);
             // wait for configuration to be set
             try {

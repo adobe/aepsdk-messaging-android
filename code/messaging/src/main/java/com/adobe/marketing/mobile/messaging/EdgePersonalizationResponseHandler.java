@@ -118,7 +118,6 @@ class EdgePersonalizationResponseHandler {
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 propositions = cachedPropositions;
-                final List<MessagingProposition> messagingPropositions = new ArrayList<>();
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
                 for (final Map.Entry<Surface, List<MessagingProposition>> cacheEntry : cachedPropositions.entrySet()) {
@@ -524,7 +523,7 @@ class EdgePersonalizationResponseHandler {
         propositionInfo.putAll(newPropositionInfo);
 
         // currently, we can't remove entries that pre-exist by message id since they are not linked to surfaces
-        // need to get surface uri from propositionInfo.scope and remove entry based on incoming `surfaces`
+        // need to get surface uri from propositionInfo.scope and remove entry based on incoming surfaces
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
             return;
         }
@@ -643,6 +642,10 @@ class EdgePersonalizationResponseHandler {
         this.serialWorkDispatcher = serialWorkDispatcher;
     }
 
+    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
+        return requestedSurfacesForEventId;
+    }
+
     /**
      * Cache any asset URL's present in each {@code RuleConsequence} {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} detail.
      *
@@ -670,10 +673,6 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    Map<String, List<Surface>> getRequestedSurfacesForEventId() {
-        return requestedSurfacesForEventId;
-    }
-
     // for testing, the size of the proposition info map should always mirror the number of rules currently loaded
     @VisibleForTesting
     int getRuleCount() {
@@ -683,5 +682,10 @@ class EdgePersonalizationResponseHandler {
     @VisibleForTesting
     void setMessagesRequestEventId(final String messagesRequestEventId) {
         requestedSurfacesForEventId.put(messagesRequestEventId, Collections.singletonList(new Surface()));
+    }
+
+    @VisibleForTesting
+    Map<Surface, List<MessagingProposition>> getInProgressPropositions () {
+        return inProgressPropositions;
     }
 }

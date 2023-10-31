@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM;
 
@@ -32,6 +31,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -155,15 +155,21 @@ public class MessagingPropositionItem implements Serializable {
             final String schema = DataReader.getString(eventData, PAYLOAD_SCHEMA);
             final Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_DATA);
 
-            String content = null;
             JSONObject jsonContent = null;
-            if (schema.equals(SCHEMA_RULESET_ITEM)) { // in-app content
+            JSONArray jsonArray = null;
+            String content = null;
+            if (schema.equals(SCHEMA_RULESET_ITEM)) {
+                // in-app content
                 jsonContent = new JSONObject(contentMap);
-            } else if (schema.equals(SCHEMA_JSON_CONTENT)) { // feed or code based json content
+            } else if (schema.equals(SCHEMA_JSON_CONTENT)) {
+                // feed or code based json content
                 final Object contentObject = contentMap.get(PAYLOAD_CONTENT);
                 if (contentObject != null) {
+                    // create a json array for list content. Json objects are created for map or string content.
                     if (contentObject instanceof Map) {
                         jsonContent = new JSONObject((Map) contentObject);
+                    } else if (contentObject instanceof List) {
+                        jsonArray = new JSONArray((List) contentObject);
                     } else {
                         jsonContent = new JSONObject(contentObject.toString());
                     }
@@ -174,6 +180,8 @@ public class MessagingPropositionItem implements Serializable {
 
             if (jsonContent != null && jsonContent.length() > 0) {
                 content = jsonContent.toString();
+            } else if (jsonArray != null && jsonArray.length() > 0) {
+                content = jsonArray.toString();
             }
 
             if (!StringUtils.isNullOrEmpty(content)) {
@@ -203,8 +211,13 @@ public class MessagingPropositionItem implements Serializable {
 
         try {
             if (schema.equals(SCHEMA_RULESET_ITEM) || schema.equals(SCHEMA_JSON_CONTENT)) { // in-app, feed, or code based content
-                final JSONObject jsonContent = new JSONObject(content);
-                data.put(PAYLOAD_CONTENT, JSONUtils.toMap(jsonContent));
+                if (content.startsWith("[")) { // we have a json array
+                    final JSONArray jsonArray = new JSONArray(content);
+                    data.put(PAYLOAD_CONTENT, JSONUtils.toList(jsonArray));
+                } else { // handle it as a json object
+                    final JSONObject jsonContent = new JSONObject(content);
+                    data.put(PAYLOAD_CONTENT, JSONUtils.toMap(jsonContent));
+                }
             } else { // html or text content
                 data.put(PAYLOAD_CONTENT, content);
             }

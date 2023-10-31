@@ -19,6 +19,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.services.ServiceProvider
+import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.charset.StandardCharsets
 
@@ -49,8 +50,13 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
                 }
             } else { // show code based experiences with text or json content in a text view
                 if (mimeType == "application/json") {
-                    val json = JSONObject(contentString)
-                    holder.textView.text = json.toString(5)
+                    if (contentString.startsWith("[")) { // we have a json array
+                        val jsonArray = JSONArray(contentString)
+                        holder.textView.text = jsonArray.toString(5)
+                    } else {
+                        val json = JSONObject(contentString)
+                        holder.textView.text = json.toString(5)
+                    }
                 } else {
                     holder.textView.text = contentString
                 }

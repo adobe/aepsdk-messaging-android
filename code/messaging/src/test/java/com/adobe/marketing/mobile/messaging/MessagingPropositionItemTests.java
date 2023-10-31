@@ -17,6 +17,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.MapUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,7 +33,8 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPropositionItemTests {
 
-    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\", \"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";    String testContent = "some html string content";
+    String testJSONStringContent = "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"id\":\"uniqueDetailId\",\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\", \"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp\",\"feedName\":\"apifeed\",\"campaignName\":\"mockCampaign\"},\"content\":{\"actionUrl\":\"https://adobe.com/\",\"actionTitle\":\"test action title\",\"title\":\"test title\",\"body\":\"test body\",\"imageUrl\":\"https://adobe.com/image.png\"}}}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}";
+    String testContent = "some html string content";
     String testJSONSchema = "https://ns.adobe.com/personalization/json-content-item";
     String testHTMLSchema = "https://ns.adobe.com/personalization/html-content-item";
     String testId = "uniqueId";
@@ -90,17 +93,17 @@ public class MessagingPropositionItemTests {
     }
 
     @Test
-    public void test_createEventData_fromPropositionItem_JSONContent() throws DataReaderException {
+    public void test_createEventData_fromPropositionItem_JSONContent() throws DataReaderException, JSONException {
         // test
         MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, testJSONSchema, testJSONStringContent);
         Map<String, Object> propositionItemMap = messagingPropositionItem.toEventData();
         // verify
         Map<String, Object> data = DataReader.getTypedMap(Object.class, propositionItemMap, "data");
-        String content = DataReader.getString(data, "content");
+        Map<String, Object> content = DataReader.getTypedMap(Object.class, data, "content");
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(testJSONSchema, propositionItemMap.get("schema"));
-        assertEquals(testJSONStringContent, content);
+        assertEquals(JSONUtils.toMap(new JSONObject(testJSONStringContent)), content);
     }
 
     @Test

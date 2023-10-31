@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -23,12 +24,16 @@ import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class SurfaceTests {
@@ -159,5 +164,75 @@ public class SurfaceTests {
         Surface surface = Surface.fromUriString(null);
         // verify
         assertNull(surface);
+    }
+
+    @Test
+    public void test_toEventData() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            Map<String, Object> eventData = new Surface().toEventData();
+
+            // verify
+            Assert.assertEquals("mobileapp://mockPackageName", eventData.get("uri"));
+        });
+    }
+
+    @Test
+    public void test_fromEventData_validData() {
+        // setup
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("uri", "mobileapp://surface/path");
+        // test
+        Surface surface = Surface.fromEventData(eventData);
+        // verify
+        assertEquals("mobileapp://surface/path", surface.getUri());
+    }
+
+    @Test
+    public void test_fromEventData_invalidUri() {
+        // setup
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("uri", "path");
+        // test
+        Surface surface = Surface.fromEventData(eventData);
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromEventData_nullUri() {
+        // setup
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("uri", null);
+        // test
+        Surface surface = Surface.fromEventData(eventData);
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromEventData_missingUriKey() {
+        // setup
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("notAUriKey", "mobileapp://surface/path");
+        // test
+        Surface surface = Surface.fromEventData(eventData);
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_equals() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            Surface surface1 = new Surface("surfacewithfeeds");
+            Surface surface2 = new Surface("surfacewithfeeds");
+            Surface surface3 = new Surface("othersurfacewithfeeds");
+            Object notASurface = new Object();
+            // verify
+            assertEquals(surface1, surface2);
+            assertNotEquals(surface1, surface3);
+            assertNotEquals(surface1, notASurface);
+        });
     }
 }
