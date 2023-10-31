@@ -23,6 +23,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.webkit.WebView
@@ -41,6 +42,7 @@ import com.adobe.marketing.mobile.util.StringUtils
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
+import java.security.AccessController.getContext
 
 
 class MainActivity : ComponentActivity() {
@@ -251,6 +253,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MobileCore.setMessagingDelegate(customMessagingDelegate)
+        val id: String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        // check if I can get id
+        val viewDeviceIdView = findViewById<TextView>(R.id.viewDeviceId)
+        viewDeviceIdView.text = id
 
         // setup ui interaction listeners
         setupButtonClickListeners()

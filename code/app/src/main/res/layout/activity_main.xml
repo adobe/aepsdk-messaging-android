@@ -86,6 +86,14 @@
         android:layout_height="wrap_content"
         android:text="fcm token"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textSize="20sp" />
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/viewDeviceId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="fcm token"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textSize="12sp" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>
