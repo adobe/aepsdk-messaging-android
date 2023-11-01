@@ -17,6 +17,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.METADATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_TITLE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_URL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.BODY;
@@ -34,7 +35,6 @@ import java.util.Map;
 
 // represents the schema data object for a feed item schema
 public class FeedItemSchemaData implements Serializable {
-    private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "FeedItemSchemaData";
     private Object content;
     private ContentType contentType;
@@ -44,11 +44,11 @@ public class FeedItemSchemaData implements Serializable {
 
     FeedItemSchemaData(final JSONObject jsonObject) {
         try {
-            this.contentType = ContentType.fromString(jsonObject.optString(CONTENT_TYPE));
+            this.contentType = ContentType.fromString(jsonObject.getString(CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(jsonObject.optJSONObject(CONTENT));
+                this.content = JSONUtils.toMap(jsonObject.getJSONObject(CONTENT));
             } else {
-                this.content = jsonObject.optString(CONTENT);
+                this.content = jsonObject.getString(CONTENT);
             }
             this.publishedDate = jsonObject.optInt(PUBLISHED_DATE);
             this.expiryDate = jsonObject.optInt(EXPIRY_DATE);

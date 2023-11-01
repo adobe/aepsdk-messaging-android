@@ -12,5 +12,49 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+
+import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class JsonContentSchemaData {
+    private static final String SELF_TAG = "JsonContentSchemaData";
+    private static final String FORMAT = "format";
+    private Object content = null;
+    private ContentType format = null;
+
+    JsonContentSchemaData(final JSONObject jsonObject) {
+        try {
+            final String decodedFormat = jsonObject.optString(FORMAT);
+            if (StringUtils.isNullOrEmpty(decodedFormat)) {
+                format = ContentType.APPLICATION_JSON;
+            } else {
+                format = ContentType.fromString(decodedFormat);
+            }
+            final Object content = jsonObject.get(CONTENT);
+            if (content instanceof JSONObject) {
+                this.content = JSONUtils.toMap((JSONObject) content);
+            } else if (content instanceof JSONArray) {
+                this.content = JSONUtils.toList((JSONArray) content);
+            } else { // we have non json content, just store it as a string
+                this.content = content.toString();
+            }
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
+        }
+    }
+
+    public Object getContent() {
+        return content;
+    }
+
+    public ContentType getFormat() {
+        return format;
+    }
 }

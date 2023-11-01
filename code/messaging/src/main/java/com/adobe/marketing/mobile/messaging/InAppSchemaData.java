@@ -49,16 +49,16 @@ public class InAppSchemaData implements Serializable {
         try {
             this.contentType = ContentType.fromString(jsonObject.optString(CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(jsonObject.optJSONObject(CONTENT));
+                this.content = JSONUtils.toMap(jsonObject.getJSONObject(CONTENT));
             } else {
-                this.content = jsonObject.optString(CONTENT);
+                this.content = jsonObject.getString(CONTENT);
             }
             this.publishedDate = jsonObject.optInt(PUBLISHED_DATE);
             this.expiryDate = jsonObject.optInt(EXPIRY_DATE);
             this.meta = JSONUtils.toMap(jsonObject.optJSONObject(METADATA));
             this.mobileParameters = JSONUtils.toMap(jsonObject.optJSONObject(MOBILE_PARAMETERS));
             this.webParameters = JSONUtils.toMap(jsonObject.optJSONObject(WEB_PARAMETERS));
-            final List<Object> assetList = JSONUtils.toList(jsonObject.getJSONArray(REMOTE_ASSETS));
+            final List<Object> assetList = JSONUtils.toList(jsonObject.optJSONArray(REMOTE_ASSETS));
             if (!MessagingUtils.isNullOrEmpty(assetList)) {
                 for (final Object asset : assetList) {
                     this.remoteAssets.add(asset.toString());
