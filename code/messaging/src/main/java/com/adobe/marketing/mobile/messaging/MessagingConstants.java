@@ -298,8 +298,9 @@ final class MessagingConstants {
         }
 
         final class RulesEngine {
-            static final String JSON_KEY = "rules";
+            static final String JSON_RULES_KEY = "rules";
             static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String JSON_VERSION_KEY = "version";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";

@@ -13,9 +13,12 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,24 +26,33 @@ import java.io.Serializable;
 
 // represents the schema data object for a html content schema
 public class HtmlContentSchemaData implements Serializable {
+    private static final String SELF_TAG = "HtmlContentSchemaData";
     private static final String FORMAT = "format";
-    private final String content;
-    private final ContentType contentType;
+    private String content = null;
+    private ContentType format = null;
 
     HtmlContentSchemaData(final JSONObject jsonObject) {
-        final String decodedFormat = jsonObject.optString(FORMAT);
-        if (StringUtils.isNullOrEmpty(decodedFormat)) {
-            contentType = ContentType.TEXT_HTML;
-        } else {
-            contentType = ContentType.fromString(decodedFormat);
+        try {
+            final String decodedFormat = jsonObject.optString(FORMAT);
+            if (StringUtils.isNullOrEmpty(decodedFormat)) {
+                format = ContentType.TEXT_HTML;
+            } else {
+                format = ContentType.fromString(decodedFormat);
+            }
+            this.content = jsonObject.getString(CONTENT);
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
         }
-        this.content = jsonObject.optString(CONTENT);
     }
 
     public Object getContent() {
-        if (contentType.equals(ContentType.APPLICATION_JSON)) {
+        if (format.equals(ContentType.APPLICATION_JSON)) {
             try {
-                return new JSONObject(content);
+                if (content.startsWith("[")) {
+                    return new JSONArray(content);
+                } else {
+                    return new JSONObject(content);
+                }
             } catch (final JSONException jsonException) {
                 return null;
             }
@@ -49,7 +61,7 @@ public class HtmlContentSchemaData implements Serializable {
         }
     }
 
-    public ContentType getContentType() {
-        return contentType;
+    public ContentType getFormat() {
+        return format;
     }
 }

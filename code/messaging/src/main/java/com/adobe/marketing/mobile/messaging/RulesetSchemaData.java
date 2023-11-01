@@ -12,5 +12,37 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_VERSION_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+
+import com.adobe.marketing.mobile.services.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
+import java.util.Map;
+
 public class RulesetSchemaData {
+    private static final String SELF_TAG = "RulesetSchemaData";
+    private int version = 0;
+    private List<Map<String, Object>> rules = null;
+
+    RulesetSchemaData(final JSONObject jsonObject) {
+        try {
+            this.version = jsonObject.getInt(JSON_VERSION_KEY);
+            this.rules = (List<Map<String, Object>>) jsonObject.get(JSON_RULES_KEY);
+        } catch (final JSONException jsonException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", jsonException.getLocalizedMessage());
+        }
+    }
+
+    public List<Map<String, Object>> getRules() {
+        return rules;
+    }
+
+    public int getVersion() {
+        return version;
+    }
 }
