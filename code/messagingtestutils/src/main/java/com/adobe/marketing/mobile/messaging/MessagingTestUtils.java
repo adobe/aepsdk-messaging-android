@@ -697,13 +697,13 @@ public class MessagingTestUtils {
         return feedConsequences;
     }
 
-    static List<Inbound> createInboundList(int size) {
+    static List<MessagingPropositionItem> createMessagingPropositionItemList(int size) {
         List<RuleConsequence> consequences = createFeedConsequenceList(size);
-        List<Inbound> inboundMessages = new ArrayList<>();
+        List<MessagingPropositionItem> propositionItemList = new ArrayList<>();
         for (RuleConsequence consequence : consequences) {
-            inboundMessages.add(Inbound.fromConsequenceDetails(consequence.getDetail()));
+            propositionItemList.add(MessagingPropositionItem.fromRuleConsequence(consequence));
         }
-        return inboundMessages;
+        return propositionItemList;
     }
 
 }

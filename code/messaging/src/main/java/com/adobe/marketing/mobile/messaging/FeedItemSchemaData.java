@@ -17,6 +17,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.METADATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_TITLE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_URL;
@@ -25,16 +26,18 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFee
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.TITLE;
 
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 
 // represents the schema data object for a feed item schema
-public class FeedItemSchemaData implements Serializable {
+public class FeedItemSchemaData {
     private static final String SELF_TAG = "FeedItemSchemaData";
     private Object content;
     private ContentType contentType;
@@ -42,32 +45,26 @@ public class FeedItemSchemaData implements Serializable {
     private int expiryDate;
     private Map<String, Object> meta;
 
-    FeedItemSchemaData(final JSONObject jsonObject) {
+    FeedItemSchemaData(final JSONObject schemaData) {
         try {
-            this.contentType = ContentType.fromString(jsonObject.getString(CONTENT_TYPE));
+            final JSONObject consequenceDetails = InternalMessagingUtils.getConsequenceDetails(schemaData);
+            final Map<String, Object> feedItemData = JSONUtils.toMap(consequenceDetails.getJSONObject(DATA));
+            this.contentType = ContentType.fromString(DataReader.getString(feedItemData, CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(jsonObject.getJSONObject(CONTENT));
+                this.content = DataReader.getTypedMap(Object.class, feedItemData, CONTENT);
             } else {
-                this.content = jsonObject.getString(CONTENT);
+                this.content = DataReader.getString(feedItemData, CONTENT);
             }
-            this.publishedDate = jsonObject.optInt(PUBLISHED_DATE);
-            this.expiryDate = jsonObject.optInt(EXPIRY_DATE);
-            this.meta = JSONUtils.toMap(jsonObject.optJSONObject(METADATA));
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating FeedItemSchemaData from json object: %s", jsonException.getLocalizedMessage());
+            this.publishedDate = DataReader.optInt(feedItemData, PUBLISHED_DATE, 0);
+            this.expiryDate = DataReader.optInt(feedItemData, EXPIRY_DATE, 0);
+            this.meta = DataReader.optTypedMap(Object.class, feedItemData, METADATA, Collections.emptyMap());
+        } catch (final JSONException | DataReaderException exception) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating FeedItemSchemaData from json object: %s", exception.getLocalizedMessage());
         }
     }
 
     public Object getContent() {
-        if (contentType.equals(ContentType.APPLICATION_JSON)) {
-            try {
-                return new JSONObject(content.toString());
-            } catch (final JSONException jsonException) {
-                return null;
-            }
-        } else {
-            return content;
-        }
+        return content;
     }
 
     public ContentType getContentType() {

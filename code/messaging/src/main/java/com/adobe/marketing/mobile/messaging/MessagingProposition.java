@@ -12,6 +12,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -27,8 +29,7 @@ import java.util.Map;
  * A {@link MessagingProposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 public class MessagingProposition implements Serializable {
-    private static final String LOG_TAG = "Messaging";
-    private static final String SELF_TAG = "Proposition";
+    private static final String SELF_TAG = "MessagingProposition";
     private static final String PAYLOAD_ID = "id";
     private static final String PAYLOAD_ITEMS = "items";
     private static final String PAYLOAD_SCOPE = "scope";
@@ -136,11 +137,11 @@ public class MessagingProposition implements Serializable {
         return eventData;
     }
 
-    public boolean equals(final Object object){
+    public boolean equals(final Object object) {
         if (object instanceof MessagingProposition) {
             final MessagingProposition proposition = (MessagingProposition) object;
-            final String newPropositionContent = proposition.getItems().get(0).getContent();
-            final String propositionContent = this.getItems().get(0).getContent();
+            final Map<String, Object> newPropositionContent = proposition.getItems().get(0).getData();
+            final Map<String, Object> propositionContent = this.getItems().get(0).getData();
             return newPropositionContent.equals(propositionContent);
         } else {
             return false;

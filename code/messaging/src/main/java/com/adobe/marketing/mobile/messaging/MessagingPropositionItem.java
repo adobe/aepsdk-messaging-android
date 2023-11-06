@@ -12,16 +12,20 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.PropositionEventType;
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
-import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.MapUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,71 +39,56 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link MessagingPropositionItem} object contains the experience content delivered within an {@link Inbound} payload.
+ * A {@link MessagingPropositionItem} object represents a personalization JSON object returned by Konductor.
+ * In its JSON form, it has the following properties: id, schema, and data.
+ * The contents of data will be determined by the provided schema.
  */
 public class MessagingPropositionItem implements Serializable {
-    private static final String LOG_TAG = "Messaging";
-    private static final String SELF_TAG = "PropositionItem";
-    private static final String JSON_RULES_KEY = "rules";
-    private static final String JSON_CONSEQUENCES_KEY = "consequences";
-    private static final String MESSAGE_CONSEQUENCE_ID = "id";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_SCHEMA = "schema";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT = "content";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_DATA = "data";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE = "contentType";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE = "publishedDate";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE = "expiryDate";
-    private static final String MESSAGE_CONSEQUENCE_DETAIL_METADATA = "meta";
-    private static final String PAYLOAD_ID = "id";
-    private static final String PAYLOAD_DATA = "data";
-    private static final String PAYLOAD_CONTENT = "content";
-    private static final String PAYLOAD_SCHEMA = "schema";
-
-    // Unique proposition identifier
-    private String uniqueId;
-    // PropositionItem schema string
-    private String schema;
-    // PropositionItem data content e.g. html or plain-text string or string containing image URL, JSON string
-    private String content;
+    private static final String SELF_TAG = "MessagingPropositionItem";
+    // proposition item identifier
+    private String itemId;
+    // SchemaType of this MessagingPropositionItem
+    private SchemaType schema;
+    // PropositionItem data map containing the JSON data
+    private Map<String, Object> itemData;
     // Soft reference to Proposition instance
     SoftReference<MessagingProposition> propositionReference;
 
-    public MessagingPropositionItem(final String uniqueId, final String schema, final String content) {
-        this.uniqueId = uniqueId;
+    public MessagingPropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
+        this.itemId = itemId;
         this.schema = schema;
-        this.content = content;
+        this.itemData = itemData;
     }
 
     /**
-     * Gets the {@code PropositionItem} identifier.
+     * Gets the {@code MessagingPropositionItem} identifier.
      *
      * @return {@link String} containing the {@link MessagingPropositionItem} identifier.
      */
-    public String getUniqueId() {
-        return uniqueId;
+    public String getPropositionItemId() {
+        return itemId;
     }
 
     /**
-     * Gets the {@code PropositionItem} content schema.
+     * Gets the {@code MessagingPropositionItem} content schema.
      *
-     * @return {@code String} containing the {@link MessagingPropositionItem} content schema.
+     * @return {@link SchemaType} containing the {@link MessagingPropositionItem} content schema.
      */
-    public String getSchema() {
+    public SchemaType getSchema() {
         return schema;
     }
 
     /**
-     * Gets the {@code PropositionItem} content.
+     * Gets the {@code MessagingPropositionItem} data.
      *
-     * @return {@link String} containing the {@link MessagingPropositionItem} content.
+     * @return {@licodenk Map<String, Object>} containing the {@link MessagingPropositionItem} data.
      */
-    public String getContent() {
-        return content;
+    public Map<String, Object> getData() {
+        return itemData;
     }
 
     /**
-     * Gets the {@code Proposition} referenced by the Proposition {@code SoftReference}.
+     * Gets the {@code MessagingProposition} referenced by the Proposition {@code SoftReference}.
      *
      * @return {@link MessagingProposition} referenced by the Proposition {@link SoftReference}.
      */
@@ -113,37 +102,112 @@ public class MessagingPropositionItem implements Serializable {
     }
 
     /**
-     * Creates an {@code Inbound} object from this {@code PropositionItem}'s content.
+     * Creates a {@code MessagingPropositionItem} object from the provided {@code RuleConsequence}.
      *
-     * @return {@link Inbound} object created from this {@link MessagingPropositionItem}'s content.
+     * @return {@link MessagingPropositionItem} object created from the provided {@link RuleConsequence}.
      */
-    public Inbound decodeContent() {
-        Inbound inboundContent = null;
+    public static MessagingPropositionItem fromRuleConsequence(final RuleConsequence consequence) {
+        MessagingPropositionItem propositionItem = null;
         try {
-            final JSONObject ruleJson = new JSONObject(content);
-            final JSONObject ruleConsequence = getConsequence(ruleJson);
-            if (ruleConsequence != null) {
-                final String uniqueId = ruleConsequence.getString(MESSAGE_CONSEQUENCE_ID);
-                final JSONObject consequenceDetails = getConsequenceDetails(ruleJson);
-                if (consequenceDetails != null) {
-                    final InboundType inboundType = InboundType.fromString(consequenceDetails.getString(MESSAGE_CONSEQUENCE_DETAIL_SCHEMA));
-                    final JSONObject data = consequenceDetails.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_DATA);
-                    final String content = data.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_CONTENT).toString();
-                    final String contentType = data.getString(MESSAGE_CONSEQUENCE_DETAIL_CONTENT_TYPE);
-                    final int expiryDate = data.getInt(MESSAGE_CONSEQUENCE_DETAIL_EXPIRY_DATE);
-                    final int publishedDate = data.getInt(MESSAGE_CONSEQUENCE_DETAIL_PUBLISHED_DATE);
-                    final Map<String, Object> meta = JSONUtils.toMap(data.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL_METADATA));
-                    inboundContent = new Inbound(uniqueId, inboundType, content, contentType, publishedDate, expiryDate, meta);
-                }
+            final Map<String, Object> details = consequence.getDetail();
+            if (MapUtils.isNullOrEmpty(details)) {
+                return null;
             }
-        } catch (final JSONException e) {
-            Log.trace(LOG_TAG, SELF_TAG, "JSONException caught while attempting to decode content: %s", e.getLocalizedMessage());
+            final String uniqueId = DataReader.getString(details, ID);
+            final String schema = DataReader.getString(details, SCHEMA);
+            final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, DATA);
+            propositionItem = new MessagingPropositionItem(uniqueId, SchemaType.fromString(schema), data);
+        } catch (final DataReaderException dataReaderException) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from event data map: %s", dataReaderException.getLocalizedMessage());
         }
-        return inboundContent;
+
+        return propositionItem;
     }
 
     /**
-     * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
+     * Returns this {@link MessagingPropositionItem}'s content as a json content {@code Map<String, Object>}.
+     *
+     * @return {@link Map<String, Object>} object containing the {@link MessagingPropositionItem}'s content.
+     */
+    public Map<String, Object> getJsonContentMap() {
+        final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
+        return schemaData.getJsonObjectContent();
+    }
+
+    /**
+     * Returns this {@link MessagingPropositionItem}'s content as a json content {@code List<Map<String, Object>>}.
+     *
+     * @return {@link List<Map<String, Object>>} object containing the {@link MessagingPropositionItem}'s content.
+     */
+    public List<Map<String, Object>> getJsonArrayMap() {
+        final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
+        return schemaData.getJsonArrayContent();
+    }
+
+    /**
+     * Returns this {@link MessagingPropositionItem}'s content as a html content {@code String}.
+     *
+     * @return {@link String} containing the {@link MessagingPropositionItem}'s content.
+     */
+    public String getHtmlContent() {
+        final HtmlContentSchemaData schemaData = createSchemaData(SchemaType.HTML_CONTENT);
+        return schemaData.getContent().toString();
+    }
+
+    /**
+     * Returns this {@link MessagingPropositionItem}'s content as a {@code InAppSchemaData} object.
+     *
+     * @return {@link InAppSchemaData} object containing the {@link MessagingPropositionItem}'s content.
+     */
+    public InAppSchemaData getInAppSchemaData() {
+        return createSchemaData(SchemaType.INAPP);
+    }
+
+    /**
+     * Returns this {@link MessagingPropositionItem}'s content as a {@code FeedItemSchemaData} object.
+     *
+     * @return {@link FeedItemSchemaData} object containing the {@link MessagingPropositionItem}'s content.
+     */
+    public FeedItemSchemaData getFeedItemSchemaData() {
+        return createSchemaData(SchemaType.FEED);
+    }
+
+    /**
+     * Creates a schema data object from this {@code MessagingPropositionItem}'s content.
+     *
+     * @param schemaType {@link SchemaType} to be used when creating the {@link T} object.
+     * @return {@code T} object created from the provided {@link MessagingPropositionItem}'s content.
+     */
+    private <T> T createSchemaData(final SchemaType schemaType) {
+        if (MapUtils.isNullOrEmpty(itemData)) {
+            Log.trace(LOG_TAG, SELF_TAG, "Cannot decode content, proposition data is null or empty.");
+            return null;
+        }
+
+        final JSONObject ruleJson = new JSONObject(itemData);
+        switch (schemaType) {
+            case UNKNOWN:
+                break;
+            case HTML_CONTENT:
+                return (T) new HtmlContentSchemaData(ruleJson);
+            case JSON_CONTENT:
+                return (T) new JsonContentSchemaData(ruleJson);
+            case RULESET:
+                break;
+            case INAPP:
+                return (T) new InAppSchemaData(ruleJson);
+            case FEED:
+                return (T) new FeedItemSchemaData(ruleJson);
+            case NATIVE_ALERT:
+                break;
+            case DEFAULT:
+                break;
+        }
+        return null;
+    }
+
+    /**
+     * Creates a {@code MessagingPropositionItem} object from the provided {@code Map<String, Object>}.
      *
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link MessagingPropositionItem} object created from the provided {@code Map<String, Object>}.
@@ -151,43 +215,23 @@ public class MessagingPropositionItem implements Serializable {
     public static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
         MessagingPropositionItem propositionItem = null;
         try {
-            final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
-            final String schema = DataReader.getString(eventData, PAYLOAD_SCHEMA);
-            final Map<String, Object> contentMap = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_DATA);
+            final String uniqueId = DataReader.getString(eventData, ID);
+            final SchemaType schema = SchemaType.fromString(DataReader.getString(eventData, SCHEMA));
 
-            JSONObject jsonContent = null;
-            JSONArray jsonArray = null;
-            String content = null;
-            if (schema.equals(SCHEMA_RULESET_ITEM)) {
-                // in-app content
-                jsonContent = new JSONObject(contentMap);
-            } else if (schema.equals(SCHEMA_JSON_CONTENT)) {
-                // feed or code based json content
-                final Object contentObject = contentMap.get(PAYLOAD_CONTENT);
-                if (contentObject != null) {
-                    // create a json array for list content. Json objects are created for map or string content.
-                    if (contentObject instanceof Map) {
-                        jsonContent = new JSONObject((Map) contentObject);
-                    } else if (contentObject instanceof List) {
-                        jsonArray = new JSONArray((List) contentObject);
-                    } else {
-                        jsonContent = new JSONObject(contentObject.toString());
-                    }
-                }
-            } else { // html or text content
-                content = DataReader.getString(contentMap, PAYLOAD_CONTENT);
+            final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, DATA);
+            if (MapUtils.isNullOrEmpty(dataMap)) {
+                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, data is null or empty.");
+                return null;
             }
 
-            if (jsonContent != null && jsonContent.length() > 0) {
-                content = jsonContent.toString();
-            } else if (jsonArray != null && jsonArray.length() > 0) {
-                content = jsonArray.toString();
+            final Object content = dataMap.get(CONTENT);
+            if (content == null) {
+                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, content is null or empty.");
+                return null;
             }
 
-            if (!StringUtils.isNullOrEmpty(content)) {
-                propositionItem = new MessagingPropositionItem(uniqueId, schema, content);
-            }
-        } catch (final Exception exception) {
+            propositionItem = new MessagingPropositionItem(uniqueId, schema, dataMap);
+        } catch (final DataReaderException exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
@@ -201,82 +245,38 @@ public class MessagingPropositionItem implements Serializable {
      */
     public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
-        final Map<String, Object> data = new HashMap<>();
-        if (StringUtils.isNullOrEmpty(content)) {
+        if (MapUtils.isNullOrEmpty(itemData)) {
             Log.trace(LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
-        eventData.put(PAYLOAD_ID, this.uniqueId);
-        eventData.put(PAYLOAD_SCHEMA, this.schema);
+        eventData.put(ID, this.itemId);
+        eventData.put(SCHEMA, this.schema);
 
         try {
-            if (schema.equals(SCHEMA_RULESET_ITEM) || schema.equals(SCHEMA_JSON_CONTENT)) { // in-app, feed, or code based content
-                if (content.startsWith("[")) { // we have a json array
-                    final JSONArray jsonArray = new JSONArray(content);
-                    data.put(PAYLOAD_CONTENT, JSONUtils.toList(jsonArray));
-                } else { // handle it as a json object
-                    final JSONObject jsonContent = new JSONObject(content);
-                    data.put(PAYLOAD_CONTENT, JSONUtils.toMap(jsonContent));
-                }
+            if (schema.equals(SchemaType.RULESET) || schema.equals(SchemaType.JSON_CONTENT)) { // in-app, feed, or code based content
+                final JSONObject jsonContent = new JSONObject(itemData);
+                eventData.put(DATA, JSONUtils.toMap(jsonContent));
             } else { // html or text content
-                data.put(PAYLOAD_CONTENT, content);
+                eventData.put(DATA, itemData);
             }
         } catch (final JSONException jsonException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create event data from a Proposition Item: %s", jsonException.getLocalizedMessage());
         }
 
-        eventData.put(PAYLOAD_DATA, data);
         return eventData;
     }
 
-    /**
-     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
-     *
-     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return {@code JSONObject> containing the consequence extracted from the rule json
-     */
-    private JSONObject getConsequence(final JSONObject ruleJson) {
-        JSONObject consequence = null;
-        try {
-            final JSONArray rules = ruleJson.getJSONArray(JSON_RULES_KEY);
-            final JSONArray consequenceArray = rules.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
-            consequence = consequenceArray.getJSONObject(0);
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
-        }
-        return consequence;
-    }
-
-    /**
-     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
-     *
-     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
-     * @return {@code JSONObject> containing the consequence details extracted from the rule json
-     */
-    private JSONObject getConsequenceDetails(final JSONObject ruleJson) {
-        JSONObject consequenceDetails = null;
-        try {
-            final JSONObject consequence = getConsequence(ruleJson);
-            if (consequence != null) {
-                consequenceDetails = consequence.getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
-            }
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
-        }
-        return consequenceDetails;
-    }
-
     private void readObject(final ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {
-        uniqueId = objectInputStream.readUTF();
-        schema = objectInputStream.readUTF();
-        content = objectInputStream.readUTF();
+        itemId = objectInputStream.readUTF();
+        schema = SchemaType.fromString(objectInputStream.readUTF());
+        itemData = (Map<String, Object>) objectInputStream.readObject();
         propositionReference = new SoftReference<>((MessagingProposition) objectInputStream.readObject());
     }
 
     private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException {
-        objectOutputStream.writeUTF(uniqueId);
-        objectOutputStream.writeUTF(schema);
-        objectOutputStream.writeUTF(content);
+        objectOutputStream.writeUTF(itemId);
+        objectOutputStream.writeUTF(schema.toString());
+        objectOutputStream.writeObject(itemData);
         objectOutputStream.writeObject(propositionReference.get());
     }
 }

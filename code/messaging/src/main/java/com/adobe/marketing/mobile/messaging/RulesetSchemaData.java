@@ -29,10 +29,10 @@ public class RulesetSchemaData {
     private int version = 0;
     private List<Map<String, Object>> rules = null;
 
-    RulesetSchemaData(final JSONObject jsonObject) {
+    RulesetSchemaData(final JSONObject schemaData) {
         try {
-            this.version = jsonObject.getInt(JSON_VERSION_KEY);
-            this.rules = (List<Map<String, Object>>) jsonObject.get(JSON_RULES_KEY);
+            this.version = schemaData.getInt(JSON_VERSION_KEY);
+            this.rules = (List<Map<String, Object>>) schemaData.get(JSON_RULES_KEY);
         } catch (final JSONException jsonException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", jsonException.getLocalizedMessage());
         }

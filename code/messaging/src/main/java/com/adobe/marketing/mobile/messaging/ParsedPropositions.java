@@ -20,7 +20,10 @@ import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
@@ -61,13 +64,13 @@ public class ParsedPropositions {
 
                 final Surface surface = Surface.fromUriString(scope);
                 for (final MessagingPropositionItem propositionItem : proposition.getItems()) {
-                    final String content = propositionItem.getContent();
-                    if (StringUtils.isNullOrEmpty(content)) {
+                    final JSONObject content = new JSONObject(propositionItem.getData());
+                    if (content == null) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring Proposition with empty content.");
                         continue;
                     }
 
-                    final List<LaunchRule> parsedRules = JSONRulesParser.parse(content, extensionApi);
+                    final List<LaunchRule> parsedRules = JSONRulesParser.parse(content.toString(), extensionApi);
                     // iam and feed items will be wrapped in a valid rules engine rule - code-based experiences are not
                     if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Proposition did not contain a rule, adding as a code-based experience.");
