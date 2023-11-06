@@ -154,7 +154,7 @@ final class MessagingCacheUtilities {
     /**
      * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param newPropositions the {@link Map<Surface, List<MessagingProposition>>} containing the propositions to be cached.
+     * @param newPropositions  the {@link Map<Surface, List<MessagingProposition>>} containing the propositions to be cached.
      * @param surfacesToRemove {@link List<Surface>} containing surfaces to be removed from the cache
      */
     void cachePropositions(final Map<Surface, List<MessagingProposition>> newPropositions, final List<Surface> surfacesToRemove) {
@@ -219,7 +219,7 @@ final class MessagingCacheUtilities {
         final List<MessagingPropositionItem> propositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
-                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
                 propositionItems.add(propositionItem);
             }
             propositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));

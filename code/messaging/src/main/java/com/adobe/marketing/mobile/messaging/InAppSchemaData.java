@@ -27,13 +27,12 @@ import com.adobe.marketing.mobile.util.JSONUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 // represents the schema data object for an in-app schema
-public class InAppSchemaData implements Serializable {
+public class InAppSchemaData {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "InAppSchemaData";
     private Object content;
@@ -45,20 +44,20 @@ public class InAppSchemaData implements Serializable {
     private Map<String, Object> webParameters;
     private List<String> remoteAssets = new ArrayList<>();
 
-    InAppSchemaData(final JSONObject jsonObject) {
+    InAppSchemaData(final JSONObject schemaData) {
         try {
-            this.contentType = ContentType.fromString(jsonObject.optString(CONTENT_TYPE));
+            this.contentType = ContentType.fromString(schemaData.optString(CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(jsonObject.getJSONObject(CONTENT));
+                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
             } else {
-                this.content = jsonObject.getString(CONTENT);
+                this.content = schemaData.getString(CONTENT);
             }
-            this.publishedDate = jsonObject.optInt(PUBLISHED_DATE);
-            this.expiryDate = jsonObject.optInt(EXPIRY_DATE);
-            this.meta = JSONUtils.toMap(jsonObject.optJSONObject(METADATA));
-            this.mobileParameters = JSONUtils.toMap(jsonObject.optJSONObject(MOBILE_PARAMETERS));
-            this.webParameters = JSONUtils.toMap(jsonObject.optJSONObject(WEB_PARAMETERS));
-            final List<Object> assetList = JSONUtils.toList(jsonObject.optJSONArray(REMOTE_ASSETS));
+            this.publishedDate = schemaData.optInt(PUBLISHED_DATE);
+            this.expiryDate = schemaData.optInt(EXPIRY_DATE);
+            this.meta = JSONUtils.toMap(schemaData.optJSONObject(METADATA));
+            this.mobileParameters = JSONUtils.toMap(schemaData.optJSONObject(MOBILE_PARAMETERS));
+            this.webParameters = JSONUtils.toMap(schemaData.optJSONObject(WEB_PARAMETERS));
+            final List<Object> assetList = JSONUtils.toList(schemaData.optJSONArray(REMOTE_ASSETS));
             if (!MessagingUtils.isNullOrEmpty(assetList)) {
                 for (final Object asset : assetList) {
                     this.remoteAssets.add(asset.toString());

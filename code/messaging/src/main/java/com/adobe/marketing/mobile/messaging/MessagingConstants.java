@@ -61,6 +61,8 @@ final class MessagingConstants {
     final class ConsequenceDetailKeys {
         static final String ID = "id";
         static final String SCHEMA = "schema";
+        static final String DATA = "data";
+        static final String CONTENT = "content";
 
         private ConsequenceDetailKeys() {
         }

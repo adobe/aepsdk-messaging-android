@@ -23,21 +23,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+import java.util.Map;
+
 public class JsonContentSchemaData {
     private static final String SELF_TAG = "JsonContentSchemaData";
     private static final String FORMAT = "format";
     private Object content = null;
     private ContentType format = null;
 
-    JsonContentSchemaData(final JSONObject jsonObject) {
+    JsonContentSchemaData(final JSONObject schemaData) {
         try {
-            final String decodedFormat = jsonObject.optString(FORMAT);
+            final String decodedFormat = schemaData.optString(FORMAT);
             if (StringUtils.isNullOrEmpty(decodedFormat)) {
                 format = ContentType.APPLICATION_JSON;
             } else {
                 format = ContentType.fromString(decodedFormat);
             }
-            final Object content = jsonObject.get(CONTENT);
+            final Object content = schemaData.get(CONTENT);
             if (content instanceof JSONObject) {
                 this.content = JSONUtils.toMap((JSONObject) content);
             } else if (content instanceof JSONArray) {
@@ -50,11 +53,21 @@ public class JsonContentSchemaData {
         }
     }
 
-    public Object getContent() {
-        return content;
+    Map<String, Object> getJsonObjectContent() {
+        if (content instanceof Map) {
+            return (Map<String, Object>) content;
+        }
+        return null;
     }
 
-    public ContentType getFormat() {
+    List<Map<String, Object>> getJsonArrayContent() {
+        if (content instanceof List) {
+            return (List<Map<String, Object>>) content;
+        }
+        return null;
+    }
+
+    ContentType getFormat() {
         return format;
     }
 }

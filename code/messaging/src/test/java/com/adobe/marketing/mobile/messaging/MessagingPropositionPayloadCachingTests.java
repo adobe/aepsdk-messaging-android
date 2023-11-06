@@ -16,7 +16,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -126,7 +125,7 @@ public class MessagingPropositionPayloadCachingTests {
         scopeDetails.put("characteristics", characteristics);
         scopeDetails.put("activity", activity);
 
-        propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
         messagingPropositionItems.add(messagingPropositionItem);
         propositionItemMaps.add(propositionItemMap);

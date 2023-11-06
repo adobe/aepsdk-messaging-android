@@ -22,36 +22,34 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
-
 // represents the schema data object for a html content schema
-public class HtmlContentSchemaData implements Serializable {
+public class HtmlContentSchemaData {
     private static final String SELF_TAG = "HtmlContentSchemaData";
     private static final String FORMAT = "format";
     private String content = null;
     private ContentType format = null;
 
-    HtmlContentSchemaData(final JSONObject jsonObject) {
+    HtmlContentSchemaData(final JSONObject schemaData) {
         try {
-            final String decodedFormat = jsonObject.optString(FORMAT);
+            final String decodedFormat = schemaData.optString(FORMAT);
             if (StringUtils.isNullOrEmpty(decodedFormat)) {
                 format = ContentType.TEXT_HTML;
             } else {
                 format = ContentType.fromString(decodedFormat);
             }
-            this.content = jsonObject.getString(CONTENT);
+            this.content = schemaData.getString(CONTENT);
         } catch (final JSONException jsonException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
         }
     }
 
-    public Object getContent() {
+    public String getContent() {
         if (format.equals(ContentType.APPLICATION_JSON)) {
             try {
                 if (content.startsWith("[")) {
-                    return new JSONArray(content);
+                    return new JSONArray(content).toString();
                 } else {
-                    return new JSONObject(content);
+                    return new JSONObject(content).toString();
                 }
             } catch (final JSONException jsonException) {
                 return null;
