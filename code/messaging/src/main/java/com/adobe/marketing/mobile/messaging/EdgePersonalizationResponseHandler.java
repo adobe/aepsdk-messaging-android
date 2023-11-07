@@ -638,7 +638,7 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    void setSerialWorkDispatcher(final SerialWorkDispatcher<Event> serialWorkDispatcher) {
+    void setSerialWorkDispatcher (final SerialWorkDispatcher<Event> serialWorkDispatcher) {
         this.serialWorkDispatcher = serialWorkDispatcher;
     }
 
@@ -685,7 +685,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
-    Map<Surface, List<MessagingProposition>> getInProgressPropositions() {
+    Map<Surface, List<MessagingProposition>> getInProgressPropositions () {
         return inProgressPropositions;
     }
 }

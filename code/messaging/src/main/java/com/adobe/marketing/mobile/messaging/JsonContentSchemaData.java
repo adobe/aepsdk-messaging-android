@@ -54,17 +54,11 @@ public class JsonContentSchemaData {
     }
 
     Map<String, Object> getJsonObjectContent() {
-        if (content instanceof Map) {
-            return (Map<String, Object>) content;
-        }
-        return null;
+        return content instanceof Map ? (Map<String, Object>) content : null;
     }
 
     List<Map<String, Object>> getJsonArrayContent() {
-        if (content instanceof List) {
-            return (List<Map<String, Object>>) content;
-        }
-        return null;
+        return content instanceof List ? (List<Map<String, Object>>) content : null;
     }
 
     ContentType getFormat() {

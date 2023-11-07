@@ -137,7 +137,7 @@ public class MessagingProposition implements Serializable {
         return eventData;
     }
 
-    public boolean equals(final Object object) {
+    public boolean equals(final Object object){
         if (object instanceof MessagingProposition) {
             final MessagingProposition proposition = (MessagingProposition) object;
             final Map<String, Object> newPropositionContent = proposition.getItems().get(0).getData();

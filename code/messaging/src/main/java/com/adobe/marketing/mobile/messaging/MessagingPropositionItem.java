@@ -23,10 +23,8 @@ import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
-import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -131,7 +129,7 @@ public class MessagingPropositionItem implements Serializable {
      */
     public Map<String, Object> getJsonContentMap() {
         final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
-        return schemaData.getJsonObjectContent();
+        return schemaData != null ? schemaData.getJsonObjectContent() : null;
     }
 
     /**
@@ -139,9 +137,9 @@ public class MessagingPropositionItem implements Serializable {
      *
      * @return {@link List<Map<String, Object>>} object containing the {@link MessagingPropositionItem}'s content.
      */
-    public List<Map<String, Object>> getJsonArrayMap() {
+    public List<Map<String, Object>> getJsonArrayList() {
         final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
-        return schemaData.getJsonArrayContent();
+        return schemaData != null ? schemaData.getJsonArrayContent() : null;
     }
 
     /**
@@ -151,7 +149,7 @@ public class MessagingPropositionItem implements Serializable {
      */
     public String getHtmlContent() {
         final HtmlContentSchemaData schemaData = createSchemaData(SchemaType.HTML_CONTENT);
-        return schemaData.getContent().toString();
+        return schemaData != null ? schemaData.getContent().toString() : null;
     }
 
     /**
@@ -251,18 +249,7 @@ public class MessagingPropositionItem implements Serializable {
         }
         eventData.put(ID, this.itemId);
         eventData.put(SCHEMA, this.schema);
-
-        try {
-            if (schema.equals(SchemaType.RULESET) || schema.equals(SchemaType.JSON_CONTENT)) { // in-app, feed, or code based content
-                final JSONObject jsonContent = new JSONObject(itemData);
-                eventData.put(DATA, JSONUtils.toMap(jsonContent));
-            } else { // html or text content
-                eventData.put(DATA, itemData);
-            }
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create event data from a Proposition Item: %s", jsonException.getLocalizedMessage());
-        }
-
+        eventData.put(DATA, itemData);
         return eventData;
     }
 
