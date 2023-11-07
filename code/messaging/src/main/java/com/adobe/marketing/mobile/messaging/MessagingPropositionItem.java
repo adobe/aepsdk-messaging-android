@@ -114,9 +114,12 @@ public class MessagingPropositionItem implements Serializable {
             final String uniqueId = DataReader.getString(details, ID);
             final String schema = DataReader.getString(details, SCHEMA);
             final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, DATA);
+            if (MapUtils.isNullOrEmpty(data)) {
+                return null;
+            }
             propositionItem = new MessagingPropositionItem(uniqueId, SchemaType.fromString(schema), data);
         } catch (final DataReaderException dataReaderException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from event data map: %s", dataReaderException.getLocalizedMessage());
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -178,28 +181,25 @@ public class MessagingPropositionItem implements Serializable {
      */
     private <T> T createSchemaData(final SchemaType schemaType) {
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Cannot decode content, proposition data is null or empty.");
+            Log.trace(LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
             return null;
         }
 
         final JSONObject ruleJson = new JSONObject(itemData);
         switch (schemaType) {
             case UNKNOWN:
+            case DEFAULT:
+            case NATIVE_ALERT:
+            case RULESET:
                 break;
             case HTML_CONTENT:
                 return (T) new HtmlContentSchemaData(ruleJson);
             case JSON_CONTENT:
                 return (T) new JsonContentSchemaData(ruleJson);
-            case RULESET:
-                break;
             case INAPP:
                 return (T) new InAppSchemaData(ruleJson);
             case FEED:
                 return (T) new FeedItemSchemaData(ruleJson);
-            case NATIVE_ALERT:
-                break;
-            case DEFAULT:
-                break;
         }
         return null;
     }
@@ -218,7 +218,7 @@ public class MessagingPropositionItem implements Serializable {
 
             final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
-                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, data is null or empty.");
+                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
                 return null;
             }
 
@@ -230,7 +230,7 @@ public class MessagingPropositionItem implements Serializable {
 
             propositionItem = new MessagingPropositionItem(uniqueId, schema, dataMap);
         } catch (final DataReaderException exception) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
+            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -244,14 +244,14 @@ public class MessagingPropositionItem implements Serializable {
     public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
+            Log.trace(LOG_TAG, SELF_TAG, "MessagingPropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
 
         eventData.put(ID, this.itemId);
         eventData.put(SCHEMA, this.schema);
         eventData.put(DATA, itemData);
-        
+
         return eventData;
     }
 

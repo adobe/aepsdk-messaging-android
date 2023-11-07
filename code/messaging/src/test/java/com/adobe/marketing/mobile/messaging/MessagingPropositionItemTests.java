@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
@@ -34,6 +35,7 @@ import java.util.Map;
 public class MessagingPropositionItemTests {
     String testStringContent = "some html string content";
     String testId = "uniqueId";
+    JSONObject inAppRuleJSON;
     Map<String, Object> codeBasedPropositionItemData = new HashMap<>();
     Map<String, Object> feedPropositionItemData = new HashMap<>();
     List<Map<String, Object>> codeBasedPropositionItemContent = new ArrayList<>();
@@ -70,7 +72,7 @@ public class MessagingPropositionItemTests {
         codeBasedPropositionItemContent = (List<Map<String, Object>>) codeBasedPropositionItemData.get("content");
         // setup in app content
         String testJSONStringInAppContent = MessagingTestUtils.loadStringFromFile("inappPropositionAllDataPresent.json");
-        JSONObject inAppRuleJSON = new JSONObject(testJSONStringInAppContent);
+        inAppRuleJSON = new JSONObject(testJSONStringInAppContent);
         JSONObject inAppConsequenceDetails = InternalMessagingUtils.getConsequenceDetails(inAppRuleJSON);
         Map<String, Object> inAppRuleJsonMap = (Map<String, Object>) JSONUtils.toMap(inAppConsequenceDetails).get("data");
         inAppPropositionItemData = inAppRuleJsonMap;
@@ -231,6 +233,41 @@ public class MessagingPropositionItemTests {
         eventDataMapForHTML.put("data", htmlDataMap);
         // test
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForHTML);
+        // verify
+        assertNull(messagingPropositionItem);
+    }
+
+    // fromRuleConsequence
+    @Test
+    public void test_createPropositionItem_fromRuleConsequence() throws JSONException {
+        // test
+        Map<String, Object> consequenceDetails = JSONUtils.toMap(InternalMessagingUtils.getConsequenceDetails(inAppRuleJSON));
+        RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", consequenceDetails);
+        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+        // verify
+        assertNotNull(messagingPropositionItem);
+        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
+        assertEquals(SchemaType.INAPP, messagingPropositionItem.getSchema());
+        Map<String, Object> propositionItemData = messagingPropositionItem.getData();
+        assertEquals(consequenceDetails.get("data"), propositionItemData);
+    }
+
+    @Test
+    public void test_createPropositionItem_fromRuleConsequence_EmptyDetails() {
+        // test
+        RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", Collections.emptyMap());
+        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+        // verify
+        assertNull(messagingPropositionItem);
+    }
+
+    @Test
+    public void test_createPropositionItem_fromRuleConsequence_EmptyData() throws JSONException {
+        // test
+        Map<String, Object> consequenceDetails = JSONUtils.toMap(InternalMessagingUtils.getConsequenceDetails(inAppRuleJSON));
+        consequenceDetails.remove("data");
+        RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", consequenceDetails);
+        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
         // verify
         assertNull(messagingPropositionItem);
     }
