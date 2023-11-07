@@ -57,10 +57,10 @@
       },
       "consequences": [
         {
-          "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+          "id": "uniqueId",
           "type": "schema",
           "detail": {
-            "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+            "id": "uniqueId",
             "schema": "https://ns.adobe.com/personalization/message/in-app",
             "data": {
               "content": "<html>message here</html>",
