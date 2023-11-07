@@ -247,9 +247,11 @@ public class MessagingPropositionItem implements Serializable {
             Log.trace(LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
+
         eventData.put(ID, this.itemId);
         eventData.put(SCHEMA, this.schema);
         eventData.put(DATA, itemData);
+        
         return eventData;
     }
 
