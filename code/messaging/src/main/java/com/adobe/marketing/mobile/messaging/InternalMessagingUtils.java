@@ -73,7 +73,6 @@ class InternalMessagingUtils {
     // ========================================================================================
     // Consequence data retrieval from a JSONObject
     // ========================================================================================
-
     /**
      * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
      *
@@ -411,7 +410,6 @@ class InternalMessagingUtils {
     // ========================================================================================
     // Collection utils
     // ========================================================================================
-
     /**
      * Updates the provided {@code Map<Surface, List<LaunchRule>>} with the provided {@code Surface} and {@code List<LaunchRule>} objects.
      *
