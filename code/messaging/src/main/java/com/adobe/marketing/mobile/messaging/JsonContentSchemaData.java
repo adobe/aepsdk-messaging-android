@@ -26,7 +26,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 
-public class JsonContentSchemaData {
+public class JsonContentSchemaData implements SchemaData {
     private static final String SELF_TAG = "JsonContentSchemaData";
     private static final String FORMAT = "format";
     private Object content = null;
@@ -63,5 +63,10 @@ public class JsonContentSchemaData {
 
     ContentType getFormat() {
         return format;
+    }
+
+    @Override
+    public Object getContent() {
+        return content;
     }
 }

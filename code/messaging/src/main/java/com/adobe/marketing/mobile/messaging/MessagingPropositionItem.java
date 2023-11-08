@@ -131,7 +131,7 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link Map<String, Object>} object containing the {@link MessagingPropositionItem}'s content.
      */
     public Map<String, Object> getJsonContentMap() {
-        final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
+        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
         return schemaData != null ? schemaData.getJsonObjectContent() : null;
     }
 
@@ -141,7 +141,7 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link List<Map<String, Object>>} object containing the {@link MessagingPropositionItem}'s content.
      */
     public List<Map<String, Object>> getJsonArrayList() {
-        final JsonContentSchemaData schemaData = createSchemaData(SchemaType.JSON_CONTENT);
+        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
         return schemaData != null ? schemaData.getJsonArrayContent() : null;
     }
 
@@ -151,8 +151,8 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link String} containing the {@link MessagingPropositionItem}'s content.
      */
     public String getHtmlContent() {
-        final HtmlContentSchemaData schemaData = createSchemaData(SchemaType.HTML_CONTENT);
-        return schemaData != null ? schemaData.getContent().toString() : null;
+        final HtmlContentSchemaData schemaData = (HtmlContentSchemaData) createSchemaData(SchemaType.HTML_CONTENT);
+        return schemaData != null ? schemaData.getContent() : null;
     }
 
     /**
@@ -161,7 +161,7 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link InAppSchemaData} object containing the {@link MessagingPropositionItem}'s content.
      */
     public InAppSchemaData getInAppSchemaData() {
-        return createSchemaData(SchemaType.INAPP);
+        return (InAppSchemaData) createSchemaData(SchemaType.INAPP);
     }
 
     /**
@@ -170,16 +170,16 @@ public class MessagingPropositionItem implements Serializable {
      * @return {@link FeedItemSchemaData} object containing the {@link MessagingPropositionItem}'s content.
      */
     public FeedItemSchemaData getFeedItemSchemaData() {
-        return createSchemaData(SchemaType.FEED);
+        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
     }
 
     /**
      * Creates a schema data object from this {@code MessagingPropositionItem}'s content.
      *
-     * @param schemaType {@link SchemaType} to be used when creating the {@link T} object.
-     * @return {@code T} object created from the provided {@link MessagingPropositionItem}'s content.
+     * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
+     * @return {@code SchemaData} object created from the provided {@link MessagingPropositionItem}'s content.
      */
-    private <T> T createSchemaData(final SchemaType schemaType) {
+    private SchemaData createSchemaData(final SchemaType schemaType) {
         if (MapUtils.isNullOrEmpty(itemData)) {
             Log.trace(LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
             return null;
@@ -193,13 +193,13 @@ public class MessagingPropositionItem implements Serializable {
             case RULESET:
                 break;
             case HTML_CONTENT:
-                return (T) new HtmlContentSchemaData(ruleJson);
+                return new HtmlContentSchemaData(ruleJson);
             case JSON_CONTENT:
-                return (T) new JsonContentSchemaData(ruleJson);
+                return new JsonContentSchemaData(ruleJson);
             case INAPP:
-                return (T) new InAppSchemaData(ruleJson);
+                return new InAppSchemaData(ruleJson);
             case FEED:
-                return (T) new FeedItemSchemaData(ruleJson);
+                return new FeedItemSchemaData(ruleJson);
         }
         return null;
     }

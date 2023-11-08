@@ -23,7 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 // represents the schema data object for a html content schema
-public class HtmlContentSchemaData {
+public class HtmlContentSchemaData implements SchemaData {
     private static final String SELF_TAG = "HtmlContentSchemaData";
     private static final String FORMAT = "format";
     private String content = null;
@@ -43,6 +43,7 @@ public class HtmlContentSchemaData {
         }
     }
 
+    @Override
     public String getContent() {
         if (format.equals(ContentType.APPLICATION_JSON)) {
             try {
