@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 
-public class RulesetSchemaData {
+public class RulesetSchemaData implements SchemaData {
     private static final String SELF_TAG = "RulesetSchemaData";
     private int version = 0;
     private List<Map<String, Object>> rules = null;
@@ -38,11 +38,12 @@ public class RulesetSchemaData {
         }
     }
 
-    public List<Map<String, Object>> getRules() {
-        return rules;
-    }
-
     public int getVersion() {
         return version;
+    }
+
+    @Override
+    public Object getContent() {
+        return rules;
     }
 }

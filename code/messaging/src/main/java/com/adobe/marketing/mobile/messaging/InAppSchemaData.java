@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 // represents the schema data object for an in-app schema
-public class InAppSchemaData {
+public class InAppSchemaData implements SchemaData {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "InAppSchemaData";
     private Object content;
@@ -68,6 +68,7 @@ public class InAppSchemaData {
         }
     }
 
+    @Override
     public Object getContent() {
         if (contentType.equals(ContentType.APPLICATION_JSON)) {
             try {

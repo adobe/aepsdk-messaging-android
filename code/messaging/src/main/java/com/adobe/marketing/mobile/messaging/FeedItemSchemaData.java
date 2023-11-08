@@ -37,7 +37,7 @@ import java.util.Collections;
 import java.util.Map;
 
 // represents the schema data object for a feed item schema
-public class FeedItemSchemaData {
+public class FeedItemSchemaData implements SchemaData {
     private static final String SELF_TAG = "FeedItemSchemaData";
     private Object content;
     private ContentType contentType;
@@ -63,6 +63,7 @@ public class FeedItemSchemaData {
         }
     }
 
+    @Override
     public Object getContent() {
         return content;
     }
