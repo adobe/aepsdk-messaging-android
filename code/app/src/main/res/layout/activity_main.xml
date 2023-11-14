@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Messaging Sample App" />
+        android:text="Messaging Sample App from Collin" />
 
     <Button
         android:id="@+id/btnGetLocalNotification"
@@ -92,8 +92,8 @@
         android:id="@+id/viewDeviceId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="fcm token"
+        android:text="ecid should appear here after button click"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textSize="12sp" />
+        android:textSize="10sp" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

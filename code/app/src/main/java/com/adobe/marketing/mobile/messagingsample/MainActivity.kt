@@ -25,7 +25,6 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
-import android.view.View
 import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.Spinner
@@ -35,14 +34,28 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.Event
+import com.adobe.marketing.mobile.Message
+import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.MessagingEdgeEventType
+import com.adobe.marketing.mobile.MobileCore
+import com.adobe.marketing.mobile.edge.identity.Identity
 import com.adobe.marketing.mobile.services.MessagingDelegate
 import com.adobe.marketing.mobile.services.ui.FullscreenMessage
 import com.adobe.marketing.mobile.util.StringUtils
 import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.allowIAMSwitch
+import kotlinx.android.synthetic.main.activity_main.btnCheckSequence
+import kotlinx.android.synthetic.main.activity_main.btnGetLocalNotification
+import kotlinx.android.synthetic.main.activity_main.btnHistoricalEvent1
+import kotlinx.android.synthetic.main.activity_main.btnHistoricalEvent2
+import kotlinx.android.synthetic.main.activity_main.btnHistoricalEvent3
+import kotlinx.android.synthetic.main.activity_main.btnRefreshInAppMessages
+import kotlinx.android.synthetic.main.activity_main.btnTriggerFullscreenIAM
+import kotlinx.android.synthetic.main.activity_main.btnTriggerLastIAM
+import kotlinx.android.synthetic.main.activity_main.btn_detailpage
+import kotlinx.android.synthetic.main.activity_main.editText
 import org.json.JSONObject
-import java.security.AccessController.getContext
 
 
 class MainActivity : ComponentActivity() {
@@ -253,10 +266,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MobileCore.setMessagingDelegate(customMessagingDelegate)
-        val id: String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        // val id: String = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         // check if I can get id
-        val viewDeviceIdView = findViewById<TextView>(R.id.viewDeviceId)
-        viewDeviceIdView.text = id
+
+
 
         // setup ui interaction listeners
         setupButtonClickListeners()
@@ -343,6 +356,11 @@ class MainActivity : ComponentActivity() {
         }
 
         btnCheckSequence.setOnClickListener {
+            Identity.getExperienceCloudId {ecid ->
+                //Handle the ID returned here
+                val viewDeviceIdView = findViewById<TextView>(R.id.viewDeviceId)
+                viewDeviceIdView.text = ecid
+            }
             val checkSequenceEvent = Event.Builder("check sequence", "iamtest", "iamtest").let {
                 val eventData: HashMap<String, Any?> = hashMapOf("checkSequence" to "true")
                 it.setEventData(eventData)
