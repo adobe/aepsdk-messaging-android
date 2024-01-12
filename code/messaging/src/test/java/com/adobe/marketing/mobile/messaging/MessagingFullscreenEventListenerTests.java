@@ -54,7 +54,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MessagingFullscreenMessageDelegateTests {
+public class MessagingFullscreenEventListenerTests {
 
     @Mock
     ServiceProvider mockServiceProvider;

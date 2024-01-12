@@ -48,6 +48,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -629,10 +630,13 @@ class EdgePersonalizationResponseHandler {
         try {
             final Map<String, Object> detailsDataMap = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, Collections.emptyMap());
             final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, detailsDataMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
-            final InternalMessage message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
-            message.propositionInfo = propositionInfo.get(message.getId());
-            message.trigger();
-            message.show(true);
+            final Message message = PresentableMessageUtils.createMessage(parent,
+                    triggeredConsequence,
+                    mobileParameters,
+                    messagingCacheUtilities.getAssetsMap(),
+                    propositionInfo.get(triggeredConsequence.getId()));
+            // todo message.trigger();
+            message.show();
         } catch (final MessageRequiredFieldMissingException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }

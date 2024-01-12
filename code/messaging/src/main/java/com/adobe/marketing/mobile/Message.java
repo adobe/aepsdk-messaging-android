@@ -25,34 +25,9 @@ public interface Message {
     void track(final String interaction, final MessagingEdgeEventType eventType);
 
     /**
-     * Adds a {@link WebViewJavascriptInterface} for the provided message name to the javascript {@link WebView}.
-     *
-     * @param name     {@link String} the name of the message being passed from javascript
-     * @param callback {@code AdobeCallback<String>} to be invoked when the javascript message payload is passed
-     */
-    void handleJavascriptMessage(final String name, final AdobeCallback<String> callback);
-
-    /**
-     * Evaluates the passed in {@code String} content containing javascript code by calling
-     * {@link WebView#evaluateJavascript(String, ValueCallback)} in the created {@code WebView}.
-     * Any output from the executed javascript code will be returned in an {@link AdobeCallback}
-     * previously set in a call to {@link #handleJavascriptMessage(String, AdobeCallback)}.
-     *
-     * @param content {@code String} containing the javascript code to be executed
-     */
-    void evaluateJavascript(final String content);
-
-    /**
      * Shows this {@link Message}.
      */
     void show();
-
-    /**
-     * Returns the {@code WebView} to allow manual integration of the in-app message.
-     *
-     * @return a {@code WebView} containing the Messaging extension in-app message
-     */
-    WebView getWebView();
 
     /**
      * Removes this {@link Message} from view.
@@ -65,11 +40,6 @@ public interface Message {
      * Returns the {@link Message}'s id.
      */
     String getId();
-
-    /**
-     * Returns the {@link Object} which created this {@link Message} object.
-     */
-    Object getParent();
 
     /**
      * Sets the {@link Message}'s auto tracking preference.

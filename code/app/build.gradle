@@ -1,14 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 33
+    compileSdk rootProject.ext.targetSdkVersion
     defaultConfig {
         applicationId "com.adobe.marketing.mobile.messagingsample"
-        minSdkVersion 19
-        targetSdkVersion 33
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "2.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -21,6 +20,13 @@ android {
         }
     }
     namespace 'com.adobe.marketing.mobile.messagingsample'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
     buildFeatures {
         viewBinding true
     }
@@ -37,6 +43,10 @@ buildscript {
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
@@ -50,11 +60,21 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
-    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
-    implementation "com.adobe.marketing.mobile:lifecycle:$rootProject.mavenLifecycleVersion"
-    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
-    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
-    implementation "com.adobe.marketing.mobile:assurance:$rootProject.mavenAssuranceVersion"
+    // implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    // TODO change once Core is released
+    implementation ("com.github.adobe.aepsdk-core-android:core:feature~uiservice-SNAPSHOT") {}
+    implementation ("com.adobe.marketing.mobile:lifecycle:$rootProject.mavenLifecycleVersion") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+    implementation ("com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+    implementation ("com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+    implementation ("com.adobe.marketing.mobile:assurance:$rootProject.mavenAssuranceVersion") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
 
     implementation project(":${rootProject.moduleProjectName}")
 }

@@ -60,8 +60,6 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
-import com.adobe.marketing.mobile.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -401,71 +399,6 @@ public final class MessagingExtension extends Extension {
                 getApi());
     }
 
-    /**
-     * Sends a proposition interaction to the customer's experience event dataset.
-     *
-     * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-     * @param message     The {@link InternalMessage} which triggered the proposition interaction
-     */
-    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final InternalMessage message) {
-        final PropositionInfo propositionInfo = message.propositionInfo;
-        if (propositionInfo == null || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
-            Log.trace(LOG_TAG, MessagingExtension.SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");
-            return;
-        }
-        final List<Map<String, Object>> propositions = new ArrayList<>();
-        final Map<String, Object> proposition = new HashMap<>();
-        proposition.put(ID, propositionInfo.id);
-        proposition.put(SCOPE, propositionInfo.scope);
-        proposition.put(SCOPE_DETAILS, propositionInfo.scopeDetails);
-        propositions.add(proposition);
-
-        final Map<String, Integer> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.getPropositionEventType(), 1);
-
-        final Map<String, Object> decisioning = new HashMap<>();
-        decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
-        decisioning.put(PROPOSITIONS, propositions);
-
-        // add propositionAction if this is an interact eventType
-        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
-            final Map<String, String> propositionAction = new HashMap<>();
-            propositionAction.put(ID, interaction);
-            propositionAction.put(LABEL, interaction);
-            decisioning.put(PROPOSITION_ACTION, propositionAction);
-        }
-
-        // create experience map with proposition tracking data
-        final Map<String, Object> experienceMap = new HashMap<>();
-        experienceMap.put(DECISIONING, decisioning);
-
-        // create XDM data with experience data
-        final Map<String, Object> xdmMap = new HashMap<>();
-        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType.toString());
-        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
-
-        // create maps for event history
-        final Map<String, String> iamHistoryMap = new HashMap<>();
-        iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-        iamHistoryMap.put(MESSAGE_ID, propositionInfo.activityId);
-        iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
-
-        // Create the mask for storing event history
-        final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
-
-        final Map<String, Object> xdmEventData = new HashMap<>();
-        xdmEventData.put(XDM, xdmMap);
-        xdmEventData.put(IAM_HISTORY, iamHistoryMap);
-
-        // dispatch in-app tracking event
-        InternalMessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
-                MessagingConstants.EventType.EDGE,
-                MessagingConstants.EventSource.REQUEST_CONTENT,
-                xdmEventData,
-                mask,
-                getApi());
-    }
     //endregion
 
     //region private methods
