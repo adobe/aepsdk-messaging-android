@@ -1,0 +1,15 @@
+{
+  "id": "uniqueId",
+  "schema": "https://ns.adobe.com/personalization/json-content-item",
+  "data": {
+    "content": [
+      {
+        "_id": "652ec01620f7a125b7296231",
+        "index": 0,
+        "latitude": 46.855582,
+        "longitude": 92.550917,
+        "favoriteFruit": "strawberry"
+      }
+    ]
+  }
+}

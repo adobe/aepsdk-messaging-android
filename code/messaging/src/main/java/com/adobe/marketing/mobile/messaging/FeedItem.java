@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile.messaging;
 
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.lang.ref.SoftReference;
+
 /**
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet interactive offer.
  * Customers can use the Messaging SDK to render the feed item data in a pre-defined format or implement their own rendering.
@@ -29,6 +31,8 @@ public class FeedItem {
     private String actionUrl;
     // Required if actionUrl is provided. Text to be used in title of button or link in feed item
     private String actionTitle;
+    // Soft reference to parent feedItemSchemaData instance
+    SoftReference<FeedItemSchemaData> parent;
 
     /**
      * Private constructor.
@@ -101,6 +105,20 @@ public class FeedItem {
             throwIfAlreadyBuilt();
 
             feedItem.actionTitle = actionTitle;
+            return this;
+        }
+
+        /**
+         * Sets the {@code FeedItemSchemaData} parent object.
+         *
+         * @param  parent {@link FeedItemSchemaData} object which is the parent for this {@link FeedItem}.
+         * @return this FeedItem {@link Builder}
+         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         */
+        public Builder setParent(final FeedItemSchemaData parent) {
+            throwIfAlreadyBuilt();
+
+            feedItem.parent = new SoftReference<>(parent);
             return this;
         }
 
