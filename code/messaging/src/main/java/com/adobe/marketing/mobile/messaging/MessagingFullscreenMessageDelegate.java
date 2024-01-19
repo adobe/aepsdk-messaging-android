@@ -23,11 +23,8 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +32,10 @@ import java.util.Map;
  * This class is the Messaging extension implementation of {@link FullscreenMessageDelegate}.
  */
 class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
+
+    static final String INTERACTION_BACK_PRESS = "backPress";
     private final static String SELF_TAG = "MessagingFullscreenMessageDelegate";
+
     /**
      * Invoked when the in-app message is displayed.
      *
@@ -43,6 +43,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message != null && message.getAutoTrack()) {
+            message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
     }
 
@@ -53,6 +57,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message != null && message.getAutoTrack()) {
+            message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 
@@ -89,33 +97,26 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return true;
         }
 
-        // check adbinapp scheme
+
         final String messageScheme = uri.getScheme();
 
+        // Quick bail out if scheme is not "adbinapp"
         if (messageScheme == null || !messageScheme.equals(MessagingConstants.QueryParameters.ADOBE_INAPP)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid message scheme found in URI. (%s)", urlString);
             return false;
         }
 
-        // url decode the query parameters
-        final String queryParams;
-        try {
-            queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
-        } catch (final UnsupportedEncodingException exception) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
-            return false;
-        }
-
-        // Populate message data
-        final Map<String, String> messageData = extractQueryParameters(queryParams);
-
         final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
         final Message message = (Message) messageSettings.getParent();
 
+        // Handle query parameters
+        final String decodedQueryString = uri.getQuery();
+        final Map<String, String> messageData = extractQueryParameters(decodedQueryString);
         if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
             final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
+
                 // ensure we have the MessagingExtension class available for tracking
                 final Object messagingExtension = message.getParent();
                 if (messagingExtension != null) {
@@ -127,11 +128,13 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             // handle optional deep link
             String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
             if (!StringUtils.isNullOrEmpty(link)) {
+
                 // handle optional javascript code to be executed
                 if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
                     message.evaluateJavascript(link);
                 } else {
+
                     // if we have any remaining query parameters we need to append them to the deeplink
                     if (!messageData.isEmpty()) {
                         for (final Map.Entry<String, String> entry : messageData.entrySet()) {
@@ -145,11 +148,19 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         }
 
         final String host = uri.getHost();
-        if ((host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) || (host.equals(MessagingConstants.QueryParameters.PATH_CANCEL))) {
+        if (host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) {
             message.dismiss(true);
         }
 
         return true;
+    }
+
+    @Override
+    public void onBackPressed(final FullscreenMessage fullscreenMessage) {
+        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+        if (message != null) {
+            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
+        }
     }
 
     // ============================================================================================
@@ -163,7 +174,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     void openUrl(final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "Will not open URL, it is null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Will not openURL, url is null or empty.");
             return;
         }
 

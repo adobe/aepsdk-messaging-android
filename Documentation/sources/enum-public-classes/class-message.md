@@ -1,26 +1,8 @@
-# Message
+# Message (Interface)
 
-The `Message` class contains the definition of an in-app message and controls its tracking via Experience Edge events.
+The `Message` interface contains the definition of an in-app message and provides a framework to track message interactions via Experience Edge events.
 
-`Message` objects are only created by the AEPMessaging extension, and passed as the `message` parameter in `MessagingDelegate` protocol methods.
-
-## Public variables
-
-### id
-
-Identifier of the `Message`.
-
-```java
-public String id;
-```
-
-### autoTrack
-
-If set to `true` (default), Experience Edge events will automatically be generated when this `Message` is triggered, displayed, and dismissed.
-
-```java
-public boolean autoTrack = true;
-```
+`InternalMessage` objects implementing this interface are created by the AEPMessaging extension, and passed as the `message` parameter in `MessagingDelegate` protocol methods.
 
 ## Public functions
 
@@ -31,7 +13,7 @@ Signals to the UIService that the message should be shown.
 If `autoTrack` is true, calling this method will result in an "decisioning.propositionDisplay" Edge Event being dispatched.
 
 ```java
-public void show()
+void show()
 ```
 
 ### dismiss
@@ -41,7 +23,7 @@ Signals to the UIService that the message should be removed from the UI.
 If `autoTrack` is true, calling this method will result in an "decisioning.propositionDismiss" Edge Event being dispatched.
 
 ```java
-public void dismiss(final boolean suppressAutoTrack)
+void dismiss(final boolean suppressAutoTrack)
 ```
 
 ###### Parameters
@@ -53,13 +35,45 @@ public void dismiss(final boolean suppressAutoTrack)
 Generates and dispatches an Edge Event for the provided `interaction` and `eventType`.
 
 ```java
-public void track(final String interaction, final MessagingEdgeEventType eventType)
+void track(final String interaction, final MessagingEdgeEventType eventType)
 ```
 
 ###### Parameters
 
 * *interaction* - a custom `String` value to be recorded in the interaction
 * *eventType* - the [`MessagingEdgeEventType`](#enum-messagingedgeeventtype) to be used for the ensuing Edge Event
+
+### getAutoTrack
+
+Retrieves the `Message's` auto tracking preference.
+
+```java
+default boolean getAutoTrack()
+```
+
+### setAutoTrack
+
+Sets the `Message's` auto tracking preference.
+
+```java
+void setAutoTrack(boolean enabled)
+```
+
+###### Parameters
+
+* *enabled* - if true, Experience Edge events will automatically be generated when this `Message` is triggered, displayed, or dismissed.
+
+### evaluateJavascript
+
+Evaluates the passed in `String` content containing javascript code using the `Message's ` webview. `handleJavascriptMessage` must be called with a valid callback before calling `evaluateJavascript` as the body of the message passed from the javascript code execution will be returned in the `AdobeCallback` .
+
+```java
+void evaluateJavascript(final String content)
+```
+
+###### Parameters
+
+* *content* - a string containing the javascript code to be executed
 
 ### handleJavascriptMessage
 
@@ -70,7 +84,7 @@ The  `AdobeCallback` will contain the body of the message passed from the `WebVi
 For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./how-to-call-native-from-javascript.md).
 
 ```java
-public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)
+void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)
 ```
 
 ###### Parameters
@@ -78,12 +92,28 @@ public void handleJavascriptMessage(final String name, final AdobeCallback<Strin
 * *name* - the name of the message that should be handled by the `callback`
 * *callback* - a callback which will be called with the body of the message created in the Message's JavaScript
 
+### getId
+
+Returns the message's id.
+
+```java
+String getId()
+```
+
+### getParent
+
+Returns the `Object` which created this `Message`.
+
+```java
+Object getParent()
+```
+
 ### getWebView
 
 Returns a reference to the message's  `WebView`  instance, if it exists.
 
 ```java
-public WebView getWebView()
+WebView getWebView()
 ```
 
 ### String values
