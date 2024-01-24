@@ -128,12 +128,10 @@ publishing {
             pom {
                 name = mavenRepoName
                 description = mavenRepoDescription
-                url = 'https://developer.adobe.com/client-sdks/documentation/'
+                url = 'https://aep-sdks.gitbook.io'
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution = 'repo'
                     }
                 }
                 developers {
@@ -144,9 +142,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:github.com//adobe/aepsdk-messaging-android.git'
-                    developerConnection = 'scm:git:ssh://github.com//adobe/aepsdk-messaging-android.git'
-                    url = 'https://github.com/adobe/aepsdk-messaging-android'
+                    connection = 'scm:git:github.com//Adobe-Marketing-Cloud/acp-sdks.git'
+                    developerConnection = 'scm:git:ssh://github.com//Adobe-Marketing-Cloud/acp-sdks.git'
+                    url = 'https://github.com/Adobe-Marketing-Cloud/acp-sdks'
                 }
                 withXml {
                     def dependenciesNode = asNode().appendNode('dependencies')
@@ -223,8 +221,6 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
         html.enabled true
     }
 }
-
-apply from: 'checkstyle.gradle'
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

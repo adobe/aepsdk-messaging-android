@@ -14,14 +14,18 @@ Register the messaging extensions and configure the SDK with the launch applicat
 ```java
 @Override
 public void onCreate() {
-
-    MobileCore.setApplication(this);
-    MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID);
-
-    MobileCore.registerExtensions(
-        Arrays.asList(Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION),
-            // callback to be notified when the registration is complete
-    );
+    MobileCore.setApplication(application);
+    
+    Messaging.registerExtension();
+    Edge.registerExtension();
+    Identity.registerExtension();
+    
+    MobileCore.start(new AdobeCallback() {
+        @Override
+        public void call(Object value) {
+           MobileCore.configureWithAppID("<appId>");
+        }
+    });
 }
 ```
 

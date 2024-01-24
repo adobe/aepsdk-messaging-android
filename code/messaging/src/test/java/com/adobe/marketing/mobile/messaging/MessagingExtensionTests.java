@@ -42,19 +42,12 @@ import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
-
-import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED;
-import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -727,76 +720,128 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_processEvent_messageTrackingEvent_whenApplicationOpened() {
+    public void test_processEvent_messageTrackingEvent_whenApplicationOpened_withCustomAction() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockConfigSharedState();
-            final Event event = samplePushTrackingEvent("pushOpened", "messageId",null, true);
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"pushNotificationTracking\":{\"customAction\":{\"actionID\":\"mock_actionId\"},\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":1}},\"eventType\":\"mock_eventType\"},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+
             // test
-            messagingExtension.processEvent(event);
+            messagingExtension.processEvent(mockEvent);
 
             // verify
-            verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+            // 1 event dispatched: edge event with push tracking data
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
 
-            // verify push tracking status event
-            final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
-            assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(EventType.MESSAGING, pushTrackingStatusEvent.getType());
-            assertEquals(EventSource.RESPONSE_CONTENT, pushTrackingStatusEvent.getSource());
-            assertEquals(PushTrackingStatus.TRACKING_INITIATED.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.TRACKING_INITIATED.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
-
-            // verify push tracking status event
-            final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
-            assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
-            assertEquals(EventType.EDGE, pushTrackingEdgeEvent.getType());
-            assertEquals(EventSource.REQUEST_CONTENT, pushTrackingEdgeEvent.getSource());
-            // verify edge tracking event data
-            Map<String,String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
-            assertEquals("messageId", edgeTrackingData.get("xdm.pushNotificationTracking.pushProviderMessageID"));
-            assertEquals("1", edgeTrackingData.get("xdm.application.launches.value"));
-            assertEquals("pushOpened", edgeTrackingData.get("xdm.eventType"));
-            assertEquals("mock_datasetId", edgeTrackingData.get("meta.collect.datasetId"));
-            assertEquals("fcm", edgeTrackingData.get("xdm.pushNotificationTracking.pushProvider"));
-            assertEquals("trackingvalue", edgeTrackingData.get("xdm.trackingkey"));
+            // verify event
+            Event event = eventCaptor.getValue();
+            assertNotNull(event.getEventData());
+            assertEquals(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT, event.getName());
+            assertEquals(MessagingConstants.EventType.EDGE, event.getType());
+            assertEquals(EventSource.REQUEST_CONTENT, event.getSource());
+            assertEquals(expectedEventData, event.getEventData());
         });
     }
 
     @Test
-    public void test_processEvent_messageTrackingEvent_whenApplicationOpened_withCustomAction() {
+    public void test_processEvent_messageTrackingEvent_whenApplicationOpened_withoutCustomAction() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockConfigSharedState();
-            final Event event = samplePushTrackingEvent("pushClicked", "messageId", "actionId", true);
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"pushNotificationTracking\":{\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":1}},\"eventType\":\"mock_eventType\"},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, true);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+
             // test
-            messagingExtension.processEvent(event);
+            messagingExtension.processEvent(mockEvent);
 
-            // verify rules engine processes event
-            verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+            // verify
+            // 1 event dispatched: edge event with push tracking data
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
 
-            // verify push tracking status event
-            final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
-            assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(PushTrackingStatus.TRACKING_INITIATED.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.TRACKING_INITIATED.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
+            // verify event
+            Event event = eventCaptor.getValue();
+            assertNotNull(event.getEventData());
+            assertEquals(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT, event.getName());
+            assertEquals(MessagingConstants.EventType.EDGE, event.getType());
+            assertEquals(EventSource.REQUEST_CONTENT, event.getSource());
+            assertEquals(expectedEventData, event.getEventData());
+        });
+    }
 
-            // verify push tracking status event
-            final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
-            assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
-            assertEquals(EventType.EDGE, pushTrackingEdgeEvent.getType());
-            assertEquals(EventSource.REQUEST_CONTENT, pushTrackingEdgeEvent.getSource());
-            // verify edge tracking event data
-            Map<String,String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
-            assertEquals("messageId", edgeTrackingData.get("xdm.pushNotificationTracking.pushProviderMessageID"));
-            assertEquals("actionId", edgeTrackingData.get("xdm.pushNotificationTracking.customAction.actionID"));
-            assertEquals("1", edgeTrackingData.get("xdm.application.launches.value"));
-            assertEquals("pushClicked", edgeTrackingData.get("xdm.eventType"));
-            assertEquals("mock_datasetId", edgeTrackingData.get("meta.collect.datasetId"));
-            assertEquals("fcm", edgeTrackingData.get("xdm.pushNotificationTracking.pushProvider"));
+    @Test
+    public void test_processEvent_messageTrackingEvent_whenMixinsDataPresent() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            Map<String, Object> expectedEventData = null;
+            try {
+                expectedEventData = JSONUtils.toMap(new JSONObject("{\"xdm\":{\"pushNotificationTracking\":{\"customAction\":{\"actionID\":\"mock_actionId\"},\"pushProviderMessageID\":\"mock_messageId\",\"pushProvider\":\"fcm\"},\"application\":{\"launches\":{\"value\":0}},\"eventType\":\"mock_eventType\",\"_experience\":{\"customerJourneyManagement\":{\"pushChannelContext\":{\"platform\":\"fcm\"},\"messageExecution\":{\"messageExecutionID\":\"16-Sept-postman\",\"journeyVersionInstanceId\":\"someJourneyVersionInstanceId\",\"messageID\":\"567\",\"journeyVersionID\":\"some-journeyVersionId\"},\"messageProfile\":{\"channel\":{\"_id\":\"https://ns.adobe.com/xdm/channels/push\"}}}}},\"meta\":{\"collect\":{\"datasetId\":\"mock_datasetId\"}}}"));
+            } catch (JSONException e) {
+                fail(e.getMessage());
+            }
+            final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
+
+            // test
+            messagingExtension.processEvent(mockEvent);
+
+            // verify
+            // 1 event dispatched: edge event with push tracking data
+            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+            // verify event
+            Event event = eventCaptor.getValue();
+            assertNotNull(event.getEventData());
+            assertEquals(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT, event.getName());
+            assertEquals(MessagingConstants.EventType.EDGE, event.getType());
+            assertEquals(EventSource.REQUEST_CONTENT, event.getSource());
+            assertEquals(expectedEventData, event.getEventData());
         });
     }
 
@@ -824,19 +869,26 @@ public class MessagingExtensionTests {
     public void test_processEvent_messageTrackingEvent_whenTrackInfoEventTypeNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockConfigSharedState();
-            final Event event = samplePushTrackingEvent(null, "messageId", "actionId", true);
-            final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, null);
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
-            messagingExtension.processEvent(event);
+            messagingExtension.processEvent(mockEvent);
 
-            // verify push tracking status event sent
-            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-            final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
-            assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(PushTrackingStatus.UNKNOWN_ERROR.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.UNKNOWN_ERROR.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
+            // verify
+            // no edge event dispatched
+            verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
         });
     }
 
@@ -844,19 +896,26 @@ public class MessagingExtensionTests {
     public void test_processEvent_messageTrackingEvent_whenMessageIdNull() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            mockConfigSharedState();
-            final Event event = samplePushTrackingEvent("pushOpened", null, "actionId", true);
-            final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, null);
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
-            messagingExtension.processEvent(event);
+            messagingExtension.processEvent(mockEvent);
 
-            // verify push tracking status event sent
-            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-            final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
-            assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(PushTrackingStatus.INVALID_MESSAGE_ID.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.INVALID_MESSAGE_ID.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
+            // verify
+            // no edge event dispatched
+            verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
         });
     }
 
@@ -867,19 +926,27 @@ public class MessagingExtensionTests {
             when(mockConfigData.getValue()).thenReturn(new HashMap<String, Object>() {{
                 put("messaging.eventDataset", "");
             }});
-            mockConfigSharedState();
-            final Event event = samplePushTrackingEvent("pushOpened", "messageId", "actionId", true);
-            final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "mock_eventType");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mock_messageId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, "mock_actionId");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, "mock_application_opened");
+            eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, mockCJMData);
+
+            Event mockEvent = mock(Event.class);
+            when(mockEvent.getEventData()).thenReturn(eventData);
+            when(mockEvent.getType()).thenReturn(MessagingConstants.EventType.MESSAGING);
+            when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+            when(mockExtensionApi.getSharedState(eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
+            when(mockExtensionApi.getXDMSharedState(eq(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME), eq(mockEvent), eq(false), eq(SharedStateResolution.LAST_SET))).thenReturn(mockEdgeIdentityData);
 
             // test
-            messagingExtension.processEvent(event);
+            messagingExtension.processEvent(mockEvent);
 
-            // verify push tracking status event sent
-            verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-            final Event pushTrackingStatusEvent = eventCaptor.getAllValues().get(0);
-            assertEquals("Push tracking status event", pushTrackingStatusEvent.getName());
-            assertEquals(PushTrackingStatus.NO_DATASET_CONFIGURED.getValue(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatus"));
-            assertEquals(PushTrackingStatus.NO_DATASET_CONFIGURED.getDescription(), pushTrackingStatusEvent.getEventData().get("pushTrackingStatusMessage"));
+            // verify
+            // no edge event dispatched
+            verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
         });
     }
 
@@ -1112,30 +1179,5 @@ public class MessagingExtensionTests {
             assertEquals(EventSource.REQUEST_CONTENT, event.getSource());
             assertEquals(expectedEventData, event.getEventData());
         });
-    }
-
-    // ========================================================================================
-    // private helpers
-    // ========================================================================================
-    private Event samplePushTrackingEvent(final String eventType, final String messageId, final String actionId, final boolean applicationOpened) {
-        final Map<String,Object> eventData = new HashMap<>();
-        eventData.put(TRACK_INFO_KEY_EVENT_TYPE,eventType);
-        eventData.put(TRACK_INFO_KEY_MESSAGE_ID,messageId);
-        eventData.put(TRACK_INFO_KEY_ACTION_ID,actionId);
-        eventData.put(TRACK_INFO_KEY_APPLICATION_OPENED,applicationOpened);
-        eventData.put(TRACK_INFO_KEY_ADOBE_XDM, "{ \"cjm\": {\"trackingkey\": \"trackingvalue\"}}");
-
-        final Event event = new Event.Builder("mock_event_name", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                .setEventData(eventData)
-                .build();
-        return event;
-    }
-
-    private void mockConfigSharedState() {
-        when(mockExtensionApi.getSharedState(
-                eq(MessagingConstants.SharedState.Configuration.EXTENSION_NAME),
-                any(Event.class),
-                eq(false),
-                eq(SharedStateResolution.LAST_SET))).thenReturn(mockConfigData);
     }
 }

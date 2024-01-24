@@ -25,9 +25,6 @@ ci-build: create-ci
 	(mv $(AAR_FILE_DIR)/$(EXTENSION-LIBRARY-FOLDER-NAME)-phone-release.aar  $(AAR_FILE_DIR)/$(MODULE_NAME)-release-$(LIB_VERSION).aar)
 	(cp -r ./code/$(EXTENSION-LIBRARY-FOLDER-NAME)/build $(BUILD-ASSEMBLE-LOCATION))
 
-checkstyle:
-		(./code/gradlew -info -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) checkstyle)
-		
 assemble-phone:
 		(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) assemblePhone)
 

@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,10 +35,7 @@ import java.util.Map;
  * This class is the Messaging extension implementation of {@link FullscreenMessageDelegate}.
  */
 class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
-
-    static final String INTERACTION_BACK_PRESS = "backPress";
     private final static String SELF_TAG = "MessagingFullscreenMessageDelegate";
-
     /**
      * Invoked when the in-app message is displayed.
      *
@@ -45,10 +43,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onShow(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
-        if (message != null && message.getAutoTrack()) {
-            message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
-        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
     }
 
@@ -59,10 +53,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     @Override
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
-        if (message != null && message.getAutoTrack()) {
-            message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
-        }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 
@@ -162,14 +152,6 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         return true;
     }
 
-    @Override
-    public void onBackPressed(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
-        if (message != null) {
-            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
-        }
-    }
-
     // ============================================================================================
     // FullscreenMessageDelegate implementation helper functions
     // ============================================================================================
@@ -181,7 +163,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      */
     void openUrl(final String url) {
         if (StringUtils.isNullOrEmpty(url)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Will not openURL, url is null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "Will not open URL, it is null or empty.");
             return;
         }
 

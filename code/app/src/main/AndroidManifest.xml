@@ -27,36 +27,6 @@
             android:exported="false"
             android:label="@string/title_activity_single_feed"
             android:theme="@style/AppTheme.NoActionBar" />
-
-        <activity
-            android:name=".ThirdLevelActivity"
-            android:exported="true"
-            android:parentActivityName=".SecondLevelActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="thirdpage"
-                    android:scheme="demoapp" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".SecondLevelActivity"
-            android:exported="true"
-            android:parentActivityName=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="secondpage"
-                    android:scheme="demoapp" />
-            </intent-filter>
-        </activity>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -79,6 +49,7 @@
         </service>
 
         <receiver android:name=".NotificationBroadcastReceiver" />
+        <receiver android:name=".NotificationDeleteReceiver" />
     </application>
 
 </manifest>
