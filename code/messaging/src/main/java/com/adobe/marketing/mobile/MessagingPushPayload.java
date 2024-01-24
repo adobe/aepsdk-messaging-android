@@ -346,7 +346,12 @@ public class MessagingPushPayload {
      * Enum to denote the type of action
      */
     public enum ActionType {
-        DEEPLINK, WEBURL, DISMISS, OPENAPP, NONE
+        DEEPLINK,
+        WEBURL,
+        @Deprecated
+        DISMISS,
+        OPENAPP,
+        NONE
     }
 
     /**
