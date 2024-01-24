@@ -55,8 +55,8 @@ public class MessagingPropositionTests {
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
-        propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
+        propositionItemMap2 = MessagingTestUtils.getMapFromFile("proposition_item2.json");
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
         MessagingPropositionItem messagingPropositionItem2 = MessagingPropositionItem.fromEventData(propositionItemMap2);
         messagingPropositionItems.add(messagingPropositionItem);
@@ -91,8 +91,8 @@ public class MessagingPropositionTests {
         assertEquals(scopeDetails, messagingProposition.getScopeDetails());
         // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
         for (MessagingPropositionItem item : messagingProposition.getItems()) {
-            assertEquals(messagingPropositionItems.get(0).getPropositionItemId(), item.getPropositionItemId());
-            assertEquals(messagingPropositionItems.get(0).getData(), item.getData());
+            assertEquals(messagingPropositionItems.get(0).getUniqueId(), item.getUniqueId());
+            assertEquals(messagingPropositionItems.get(0).getContent(), item.getContent());
             assertEquals(messagingPropositionItems.get(0).getSchema(), item.getSchema());
             assertNotNull(item.getProposition());
         }
@@ -110,7 +110,7 @@ public class MessagingPropositionTests {
         for (Map<String, Object> item : itemList) {
             Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
             Map<String, Object> content = DataReader.getTypedMap(Object.class, data, "content");
-            assertEquals(messagingPropositionItem.getPropositionItemId(), item.get("id"));
+            assertEquals(messagingPropositionItem.getUniqueId(), item.get("id"));
             assertEquals(messagingPropositionItem.getSchema(), item.get("schema"));
             Map<String, Object> expectedContent = JSONUtils.toMap(new JSONObject("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"consequenceId\",\"detail\":{\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\",\"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp/feeds/testFeed\",\"feedName\":\"testFeed\",\"campaignName\":\"testCampaign\"},\"content\":{\"actionUrl\":\"actionUrl\",\"actionTitle\":\"actionTitle\",\"title\":\"title\",\"body\":\"body\",\"imageUrl\":\"imageUrl\"}},\"id\":\"uniqueDetailId\"}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}"));
             assertEquals(expectedContent, content);

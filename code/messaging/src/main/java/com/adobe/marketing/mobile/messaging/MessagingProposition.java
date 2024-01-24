@@ -12,8 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -29,7 +27,8 @@ import java.util.Map;
  * A {@link MessagingProposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 public class MessagingProposition implements Serializable {
-    private static final String SELF_TAG = "MessagingProposition";
+    private static final String LOG_TAG = "Messaging";
+    private static final String SELF_TAG = "Proposition";
     private static final String PAYLOAD_ID = "id";
     private static final String PAYLOAD_ITEMS = "items";
     private static final String PAYLOAD_SCOPE = "scope";
@@ -57,7 +56,7 @@ public class MessagingProposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingProposition} identifier.
+     * Gets the {@code Proposition} identifier.
      *
      * @return {@link String} containing the {@link MessagingProposition} identifier.
      */
@@ -66,16 +65,16 @@ public class MessagingProposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} list.
+     * Gets the {@code Proposition} items.
      *
-     * @return {@code List<MessagingPropositionItem>} containing the {@link MessagingPropositionItem}s.
+     * @return {@code List<PropositionItem>} containing the {@link MessagingProposition} items.
      */
     public List<MessagingPropositionItem> getItems() {
         return messagingPropositionItems;
     }
 
     /**
-     * Gets the {@code MessagingProposition} scope.
+     * Gets the {@code Proposition} scope.
      *
      * @return {@link String} containing the encoded {@link MessagingProposition} scope.
      */
@@ -84,7 +83,7 @@ public class MessagingProposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingProposition} scope details.
+     * Gets the {@code Proposition} scope details.
      *
      * @return {@code Map<String, Object>} containing the {@link MessagingProposition} scope details.
      */
@@ -93,7 +92,7 @@ public class MessagingProposition implements Serializable {
     }
 
     /**
-     * Creates a {@code MessagingProposition} object from the provided {@code Map<String, Object>}.
+     * Creates a {@code Proposition} object from the provided {@code Map<String, Object>}.
      *
      * @return {@link MessagingProposition} object created from the provided {@link Map<String, Object>}.
      */
@@ -113,14 +112,14 @@ public class MessagingProposition implements Serializable {
             }
             messagingProposition = new MessagingProposition(uniqueId, scope, scopeDetails, messagingPropositionItems);
         } catch (final DataReaderException dataReaderException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating MessagingProposition from event data map: %s", dataReaderException.getLocalizedMessage());
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating proposition from event data map: %s", dataReaderException.getLocalizedMessage());
         }
 
         return messagingProposition;
     }
 
     /**
-     * Creates a {@code Map<String, Object>} object from this {@code MessagingProposition}.
+     * Creates a {@code Map<String, Object>} object from this {@code Proposition}.
      *
      * @return {@link Map<String, Object>} object created from this {@link MessagingProposition}.
      */
@@ -137,11 +136,11 @@ public class MessagingProposition implements Serializable {
         return eventData;
     }
 
-    public boolean equals(final Object object) {
+    public boolean equals(final Object object){
         if (object instanceof MessagingProposition) {
             final MessagingProposition proposition = (MessagingProposition) object;
-            final Map<String, Object> newPropositionContent = proposition.getItems().get(0).getData();
-            final Map<String, Object> propositionContent = this.getItems().get(0).getData();
+            final String newPropositionContent = proposition.getItems().get(0).getContent();
+            final String propositionContent = this.getItems().get(0).getContent();
             return newPropositionContent.equals(propositionContent);
         } else {
             return false;

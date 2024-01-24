@@ -54,12 +54,12 @@ public class ParsedPropositionsTests {
     private MessagingProposition mockFeedProposition;
     private Surface mockFeedSurface;
     private final String mockFeedMessageId = "183639c4-cb37-458e-a8ef-4e130d767ebf";
-    private Map<String, Object> mockFeedContent;
+    private String mockFeedContent;
 
     private MessagingPropositionItem mockCodeBasedPropositionItem;
     private MessagingProposition mockCodeBasedProposition;
     private Surface mockCodeBasedSurface;
-    private Map<String, Object> mockCodeBasedContent;
+    private String mockCodeBasedContent;
 
     private final Map<String, Object> mockScopeDetails = new HashMap<String, Object>() {{
         put("key", "value");
@@ -74,8 +74,8 @@ public class ParsedPropositionsTests {
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
 
         mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp");
-        final Map<String, Object> inappPropositionV1Content = MessagingTestUtils.getMapFromFile("inappPropositionV1Content.json");
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.INAPP, inappPropositionV1Content);
+        final String inappPropositionV1Content = MessagingTestUtils.loadStringFromFile("inappPropositionV1Content.json");
+        mockInAppPropositionItem = new MessagingPropositionItem("inapp", "inapp", inappPropositionV1Content);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
@@ -84,8 +84,8 @@ public class ParsedPropositionsTests {
                 }});
 
         mockInAppSurfaceV2 = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
-        final Map<String, Object> inappPropositionV2Content = MessagingTestUtils.getMapFromFile("inappPropositionV2Content.json");
-        mockInAppPropositionItemV2 = new MessagingPropositionItem("inapp2", SchemaType.INAPP, inappPropositionV2Content);
+        final String inappPropositionV2Content = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
+        mockInAppPropositionItemV2 = new MessagingPropositionItem("inapp2", "inapp2", inappPropositionV2Content);
         mockInAppPropositionV2 = new MessagingProposition("inapp2",
                 mockInAppSurfaceV2.getUri(),
                 mockScopeDetails,
@@ -94,8 +94,8 @@ public class ParsedPropositionsTests {
                 }});
 
         mockFeedSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
-        mockFeedContent = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
-        mockFeedPropositionItem = new MessagingPropositionItem("feed", SchemaType.FEED, mockFeedContent);
+        mockFeedContent = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
+        mockFeedPropositionItem = new MessagingPropositionItem("feed", "feed", mockFeedContent);
         mockFeedProposition = new MessagingProposition("feed",
                 mockFeedSurface.getUri(),
                 mockScopeDetails,
@@ -104,8 +104,8 @@ public class ParsedPropositionsTests {
                 }});
 
         mockCodeBasedSurface = Surface.fromUriString("mobileapp://mockPackageName/codebased");
-        mockCodeBasedContent = MessagingTestUtils.getMapFromFile("codeBasedPropositionContent.json");
-        mockCodeBasedPropositionItem = new MessagingPropositionItem("codebased", SchemaType.JSON_CONTENT, mockCodeBasedContent);
+        mockCodeBasedContent = MessagingTestUtils.loadStringFromFile("codeBasedPropositionContent.json");
+        mockCodeBasedPropositionItem = new MessagingPropositionItem("codebased", "codebased", mockCodeBasedContent);
         mockCodeBasedProposition = new MessagingProposition("codebased",
                 mockCodeBasedSurface.getUri(),
                 mockScopeDetails,
@@ -328,15 +328,15 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(1, parsedPropositions.propositionsToCache.size());
         MessagingProposition codeBasedProp = parsedPropositions.propositionsToCache.get(mockCodeBasedSurface).get(0);
-        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getData());
+        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getContent());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
     }
 
     @Test
-    public void test_parsedPropositionConstructor_PropositionItemEmptyMap() {
+    public void test_parsedPropositionConstructor_PropositionItemEmptyContentString() {
         // setup
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.INAPP, null);
+        mockInAppPropositionItem = new MessagingPropositionItem("inapp", "inapp", "");
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
@@ -369,8 +369,8 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_PropositionRuleWithNoConsequence() {
         // setup
-        final Map<String, Object> ruleWithNoConsequenceContent = MessagingTestUtils.getMapFromFile("ruleWithNoConsequence.json");
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.INAPP, ruleWithNoConsequenceContent);
+        final String ruleWithNoConsequenceContent = MessagingTestUtils.loadStringFromFile("ruleWithNoConsequence.json");
+        mockInAppPropositionItem = new MessagingPropositionItem("inapp", "inapp", ruleWithNoConsequenceContent);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
@@ -403,8 +403,8 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_PropositionRuleWithUnknownSchema() {
         // setup
-        final Map<String, Object> ruleWithUnknownConsequenceSchema = MessagingTestUtils.getMapFromFile("ruleWithUnknownConsequenceSchema.json");
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.INAPP, ruleWithUnknownConsequenceSchema);
+        final String ruleWithUnknownConsequenceSchema = MessagingTestUtils.loadStringFromFile("ruleWithUnknownConsequenceSchema.json");
+        mockInAppPropositionItem = new MessagingPropositionItem("inapp", "inapp", ruleWithUnknownConsequenceSchema);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,

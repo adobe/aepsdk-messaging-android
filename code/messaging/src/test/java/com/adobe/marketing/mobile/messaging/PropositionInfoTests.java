@@ -47,7 +47,7 @@ public class PropositionInfoTests {
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
         messagingPropositionItems.add(messagingPropositionItem);
     }

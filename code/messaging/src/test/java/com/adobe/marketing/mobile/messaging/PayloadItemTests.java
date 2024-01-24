@@ -50,7 +50,8 @@ public class PayloadItemTests {
         assertNotNull(payloadItem);
         assertEquals("id", payloadItem.id);
         assertEquals("schema", payloadItem.schema);
-        assertEquals("data", payloadItem.data);
+        assertEquals("content", payloadItem.data.content);
+        assertEquals("dataid", payloadItem.data.id);
     }
 
     @Test

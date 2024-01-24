@@ -38,7 +38,7 @@ public class MessagingUtilsTests {
     @Before
     public void setup() {
         mockSurface = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed");
-        final Map<String, Object> propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        final Map<String, Object> propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
         final MessagingPropositionItem mockPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
         MessagingProposition mockProposition = new MessagingProposition("mockId",
                 mockSurface.getUri(),
@@ -50,15 +50,15 @@ public class MessagingUtilsTests {
             add(mockProposition);
         }});
 
-        final Map<String, Object> content = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
-        MessagingPropositionItem mockPropositionItemToAdd1 = new MessagingPropositionItem("mockId1", SchemaType.DEFAULT, content);
+        final String content = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
+        MessagingPropositionItem mockPropositionItemToAdd1 = new MessagingPropositionItem("mockId1", "schema", content);
         mockPropositionToAdd1 = new MessagingProposition("mockId1",
                 mockSurface.getUri(),
                 mockScopeDetails,
                 new ArrayList<MessagingPropositionItem>() {{
                     add(mockPropositionItemToAdd1);
                 }});
-        Map<String, Object> propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
+        Map<String, Object> propositionItemMap2 = MessagingTestUtils.getMapFromFile("proposition_item2.json");
         MessagingPropositionItem messagingPropositionItemToAdd2 = MessagingPropositionItem.fromEventData(propositionItemMap2);
         mockPropositionToAdd2 = new MessagingProposition("mockId2",
                 mockSurface.getUri(),
