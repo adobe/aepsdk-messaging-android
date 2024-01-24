@@ -16,10 +16,14 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_BASE
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ECID;
@@ -39,6 +43,10 @@ import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,6 +68,43 @@ class InternalMessagingUtils {
             }
         }
         return messagingPropositions;
+    }
+
+    // ========================================================================================
+    // Consequence data retrieval from a JSONObject
+    // ========================================================================================
+    /**
+     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence details extracted from the rule json
+     */
+    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        JSONObject consequenceDetails = null;
+        try {
+            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+        }
+        return consequenceDetails;
+    }
+
+    /**
+     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence extracted from the rule json
+     */
+    static JSONObject getConsequence(final JSONObject ruleJson) {
+        JSONObject consequence = null;
+        try {
+            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_RULES_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            consequence = consequenceArray.getJSONObject(0);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+        }
+        return consequence;
     }
 
     // ========================================================================================
@@ -214,7 +259,7 @@ class InternalMessagingUtils {
         final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
+            Log.debug(LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 
@@ -326,6 +371,24 @@ class InternalMessagingUtils {
      */
     static void sendEvent(final String eventName, final String eventType, final String eventSource, final Map<String, Object> data, final ExtensionApi extensionApi) {
         sendEvent(eventName, eventType, eventSource, data, null, extensionApi);
+    }
+
+    /**
+     * Sends a tracking status response event with the given parameters.
+     *
+     * @param status a {@link PushTrackingStatus} containing the status of the tracking request
+     * @param extensionApi {@link ExtensionApi} to use for dispatching the event
+     * @param requestEvent {@link Event} to be used as the request event
+     */
+    static void sendTrackingResponseEvent(final PushTrackingStatus status, final ExtensionApi extensionApi, final Event requestEvent) {
+        final Map<String, Object> responseEventData = new HashMap<>();
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_STATUS, status.getValue());
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_MESSAGE, status.getDescription());
+        final Event event = new Event.Builder(MessagingConstants.EventName.PUSH_TRACKING_STATUS_EVENT , EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(responseEventData)
+                .inResponseToEvent(requestEvent)
+                .build();
+        extensionApi.dispatch(event);
     }
 
     // ========================================================================================

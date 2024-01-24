@@ -67,6 +67,8 @@ import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
+import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -306,6 +308,7 @@ public final class MessagingExtension extends Extension {
             final Map<String, Object> configSharedState = getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, eventToProcess);
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
+                InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),eventToProcess);
                 Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
@@ -353,10 +356,18 @@ public final class MessagingExtension extends Extension {
                 getApi());
     }
 
-    void handleTrackingInfo(final Event event, final String datasetId) {
+    /**
+     * Handles the push tracking information from the messaging request content event.
+     * <p>
+     *   The push tracking information is sent to the platform via configured dataset.
+     * @param event {@link Event} containing the push tracking information
+     * @param datasetId A valid {@link String} containing the dataset id
+     */
+    private void handleTrackingInfo(@NonNull final Event event, @NonNull final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventData is null.");
+            InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
             return;
         }
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
@@ -364,13 +375,15 @@ public final class MessagingExtension extends Extension {
         final boolean isApplicationOpened = DataReader.optBoolean(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_APPLICATION_OPENED, false);
         final String actionId = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID, null);
 
-        if (StringUtils.isNullOrEmpty(eventType) || StringUtils.isNullOrEmpty(messageId)) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleTrackingInfo - Cannot track information, eventType or messageId is either null or empty.");
+        if (StringUtils.isNullOrEmpty(eventType)) {
+            InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
             return;
         }
 
-        if (StringUtils.isNullOrEmpty(datasetId)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to record a message interaction, configuration information is not available.");
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(), event);
+            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
             return;
         }
 
@@ -392,6 +405,8 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> xdmData = new HashMap<>();
         xdmData.put(XDM, xdmMap);
         xdmData.put(META, metaMap);
+
+        InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.TRACKING_INITIATED, getApi(), event);
 
         // dispatch push tracking event
         InternalMessagingUtils.sendEvent(MessagingConstants.EventName.PUSH_TRACKING_EDGE_EVENT,

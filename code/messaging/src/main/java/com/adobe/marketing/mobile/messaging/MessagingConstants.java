@@ -12,9 +12,9 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-final class MessagingConstants {
+public final class MessagingConstants {
 
-    static final String LOG_TAG = "Messaging";
+    public static final String LOG_TAG = "Messaging";
     static final String EXTENSION_VERSION = "2.3.0";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
@@ -37,11 +37,48 @@ final class MessagingConstants {
     final class SchemaValues {
         static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
         static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
-        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
-        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
         static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
 
         private SchemaValues() {
+        }
+    }
+
+    final class ContentTypes {
+        static final String APPLICATION_JSON = "application/json";
+        static final String TEXT_HTML = "text/html";
+        static final String TEXT_XML = "text/xml";
+        static final String TEXT_PLAIN = "text/plain";
+        static final String UNKNOWN = "unknown";
+
+        private ContentTypes() {
+        }
+    }
+
+    final class ConsequenceDetailKeys {
+        static final String ID = "id";
+        static final String SCHEMA = "schema";
+        static final String DATA = "data";
+        static final String CONTENT = "content";
+
+        private ConsequenceDetailKeys() {
+        }
+    }
+
+    final class ConsequenceDetailDataKeys {
+        static final String CONTENT = "content";
+        static final String CONTENT_TYPE = "contentType";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String WEB_PARAMETERS = "webParameters";
+        static final String REMOTE_ASSETS = "remoteAssets";
+
+        private ConsequenceDetailDataKeys() {
         }
     }
 
@@ -153,7 +190,8 @@ final class MessagingConstants {
             static final String SURFACES = "surfaces";
             static final String ENDING_EVENT_ID = "endingEventId";
             static final String RESPONSE_ERROR = "responseerror";
-
+            static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
+            static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             private Messaging() {
             }
 
@@ -163,19 +201,22 @@ final class MessagingConstants {
                     static final String AJO = "ajo";
                     static final String INAPP_RESPONSE_FORMAT = "in-app-response-format";
 
-                    private AdobeKeys() {}
+                    private AdobeKeys() {
+                    }
                 }
 
                 final class Key {
                     static final String DATA = "data";
 
-                    private Key() {}
+                    private Key() {
+                    }
                 }
 
                 final class Value {
                     static final int NEW_IAM = 2;
 
-                    private Value() {}
+                    private Value() {
+                    }
                 }
 
                 private Data() {
@@ -260,8 +301,9 @@ final class MessagingConstants {
         }
 
         final class RulesEngine {
-            static final String JSON_KEY = "rules";
+            static final String JSON_RULES_KEY = "rules";
             static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String JSON_VERSION_KEY = "version";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
@@ -309,6 +351,7 @@ final class MessagingConstants {
     final class EventName {
         static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
         static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
@@ -378,6 +421,26 @@ final class MessagingConstants {
             static final String PUSH_IDENTIFIER = "pushidentifier";
 
             private Messaging() {
+            }
+        }
+    }
+
+    public final class Push {
+        public class PayloadKeys {
+            public static final String TITLE = "adb_title";
+            public static final String BODY = "adb_body";
+            public static final String SOUND = "adb_sound";
+            public static final String BADGE_NUMBER = "adb_n_count";
+            public static final String NOTIFICATION_VISIBILITY = "adb_n_visibility";
+            public static final String NOTIFICATION_PRIORITY = "adb_n_priority";
+            public static final String CHANNEL_ID = "adb_channel_id";
+            public static final String ICON = "adb_icon";
+            public static final String IMAGE_URL = "adb_image";
+            public static final String ACTION_TYPE = "adb_a_type";
+            public static final String ACTION_URI = "adb_uri";
+            public static final String ACTION_BUTTONS = "adb_act";
+
+            private PayloadKeys() {
             }
         }
     }
