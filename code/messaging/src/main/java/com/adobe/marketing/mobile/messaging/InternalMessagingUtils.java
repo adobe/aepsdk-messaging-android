@@ -399,7 +399,7 @@ class InternalMessagingUtils {
         if (MapUtils.isNullOrEmpty(identityMap)) return null;
 
         final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
-        if (ecids == null || ecids.isEmpty()) return null;
+        if (MessagingUtils.isNullOrEmpty(ecids)) return null;
 
         final Map<String, Object> ecidMap = ecids.get(0);
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;

@@ -11,23 +11,15 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static org.mockito.Mockito.when;
-
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
-import com.adobe.marketing.mobile.services.DeviceInforming;
-import com.adobe.marketing.mobile.services.ServiceProvider;
 
 import org.json.JSONException;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
@@ -134,7 +126,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
 
     @Test
@@ -165,7 +157,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
 
     @Test
@@ -198,8 +190,8 @@ public class ParsedPropositionsTests {
         Assert.assertNotNull(iamPersist);
         Assert.assertEquals(1, iamPersist.size());
         Assert.assertEquals("inapp", iamPersist.get(0).getUniqueId());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesByInboundType.size());
-        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesByInboundType.get(InboundType.INAPP);
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
         Assert.assertNotNull(iamRules);
         Assert.assertEquals(1, iamRules.size());
     }
@@ -234,8 +226,8 @@ public class ParsedPropositionsTests {
         Assert.assertNotNull(iamPersist);
         Assert.assertEquals(1, iamPersist.size());
         Assert.assertEquals("inapp2", iamPersist.get(0).getUniqueId());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesByInboundType.size());
-        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesByInboundType.get(InboundType.INAPP);
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
         Assert.assertNotNull(iamRules);
         Assert.assertEquals(1, iamRules.size());
     }
@@ -267,8 +259,8 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(2, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(2, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesByInboundType.size());
-        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesByInboundType.get(InboundType.INAPP);
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules = parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
         Assert.assertNotNull(iamRules);
         Assert.assertEquals(2, iamRules.size());
     }
@@ -299,8 +291,8 @@ public class ParsedPropositionsTests {
         Assert.assertEquals("feed", feedPropositionInfo.id);
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesByInboundType.size());
-        Map<Surface, List<LaunchRule>> feedRules = parsedPropositions.surfaceRulesByInboundType.get(InboundType.FEED);
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> feedRules = parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.FEED);
         Assert.assertNotNull(feedRules);
         Assert.assertEquals(1, feedRules.size());
     }
@@ -330,7 +322,7 @@ public class ParsedPropositionsTests {
         MessagingProposition codeBasedProp = parsedPropositions.propositionsToCache.get(mockCodeBasedSurface).get(0);
         Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getData());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
 
     @Test
@@ -363,7 +355,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
 
     @Test
@@ -397,7 +389,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(0, parsedPropositions.surfaceRulesByInboundType.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
 
     @Test
@@ -431,8 +423,8 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(1, parsedPropositions.propositionInfoToCache.size());
         Assert.assertEquals(1, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesByInboundType.size());
-        Map<Surface, List<LaunchRule>> unknownRules = parsedPropositions.surfaceRulesByInboundType.get(InboundType.UNKNOWN);
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> unknownRules = parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.UNKNOWN);
         Assert.assertNotNull(unknownRules);
         Assert.assertEquals(1, unknownRules.size());
     }

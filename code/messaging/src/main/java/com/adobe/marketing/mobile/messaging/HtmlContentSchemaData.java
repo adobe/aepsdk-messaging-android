@@ -13,6 +13,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.FORMAT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import com.adobe.marketing.mobile.services.Log;
@@ -25,7 +26,6 @@ import org.json.JSONObject;
 // represents the schema data object for a html content schema
 public class HtmlContentSchemaData implements SchemaData {
     private static final String SELF_TAG = "HtmlContentSchemaData";
-    private static final String FORMAT = "format";
     private String content = null;
     private ContentType format = null;
 
