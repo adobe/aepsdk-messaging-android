@@ -52,8 +52,6 @@ final class MessagingConstants {
         static final String TEXT_HTML = "text/html";
         static final String TEXT_XML = "text/xml";
         static final String TEXT_PLAIN = "text/plain";
-        static final String UNKNOWN = "unknown";
-
         private ContentTypes() {
         }
     }
@@ -69,6 +67,7 @@ final class MessagingConstants {
     }
 
     final class ConsequenceDetailDataKeys {
+        static final String FORMAT = "format";
         static final String CONTENT = "content";
         static final String CONTENT_TYPE = "contentType";
         static final String PUBLISHED_DATE = "publishedDate";
@@ -292,6 +291,7 @@ final class MessagingConstants {
                     static final String PROPOSITIONS = "propositions";
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
+                    static final String SCHEMAS = "schemas";
 
                     private Key() {
                     }

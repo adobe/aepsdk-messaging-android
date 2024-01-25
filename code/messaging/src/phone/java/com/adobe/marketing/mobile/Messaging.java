@@ -206,45 +206,6 @@ public final class Messaging {
         MobileCore.dispatchEvent(refreshMessageEvent);
     }
 
-    // region proposition retrieval api
-
-    /**
-     * Registers a permanent event listener with the Mobile Core for listening to personalization decisions events received upon a personalization query to the Experience Edge network.
-     * If a new {@code AdobeCallback} is provided, it will replace the existing one and it will be invoked when propositions are received from the Edge network.
-     *
-     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface, List< MessagingProposition >>} containing the {@link Surface}s and the corresponding list of {@link MessagingProposition} objects.
-     */
-    @VisibleForTesting
-    public static void setPropositionsHandler(@NonNull final AdobeCallback<Map<Surface, List<MessagingProposition>>> callback) {
-        propositionsResponseHandler = callback;
-        if (!isPropositionsResponseListenerRegistered && callback != null) {
-            isPropositionsResponseListenerRegistered = true;
-            MobileCore.registerEventListener(EventType.MESSAGING, EVENT_SOURCE_NOTIFICATION, event -> {
-                Map<Surface, List<MessagingProposition>> convertedPropositionsMap = new HashMap<>();
-                final Map<String, Object> eventData = event.getEventData();
-                if (!MapUtils.isNullOrEmpty(eventData)) {
-                    final List<Map<String, Object>> retrievedPropositionData = DataReader.optTypedListOfMap(Object.class, eventData, PROPOSITIONS, Collections.emptyList());
-                    if (retrievedPropositionData != null && !retrievedPropositionData.isEmpty()) {
-                        Surface surface = null;
-                        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
-                        for (final Map<String, Object> propositionData : retrievedPropositionData) {
-                            surface = MessagingUtils.scopeToSurface(DataReader.optString(propositionData, SCOPE, null));
-                            final MessagingProposition messagingProposition = MessagingProposition.fromEventData(propositionData);
-                            messagingPropositions.add(messagingProposition);
-                        }
-                        convertedPropositionsMap = MessagingUtils.updatePropositionMapForSurface(surface, messagingPropositions, convertedPropositionsMap);
-                    }
-                }
-
-                if (!convertedPropositionsMap.isEmpty()) {
-                    propositionsResponseHandler.call(convertedPropositionsMap);
-                }
-            });
-        } else {
-            isPropositionsResponseListenerRegistered = false;
-        }
-    }
-
     /**
      * Dispatches an event to retrieve the previously fetched (and cached) feeds content from the SDK for the provided surfaces.
      * If the feeds content for one or more surfaces isn't previously cached in the SDK, it will not be retrieved from Adobe Journey Optimizer via the Experience Edge network.

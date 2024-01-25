@@ -17,7 +17,7 @@ public enum ContentType {
     TEXT_HTML(1),
     TEXT_XML(2),
     TEXT_PLAIN(3),
-    UNKNOWN(3);
+    UNKNOWN(4);
 
     private final int value;
 
@@ -41,7 +41,7 @@ public enum ContentType {
             case TEXT_PLAIN:
                 return MessagingConstants.ContentTypes.TEXT_PLAIN;
             default:
-                return MessagingConstants.ContentTypes.UNKNOWN;
+                return "";
         }
     }
 

@@ -250,7 +250,7 @@ final class MessagingCacheUtilities {
         final List<String> assetsToRetain = new ArrayList<>();
 
         // validate asset URLs and remove duplicates
-        if (assetsUrls != null && !assetsUrls.isEmpty()) {
+        if (!MessagingUtils.isNullOrEmpty(assetsUrls)) {
             for (final String imageAssetUrl : assetsUrls) {
                 if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
                     assetsToRetain.add(imageAssetUrl);

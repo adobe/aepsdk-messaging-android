@@ -229,17 +229,11 @@ public final class MessagingExtension extends Extension {
         }
 
         List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
-        final List<RuleConsequence> consequences = new ArrayList<>();
-
         if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
             return;
         }
 
-        for (final RuleConsequence consequence : triggeredConsequences) {
-            consequences.add(consequence);
-        }
-
-        edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+        edgePersonalizationResponseHandler.createInAppMessage(triggeredConsequences.get(0));
     }
 
     /**
@@ -257,8 +251,12 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence is not of type 'schema'");
+            return;
+        }
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
         // detail is required
