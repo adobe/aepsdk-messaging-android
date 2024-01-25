@@ -56,7 +56,6 @@ public class MessagingPushPayload {
     static final class ActionButtonType {
         static final String DEEPLINK = "DEEPLINK";
         static final String WEBURL = "WEBURL";
-        static final String DISMISS = "DISMISS";
         static final String OPENAPP = "OPENAPP";
     }
 
@@ -291,8 +290,6 @@ public class MessagingPushPayload {
                 return ActionType.DEEPLINK;
             case ActionButtonType.WEBURL:
                 return ActionType.WEBURL;
-            case ActionButtonType.DISMISS:
-                return ActionType.DISMISS;
             case ActionButtonType.OPENAPP:
                 return ActionType.OPENAPP;
         }
@@ -346,7 +343,7 @@ public class MessagingPushPayload {
      * Enum to denote the type of action
      */
     public enum ActionType {
-        DEEPLINK, WEBURL, DISMISS, OPENAPP, NONE
+        DEEPLINK, WEBURL, @Deprecated DISMISS, OPENAPP, NONE
     }
 
     /**
