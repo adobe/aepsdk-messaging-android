@@ -18,10 +18,12 @@ import android.webkit.WebView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.services.ServiceProvider
+import java.nio.charset.StandardCharsets
 import org.json.JSONArray
 import org.json.JSONObject
-import java.nio.charset.StandardCharsets
+
 
 class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
     RecyclerView.Adapter<CodeBasedCardAdapter.ViewHolder>() {
@@ -36,11 +38,15 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = messagingPropositions[position]
         for (item in proposition.items) {
-            val mimeType =
-                if (item.schema.equals("https://ns.adobe.com/personalization/json-content-item")) "application/json" else "text/html"
-            val contentString = item.content
+            var mimeType = ""
+            if (item.schema == SchemaType.JSON_CONTENT) {
+                mimeType = "application/json"
+            } else if (item.schema == SchemaType.HTML_CONTENT) {
+                mimeType = "text/html"
+            }
             // show code based experiences with html content in a webview
             if (mimeType == "text/html") {
+                val contentString = item.htmlContent
                 ServiceProvider.getInstance().uiService.run {
                     holder.webView.loadData(
                         contentString,
@@ -48,17 +54,14 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
                         StandardCharsets.UTF_8.toString()
                     )
                 }
-            } else { // show code based experiences with text or json content in a text view
-                if (mimeType == "application/json") {
-                    if (contentString.startsWith("[")) { // we have a json array
-                        val jsonArray = JSONArray(contentString)
-                        holder.textView.text = jsonArray.toString(5)
-                    } else {
-                        val json = JSONObject(contentString)
-                        holder.textView.text = json.toString(5)
-                    }
+            } else if (mimeType == "application/json") {
+                var contentString = item.jsonArrayList
+                if (contentString != null) { // we have a json array
+                    val jsonArray = JSONArray(contentString)
+                    holder.textView.text = jsonArray.toString(5)
                 } else {
-                    holder.textView.text = contentString
+                    val json = JSONObject(item.jsonContentMap)
+                    holder.textView.text = json.toString(5)
                 }
             }
         }

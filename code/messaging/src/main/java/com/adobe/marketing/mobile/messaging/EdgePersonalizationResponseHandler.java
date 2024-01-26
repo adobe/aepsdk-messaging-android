@@ -529,7 +529,6 @@ class EdgePersonalizationResponseHandler {
 
         final Map<String, PropositionInfo> tempPropositionInfoMap = new HashMap<>(propositionInfo);
         for (final Map.Entry<String, PropositionInfo> entry : tempPropositionInfoMap.entrySet()) {
-            // todo verify that this should be surfaces.contains
             if (surfacesToRemove.contains(Surface.fromUriString(entry.getValue().scope))) {
                 tempPropositionInfoMap.remove(entry.getKey());
             }
