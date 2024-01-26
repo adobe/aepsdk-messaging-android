@@ -221,13 +221,6 @@ public class MessagingPropositionItem implements Serializable {
                 Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
                 return null;
             }
-
-            final Object content = dataMap.get(CONTENT);
-            if (content == null) {
-                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, content is null or empty.");
-                return null;
-            }
-
             propositionItem = new MessagingPropositionItem(uniqueId, schema, dataMap);
         } catch (final DataReaderException exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
@@ -249,7 +242,7 @@ public class MessagingPropositionItem implements Serializable {
         }
 
         eventData.put(ID, this.itemId);
-        eventData.put(SCHEMA, this.schema);
+        eventData.put(SCHEMA, this.schema.toString());
         eventData.put(DATA, itemData);
 
         return eventData;

@@ -11,9 +11,10 @@ android {
         targetSdkVersion 33
         versionCode 1
         versionName "2.0.0"
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
 
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -38,6 +39,7 @@ buildscript {
 }
 
 dependencies {
+    implementation 'com.android.support:multidex:1.0.3'
     implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
     // constraint layout dependency for assurance
