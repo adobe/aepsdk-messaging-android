@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <activity
+            android:name="com.adobe.marketing.mobile.messaging.MessagingPushTrackerActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:theme="@style/Messaging.Style.Transparent"/>
 </application>
 </manifest>
