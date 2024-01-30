@@ -17,7 +17,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.adobe.marketing.mobile.services.ServiceProvider
-import org.json.JSONObject
 
 class SingleFeedActivity : AppCompatActivity() {
 
@@ -36,17 +35,17 @@ class SingleFeedActivity : AppCompatActivity() {
         feedActivityButton = findViewById(R.id.feedActivityActionButton)
 
         // retrieve feed content from the intent
-        var content = intent.extras?.getString("content")
+        val contentMap = intent.extras?.get("content") as HashMap<String, String>
 
         // show single feed item
-        val jsonContent = JSONObject(content)
-        feedActivityItemTitle.text = jsonContent.getString("title")
-        feedActivityItemImage.setImageBitmap(ImageDownloader.getImage(jsonContent.getString("imageUrl")))
+        feedActivityItemTitle.text = contentMap.get("title")
+        feedActivityItemImage.setImageBitmap(contentMap.get("imageUrl")
+            ?.let { ImageDownloader.getImage(it) })
         feedActivityItemImage.refreshDrawableState()
-        feedActivityBody.text = jsonContent.getString("body")
-        feedActivityButton.text = jsonContent.getString("actionTitle")
+        feedActivityBody.text = contentMap.get("body")
+        feedActivityButton.text = contentMap.get("actionTitle")
         feedActivityButton.setOnClickListener {
-            ServiceProvider.getInstance().uriService.openUri(jsonContent.getString("actionUrl"))
+            ServiceProvider.getInstance().uiService.showUrl(contentMap.get("actionUrl"))
         }
     }
 }
