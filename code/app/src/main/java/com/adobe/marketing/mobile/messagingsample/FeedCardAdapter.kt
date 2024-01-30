@@ -45,7 +45,8 @@ class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) 
                     val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     MobileCore.getApplication()?.startActivity(intent.apply {
-                        putExtra("content", inboundContent.content.toString())
+                        val contentMap = inboundContent.content as HashMap<*, *>
+                        putExtra("content", contentMap)
                     })
                 }
             }
