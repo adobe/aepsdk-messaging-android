@@ -33,7 +33,7 @@ import com.adobe.marketing.mobile.util.JSONUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 // represents the schema data object for a feed item schema
@@ -47,18 +47,16 @@ public class FeedItemSchemaData implements SchemaData {
 
     FeedItemSchemaData(final JSONObject schemaData) {
         try {
-            final JSONObject consequenceDetails = InternalMessagingUtils.getConsequenceDetails(schemaData);
-            final Map<String, Object> feedItemData = JSONUtils.toMap(consequenceDetails.getJSONObject(DATA));
-            this.contentType = ContentType.fromString(DataReader.getString(feedItemData, CONTENT_TYPE));
+            this.contentType = ContentType.fromString(schemaData.optString(CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = DataReader.getTypedMap(Object.class, feedItemData, CONTENT);
+                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
             } else {
-                this.content = DataReader.getString(feedItemData, CONTENT);
+                this.content = schemaData.getString(CONTENT);
             }
-            this.publishedDate = DataReader.optInt(feedItemData, PUBLISHED_DATE, 0);
-            this.expiryDate = DataReader.optInt(feedItemData, EXPIRY_DATE, 0);
-            this.meta = DataReader.optTypedMap(Object.class, feedItemData, METADATA, Collections.emptyMap());
-        } catch (final JSONException | DataReaderException exception) {
+            this.publishedDate = schemaData.optInt(PUBLISHED_DATE);
+            this.expiryDate = schemaData.optInt(EXPIRY_DATE);
+            this.meta = JSONUtils.toMap(schemaData.optJSONObject(METADATA));
+        } catch (final JSONException exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating FeedItemSchemaData from json object: %s", exception.getLocalizedMessage());
         }
     }
@@ -93,17 +91,21 @@ public class FeedItemSchemaData implements SchemaData {
             return null;
         }
 
-        final JSONObject jsonContent = (JSONObject) content;
-        final String title = jsonContent.optString(TITLE);
-        final String body = jsonContent.optString(BODY);
-        final String imageUrl = jsonContent.optString(IMAGE_URL);
-        final String actionUrl = jsonContent.optString(ACTION_URL);
-        final String actionTitle = jsonContent.optString(ACTION_TITLE);
-        return new FeedItem.Builder(title, body)
-                .setImageUrl(imageUrl)
-                .setActionUrl(actionUrl)
-                .setActionTitle(actionTitle)
-                .setParent(this)
-                .build();
+        try {
+            final Map<String, Object> contentMap = (HashMap<String, Object>) content;
+            final String title = DataReader.optString(contentMap, TITLE, "");
+            final String body = DataReader.optString(contentMap, BODY, "");
+            final String imageUrl = DataReader.optString(contentMap, IMAGE_URL, "");
+            final String actionUrl = DataReader.optString(contentMap, ACTION_URL, "");
+            final String actionTitle = DataReader.optString(contentMap, ACTION_TITLE, "");
+            return new FeedItem.Builder(title, body)
+                    .setImageUrl(imageUrl)
+                    .setActionUrl(actionUrl)
+                    .setActionTitle(actionTitle)
+                    .setParent(this)
+                    .build();
+        } catch (final ClassCastException exception) {
+            return null;
+        }
     }
 }
