@@ -70,15 +70,7 @@ public class InAppSchemaData implements SchemaData {
 
     @Override
     public Object getContent() {
-        if (contentType.equals(ContentType.APPLICATION_JSON)) {
-            try {
-                return new JSONObject(content.toString());
-            } catch (final JSONException jsonException) {
-                return null;
-            }
-        } else {
-            return content;
-        }
+        return content;
     }
 
     public ContentType getContentType() {
