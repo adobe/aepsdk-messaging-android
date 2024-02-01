@@ -138,7 +138,7 @@ class EdgePersonalizationResponseHandler {
                     for (final Map.Entry<Surface, List<LaunchRule>> entry: inAppRules.entrySet()){
                         rulesToReplace.addAll(entry.getValue());
                     }
-                    if (MessagingUtils.isNullOrEmpty(rulesToReplace)) {
+                    if (!MessagingUtils.isNullOrEmpty(rulesToReplace)) {
                         launchRulesEngine.replaceRules(rulesToReplace);
                     }
                 }
