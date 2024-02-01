@@ -464,7 +464,7 @@ class CustomDelegate : MessagingDelegate {
             // if we're not showing the message now, we can save it for later
             if(!showMessages) {
                 println("message was suppressed: ${currentMessage?.id}")
-                currentMessage?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
+                currentMessage?.track("message suppressed", MessagingEdgeEventType.TRIGGER)
             }
         }
         return showMessages
@@ -479,7 +479,7 @@ class CustomDelegate : MessagingDelegate {
         currentMessage?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                currentMessage?.track(content, MessagingEdgeEventType.INTERACT)
             }
         }
 

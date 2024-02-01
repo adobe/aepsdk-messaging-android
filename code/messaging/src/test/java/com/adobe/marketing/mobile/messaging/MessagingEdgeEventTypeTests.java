@@ -41,10 +41,10 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_toString() {
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, MessagingEdgeEventType.IN_APP_DISMISS.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT, MessagingEdgeEventType.IN_APP_INTERACT.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER, MessagingEdgeEventType.IN_APP_TRIGGER.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY, MessagingEdgeEventType.IN_APP_DISPLAY.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS, MessagingEdgeEventType.IN_APP_DISMISS.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT, MessagingEdgeEventType.IN_APP_INTERACT.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER, MessagingEdgeEventType.IN_APP_TRIGGER.toString());
+        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY, MessagingEdgeEventType.IN_APP_DISPLAY.toString());
         assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.toString());
         assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
     }

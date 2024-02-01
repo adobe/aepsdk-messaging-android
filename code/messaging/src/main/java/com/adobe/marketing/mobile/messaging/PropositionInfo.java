@@ -14,8 +14,8 @@ package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.CORRELATION_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ACTIVITY;
 
 import com.adobe.marketing.mobile.util.DataReader;

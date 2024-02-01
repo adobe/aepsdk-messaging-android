@@ -18,13 +18,13 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCHEMAS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PAYLOAD;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
@@ -41,6 +41,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.RESPONSE_CALLBACK_TIMEOUT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
@@ -154,7 +155,7 @@ class EdgePersonalizationResponseHandler {
      * @param event    The fetch message {@link Event}
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
-    void fetchMessages(final Event event, final List<Surface> surfaces) {
+    void fetchMessages(@NonNull final Event event, final List<Surface> surfaces) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
         Surface appSurface = null;
         // if surfaces are provided, use them - otherwise assume the request is for base surface (mobileapp://{application package name})
@@ -261,7 +262,7 @@ class EdgePersonalizationResponseHandler {
      *
      * @param event A {@link Event} containing the personalization notification complete edge response event.
      */
-    void handleProcessCompletedEvent(final Event event) {
+    void handleProcessCompletedEvent(@NonNull final Event event) {
         final String endingEventId = InternalMessagingUtils.getEndingEventId(event);
         final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(endingEventId);
         if (StringUtils.isNullOrEmpty(endingEventId) || MessagingUtils.isNullOrEmpty(requestedSurfaces)) {
@@ -310,7 +311,7 @@ class EdgePersonalizationResponseHandler {
      * @param surfaces A {@code List<Surface>} of surfaces to use for retrieving cached content
      * @param event    The retrieve message {@link Event}
      */
-    void retrieveMessages(final List<Surface> surfaces, final Event event) {
+    void retrieveMessages(final List<Surface> surfaces, @NonNull final Event event) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
         if (surfaces == null || surfaces.isEmpty()) {
             return;
@@ -360,7 +361,7 @@ class EdgePersonalizationResponseHandler {
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
-    void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
+    void handleEdgePersonalizationNotification(@NonNull final Event edgeResponseEvent) {
         // validate this is one of our events
         final String requestEventId = InternalMessagingUtils.getRequestEventId(edgeResponseEvent);
 

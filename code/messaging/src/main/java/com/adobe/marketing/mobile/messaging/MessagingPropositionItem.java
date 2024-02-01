@@ -17,7 +17,9 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
-import com.adobe.marketing.mobile.PropositionEventType;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -93,9 +95,44 @@ public class MessagingPropositionItem implements Serializable {
         return propositionReference.get();
     }
 
-    // Track offer interaction
-    void track(final PropositionEventType interaction) {
-        // TODO
+    /**
+     * Tracks interaction with the given proposition item.
+     *
+     * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the interaction
+     */
+    public void track(final MessagingEdgeEventType eventType) {
+        final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(eventType);
+        if (propositionInteractionXdm == null) {
+            Log.debug(LOG_TAG, SELF_TAG,  "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, propositionInteractionXdm);
+
+        final Event trackingPropositionsEvent = new Event.Builder(MessagingConstants.EventName.TRACK_PROPOSITIONS,
+                MessagingConstants.EventType.MESSAGING,
+                MessagingConstants.EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
+        MobileCore.dispatchEvent(trackingPropositionsEvent);
+    }
+
+    /**
+     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given proposition item, for the provided event type.
+     * If the proposition reference within the item is released and no longer valid, the method returns null.
+     * @param eventType an enum of type {@link MessagingEdgeEventType} specifying event type for the interaction.
+     * @return {code Map<String, Object} containing XDM data for the proposition interaction.
+     */
+    public Map<String, Object> generateInteractionXdm(final MessagingEdgeEventType eventType) {
+        if (propositionReference == null) {
+            Log.debug(LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
+            return null;
+        }
+        final MessagingPropositionInteraction interaction = new MessagingPropositionInteraction(eventType, null,
+                PropositionInfo.createFromProposition(getProposition()), itemId);
+        return interaction.getPropositionInteractionXDM();
     }
 
     /**

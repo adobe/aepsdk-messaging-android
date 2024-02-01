@@ -12,11 +12,13 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -47,13 +49,17 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
             // show code based experiences with html content in a webview
             if (mimeType == "text/html") {
                 val contentString = item.htmlContent
-                ServiceProvider.getInstance().uiService.run {
-                    holder.webView.loadData(
+                holder.webView.loadData(
                         contentString,
                         mimeType,
-                        StandardCharsets.UTF_8.toString()
-                    )
-                }
+                        StandardCharsets.UTF_8.toString())
+                item.track(MessagingEdgeEventType.DISPLAY)
+                holder.webView.setOnTouchListener(object: View.OnTouchListener {
+                    override fun onTouch(p0: View?, p1: MotionEvent?): Boolean {
+                        item.track(MessagingEdgeEventType.INTERACT)
+                        return true
+                    }
+                })
             } else if (mimeType == "application/json") {
                 var contentString = item.jsonArrayList
                 if (contentString != null) { // we have a json array
@@ -62,6 +68,10 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
                 } else {
                     val json = JSONObject(item.jsonContentMap)
                     holder.textView.text = json.toString(5)
+                }
+                item.track(MessagingEdgeEventType.DISPLAY)
+                holder.textView.setOnClickListener {
+                    item.track(MessagingEdgeEventType.INTERACT)
                 }
             }
         }

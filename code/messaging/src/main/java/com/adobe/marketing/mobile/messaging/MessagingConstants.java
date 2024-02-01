@@ -155,8 +155,6 @@ public final class MessagingConstants {
         static final String DATA = "data";
         static final String CONTENT = "content";
         static final String ID = "id";
-        static final String SCOPE = "scope";
-        static final String SCOPE_DETAILS = "scopeDetails";
         static final String SCHEMA = "schema";
         static final String CORRELATION_ID = "correlationID";
         static final String ACTIVITY = "activity";
@@ -191,6 +189,8 @@ public final class MessagingConstants {
             static final String RESPONSE_ERROR = "responseerror";
             static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
+            static final String TRACK_PROPOSITIONS = "trackpropositions";
+            static final String PROPOSITION_INTERACTION = "propositioninteraction";
             private Messaging() {
             }
 
@@ -251,20 +251,12 @@ public final class MessagingConstants {
 
                 private PushNotificationDetailsDataKeys() {
                 }
-
-                final class EventType {
-                    static final String OPENED = "pushTracking.applicationOpened";
-                    static final String CUSTOM_ACTION = "pushTracking.customAction";
-
-                    private EventType() {
-                    }
-                }
             }
 
-            final class IAMDetailsDataKeys {
+            final class Inbound {
                 static final String SURFACE_BASE = "mobileapp://";
 
-                private IAMDetailsDataKeys() {
+                private Inbound() {
                 }
 
                 final class EventType {
@@ -358,6 +350,8 @@ public final class MessagingConstants {
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
         static final String FINALIZE_PROPOSITIONS_RESPONSE = "Finalize propositions response";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
+        static final String TRACK_PROPOSITIONS = "Track propositions";
+        static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
 
         private EventName() {
         }
@@ -367,6 +361,7 @@ public final class MessagingConstants {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
         static final String NOTIFICATION = "com.adobe.eventSource.notification";
+        static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
 
         private EventSource() {
         }
