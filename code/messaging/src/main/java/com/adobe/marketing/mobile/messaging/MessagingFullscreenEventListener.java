@@ -117,7 +117,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
             return false;
         }
 
-        // url decode the query parameters
+        // url decode the query parameters if present
         final String queryParams;
         try {
             queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
@@ -158,8 +158,6 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
                             link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
                         }
                     }
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
-                    openUrl(link);
                 }
             }
         }
