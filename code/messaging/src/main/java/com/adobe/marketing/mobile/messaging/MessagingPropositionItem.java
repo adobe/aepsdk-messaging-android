@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;

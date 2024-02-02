@@ -37,7 +37,9 @@ public class FeedRulesEngineTests {
     private FeedRulesEngine feedRulesEngine;
 
     private Event defaultEvent = new Event.Builder("event", EventType.GENERIC_TRACK, EventSource.REQUEST_CONTENT)
-            .setEventData(new HashMap<String, Object>() {{ put("action", "fullscreen"); }}).build();
+            .setEventData(new HashMap<String, Object>() {{
+                put("action", "fullscreen");
+            }}).build();
 
     @Before
     public void setup() {
@@ -67,26 +69,9 @@ public class FeedRulesEngineTests {
     }
 
     @Test
-    public void test_evaluate_WithInAppConsequence() {
-        // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV1Content.json");
-        Assert.assertNotNull(rulesJson);
-        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
-
-        // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
-
-
-        // verify
-        Assert.assertNotNull(propositionItemsBySurface);
-        Assert.assertTrue(propositionItemsBySurface.isEmpty());
-    }
-
-    @Test
     public void test_evaluate_WithInAppV2Consequence() {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionContent.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         feedRulesEngine.replaceRules(rules);
@@ -117,7 +102,7 @@ public class FeedRulesEngineTests {
         List<MessagingPropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(1, inboundMessageList.size());
-        Assert.assertEquals(ContentType.APPLICATION_JSON, inboundMessageList.get(0).getSchema());
+        Assert.assertEquals(SchemaType.FEED, inboundMessageList.get(0).getSchema());
     }
 
     @Test

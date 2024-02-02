@@ -108,49 +108,52 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
             return false;
         }
 
-        // url decode the query parameters
+        // url decode the query parameters if present
         final String queryParams;
-        try {
-            queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
-        } catch (final UnsupportedEncodingException exception) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
-            return false;
-        }
-
-        // Populate message data
-        final Map<String, String> messageData = extractQueryParameters(queryParams);
-
+        final String query = uri.getQuery();
         final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
         final Message message = (Message) messageSettings.getParent();
 
-        if (!MapUtils.isNullOrEmpty(messageData)) {
-            // handle optional tracking
-            final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
-            if (!StringUtils.isNullOrEmpty(interaction)) {
-                // ensure we have the MessagingExtension class available for tracking
-                final Object messagingExtension = message.getParent();
-                if (messagingExtension != null) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
-                    message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
-                }
+        if (!StringUtils.isNullOrEmpty(query)) {
+            try {
+                queryParams = URLDecoder.decode(query, StandardCharsets.UTF_8.toString());
+            } catch (final UnsupportedEncodingException exception) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
+                return false;
             }
 
-            // handle optional deep link
-            String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
-            if (!StringUtils.isNullOrEmpty(link)) {
-                // handle optional javascript code to be executed
-                if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
-                    message.evaluateJavascript(link);
-                } else {
-                    // if we have any remaining query parameters we need to append them to the deeplink
-                    if (!messageData.isEmpty()) {
-                        for (final Map.Entry<String, String> entry : messageData.entrySet()) {
-                            link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
-                        }
+            // Populate message data
+            final Map<String, String> messageData = extractQueryParameters(queryParams);
+
+            if (!MapUtils.isNullOrEmpty(messageData)) {
+                // handle optional tracking
+                final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
+                if (!StringUtils.isNullOrEmpty(interaction)) {
+                    // ensure we have the MessagingExtension class available for tracking
+                    final Object messagingExtension = message.getParent();
+                    if (messagingExtension != null) {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
+                        message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                     }
-                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
-                    openUrl(link);
+                }
+
+                // handle optional deep link
+                String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
+                if (!StringUtils.isNullOrEmpty(link)) {
+                    // handle optional javascript code to be executed
+                    if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
+                        message.evaluateJavascript(link);
+                    } else {
+                        // if we have any remaining query parameters we need to append them to the deeplink
+                        if (!messageData.isEmpty()) {
+                            for (final Map.Entry<String, String> entry : messageData.entrySet()) {
+                                link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
+                            }
+                        }
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
+                        openUrl(link);
+                    }
                 }
             }
         }

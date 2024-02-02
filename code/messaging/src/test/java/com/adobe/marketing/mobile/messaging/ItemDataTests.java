@@ -44,7 +44,8 @@ public class ItemDataTests {
         // test
         try {
             itemData = new ItemData(null, "content");
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(itemData);
     }
@@ -54,7 +55,8 @@ public class ItemDataTests {
         // test
         try {
             itemData = new ItemData("id", null);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(itemData);
     }

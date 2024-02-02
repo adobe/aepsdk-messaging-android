@@ -14,10 +14,7 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.mockito.Mockito.when;
 
-import android.os.Bundle;
-
 import com.adobe.marketing.mobile.MessagingPushPayload;
-import com.adobe.marketing.mobile.messaging.internal.MessagingConstants;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.junit.Assert;

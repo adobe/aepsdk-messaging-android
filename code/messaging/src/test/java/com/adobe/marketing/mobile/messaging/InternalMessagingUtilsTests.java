@@ -117,10 +117,10 @@ public class InternalMessagingUtilsTests {
     // ========================================================================================
     @Test
     public void testIsGenericIdentityRequest_validEvent() {
-       Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT)
-               .setEventData(new HashMap<>())
-               .build();
-       assertTrue(InternalMessagingUtils.isGenericIdentityRequestEvent(event));
+        Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap<>())
+                .build();
+        assertTrue(InternalMessagingUtils.isGenericIdentityRequestEvent(event));
     }
 
     @Test
@@ -160,7 +160,9 @@ public class InternalMessagingUtilsTests {
     @Test
     public void testIsRefreshMessagesEvent_validEvent() {
         Event event = new Event.Builder("refresh messages event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                .setEventData(new HashMap<String, Object>() {{ put("refreshmessages", true); }})
+                .setEventData(new HashMap<String, Object>() {{
+                    put("refreshmessages", true);
+                }})
                 .build();
         assertTrue(InternalMessagingUtils.isRefreshMessagesEvent(event));
     }
@@ -223,7 +225,9 @@ public class InternalMessagingUtilsTests {
     @Test
     public void testIsUpdatePropositionsEvent_validEvent() {
         Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                .setEventData(new HashMap() {{ put("updatepropositions", true); }})
+                .setEventData(new HashMap() {{
+                    put("updatepropositions", true);
+                }})
                 .build();
         assertTrue(InternalMessagingUtils.isUpdatePropositionsEvent(event));
     }
@@ -244,7 +248,9 @@ public class InternalMessagingUtilsTests {
     @Test
     public void testIsGetPropositionsEvent_validEvent() {
         Event event = new Event.Builder("get propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                .setEventData(new HashMap() {{ put("getpropositions", true); }})
+                .setEventData(new HashMap() {{
+                    put("getpropositions", true);
+                }})
                 .build();
         assertTrue(InternalMessagingUtils.isGetPropositionsEvent(event));
     }

@@ -61,6 +61,9 @@ class FeedRulesEngine extends LaunchRulesEngine {
             }
 
             final MessagingPropositionItem propositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+            if (propositionItem == null) {
+                continue;
+            }
             final FeedItemSchemaData propositionAsFeedItem = propositionItem.getFeedItemSchemaData();
 
             if (propositionAsFeedItem == null) {

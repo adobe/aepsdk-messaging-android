@@ -1,6 +1,6 @@
 {
     "id": "uniqueId",
-    "schema": "https://ns.adobe.com/personalization/json-content-item",
+    "schema": "https://ns.adobe.com/personalization/ruleset-item",
     "data": {
         "content": {
             "version": 1,
@@ -27,10 +27,10 @@
                     }
                 },
                 "consequences": [{
-                    "id": "consequenceId",
+                    "id": "uniqueId",
                     "type": "schema",
                     "detail": {
-                        "id": "uniqueDetailId",
+                        "id": "uniqueId",
                         "schema": "https://ns.adobe.com/personalization/message/feed-item",
                         "data": {
                             "expiryDate": 1717688797,

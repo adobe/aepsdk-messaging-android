@@ -12,7 +12,6 @@ package com.adobe.marketing.mobile;
 
 import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ACTION_ID;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
@@ -20,7 +19,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -38,13 +36,9 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
-import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
-import com.adobe.marketing.mobile.messaging.MessagingExtension;
-import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -55,7 +49,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,12 +259,8 @@ public class MessagingTests {
             // verify
             verify(mockIntent, times(2)).getStringExtra(anyString());
 
-            // verify event
-            Event event = eventCaptor.getValue();
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+            // verify no event captured
+            assertEquals(0, eventCaptor.getAllValues().size());
         });
     }
 
@@ -372,66 +361,6 @@ public class MessagingTests {
     }
 
     // ========================================================================================
-    // setPropositionsHandler
-    // ========================================================================================
-    /** TODO: Holding off on this till we decide funtionality of the API
-    @Test
-    public void test_setPropositionsHandler_validProposition() throws Exception {
-        try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class)) {
-            // setup
-            final Map<String, Object> propositionData = MessagingTestUtils.getMapFromFile("personalization_payload.json");
-            final List<Map<String, Object>> propositionsList = new ArrayList<>();
-            propositionsList.add(propositionData);
-
-            final Map<String, Object> eventData = new HashMap<>();
-            eventData.put(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS, propositionsList);
-            final Event event = new Event.Builder("Messaging Notification",
-                    MessagingTestConstants.EventType.MESSAGING,
-                    MessagingTestConstants.EventSource.NOTIFICATION)
-                    .setEventData(eventData).build();
-
-            // test setPropositionsHandler
-            CountDownLatch latch = new CountDownLatch(1);
-            final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{new HashMap<>()};
-            Messaging.setPropositionsHandler(new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
-                @Override
-                public void fail(AdobeError adobeError) {
-                    responseError[0] = adobeError;
-                    latch.countDown();
-                }
-
-                @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
-                    responseMapForSurface[0] = surfaceListMap;
-                    latch.countDown();
-                }
-            });
-
-            // verify event listener is registered
-            final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor = ArgumentCaptor.forClass(AdobeCallbackWithError.class);
-            mobileCoreMockedStatic.verify(() -> MobileCore.registerEventListener(ArgumentMatchers.eq(MessagingTestConstants.EventType.MESSAGING),
-                    ArgumentMatchers.eq(MessagingTestConstants.EventSource.NOTIFICATION),
-                    callbackCaptor.capture()));
-            final AdobeCallback<Event> callback = callbackCaptor.getValue();
-
-            // test response returned when callback is called
-            callback.call(event);
-
-            //verify
-            Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
-            Assert.assertNull(responseError[0]);
-            Assert.assertNotNull(responseMapForSurface[0]);
-            List<MessagingProposition> messagingPropositions = responseMapForSurface[0].get(MessagingUtils.scopeToSurface("mobileapp://com.adobe.marketing.mobile.messaging.test"));
-            Assert.assertNotNull(messagingPropositions);
-            Assert.assertEquals(1, messagingPropositions.size());
-            Assert.assertEquals("uniqueId",messagingPropositions.get(0).getUniqueId());
-            Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", messagingPropositions.get(0).getScope());
-            Assert.assertEquals(1, messagingPropositions.get(0).getItems().size());
-        }
-    } **/
-
-    // ========================================================================================
     // getPropositionsForSurfaces
     // ========================================================================================
     @Test
@@ -471,9 +400,13 @@ public class MessagingTests {
             Assert.assertEquals(MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
             final Map<String, Object> eventData = event.getEventData();
             Assert.assertTrue((Boolean) eventData.get(MessagingTestConstants.EventDataKeys.Messaging.GET_PROPOSITIONS));
-            List<Map<String, Object>> flattenedSurfaces = new ArrayList<Map<String, Object>>(){{
-                add(new HashMap<String, Object>(){{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed"); }});
-                add(new HashMap<String, Object>(){{ put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/cbe"); }});
+            List<Map<String, Object>> flattenedSurfaces = new ArrayList<Map<String, Object>>() {{
+                add(new HashMap<String, Object>() {{
+                    put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed");
+                }});
+                add(new HashMap<String, Object>() {{
+                    put("uri", "mobileapp://com.adobe.marketing.mobile.messaging.test/cbe");
+                }});
             }};
             Assert.assertEquals(flattenedSurfaces, eventData.get(MessagingTestConstants.EventDataKeys.Messaging.SURFACES));
 
@@ -504,14 +437,14 @@ public class MessagingTests {
             List<MessagingProposition> feedMessagingPropositions = responseMapForSurface[0].get(feedSurface);
             Assert.assertNotNull(feedMessagingPropositions);
             Assert.assertEquals(1, feedMessagingPropositions.size());
-            Assert.assertEquals("c2aa4a73-a534-44c2-baa4-a12980e5bb9d",feedMessagingPropositions.get(0).getUniqueId());
+            Assert.assertEquals("c2aa4a73-a534-44c2-baa4-a12980e5bb9d", feedMessagingPropositions.get(0).getUniqueId());
             Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed", feedMessagingPropositions.get(0).getScope());
             Assert.assertEquals(1, feedMessagingPropositions.get(0).getItems().size());
 
             List<MessagingProposition> codeBasedMessagingPropositions = responseMapForSurface[0].get(codeBasedSurface);
             Assert.assertNotNull(codeBasedMessagingPropositions);
             Assert.assertEquals(1, codeBasedMessagingPropositions.size());
-            Assert.assertEquals("d5072be7-5317-4ee4-b52b-1710ab60748f",codeBasedMessagingPropositions.get(0).getUniqueId());
+            Assert.assertEquals("d5072be7-5317-4ee4-b52b-1710ab60748f", codeBasedMessagingPropositions.get(0).getUniqueId());
             Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/cbe", codeBasedMessagingPropositions.get(0).getScope());
             Assert.assertEquals(1, codeBasedMessagingPropositions.get(0).getItems().size());
         });
@@ -522,7 +455,9 @@ public class MessagingTests {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
             // test
-            Messaging.getPropositionsForSurfaces(new ArrayList<Surface>() {{ add(new Surface("apifeed")); }}, null);
+            Messaging.getPropositionsForSurfaces(new ArrayList<Surface>() {{
+                add(new Surface("apifeed"));
+            }}, null);
 
             // verify no event dispatched
             mobileCoreMockedStatic.verifyNoInteractions();
@@ -581,18 +516,20 @@ public class MessagingTests {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
             // test
-            Messaging.getPropositionsForSurfaces(new ArrayList<Surface>() {{ add(new Surface(""));}},
+            Messaging.getPropositionsForSurfaces(new ArrayList<Surface>() {{
+                                                     add(new Surface(""));
+                                                 }},
                     new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
-                @Override
-                public void fail(AdobeError adobeError) {
+                        @Override
+                        public void fail(AdobeError adobeError) {
 
-                }
+                        }
 
-                @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                        @Override
+                        public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
 
-                }
-            });
+                        }
+                    });
 
             // verify no event dispatched
             mobileCoreMockedStatic.verifyNoInteractions();
@@ -805,7 +742,9 @@ public class MessagingTests {
             final Map<String, Object> responseEventData = new HashMap<>();
             responseEventData.put(MessagingTestConstants.EventDataKeys.Messaging.PROPOSITIONS,
                     new ArrayList<Map<String, Object>>() {{
-                        new HashMap<String, Object>() {{ put("SomeKey", "SomeValue"); }};
+                        new HashMap<String, Object>() {{
+                            put("SomeKey", "SomeValue");
+                        }};
                     }});
             final Event responseEvent = new Event.Builder(
                     MessagingTestConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE,

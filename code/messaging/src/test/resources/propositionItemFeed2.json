@@ -1,6 +1,6 @@
 {
   "id": "uniqueId",
-  "schema": "https://ns.adobe.com/personalization/json-content-item",
+  "schema": "https://ns.adobe.com/personalization/ruleset-item",
   "data": {
     "content": {
       "version": 1,
