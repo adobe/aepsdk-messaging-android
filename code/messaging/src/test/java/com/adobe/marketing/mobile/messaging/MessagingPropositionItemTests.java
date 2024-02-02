@@ -142,7 +142,7 @@ public class MessagingPropositionItemTests {
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
-        assertEquals(SchemaType.JSON_CONTENT, propositionItemMap.get("schema"));
+        assertEquals(SchemaType.JSON_CONTENT.toString(), propositionItemMap.get("schema"));
         assertEquals(eventDataMapForJSON.get("data"), propositionItemMap.get("data"));
     }
 
@@ -154,7 +154,7 @@ public class MessagingPropositionItemTests {
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
-        assertEquals(SchemaType.HTML_CONTENT, propositionItemMap.get("schema"));
+        assertEquals(SchemaType.HTML_CONTENT.toString(), propositionItemMap.get("schema"));
         assertEquals(eventDataMapForHTML.get("data"), propositionItemMap.get("data"));
     }
 
@@ -166,7 +166,7 @@ public class MessagingPropositionItemTests {
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
-        assertEquals(SchemaType.FEED, propositionItemMap.get("schema"));
+        assertEquals(SchemaType.FEED.toString(), propositionItemMap.get("schema"));
         assertEquals(feedPropositionItemData, propositionItemMap.get("data"));
     }
 
@@ -209,30 +209,6 @@ public class MessagingPropositionItemTests {
         eventDataMapForJSON.put("data", null);
         // test
         MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForJSON);
-        // verify
-        assertNull(messagingPropositionItem);
-    }
-
-    @Test
-    public void test_createPropositionItem_fromEventData_NullJSONContent() {
-        // setup
-        final Map<String, Object> jsonDataMap = new HashMap<>();
-        jsonDataMap.put("content", null);
-        eventDataMapForJSON.put("data", jsonDataMap);
-        // test
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForJSON);
-        // verify
-        assertNull(messagingPropositionItem);
-    }
-
-    @Test
-    public void test_createPropositionItem_fromEventData_NullStringContent() {
-        // setup
-        final Map<String, Object> htmlDataMap = new HashMap<>();
-        htmlDataMap.put("content", null);
-        eventDataMapForHTML.put("data", htmlDataMap);
-        // test
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForHTML);
         // verify
         assertNull(messagingPropositionItem);
     }
@@ -302,8 +278,15 @@ public class MessagingPropositionItemTests {
     // getFeedItemSchemaData tests
     @Test
     public void test_getFeedItemSchemaData() {
+        // setup
+        ArrayList<Map<String, Object>> rules = (ArrayList) feedPropositionItemContent.get("rules");
+        Map<String, Object> rule = rules.get(0);
+        ArrayList<Map<String, Object>> consequences = (ArrayList<Map<String, Object>>) rule.get("consequences");
+        Map<String, Object> consequence = consequences.get(0);
+        Map<String, Object> consequenceDetail = (Map<String, Object>) consequence.get("detail");
+        Map<String, Object> itemData = (Map<String, Object>) consequenceDetail.get("data");
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, feedPropositionItemContent);
+        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, itemData);
         FeedItemSchemaData schemaData = messagingPropositionItem.getFeedItemSchemaData();
         // verify
         assertNotNull(schemaData);

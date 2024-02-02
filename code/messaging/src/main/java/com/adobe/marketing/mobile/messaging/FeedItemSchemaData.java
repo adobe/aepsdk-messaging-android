@@ -27,7 +27,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFee
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;

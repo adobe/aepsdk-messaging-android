@@ -59,7 +59,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -76,7 +77,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -88,7 +90,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -100,7 +103,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -110,7 +114,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(null);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -125,7 +130,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -145,7 +151,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -160,7 +167,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -175,7 +183,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }

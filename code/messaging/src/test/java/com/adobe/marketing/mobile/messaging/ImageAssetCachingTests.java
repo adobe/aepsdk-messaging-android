@@ -68,7 +68,8 @@ public class ImageAssetCachingTests {
     private MessagingCacheUtilities messagingCacheUtilities;
 
     @Before
-    public void setup() {}
+    public void setup() {
+    }
 
     @After
     public void tearDown() {

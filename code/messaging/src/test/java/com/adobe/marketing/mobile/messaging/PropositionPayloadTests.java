@@ -63,11 +63,11 @@ public class PropositionPayloadTests {
         // verify payload item
         PayloadItem payloadItem = propositionPayload.items.get(0);
         assertEquals("itemId", payloadItem.id);
-        assertEquals("https://ns.adobe.com/personalization/json-content-item", payloadItem.schema);
+        assertEquals("https://ns.adobe.com/personalization/ruleset-item", payloadItem.schema);
         // verify payload item data
         Map<String, Object> data = payloadItem.data;
         assertEquals("dataId", data.get("id"));
-        assertEquals("{\"version\":1,\"rules\":[{\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"definition\":{\"key\":\"foo\",\"matcher\":\"eq\",\"values\":[\"bar\"]},\"type\":\"matcher\"}],\"logic\":\"and\"}},\"consequences\":[{\"id\":\"ebdbd89e-3318-4720-afbc-d929890b28ae\",\"type\":\"cjmiam\",\"detail\":{\"mobileParameters\":{\"verticalAlign\":\"center\",\"horizontalInset\":0,\"dismissAnimation\":\"bottom\",\"uiTakeover\":true,\"horizontalAlign\":\"center\",\"verticalInset\":0,\"displayAnimation\":\"bottom\",\"width\":100,\"height\":100,\"gestures\":{}},\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",\"remoteAssets\":[]}}]}]}", data.get("content"));
+        assertEquals("{\"version\":1,\"rules\":[{\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"definition\":{\"key\":\"foo\",\"matcher\":\"eq\",\"values\":[\"bar\"]},\"type\":\"matcher\"}],\"logic\":\"and\"}},\"consequences\":[{\"id\":\"ebdbd89e-3318-4720-afbc-d929890b28ae\",\"type\":\"schema\",\"detail\":{\"mobileParameters\":{\"verticalAlign\":\"center\",\"horizontalInset\":0,\"dismissAnimation\":\"bottom\",\"uiTakeover\":true,\"horizontalAlign\":\"center\",\"verticalInset\":0,\"displayAnimation\":\"bottom\",\"width\":100,\"height\":100,\"gestures\":{}},\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",\"remoteAssets\":[]}}]}]}", data.get("content"));
     }
 
     @Test
