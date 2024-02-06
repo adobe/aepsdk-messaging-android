@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,6 +12,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+
 public enum SchemaType {
     UNKNOWN(0),
     HTML_CONTENT(1),
@@ -20,7 +22,7 @@ public enum SchemaType {
     INAPP(4),
     FEED(5),
     NATIVE_ALERT(6),
-    DEFAULT(7);
+    DEFAULT_CONTENT(7);
 
     private final int value;
 
@@ -32,6 +34,7 @@ public enum SchemaType {
         return value;
     }
 
+    @NonNull
     @Override
     public String toString() {
         switch (this) {
@@ -47,7 +50,7 @@ public enum SchemaType {
                 return MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
             case NATIVE_ALERT:
                 return MessagingConstants.SchemaValues.SCHEMA_NATIVE_ALERT;
-            case DEFAULT:
+            case DEFAULT_CONTENT:
                 return MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT;
             default:
                 return "";
@@ -55,6 +58,9 @@ public enum SchemaType {
     }
 
     static SchemaType fromString(final String typeString) {
+        if (typeString == null) {
+            return UNKNOWN;
+        }
         SchemaType schemaType;
         switch (typeString) {
             case MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT:
@@ -76,7 +82,7 @@ public enum SchemaType {
                 schemaType = SchemaType.NATIVE_ALERT;
                 break;
             case MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT:
-                schemaType = SchemaType.DEFAULT;
+                schemaType = SchemaType.DEFAULT_CONTENT;
                 break;
             default:
                 schemaType = SchemaType.UNKNOWN;

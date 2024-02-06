@@ -51,7 +51,7 @@ public class MessagingUtilsTests {
         }});
 
         final Map<String, Object> content = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
-        MessagingPropositionItem mockPropositionItemToAdd1 = new MessagingPropositionItem("mockId1", SchemaType.DEFAULT, content);
+        MessagingPropositionItem mockPropositionItemToAdd1 = new MessagingPropositionItem("mockId1", SchemaType.DEFAULT_CONTENT, content);
         mockPropositionToAdd1 = new MessagingProposition("mockId1",
                 mockSurface.getUri(),
                 mockScopeDetails,

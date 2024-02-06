@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -15,6 +15,8 @@ package com.adobe.marketing.mobile.messaging;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_VERSION_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
+
+import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.services.Log;
 
@@ -33,8 +35,8 @@ public class RulesetSchemaData implements SchemaData {
         try {
             this.version = schemaData.getInt(JSON_VERSION_KEY);
             this.rules = (List<Map<String, Object>>) schemaData.get(JSON_RULES_KEY);
-        } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", jsonException.getLocalizedMessage());
+        } catch (final JSONException|ClassCastException exception) {
+            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", exception.getLocalizedMessage());
         }
     }
 
@@ -42,7 +44,13 @@ public class RulesetSchemaData implements SchemaData {
         return version;
     }
 
+    @Nullable
+    public List<Map<String, Object>> getRules() {
+        return rules;
+    }
+
     @Override
+    @Nullable
     public Object getContent() {
         return rules;
     }

@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -16,10 +16,11 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.FORMAT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,20 +45,9 @@ public class HtmlContentSchemaData implements SchemaData {
     }
 
     @Override
+    @Nullable
     public String getContent() {
-        if (format.equals(ContentType.APPLICATION_JSON)) {
-            try {
-                if (content.startsWith("[")) {
-                    return new JSONArray(content).toString();
-                } else {
-                    return new JSONObject(content).toString();
-                }
-            } catch (final JSONException jsonException) {
-                return null;
-            }
-        } else {
-            return content;
-        }
+        return content;
     }
 
     public ContentType getFormat() {
