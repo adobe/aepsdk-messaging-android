@@ -67,6 +67,26 @@ public class MessagingTestConstants {
 
         private EventDataKey() {
         }
+
+        final class RulesEngine {
+            static final String JSON_RULES_KEY = "rules";
+            static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String JSON_VERSION_KEY = "version";
+            static final String MESSAGE_CONSEQUENCE_ID = "id";
+            static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
+            static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+
+            private RulesEngine() {
+            }
+        }
     }
 
     public static final class SharedStateName {
@@ -259,6 +279,58 @@ public class MessagingTestConstants {
         }
 
         private SharedState() {
+        }
+    }
+
+    final class SchemaValues {
+        static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
+
+        private SchemaValues() {
+        }
+    }
+
+    final class ContentTypes {
+        static final String APPLICATION_JSON = "application/json";
+        static final String TEXT_HTML = "text/html";
+        static final String TEXT_XML = "text/xml";
+        static final String TEXT_PLAIN = "text/plain";
+        private ContentTypes() {
+        }
+    }
+
+    final class ConsequenceDetailDataKeys {
+        static final String FORMAT = "format";
+        static final String CONTENT = "content";
+        static final String CONTENT_TYPE = "contentType";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String WEB_PARAMETERS = "webParameters";
+        static final String REMOTE_ASSETS = "remoteAssets";
+
+        private ConsequenceDetailDataKeys() {
+        }
+    }
+
+    final class MessageFeedKeys {
+        static final String TITLE = "title";
+        static final String BODY = "body";
+        static final String CONTENT = "content";
+        static final String IMAGE_URL = "imageUrl";
+        static final String ACTION_TITLE = "actionTitle";
+        static final String ACTION_URL = "actionUrl";
+        static final String FEEDS = "feeds";
+        static final String FEED_NAME = "feedName";
+        static final String SURFACE = "surface";
+
+        private MessageFeedKeys() {
         }
     }
 }
