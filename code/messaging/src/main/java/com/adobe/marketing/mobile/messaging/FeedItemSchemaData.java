@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -24,6 +24,9 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFee
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.BODY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.IMAGE_URL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.TITLE;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -81,10 +84,12 @@ public class FeedItemSchemaData implements SchemaData {
         return meta;
     }
 
-    public FeedItemSchemaData getEmpty() {
+    @VisibleForTesting
+    static FeedItemSchemaData getEmpty() {
         return new FeedItemSchemaData(new JSONObject());
     }
 
+    @Nullable
     public FeedItem getFeedItem() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
             return null;
