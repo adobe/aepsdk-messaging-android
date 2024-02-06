@@ -46,6 +46,9 @@ public enum ContentType {
     }
 
     static ContentType fromString(final String typeString) {
+        if (typeString == null) {
+            return UNKNOWN;
+        }
         ContentType contentType;
         switch (typeString) {
             case MessagingConstants.ContentTypes.APPLICATION_JSON:

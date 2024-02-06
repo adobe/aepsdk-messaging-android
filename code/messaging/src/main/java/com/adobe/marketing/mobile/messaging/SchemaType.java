@@ -12,6 +12,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+
 public enum SchemaType {
     UNKNOWN(0),
     HTML_CONTENT(1),
@@ -32,6 +34,7 @@ public enum SchemaType {
         return value;
     }
 
+    @NonNull
     @Override
     public String toString() {
         switch (this) {
@@ -55,6 +58,9 @@ public enum SchemaType {
     }
 
     static SchemaType fromString(final String typeString) {
+        if (typeString == null) {
+            return UNKNOWN;
+        }
         SchemaType schemaType;
         switch (typeString) {
             case MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT:

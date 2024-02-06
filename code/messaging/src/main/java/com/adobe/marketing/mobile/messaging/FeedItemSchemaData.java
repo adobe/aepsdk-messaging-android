@@ -25,6 +25,9 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFee
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.IMAGE_URL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.TITLE;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -82,10 +85,12 @@ public class FeedItemSchemaData implements SchemaData {
         return meta;
     }
 
-    public FeedItemSchemaData getEmpty() {
+    @VisibleForTesting
+    static FeedItemSchemaData getEmpty() {
         return new FeedItemSchemaData(new JSONObject());
     }
 
+    @Nullable
     public FeedItem getFeedItem() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
             return null;

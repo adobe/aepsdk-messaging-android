@@ -16,11 +16,12 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.FORMAT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,23 +41,22 @@ public class JsonContentSchemaData implements SchemaData {
             } else {
                 format = ContentType.fromString(decodedFormat);
             }
-            final Object content = schemaData.get(CONTENT);
-            if (content instanceof JSONObject) {
-                this.content = JSONUtils.toMap((JSONObject) content);
-            } else if (content instanceof JSONArray) {
-                this.content = JSONUtils.toList((JSONArray) content);
-            } else { // we have non json content, just store it as a string
-                this.content = content.toString();
+            try {
+                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+            } catch (JSONException e) {
+                this.content = JSONUtils.toList(schemaData.getJSONArray(CONTENT));
             }
         } catch (final JSONException jsonException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
         }
     }
 
+    @Nullable
     Map<String, Object> getJsonObjectContent() {
         return content instanceof Map ? (Map<String, Object>) content : null;
     }
 
+    @Nullable
     List<Map<String, Object>> getJsonArrayContent() {
         return content instanceof List ? (List<Map<String, Object>>) content : null;
     }
@@ -66,6 +66,7 @@ public class JsonContentSchemaData implements SchemaData {
     }
 
     @Override
+    @Nullable
     public Object getContent() {
         return content;
     }

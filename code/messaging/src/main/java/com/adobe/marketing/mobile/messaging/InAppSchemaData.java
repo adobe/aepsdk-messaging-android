@@ -21,8 +21,11 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.REMOTE_ASSETS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.WEB_PARAMETERS;
 
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,20 +38,29 @@ import java.util.Map;
 public class InAppSchemaData implements SchemaData {
     private static final String LOG_TAG = "Messaging";
     private static final String SELF_TAG = "InAppSchemaData";
-    private Object content;
-    private ContentType contentType;
-    private int publishedDate;
-    private int expiryDate;
-    private Map<String, Object> meta;
-    private Map<String, Object> mobileParameters;
-    private Map<String, Object> webParameters;
-    private List<String> remoteAssets = new ArrayList<>();
+    private Object content = null;
+    private ContentType contentType = null;
+    private int publishedDate = 0;
+    private int expiryDate = 0;
+    private Map<String, Object> meta = null;
+    private Map<String, Object> mobileParameters = null;
+    private Map<String, Object> webParameters = null;
+    private List<String> remoteAssets = null;
 
     InAppSchemaData(final JSONObject schemaData) {
         try {
-            this.contentType = ContentType.fromString(schemaData.optString(CONTENT_TYPE));
+            String contentTypeString = schemaData.optString(CONTENT_TYPE);
+            if(StringUtils.isNullOrEmpty(contentTypeString)) {
+                this.contentType = ContentType.fromString(contentTypeString);
+                return;
+            }
+            this.contentType = ContentType.fromString(contentTypeString);
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+                try {
+                    this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+                } catch (JSONException e) {
+                    this.content = JSONUtils.toList(schemaData.getJSONArray(CONTENT));
+                }
             } else {
                 this.content = schemaData.getString(CONTENT);
             }
@@ -59,6 +71,7 @@ public class InAppSchemaData implements SchemaData {
             this.webParameters = JSONUtils.toMap(schemaData.optJSONObject(WEB_PARAMETERS));
             final List<Object> assetList = JSONUtils.toList(schemaData.optJSONArray(REMOTE_ASSETS));
             if (!MessagingUtils.isNullOrEmpty(assetList)) {
+                this.remoteAssets = new ArrayList<>();
                 for (final Object asset : assetList) {
                     this.remoteAssets.add(asset.toString());
                 }
@@ -85,18 +98,22 @@ public class InAppSchemaData implements SchemaData {
         return expiryDate;
     }
 
+    @Nullable
     public Map<String, Object> getMeta() {
         return meta;
     }
 
+    @Nullable
     public Map<String, Object> getMobileParameters() {
         return mobileParameters;
     }
 
+    @Nullable
     public Map<String, Object> getWebParameters() {
         return webParameters;
     }
 
+    @Nullable
     public List<String> getRemoteAssets() {
         return remoteAssets;
     }
