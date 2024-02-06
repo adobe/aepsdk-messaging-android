@@ -22,7 +22,7 @@ public enum SchemaType {
     INAPP(4),
     FEED(5),
     NATIVE_ALERT(6),
-    DEFAULT(7);
+    DEFAULT_TYPE(7);
 
     private final int value;
 
@@ -50,7 +50,7 @@ public enum SchemaType {
                 return MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
             case NATIVE_ALERT:
                 return MessagingConstants.SchemaValues.SCHEMA_NATIVE_ALERT;
-            case DEFAULT:
+            case DEFAULT_TYPE:
                 return MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT;
             default:
                 return "";
@@ -82,7 +82,7 @@ public enum SchemaType {
                 schemaType = SchemaType.NATIVE_ALERT;
                 break;
             case MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT:
-                schemaType = SchemaType.DEFAULT;
+                schemaType = SchemaType.DEFAULT_TYPE;
                 break;
             default:
                 schemaType = SchemaType.UNKNOWN;

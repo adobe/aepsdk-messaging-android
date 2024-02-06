@@ -81,7 +81,7 @@ public class ParsedPropositions {
                         }
                         switch (schemaConsequence.getSchema()) {
                             case INAPP:
-                            case DEFAULT:
+                            case DEFAULT_TYPE:
                                 final PropositionInfo propositionInfo = PropositionInfo.createFromProposition(proposition);
                                 if (propositionInfo == null) {
                                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with missing / invalid proposition info.");
@@ -106,7 +106,7 @@ public class ParsedPropositions {
                         break;
                     case JSON_CONTENT:
                     case HTML_CONTENT:
-                    case DEFAULT:
+                    case DEFAULT_TYPE:
                         propositionsToCache = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToCache);
                         break;
                     default:

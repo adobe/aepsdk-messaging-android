@@ -12,7 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;
@@ -188,7 +187,7 @@ public class MessagingPropositionItem implements Serializable {
         final JSONObject ruleJson = new JSONObject(itemData);
         switch (schemaType) {
             case UNKNOWN:
-            case DEFAULT:
+            case DEFAULT_TYPE:
             case NATIVE_ALERT:
             case RULESET:
                 break;
