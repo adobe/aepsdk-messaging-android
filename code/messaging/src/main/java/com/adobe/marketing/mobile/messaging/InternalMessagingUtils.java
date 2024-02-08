@@ -63,8 +63,15 @@ class InternalMessagingUtils {
      * @return {@code JSONObject> containing the consequence details extracted from the rule json
      */
     static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        if (ruleJson == null) {
+            return null;
+        }
         JSONObject consequenceDetails = null;
         try {
+            JSONObject consequence = getConsequence(ruleJson);
+            if (consequence == null) {
+                return null;
+            }
             consequenceDetails = getConsequence(ruleJson).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
         } catch (final JSONException jsonException) {
             Log.debug(MessagingConstants.LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
@@ -79,6 +86,9 @@ class InternalMessagingUtils {
      * @return {@code JSONObject> containing the consequence extracted from the rule json
      */
     static JSONObject getConsequence(final JSONObject ruleJson) {
+        if (ruleJson == null) {
+            return null;
+        }
         JSONObject consequence = null;
         try {
             final JSONArray rulesArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY);
@@ -289,6 +299,9 @@ class InternalMessagingUtils {
      * @return {@code String} containing the ending event id
      */
     static String getEndingEventId(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
         return DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, null);
     }
 

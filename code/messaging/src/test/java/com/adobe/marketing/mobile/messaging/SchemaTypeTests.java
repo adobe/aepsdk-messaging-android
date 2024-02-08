@@ -87,7 +87,7 @@ public class SchemaTypeTests {
         int expectedValue = 7;
 
         //test
-        SchemaType schemaType = SchemaType.DEFAULT;
+        SchemaType schemaType = SchemaType.DEFAULT_CONTENT;
 
         //verify
         assertEquals(expectedValue, schemaType.getValue());
@@ -180,7 +180,7 @@ public class SchemaTypeTests {
     @Test
     public void toString_returnsCorrectString_forDefault() {
         //setup
-        SchemaType schemaType = SchemaType.DEFAULT;
+        SchemaType schemaType = SchemaType.DEFAULT_CONTENT;
 
         //test
         String result = schemaType.toString();
@@ -282,7 +282,7 @@ public class SchemaTypeTests {
         SchemaType schemaType = SchemaType.fromString(typeString);
 
         //verify
-        assertEquals(SchemaType.DEFAULT, schemaType);
+        assertEquals(SchemaType.DEFAULT_CONTENT, schemaType);
     }
 
     @Test

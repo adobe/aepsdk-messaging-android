@@ -184,6 +184,42 @@ public class ImageAssetCachingTests {
     }
 
     @Test
+    public void testCacheImageAssets_AssetNotDownloadable_Then_AssetsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            final List<String> imageAssets = new ArrayList<>();
+            imageAssets.add("someInvalidURL");
+            imageAssets.add("mobileapp://someURL");
+
+            // test
+            messagingCacheUtilities = new MessagingCacheUtilities();
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+
+            // verify no network requests made because the cache service is not available
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+        });
+    }
+
+    @Test
+    public void testCacheImageAssets_DuplicateImagesTriggersRemoteAssetFetchOnceOnly() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            ArgumentCaptor<NetworkRequest> networkRequestArgumentCaptor = ArgumentCaptor.forClass(NetworkRequest.class);
+            final List<String> imageAssets = new ArrayList<>();
+            imageAssets.add(IMAGE_URL);
+            imageAssets.add(IMAGE_URL);
+            // test
+            messagingCacheUtilities.cacheImageAssets(imageAssets);
+            // verify 1 network requests made containing the 1 image URL's
+            verify(mockNetworkService, times(1)).connectAsync(networkRequestArgumentCaptor.capture(), any(NetworkCallback.class));
+            List<NetworkRequest> networkRequestList = networkRequestArgumentCaptor.getAllValues();
+            assertEquals(1, networkRequestList.size());
+            NetworkRequest firstRequest = networkRequestList.get(0);
+            assertEquals(IMAGE_URL, firstRequest.getUrl());
+        });
+    }
+
+    @Test
     public void testGetAssetMap() {
         // setup
         setupServiceProviderMockAndRunTest(() -> {

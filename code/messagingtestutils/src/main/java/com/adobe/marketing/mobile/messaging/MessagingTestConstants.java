@@ -63,7 +63,7 @@ public class MessagingTestConstants {
     }
 
     public static final class EventDataKey {
-        public static final String STATE_OWNER = "stateowner";
+        static final String REQUEST_EVENT_ID = "requestEventId";
 
         private EventDataKey() {
         }
