@@ -78,8 +78,8 @@ public class SurfaceTests {
             Surface surface = new Surface("");
             // verify
             assertNotNull(surface);
-            assertEquals("unknown", surface.getUri());
-            assertFalse(surface.isValid());
+            assertEquals("mobileapp://mockPackageName", surface.getUri());
+            assertTrue(surface.isValid());
         });
     }
 
@@ -90,8 +90,8 @@ public class SurfaceTests {
             Surface surface = new Surface(null);
             // verify
             assertNotNull(surface);
-            assertEquals("unknown", surface.getUri());
-            assertFalse(surface.isValid());
+            assertEquals("mobileapp://mockPackageName", surface.getUri());
+            assertTrue(surface.isValid());
         });
     }
 
@@ -233,6 +233,32 @@ public class SurfaceTests {
             assertEquals(surface1, surface2);
             assertNotEquals(surface1, surface3);
             assertNotEquals(surface1, notASurface);
+        });
+    }
+
+    @Test
+    public void test_equals_ConstructorWithoutPaths() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            Surface surface1 = new Surface();
+            Surface surface2 = new Surface();
+
+            // verify
+            assertEquals(surface1, surface2);
+            assertTrue(surface1.equals(surface2));
+        });
+    }
+
+    @Test
+    public void test_equals_DifferentSurfaces() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            Surface surface1 = new Surface();
+            Surface surface2 = new Surface("surfacewithfeeds");
+
+            // verify
+            assertNotEquals(surface1, surface2);
+            assertFalse(surface1.equals(surface2));
         });
     }
 }

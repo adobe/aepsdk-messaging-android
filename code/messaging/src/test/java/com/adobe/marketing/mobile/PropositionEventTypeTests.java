@@ -37,10 +37,10 @@ public class PropositionEventTypeTests {
 
     @Test
     public void test_PropositionEventType_toString() {
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISMISS, PropositionEventType.IN_APP_DISMISS.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.INTERACT, PropositionEventType.IN_APP_INTERACT.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.TRIGGER, PropositionEventType.IN_APP_TRIGGER.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.DISPLAY, PropositionEventType.IN_APP_DISPLAY.toString());
+        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS, PropositionEventType.IN_APP_DISMISS.toString());
+        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT, PropositionEventType.IN_APP_INTERACT.toString());
+        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER, PropositionEventType.IN_APP_TRIGGER.toString());
+        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY, PropositionEventType.IN_APP_DISPLAY.toString());
     }
 
     @Test

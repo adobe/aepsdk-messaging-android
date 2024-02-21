@@ -216,6 +216,9 @@ public class PropositionItem implements Serializable {
      * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
      */
     public Map<String, Object> getJsonContentMap() {
+        if (!schema.equals(SchemaType.JSON_CONTENT)) {
+            return null;
+        }
         final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
         return schemaData != null ? schemaData.getJsonObjectContent() : null;
     }
@@ -226,6 +229,9 @@ public class PropositionItem implements Serializable {
      * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s content.
      */
     public List<Map<String, Object>> getJsonArrayList() {
+        if (!schema.equals(SchemaType.JSON_CONTENT)) {
+            return null;
+        }
         final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
         return schemaData != null ? schemaData.getJsonArrayContent() : null;
     }
@@ -236,6 +242,9 @@ public class PropositionItem implements Serializable {
      * @return {@link String} containing the {@link PropositionItem}'s content.
      */
     public String getHtmlContent() {
+        if (!schema.equals(SchemaType.HTML_CONTENT)) {
+            return null;
+        }
         final HtmlContentSchemaData schemaData = (HtmlContentSchemaData) createSchemaData(SchemaType.HTML_CONTENT);
         return schemaData != null ? schemaData.getContent() : null;
     }
@@ -246,6 +255,9 @@ public class PropositionItem implements Serializable {
      * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
      */
     public InAppSchemaData getInAppSchemaData() {
+        if (!schema.equals(SchemaType.INAPP)) {
+            return null;
+        }
         return (InAppSchemaData) createSchemaData(SchemaType.INAPP);
     }
 
@@ -255,6 +267,9 @@ public class PropositionItem implements Serializable {
      * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
      */
     public FeedItemSchemaData getFeedItemSchemaData() {
+        if (!schema.equals(SchemaType.FEED)) {
+            return null;
+        }
         return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
     }
 

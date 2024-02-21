@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.adobe.marketing.mobile.services.Log;
 
@@ -86,5 +87,36 @@ public class RulesetSchemaDataTests {
             // verify
             logMockedStatic.verify(() -> Log.trace(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()));
         }
+    }
+
+    @Test
+    public void getContent_returnsRules_whenCalled() throws JSONException {
+        //setup
+        JSONObject schemaData = new JSONObject();
+        schemaData.put(JSON_VERSION_KEY, 1);
+        Map<String, Object> rule = new HashMap<>();
+        rule.put("key", "value");
+        schemaData.put(JSON_RULES_KEY, Collections.singletonList(rule));
+        RulesetSchemaData rulesetSchemaData = new RulesetSchemaData(schemaData);
+
+        //test
+        Object content = rulesetSchemaData.getContent();
+
+        //verify
+        assertEquals(Collections.singletonList(rule), content);
+    }
+
+    @Test
+    public void getContent_returnsNull_whenRulesAreNotSet() throws JSONException {
+        //setup
+        JSONObject schemaData = new JSONObject();
+        schemaData.put(JSON_VERSION_KEY, 1);
+        RulesetSchemaData rulesetSchemaData = new RulesetSchemaData(schemaData);
+
+        //test
+        Object content = rulesetSchemaData.getContent();
+
+        //verify
+        assertNull(content);
     }
 }

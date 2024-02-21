@@ -71,7 +71,7 @@ public class FeedRulesEngineTests {
     @Test
     public void test_evaluate_WithInAppV2Consequence() {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionContent.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionAllDataPresent.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         feedRulesEngine.replaceRules(rules);
@@ -123,5 +123,37 @@ public class FeedRulesEngineTests {
         List<PropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(2, inboundMessageList.size());
+    }
+
+    @Test
+    public void test_evaluate_WithMissingDataInConsequencesDetail() {
+        // setup
+        String rulesJson = MessagingTestUtils.loadStringFromFile("feedPropositionContentMissingData.json");
+        Assert.assertNotNull(rulesJson);
+        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
+        feedRulesEngine.replaceRules(rules);
+
+        // test
+        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+
+
+        // verify
+        Assert.assertTrue(propositionItemsBySurface.isEmpty());
+    }
+
+    @Test
+    public void test_evaluate_WithMissingSurfaceInConsequencesDetailMetadata() {
+        // setup
+        String rulesJson = MessagingTestUtils.loadStringFromFile("feedPropositionContentMissingSurfaceMetadata.json");
+        Assert.assertNotNull(rulesJson);
+        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
+        feedRulesEngine.replaceRules(rules);
+
+        // test
+        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+
+
+        // verify
+        Assert.assertTrue(propositionItemsBySurface.isEmpty());
     }
 }

@@ -18,6 +18,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -41,7 +42,9 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
                 holder.feedItemImage.refreshDrawableState()
                 holder.feedItemTitle.text = feedItem.title
                 holder.feedBody.text = feedItem.body
+                item.track(MessagingEdgeEventType.DISPLAY)
                 holder.itemView.setOnClickListener {
+                    item.track(MessagingEdgeEventType.INTERACT)
                     val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     MobileCore.getApplication()?.startActivity(intent.apply {

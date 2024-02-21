@@ -67,6 +67,7 @@ public class FeedItemSchemaData implements SchemaData {
         return expiryDate;
     }
 
+    @Nullable
     public Map<String, Object> getMeta() {
         return meta;
     }
