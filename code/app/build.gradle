@@ -62,15 +62,16 @@ dependencies {
 
     // implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     // TODO change once Core is released
-    implementation ("com.github.adobe.aepsdk-core-android:core:feature~uiservice-SNAPSHOT") {}
-    implementation ("com.adobe.marketing.mobile:lifecycle:$rootProject.mavenLifecycleVersion") {
+    implementation ("com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT") {}
+    implementation ("com.adobe.marketing.mobile:lifecycle:3.0.0-SNAPSHOT") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }
-    implementation ("com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion") {
+    implementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-SNAPSHOT") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }
-    implementation ("com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion") {
+    implementation("com.adobe.marketing.mobile:edge:3.0.0-SNAPSHOT") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
+        exclude group: 'com.adobe.marketing.mobile', module: 'edgeidentity'
     }
     implementation ("com.adobe.marketing.mobile:assurance:$rootProject.mavenAssuranceVersion") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
