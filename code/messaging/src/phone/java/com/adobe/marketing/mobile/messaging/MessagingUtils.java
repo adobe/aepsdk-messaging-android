@@ -12,6 +12,11 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.Nullable;
+
+import com.adobe.marketing.mobile.Message;
+import com.adobe.marketing.mobile.services.ui.InAppMessage;
+import com.adobe.marketing.mobile.services.ui.Presentable;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.ArrayList;
@@ -122,5 +127,22 @@ public class MessagingUtils {
             return null;
         }
         return Surface.fromUriString(scope);
+    }
+
+    // ========================================================================================
+    // Presentable message utils
+    // ========================================================================================
+    /**
+     * Returns the {@code Message} object from the provided {@code Presentable<InAppMessage>} object.
+     *
+     * @param presentable A {@link Presentable<InAppMessage>} object
+     * @return the {@link Message} object linked to the presentable or null if the presentable is null
+     */
+    @Nullable
+    public static Message getMessageForInAppMessagePresentable(final Presentable<InAppMessage> presentable) {
+        if (presentable == null) {
+            return null;
+        }
+        return PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().getId());
     }
 }

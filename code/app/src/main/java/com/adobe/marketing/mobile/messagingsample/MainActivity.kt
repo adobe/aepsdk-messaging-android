@@ -31,8 +31,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.PresentableMessageMapper
 import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.InAppMessage
@@ -467,7 +467,7 @@ class CustomDelegate : PresentationDelegate {
 
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
-            val message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
+            val message = MessagingUtils.getMessageForInAppMessagePresentable(currentMessagePresentable)
             message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
         }
 
@@ -482,7 +482,7 @@ class CustomDelegate : PresentationDelegate {
         currentMessagePresentable?.getPresentation()?.eventHandler?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                val message: Message? = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
+                val message: Message? = MessagingUtils.getMessageForInAppMessagePresentable(currentMessagePresentable)
                 message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
         }

@@ -64,7 +64,6 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
         }
-        PresentableMessageMapper.getInstance().removePresentableFromMap(fullscreenMessage.getPresentation().getId());
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 

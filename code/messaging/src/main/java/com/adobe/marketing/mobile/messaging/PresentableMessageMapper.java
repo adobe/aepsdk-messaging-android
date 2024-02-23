@@ -35,7 +35,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class PresentableMessageMapper {
+class PresentableMessageMapper {
 
     private static final Map<String, WeakReference<Message>> presentableMessageMap = new HashMap<>();
 
@@ -48,24 +48,50 @@ public final class PresentableMessageMapper {
      *
      * @return the {@link PresentableMessageMapper} singleton
      */
-    public static PresentableMessageMapper getInstance() {
+    static PresentableMessageMapper getInstance() {
         return PresentableMessageMapper.PresentableMessageMapperSingleton.INSTANCE;
     }
 
     private PresentableMessageMapper() {}
 
+     /**
+      * Creates a {@link Message} object
+      * <p>
+      * Every {@code InternalMessage} requires a {@link RuleConsequence#getId()}, and must be of type "cjmiam".
+      * <p>
+      * The consequence {@code Map} for a {@code InternalMessage} is required to have valid values for the following fields:
+      * <ul>
+      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
+      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
+      *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
+      * </ul>
+      *
+      * @param messagingExtension             {@link MessagingExtension} instance that created this Message
+      * @param consequence        {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} containing a {@code InternalMessage} defining payload
+      * @param rawInAppMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
+      * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
+      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
+      * @throws IllegalStateException if {@link UIService} is unavailable
+      */
     Message createMessage(final MessagingExtension messagingExtension,
                           final RuleConsequence consequence,
                           final Map<String, Object> rawInAppMessageSettings,
                           final Map<String, String> assetMap,
                           final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
+        cleanPresentableMessageMap();
         final InternalMessage internalMessage = new InternalMessage(messagingExtension, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
         presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), new WeakReference<>(internalMessage));
         return internalMessage;
     }
 
+    /**
+     * Retrieves a {@code Message} object associated with the given presentableId from the internally maintained map.
+     *
+     * @param presentableId The ID of the {@link Presentable}  message to retrieve.
+     * @return The {@link Message} object associated with the given presentableId, or null if no such message exists or the presentableId is null or empty.
+     */
     @Nullable
-    public Message getMessageFromPresentableId(final String presentableId) {
+    Message getMessageFromPresentableId(final String presentableId) {
         if (StringUtils.isNullOrEmpty(presentableId)) {
             return null;
         }
@@ -76,11 +102,16 @@ public final class PresentableMessageMapper {
         return messageWeakReference.get();
     }
 
-    public void removePresentableFromMap(final String presentableId) {
-        if (StringUtils.isNullOrEmpty(presentableId)) {
-            return;
+    /**
+     * Removes the weak reference to {@code Message} object associated with the given presentableId
+     * from the presentableMessageMap if the reference to the message is null.
+     */
+    private void cleanPresentableMessageMap() {
+        for (final Map.Entry<String, WeakReference<Message>> entry : presentableMessageMap.entrySet()) {
+            if (entry.getValue().get() == null) {
+                presentableMessageMap.remove(entry.getKey());
+            }
         }
-        presentableMessageMap.remove(presentableId);
     }
 
     static class InternalMessage implements Message {
