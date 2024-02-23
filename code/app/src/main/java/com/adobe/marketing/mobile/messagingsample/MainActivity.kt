@@ -468,7 +468,7 @@ class CustomDelegate : PresentationDelegate {
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
             val message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
-            message.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
+            message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
         }
 
         return showMessages
@@ -482,8 +482,8 @@ class CustomDelegate : PresentationDelegate {
         currentMessagePresentable?.getPresentation()?.eventHandler?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                val message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
-                message.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                val message: Message? = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
+                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
         }
 

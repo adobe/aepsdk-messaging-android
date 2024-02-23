@@ -15,6 +15,8 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -56,12 +58,13 @@ public final class PresentableMessageMapper {
                           final RuleConsequence consequence,
                           final Map<String, Object> rawInAppMessageSettings,
                           final Map<String, String> assetMap,
-                          final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException {
+                          final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
         final InternalMessage internalMessage = new InternalMessage(messagingExtension, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
         presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), new WeakReference<>(internalMessage));
         return internalMessage;
     }
 
+    @Nullable
     public Message getMessageFromPresentableId(final String presentableId) {
         if (StringUtils.isNullOrEmpty(presentableId)) {
             return null;
@@ -85,7 +88,7 @@ public final class PresentableMessageMapper {
         private final static int FILL_SCREEN = 100;
         private final String id;
         private final MessagingExtension messagingExtension;
-        private Presentable<InAppMessage> aepMessage;
+        private final Presentable<InAppMessage> aepMessage;
 
         private boolean autoTrack = true;
         // package private
@@ -113,8 +116,9 @@ public final class PresentableMessageMapper {
                         final RuleConsequence consequence,
                         final Map<String, Object> rawInAppMessageSettings,
                         final Map<String, String> assetMap,
-                        final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException {
+                        final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
             messagingExtension = parent;
+            this.propositionInfo = propositionInfo;
 
             id = consequence.getId();
             if (StringUtils.isNullOrEmpty(id)) {
@@ -122,7 +126,6 @@ public final class PresentableMessageMapper {
                 throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
             }
 
-            this.propositionInfo = propositionInfo;
 
             final Map<String, Object> details = consequence.getDetail();
             if (MapUtils.isNullOrEmpty(details)) {
@@ -153,7 +156,7 @@ public final class PresentableMessageMapper {
             final UIService uiService = ServiceProvider.getInstance().getUIService();
             if (uiService == null) {
                 Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
-                return;
+                throw new IllegalStateException("The UIService is unavailable");
             }
             aepMessage = uiService.create(new InAppMessage(settings, new MessagingFullscreenEventListener()), new DefaultPresentationUtilityProvider());
         }
@@ -175,9 +178,6 @@ public final class PresentableMessageMapper {
         // ui management
         public void show() {
             if (aepMessage != null) {
-                if (autoTrack) {
-                    track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
-                }
                 aepMessage.show();
             }
         }

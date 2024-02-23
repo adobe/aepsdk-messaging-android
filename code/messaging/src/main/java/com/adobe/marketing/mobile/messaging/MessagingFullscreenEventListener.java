@@ -33,9 +33,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class is the Messaging extension implementation of {@link InAppMessageEventListener}.
+ */
 class MessagingFullscreenEventListener implements InAppMessageEventListener {
     private final static String SELF_TAG = "MessagingFullscreenMessageDelegate";
-    static final String INTERACTION_BACK_PRESS = "backPress";
 
     /**
      * Invoked when the in-app message is displayed.
@@ -119,12 +121,12 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         // Populate message data
         final Map<String, String> messageData = extractQueryParameters(queryParams);
 
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
             final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingExtension class available for tracking
-                Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
                 if (message != null) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
@@ -155,7 +157,9 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
 
         final String host = uri.getHost();
         if ((host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) || (host.equals(MessagingConstants.QueryParameters.PATH_CANCEL))) {
-            fullscreenMessage.dismiss();
+            if (message != null) {
+                message.dismiss(true);
+            }
         }
 
         return true;
@@ -165,13 +169,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
     public void onHide(@NonNull Presentable<InAppMessage> presentable) {}
 
     @Override
-    public void onBackPressed(@NonNull Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
-        if (message != null) {
-            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
-        }
-        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
-    }
+    public void onBackPressed(@NonNull Presentable<InAppMessage> fullscreenMessage) {}
 
     // ============================================================================================
     // FullscreenMessageDelegate implementation helper functions

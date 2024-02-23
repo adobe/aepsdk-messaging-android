@@ -637,7 +637,7 @@ class EdgePersonalizationResponseHandler {
                     propositionInfo.get(triggeredConsequence.getId()));
             message.trigger();
             message.show();
-        } catch (final MessageRequiredFieldMissingException exception) {
+        } catch (final MessageRequiredFieldMissingException|IllegalStateException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }
     }
