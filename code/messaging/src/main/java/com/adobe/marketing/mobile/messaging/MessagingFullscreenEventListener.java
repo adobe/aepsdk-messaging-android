@@ -44,7 +44,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      */
     @Override
     public void onShow(@NonNull Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageUtils.getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
         }
@@ -58,11 +58,11 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      */
     @Override
     public void onDismiss(@NonNull Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageUtils.getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
         }
-        PresentableMessageUtils.removePresentableFromMap(fullscreenMessage.getPresentation().getId());
+        PresentableMessageMapper.getInstance().removePresentableFromMap(fullscreenMessage.getPresentation().getId());
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
 
@@ -124,7 +124,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
             final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingExtension class available for tracking
-                Message message = PresentableMessageUtils.getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+                Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
                 if (message != null) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
@@ -138,7 +138,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
                 if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
                     fullscreenMessage.getPresentation().getEventHandler().evaluateJavascript(link, s -> {
-                        // todo logging
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Javascript evaluation completed with result: %s", s);
                     });
                 } else {
                     // if we have any remaining query parameters we need to append them to the deeplink
@@ -162,13 +162,11 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
     }
 
     @Override
-    public void onHide(@NonNull Presentable<InAppMessage> presentable) {
-
-    }
+    public void onHide(@NonNull Presentable<InAppMessage> presentable) {}
 
     @Override
     public void onBackPressed(@NonNull Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageUtils.getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null) {
             message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
         }

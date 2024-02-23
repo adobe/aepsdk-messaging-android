@@ -230,7 +230,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     //implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     // TODO change once Core is released
-    implementation ("com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT") {}
+    implementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
     implementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-SNAPSHOT") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }
@@ -256,12 +256,8 @@ dependencies {
     // add test util dependencies for functional and unit tests
     testImplementation project(':messagingtestutils')
     androidTestImplementation project(':messagingtestutils')
-    testImplementation ("com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion") {
-        exclude group: 'com.adobe.marketing.mobile', module: 'core'
-    }
-    androidTestImplementation ("com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion") {
-        exclude group: 'com.adobe.marketing.mobile', module: 'core'
-    }
+    testImplementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
+    androidTestImplementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
 }
 
 tasks.withType(Test) {

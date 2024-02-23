@@ -34,7 +34,7 @@ dependencies {
     compileOnly project(":${rootProject.moduleProjectName}")
     // implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     // TODO change once Core is released
-    implementation ("com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT") {}
+    implementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
     implementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.junitVersion}"
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

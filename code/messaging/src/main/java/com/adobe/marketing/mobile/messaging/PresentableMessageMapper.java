@@ -10,26 +10,11 @@
  */
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.MESSAGE_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.XDM;
 
-import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
@@ -44,54 +29,69 @@ import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.util.ArrayList;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public final class PresentableMessageUtils {
+public final class PresentableMessageMapper {
 
-    private static Map<String, Message> presentableMessageMap = new HashMap<>();
+    private static final Map<String, WeakReference<Message>> presentableMessageMap = new HashMap<>();
 
-    private PresentableMessageUtils() {}
+    private static class PresentableMessageMapperSingleton {
+        private static final PresentableMessageMapper INSTANCE = new PresentableMessageMapper();
+    }
 
-    public static Message createMessage(final MessagingExtension parent,
-                                        final RuleConsequence consequence,
-                                        final Map<String, Object> rawInAppMessageSettings,
-                                        final Map<String, String> assetMap,
-                                        final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException {
-        final InternalMessage internalMessage = new InternalMessage(parent, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
-        presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), internalMessage);
+    /**
+     * Singleton method to get the instance of PresentableMessageMapper
+     *
+     * @return the {@link PresentableMessageMapper} singleton
+     */
+    public static PresentableMessageMapper getInstance() {
+        return PresentableMessageMapper.PresentableMessageMapperSingleton.INSTANCE;
+    }
+
+    private PresentableMessageMapper() {}
+
+    Message createMessage(final MessagingExtension messagingExtension,
+                          final RuleConsequence consequence,
+                          final Map<String, Object> rawInAppMessageSettings,
+                          final Map<String, String> assetMap,
+                          final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException {
+        final InternalMessage internalMessage = new InternalMessage(messagingExtension, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
+        presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), new WeakReference<>(internalMessage));
         return internalMessage;
     }
 
-    public static Message getMessageFromPresentableId(final String presentableId) {
+    public Message getMessageFromPresentableId(final String presentableId) {
         if (StringUtils.isNullOrEmpty(presentableId)) {
             return null;
         }
-        return presentableMessageMap.get(presentableId);
+        WeakReference<Message> messageWeakReference = presentableMessageMap.get(presentableId);
+        if (messageWeakReference == null) {
+            return null;
+        }
+        return messageWeakReference.get();
     }
 
-    public static void removePresentableFromMap(final String presentableId) {
+    public void removePresentableFromMap(final String presentableId) {
         if (StringUtils.isNullOrEmpty(presentableId)) {
             return;
         }
         presentableMessageMap.remove(presentableId);
     }
 
-    private static class InternalMessage implements Message {
+    static class InternalMessage implements Message {
         private final static String SELF_TAG = "Message";
         private final static int FILL_SCREEN = 100;
         private final String id;
         private final MessagingExtension messagingExtension;
-        Presentable<InAppMessage> aepMessage;
+        private Presentable<InAppMessage> aepMessage;
 
         private boolean autoTrack = true;
         // package private
-        private PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
-        Map<String, Object> details;
+        final PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
-        /**
+         /**
          * Constructor.
          * <p>
          * Every {@link InternalMessage} requires a {@link #id}, and must be of type "cjmiam".
@@ -109,7 +109,7 @@ public final class PresentableMessageUtils {
          * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
          * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
          */
-        InternalMessage(final MessagingExtension parent,
+        private InternalMessage(final MessagingExtension parent,
                         final RuleConsequence consequence,
                         final Map<String, Object> rawInAppMessageSettings,
                         final Map<String, String> assetMap,
@@ -124,7 +124,7 @@ public final class PresentableMessageUtils {
 
             this.propositionInfo = propositionInfo;
 
-            details = consequence.getDetail();
+            final Map<String, Object> details = consequence.getDetail();
             if (MapUtils.isNullOrEmpty(details)) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
                 throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
@@ -169,71 +169,7 @@ public final class PresentableMessageUtils {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to record a message interaction, MessagingEdgeEventType was null.");
                 return;
             }
-            sendPropositionInteraction(interaction, eventType);
-        }
-
-        /**
-         * Sends a proposition interaction to the customer's experience event dataset.
-         *
-         * @param interaction {@code String} containing the interaction which occurred
-         * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-         */
-        void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType) {
-            if (propositionInfo == null || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
-                Log.trace(LOG_TAG, SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");
-                return;
-            }
-            final List<Map<String, Object>> propositions = new ArrayList<>();
-            final Map<String, Object> proposition = new HashMap<>();
-            proposition.put(ID, propositionInfo.id);
-            proposition.put(SCOPE, propositionInfo.scope);
-            proposition.put(SCOPE_DETAILS, propositionInfo.scopeDetails);
-            propositions.add(proposition);
-
-            final Map<String, Integer> propositionEventType = new HashMap<>();
-            propositionEventType.put(eventType.getPropositionEventType(), 1);
-
-            final Map<String, Object> decisioning = new HashMap<>();
-            decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
-            decisioning.put(PROPOSITIONS, propositions);
-
-            // add propositionAction if this is an interact eventType
-            if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
-                final Map<String, String> propositionAction = new HashMap<>();
-                propositionAction.put(ID, interaction);
-                propositionAction.put(LABEL, interaction);
-                decisioning.put(PROPOSITION_ACTION, propositionAction);
-            }
-
-            // create experience map with proposition tracking data
-            final Map<String, Object> experienceMap = new HashMap<>();
-            experienceMap.put(DECISIONING, decisioning);
-
-            // create XDM data with experience data
-            final Map<String, Object> xdmMap = new HashMap<>();
-            xdmMap.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE, eventType.toString());
-            xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
-
-            // create maps for event history
-            final Map<String, String> iamHistoryMap = new HashMap<>();
-            iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-            iamHistoryMap.put(MESSAGE_ID, propositionInfo.activityId);
-            iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
-
-            // Create the mask for storing event history
-            final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
-
-            final Map<String, Object> xdmEventData = new HashMap<>();
-            xdmEventData.put(XDM, xdmMap);
-            xdmEventData.put(IAM_HISTORY, iamHistoryMap);
-
-            // dispatch in-app tracking event
-            InternalMessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
-                    MessagingConstants.EventType.EDGE,
-                    MessagingConstants.EventSource.REQUEST_CONTENT,
-                    xdmEventData,
-                    mask,
-                    messagingExtension.getApi());
+            messagingExtension.sendPropositionInteraction(interaction, eventType, this);
         }
 
         // ui management

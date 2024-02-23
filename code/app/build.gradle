@@ -62,7 +62,7 @@ dependencies {
 
     // implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
     // TODO change once Core is released
-    implementation ("com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT") {}
+    implementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
     implementation ("com.adobe.marketing.mobile:lifecycle:3.0.0-SNAPSHOT") {
         exclude group: 'com.adobe.marketing.mobile', module: 'core'
     }

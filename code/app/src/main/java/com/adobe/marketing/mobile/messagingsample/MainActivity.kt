@@ -31,7 +31,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.PresentableMessageUtils
+import com.adobe.marketing.mobile.messaging.PresentableMessageMapper
 import com.adobe.marketing.mobile.messaging.MessagingProposition
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -467,7 +467,7 @@ class CustomDelegate : PresentationDelegate {
 
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
-            val message = PresentableMessageUtils.getMessageFromPresentableId(presentable.getPresentation().id)
+            val message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
             message.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
         }
 
@@ -482,7 +482,7 @@ class CustomDelegate : PresentationDelegate {
         currentMessagePresentable?.getPresentation()?.eventHandler?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                val message = PresentableMessageUtils.getMessageFromPresentableId(presentable.getPresentation().id)
+                val message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().id)
                 message.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
         }
@@ -500,14 +500,14 @@ class CustomDelegate : PresentationDelegate {
     }
 
     override fun onHide(presentable: Presentable<*>) {
-        TODO("Not yet implemented")
+        setCurrentMessage(presentable)
     }
 
     override fun onContentLoaded(
         presentable: Presentable<*>,
         presentationContent: PresentationListener.PresentationContent?
     ) {
-        TODO("Not yet implemented")
+        setCurrentMessage(presentable)
     }
 
 

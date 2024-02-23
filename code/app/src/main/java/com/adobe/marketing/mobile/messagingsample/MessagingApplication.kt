@@ -33,8 +33,6 @@ class MessagingApplication : Application() {
             MobileCore.lifecycleStart(null)
         }
 
-        Assurance.startSession(ASSURANCE_SESSION_ID)
-
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast
             if (task.isSuccessful) {
