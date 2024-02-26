@@ -227,18 +227,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
-        final List<RuleConsequence> consequences = new ArrayList<>();
-
-        if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
-            return;
-        }
-
-        for (final RuleConsequence consequence : triggeredConsequences) {
-            consequences.add(consequence);
-        }
-
-        edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+        messagingRulesEngine.processEvent(event);
     }
 
     /**

@@ -37,7 +37,7 @@ import java.util.Map;
 
 class PresentableMessageMapper {
 
-    private static final Map<String, WeakReference<Message>> presentableMessageMap = new HashMap<>();
+    private static final Map<String, Message> presentableMessageMap = new HashMap<>();
 
     private static class PresentableMessageMapperSingleton {
         private static final PresentableMessageMapper INSTANCE = new PresentableMessageMapper();
@@ -78,10 +78,25 @@ class PresentableMessageMapper {
                           final Map<String, Object> rawInAppMessageSettings,
                           final Map<String, String> assetMap,
                           final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
-        cleanPresentableMessageMap();
+        final Message existingInternalMessage = findExistingInternalMessage(consequence);
+        if (existingInternalMessage != null) {
+            return existingInternalMessage;
+        }
         final InternalMessage internalMessage = new InternalMessage(messagingExtension, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
-        presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), new WeakReference<>(internalMessage));
+        presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), internalMessage);
         return internalMessage;
+    }
+
+    private InternalMessage findExistingInternalMessage(final RuleConsequence consequence) {
+        if (consequence == null) {
+            return null;
+        }
+        for (final Message message : presentableMessageMap.values()) {
+            if (message.getId().equals(consequence.getId())) {
+                return (InternalMessage) message;
+            }
+        }
+        return null;
     }
 
     /**
@@ -95,23 +110,7 @@ class PresentableMessageMapper {
         if (StringUtils.isNullOrEmpty(presentableId)) {
             return null;
         }
-        WeakReference<Message> messageWeakReference = presentableMessageMap.get(presentableId);
-        if (messageWeakReference == null) {
-            return null;
-        }
-        return messageWeakReference.get();
-    }
-
-    /**
-     * Removes the weak reference to {@code Message} object associated with the given presentableId
-     * from the presentableMessageMap if the reference to the message is null.
-     */
-    private void cleanPresentableMessageMap() {
-        for (final Map.Entry<String, WeakReference<Message>> entry : presentableMessageMap.entrySet()) {
-            if (entry.getValue().get() == null) {
-                presentableMessageMap.remove(entry.getKey());
-            }
-        }
+        return presentableMessageMap.get(presentableId);
     }
 
     static class InternalMessage implements Message {
