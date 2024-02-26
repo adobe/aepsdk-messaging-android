@@ -122,7 +122,7 @@ class PresentableMessageMapper {
 
         private boolean autoTrack = true;
         // package private
-        final PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+        PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
          /**
          * Constructor.

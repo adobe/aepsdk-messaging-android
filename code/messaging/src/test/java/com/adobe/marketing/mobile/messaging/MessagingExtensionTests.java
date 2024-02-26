@@ -92,7 +92,7 @@ public class MessagingExtensionTests {
     @Mock
     Application mockApplication;
     @Mock
-    InternalMessage mockInternalMessage;
+    PresentableMessageMapper.InternalMessage mockInternalMessage;
     @Mock
     LaunchRule mockLaunchRule;
     @Mock

@@ -30,6 +30,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
@@ -119,6 +120,10 @@ public class EdgePersonalizationResponseHandlerTests {
     MessagingCacheUtilities mockMessagingCacheUtilities;
     @Mock
     SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
+    @Mock
+    PresentableMessageMapper mockPresentableMessageMapper;
+    @Mock
+    PresentableMessageMapper.InternalMessage mockInternalMessage;
 
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
@@ -149,6 +154,8 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingRulesEngine);
         reset(mockFeedRulesEngine);
         reset(mockSerialWorkDispatcher);
+        reset(mockPresentableMessageMapper);
+        reset(mockInternalMessage);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -170,7 +177,7 @@ public class EdgePersonalizationResponseHandlerTests {
             edgePersonalizationResponseHandler = new EdgePersonalizationResponseHandler(mockMessagingExtension, mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockMessagingCacheUtilities);
             edgePersonalizationResponseHandler.setMessagesRequestEventId("TESTING_ID");
             edgePersonalizationResponseHandler.setSerialWorkDispatcher(mockSerialWorkDispatcher);
-            
+
             when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
             when(mockResponseEvent.getParentID()).thenReturn("mockParentResponseId");
             when(mockResponseEvent.getName()).thenReturn("fetch message response");
@@ -640,7 +647,7 @@ public class EdgePersonalizationResponseHandlerTests {
             }
         });
     }
-    
+
     @Test
     public void test_handleProcessCompletedEvent_EmptyPayload() {
         runUsingMockedServiceProvider(() -> {
@@ -987,25 +994,32 @@ public class EdgePersonalizationResponseHandlerTests {
     public void test_createInAppMessage() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
-                Map<String, Object> details = new HashMap<>();
-                Map<String, Object> data = new HashMap<>();
-                Map<String, Object> mobileParameters = new HashMap<>();
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                try {
+                    when(mockPresentableMessageMapper.createMessage(any(), any(), any(), any(), any())).thenReturn(mockInternalMessage);
 
-                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
-                data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
-                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
-                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-                RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+                    Map<String, Object> details = new HashMap<>();
+                    Map<String, Object> data = new HashMap<>();
+                    Map<String, Object> mobileParameters = new HashMap<>();
+                    data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+                    data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+                    data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+                    details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
+                    details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
+                    RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
 
-                // test
-                edgePersonalizationResponseHandler.createInAppMessage(consequence);
+                    // test
+                    edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
-                // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
-                InternalMessage mockInternalMessage = mockedConstruction.constructed().get(0);
-                verify(mockInternalMessage, times(1)).trigger();
-                verify(mockInternalMessage, times(1)).show(eq(true));
+                    // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
+                    verify(mockPresentableMessageMapper, times(1)).createMessage(any(), eq(consequence), eq(mobileParameters), any(), any());
+                    verify(mockInternalMessage, times(1)).trigger();
+                    verify(mockInternalMessage, times(1)).show();
+                } catch (MessageRequiredFieldMissingException e) {
+                    fail();
+                }
             }
         });
     }
@@ -1014,7 +1028,11 @@ public class EdgePersonalizationResponseHandlerTests {
     public void test_createInAppMessage_EmptyConsequenceType() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockInternalMessage);
+
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
@@ -1027,7 +1045,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
-                assertEquals(0, mockedConstruction.constructed().size());
+                verifyNoInteractions(mockPresentableMessageMapper);
             }
         });
     }
@@ -1036,23 +1054,31 @@ public class EdgePersonalizationResponseHandlerTests {
     public void test_createInAppMessage_NullDetails() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockInternalMessage);
+
                 RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
 
                 // test
                 edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
-                assertEquals(0, mockedConstruction.constructed().size());
+                verifyNoInteractions(mockPresentableMessageMapper);
             }
         });
     }
 
     @Test
-    public void test_createInAppMessage_NotCjmIamPayload() {
+    public void test_createInAppMessage_ConsequenceTypeEmpty() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockInternalMessage);
+
                 Map<String, Object> details = new HashMap<>();
                 Map<String, Object> mobileParameters = new HashMap<>();
 
@@ -1065,7 +1091,34 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.createInAppMessage(consequence);
 
                 // verify no message object created
-                assertEquals(0, mockedConstruction.constructed().size());
+                verifyNoInteractions(mockPresentableMessageMapper);
+            }
+        });
+    }
+
+    @Test
+    public void test_createInAppMessage_NotCjmIamPayload() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockInternalMessage);
+
+                Map<String, Object> details = new HashMap<>();
+                Map<String, Object> mobileParameters = new HashMap<>();
+
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, mobileParameters);
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML, "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>");
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "random");
+                RuleConsequence consequence = new RuleConsequence("123456789", "notCjmIam", details);
+
+                // test
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
+
+                // verify no message object created
+                verifyNoInteractions(mockPresentableMessageMapper);
             }
         });
     }
@@ -1074,12 +1127,41 @@ public class EdgePersonalizationResponseHandlerTests {
     public void test_createInAppMessage_NullRuleConsequence() {
         runUsingMockedServiceProvider(() -> {
             // setup
-            try (MockedConstruction<InternalMessage> mockedConstruction = Mockito.mockConstruction(InternalMessage.class)) {
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockInternalMessage);
+
                 // test
                 edgePersonalizationResponseHandler.createInAppMessage(null);
 
                 // verify no message object created
-                assertEquals(0, mockedConstruction.constructed().size());
+                verifyNoInteractions(mockPresentableMessageMapper);
+            }
+        });
+    }
+
+    @Test
+    public void test_createInAppMessage_MissingConsequenceDetailsData() {
+        runUsingMockedServiceProvider(() -> {
+            // setup
+            try (MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
+                // setup
+                presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
+                when(mockPresentableMessageMapper.createMessage(any(), any(), any(), any(), any())).thenThrow(new MessageRequiredFieldMissingException("Missing required field: data"));
+
+                Map<String, Object> details = new HashMap<>();
+                details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
+                RuleConsequence consequence = new RuleConsequence("123456789", MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+
+                // test
+                edgePersonalizationResponseHandler.createInAppMessage(consequence);
+
+                // verify MessagingFullscreenMessage.trigger() then MessagingFullscreenMessage.show() called
+                verify(mockPresentableMessageMapper, times(1)).createMessage(any(), eq(consequence), eq(Collections.emptyMap()), any(), any());
+                verifyNoInteractions(mockInternalMessage);
+            } catch (MessageRequiredFieldMissingException e) {
+                fail();
             }
         });
     }

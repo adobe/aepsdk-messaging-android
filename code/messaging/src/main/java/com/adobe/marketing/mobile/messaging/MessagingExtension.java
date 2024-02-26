@@ -68,6 +68,7 @@ import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.InAppMessage;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -232,7 +233,7 @@ public final class MessagingExtension extends Extension {
 
     /**
      * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
-     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.InAppMessage}
+     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.Presentable<InAppMessage>}
      * created from the triggered rule consequence payload.
      *
      * @param event incoming {@link Event} object to be processed
