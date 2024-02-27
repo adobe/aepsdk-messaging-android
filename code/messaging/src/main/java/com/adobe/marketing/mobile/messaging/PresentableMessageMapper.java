@@ -197,6 +197,7 @@ class PresentableMessageMapper {
          * @param interaction {@code String} containing the interaction which occurred
          * @param eventType   {@link MessagingEdgeEventType} enum containing the Event Type to be used for the ensuing Edge Event
          */
+        @Override
         public void track(final String interaction, final MessagingEdgeEventType eventType) {
             if (eventType == null) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to record a message interaction, MessagingEdgeEventType was null.");
@@ -206,27 +207,31 @@ class PresentableMessageMapper {
         }
 
         // ui management
+        @Override
         public void show() {
             if (aepMessage != null) {
                 aepMessage.show();
             }
         }
 
+        @Override
         public void dismiss(final boolean suppressAutoTrack) {
-            if (aepMessage != null) {
-                if (autoTrack && !suppressAutoTrack) {
-                    track(null, MessagingEdgeEventType.IN_APP_DISMISS);
-                }
-
-                aepMessage.dismiss();
+            if (aepMessage == null) {
+                return;
             }
+            if (autoTrack && !suppressAutoTrack) {
+                track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+            }
+
+            aepMessage.dismiss();
         }
 
         void trigger() {
-            if (aepMessage != null) {
-                if (autoTrack) {
-                    track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
-                }
+            if (aepMessage == null) {
+                return;
+            }
+            if (autoTrack) {
+                track(null, MessagingEdgeEventType.IN_APP_TRIGGER);
             }
         }
 
@@ -275,33 +280,22 @@ class PresentableMessageMapper {
         private InAppMessageSettings InAppMessageSettingsFromMap(final Map<String, Object> rawSettings,
                                                                  final String content,
                                                                  final Map<String, String> assetMap) {
-            int width, height, verticalInset, horizontalInset;
-            String backdropColor;
-            float backdropOpacity;
-            float cornerRadius;
-            boolean uiTakeover;
-            InAppMessageSettings.MessageAlignment verticalAlign, horizontalAlign;
-            InAppMessageSettings.MessageAnimation displayAnimation, dismissAnimation;
-            Map<String, String> gestureMap = new HashMap<>();
 
-            width = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.WIDTH, FILL_SCREEN);
-            height = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HEIGHT, FILL_SCREEN);
-            verticalAlign = InAppMessageSettings.MessageAlignment.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center").toUpperCase()));
-            verticalInset = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_INSET, 0);
-            horizontalAlign = InAppMessageSettings.MessageAlignment.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_ALIGN, "center").toUpperCase()));
-            horizontalInset = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
-            displayAnimation = InAppMessageSettings.MessageAnimation.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.DISPLAY_ANIMATION, "none").toUpperCase()));
-            dismissAnimation = InAppMessageSettings.MessageAnimation.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "none").toUpperCase()));
-            backdropColor = DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.BACKDROP_COLOR, "#FFFFFF");
-            backdropOpacity = DataReader.optFloat(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.BACKDROP_OPACITY, 0.0f);
-            cornerRadius = DataReader.optFloat(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.CORNER_RADIUS, 0.0f);
-            uiTakeover = DataReader.optBoolean(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
+            final int width = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.WIDTH, FILL_SCREEN);
+            final int height = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HEIGHT, FILL_SCREEN);
+            final InAppMessageSettings.MessageAlignment verticalAlign = InAppMessageSettings.MessageAlignment.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_ALIGN, "center").toUpperCase()));
+            final int verticalInset = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.VERTICAL_INSET, 0);
+            final InAppMessageSettings.MessageAlignment horizontalAlign = InAppMessageSettings.MessageAlignment.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_ALIGN, "center").toUpperCase()));
+            final int horizontalInset = DataReader.optInt(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.HORIZONTAL_INSET, 0);
+            final InAppMessageSettings.MessageAnimation displayAnimation = InAppMessageSettings.MessageAnimation.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.DISPLAY_ANIMATION, "none").toUpperCase()));
+            final InAppMessageSettings.MessageAnimation dismissAnimation = InAppMessageSettings.MessageAnimation.valueOf((DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.DISMISS_ANIMATION, "none").toUpperCase()));
+            final String backdropColor = DataReader.optString(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.BACKDROP_COLOR, "#FFFFFF");
+            final float backdropOpacity = DataReader.optFloat(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.BACKDROP_OPACITY, 0.0f);
+            final float cornerRadius = DataReader.optFloat(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.CORNER_RADIUS, 0.0f);
+            final boolean uiTakeover = DataReader.optBoolean(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER, true);
 
             // we need to convert key strings present in the gestures map to InAppInAppMessageSettings.MessageGesture enum keys
-            final Map<String, String> stringMap = DataReader.optStringMap(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.GESTURES, null);
-            if (!MapUtils.isNullOrEmpty(stringMap)) {
-                gestureMap.putAll(stringMap);
-            }
+            final Map<String, String> gestureMap = DataReader.optStringMap(rawSettings, MessagingConstants.EventDataKeys.MobileParametersKeys.GESTURES, new HashMap<>());
 
             return new InAppMessageSettings.Builder()
                     .content(content)

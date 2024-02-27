@@ -139,7 +139,7 @@ public class MessagingUtils {
      * @return the {@link Message} object linked to the presentable or null if the presentable is null
      */
     @Nullable
-    public static Message getMessageForInAppMessagePresentable(final Presentable<InAppMessage> presentable) {
+    public static Message getMessageForPresentable(final Presentable<InAppMessage> presentable) {
         if (presentable == null) {
             return null;
         }
