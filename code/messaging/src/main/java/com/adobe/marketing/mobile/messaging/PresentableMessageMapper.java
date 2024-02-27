@@ -16,6 +16,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
@@ -87,16 +88,21 @@ class PresentableMessageMapper {
         return internalMessage;
     }
 
-    private InternalMessage findExistingInternalMessage(final RuleConsequence consequence) {
+    private Message findExistingInternalMessage(final RuleConsequence consequence) {
         if (consequence == null) {
             return null;
         }
         for (final Message message : presentableMessageMap.values()) {
             if (message.getId().equals(consequence.getId())) {
-                return (InternalMessage) message;
+                return message;
             }
         }
         return null;
+    }
+
+    @VisibleForTesting
+    void clearPresentableMessageMap() {
+        presentableMessageMap.clear();
     }
 
     /**

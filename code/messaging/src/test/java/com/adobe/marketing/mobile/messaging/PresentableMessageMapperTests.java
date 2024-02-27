@@ -93,6 +93,7 @@ public class PresentableMessageMapperTests {
 
     @After
     public void tearDown() {
+        PresentableMessageMapper.getInstance().clearPresentableMessageMap();
         reset(mockExtensionApi);
         reset(mockServiceProvider);
         reset(mockUIService);
@@ -146,6 +147,25 @@ public class PresentableMessageMapperTests {
 
             // verify
             verify(mockUIService, times(1)).create(any(InAppMessage.class), any(DefaultPresentationUtilityProvider.class));
+        });
+    }
+
+    @Test
+    public void test_createMessage_MessagesForSameConsequence() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            // test
+            PresentableMessageMapper.InternalMessage internalMessageSameConsequence = null;
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessageSameConsequence = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // verify
+            verify(mockUIService, times(1)).create(any(InAppMessage.class), any(DefaultPresentationUtilityProvider.class));
+            assertEquals(internalMessage, internalMessageSameConsequence);
         });
     }
 

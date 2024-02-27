@@ -373,10 +373,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleWildcardEvents(mockEvent);
 
             // verify rules engine processes event
-            verify(mockMessagingRulesEngine, times(1)).evaluateEvent(eq(mockEvent));
-
-            // verify in-app message created
-            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(mockRuleConsequence);
+            verify(mockMessagingRulesEngine, times(1)).processEvent(eq(mockEvent));
         });
     }
 
