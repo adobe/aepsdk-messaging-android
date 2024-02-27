@@ -212,7 +212,7 @@ public class TestHelper {
                 public void evaluate() throws Throwable {
                     // Use registerExtension here to avoid starting the core yet, the tests should
                     // start it after all extensions have been registered
-                    MobileCore.registerExtension(MonitorExtension.EXTENSION, null);
+                    MobileCore.registerExtensions(Collections.singletonList(MonitorExtension.class), null);
 
                     try {
                         base.evaluate();
