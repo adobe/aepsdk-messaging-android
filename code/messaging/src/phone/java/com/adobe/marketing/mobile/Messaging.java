@@ -81,21 +81,6 @@ public final class Messaging {
     }
 
     /**
-     * Registers the Messaging extension with the {@code MobileCore}.
-     * <p>
-     * This will allow the extension to send and receive events to and from the SDK.
-     */
-    @Deprecated
-    public static void registerExtension() {
-        MobileCore.registerExtension(MessagingExtension.class, extensionError -> {
-            if (extensionError == null) {
-                return;
-            }
-            Log.error(LOG_TAG, CLASS_NAME, "There was an error registering Messaging Extension: %s", extensionError.getErrorName());
-        });
-    }
-
-    /**
      * Extracts and update the intent with xdm data and message id from data payload.
      * <p>
      * This method needs to be called with the intent before the notification is created.

@@ -61,7 +61,6 @@ import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -228,23 +227,12 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        List<RuleConsequence> triggeredConsequences = messagingRulesEngine.evaluateEvent(event);
-        final List<RuleConsequence> consequences = new ArrayList<>();
-
-        if (MessagingUtils.isNullOrEmpty(triggeredConsequences)) {
-            return;
-        }
-
-        for (final RuleConsequence consequence : triggeredConsequences) {
-            consequences.add(consequence);
-        }
-
-        edgePersonalizationResponseHandler.createInAppMessage(consequences.get(0));
+        messagingRulesEngine.processEvent(event);
     }
 
     /**
      * Handles Rule Engine Response Content events which are dispatched when a event matches a rule in the Messaging {@link LaunchRulesEngine}.
-     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.FullscreenMessage}
+     * The {@link EdgePersonalizationResponseHandler} will then attempt to show a {@link com.adobe.marketing.mobile.services.ui.InAppMessage}
      * created from the triggered rule consequence payload.
      *
      * @param event incoming {@link Event} object to be processed
@@ -406,9 +394,9 @@ public final class MessagingExtension extends Extension {
      *
      * @param interaction {@code String} containing the interaction which occurred
      * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-     * @param message     The {@link InternalMessage} which triggered the proposition interaction
+     * @param message     The {@link PresentableMessageMapper.InternalMessage} which triggered the proposition interaction
      */
-    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final InternalMessage message) {
+    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final PresentableMessageMapper.InternalMessage message) {
         final PropositionInfo propositionInfo = message.propositionInfo;
         if (propositionInfo == null || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
             Log.trace(LOG_TAG, MessagingExtension.SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");

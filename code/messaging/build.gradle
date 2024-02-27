@@ -222,12 +222,22 @@ task platformFunctionalTestJacocoReport(type: JacocoReport, dependsOn: "createPh
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
-    implementation "com.adobe.marketing.mobile:edgeidentity:$rootProject.mavenEdgeIdentityVersion"
-    implementation "com.adobe.marketing.mobile:edge:$rootProject.mavenEdgeVersion"
-
+    //implementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    // TODO change once Core is released
+    implementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
+    implementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-SNAPSHOT") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+    }
+    implementation("com.adobe.marketing.mobile:edge:3.0.0-SNAPSHOT") {
+        exclude group: 'com.adobe.marketing.mobile', module: 'core'
+        exclude group: 'com.adobe.marketing.mobile', module: 'edgeidentity'
+    }
     // Firebase sdk compile only
     compileOnly "com.google.firebase:firebase-messaging:21.1.0"
 
@@ -246,8 +256,8 @@ dependencies {
     // add test util dependencies for functional and unit tests
     testImplementation project(':messagingtestutils')
     androidTestImplementation project(':messagingtestutils')
-    testImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
-    androidTestImplementation "com.adobe.marketing.mobile:core:$rootProject.mavenCoreVersion"
+    testImplementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
+    androidTestImplementation "com.adobe.marketing.mobile:core:3.0.0-SNAPSHOT"
 }
 
 tasks.withType(Test) {
