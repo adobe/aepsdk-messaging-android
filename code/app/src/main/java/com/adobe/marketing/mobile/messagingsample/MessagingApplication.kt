@@ -17,7 +17,7 @@ import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
-    private val ENVIRONMENT_FILE_ID = "3149c49c3910/aade5cbb52e4/launch-365a8d4bb1e7-development"
+    private val ENVIRONMENT_FILE_ID = ""
     private val ASSURANCE_SESSION_ID = ""
 
     override fun onCreate() {
