@@ -39,15 +39,15 @@ class NotificationService : FirebaseMessagingService() {
         val payload = MessagingPushPayload(message)
 
         val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
             val channelName = "some channel name"
             channelId = if (payload.channelId != null) payload.channelId else channelId
             val channel = NotificationChannel(
-                channelId,
-                channelName,
-                getImportance(payload.notificationPriority)
+                    channelId,
+                    channelName,
+                    getImportance(payload.notificationPriority)
             ).apply {
                 description = "Settings for push notification"
             }
