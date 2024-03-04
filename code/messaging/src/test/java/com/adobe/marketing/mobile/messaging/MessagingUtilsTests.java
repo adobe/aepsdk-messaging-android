@@ -225,4 +225,10 @@ public class MessagingUtilsTests {
         Assert.assertNotNull(surface);
         Assert.assertEquals("mobileapp://mockApp/feeds/testFeed", surface.getUri());
     }
+
+    @Test
+    public void test_getMessageForPresentable_presentableIsNull() {
+        // test
+        Assert.assertNull(MessagingUtils.getMessageForPresentable(null));
+    }
 }
