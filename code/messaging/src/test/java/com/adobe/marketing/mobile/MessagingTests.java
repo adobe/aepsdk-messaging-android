@@ -29,6 +29,7 @@ import android.content.Intent;
 import com.adobe.marketing.mobile.messaging.MessagingProposition;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
+import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
 import com.adobe.marketing.mobile.messaging.Surface;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
@@ -221,23 +222,20 @@ public class MessagingTests {
     public void test_handleNotificationResponseNoXdmData() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         runWithMockedMobileCore(eventCaptor, null, () -> {
+            final AdobeCallback<PushTrackingStatus> mockCallback = Mockito.mock(AdobeCallback.class);
             String mockActionId = "mockActionId";
             String messageId = "messageId";
 
-            when(mockIntent.getStringExtra(ArgumentMatchers.contains("messageId"))).thenReturn(messageId);
+            when(mockIntent.getStringExtra(ArgumentMatchers.eq("messageId"))).thenReturn(messageId);
 
             // test
-            Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+            Messaging.handleNotificationResponse(mockIntent, true, mockActionId, mockCallback);
 
             // verify
             verify(mockIntent, times(2)).getStringExtra(anyString());
 
             // verify event
-            Event event = eventCaptor.getValue();
-            Map<String, Object> eventData = event.getEventData();
-            assertNotNull(eventData);
-            assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
-            assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+            verify(mockCallback).call(PushTrackingStatus.NO_TRACKING_DATA);
         });
     }
 
