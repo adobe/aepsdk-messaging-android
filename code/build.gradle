@@ -2,7 +2,7 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.4.0'
+        kotlin_version = '1.7.20'
     }
     repositories {
         google()
@@ -16,7 +16,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:7.3.1'
         classpath 'org.codehaus.groovy:groovy-all:2.4.15'
         classpath 'com.google.gms:google-services:4.3.14'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -27,9 +27,9 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://jitpack.io"  }
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-        maven { url "https://jitpack.io" }
     }
 
     apply plugin: 'maven-publish'
@@ -41,7 +41,7 @@ task clean(type: Delete) {
 
 ext {
     // android config
-    minSdkVersion = 19
+    minSdkVersion = 21
     targetSdkVersion = 33
     compileSdkVersion = 33
     versionCode = 1
@@ -58,6 +58,6 @@ ext {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     jacocoVersion = "0.8.8"
     kotlinJvmTarget = JavaVersion.VERSION_1_8
-    kotlinLanguageVersion = "1.4"
-    kotlinApiVersion = "1.4"
+    kotlinLanguageVersion = "1.5"
+    kotlinApiVersion = "1.5"
 }

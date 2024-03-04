@@ -629,11 +629,15 @@ class EdgePersonalizationResponseHandler {
         try {
             final Map<String, Object> detailsDataMap = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, Collections.emptyMap());
             final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, detailsDataMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
-            final InternalMessage message = new InternalMessage(parent, triggeredConsequence, mobileParameters, messagingCacheUtilities.getAssetsMap());
-            message.propositionInfo = propositionInfo.get(message.getId());
+            final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(
+                    parent,
+                    triggeredConsequence,
+                    mobileParameters,
+                    messagingCacheUtilities.getAssetsMap(),
+                    propositionInfo.get(triggeredConsequence.getId()));
             message.trigger();
-            message.show(true);
-        } catch (final MessageRequiredFieldMissingException exception) {
+            message.show();
+        } catch (final MessageRequiredFieldMissingException|IllegalStateException exception) {
             Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }
     }

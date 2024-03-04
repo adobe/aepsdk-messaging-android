@@ -1,5 +1,5 @@
 /*
-  Copyright 2021 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,14 +12,18 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-import com.adobe.marketing.mobile.services.ui.FullscreenMessage;
-import com.adobe.marketing.mobile.services.ui.FullscreenMessageDelegate;
-import com.adobe.marketing.mobile.services.ui.MessageSettings;
+import com.adobe.marketing.mobile.services.ui.InAppMessage;
+import com.adobe.marketing.mobile.services.ui.Presentable;
+import com.adobe.marketing.mobile.services.ui.PresentationError;
 import com.adobe.marketing.mobile.services.ui.UIService;
+import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventListener;
+import com.adobe.marketing.mobile.services.uri.UriOpening;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
@@ -27,25 +31,25 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class is the Messaging extension implementation of {@link FullscreenMessageDelegate}.
+ * This class is the Messaging extension implementation of {@link InAppMessageEventListener}.
  */
-class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
-
+class MessagingFullscreenEventListener implements InAppMessageEventListener {
     static final String INTERACTION_BACK_PRESS = "backPress";
     private final static String SELF_TAG = "MessagingFullscreenMessageDelegate";
 
     /**
      * Invoked when the in-app message is displayed.
      *
-     * @param fullscreenMessage the {@link FullscreenMessage} being displayed
+     * @param fullscreenMessage the {@link Presentable < InAppMessage >} being displayed
      */
     @Override
-    public void onShow(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+    public void onShow(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
         }
@@ -55,11 +59,11 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
     /**
      * Invoked when the in-app message is dismissed.
      *
-     * @param fullscreenMessage the {@link FullscreenMessage} being dismissed
+     * @param fullscreenMessage the {@link Presentable<InAppMessage>} being dismissed
      */
     @Override
-    public void onDismiss(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+    public void onDismiss(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
         }
@@ -70,19 +74,19 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
      * Invoked when the in-app message failed to be displayed.
      */
     @Override
-    public void onShowFailure() {
+    public void onError(@NonNull Presentable<InAppMessage> presentable, @NonNull PresentationError presentationError) {
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");
     }
 
     /**
-     * Invoked when a {@link FullscreenMessage} is attempting to load a URL.
+     * Invoked when a {@link Presentable<InAppMessage>} is attempting to load a URL.
      *
-     * @param fullscreenMessage the {@link FullscreenMessage} instance
+     * @param fullscreenMessage the {@link Presentable<InAppMessage>} instance
      * @param urlString         {@link String} containing the URL being loaded by the {@code AEPMessage}
      * @return true if the SDK wants to handle the URL
      */
     @Override
-    public boolean overrideUrlLoad(final FullscreenMessage fullscreenMessage, final String urlString) {
+    public boolean onUrlLoading(@NonNull Presentable<InAppMessage> fullscreenMessage, @NonNull String urlString) {
         Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen overrideUrlLoad callback received with url (%s)", urlString);
 
         if (StringUtils.isNullOrEmpty(urlString)) {
@@ -119,16 +123,13 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         // Populate message data
         final Map<String, String> messageData = extractQueryParameters(queryParams);
 
-        final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
-        final Message message = (Message) messageSettings.getParent();
-
+        final Message message = MessagingUtils.getMessageForPresentable(fullscreenMessage);
         if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
             final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
             if (!StringUtils.isNullOrEmpty(interaction)) {
                 // ensure we have the MessagingExtension class available for tracking
-                final Object messagingExtension = message.getParent();
-                if (messagingExtension != null) {
+                if (message != null) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
                     message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
                 }
@@ -140,7 +141,9 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
                 // handle optional javascript code to be executed
                 if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
-                    message.evaluateJavascript(link);
+                    fullscreenMessage.getPresentation().getEventHandler().evaluateJavascript(link, s -> {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Javascript evaluation completed with result: %s", s);
+                    });
                 } else {
                     // if we have any remaining query parameters we need to append them to the deeplink
                     if (!messageData.isEmpty()) {
@@ -156,15 +159,20 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
 
         final String host = uri.getHost();
         if ((host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) || (host.equals(MessagingConstants.QueryParameters.PATH_CANCEL))) {
-            message.dismiss(true);
+            if (message != null) {
+                message.dismiss(true);
+            }
         }
 
         return true;
     }
 
     @Override
-    public void onBackPressed(final FullscreenMessage fullscreenMessage) {
-        final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
+    public void onHide(@NonNull Presentable<InAppMessage> presentable) {}
+
+    @Override
+    public void onBackPressed(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+        final Message message = MessagingUtils.getMessageForPresentable(fullscreenMessage);
         if (message != null) {
             message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
         }
@@ -186,18 +194,18 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
         }
 
         // pass the url to the ui service
-        final UIService uiService = ServiceProvider.getInstance().getUIService();
-        if (uiService == null || !uiService.showUrl(url)) {
+        final UriOpening uriService = ServiceProvider.getInstance().getUriService();
+        if (uriService == null || !uriService.openUri(url)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Could not open URL (%s)", url);
         }
     }
 
-    private static Map<String, String> extractQueryParameters(final String queryString) {
+    private Map<String, String> extractQueryParameters(final String queryString) {
         if (StringUtils.isNullOrEmpty(queryString)) {
             return null;
         }
 
-        final Map<String, String> parameters = new HashMap<String, String>();
+        final Map<String, String> parameters = new HashMap<>();
         final String[] paramArray = queryString.split("&");
 
         for (String currentParam : paramArray) {

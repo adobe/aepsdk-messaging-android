@@ -46,7 +46,7 @@ class SingleFeedActivity : AppCompatActivity() {
         feedActivityBody.text = jsonContent.getString("body")
         feedActivityButton.text = jsonContent.getString("actionTitle")
         feedActivityButton.setOnClickListener {
-            ServiceProvider.getInstance().uiService.showUrl(jsonContent.getString("actionUrl"))
+            ServiceProvider.getInstance().uriService.openUri(jsonContent.getString("actionUrl"))
         }
     }
 }

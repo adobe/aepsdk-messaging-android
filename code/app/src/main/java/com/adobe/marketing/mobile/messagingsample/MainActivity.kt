@@ -24,7 +24,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
-import android.webkit.WebView
 import android.widget.AdapterView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -33,11 +32,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.messaging.MessagingProposition
-import com.adobe.marketing.mobile.messaging.Surface
-import com.adobe.marketing.mobile.services.MessagingDelegate
-import com.adobe.marketing.mobile.services.ui.FullscreenMessage
+import com.adobe.marketing.mobile.messaging.MessagingUtils
+import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
+import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.services.ui.InAppMessage
+import com.adobe.marketing.mobile.services.ui.Presentable
+import com.adobe.marketing.mobile.services.ui.PresentationDelegate
+import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
-import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
@@ -243,10 +245,13 @@ class MainActivity : ComponentActivity() {
     }
 
     var messagingPropositions = mutableListOf<MessagingProposition>()
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        MobileCore.setMessagingDelegate(customMessagingDelegate)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+        ServiceProvider.getInstance().uiService.setPresentationDelegate(customMessagingDelegate)
 
         // setup ui interaction listeners
         setupButtonClickListeners()
@@ -267,12 +272,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupButtonClickListeners() {
-        btnGetLocalNotification.setOnClickListener {
+        binding.btnGetLocalNotification.setOnClickListener {
             scheduleNotification(getNotification("Click on the notification for tracking"), 1000)
         }
 
-        btnTriggerFullscreenIAM.setOnClickListener {
-            val trigger = editText.text.toString()
+        binding.btnTriggerFullscreenIAM.setOnClickListener {
+            val trigger = binding.editText.text.toString()
             if (StringUtils.isNullOrEmpty(trigger) || trigger == "Trigger IAM") {
                 Toast.makeText(
                     this@MainActivity, "Empty or default trigger string provided. Triggering default message.",
@@ -283,15 +288,15 @@ class MainActivity : ComponentActivity() {
                 MobileCore.trackAction(trigger, null)
             }
         }
-        btnCheckFeedMessages.setOnClickListener {
+        binding.btnCheckFeedMessages.setOnClickListener {
             startActivity(Intent(this, ScrollingFeedActivity::class.java))
         }
 
-        btnCheckCodeBased.setOnClickListener {
+        binding.btnCheckCodeBased.setOnClickListener {
             startActivity(Intent(this, CodeBasedExperienceActivity::class.java))
         }
 
-        btnTriggerLastIAM.setOnClickListener {
+        binding.btnTriggerLastIAM.setOnClickListener {
             Toast.makeText(
                     this@MainActivity, "Showing last message.",
                     Toast.LENGTH_SHORT
@@ -299,13 +304,13 @@ class MainActivity : ComponentActivity() {
             customMessagingDelegate.getLastTriggeredMessage()?.show()
         }
 
-        btnRefreshInAppMessages.setOnClickListener {
+        binding.btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
     }
 
     private fun setupSwitchListeners() {
-        allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
+        binding.allowIAMSwitch.setOnCheckedChangeListener { _, isChecked ->
             val message = if (isChecked) "Fullscreen IAM enabled" else "Fullscreen IAM disabled"
             Toast.makeText(
                     this@MainActivity, message,
@@ -446,59 +451,75 @@ class MainActivity : ComponentActivity() {
             it.setEventData(eventData)
             it.build()
         }
-        MobileCore.dispatchEvent(edgeResponseEvent, null)
+        MobileCore.dispatchEvent(edgeResponseEvent)
     }
 }
 
-class CustomDelegate : MessagingDelegate {
-    private var currentMessage: Message? = null
-    private var webview: WebView? = null
+class CustomDelegate : PresentationDelegate {
+    private var currentMessagePresentable: Presentable<InAppMessage>? = null
     var showMessages = true
 
-    override fun shouldShowMessage(fullscreenMessage: FullscreenMessage?): Boolean {
-        // access to the whole message from the parent
-        fullscreenMessage?.also {
-            this.currentMessage = (fullscreenMessage.parent) as? Message
-            this.webview = currentMessage?.webView
+    override fun canShow(presentable: Presentable<*>): Boolean {
+        if (!isInAppMessage(presentable)) return true
 
-            // if we're not showing the message now, we can save it for later
-            if(!showMessages) {
-                println("message was suppressed: ${currentMessage?.id}")
-                currentMessage?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
-            }
+        // can hold this reference for later use
+        setCurrentMessage(presentable)
+
+        if(!showMessages) {
+            println("message was suppressed: ${presentable.getPresentation().id}")
+            val message = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
+            message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
         }
+
         return showMessages
     }
 
-    override fun onShow(fullscreenMessage: FullscreenMessage?) {
-        this.currentMessage = fullscreenMessage?.parent as Message?
-        this.webview = currentMessage?.webView
+    override fun onShow(presentable: Presentable<*>) {
+        setCurrentMessage(presentable)
 
         // example: in-line handling of javascript calls in the AJO in-app message html
         // the content callback will contain the output of (function() { return 'inline js return value'; })();
-        currentMessage?.handleJavascriptMessage("handler_name") { content ->
+        currentMessagePresentable?.getPresentation()?.eventHandler?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                currentMessage?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
+                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
             }
         }
 
         // example: running javascript on the webview created by the Messaging extension.
-        // running javascript content must be done on the ui thread
-        webview?.post {
-            webview?.evaluateJavascript("(function() { return 'function return value'; })();") { content ->
-                if (content != null) {
-                    println("js function return content is: $content")
-                }
+        currentMessagePresentable?.getPresentation()?.eventHandler?.evaluateJavascript("(function() { return 'function return value'; })();") { content ->
+            if (content != null) {
+                println("js function return content is: $content")
             }
         }
     }
 
-    override fun onDismiss(fullscreenMessage: FullscreenMessage?) {
-        this.currentMessage = fullscreenMessage?.parent as Message?
+    override fun onDismiss(presentable: Presentable<*>) {
+        setCurrentMessage(presentable)
     }
 
-    fun getLastTriggeredMessage(): Message? {
-        return currentMessage
+    override fun onHide(presentable: Presentable<*>) {
+        setCurrentMessage(presentable)
+    }
+
+    override fun onContentLoaded(
+        presentable: Presentable<*>,
+        presentationContent: PresentationListener.PresentationContent?
+    ) {
+        setCurrentMessage(presentable)
+    }
+
+
+    fun getLastTriggeredMessage(): Presentable<InAppMessage>? {
+        return currentMessagePresentable
+    }
+
+    private fun setCurrentMessage(presentable: Presentable<*>) {
+        currentMessagePresentable = presentable as Presentable<InAppMessage>
+    }
+
+    private fun isInAppMessage(presentable: Presentable<*>): Boolean {
+        return presentable.getPresentation() is InAppMessage
     }
 }

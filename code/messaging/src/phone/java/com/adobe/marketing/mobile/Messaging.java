@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "2.3.0";
+    private static final String EXTENSION_VERSION = "2.3.0-cbe-beta";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -80,21 +80,6 @@ public final class Messaging {
     @NonNull
     public static String extensionVersion() {
         return EXTENSION_VERSION;
-    }
-
-    /**
-     * Registers the Messaging extension with the {@code MobileCore}.
-     * <p>
-     * This will allow the extension to send and receive events to and from the SDK.
-     */
-    @Deprecated
-    public static void registerExtension() {
-        MobileCore.registerExtension(MessagingExtension.class, extensionError -> {
-            if (extensionError == null) {
-                return;
-            }
-            Log.error(LOG_TAG, CLASS_NAME, "There was an error registering Messaging Extension: %s", extensionError.getErrorName());
-        });
     }
 
     /**
