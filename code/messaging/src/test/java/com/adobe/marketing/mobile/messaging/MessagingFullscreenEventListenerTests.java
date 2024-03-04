@@ -27,7 +27,6 @@ import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.WebViewJavascriptInterface;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -86,7 +85,6 @@ public class MessagingFullscreenEventListenerTests {
     ArgumentCaptor<String> urlStringCaptor;
 
     private MessagingFullscreenEventListener eventListener;
-    private Map <String, WebViewJavascriptInterface> scriptHandlerMap;
 
     @Before
     public void setup() {

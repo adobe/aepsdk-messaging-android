@@ -10,12 +10,13 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile;
+package com.adobe.marketing.mobile.messaging;
 
 import static org.mockito.Mockito.when;
 
 import android.os.Bundle;
 
+import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.junit.Assert;
@@ -51,6 +52,7 @@ public class MessagingPushPayloadTests {
     public void test_Constructor_with_RemoteMessage() {
         mockData = getMockData(false);
         final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getMessageId()).thenReturn("mockMessageId");
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
@@ -68,8 +70,8 @@ public class MessagingPushPayloadTests {
     @Test
     public void test_Constructor_with_RemoteMessage_MalformedActionButtons() {
         mockData = getMockData(true);
-        Bundle bundle = Mockito.mock(Bundle.class);
         final RemoteMessage mockMessage = Mockito.mock(RemoteMessage.class);
+        when(mockMessage.getMessageId()).thenReturn("mockMessageId");
         when(mockMessage.getData()).thenReturn(mockData);
         payload = new MessagingPushPayload(mockMessage);
         Assert.assertNotNull(payload);
@@ -115,20 +117,20 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingPushPayload.TITLE, mockTitle);
-        mockData.put(MessagingPushPayload.BODY, mockBody);
-        mockData.put(MessagingPushPayload.SOUND, mockSound);
-        mockData.put(MessagingPushPayload.NOTIFICATION_COUNT, mockBadgeCount);
-        mockData.put(MessagingPushPayload.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingPushPayload.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingPushPayload.ICON, mockIcon);
-        mockData.put(MessagingPushPayload.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingPushPayload.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingPushPayload.ACTION_URI, mockActionUri);
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, mockTitle);
+        mockData.put(MessagingConstants.Push.PayloadKeys.BODY, mockBody);
+        mockData.put(MessagingConstants.Push.PayloadKeys.SOUND, mockSound);
+        mockData.put(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER, mockBadgeCount);
+        mockData.put(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingConstants.Push.PayloadKeys.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ICON, mockIcon);
+        mockData.put(MessagingConstants.Push.PayloadKeys.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, mockActionUri);
         if (testingMalformedButtonString) {
-            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockMalformedActionButtons);
+            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
         } else {
-            mockData.put(MessagingPushPayload.ACTION_BUTTONS, mockActionButtons);
+            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
         }
 
         return mockData;

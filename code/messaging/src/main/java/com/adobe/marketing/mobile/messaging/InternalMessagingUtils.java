@@ -328,6 +328,24 @@ class InternalMessagingUtils {
         sendEvent(eventName, eventType, eventSource, data, null, extensionApi);
     }
 
+    /**
+     * Sends a tracking status response event with the given parameters.
+     *
+     * @param status a {@link PushTrackingStatus} containing the status of the tracking request
+     * @param extensionApi {@link ExtensionApi} to use for dispatching the event
+     * @param requestEvent {@link Event} to be used as the request event
+     */
+    static void sendTrackingResponseEvent(final PushTrackingStatus status, final ExtensionApi extensionApi, final Event requestEvent) {
+        final Map<String, Object> responseEventData = new HashMap<>();
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_STATUS, status.getValue());
+        responseEventData.put(MessagingConstants.EventDataKeys.Messaging.PUSH_NOTIFICATION_TRACKING_MESSAGE, status.getDescription());
+        final Event event = new Event.Builder(MessagingConstants.EventName.PUSH_TRACKING_STATUS_EVENT , EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(responseEventData)
+                .inResponseToEvent(requestEvent)
+                .build();
+        extensionApi.dispatch(event);
+    }
+
     // ========================================================================================
     // Shared State Helpers
     // ========================================================================================
