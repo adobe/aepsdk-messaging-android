@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("NestedForDepth")
 public class ParsedPropositions {
     private final static String SELF_TAG = "ParsedPropositions";
     // store tracking information for propositions loaded into rules engines

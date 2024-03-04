@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 import com.adobe.marketing.mobile.LoggingMode;
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.WebViewJavascriptInterface;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -50,10 +49,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingFullscreenEventListenerTests {
@@ -342,6 +337,34 @@ public class MessagingFullscreenEventListenerTests {
             ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
             verify(mockUriOpening, times(1)).openUri(stringArgumentCaptor.capture());
             assertEquals("scheme://parameters?param1=value1&param2=value2", stringArgumentCaptor.getValue());
+        });
+    }
+
+    @Test
+    public void test_onBackPressed_WithAutoTrack() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockMessage.getAutoTrack()).thenReturn(true);
+
+            // test
+            eventListener.onBackPressed(mockInAppPresentable);
+
+            // verify
+            verify(mockMessage, times(1)).track("backPress", MessagingEdgeEventType.IN_APP_INTERACT);
+        });
+    }
+
+    @Test
+    public void test_onBackPressed_WithAutoTrackDisabled() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockMessage.getAutoTrack()).thenReturn(false);
+
+            // test
+            eventListener.onBackPressed(mockInAppPresentable);
+
+            // verify
+            verify(mockMessage, times(0)).track("backPress", MessagingEdgeEventType.IN_APP_DISMISS);
         });
     }
 }

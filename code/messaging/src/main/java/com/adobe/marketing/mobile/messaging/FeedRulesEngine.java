@@ -32,7 +32,7 @@ import java.util.Map;
 class FeedRulesEngine extends LaunchRulesEngine {
     final ExtensionApi extensionApi;
 
-    FeedRulesEngine(@NonNull String name, @NonNull ExtensionApi extensionApi) {
+    FeedRulesEngine(@NonNull final String name, @NonNull final ExtensionApi extensionApi) {
         super(name, extensionApi);
         this.extensionApi = extensionApi;
     }

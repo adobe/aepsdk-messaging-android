@@ -373,7 +373,7 @@ class InternalMessagingUtils {
      * @param mapToUpdate The {@code Map<Surface, List<LaunchRule>>} to be updated with the provided {@code Surface} and {@code List<LaunchRule>} objects
      * @return the updated {@link Map<Surface, List<LaunchRule>>} map
      */
-    public static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(final Surface surface, final List<LaunchRule> rulesToAdd, Map<Surface, List<LaunchRule>> mapToUpdate) {
+    public static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(final Surface surface, final List<LaunchRule> rulesToAdd, final Map<Surface, List<LaunchRule>> mapToUpdate) {
         if (MessagingUtils.isNullOrEmpty(rulesToAdd)) {
             return mapToUpdate;
         }
