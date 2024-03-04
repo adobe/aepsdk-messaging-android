@@ -25,6 +25,7 @@ import android.content.Intent;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -325,24 +326,27 @@ public class MessagingPublicAPITests {
         Intent intent = new Intent();
         intent.putExtra(MessagingTestConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_MESSAGE_ID, "mockMessageId");
 
-        // expected
-        String expectedMessagingEventData = "{messageId=mockMessageId, eventType=pushTracking.applicationOpened, applicationOpened=true, adobe_xdm=null}";
-        String expectedEdgeEventData = "{xdm={pushNotificationTracking={pushProviderMessageID=mockMessageId, pushProvider=fcm}, application={launches={value=1}}, eventType=pushTracking.applicationOpened}, meta={collect={datasetId=somedatasetid}}}";
-
         // test
-        Messaging.handleNotificationResponse(intent, true, null);
+        CountDownLatch latch = new CountDownLatch(1);
+        final PushTrackingStatus[] trackingStatus = new PushTrackingStatus[1];
+        Messaging.handleNotificationResponse(intent, true, null, pushTrackingStatus -> {
+            trackingStatus[0] = pushTrackingStatus;
+            latch.countDown();
+        });
 
-        // verify messaging event
+        // verify callback called with error status
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertEquals(PushTrackingStatus.NO_TRACKING_DATA, trackingStatus[0]);
+
+        // verify no messaging request event is sent
         List<Event> messagingRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.MESSAGING,
                 EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-        assertEquals(expectedMessagingEventData, messagingRequestEvents.get(0).getEventData().toString());
+        assertEquals(0, messagingRequestEvents.size());
 
-        // verify push tracking edge event
+        // verify no push tracking edge is sent
         List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
                 EventSource.REQUEST_CONTENT);
-        assertEquals(1, edgeRequestEvents.size());
-        assertEquals(expectedEdgeEventData, edgeRequestEvents.get(0).getEventData().toString());
+        assertEquals(0, edgeRequestEvents.size());
     }
 
     @Test

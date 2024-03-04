@@ -234,7 +234,7 @@ public class MessagingTests {
             // verify
             verify(mockIntent, times(2)).getStringExtra(anyString());
 
-            // verify event
+            // verify callback called with error
             verify(mockCallback).call(PushTrackingStatus.NO_TRACKING_DATA);
         });
     }
