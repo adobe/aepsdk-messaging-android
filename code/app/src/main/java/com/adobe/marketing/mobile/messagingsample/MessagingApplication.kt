@@ -24,6 +24,7 @@ class MessagingApplication : Application() {
 
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
+        //
         MobileCore.configureWithAppID("")
 
         val extensions = listOf(
