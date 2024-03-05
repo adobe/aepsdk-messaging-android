@@ -356,7 +356,7 @@ class EdgePersonalizationResponseHandler {
         // validate this is one of our events
         final String requestEventId = InternalMessagingUtils.getRequestEventId(edgeResponseEvent);
 
-        if (StringUtils.isNullOrEmpty(requestEventId) || (!requestedSurfacesForEventId.containsKey(requestEventId) && !requestEventId.equals("TESTING_ID"))) {
+        if (StringUtils.isNullOrEmpty(requestEventId) || (!requestedSurfacesForEventId.containsKey(requestEventId) && !"TESTING_ID".equals(requestEventId))) {
             return;
         }
 

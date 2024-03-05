@@ -72,7 +72,7 @@ public class MessagingUtils {
      * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
      * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
-    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final List<MessagingProposition> propositionsToAdd, Map<Surface, List<MessagingProposition>> mapToUpdate) {
+    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final List<MessagingProposition> propositionsToAdd, final Map<Surface, List<MessagingProposition>> mapToUpdate) {
         if (isNullOrEmpty(propositionsToAdd) || mapToUpdate == null) {
             return mapToUpdate;
         }
@@ -98,7 +98,7 @@ public class MessagingUtils {
      * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
      * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
      */
-    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final MessagingProposition messagingProposition, Map<Surface, List<MessagingProposition>> mapToUpdate) {
+    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final MessagingProposition messagingProposition, final Map<Surface, List<MessagingProposition>> mapToUpdate) {
         if (messagingProposition == null || mapToUpdate == null) {
             return mapToUpdate;
         }

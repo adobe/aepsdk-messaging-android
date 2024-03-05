@@ -16,6 +16,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
@@ -31,7 +32,6 @@ import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,16 +87,21 @@ class PresentableMessageMapper {
         return internalMessage;
     }
 
-    private InternalMessage findExistingInternalMessage(final RuleConsequence consequence) {
+    private Message findExistingInternalMessage(final RuleConsequence consequence) {
         if (consequence == null) {
             return null;
         }
         for (final Message message : presentableMessageMap.values()) {
             if (message.getId().equals(consequence.getId())) {
-                return (InternalMessage) message;
+                return message;
             }
         }
         return null;
+    }
+
+    @VisibleForTesting
+    void clearPresentableMessageMap() {
+        presentableMessageMap.clear();
     }
 
     /**
@@ -122,7 +127,7 @@ class PresentableMessageMapper {
 
         private boolean autoTrack = true;
         // package private
-        final PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
+        PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
          /**
          * Constructor.

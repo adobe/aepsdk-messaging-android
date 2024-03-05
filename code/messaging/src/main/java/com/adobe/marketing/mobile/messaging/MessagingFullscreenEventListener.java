@@ -48,7 +48,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      * @param fullscreenMessage the {@link Presentable < InAppMessage >} being displayed
      */
     @Override
-    public void onShow(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+    public void onShow(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
         Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
@@ -62,7 +62,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      * @param fullscreenMessage the {@link Presentable<InAppMessage>} being dismissed
      */
     @Override
-    public void onDismiss(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+    public void onDismiss(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
         Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
         if (message != null && message.getAutoTrack()) {
             message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
@@ -74,7 +74,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      * Invoked when the in-app message failed to be displayed.
      */
     @Override
-    public void onError(@NonNull Presentable<InAppMessage> presentable, @NonNull PresentationError presentationError) {
+    public void onError(@NonNull final Presentable<InAppMessage> presentable, @NonNull final PresentationError presentationError) {
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");
     }
 
@@ -86,7 +86,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      * @return true if the SDK wants to handle the URL
      */
     @Override
-    public boolean onUrlLoading(@NonNull Presentable<InAppMessage> fullscreenMessage, @NonNull String urlString) {
+    public boolean onUrlLoading(@NonNull final Presentable<InAppMessage> fullscreenMessage, @NonNull final String urlString) {
         Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen overrideUrlLoad callback received with url (%s)", urlString);
 
         if (StringUtils.isNullOrEmpty(urlString)) {
@@ -168,12 +168,12 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
     }
 
     @Override
-    public void onHide(@NonNull Presentable<InAppMessage> presentable) {}
+    public void onHide(@NonNull final Presentable<InAppMessage> presentable) {}
 
     @Override
-    public void onBackPressed(@NonNull Presentable<InAppMessage> fullscreenMessage) {
+    public void onBackPressed(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
         final Message message = MessagingUtils.getMessageForPresentable(fullscreenMessage);
-        if (message != null) {
+        if (message != null && message.getAutoTrack()) {
             message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
         }
     }
