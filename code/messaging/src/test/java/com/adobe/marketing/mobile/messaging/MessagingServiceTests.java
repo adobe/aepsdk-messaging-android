@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import android.app.Notification;
 import android.content.Context;
+
 import androidx.core.app.NotificationManagerCompat;
 
 import com.adobe.marketing.mobile.Event;
@@ -44,6 +45,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import java.util.HashMap;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -89,8 +91,7 @@ public class MessagingServiceTests {
     @Test
     public void test_handleRemoteMessage_WhenPushNotificationFromAJO() {
         //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>()
-        {{
+        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
             put("_xdm", "somevalues");
             put("adb_title", "Sample Title");
             put("adb_content", "Sample Content");
@@ -98,7 +99,7 @@ public class MessagingServiceTests {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // test
-        boolean isHandled = MessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
         // verify
         assertTrue(isHandled);
@@ -120,26 +121,24 @@ public class MessagingServiceTests {
     @Test
     public void test_handleRemoteMessage_WhenNotificationFromAssurance() {
         //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>()
-        {{
+        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
             put("adb_title", "title");
         }});
 
         // test
-        assertTrue(MessagingService.handleRemoteMessage(context,remoteMessage));
+        assertTrue(MessagingService.handleRemoteMessage(context, remoteMessage));
     }
 
 
     @Test
     public void test_handleRemoteMessage_whenNotAdobeGeneratedNotification() {
         //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>()
-        {{
+        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
             put("key", "value");
         }});
 
         // test
-        boolean isHandled = MessagingService.handleRemoteMessage(context,remoteMessage);
+        boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
 
         // verify
         assertFalse(isHandled);

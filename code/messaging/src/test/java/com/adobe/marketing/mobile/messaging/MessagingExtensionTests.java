@@ -217,7 +217,9 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             Event event = new Event.Builder("Test Get propositions", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
-                    .setEventData(new HashMap<String, Object>() {{ put(MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, true); }})
+                    .setEventData(new HashMap<String, Object>() {{
+                        put(MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, true);
+                    }})
                     .build();
 
             // test
@@ -239,7 +241,9 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
-            requestedSurfacesForEventId.put("testEventId", new ArrayList<Surface>() {{ add(new Surface()); }});
+            requestedSurfacesForEventId.put("testEventId", new ArrayList<Surface>() {{
+                add(new Surface());
+            }});
             when(mockEdgePersonalizationResponseHandler.getRequestedSurfacesForEventId()).thenReturn(requestedSurfacesForEventId);
             messagingExtension = new MessagingExtension(mockExtensionApi, mockMessagingRulesEngine, mockFeedRulesEngine, mockEdgePersonalizationResponseHandler);
 
@@ -408,7 +412,7 @@ public class MessagingExtensionTests {
                     new HashMap<String, Object>() {
                         {
                             put("id", "testId");
-                            put("type", "cjmiam");
+                            put("type", "schema");
                             put("detail", detail);
                         }
                     };
@@ -430,6 +434,49 @@ public class MessagingExtensionTests {
 
             // verify
             verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(any(RuleConsequence.class));
+        });
+    }
+
+    @Test
+    public void test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageNotCalled() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> detail =
+                    new HashMap<String, Object>() {
+                        {
+                            put("remoteAssets", assetList);
+                            put("mobileParameters", new HashMap<String, Object>());
+                            put("html", "iam html content");
+                        }
+                    };
+            Map<String, Object> triggeredConsequence =
+                    new HashMap<String, Object>() {
+                        {
+                            put("id", "testId");
+                            put("type", "invalid");
+                            put("detail", detail);
+                        }
+                    };
+
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", triggeredConsequence);
+                    }
+                }
+            };
+
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
+
+            // test
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+            // verify
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
         });
     }
 
@@ -731,7 +778,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             // setup
             mockConfigSharedState();
-            final Event event = samplePushTrackingEvent("pushOpened", "messageId",null, true);
+            final Event event = samplePushTrackingEvent("pushOpened", "messageId", null, true);
             final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
             // test
@@ -754,7 +801,7 @@ public class MessagingExtensionTests {
             assertEquals(EventType.EDGE, pushTrackingEdgeEvent.getType());
             assertEquals(EventSource.REQUEST_CONTENT, pushTrackingEdgeEvent.getSource());
             // verify edge tracking event data
-            Map<String,String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+            Map<String, String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
             assertEquals("messageId", edgeTrackingData.get("xdm.pushNotificationTracking.pushProviderMessageID"));
             assertEquals("1", edgeTrackingData.get("xdm.application.launches.value"));
             assertEquals("pushOpened", edgeTrackingData.get("xdm.eventType"));
@@ -790,7 +837,7 @@ public class MessagingExtensionTests {
             assertEquals(EventType.EDGE, pushTrackingEdgeEvent.getType());
             assertEquals(EventSource.REQUEST_CONTENT, pushTrackingEdgeEvent.getSource());
             // verify edge tracking event data
-            Map<String,String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+            Map<String, String> edgeTrackingData = MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
             assertEquals("messageId", edgeTrackingData.get("xdm.pushNotificationTracking.pushProviderMessageID"));
             assertEquals("actionId", edgeTrackingData.get("xdm.pushNotificationTracking.customAction.actionID"));
             assertEquals("1", edgeTrackingData.get("xdm.application.launches.value"));
@@ -1118,11 +1165,11 @@ public class MessagingExtensionTests {
     // private helpers
     // ========================================================================================
     private Event samplePushTrackingEvent(final String eventType, final String messageId, final String actionId, final boolean applicationOpened) {
-        final Map<String,Object> eventData = new HashMap<>();
-        eventData.put(TRACK_INFO_KEY_EVENT_TYPE,eventType);
-        eventData.put(TRACK_INFO_KEY_MESSAGE_ID,messageId);
-        eventData.put(TRACK_INFO_KEY_ACTION_ID,actionId);
-        eventData.put(TRACK_INFO_KEY_APPLICATION_OPENED,applicationOpened);
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(TRACK_INFO_KEY_EVENT_TYPE, eventType);
+        eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
+        eventData.put(TRACK_INFO_KEY_ACTION_ID, actionId);
+        eventData.put(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
         eventData.put(TRACK_INFO_KEY_ADOBE_XDM, "{ \"cjm\": {\"trackingkey\": \"trackingvalue\"}}");
 
         final Event event = new Event.Builder("mock_event_name", MessagingConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT)

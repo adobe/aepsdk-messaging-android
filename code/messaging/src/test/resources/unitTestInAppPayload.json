@@ -1,6 +1,6 @@
 {
   "id": "e2c25d5d-79e7-46c2-8b38-5b8c935283c6",
-  "scope": "mobileapp://com.adobe.marketing.mobile.messaging.test",
+  "scope": "mobileapp://mockPackageName",
   "scopeDetails": {
     "decisionProvider": "AJO",
     "correlationID": "da584061-bae4-4dad-8878-dc535b517e72",

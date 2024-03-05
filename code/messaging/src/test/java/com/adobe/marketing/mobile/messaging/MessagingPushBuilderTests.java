@@ -44,6 +44,7 @@ import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushBuilderTests {
 
@@ -82,7 +83,7 @@ public class MessagingPushBuilderTests {
     MockedStatic<MessagingPushUtils> utils;
     ArgumentCaptor<Intent> launchIntentCaptor;
     MockedStatic<PendingIntent> staticMockPendingIntent;
-    MockedStatic<TaskStackBuilder> staticMockTaskStackBuilder ;
+    MockedStatic<TaskStackBuilder> staticMockTaskStackBuilder;
     MockedStatic<Uri> staticMockUri;
     ArgumentCaptor<String> mockUriStringCaptor;
 
@@ -116,8 +117,8 @@ public class MessagingPushBuilderTests {
         when(context.getPackageName()).thenReturn("com.adobe.sample");
 
         utils.when(() -> MessagingPushUtils.getDefaultAppIcon(context)).thenReturn(DEFAULT_ICON_RESOURCE_ID);
-        utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME,context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
-        utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME ,context)).thenReturn(CUSTOM_SOUND_URI);
+        utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME, context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
+        utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME, context)).thenReturn(CUSTOM_SOUND_URI);
 
         when(taskStackBuilder.addNextIntentWithParentStack(any(Intent.class))).thenReturn(taskStackBuilder);
         when(taskStackBuilder.getPendingIntent(anyInt(), anyInt())).thenReturn(returnedPendingIntent);
@@ -147,12 +148,12 @@ public class MessagingPushBuilderTests {
 
         //verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setContentText(NOTIFICATION_BODY);
-        verify(mockNotificationBuilder,times(1)).setContentTitle(NOTIFICATION_TITLE);
-        verify(mockNotificationBuilder,times(1)).setPriority(SAMPLE_PRIORITY);
-        verify(mockNotificationBuilder,times(1)).setSmallIcon(CUSTOM_ICON_RESOURCE_ID);
-        verify(mockNotificationBuilder,times(1)).setNumber(BADGE_COUNT);
-        verify(mockNotificationBuilder,times(1)).setSound(CUSTOM_SOUND_URI);
+        verify(mockNotificationBuilder, times(1)).setContentText(NOTIFICATION_BODY);
+        verify(mockNotificationBuilder, times(1)).setContentTitle(NOTIFICATION_TITLE);
+        verify(mockNotificationBuilder, times(1)).setPriority(SAMPLE_PRIORITY);
+        verify(mockNotificationBuilder, times(1)).setSmallIcon(CUSTOM_ICON_RESOURCE_ID);
+        verify(mockNotificationBuilder, times(1)).setNumber(BADGE_COUNT);
+        verify(mockNotificationBuilder, times(1)).setSound(CUSTOM_SOUND_URI);
     }
 
     @Test
@@ -166,8 +167,8 @@ public class MessagingPushBuilderTests {
 
         //verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
-        verify(mockNotificationBuilder,times(0)).setSound(any(Uri.class));
+        verify(mockNotificationBuilder, times(1)).setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+        verify(mockNotificationBuilder, times(0)).setSound(any(Uri.class));
     }
 
     @Test
@@ -181,7 +182,7 @@ public class MessagingPushBuilderTests {
 
         //verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setSmallIcon(DEFAULT_ICON_RESOURCE_ID);
+        verify(mockNotificationBuilder, times(1)).setSmallIcon(DEFAULT_ICON_RESOURCE_ID);
     }
 
     @Test
@@ -195,6 +196,6 @@ public class MessagingPushBuilderTests {
 
         //verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setPriority(Notification.PRIORITY_DEFAULT);
+        verify(mockNotificationBuilder, times(1)).setPriority(Notification.PRIORITY_DEFAULT);
     }
 }

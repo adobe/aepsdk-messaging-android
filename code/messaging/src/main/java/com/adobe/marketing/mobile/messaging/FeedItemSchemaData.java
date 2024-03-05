@@ -30,7 +30,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
-import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.JSONUtils;
 
 import org.json.JSONException;
