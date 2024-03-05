@@ -76,7 +76,7 @@ public class MessagingPropositionPayloadCachingTests {
 
     Map<String, Object> propositionItemMap = new HashMap<>();
     Map<String, Object> eventDataMap = new HashMap<>();
-    List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+    List<PropositionItem> propositionItems = new ArrayList<>();
     List<Map<String, Object>> propositionItemMaps = new ArrayList<>();
     Map<String, String> fakeMetaData = new HashMap<>();
 
@@ -126,8 +126,8 @@ public class MessagingPropositionPayloadCachingTests {
         scopeDetails.put("activity", activity);
 
         propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
-        messagingPropositionItems.add(messagingPropositionItem);
+        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
+        propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");
         eventDataMap.put("scope", "mobileapp://com.adobe.marketing.mobile.messaging.test");

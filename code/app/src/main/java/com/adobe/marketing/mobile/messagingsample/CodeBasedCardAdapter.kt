@@ -55,9 +55,12 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
                         StandardCharsets.UTF_8.toString())
                 item.track(MessagingEdgeEventType.DISPLAY)
                 holder.webView.setOnTouchListener(object: View.OnTouchListener {
-                    override fun onTouch(p0: View?, p1: MotionEvent?): Boolean {
-                        item.track(MessagingEdgeEventType.INTERACT)
-                        return true
+                    override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
+                        if (event?.action == MotionEvent.ACTION_DOWN) {
+                            item.track(MessagingEdgeEventType.INTERACT)
+                            return true
+                        }
+                        return false
                     }
                 })
             } else if (mimeType == "application/json") {

@@ -16,7 +16,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.MESSAGE_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
@@ -163,9 +162,9 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to send a proposition interaction (%s), PropositionInfo is not found for message (%s)", eventType.getPropositionEventType(), id);
             return;
         }
-        final MessagingPropositionInteraction messagingPropositionInteraction = new MessagingPropositionInteraction(eventType,
-                interaction == null ? "" : interaction, propositionInfo, null);
-        final Map<String, Object> propositionInteractionXdm = messagingPropositionInteraction.getPropositionInteractionXDM();
+        final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType,
+                interaction == null ? "" : interaction, propositionInfo, null, null);
+        final Map<String, Object> propositionInteractionXdm = propositionInteraction.getPropositionInteractionXDM();
         messagingExtension.sendPropositionInteraction(propositionInteractionXdm);
     }
 

@@ -41,21 +41,21 @@ public class PropositionInfoTests {
         put("characteristics", characteristics);
         put("activity", activity);
     }};
-    List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+    List<PropositionItem> propositionItems = new ArrayList<>();
     Map<String, Object> propositionItemMap = new HashMap<>();
     private PropositionInfo propositionInfo;
 
     @Before
     public void setup() throws JSONException {
         propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
-        messagingPropositionItems.add(messagingPropositionItem);
+        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
+        propositionItems.add(propositionItem);
     }
 
     @Test
     public void testCreatePropositionInfoFromProposition() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
@@ -73,7 +73,7 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullId() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition(null, "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
@@ -86,7 +86,7 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScope() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", null, scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("id", null, scopeDetails, propositionItems);
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
@@ -99,7 +99,7 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScopeDetails() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", null, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", null, propositionItems);
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(messagingProposition);

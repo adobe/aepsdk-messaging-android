@@ -314,7 +314,7 @@ public final class MessagingExtension extends Extension {
      *
      * @param event A {@link Event} request event containing proposition interaction XDM data
      */
-    void trackMessages(@NonNull final Event event) {
+    void trackMessages(final Event event) {
         final Map<String, Object> propositionInteractionXdm = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, new HashMap<>());
         if (MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
             Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition item, proposition interaction XDM is not available.");
@@ -363,7 +363,7 @@ public final class MessagingExtension extends Extension {
      * @param event {@link Event} containing the push tracking information
      * @param datasetId A valid {@link String} containing the dataset id
      */
-    private void handleTrackingInfo(@NonNull final Event event, @NonNull final String datasetId) {
+    private void handleTrackingInfo(final Event event, final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
             InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);

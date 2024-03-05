@@ -39,11 +39,11 @@ public class MessagingUtilsTests {
     public void setup() {
         mockSurface = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed");
         final Map<String, Object> propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
-        final MessagingPropositionItem mockPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
+        final PropositionItem mockPropositionItem = PropositionItem.fromEventData(propositionItemMap);
         MessagingProposition mockProposition = new MessagingProposition("mockId",
                 mockSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockPropositionItem);
                 }});
         mockMapToUpdate.put(mockSurface, new ArrayList<MessagingProposition>() {{
@@ -51,20 +51,20 @@ public class MessagingUtilsTests {
         }});
 
         final Map<String, Object> content = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
-        MessagingPropositionItem mockPropositionItemToAdd1 = new MessagingPropositionItem("mockId1", SchemaType.DEFAULT_CONTENT, content);
+        PropositionItem mockPropositionItemToAdd1 = new PropositionItem("mockId1", SchemaType.DEFAULT_CONTENT, content);
         mockPropositionToAdd1 = new MessagingProposition("mockId1",
                 mockSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockPropositionItemToAdd1);
                 }});
         Map<String, Object> propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
-        MessagingPropositionItem messagingPropositionItemToAdd2 = MessagingPropositionItem.fromEventData(propositionItemMap2);
+        PropositionItem propositionItemToAdd2 = PropositionItem.fromEventData(propositionItemMap2);
         mockPropositionToAdd2 = new MessagingProposition("mockId2",
                 mockSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
-                    add(messagingPropositionItemToAdd2);
+                new ArrayList<PropositionItem>() {{
+                    add(propositionItemToAdd2);
                 }});
         mockPropositionsToAdd.add(mockPropositionToAdd1);
         mockPropositionsToAdd.add(mockPropositionToAdd2);

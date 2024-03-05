@@ -543,10 +543,10 @@ public class MessagingPublicAPITests {
             put("activity", activity);
         }};
 
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem("propositionItemId", "schema", "content");
-        List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
-        messagingPropositionItems.add(messagingPropositionItem);
-        MessagingProposition messagingProposition = new MessagingProposition("propositionId", EXPECTED_SURFACE_URI, scopeDetails, messagingPropositionItems);
+        PropositionItem propositionItem = new PropositionItem("propositionItemId", "schema", "content");
+        List<PropositionItem> propositionItems = new ArrayList<>();
+        propositionItems.add(propositionItem);
+        MessagingProposition messagingProposition = new MessagingProposition("propositionId", EXPECTED_SURFACE_URI, scopeDetails, propositionItems);
         List<Map<String, Object>> propositions = new ArrayList<>();
         propositions.add(messagingProposition.toEventData());
 
@@ -574,7 +574,7 @@ public class MessagingPublicAPITests {
             assertEquals(1, returnedProposition.getValue().size());
             for (MessagingProposition returnedMessagingPropositionValue : returnedProposition.getValue()) {
                 assertEquals(EXPECTED_SURFACE_URI, returnedMessagingPropositionValue.getScope());
-                assertEquals(messagingPropositionItems.get(0).toEventData(), returnedMessagingPropositionValue.getItems().get(0).toEventData());
+                assertEquals(propositionItems.get(0).toEventData(), returnedMessagingPropositionValue.getItems().get(0).toEventData());
                 assertEquals(scopeDetails, returnedMessagingPropositionValue.getScopeDetails());
                 assertEquals("propositionId", returnedMessagingPropositionValue.getUniqueId());
             }

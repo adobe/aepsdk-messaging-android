@@ -39,12 +39,12 @@ class FeedRulesEngine extends LaunchRulesEngine {
 
     /**
      * Evaluates the supplied event against the all current rules and returns a {@link
-     * Map<Surface, List<MessagingPropositionItem>>} created from the rules that matched the supplied event.
+     * Map<Surface, List< PropositionItem >>} created from the rules that matched the supplied event.
      *
      * @param event the event to be evaluated
      * @return a {@code Map<String ,List<Inbound>>} containing inbound content for the given event
      */
-    Map<Surface, List<MessagingPropositionItem>> evaluate(@NonNull final Event event) {
+    Map<Surface, List<PropositionItem>> evaluate(@NonNull final Event event) {
         if (event == null) {
             throw new IllegalArgumentException("Cannot evaluate null event.");
         }
@@ -54,13 +54,13 @@ class FeedRulesEngine extends LaunchRulesEngine {
             return null;
         }
 
-        final Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = new HashMap<>();
+        final Map<Surface, List<PropositionItem>> propositionItemsBySurface = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
             if (consequence == null) {
                 continue;
             }
 
-            final MessagingPropositionItem propositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+            final PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
             if (propositionItem == null) {
                 continue;
             }
@@ -81,7 +81,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
             }
 
             if (propositionItemsBySurface.get(surface) != null) {
-                final List<MessagingPropositionItem> propositionItemList = new ArrayList<>(propositionItemsBySurface.get(surface));
+                final List<PropositionItem> propositionItemList = new ArrayList<>(propositionItemsBySurface.get(surface));
                 propositionItemList.add(propositionItem);
                 propositionItemsBySurface.put(surface, propositionItemList);
             } else {

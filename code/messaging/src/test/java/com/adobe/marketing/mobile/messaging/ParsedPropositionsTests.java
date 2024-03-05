@@ -32,19 +32,19 @@ public class ParsedPropositionsTests {
 
     private Surface mockSurface;
 
-    private MessagingPropositionItem mockInAppPropositionItem;
+    private PropositionItem mockInAppPropositionItem;
     private MessagingProposition mockInAppProposition;
 
     private Surface mockInAppSurface;
     private final String mockInAppConsequenceId = "mockInAppConsequenceId";
 
-    private MessagingPropositionItem mockFeedPropositionItem;
+    private PropositionItem mockFeedPropositionItem;
     private MessagingProposition mockFeedProposition;
     private Surface mockFeedSurface;
     private final String mockFeedMessageId = "183639c4-cb37-458e-a8ef-4e130d767ebf";
     private Map<String, Object> mockFeedContent;
 
-    private MessagingPropositionItem mockCodeBasedPropositionItem;
+    private PropositionItem mockCodeBasedPropositionItem;
     private MessagingProposition mockCodeBasedProposition;
     private Surface mockCodeBasedSurface;
     private Map<String, Object> mockCodeBasedContent;
@@ -63,31 +63,31 @@ public class ParsedPropositionsTests {
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
         mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
         inappPropositionContent = MessagingTestUtils.getMapFromFile("inAppRule.json");
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp2", SchemaType.RULESET, inappPropositionContent);
+        mockInAppPropositionItem = new PropositionItem("inapp2", SchemaType.RULESET, inappPropositionContent);
         mockInAppProposition = new MessagingProposition("inapp2",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockInAppPropositionItem);
                 }});
 
         mockFeedSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
         mockFeedContent = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
-        mockFeedPropositionItem = new MessagingPropositionItem("feed", SchemaType.RULESET, mockFeedContent);
+        mockFeedPropositionItem = new PropositionItem("feed", SchemaType.RULESET, mockFeedContent);
         mockFeedProposition = new MessagingProposition("feed",
                 mockFeedSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockFeedPropositionItem);
                 }});
 
         mockCodeBasedSurface = Surface.fromUriString("mobileapp://mockPackageName/codebased");
         mockCodeBasedContent = MessagingTestUtils.getMapFromFile("codeBasedPropositionContent.json");
-        mockCodeBasedPropositionItem = new MessagingPropositionItem("codebased", SchemaType.JSON_CONTENT, mockCodeBasedContent);
+        mockCodeBasedPropositionItem = new PropositionItem("codebased", SchemaType.JSON_CONTENT, mockCodeBasedContent);
         mockCodeBasedProposition = new MessagingProposition("codebased",
                 mockCodeBasedSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockCodeBasedPropositionItem);
                 }});
     }
@@ -242,11 +242,11 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_PropositionItemEmptyMap() {
         // setup
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.RULESET, null);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, null);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockInAppPropositionItem);
                 }});
         Map<Surface, List<MessagingProposition>> propositions = new HashMap<Surface, List<MessagingProposition>>() {{
@@ -276,11 +276,11 @@ public class ParsedPropositionsTests {
     public void test_parsedPropositionConstructor_PropositionRuleWithNoConsequence() {
         // setup
         final Map<String, Object> ruleWithNoConsequenceContent = MessagingTestUtils.getMapFromFile("ruleWithNoConsequence.json");
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockInAppPropositionItem);
                 }});
         Map<Surface, List<MessagingProposition>> propositions = new HashMap<Surface, List<MessagingProposition>>() {{
@@ -309,11 +309,11 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_PropositionRuleWithDefaultSchema() {
         // setup
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.DEFAULT, inappPropositionContent);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.DEFAULT, inappPropositionContent);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockInAppPropositionItem);
                 }});
         Map<Surface, List<MessagingProposition>> propositions = new HashMap<Surface, List<MessagingProposition>>() {{
@@ -344,11 +344,11 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_PropositionRuleWithUnknownSchema() {
         // setup
-        mockInAppPropositionItem = new MessagingPropositionItem("inapp", SchemaType.UNKNOWN, inappPropositionContent);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.UNKNOWN, inappPropositionContent);
         mockInAppProposition = new MessagingProposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                new ArrayList<MessagingPropositionItem>() {{
+                new ArrayList<PropositionItem>() {{
                     add(mockInAppPropositionItem);
                 }});
         Map<Surface, List<MessagingProposition>> propositions = new HashMap<Surface, List<MessagingProposition>>() {{

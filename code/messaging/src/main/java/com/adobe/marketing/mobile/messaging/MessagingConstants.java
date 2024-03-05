@@ -293,6 +293,8 @@ public final class MessagingConstants {
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
                     static final String SCHEMAS = "schemas";
+                    static final String CHARACTERISTICS = "characteristics";
+                    static final String TOKENS = "tokens";
 
                     private Key() {
                     }

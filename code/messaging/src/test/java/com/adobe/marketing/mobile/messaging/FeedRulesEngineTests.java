@@ -61,7 +61,7 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
@@ -77,7 +77,7 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
@@ -94,12 +94,12 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
         Assert.assertEquals(1, propositionItemsBySurface.size());
-        List<MessagingPropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
+        List<PropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(1, inboundMessageList.size());
         Assert.assertEquals(SchemaType.FEED, inboundMessageList.get(0).getSchema());
@@ -114,13 +114,13 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
         Assert.assertEquals(1, propositionItemsBySurface.size());
-        List<MessagingPropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
+        List<PropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(2, inboundMessageList.size());
     }

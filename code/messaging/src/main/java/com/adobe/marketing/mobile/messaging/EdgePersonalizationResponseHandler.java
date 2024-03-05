@@ -155,7 +155,7 @@ class EdgePersonalizationResponseHandler {
      * @param event    The fetch message {@link Event}
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
-    void fetchMessages(@NonNull final Event event, final List<Surface> surfaces) {
+    void fetchMessages(final Event event, final List<Surface> surfaces) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
         Surface appSurface = null;
         // if surfaces are provided, use them - otherwise assume the request is for base surface (mobileapp://{application package name})
@@ -262,7 +262,7 @@ class EdgePersonalizationResponseHandler {
      *
      * @param event A {@link Event} containing the personalization notification complete edge response event.
      */
-    void handleProcessCompletedEvent(@NonNull final Event event) {
+    void handleProcessCompletedEvent(final Event event) {
         final String endingEventId = InternalMessagingUtils.getEndingEventId(event);
         final List<Surface> requestedSurfaces = requestedSurfacesForEventId.get(endingEventId);
         if (StringUtils.isNullOrEmpty(endingEventId) || MessagingUtils.isNullOrEmpty(requestedSurfaces)) {
@@ -311,7 +311,7 @@ class EdgePersonalizationResponseHandler {
      * @param surfaces A {@code List<Surface>} of surfaces to use for retrieving cached content
      * @param event    The retrieve message {@link Event}
      */
-    void retrieveMessages(final List<Surface> surfaces, @NonNull final Event event) {
+    void retrieveMessages(final List<Surface> surfaces, final Event event) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
         if (surfaces == null || surfaces.isEmpty()) {
             return;
@@ -361,7 +361,7 @@ class EdgePersonalizationResponseHandler {
      *
      * @param edgeResponseEvent A {@link Event} containing the in-app message definitions retrieved via the Edge extension.
      */
-    void handleEdgePersonalizationNotification(@NonNull final Event edgeResponseEvent) {
+    void handleEdgePersonalizationNotification(final Event edgeResponseEvent) {
         // validate this is one of our events
         final String requestEventId = InternalMessagingUtils.getRequestEventId(edgeResponseEvent);
 
@@ -540,11 +540,11 @@ class EdgePersonalizationResponseHandler {
 
     private Map<Surface, List<MessagingProposition>> getPropositionsFromFeedRulesEngine(final Event event) {
         Map<Surface, List<MessagingProposition>> surfacePropositions = new HashMap<>();
-        final Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(event);
+        final Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(event);
         if (!MapUtils.isNullOrEmpty(propositionItemsBySurface)) {
-            for (final Map.Entry<Surface, List<MessagingPropositionItem>> entry: propositionItemsBySurface.entrySet()){
+            for (final Map.Entry<Surface, List<PropositionItem>> entry: propositionItemsBySurface.entrySet()){
                 final List<MessagingProposition> tempPropositions = new ArrayList<>();
-                for (final MessagingPropositionItem propositionItem: entry.getValue()) {
+                for (final PropositionItem propositionItem: entry.getValue()) {
                     final PropositionInfo propositionInfo = this.propositionInfo.get(propositionItem.getPropositionItemId());
                     if (propositionInfo == null) {
                         continue;
@@ -554,7 +554,7 @@ class EdgePersonalizationResponseHandler {
                             propositionInfo.id,
                             propositionInfo.scope,
                             propositionInfo.scopeDetails,
-                            new ArrayList<MessagingPropositionItem>() {{ add(propositionItem); }});
+                            new ArrayList<PropositionItem>() {{ add(propositionItem); }});
 
                     // check to see if that proposition is already in the array (based on ID)
                     // if yes, append the propositionItem.  if not, create a new entry for the
