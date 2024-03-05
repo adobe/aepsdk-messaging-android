@@ -187,7 +187,7 @@ public class MessagingPropositionItem implements Serializable {
         final JSONObject ruleJson = new JSONObject(itemData);
         switch (schemaType) {
             case UNKNOWN:
-            case DEFAULT:
+            case DEFAULT_CONTENT:
             case NATIVE_ALERT:
             case RULESET:
                 break;
