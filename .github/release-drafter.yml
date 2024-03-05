@@ -11,6 +11,8 @@
 #
 
 template: |
+  ## Release Notes
+  - manually updated
+  
   ## What’s Changed
-
   $CHANGES
