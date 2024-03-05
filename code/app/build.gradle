@@ -6,7 +6,7 @@ apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion 33
     defaultConfig {
-        applicationId "com.adobe.marketing.mobile.messagingsample.push"
+        applicationId "com.adobe.marketing.mobile.messagingsample"
         minSdkVersion 21
         targetSdkVersion 33
         versionCode 1
@@ -20,7 +20,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    namespace 'com.adobe.marketing.mobile.messagingsample.push'
+    namespace 'com.adobe.marketing.mobile.messagingsample'
 }
 
 buildscript {
