@@ -586,8 +586,8 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
-                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(4));
+                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -685,8 +685,8 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
-                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(4));
+                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -793,8 +793,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 List<Surface> surfaces = new ArrayList<Surface>(){{ add(surface); }};
 
                 // setup feed rules engine
-                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(surface, MessagingTestUtils.createInboundList(3));
+                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -846,8 +846,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 surfaces.add(new Surface("alsoinvalid##"));
 
                 // setup feed rules engine
-                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(new Surface(), MessagingTestUtils.createInboundList(3));
+                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(new Surface(), MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 
@@ -896,8 +896,8 @@ public class EdgePersonalizationResponseHandlerTests {
                 List<Surface> surfaces = new ArrayList<>();
 
                 // setup feed rules engine
-                Map<Surface, List<Inbound>> matchedFeedRules = new HashMap<>();
-                matchedFeedRules.put(new Surface(), MessagingTestUtils.createInboundList(3));
+                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                matchedFeedRules.put(new Surface(), MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
 

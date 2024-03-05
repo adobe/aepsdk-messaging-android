@@ -219,7 +219,7 @@ final class MessagingCacheUtilities {
         final List<MessagingPropositionItem> propositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
-                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, payloadItem.schema, payloadItem.data.content);
+                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
                 propositionItems.add(propositionItem);
             }
             propositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
@@ -250,7 +250,7 @@ final class MessagingCacheUtilities {
         final List<String> assetsToRetain = new ArrayList<>();
 
         // validate asset URLs and remove duplicates
-        if (assetsUrls != null && !assetsUrls.isEmpty()) {
+        if (!MessagingUtils.isNullOrEmpty(assetsUrls)) {
             for (final String imageAssetUrl : assetsUrls) {
                 if (assetIsDownloadable(imageAssetUrl) && !assetsToRetain.contains(imageAssetUrl)) {
                     assetsToRetain.add(imageAssetUrl);
