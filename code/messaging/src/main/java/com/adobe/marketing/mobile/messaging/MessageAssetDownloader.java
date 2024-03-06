@@ -86,6 +86,10 @@ class MessageAssetDownloader {
             final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
             final NetworkRequest networkRequest = new NetworkRequest(url, HttpMethod.GET, null, requestProperties, MessagingConstants.DEFAULT_TIMEOUT, MessagingConstants.DEFAULT_TIMEOUT);
             ServiceProvider.getInstance().getNetworkService().connectAsync(networkRequest, connection -> {
+                if (connection == null) {
+                    Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - connection returned from NetworkService was null. Aborting asset download for: %s", url);
+                    return;
+                }
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
                     Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Asset was cached previously: %s", url);
                     connection.close();
