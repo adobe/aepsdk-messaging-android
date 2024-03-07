@@ -45,7 +45,7 @@ class SingleFeedActivity : AppCompatActivity() {
         feedActivityBody.text = contentMap.get("body")
         feedActivityButton.text = contentMap.get("actionTitle")
         feedActivityButton.setOnClickListener {
-            ServiceProvider.getInstance().uiService.showUrl(contentMap.get("actionUrl"))
+            contentMap.get("actionUrl")?.let { it1 -> ServiceProvider.getInstance().uriService.openUri(it1) }
         }
     }
 }

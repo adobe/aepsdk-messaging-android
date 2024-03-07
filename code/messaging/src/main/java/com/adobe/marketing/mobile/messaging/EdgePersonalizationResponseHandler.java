@@ -18,13 +18,13 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.EventType.PERSONALIZATION_REQUEST;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PAYLOAD;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PERSONALIZATION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.QUERY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCHEMAS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SURFACES;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PAYLOAD;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
@@ -539,11 +539,11 @@ class EdgePersonalizationResponseHandler {
 
     private Map<Surface, List<MessagingProposition>> getPropositionsFromFeedRulesEngine(final Event event) {
         Map<Surface, List<MessagingProposition>> surfacePropositions = new HashMap<>();
-        final Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(event);
+        final Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(event);
         if (!MapUtils.isNullOrEmpty(propositionItemsBySurface)) {
-            for (final Map.Entry<Surface, List<MessagingPropositionItem>> entry: propositionItemsBySurface.entrySet()){
+            for (final Map.Entry<Surface, List<PropositionItem>> entry: propositionItemsBySurface.entrySet()){
                 final List<MessagingProposition> tempPropositions = new ArrayList<>();
-                for (final MessagingPropositionItem propositionItem: entry.getValue()) {
+                for (final PropositionItem propositionItem: entry.getValue()) {
                     final PropositionInfo propositionInfo = this.propositionInfo.get(propositionItem.getPropositionItemId());
                     if (propositionInfo == null) {
                         continue;
@@ -553,7 +553,7 @@ class EdgePersonalizationResponseHandler {
                             propositionInfo.id,
                             propositionInfo.scope,
                             propositionInfo.scopeDetails,
-                            new ArrayList<MessagingPropositionItem>() {{ add(propositionItem); }});
+                            new ArrayList<PropositionItem>() {{ add(propositionItem); }});
 
                     // check to see if that proposition is already in the array (based on ID)
                     // if yes, append the propositionItem.  if not, create a new entry for the

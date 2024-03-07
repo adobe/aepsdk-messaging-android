@@ -42,14 +42,14 @@ public class MessagingProposition implements Serializable {
     // Scope details map
     private final Map<String, Object> scopeDetails;
     // List containing proposition decision items
-    private final List<MessagingPropositionItem> messagingPropositionItems;
+    private final List<PropositionItem> propositionItems;
 
-    public MessagingProposition(final String uniqueId, final String scope, final Map<String, Object> scopeDetails, final List<MessagingPropositionItem> messagingPropositionItems) {
+    public MessagingProposition(final String uniqueId, final String scope, final Map<String, Object> scopeDetails, final List<PropositionItem> propositionItems) {
         this.uniqueId = uniqueId;
         this.scope = scope;
         this.scopeDetails = scopeDetails;
-        this.messagingPropositionItems = messagingPropositionItems;
-        for (final MessagingPropositionItem item : this.messagingPropositionItems) {
+        this.propositionItems = propositionItems;
+        for (final PropositionItem item : this.propositionItems) {
             if (item.propositionReference == null) {
                 item.propositionReference = new SoftReference<>(this);
             }
@@ -68,10 +68,10 @@ public class MessagingProposition implements Serializable {
     /**
      * Gets the {@code MessagingPropositionItem} list.
      *
-     * @return {@code List<MessagingPropositionItem>} containing the {@link MessagingPropositionItem}s.
+     * @return {@code List<MessagingPropositionItem>} containing the {@link PropositionItem}s.
      */
-    public List<MessagingPropositionItem> getItems() {
-        return messagingPropositionItems;
+    public List<PropositionItem> getItems() {
+        return propositionItems;
     }
 
     /**
@@ -104,14 +104,14 @@ public class MessagingProposition implements Serializable {
             final String scope = DataReader.getString(eventData, PAYLOAD_SCOPE);
             final Map<String, Object> scopeDetails = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS);
             final List<Map<String, Object>> items = DataReader.getTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS);
-            final List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+            final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
-                final MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(item);
-                if (messagingPropositionItem != null) {
-                    messagingPropositionItems.add(messagingPropositionItem);
+                final PropositionItem propositionItem = PropositionItem.fromEventData(item);
+                if (propositionItem != null) {
+                    propositionItems.add(propositionItem);
                 }
             }
-            messagingProposition = new MessagingProposition(uniqueId, scope, scopeDetails, messagingPropositionItems);
+            messagingProposition = new MessagingProposition(uniqueId, scope, scopeDetails, propositionItems);
         } catch (final DataReaderException dataReaderException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating MessagingProposition from event data map: %s", dataReaderException.getLocalizedMessage());
         }
@@ -130,8 +130,8 @@ public class MessagingProposition implements Serializable {
         eventData.put(PAYLOAD_SCOPE, this.scope);
         eventData.put(PAYLOAD_SCOPE_DETAILS, this.scopeDetails);
         final List<Map<String, Object>> items = new ArrayList<>();
-        for (final MessagingPropositionItem messagingPropositionItem : this.messagingPropositionItems) {
-            items.add(messagingPropositionItem.toEventData());
+        for (final PropositionItem propositionItem : this.propositionItems) {
+            items.add(propositionItem.toEventData());
         }
         eventData.put(PAYLOAD_ITEMS, items);
         return eventData;

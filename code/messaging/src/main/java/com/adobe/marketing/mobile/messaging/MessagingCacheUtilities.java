@@ -216,10 +216,10 @@ final class MessagingCacheUtilities {
      */
     private List<MessagingProposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
         final List<MessagingProposition> propositions = new ArrayList<>();
-        final List<MessagingPropositionItem> propositionItems = new ArrayList<>();
+        final List<PropositionItem> propositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
-                final MessagingPropositionItem propositionItem = new MessagingPropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
+                final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
                 propositionItems.add(propositionItem);
             }
             propositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));

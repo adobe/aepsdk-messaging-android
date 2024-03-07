@@ -17,7 +17,11 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.Consequenc
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
-import com.adobe.marketing.mobile.PropositionEventType;
+import androidx.annotation.NonNull;
+
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -36,11 +40,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link MessagingPropositionItem} object represents a personalization JSON object returned by Konductor.
+ * A {@link PropositionItem} object represents a personalization JSON object returned by Konductor.
  * In its JSON form, it has the following properties: id, schema, and data.
  * The contents of data will be determined by the provided schema.
  */
-public class MessagingPropositionItem implements Serializable {
+public class PropositionItem implements Serializable {
     private static final String SELF_TAG = "MessagingPropositionItem";
     // proposition item identifier
     private String itemId;
@@ -51,7 +55,7 @@ public class MessagingPropositionItem implements Serializable {
     // Soft reference to Proposition instance
     SoftReference<MessagingProposition> propositionReference;
 
-    public MessagingPropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
+    public PropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
         this.itemId = itemId;
         this.schema = schema;
         this.itemData = itemData;
@@ -60,7 +64,7 @@ public class MessagingPropositionItem implements Serializable {
     /**
      * Gets the {@code MessagingPropositionItem} identifier.
      *
-     * @return {@link String} containing the {@link MessagingPropositionItem} identifier.
+     * @return {@link String} containing the {@link PropositionItem} identifier.
      */
     public String getPropositionItemId() {
         return itemId;
@@ -69,7 +73,7 @@ public class MessagingPropositionItem implements Serializable {
     /**
      * Gets the {@code MessagingPropositionItem} content schema.
      *
-     * @return {@link SchemaType} containing the {@link MessagingPropositionItem} content schema.
+     * @return {@link SchemaType} containing the {@link PropositionItem} content schema.
      */
     public SchemaType getSchema() {
         return schema;
@@ -78,7 +82,7 @@ public class MessagingPropositionItem implements Serializable {
     /**
      * Gets the {@code MessagingPropositionItem} data.
      *
-     * @return {@licodenk Map<String, Object>} containing the {@link MessagingPropositionItem} data.
+     * @return {@licodenk Map<String, Object>} containing the {@link PropositionItem} data.
      */
     public Map<String, Object> getData() {
         return itemData;
@@ -93,18 +97,99 @@ public class MessagingPropositionItem implements Serializable {
         return propositionReference.get();
     }
 
-    // Track offer interaction
-    void track(final PropositionEventType interaction) {
-        // TODO
+    /**
+     * Tracks interaction with the given proposition item.
+     *
+     * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the interaction
+     */
+    public void track(@NonNull final MessagingEdgeEventType eventType) {
+        final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(eventType);
+        if (propositionInteractionXdm == null) {
+            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, propositionInteractionXdm);
+
+        final Event trackingPropositionsEvent = new Event.Builder(MessagingConstants.EventName.TRACK_PROPOSITIONS,
+                MessagingConstants.EventType.MESSAGING,
+                MessagingConstants.EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
+        MobileCore.dispatchEvent(trackingPropositionsEvent);
+    }
+
+    /**
+     * Tracks interaction with the given proposition item.
+     *
+     * @param interaction {@link String} describing the interaction.
+     * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the interaction
+     * @param tokens {@link List<String>} containing the sub-item tokens for recording interaction.
+     */
+    void track(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
+        final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(interaction, eventType, tokens);
+        if (propositionInteractionXdm == null) {
+            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
+            return;
+        }
+
+        final Map<String, Object> eventData = new HashMap<>();
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, propositionInteractionXdm);
+
+        final Event trackingPropositionsEvent = new Event.Builder(MessagingConstants.EventName.TRACK_PROPOSITIONS,
+                MessagingConstants.EventType.MESSAGING,
+                MessagingConstants.EventSource.REQUEST_CONTENT)
+                .setEventData(eventData)
+                .build();
+        MobileCore.dispatchEvent(trackingPropositionsEvent);
+    }
+
+    /**
+     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given proposition item, for the provided event type.
+     * If the proposition reference within the item is released and no longer valid, the method returns null.
+     *
+     * @param eventType an enum of type {@link MessagingEdgeEventType} specifying event type for the interaction.
+     * @return {code Map<String, Object} containing XDM data for the proposition interaction.
+     */
+    public Map<String, Object> generateInteractionXdm(@NonNull final MessagingEdgeEventType eventType) {
+        if (propositionReference == null) {
+            Log.debug(LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
+            return null;
+        }
+        final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType, null,
+                PropositionInfo.createFromProposition(getProposition()), itemId, null);
+        return propositionInteraction.getPropositionInteractionXDM();
+    }
+
+    /**
+     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given proposition item, for the provided event type.
+     * If the proposition reference within the item is released and no longer valid, the method returns null.
+     *
+     * @param interaction custom {@link String} describing the interaction.
+     * @param eventType an enum of type {@link MessagingEdgeEventType} specifying event type for the interaction.
+     * @param tokens {@link List<String>} containing the sub-item tokens for recording interaction.
+     * @return {code Map<String, Object} containing XDM data for the proposition interaction.
+     */
+    public Map<String, Object> generateInteractionXdm(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
+        if (propositionReference == null) {
+            Log.debug(LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
+            return null;
+        }
+        final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType, interaction,
+                PropositionInfo.createFromProposition(getProposition()), itemId, tokens);
+        return propositionInteraction.getPropositionInteractionXDM();
     }
 
     /**
      * Creates a {@code MessagingPropositionItem} object from the provided {@code RuleConsequence}.
      *
-     * @return {@link MessagingPropositionItem} object created from the provided {@link RuleConsequence}.
+     * @return {@link PropositionItem} object created from the provided {@link RuleConsequence}.
      */
-    public static MessagingPropositionItem fromRuleConsequence(final RuleConsequence consequence) {
-        MessagingPropositionItem propositionItem = null;
+    public static PropositionItem fromRuleConsequence(final RuleConsequence consequence) {
+        PropositionItem propositionItem = null;
         try {
             final Map<String, Object> details = consequence.getDetail();
             if (MapUtils.isNullOrEmpty(details)) {
@@ -116,7 +201,7 @@ public class MessagingPropositionItem implements Serializable {
             if (MapUtils.isNullOrEmpty(data)) {
                 return null;
             }
-            propositionItem = new MessagingPropositionItem(uniqueId, SchemaType.fromString(schema), data);
+            propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
         } catch (final DataReaderException dataReaderException) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
         }
@@ -125,9 +210,9 @@ public class MessagingPropositionItem implements Serializable {
     }
 
     /**
-     * Returns this {@link MessagingPropositionItem}'s content as a json content {@code Map<String, Object>}.
+     * Returns this {@link PropositionItem}'s content as a json content {@code Map<String, Object>}.
      *
-     * @return {@link Map<String, Object>} object containing the {@link MessagingPropositionItem}'s content.
+     * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
      */
     public Map<String, Object> getJsonContentMap() {
         final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
@@ -135,9 +220,9 @@ public class MessagingPropositionItem implements Serializable {
     }
 
     /**
-     * Returns this {@link MessagingPropositionItem}'s content as a json content {@code List<Map<String, Object>>}.
+     * Returns this {@link PropositionItem}'s content as a json content {@code List<Map<String, Object>>}.
      *
-     * @return {@link List<Map<String, Object>>} object containing the {@link MessagingPropositionItem}'s content.
+     * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s content.
      */
     public List<Map<String, Object>> getJsonArrayList() {
         final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
@@ -145,9 +230,9 @@ public class MessagingPropositionItem implements Serializable {
     }
 
     /**
-     * Returns this {@link MessagingPropositionItem}'s content as a html content {@code String}.
+     * Returns this {@link PropositionItem}'s content as a html content {@code String}.
      *
-     * @return {@link String} containing the {@link MessagingPropositionItem}'s content.
+     * @return {@link String} containing the {@link PropositionItem}'s content.
      */
     public String getHtmlContent() {
         final HtmlContentSchemaData schemaData = (HtmlContentSchemaData) createSchemaData(SchemaType.HTML_CONTENT);
@@ -155,18 +240,18 @@ public class MessagingPropositionItem implements Serializable {
     }
 
     /**
-     * Returns this {@link MessagingPropositionItem}'s content as a {@code InAppSchemaData} object.
+     * Returns this {@link PropositionItem}'s content as a {@code InAppSchemaData} object.
      *
-     * @return {@link InAppSchemaData} object containing the {@link MessagingPropositionItem}'s content.
+     * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
      */
     public InAppSchemaData getInAppSchemaData() {
         return (InAppSchemaData) createSchemaData(SchemaType.INAPP);
     }
 
     /**
-     * Returns this {@link MessagingPropositionItem}'s content as a {@code FeedItemSchemaData} object.
+     * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
      *
-     * @return {@link FeedItemSchemaData} object containing the {@link MessagingPropositionItem}'s content.
+     * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
      */
     public FeedItemSchemaData getFeedItemSchemaData() {
         return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
@@ -176,7 +261,7 @@ public class MessagingPropositionItem implements Serializable {
      * Creates a schema data object from this {@code MessagingPropositionItem}'s content.
      *
      * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
-     * @return {@code SchemaData} object created from the provided {@link MessagingPropositionItem}'s content.
+     * @return {@code SchemaData} object created from the provided {@link PropositionItem}'s content.
      */
     private SchemaData createSchemaData(final SchemaType schemaType) {
         if (MapUtils.isNullOrEmpty(itemData)) {
@@ -207,10 +292,10 @@ public class MessagingPropositionItem implements Serializable {
      * Creates a {@code MessagingPropositionItem} object from the provided {@code Map<String, Object>}.
      *
      * @param eventData {@link Map<String, Object>} event data
-     * @return {@link MessagingPropositionItem} object created from the provided {@code Map<String, Object>}.
+     * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    public static MessagingPropositionItem fromEventData(final Map<String, Object> eventData) {
-        MessagingPropositionItem propositionItem = null;
+    public static PropositionItem fromEventData(final Map<String, Object> eventData) {
+        PropositionItem propositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, ID);
             final SchemaType schema = SchemaType.fromString(DataReader.getString(eventData, SCHEMA));
@@ -220,7 +305,7 @@ public class MessagingPropositionItem implements Serializable {
                 Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
                 return null;
             }
-            propositionItem = new MessagingPropositionItem(uniqueId, schema, dataMap);
+            propositionItem = new PropositionItem(uniqueId, schema, dataMap);
         } catch (final DataReaderException exception) {
             Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
@@ -231,7 +316,7 @@ public class MessagingPropositionItem implements Serializable {
     /**
      * Creates a {@code Map<String, Object>} object from this {@code PropositionItem}.
      *
-     * @return {@link Map<String, Object>} object created from this {@link MessagingPropositionItem}.
+     * @return {@link Map<String, Object>} object created from this {@link PropositionItem}.
      */
     public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();

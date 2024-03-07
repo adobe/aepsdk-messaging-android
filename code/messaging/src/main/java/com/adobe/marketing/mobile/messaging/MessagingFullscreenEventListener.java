@@ -49,9 +49,12 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      */
     @Override
     public void onShow(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
-        if (message != null && message.getAutoTrack()) {
-            message.track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+        PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        if (message != null) {
+            if (message.getAutoTrack()) {
+                message.track(null, MessagingEdgeEventType.DISPLAY);
+            }
+            message.recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
         }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message shown.");
     }
@@ -63,9 +66,10 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      */
     @Override
     public void onDismiss(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
-        Message message = PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
-        if (message != null && message.getAutoTrack()) {
-            message.track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+        PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        if (message != null) {
+            message.recordEventHistory(null, MessagingEdgeEventType.DISMISS);
+            message.dismiss();
         }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
@@ -111,52 +115,49 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
             return false;
         }
 
-        // url decode the query parameters if present
+        // url decode the query parameters
         final String queryParams;
-        final String query = uri.getQuery();
-        final MessageSettings messageSettings = fullscreenMessage.getMessageSettings();
-        final Message message = (Message) messageSettings.getParent();
+        try {
+            queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
+        } catch (final UnsupportedEncodingException exception) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
+            return false;
+        }
 
-        if (!StringUtils.isNullOrEmpty(query)) {
-            try {
-                queryParams = URLDecoder.decode(query, StandardCharsets.UTF_8.toString());
-            } catch (final UnsupportedEncodingException exception) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
-                return false;
-            }
+        // Populate message data
+        final Map<String, String> messageData = extractQueryParameters(queryParams);
 
-            // Populate message data
-            final Map<String, String> messageData = extractQueryParameters(queryParams);
-
-            if (!MapUtils.isNullOrEmpty(messageData)) {
-                // handle optional tracking
-                final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
-                if (!StringUtils.isNullOrEmpty(interaction)) {
-                    // ensure we have the MessagingExtension class available for tracking
-                    final Object messagingExtension = message.getParent();
-                    if (messagingExtension != null) {
+        final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().getMessageFromPresentableId(fullscreenMessage.getPresentation().getId());
+        if (!MapUtils.isNullOrEmpty(messageData)) {
+            // handle optional tracking
+            final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
+            if (!StringUtils.isNullOrEmpty(interaction)) {
+                // ensure we have the MessagingExtension class available for tracking
+                if (message != null) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
-                        message.track(interaction, MessagingEdgeEventType.IN_APP_INTERACT);
+                        message.track(interaction, MessagingEdgeEventType.INTERACT);
+                        message.recordEventHistory(interaction, MessagingEdgeEventType.INTERACT);
                     }
                 }
 
-                // handle optional deep link
-                String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
-                if (!StringUtils.isNullOrEmpty(link)) {
-                    // handle optional javascript code to be executed
-                    if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
-                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
-                        message.evaluateJavascript(link);
-                    } else {
-                        // if we have any remaining query parameters we need to append them to the deeplink
-                        if (!messageData.isEmpty()) {
-                            for (final Map.Entry<String, String> entry : messageData.entrySet()) {
-                                link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
-                            }
+            // handle optional deep link
+            String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
+            if (!StringUtils.isNullOrEmpty(link)) {
+                // handle optional javascript code to be executed
+                if (link.startsWith(MessagingConstants.QueryParameters.JAVASCRIPT_QUERY_KEY)) {
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Evaluating javascript (%s)", link);
+                    fullscreenMessage.getPresentation().getEventHandler().evaluateJavascript(link, s -> {
+                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Javascript evaluation completed with result: %s", s);
+                    });
+                } else {
+                    // if we have any remaining query parameters we need to append them to the deeplink
+                    if (!messageData.isEmpty()) {
+                        for (final Map.Entry<String, String> entry : messageData.entrySet()) {
+                            link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
                         }
-                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
-                        openUrl(link);
                     }
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
+                    openUrl(link);
                 }
             }
         }
@@ -164,7 +165,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         final String host = uri.getHost();
         if ((host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) || (host.equals(MessagingConstants.QueryParameters.PATH_CANCEL))) {
             if (message != null) {
-                message.dismiss(true);
+                message.dismiss();
             }
         }
 
@@ -176,9 +177,10 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
 
     @Override
     public void onBackPressed(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
-        final Message message = MessagingUtils.getMessageForPresentable(fullscreenMessage);
-        if (message != null && message.getAutoTrack()) {
-            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.IN_APP_INTERACT);
+        final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) MessagingUtils.getMessageForPresentable(fullscreenMessage);
+        if (message != null) {
+            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
+            message.recordEventHistory(INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
         }
     }
 

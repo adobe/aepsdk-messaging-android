@@ -62,7 +62,7 @@ public class ParsedPropositions {
                 }
 
                 final Surface surface = Surface.fromUriString(scope);
-                final MessagingPropositionItem firstPropositionItem = proposition.getItems().get(0);
+                final PropositionItem firstPropositionItem = proposition.getItems().get(0);
                 switch (firstPropositionItem.getSchema()) {
                     case RULESET :
                         final JSONObject content = new JSONObject(firstPropositionItem.getData());
@@ -76,7 +76,7 @@ public class ParsedPropositions {
                             break;
                         }
                         final RuleConsequence consequence = consequences.get(0);
-                        final MessagingPropositionItem schemaConsequence = MessagingPropositionItem.fromRuleConsequence(consequence);
+                        final PropositionItem schemaConsequence = PropositionItem.fromRuleConsequence(consequence);
                         if (schemaConsequence == null) {
                             break;
                         }

@@ -15,7 +15,6 @@ package com.adobe.marketing.mobile.messaging;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -65,7 +64,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -593,7 +591,7 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
-                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
                 matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
@@ -686,7 +684,7 @@ public class EdgePersonalizationResponseHandlerTests {
             // setup
             try (MockedStatic<JSONRulesParser> ignored = Mockito.mockStatic(JSONRulesParser.class)) {
                 Surface surface = new Surface();
-                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
                 matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(4));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
@@ -788,7 +786,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 }};
 
                 // setup feed rules engine
-                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
                 matchedFeedRules.put(surface, MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
@@ -841,7 +839,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 surfaces.add(new Surface("alsoinvalid##"));
 
                 // setup feed rules engine
-                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
                 matchedFeedRules.put(new Surface(), MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);
@@ -891,7 +889,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 List<Surface> surfaces = new ArrayList<>();
 
                 // setup feed rules engine
-                Map<Surface, List<MessagingPropositionItem>> matchedFeedRules = new HashMap<>();
+                Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
                 matchedFeedRules.put(new Surface(), MessagingTestUtils.createMessagingPropositionItemList(3));
                 when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class))).thenCallRealMethod();
                 when(mockFeedRulesEngine.evaluate(any(Event.class))).thenReturn(matchedFeedRules);

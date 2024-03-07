@@ -49,18 +49,18 @@ public class MessagingPropositionTests {
     Map<String, Object> propositionItemMap = new HashMap<>();
     Map<String, Object> propositionItemMap2 = new HashMap<>();
     Map<String, Object> eventDataMap = new HashMap<>();
-    List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
-    List<MessagingPropositionItem> messagingPropositionItems2 = new ArrayList<>();
+    List<PropositionItem> propositionItems = new ArrayList<>();
+    List<PropositionItem> propositionItems2 = new ArrayList<>();
     List<Map<String, Object>> propositionItemMaps = new ArrayList<>();
 
     @Before
     public void setup() throws JSONException {
         propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
         propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
-        MessagingPropositionItem messagingPropositionItem2 = MessagingPropositionItem.fromEventData(propositionItemMap2);
-        messagingPropositionItems.add(messagingPropositionItem);
-        messagingPropositionItems2.add(messagingPropositionItem2);
+        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
+        PropositionItem propositionItem2 = PropositionItem.fromEventData(propositionItemMap2);
+        propositionItems.add(propositionItem);
+        propositionItems2.add(propositionItem2);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");
         eventDataMap.put("scope", "mobileapp://mockScope");
@@ -71,13 +71,13 @@ public class MessagingPropositionTests {
     @Test
     public void test_propositionConstructor() {
         // test
-        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         // verify
         assertNotNull(messagingProposition);
         assertEquals("uniqueId", messagingProposition.getUniqueId());
         assertEquals("mobileapp://mockScope", messagingProposition.getScope());
         assertEquals(scopeDetails, messagingProposition.getScopeDetails());
-        assertEquals(messagingPropositionItems, messagingProposition.getItems());
+        assertEquals(propositionItems, messagingProposition.getItems());
     }
 
     @Test
@@ -90,10 +90,10 @@ public class MessagingPropositionTests {
         assertEquals("mobileapp://mockScope", messagingProposition.getScope());
         assertEquals(scopeDetails, messagingProposition.getScopeDetails());
         // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
-        for (MessagingPropositionItem item : messagingProposition.getItems()) {
-            assertEquals(messagingPropositionItems.get(0).getPropositionItemId(), item.getPropositionItemId());
-            assertEquals(messagingPropositionItems.get(0).getData(), item.getData());
-            assertEquals(messagingPropositionItems.get(0).getSchema(), item.getSchema());
+        for (PropositionItem item : messagingProposition.getItems()) {
+            assertEquals(propositionItems.get(0).getPropositionItemId(), item.getPropositionItemId());
+            assertEquals(propositionItems.get(0).getData(), item.getData());
+            assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
             assertNotNull(item.getProposition());
         }
     }
@@ -101,17 +101,17 @@ public class MessagingPropositionTests {
     @Test
     public void test_createEventData_fromProposition() throws DataReaderException, JSONException {
         // test
-        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         Map<String, Object> propositionMap = messagingProposition.toEventData();
         // verify
         assertNotNull(propositionMap);
         List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
-        MessagingPropositionItem messagingPropositionItem = messagingPropositionItems.get(0);
+        PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
             Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
             Map<String, Object> content = DataReader.getTypedMap(Object.class, data, "content");
-            assertEquals(messagingPropositionItem.getPropositionItemId(), item.get("id"));
-            assertEquals(messagingPropositionItem.getSchema().toString(), item.get("schema"));
+            assertEquals(propositionItem.getPropositionItemId(), item.get("id"));
+            assertEquals(propositionItem.getSchema().toString(), item.get("schema"));
             Map<String, Object> expectedContent = JSONUtils.toMap(new JSONObject("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\",\"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp/feeds/testFeed\",\"feedName\":\"testFeed\",\"campaignName\":\"testCampaign\"},\"content\":{\"actionUrl\":\"actionUrl\",\"actionTitle\":\"actionTitle\",\"title\":\"title\",\"body\":\"body\",\"imageUrl\":\"imageUrl\"}},\"id\":\"uniqueId\"}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}"));
             assertEquals(expectedContent, content);
         }
@@ -120,9 +120,9 @@ public class MessagingPropositionTests {
     @Test
     public void test_equals() {
         // test
-        MessagingProposition messagingProposition1 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
-        MessagingProposition messagingProposition2 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
-        MessagingProposition messagingProposition3 = new MessagingProposition("uniqueId2", "mobileapp://mockScope2", scopeDetails, messagingPropositionItems2);
+        MessagingProposition messagingProposition1 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        MessagingProposition messagingProposition2 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        MessagingProposition messagingProposition3 = new MessagingProposition("uniqueId2", "mobileapp://mockScope2", scopeDetails, propositionItems2);
 
         Object notAMessagingProposition = new Object();
         // verify

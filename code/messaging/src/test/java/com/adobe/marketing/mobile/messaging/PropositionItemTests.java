@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MessagingPropositionItemTests {
+public class PropositionItemTests {
     String testStringContent = "some html string content";
     String testId = "uniqueId";
     JSONObject inAppRuleJSON;
@@ -114,31 +114,31 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_propositionItemConstructor_FeedJSONContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
         // verify
-        assertNotNull(messagingPropositionItem);
-        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
-        assertEquals(SchemaType.FEED, messagingPropositionItem.getSchema());
-        assertEquals(feedPropositionItemData, messagingPropositionItem.getData());
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getPropositionItemId());
+        assertEquals(SchemaType.FEED, propositionItem.getSchema());
+        assertEquals(feedPropositionItemData, propositionItem.getData());
     }
 
     @Test
     public void test_propositionItemConstructor_StringContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.HTML_CONTENT, eventDataMapForHTML);
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, eventDataMapForHTML);
         // verify
-        assertNotNull(messagingPropositionItem);
-        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
-        assertEquals(SchemaType.HTML_CONTENT, messagingPropositionItem.getSchema());
-        assertEquals(eventDataMapForHTML, messagingPropositionItem.getData());
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getPropositionItemId());
+        assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
+        assertEquals(eventDataMapForHTML, propositionItem.getData());
     }
 
     // toEventData
     @Test
     public void test_toEventData_JsonContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, (Map<String, Object>) eventDataMapForJSON.get("data"));
-        Map<String, Object> propositionItemMap = messagingPropositionItem.toEventData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, (Map<String, Object>) eventDataMapForJSON.get("data"));
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
@@ -149,8 +149,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_toEventData_StringContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.HTML_CONTENT, (Map<String, Object>) eventDataMapForHTML.get("data"));
-        Map<String, Object> propositionItemMap = messagingPropositionItem.toEventData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, (Map<String, Object>) eventDataMapForHTML.get("data"));
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
@@ -161,8 +161,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_toEventData_FeedContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
-        Map<String, Object> propositionItemMap = messagingPropositionItem.toEventData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
         assertNotNull(propositionItemMap);
         assertEquals(testId, propositionItemMap.get("id"));
@@ -173,8 +173,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_toEventData_NullContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, null);
-        Map<String, Object> propositionItemMap = messagingPropositionItem.toEventData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, null);
+        Map<String, Object> propositionItemMap = propositionItem.toEventData();
         // verify
         assertTrue(propositionItemMap.isEmpty());
     }
@@ -183,24 +183,24 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_createPropositionItem_fromEventData_JSONContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
         // verify
-        assertNotNull(messagingPropositionItem);
-        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
-        assertEquals(SchemaType.FEED, messagingPropositionItem.getSchema());
-        Map<String, Object> propositionItemData = messagingPropositionItem.getData();
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getPropositionItemId());
+        assertEquals(SchemaType.FEED, propositionItem.getSchema());
+        Map<String, Object> propositionItemData = propositionItem.getData();
         assertEquals(feedPropositionItemData, propositionItemData);
     }
 
     @Test
     public void test_createPropositionItem_fromEventData_StringContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForHTML);
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForHTML);
         // verify
-        assertNotNull(messagingPropositionItem);
-        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
-        assertEquals(SchemaType.HTML_CONTENT, messagingPropositionItem.getSchema());
-        assertEquals(htmlContentMap, messagingPropositionItem.getData());
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getPropositionItemId());
+        assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
+        assertEquals(htmlContentMap, propositionItem.getData());
     }
 
     @Test
@@ -208,9 +208,9 @@ public class MessagingPropositionItemTests {
         // setup
         eventDataMapForJSON.put("data", null);
         // test
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
         // verify
-        assertNull(messagingPropositionItem);
+        assertNull(propositionItem);
     }
 
     // fromRuleConsequence
@@ -219,12 +219,12 @@ public class MessagingPropositionItemTests {
         // test
         Map<String, Object> consequenceDetails = JSONUtils.toMap(InternalMessagingUtils.getConsequenceDetails(inAppRuleJSON));
         RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", consequenceDetails);
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+        PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
         // verify
-        assertNotNull(messagingPropositionItem);
-        assertEquals(testId, messagingPropositionItem.getPropositionItemId());
-        assertEquals(SchemaType.INAPP, messagingPropositionItem.getSchema());
-        Map<String, Object> propositionItemData = messagingPropositionItem.getData();
+        assertNotNull(propositionItem);
+        assertEquals(testId, propositionItem.getPropositionItemId());
+        assertEquals(SchemaType.INAPP, propositionItem.getSchema());
+        Map<String, Object> propositionItemData = propositionItem.getData();
         assertEquals(consequenceDetails.get("data"), propositionItemData);
     }
 
@@ -232,9 +232,9 @@ public class MessagingPropositionItemTests {
     public void test_createPropositionItem_fromRuleConsequence_EmptyDetails() {
         // test
         RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", Collections.emptyMap());
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+        PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
         // verify
-        assertNull(messagingPropositionItem);
+        assertNull(propositionItem);
     }
 
     @Test
@@ -243,17 +243,17 @@ public class MessagingPropositionItemTests {
         Map<String, Object> consequenceDetails = JSONUtils.toMap(InternalMessagingUtils.getConsequenceDetails(inAppRuleJSON));
         consequenceDetails.remove("data");
         RuleConsequence consequence = new RuleConsequence("testId", "cjmiam", consequenceDetails);
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromRuleConsequence(consequence);
+        PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
         // verify
-        assertNull(messagingPropositionItem);
+        assertNull(propositionItem);
     }
 
     // getInAppSchemaData tests
     @Test
     public void test_getInAppSchemaData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.INAPP, inAppPropositionItemData);
-        InAppSchemaData schemaData = messagingPropositionItem.getInAppSchemaData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.INAPP, inAppPropositionItemData);
+        InAppSchemaData schemaData = propositionItem.getInAppSchemaData();
         // verify
         assertNotNull(schemaData);
         assertEquals(ContentType.TEXT_HTML, schemaData.getContentType());
@@ -269,8 +269,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getInAppSchemaData_emptyData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.INAPP, Collections.emptyMap());
-        InAppSchemaData schemaData = messagingPropositionItem.getInAppSchemaData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.INAPP, Collections.emptyMap());
+        InAppSchemaData schemaData = propositionItem.getInAppSchemaData();
         // verify
         assertNull(schemaData);
     }
@@ -286,8 +286,8 @@ public class MessagingPropositionItemTests {
         Map<String, Object> consequenceDetail = (Map<String, Object>) consequence.get("detail");
         Map<String, Object> itemData = (Map<String, Object>) consequenceDetail.get("data");
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, itemData);
-        FeedItemSchemaData schemaData = messagingPropositionItem.getFeedItemSchemaData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, itemData);
+        FeedItemSchemaData schemaData = propositionItem.getFeedItemSchemaData();
         // verify
         assertNotNull(schemaData);
         assertEquals(ContentType.APPLICATION_JSON, schemaData.getContentType());
@@ -300,8 +300,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getFeedSchemaData_emptyData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.FEED, Collections.emptyMap());
-        FeedItemSchemaData schemaData = messagingPropositionItem.getFeedItemSchemaData();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, Collections.emptyMap());
+        FeedItemSchemaData schemaData = propositionItem.getFeedItemSchemaData();
         // verify
         assertNull(schemaData);
     }
@@ -310,8 +310,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getJsonContentMap() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, feedPropositionItemData);
-        Map<String, Object> jsonContentMap = messagingPropositionItem.getJsonContentMap();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, feedPropositionItemData);
+        Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
         // verify
         assertNotNull(jsonContentMap);
         assertEquals(feedPropositionItemData.get("content"), jsonContentMap);
@@ -320,8 +320,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getJsonContentMap_emptyData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
-        Map<String, Object> jsonContentMap = messagingPropositionItem.getJsonContentMap();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
+        Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
         // verify
         assertNull(jsonContentMap);
     }
@@ -330,8 +330,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getJsonArrayContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, codeBasedPropositionItemData);
-        List<Map<String, Object>> jsonArrayList = messagingPropositionItem.getJsonArrayList();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, codeBasedPropositionItemData);
+        List<Map<String, Object>> jsonArrayList = propositionItem.getJsonArrayList();
         // verify
         assertNotNull(jsonArrayList);
         assertEquals(codeBasedPropositionItemContent, jsonArrayList);
@@ -340,8 +340,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getJsonArrayContent_emptyData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
-        List<Map<String, Object>> jsonArrayList = messagingPropositionItem.getJsonArrayList();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
+        List<Map<String, Object>> jsonArrayList = propositionItem.getJsonArrayList();
         // verify
         assertNull(jsonArrayList);
     }
@@ -350,8 +350,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getHtmlContent() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.HTML_CONTENT, htmlContentMap);
-        String htmlContent = messagingPropositionItem.getHtmlContent();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, htmlContentMap);
+        String htmlContent = propositionItem.getHtmlContent();
         // verify
         assertEquals(testStringContent, htmlContent);
     }
@@ -359,8 +359,8 @@ public class MessagingPropositionItemTests {
     @Test
     public void test_getHtmlContent_EmptyData() {
         // test
-        MessagingPropositionItem messagingPropositionItem = new MessagingPropositionItem(testId, SchemaType.HTML_CONTENT, Collections.emptyMap());
-        String htmlContent = messagingPropositionItem.getHtmlContent();
+        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, Collections.emptyMap());
+        String htmlContent = propositionItem.getHtmlContent();
         // verify
         assertNull(htmlContent);
     }

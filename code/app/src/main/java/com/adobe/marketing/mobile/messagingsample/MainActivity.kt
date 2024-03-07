@@ -468,7 +468,7 @@ class CustomDelegate : PresentationDelegate {
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
             val message = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-            message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
+            message?.track("message suppressed", MessagingEdgeEventType.TRIGGER)
         }
 
         return showMessages
@@ -483,7 +483,7 @@ class CustomDelegate : PresentationDelegate {
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
                 val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                message?.track(content, MessagingEdgeEventType.TRIGGER)
             }
         }
 
