@@ -47,11 +47,11 @@ class PropositionInteraction {
     // Returns proposition interaction XDM
     Map<String, Object> getPropositionInteractionXDM() {
         if (propositionInfo == null) {
-            Log.trace(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, PropositionInfo was not found for this message.");
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, PropositionInfo was not found for this message.");
             return null;
         }
         if (eventType == null) {
-            Log.trace(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, MessagingEdgeEventType was not found for this message.");
+            Log.warning(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, MessagingEdgeEventType was not found for this message.");
             return null;
         }
         final Map<String, Object> propositionDetailsData= new HashMap<>();
@@ -60,15 +60,15 @@ class PropositionInteraction {
         propositionDetailsData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS,
                 propositionInfo.scopeDetails == null ? new HashMap<>() : propositionInfo.scopeDetails);
         if (!StringUtils.isNullOrEmpty(itemId)) {
-            Map<String, Object> item = new HashMap<>();
+            final Map<String, Object> item = new HashMap<>();
             item.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, itemId);
 
             if (MessagingUtils.isNullOrEmpty(tokens)) {
-                Map<String, Object> characteristics = new HashMap<>();
+                final Map<String, Object> characteristics = new HashMap<>();
                 characteristics.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.TOKENS, String.join(",", tokens));
                 item.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.CHARACTERISTICS, characteristics);
             }
-            List<Map<String, Object>> items = new ArrayList<>();
+            final List<Map<String, Object>> items = new ArrayList<>();
             items.add(item);
             propositionDetailsData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ITEMS, items);
         }

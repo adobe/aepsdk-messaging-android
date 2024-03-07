@@ -64,8 +64,10 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
     public void onDismiss(final FullscreenMessage fullscreenMessage) {
         final InternalMessage message = (InternalMessage) fullscreenMessage.getParent();
         if (message != null) {
+            if (message.getAutoTrack()) {
+                message.track(null, MessagingEdgeEventType.DISMISS);
+            }
             message.recordEventHistory(null, MessagingEdgeEventType.DISMISS);
-            message.dismiss(false);
         }
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message dismissed.");
     }
@@ -164,7 +166,7 @@ class MessagingFullscreenMessageDelegate implements FullscreenMessageDelegate {
 
         final String host = uri.getHost();
         if ((host.equals(MessagingConstants.QueryParameters.PATH_DISMISS)) || (host.equals(MessagingConstants.QueryParameters.PATH_CANCEL))) {
-            message.dismiss(true);
+            message.dismiss();
         }
 
         return true;

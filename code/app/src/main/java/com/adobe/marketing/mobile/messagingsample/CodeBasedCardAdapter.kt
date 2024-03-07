@@ -56,7 +56,7 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
                 item.track(MessagingEdgeEventType.DISPLAY)
                 holder.webView.setOnTouchListener(object: View.OnTouchListener {
                     override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
-                        if (event?.action == MotionEvent.ACTION_DOWN) {
+                        if (event?.action == MotionEvent.ACTION_UP) {
                             item.track(MessagingEdgeEventType.INTERACT)
                             return true
                         }

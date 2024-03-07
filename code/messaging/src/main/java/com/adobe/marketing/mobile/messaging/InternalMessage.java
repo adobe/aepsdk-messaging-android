@@ -264,11 +264,8 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
         }
     }
 
-    public void dismiss(final boolean suppressAutoTrack) {
+    public void dismiss() {
         if (aepMessage != null) {
-            if (autoTrack && !suppressAutoTrack) {
-                track(null, MessagingEdgeEventType.DISMISS);
-            }
             aepMessage.dismiss();
         }
     }

@@ -56,10 +56,8 @@ public interface Message {
 
     /**
      * Removes this {@link Message} from view.
-     *
-     * @param suppressAutoTrack if true, tracking is not done automatically for a dismiss event
-     */
-    void dismiss(final boolean suppressAutoTrack);
+     * */
+    void dismiss();
 
     /**
      * Returns the {@link Message}'s id.
