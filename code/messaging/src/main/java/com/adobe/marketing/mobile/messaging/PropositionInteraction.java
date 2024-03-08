@@ -63,7 +63,7 @@ class PropositionInteraction {
             final Map<String, Object> item = new HashMap<>();
             item.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, itemId);
 
-            if (MessagingUtils.isNullOrEmpty(tokens)) {
+            if (!MessagingUtils.isNullOrEmpty(tokens)) {
                 final Map<String, Object> characteristics = new HashMap<>();
                 characteristics.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.TOKENS, String.join(",", tokens));
                 item.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.CHARACTERISTICS, characteristics);
