@@ -57,17 +57,17 @@ import java.util.Map;
 class InternalMessagingUtils {
     private final static String SELF_TAG = "InternalMessagingUtils";
 
-    static List<MessagingProposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
-        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
+    static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final MessagingProposition messagingProposition = MessagingProposition.fromEventData(payload);
-                if (messagingProposition != null) {
-                    messagingPropositions.add(messagingProposition);
+                final Proposition proposition = Proposition.fromEventData(payload);
+                if (proposition != null) {
+                    propositions.add(proposition);
                 }
             }
         }
-        return messagingPropositions;
+        return propositions;
     }
 
     // ========================================================================================

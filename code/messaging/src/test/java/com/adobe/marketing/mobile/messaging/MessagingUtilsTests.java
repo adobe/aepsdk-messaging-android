@@ -27,10 +27,10 @@ import java.util.Map;
 public class MessagingUtilsTests {
 
     private Surface mockSurface;
-    private Map<Surface, List<MessagingProposition>> mockMapToUpdate = new HashMap<>();
-    private List<MessagingProposition> mockPropositionsToAdd = new ArrayList<>();
-    private MessagingProposition mockPropositionToAdd1;
-    private MessagingProposition mockPropositionToAdd2;
+    private Map<Surface, List<Proposition>> mockMapToUpdate = new HashMap<>();
+    private List<Proposition> mockPropositionsToAdd = new ArrayList<>();
+    private Proposition mockPropositionToAdd1;
+    private Proposition mockPropositionToAdd2;
     private final Map<String, Object> mockScopeDetails = new HashMap<String, Object>() {{
         put("key", "value");
     }};
@@ -40,19 +40,19 @@ public class MessagingUtilsTests {
         mockSurface = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed");
         final Map<String, Object> propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
         final PropositionItem mockPropositionItem = PropositionItem.fromEventData(propositionItemMap);
-        MessagingProposition mockProposition = new MessagingProposition("mockId",
+        Proposition mockProposition = new Proposition("mockId",
                 mockSurface.getUri(),
                 mockScopeDetails,
                 new ArrayList<PropositionItem>() {{
                     add(mockPropositionItem);
                 }});
-        mockMapToUpdate.put(mockSurface, new ArrayList<MessagingProposition>() {{
+        mockMapToUpdate.put(mockSurface, new ArrayList<Proposition>() {{
             add(mockProposition);
         }});
 
         final Map<String, Object> content = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
         PropositionItem mockPropositionItemToAdd1 = new PropositionItem("mockId1", SchemaType.DEFAULT_CONTENT, content);
-        mockPropositionToAdd1 = new MessagingProposition("mockId1",
+        mockPropositionToAdd1 = new Proposition("mockId1",
                 mockSurface.getUri(),
                 mockScopeDetails,
                 new ArrayList<PropositionItem>() {{
@@ -60,7 +60,7 @@ public class MessagingUtilsTests {
                 }});
         Map<String, Object> propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
         PropositionItem propositionItemToAdd2 = PropositionItem.fromEventData(propositionItemMap2);
-        mockPropositionToAdd2 = new MessagingProposition("mockId2",
+        mockPropositionToAdd2 = new Proposition("mockId2",
                 mockSurface.getUri(),
                 mockScopeDetails,
                 new ArrayList<PropositionItem>() {{
@@ -122,7 +122,7 @@ public class MessagingUtilsTests {
     public void test_updatePropositionMapForSurface_PropositionsListToAddIsNull() {
         // test
         Assert.assertEquals(mockMapToUpdate,
-                MessagingUtils.updatePropositionMapForSurface(mockSurface, (List<MessagingProposition>) null, mockMapToUpdate));
+                MessagingUtils.updatePropositionMapForSurface(mockSurface, (List<Proposition>) null, mockMapToUpdate));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class MessagingUtilsTests {
     @Test
     public void test_updatePropositionMapForSurface_ValidPropositionList() {
         // test
-        Map<Surface, List<MessagingProposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
+        Map<Surface, List<Proposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
                 mockSurface,
                 mockPropositionsToAdd,
                 mockMapToUpdate);
@@ -150,7 +150,7 @@ public class MessagingUtilsTests {
         Surface mockSurface2 = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed2");
 
         // test
-        Map<Surface, List<MessagingProposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
+        Map<Surface, List<Proposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
                 mockSurface2,
                 mockPropositionsToAdd,
                 mockMapToUpdate);
@@ -165,7 +165,7 @@ public class MessagingUtilsTests {
     public void test_updatePropositionMapForSurface_PropositionToAddIsNull() {
         // test
         Assert.assertEquals(mockMapToUpdate,
-                MessagingUtils.updatePropositionMapForSurface(mockSurface, (MessagingProposition) null, mockMapToUpdate));
+                MessagingUtils.updatePropositionMapForSurface(mockSurface, (Proposition) null, mockMapToUpdate));
     }
 
     @Test
@@ -177,7 +177,7 @@ public class MessagingUtilsTests {
     @Test
     public void test_updatePropositionMapForSurface_ValidProposition() {
         // test
-        Map<Surface, List<MessagingProposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
+        Map<Surface, List<Proposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
                 mockSurface,
                 mockPropositionToAdd1,
                 mockMapToUpdate);
@@ -193,7 +193,7 @@ public class MessagingUtilsTests {
         Surface mockSurface2 = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed2");
 
         // test
-        Map<Surface, List<MessagingProposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
+        Map<Surface, List<Proposition>> updatedMap = MessagingUtils.updatePropositionMapForSurface(
                 mockSurface2,
                 mockPropositionToAdd1,
                 mockMapToUpdate);

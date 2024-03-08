@@ -32,10 +32,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.MessagingProposition
-import com.adobe.marketing.mobile.messaging.Surface
-import com.adobe.marketing.mobile.services.MessagingDelegate
-import com.adobe.marketing.mobile.services.ui.FullscreenMessage
+import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.MessagingUtils
+import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
+import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.services.ui.InAppMessage
+import com.adobe.marketing.mobile.services.ui.Presentable
+import com.adobe.marketing.mobile.services.ui.PresentationDelegate
+import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONObject
@@ -242,7 +246,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    var messagingPropositions = mutableListOf<MessagingProposition>()
+    var propositions = mutableListOf<Proposition>()
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

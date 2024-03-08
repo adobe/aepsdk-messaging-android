@@ -424,13 +424,13 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(1, inProgressPropositions.size());
                 Surface surface = inProgressPropositions.keySet().stream().findFirst().get();
                 assertEquals("mobileapp://mockPackageName", surface.getUri());
-                List<MessagingProposition> propositions = inProgressPropositions.get(surface);
+                List<Proposition> propositions = inProgressPropositions.get(surface);
                 assertEquals(1, propositions.size());
-                MessagingProposition proposition = propositions.get(0);
+                Proposition proposition = propositions.get(0);
                 assertNotNull(proposition);
                 assertEquals(1, proposition.getItems().size());
             }
@@ -455,13 +455,13 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(1, inProgressPropositions.size());
                 Surface surface = inProgressPropositions.keySet().stream().findFirst().get();
                 assertEquals("mobileapp://mockPackageName", surface.getUri());
-                List<MessagingProposition> propositions = inProgressPropositions.get(surface);
+                List<Proposition> propositions = inProgressPropositions.get(surface);
                 assertEquals(1, propositions.size());
-                MessagingProposition proposition = propositions.get(0);
+                Proposition proposition = propositions.get(0);
                 assertNotNull(proposition);
                 assertEquals(3, proposition.getItems().size());
 
@@ -505,7 +505,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -526,7 +526,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -547,7 +547,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -570,7 +570,7 @@ public class EdgePersonalizationResponseHandlerTests {
                 edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(mockEvent);
 
                 // verify in progress propositions map not updated
-                Map<Surface, List<MessagingProposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
+                Map<Surface, List<Proposition>> inProgressPropositions = edgePersonalizationResponseHandler.getInProgressPropositions();
                 assertEquals(0, inProgressPropositions.size());
             }
         });
@@ -932,7 +932,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                 CacheService cacheService = new FileCacheService();
                 when(mockServiceProvider.getCacheService()).thenReturn(cacheService);
-                Map<Surface, List<MessagingProposition>> payload = new HashMap<>();
+                Map<Surface, List<Proposition>> payload = new HashMap<>();
                 try {
                     payload.put(new Surface(), InternalMessagingUtils.getPropositionsFromPayloads(new ArrayList<Map<String, Object>>() {{
                         for (int i = 0; i < inAppCount; i++) {

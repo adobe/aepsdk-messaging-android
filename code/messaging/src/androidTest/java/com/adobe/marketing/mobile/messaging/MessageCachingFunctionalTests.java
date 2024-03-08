@@ -94,17 +94,17 @@ public class MessageCachingFunctionalTests {
     @Test
     public void testMessageCaching_CachePropositions() {
         final Surface surface = new Surface();
-        final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
-        final List<MessagingProposition> messagingPropositionList = new ArrayList<>();
-        messagingPropositionList.add(MessagingProposition.fromEventData(MessagingTestUtils.getMapFromFile("personalization_payload.json")));
-        propositions.put(surface, messagingPropositionList);
+        final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+        final List<Proposition> propositionList = new ArrayList<>();
+        propositionList.add(Proposition.fromEventData(MessagingTestUtils.getMapFromFile("personalization_payload.json")));
+        propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
         // wait for event and rules processing
         TestHelper.sleep(1000);
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.arePropositionsCached());
-        final Map<Surface, List<MessagingProposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+        final Map<Surface, List<Proposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
         final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
         expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
         final String expectedPropositionString = MessagingTestUtils.convertPropositionsToString(InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));

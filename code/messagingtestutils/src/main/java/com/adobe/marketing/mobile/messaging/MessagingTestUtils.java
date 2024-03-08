@@ -521,11 +521,11 @@ public class MessagingTestUtils {
         return payload;
     }
 
-    static String convertPropositionsToString(List<MessagingProposition> messagingPropositions) {
+    static String convertPropositionsToString(List<Proposition> propositions) {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(messagingPropositions);
+            objectOutputStream.writeObject(propositions);
             objectOutputStream.defaultWriteObject();
             return objectOutputStream.toString();
         } catch (Exception e) {

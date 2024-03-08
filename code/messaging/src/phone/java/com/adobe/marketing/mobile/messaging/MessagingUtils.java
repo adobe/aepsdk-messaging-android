@@ -62,20 +62,20 @@ public class MessagingUtils {
     /**
      * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code Surface} and {@code List<Proposition>} objects.
      *
-     * @param surface           A {@link Surface} key used to update a {@link List< MessagingProposition >} value in the provided {@link Map<Surface, List< MessagingProposition >>}
-     * @param propositionsToAdd A {@link List< MessagingProposition >} list to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param surface           A {@link Surface} key used to update a {@link List<  Proposition  >} value in the provided {@link Map<Surface, List<  Proposition  >>}
+     * @param propositionsToAdd A {@link List<  Proposition  >} list to add in the provided {@code Map<Surface, List<Proposition>>}
      * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
+     * @return the updated {@link Map<Surface, List<  Proposition  >>} map
      */
-    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final List<MessagingProposition> propositionsToAdd, Map<Surface, List<MessagingProposition>> mapToUpdate) {
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> propositionsToAdd, final Map<Surface, List<Proposition>> mapToUpdate) {
         if (isNullOrEmpty(propositionsToAdd) || mapToUpdate == null) {
             return mapToUpdate;
         }
-        final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<MessagingProposition> existingList = updatedMap.get(surface);
-        final List<MessagingProposition> updatedList = existingList != null ? existingList : createMutableList(propositionsToAdd);
+        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<Proposition> existingList = updatedMap.get(surface);
+        final List<Proposition> updatedList = existingList != null ? existingList : createMutableList(propositionsToAdd);
         if (existingList != null) {
-            for (final MessagingProposition proposition : propositionsToAdd) {
+            for (final Proposition proposition : propositionsToAdd) {
                 if (!updatedList.contains(proposition)) {
                     updatedList.add(proposition);
                 }
@@ -88,20 +88,20 @@ public class MessagingUtils {
     /**
      * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code Surface} and {@code Proposition} objects.
      *
-     * @param surface     A {@link Surface} key used to update a {@link List< MessagingProposition >} value in the provided {@link Map<Surface, List< MessagingProposition >>}
-     * @param messagingProposition A {@link MessagingProposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
+     * @param surface     A {@link Surface} key used to update a {@link List<  Proposition  >} value in the provided {@link Map<Surface, List<  Proposition  >>}
+     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
      * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List< MessagingProposition >>} map
+     * @return the updated {@link Map<Surface, List<  Proposition  >>} map
      */
-    public static Map<Surface, List<MessagingProposition>> updatePropositionMapForSurface(final Surface surface, final MessagingProposition messagingProposition, Map<Surface, List<MessagingProposition>> mapToUpdate) {
-        if (messagingProposition == null || mapToUpdate == null) {
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, final Map<Surface, List<Proposition>> mapToUpdate) {
+        if (proposition == null || mapToUpdate == null) {
             return mapToUpdate;
         }
-        final Map<Surface, List<MessagingProposition>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<MessagingProposition> existingList = updatedMap.get(surface);
-        final List<MessagingProposition> updatedList = existingList != null ? existingList : createMutableList(messagingProposition);
+        final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
+        final List<Proposition> existingList = updatedMap.get(surface);
+        final List<Proposition> updatedList = existingList != null ? existingList : createMutableList(proposition);
         if (existingList != null) {
-            updatedList.add(messagingProposition);
+            updatedList.add(proposition);
         }
         updatedMap.put(surface, updatedList);
         return updatedMap;
@@ -114,7 +114,7 @@ public class MessagingUtils {
     /**
      * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
      *
-     * @param scope A {@link String} containing a {@link MessagingProposition} scope
+     * @param scope A {@link String} containing a {@link Proposition} scope
      * @return the created {@link Surface}
      */
     public static Surface scopeToSurface(final String scope) {

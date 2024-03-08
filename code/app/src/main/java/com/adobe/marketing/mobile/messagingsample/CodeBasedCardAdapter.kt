@@ -19,17 +19,16 @@ import android.webkit.WebView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.MessagingEdgeEventType
-import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.SchemaType
-import com.adobe.marketing.mobile.services.ServiceProvider
 import java.nio.charset.StandardCharsets
 import org.json.JSONArray
 import org.json.JSONObject
 
 
-class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
+class CodeBasedCardAdapter(propositions: MutableList<Proposition>) :
     RecyclerView.Adapter<CodeBasedCardAdapter.ViewHolder>() {
-    private var messagingPropositions = mutableListOf<MessagingProposition>()
+    private var propositions = mutableListOf<Proposition>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view =
@@ -38,7 +37,7 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val proposition = messagingPropositions[position]
+        val proposition = propositions[position]
         for (item in proposition.items) {
             var mimeType = ""
             if (item.schema == SchemaType.JSON_CONTENT) {
@@ -81,7 +80,7 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     }
 
     override fun getItemCount(): Int {
-        return messagingPropositions.size
+        return propositions.size
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -95,6 +94,6 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     }
 
     init {
-        this.messagingPropositions = messagingPropositions
+        this.propositions = propositions
     }
 }

@@ -43,24 +43,23 @@ import java.util.Map;
  * A {@link PropositionItem} object represents a personalization JSON object returned by Konductor.
  * In its JSON form, it has the following properties: id, schema, and data.
  * The contents of data will be determined by the provided schema.
- * This class provides helper access to get strongly typed content - e.g. getHtmlContent, getInAppSchemaData, etc.
+ * This class provides helper access to get strongly typed content - e.g. `getHtmlContent`
  */
 public class PropositionItem implements Serializable {
     private static final String SELF_TAG = "MessagingPropositionItem";
-    // Unique identifier for this `PropositionItem`
-    // contains value for `id` in JSON
+    /// Unique identifier for this `PropositionItem`
+    /// contains value for `id` in JSON
     private String itemId;
 
-    // `PropositionItem` schema string
-    // contains value for `schema` in JSON
+    /// `PropositionItem` schema string
+    /// contains value for `schema` in JSON
     private SchemaType schema;
 
-    // `PropositionItem` data as Map
-    // contains value for `data` in JSON
+    // PropositionItem data map containing the JSON data
     private Map<String, Object> itemData;
 
     // Soft reference to Proposition instance
-    SoftReference<MessagingProposition> propositionReference;
+    SoftReference<Proposition> propositionReference;
 
     public PropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
         this.itemId = itemId;
@@ -98,9 +97,9 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code MessagingProposition} referenced by the Proposition {@code SoftReference}.
      *
-     * @return {@link MessagingProposition} referenced by the Proposition {@link SoftReference}.
+     * @return {@link Proposition} referenced by the Proposition {@link SoftReference}.
      */
-    public MessagingProposition getProposition() {
+    public Proposition getProposition() {
         return propositionReference.get();
     }
 
@@ -344,7 +343,7 @@ public class PropositionItem implements Serializable {
         itemId = objectInputStream.readUTF();
         schema = SchemaType.fromString(objectInputStream.readUTF());
         itemData = (Map<String, Object>) objectInputStream.readObject();
-        propositionReference = new SoftReference<>((MessagingProposition) objectInputStream.readObject());
+        propositionReference = new SoftReference<>((Proposition) objectInputStream.readObject());
     }
 
     private void writeObject(final ObjectOutputStream objectOutputStream) throws IOException {
