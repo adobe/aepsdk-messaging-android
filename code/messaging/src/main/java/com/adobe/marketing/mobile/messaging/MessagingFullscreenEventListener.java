@@ -157,9 +157,9 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
                         for (final Map.Entry<String, String> entry : messageData.entrySet()) {
                             link = link.concat("&").concat(entry.getKey()).concat("=").concat(entry.getValue());
                         }
-                        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
-                        openUrl(link);
                     }
+                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Loading deeplink (%s)", link);
+                    openUrl(link);
                 }
             }
         }
