@@ -1,0 +1,55 @@
+#
+# Copyright 2024 Adobe. All rights reserved.
+# This file is licensed to you under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License. You may obtain a copy
+# of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
+
+name: Feature request
+description: Suggest an idea for this project.
+labels: [feature-request, triage-required]
+
+body:
+- type: checkboxes
+  attributes:
+    label:  Prerequisites
+    description: Please check the following items before logging a new feature request.
+    options:
+    - label: This is not a Security Disclosure, otherwise please follow the guidelines in [Security Policy](https://github.com/adobe/aepsdk-places-android/security/policy).
+      required: true
+    - label: I have searched in this repository's issues to see if it has already been reported.
+      required: true
+
+- type: textarea
+  id: description
+  attributes:
+    label: Feature request summary
+    description: Please provide a summary of the feature.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Current behavior
+    description: A concise description of what you are experiencing.
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: Expected behavior
+    description: A concise description of what you expected to happen.
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: Additional implementation details or code snippets
+    description: Provide additional information about this request, implementation details or code snippets.
+  validations:
+    required: false
