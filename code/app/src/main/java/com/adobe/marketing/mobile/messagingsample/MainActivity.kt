@@ -31,7 +31,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
-import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -244,7 +244,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    var messagingPropositions = mutableListOf<MessagingProposition>()
+    var propositions = mutableListOf<Proposition>()
     private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -468,7 +468,7 @@ class CustomDelegate : PresentationDelegate {
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
             val message = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-            message?.track("message suppressed", MessagingEdgeEventType.IN_APP_TRIGGER)
+            message?.track("message suppressed", MessagingEdgeEventType.TRIGGER)
         }
 
         return showMessages
@@ -483,7 +483,7 @@ class CustomDelegate : PresentationDelegate {
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
                 val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-                message?.track(content, MessagingEdgeEventType.IN_APP_INTERACT)
+                message?.track(content, MessagingEdgeEventType.TRIGGER)
             }
         }
 

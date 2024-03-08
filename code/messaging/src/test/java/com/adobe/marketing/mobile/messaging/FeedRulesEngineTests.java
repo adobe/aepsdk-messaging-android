@@ -37,7 +37,9 @@ public class FeedRulesEngineTests {
     private FeedRulesEngine feedRulesEngine;
 
     private Event defaultEvent = new Event.Builder("event", EventType.GENERIC_TRACK, EventSource.REQUEST_CONTENT)
-            .setEventData(new HashMap<String, Object>() {{ put("action", "fullscreen"); }}).build();
+            .setEventData(new HashMap<String, Object>() {{
+                put("action", "fullscreen");
+            }}).build();
 
     @Before
     public void setup() {
@@ -59,45 +61,28 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<Inbound>> inboundMessages = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
-        Assert.assertNull(inboundMessages);
-    }
-
-    @Test
-    public void test_evaluate_WithInAppConsequence() {
-        // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV1Content.json");
-        Assert.assertNotNull(rulesJson);
-        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
-
-        // test
-        Map<Surface, List<Inbound>> inboundMessages = feedRulesEngine.evaluate(defaultEvent);
-
-
-        // verify
-        Assert.assertNotNull(inboundMessages);
-        Assert.assertTrue(inboundMessages.isEmpty());
+        Assert.assertNull(propositionItemsBySurface);
     }
 
     @Test
     public void test_evaluate_WithInAppV2Consequence() {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionContent.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<Inbound>> inboundMessages = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
-        Assert.assertNotNull(inboundMessages);
-        Assert.assertTrue(inboundMessages.isEmpty());
+        Assert.assertNotNull(propositionItemsBySurface);
+        Assert.assertTrue(propositionItemsBySurface.isEmpty());
     }
 
     @Test
@@ -109,15 +94,15 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<Inbound>> inboundMessages = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
         // verify
-        Assert.assertNotNull(inboundMessages);
-        Assert.assertEquals(1, inboundMessages.size());
-        List<Inbound> inboundMessageList = inboundMessages.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
+        Assert.assertNotNull(propositionItemsBySurface);
+        Assert.assertEquals(1, propositionItemsBySurface.size());
+        List<PropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(1, inboundMessageList.size());
-        Assert.assertEquals(InboundType.FEED, inboundMessageList.get(0).getInboundType());
+        Assert.assertEquals(SchemaType.FEED, inboundMessageList.get(0).getSchema());
     }
 
     @Test
@@ -129,13 +114,13 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<Inbound>> inboundMessages = feedRulesEngine.evaluate(defaultEvent);
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
 
         // verify
-        Assert.assertNotNull(inboundMessages);
-        Assert.assertEquals(1, inboundMessages.size());
-        List<Inbound> inboundMessageList = inboundMessages.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
+        Assert.assertNotNull(propositionItemsBySurface);
+        Assert.assertEquals(1, propositionItemsBySurface.size());
+        List<PropositionItem> inboundMessageList = propositionItemsBySurface.get(Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(2, inboundMessageList.size());
     }

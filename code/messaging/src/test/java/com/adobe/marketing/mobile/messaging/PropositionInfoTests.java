@@ -41,25 +41,26 @@ public class PropositionInfoTests {
         put("characteristics", characteristics);
         put("activity", activity);
     }};
-    List<MessagingPropositionItem> messagingPropositionItems = new ArrayList<>();
+    List<PropositionItem> propositionItems = new ArrayList<>();
     Map<String, Object> propositionItemMap = new HashMap<>();
     private PropositionInfo propositionInfo;
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("proposition_item.json");
-        MessagingPropositionItem messagingPropositionItem = MessagingPropositionItem.fromEventData(propositionItemMap);
-        messagingPropositionItems.add(messagingPropositionItem);
+        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
+        propositionItems.add(propositionItem);
     }
 
     @Test
     public void testCreatePropositionInfoFromProposition() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        Proposition proposition = new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
+        } catch (Exception e) {
+        }
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -72,11 +73,12 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullId() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition(null, "mobileapp://mockScope", scopeDetails, messagingPropositionItems);
+        Proposition proposition = new Proposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -84,11 +86,12 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScope() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", null, scopeDetails, messagingPropositionItems);
+        Proposition proposition = new Proposition("id", null, scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -96,11 +99,12 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScopeDetails() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", null, messagingPropositionItems);
+        Proposition proposition = new Proposition("id", "mobileapp://mockScope", null, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
-        } catch (Exception e) {}
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -110,7 +114,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(null);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -125,7 +130,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -145,7 +151,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -160,7 +167,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }
@@ -175,7 +183,8 @@ public class PropositionInfoTests {
         // test
         try {
             propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(propositionInfo);
     }

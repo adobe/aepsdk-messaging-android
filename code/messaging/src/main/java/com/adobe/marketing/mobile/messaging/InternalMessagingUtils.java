@@ -16,10 +16,14 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_BASE
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ECID;
@@ -40,6 +44,10 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,17 +57,54 @@ import java.util.Map;
 class InternalMessagingUtils {
     private final static String SELF_TAG = "InternalMessagingUtils";
 
-    static List<MessagingProposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
-        final List<MessagingProposition> messagingPropositions = new ArrayList<>();
+    static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
-                final MessagingProposition messagingProposition = MessagingProposition.fromEventData(payload);
-                if (messagingProposition != null) {
-                    messagingPropositions.add(messagingProposition);
+                final Proposition proposition = Proposition.fromEventData(payload);
+                if (proposition != null) {
+                    propositions.add(proposition);
                 }
             }
         }
-        return messagingPropositions;
+        return propositions;
+    }
+
+    // ========================================================================================
+    // Consequence data retrieval from a JSONObject
+    // ========================================================================================
+    /**
+     * Retrieves the consequence detail {@code Map} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence details extracted from the rule json
+     */
+    static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        JSONObject consequenceDetails = null;
+        try {
+            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+        }
+        return consequenceDetails;
+    }
+
+    /**
+     * Retrieves the consequence {@code JSONObject} from the passed in {@code JSONObject}.
+     *
+     * @param ruleJson A {@link JSONObject} containing an AJO rule payload
+     * @return {@code JSONObject> containing the consequence extracted from the rule json
+     */
+    static JSONObject getConsequence(final JSONObject ruleJson) {
+        JSONObject consequence = null;
+        try {
+            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_RULES_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            consequence = consequenceArray.getJSONObject(0);
+        } catch (final JSONException jsonException) {
+            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+        }
+        return consequence;
     }
 
     // ========================================================================================
@@ -190,16 +235,26 @@ class InternalMessagingUtils {
                 && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.GET_PROPOSITIONS, false);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is a tracking proposition event
+     *
+     * @param event A Messaging Request Content {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a track propositions event.
+     */
+    static boolean isTrackingPropositionsEvent(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+                && DataReader.optBoolean(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, false);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
 
-    /**
-     * Retrieves the app surfaces from the passed in {@code Event}'s event data.
-     *
-     * @param event A Messaging Request Content {@link Event}.
-     * @return {@code List<Surface>} containing the app surfaces to be used for retrieving propositions
-     */
     /**
      * Retrieves the app surfaces from the passed in {@code Event}'s event data.
      *
@@ -214,7 +269,7 @@ class InternalMessagingUtils {
         final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
+            Log.debug(LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 
@@ -354,7 +409,7 @@ class InternalMessagingUtils {
         if (MapUtils.isNullOrEmpty(identityMap)) return null;
 
         final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
-        if (ecids == null || ecids.isEmpty()) return null;
+        if (MessagingUtils.isNullOrEmpty(ecids)) return null;
 
         final Map<String, Object> ecidMap = ecids.get(0);
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;

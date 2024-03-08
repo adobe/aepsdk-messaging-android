@@ -14,8 +14,8 @@ package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.CORRELATION_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.SCOPE_DETAILS;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ACTIVITY;
 
 import com.adobe.marketing.mobile.util.DataReader;
@@ -85,19 +85,19 @@ class PropositionInfo implements Serializable {
         return new PropositionInfo(propositionInfoMap);
     }
 
-    static PropositionInfo createFromProposition(final MessagingProposition messagingProposition) {
-        if (messagingProposition == null) {
+    static PropositionInfo createFromProposition(final Proposition proposition) {
+        if (proposition == null) {
             return null;
         }
-        final String id = messagingProposition.getUniqueId();
+        final String id = proposition.getUniqueId();
         if (StringUtils.isNullOrEmpty(id)) {
             return null;
         }
-        final String scope = messagingProposition.getScope();
+        final String scope = proposition.getScope();
         if (StringUtils.isNullOrEmpty(scope)) {
             return null;
         }
-        final Map scopeDetails = messagingProposition.getScopeDetails();
+        final Map scopeDetails = proposition.getScopeDetails();
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             return null;
         }

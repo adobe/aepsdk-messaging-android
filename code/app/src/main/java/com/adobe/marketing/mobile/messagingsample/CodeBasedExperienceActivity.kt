@@ -16,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.Messaging
-import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityCodebasedBinding
 
@@ -29,7 +29,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // create list of code based surface paths
-        var messagingPropositions = mutableListOf<MessagingProposition>()
+        var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
         surfaces.add(Surface("cbe-path1"))
         surfaces.add(Surface("cbe-path2"))
@@ -41,13 +41,13 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries")
             for (entry in it.entries) {
                 println("Adding ${entry.value.size} proposition(s) from surface ${entry.key.uri}")
-                messagingPropositions.addAll(entry.value)
+                propositions.addAll(entry.value)
             }
 
             // show code based experiences
             val codeBasedRecyclerView = findViewById<RecyclerView>(R.id.codeBasedContentView)
             val linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-            val codeBasedCardAdapter = CodeBasedCardAdapter(messagingPropositions)
+            val codeBasedCardAdapter = CodeBasedCardAdapter(propositions)
             runOnUiThread {
                 codeBasedRecyclerView.layoutManager = linearLayoutManager
                 codeBasedRecyclerView.adapter = codeBasedCardAdapter

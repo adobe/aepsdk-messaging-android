@@ -14,15 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.DECISIONING;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.LABEL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.PROPOSITION_EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.IAMDetailsDataKeys.Key.SCOPE_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
@@ -32,9 +23,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.MESSAGE_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.FEED_RULES_ENGINE_NAME;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.FRIENDLY_EXTENSION_NAME;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.JsonValues.ECID;
@@ -60,7 +48,6 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
-import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -245,8 +232,12 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final String type = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+        if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence is not of type 'schema'");
+            return;
+        }
+        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
         // detail is required
@@ -286,6 +277,10 @@ public final class MessagingExtension extends Extension {
             // before it is processed.
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to get cached proposition content.");
             serialWorkDispatcher.offer(eventToProcess);
+        } else if (InternalMessagingUtils.isTrackingPropositionsEvent(eventToProcess)) {
+            // handle an event to track propositions
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Processing request to track propositions.");
+            trackMessages(eventToProcess);
         } else if (InternalMessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
@@ -307,6 +302,20 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
         }
+    }
+
+    /**
+     * Generates and dispatches an event prompting the Edge extension to send a proposition interactions tracking event.
+     *
+     * @param event A {@link Event} request event containing proposition interaction XDM data
+     */
+    void trackMessages(final Event event) {
+        final Map<String, Object> propositionInteractionXdm = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, new HashMap<>());
+        if (MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
+            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition item, proposition interaction XDM is not available.");
+            return;
+        }
+        sendPropositionInteraction(propositionInteractionXdm);
     }
 
     void handlePushToken(final Event event) {
@@ -349,7 +358,7 @@ public final class MessagingExtension extends Extension {
      * @param event {@link Event} containing the push tracking information
      * @param datasetId A valid {@link String} containing the dataset id
      */
-    private void handleTrackingInfo(@NonNull final Event event, @NonNull final String datasetId) {
+    private void handleTrackingInfo(final Event event, final String datasetId) {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
             InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
@@ -405,66 +414,17 @@ public final class MessagingExtension extends Extension {
     /**
      * Sends a proposition interaction to the customer's experience event dataset.
      *
-     * @param interaction {@code String} containing the interaction which occurred
-     * @param eventType   {@link MessagingEdgeEventType} enum containing the {@link EventType} to be used for the ensuing Edge Event
-     * @param message     The {@link PresentableMessageMapper.InternalMessage} which triggered the proposition interaction
+     * @param xdmMap {@code Map<String, Object>} containing the proposition interaction XDM.
      */
-    public void sendPropositionInteraction(final String interaction, final MessagingEdgeEventType eventType, final PresentableMessageMapper.InternalMessage message) {
-        final PropositionInfo propositionInfo = message.propositionInfo;
-        if (propositionInfo == null || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
-            Log.trace(LOG_TAG, MessagingExtension.SELF_TAG, "Unable to record an in-app message interaction, the scope details were not found for this message.");
-            return;
-        }
-        final List<Map<String, Object>> propositions = new ArrayList<>();
-        final Map<String, Object> proposition = new HashMap<>();
-        proposition.put(ID, propositionInfo.id);
-        proposition.put(SCOPE, propositionInfo.scope);
-        proposition.put(SCOPE_DETAILS, propositionInfo.scopeDetails);
-        propositions.add(proposition);
-
-        final Map<String, Integer> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.getPropositionEventType(), 1);
-
-        final Map<String, Object> decisioning = new HashMap<>();
-        decisioning.put(PROPOSITION_EVENT_TYPE, propositionEventType);
-        decisioning.put(PROPOSITIONS, propositions);
-
-        // add propositionAction if this is an interact eventType
-        if (eventType.equals(MessagingEdgeEventType.IN_APP_INTERACT)) {
-            final Map<String, String> propositionAction = new HashMap<>();
-            propositionAction.put(ID, interaction);
-            propositionAction.put(LABEL, interaction);
-            decisioning.put(PROPOSITION_ACTION, propositionAction);
-        }
-
-        // create experience map with proposition tracking data
-        final Map<String, Object> experienceMap = new HashMap<>();
-        experienceMap.put(DECISIONING, decisioning);
-
-        // create XDM data with experience data
-        final Map<String, Object> xdmMap = new HashMap<>();
-        xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType.toString());
-        xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experienceMap);
-
-        // create maps for event history
-        final Map<String, String> iamHistoryMap = new HashMap<>();
-        iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-        iamHistoryMap.put(MESSAGE_ID, propositionInfo.activityId);
-        iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
-
-        // Create the mask for storing event history
-        final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
-
+    public void sendPropositionInteraction(final Map<String, Object> xdmMap) {
         final Map<String, Object> xdmEventData = new HashMap<>();
         xdmEventData.put(XDM, xdmMap);
-        xdmEventData.put(IAM_HISTORY, iamHistoryMap);
 
         // dispatch in-app tracking event
         InternalMessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmEventData,
-                mask,
                 getApi());
     }
     //endregion

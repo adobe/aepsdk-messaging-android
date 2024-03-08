@@ -37,11 +37,47 @@ public final class MessagingConstants {
     final class SchemaValues {
         static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
         static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
-        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
-        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
         static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
 
         private SchemaValues() {
+        }
+    }
+
+    final class ContentTypes {
+        static final String APPLICATION_JSON = "application/json";
+        static final String TEXT_HTML = "text/html";
+        static final String TEXT_XML = "text/xml";
+        static final String TEXT_PLAIN = "text/plain";
+        private ContentTypes() {
+        }
+    }
+
+    final class ConsequenceDetailKeys {
+        static final String ID = "id";
+        static final String SCHEMA = "schema";
+        static final String DATA = "data";
+        static final String CONTENT = "content";
+
+        private ConsequenceDetailKeys() {
+        }
+    }
+
+    final class ConsequenceDetailDataKeys {
+        static final String FORMAT = "format";
+        static final String CONTENT = "content";
+        static final String CONTENT_TYPE = "contentType";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String WEB_PARAMETERS = "webParameters";
+        static final String REMOTE_ASSETS = "remoteAssets";
+
+        private ConsequenceDetailDataKeys() {
         }
     }
 
@@ -119,8 +155,6 @@ public final class MessagingConstants {
         static final String DATA = "data";
         static final String CONTENT = "content";
         static final String ID = "id";
-        static final String SCOPE = "scope";
-        static final String SCOPE_DETAILS = "scopeDetails";
         static final String SCHEMA = "schema";
         static final String CORRELATION_ID = "correlationID";
         static final String ACTIVITY = "activity";
@@ -155,6 +189,8 @@ public final class MessagingConstants {
             static final String RESPONSE_ERROR = "responseerror";
             static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
+            static final String TRACK_PROPOSITIONS = "trackpropositions";
+            static final String PROPOSITION_INTERACTION = "propositioninteraction";
             private Messaging() {
             }
 
@@ -164,19 +200,22 @@ public final class MessagingConstants {
                     static final String AJO = "ajo";
                     static final String INAPP_RESPONSE_FORMAT = "in-app-response-format";
 
-                    private AdobeKeys() {}
+                    private AdobeKeys() {
+                    }
                 }
 
                 final class Key {
                     static final String DATA = "data";
 
-                    private Key() {}
+                    private Key() {
+                    }
                 }
 
                 final class Value {
                     static final int NEW_IAM = 2;
 
-                    private Value() {}
+                    private Value() {
+                    }
                 }
 
                 private Data() {
@@ -222,10 +261,10 @@ public final class MessagingConstants {
                 }
             }
 
-            final class IAMDetailsDataKeys {
+            final class Inbound {
                 static final String SURFACE_BASE = "mobileapp://";
 
-                private IAMDetailsDataKeys() {
+                private Inbound() {
                 }
 
                 final class EventType {
@@ -253,6 +292,9 @@ public final class MessagingConstants {
                     static final String PROPOSITIONS = "propositions";
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
+                    static final String SCHEMAS = "schemas";
+                    static final String CHARACTERISTICS = "characteristics";
+                    static final String TOKENS = "tokens";
 
                     private Key() {
                     }
@@ -261,8 +303,9 @@ public final class MessagingConstants {
         }
 
         final class RulesEngine {
-            static final String JSON_KEY = "rules";
+            static final String JSON_RULES_KEY = "rules";
             static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String JSON_VERSION_KEY = "version";
             static final String MESSAGE_CONSEQUENCE_ID = "id";
             static final String MESSAGE_CONSEQUENCE_TYPE = "type";
             static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
@@ -317,6 +360,8 @@ public final class MessagingConstants {
         static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
         static final String FINALIZE_PROPOSITIONS_RESPONSE = "Finalize propositions response";
         static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
+        static final String TRACK_PROPOSITIONS = "Track propositions";
+        static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
 
         private EventName() {
         }
@@ -326,6 +371,7 @@ public final class MessagingConstants {
         static final String PERSONALIZATION_DECISIONS = "personalization:decisions";
         static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
         static final String NOTIFICATION = "com.adobe.eventSource.notification";
+        static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
 
         private EventSource() {
         }

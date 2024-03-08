@@ -12,20 +12,23 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.adobe.marketing.mobile.messaging.MessagingProposition
-import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.MessagingEdgeEventType
+import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.SchemaType
+import java.nio.charset.StandardCharsets
 import org.json.JSONArray
 import org.json.JSONObject
-import java.nio.charset.StandardCharsets
 
-class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
+
+class CodeBasedCardAdapter(propositions: MutableList<Proposition>) :
     RecyclerView.Adapter<CodeBasedCardAdapter.ViewHolder>() {
-    private var messagingPropositions = mutableListOf<MessagingProposition>()
+    private var propositions = mutableListOf<Proposition>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view =
@@ -34,38 +37,50 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val proposition = messagingPropositions[position]
+        val proposition = propositions[position]
         for (item in proposition.items) {
-            val mimeType =
-                if (item.schema.equals("https://ns.adobe.com/personalization/json-content-item")) "application/json" else "text/html"
-            val contentString = item.content
+            var mimeType = ""
+            if (item.schema == SchemaType.JSON_CONTENT) {
+                mimeType = "application/json"
+            } else if (item.schema == SchemaType.HTML_CONTENT) {
+                mimeType = "text/html"
+            }
             // show code based experiences with html content in a webview
             if (mimeType == "text/html") {
-                ServiceProvider.getInstance().uiService.run {
-                    holder.webView.loadData(
+                val contentString = item.htmlContent
+                holder.webView.loadData(
                         contentString,
                         mimeType,
-                        StandardCharsets.UTF_8.toString()
-                    )
-                }
-            } else { // show code based experiences with text or json content in a text view
-                if (mimeType == "application/json") {
-                    if (contentString.startsWith("[")) { // we have a json array
-                        val jsonArray = JSONArray(contentString)
-                        holder.textView.text = jsonArray.toString(5)
-                    } else {
-                        val json = JSONObject(contentString)
-                        holder.textView.text = json.toString(5)
+                        StandardCharsets.UTF_8.toString())
+                item.track(MessagingEdgeEventType.DISPLAY)
+                holder.webView.setOnTouchListener(object: View.OnTouchListener {
+                    override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
+                        if (event?.action == MotionEvent.ACTION_UP) {
+                            item.track(MessagingEdgeEventType.INTERACT)
+                            return true
+                        }
+                        return false
                     }
+                })
+            } else if (mimeType == "application/json") {
+                var contentString = item.jsonArrayList
+                if (contentString != null) { // we have a json array
+                    val jsonArray = JSONArray(contentString)
+                    holder.textView.text = jsonArray.toString(5)
                 } else {
-                    holder.textView.text = contentString
+                    val json = JSONObject(item.jsonContentMap)
+                    holder.textView.text = json.toString(5)
+                }
+                item.track(MessagingEdgeEventType.DISPLAY)
+                holder.textView.setOnClickListener {
+                    item.track(MessagingEdgeEventType.INTERACT)
                 }
             }
         }
     }
 
     override fun getItemCount(): Int {
-        return messagingPropositions.size
+        return propositions.size
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -79,6 +94,6 @@ class CodeBasedCardAdapter(messagingPropositions: MutableList<MessagingPropositi
     }
 
     init {
-        this.messagingPropositions = messagingPropositions
+        this.propositions = propositions
     }
 }

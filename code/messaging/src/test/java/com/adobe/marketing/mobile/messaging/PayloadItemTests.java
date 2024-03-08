@@ -50,8 +50,8 @@ public class PayloadItemTests {
         assertNotNull(payloadItem);
         assertEquals("id", payloadItem.id);
         assertEquals("schema", payloadItem.schema);
-        assertEquals("content", payloadItem.data.content);
-        assertEquals("dataid", payloadItem.data.id);
+        assertEquals("dataid", payloadItem.data.get("id"));
+        assertEquals("content", payloadItem.data.get("content"));
     }
 
     @Test
@@ -61,7 +61,8 @@ public class PayloadItemTests {
         // test
         try {
             payloadItem = new PayloadItem(payloadMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(payloadItem);
     }
@@ -73,7 +74,8 @@ public class PayloadItemTests {
         // test
         try {
             payloadItem = new PayloadItem(payloadMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(payloadItem);
     }
@@ -85,7 +87,8 @@ public class PayloadItemTests {
         // test
         try {
             payloadItem = new PayloadItem(payloadMap);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         // verify
         assertNull(payloadItem);
     }

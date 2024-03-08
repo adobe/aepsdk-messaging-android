@@ -39,12 +39,12 @@ class FeedRulesEngine extends LaunchRulesEngine {
 
     /**
      * Evaluates the supplied event against the all current rules and returns a {@link
-     * Map<Surface, List<Inbound>>} created from the rules that matched the supplied event.
+     * Map<Surface, List< PropositionItem >>} created from the rules that matched the supplied event.
      *
      * @param event the event to be evaluated
      * @return a {@code Map<String ,List<Inbound>>} containing inbound content for the given event
      */
-    Map<Surface, List<Inbound>> evaluate(@NonNull final Event event) {
+    Map<Surface, List<PropositionItem>> evaluate(@NonNull final Event event) {
         if (event == null) {
             throw new IllegalArgumentException("Cannot evaluate null event.");
         }
@@ -54,19 +54,23 @@ class FeedRulesEngine extends LaunchRulesEngine {
             return null;
         }
 
-        final Map<Surface, List<Inbound>> inboundMessages = new HashMap<>();
+        final Map<Surface, List<PropositionItem>> propositionItemsBySurface = new HashMap<>();
         for (final RuleConsequence consequence : consequences) {
             if (consequence == null) {
                 continue;
             }
 
-            final Map details = consequence.getDetail();
-            final Inbound inboundMessage = Inbound.fromConsequenceDetails(details);
-            if (inboundMessage == null) {
+            final PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
+            if (propositionItem == null) {
+                continue;
+            }
+            final FeedItemSchemaData propositionAsFeedItem = propositionItem.getFeedItemSchemaData();
+
+            if (propositionAsFeedItem == null) {
                 continue;
             }
 
-            final Map metadata = inboundMessage.getMeta();
+            final Map metadata = propositionAsFeedItem.getMeta();
             if (MapUtils.isNullOrEmpty(metadata)) {
                 continue;
             }
@@ -76,14 +80,14 @@ class FeedRulesEngine extends LaunchRulesEngine {
                 continue;
             }
 
-            if (inboundMessages.get(surface) != null) {
-                final List<Inbound> inboundMessageList = new ArrayList<>(inboundMessages.get(surface));
-                inboundMessageList.add(inboundMessage);
-                inboundMessages.put(surface, inboundMessageList);
+            if (propositionItemsBySurface.get(surface) != null) {
+                final List<PropositionItem> propositionItemList = new ArrayList<>(propositionItemsBySurface.get(surface));
+                propositionItemList.add(propositionItem);
+                propositionItemsBySurface.put(surface, propositionItemList);
             } else {
-                inboundMessages.put(surface, Collections.singletonList(inboundMessage));
+                propositionItemsBySurface.put(surface, Collections.singletonList(propositionItem));
             }
         }
-        return inboundMessages;
+        return propositionItemsBySurface;
     }
 }
