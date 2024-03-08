@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.Intent;
 
-import com.adobe.marketing.mobile.messaging.MessagingProposition;
+import com.adobe.marketing.mobile.messaging.Proposition;
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils;
 import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
@@ -352,8 +352,8 @@ public class MessagingTests {
             // test
             CountDownLatch latch = new CountDownLatch(1);
             final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{null};
-            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            final Map<Surface, List<Proposition>>[] responseMapForSurface = new Map[]{null};
+            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
                     responseError[0] = adobeError;
@@ -361,7 +361,7 @@ public class MessagingTests {
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
                     responseMapForSurface[0] = surfaceListMap;
                     latch.countDown();
                 }
@@ -409,19 +409,19 @@ public class MessagingTests {
             Assert.assertNull(responseError[0]);
             Assert.assertNotNull(responseMapForSurface[0]);
 
-            List<MessagingProposition> feedMessagingPropositions = responseMapForSurface[0].get(feedSurface);
-            Assert.assertNotNull(feedMessagingPropositions);
-            Assert.assertEquals(1, feedMessagingPropositions.size());
-            Assert.assertEquals("c2aa4a73-a534-44c2-baa4-a12980e5bb9d", feedMessagingPropositions.get(0).getUniqueId());
-            Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed", feedMessagingPropositions.get(0).getScope());
-            Assert.assertEquals(1, feedMessagingPropositions.get(0).getItems().size());
+            List<Proposition> feedPropositions = responseMapForSurface[0].get(feedSurface);
+            Assert.assertNotNull(feedPropositions);
+            Assert.assertEquals(1, feedPropositions.size());
+            Assert.assertEquals("c2aa4a73-a534-44c2-baa4-a12980e5bb9d", feedPropositions.get(0).getUniqueId());
+            Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed", feedPropositions.get(0).getScope());
+            Assert.assertEquals(1, feedPropositions.get(0).getItems().size());
 
-            List<MessagingProposition> codeBasedMessagingPropositions = responseMapForSurface[0].get(codeBasedSurface);
-            Assert.assertNotNull(codeBasedMessagingPropositions);
-            Assert.assertEquals(1, codeBasedMessagingPropositions.size());
-            Assert.assertEquals("d5072be7-5317-4ee4-b52b-1710ab60748f", codeBasedMessagingPropositions.get(0).getUniqueId());
-            Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/cbe", codeBasedMessagingPropositions.get(0).getScope());
-            Assert.assertEquals(1, codeBasedMessagingPropositions.get(0).getItems().size());
+            List<Proposition> codeBasedPropositions = responseMapForSurface[0].get(codeBasedSurface);
+            Assert.assertNotNull(codeBasedPropositions);
+            Assert.assertEquals(1, codeBasedPropositions.size());
+            Assert.assertEquals("d5072be7-5317-4ee4-b52b-1710ab60748f", codeBasedPropositions.get(0).getUniqueId());
+            Assert.assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test/cbe", codeBasedPropositions.get(0).getScope());
+            Assert.assertEquals(1, codeBasedPropositions.get(0).getItems().size());
         });
     }
 
@@ -445,14 +445,14 @@ public class MessagingTests {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
             // test
-            Messaging.getPropositionsForSurfaces(null, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            Messaging.getPropositionsForSurfaces(null, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
 
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
 
                 }
             });
@@ -468,14 +468,14 @@ public class MessagingTests {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
             // test
-            Messaging.getPropositionsForSurfaces(new ArrayList<>(), new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            Messaging.getPropositionsForSurfaces(new ArrayList<>(), new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
 
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
 
                 }
             });
@@ -494,14 +494,14 @@ public class MessagingTests {
             Messaging.getPropositionsForSurfaces(new ArrayList<Surface>() {{
                                                      add(new Surface(""));
                                                  }},
-                    new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+                    new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                         @Override
                         public void fail(AdobeError adobeError) {
 
                         }
 
                         @Override
-                        public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                        public void call(Map<Surface, List<Proposition>> surfaceListMap) {
 
                         }
                     });
@@ -524,8 +524,8 @@ public class MessagingTests {
             // test
             CountDownLatch latch = new CountDownLatch(1);
             final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{null};
-            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            final Map<Surface, List<Proposition>>[] responseMapForSurface = new Map[]{null};
+            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
                     responseError[0] = adobeError;
@@ -533,7 +533,7 @@ public class MessagingTests {
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
                     responseMapForSurface[0] = surfaceListMap;
                     latch.countDown();
                 }
@@ -579,8 +579,8 @@ public class MessagingTests {
             // test
             CountDownLatch latch = new CountDownLatch(1);
             final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{null};
-            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            final Map<Surface, List<Proposition>>[] responseMapForSurface = new Map[]{null};
+            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
                     responseError[0] = adobeError;
@@ -588,7 +588,7 @@ public class MessagingTests {
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
                     responseMapForSurface[0] = surfaceListMap;
                     latch.countDown();
                 }
@@ -635,8 +635,8 @@ public class MessagingTests {
             // test
             CountDownLatch latch = new CountDownLatch(1);
             final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{null};
-            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            final Map<Surface, List<Proposition>>[] responseMapForSurface = new Map[]{null};
+            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
                     responseError[0] = adobeError;
@@ -644,7 +644,7 @@ public class MessagingTests {
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
                     responseMapForSurface[0] = surfaceListMap;
                     latch.countDown();
                 }
@@ -691,8 +691,8 @@ public class MessagingTests {
             // test
             CountDownLatch latch = new CountDownLatch(1);
             final AdobeError[] responseError = new AdobeError[1];
-            final Map<Surface, List<MessagingProposition>>[] responseMapForSurface = new Map[]{null};
-            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<MessagingProposition>>>() {
+            final Map<Surface, List<Proposition>>[] responseMapForSurface = new Map[]{null};
+            Messaging.getPropositionsForSurfaces(surfacePaths, new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
                 @Override
                 public void fail(AdobeError adobeError) {
                     responseError[0] = adobeError;
@@ -700,7 +700,7 @@ public class MessagingTests {
                 }
 
                 @Override
-                public void call(Map<Surface, List<MessagingProposition>> surfaceListMap) {
+                public void call(Map<Surface, List<Proposition>> surfaceListMap) {
                     responseMapForSurface[0] = surfaceListMap;
                     latch.countDown();
                 }

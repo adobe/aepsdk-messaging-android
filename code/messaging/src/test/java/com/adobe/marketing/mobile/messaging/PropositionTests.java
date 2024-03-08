@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class MessagingPropositionTests {
+public class PropositionTests {
 
     Map<String, Object> characteristics = new HashMap<String, Object>() {{
         put("eventToken", "eventToken");
@@ -71,26 +71,26 @@ public class MessagingPropositionTests {
     @Test
     public void test_propositionConstructor() {
         // test
-        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         // verify
-        assertNotNull(messagingProposition);
-        assertEquals("uniqueId", messagingProposition.getUniqueId());
-        assertEquals("mobileapp://mockScope", messagingProposition.getScope());
-        assertEquals(scopeDetails, messagingProposition.getScopeDetails());
-        assertEquals(propositionItems, messagingProposition.getItems());
+        assertNotNull(proposition);
+        assertEquals("uniqueId", proposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", proposition.getScope());
+        assertEquals(scopeDetails, proposition.getScopeDetails());
+        assertEquals(propositionItems, proposition.getItems());
     }
 
     @Test
     public void test_createProposition_fromEventData() {
         // test
-        MessagingProposition messagingProposition = MessagingProposition.fromEventData(eventDataMap);
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
         // verify
-        assertNotNull(messagingProposition);
-        assertEquals("uniqueId", messagingProposition.getUniqueId());
-        assertEquals("mobileapp://mockScope", messagingProposition.getScope());
-        assertEquals(scopeDetails, messagingProposition.getScopeDetails());
+        assertNotNull(proposition);
+        assertEquals("uniqueId", proposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", proposition.getScope());
+        assertEquals(scopeDetails, proposition.getScopeDetails());
         // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
-        for (PropositionItem item : messagingProposition.getItems()) {
+        for (PropositionItem item : proposition.getItems()) {
             assertEquals(propositionItems.get(0).getPropositionItemId(), item.getPropositionItemId());
             assertEquals(propositionItems.get(0).getData(), item.getData());
             assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
@@ -101,8 +101,8 @@ public class MessagingPropositionTests {
     @Test
     public void test_createEventData_fromProposition() throws DataReaderException, JSONException {
         // test
-        MessagingProposition messagingProposition = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
-        Map<String, Object> propositionMap = messagingProposition.toEventData();
+        Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Map<String, Object> propositionMap = proposition.toEventData();
         // verify
         assertNotNull(propositionMap);
         List<Map<String, Object>> itemList = DataReader.optTypedListOfMap(Object.class, propositionMap, "items", null);
@@ -120,14 +120,14 @@ public class MessagingPropositionTests {
     @Test
     public void test_equals() {
         // test
-        MessagingProposition messagingProposition1 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
-        MessagingProposition messagingProposition2 = new MessagingProposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
-        MessagingProposition messagingProposition3 = new MessagingProposition("uniqueId2", "mobileapp://mockScope2", scopeDetails, propositionItems2);
+        Proposition proposition1 = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition2 = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition3 = new Proposition("uniqueId2", "mobileapp://mockScope2", scopeDetails, propositionItems2);
 
         Object notAMessagingProposition = new Object();
         // verify
-        assertEquals(messagingProposition1, messagingProposition2);
-        assertNotEquals(messagingProposition1, notAMessagingProposition);
-        assertNotEquals(messagingProposition1, messagingProposition3);
+        assertEquals(proposition1, proposition2);
+        assertNotEquals(proposition1, notAMessagingProposition);
+        assertNotEquals(proposition1, proposition3);
     }
 }

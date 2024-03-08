@@ -55,10 +55,10 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition = new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
         } catch (Exception e) {
         }
         // verify
@@ -73,10 +73,10 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullId() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition = new Proposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
         } catch (Exception e) {
         }
         // verify
@@ -86,10 +86,10 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScope() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", null, scopeDetails, propositionItems);
+        Proposition proposition = new Proposition("id", null, scopeDetails, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
         } catch (Exception e) {
         }
         // verify
@@ -99,10 +99,10 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullScopeDetails() {
         // setup
-        MessagingProposition messagingProposition = new MessagingProposition("id", "mobileapp://mockScope", null, propositionItems);
+        Proposition proposition = new Proposition("id", "mobileapp://mockScope", null, propositionItems);
         // test
         try {
-            propositionInfo = PropositionInfo.createFromProposition(messagingProposition);
+            propositionInfo = PropositionInfo.createFromProposition(proposition);
         } catch (Exception e) {
         }
         // verify

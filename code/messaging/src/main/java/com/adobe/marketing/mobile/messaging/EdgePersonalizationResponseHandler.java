@@ -88,12 +88,12 @@ class EdgePersonalizationResponseHandler {
     private final LaunchRulesEngine launchRulesEngine;
     private final FeedRulesEngine feedRulesEngine;
 
-    private Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
+    private Map<Surface, List<Proposition>> propositions = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
     // keeps a list of all surfaces requested per personalization request event by event id
     private final Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
     // used while processing streaming payloads for a single request
-    private Map<Surface, List<MessagingProposition>> inProgressPropositions = new HashMap<>();
+    private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
     private final Map<Surface, List<LaunchRule>> feedRulesBySurface = new HashMap<>();
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
@@ -120,13 +120,13 @@ class EdgePersonalizationResponseHandler {
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities = messagingCacheUtilities != null ? messagingCacheUtilities : new MessagingCacheUtilities();
         if (this.messagingCacheUtilities.arePropositionsCached()) {
-            final Map<Surface, List<MessagingProposition>> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
+            final Map<Surface, List<Proposition>> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
                 Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 propositions = cachedPropositions;
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
-                for (final Map.Entry<Surface, List<MessagingProposition>> cacheEntry : cachedPropositions.entrySet()) {
+                for (final Map.Entry<Surface, List<Proposition>> cacheEntry : cachedPropositions.entrySet()) {
                     surfaces.add(cacheEntry.getKey());
                 }
 
@@ -280,7 +280,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     private void dispatchNotificationEventForSurfaces(final List<Surface> requestedSurfaces) {
-        final Map<Surface, List<MessagingProposition>> requestedPropositionsMap = retrieveCachedPropositions(requestedSurfaces);
+        final Map<Surface, List<Proposition>> requestedPropositionsMap = retrieveCachedPropositions(requestedSurfaces);
         if (MapUtils.isNullOrEmpty(requestedPropositionsMap)) {
             Log.trace(LOG_TAG, SELF_TAG, "Not dispatching a notification event, personalization:decisions response does not contain propositions.");
             return;
@@ -289,8 +289,8 @@ class EdgePersonalizationResponseHandler {
         // dispatch an event with the propositions received from the remote
         final Map<String, Object> eventData = new HashMap<>();
         final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
-        for (final Map.Entry<Surface, List<MessagingProposition>> propositionEntry : requestedPropositionsMap.entrySet()) {
-            for (final MessagingProposition proposition : propositionEntry.getValue()) {
+        for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositionsMap.entrySet()) {
+            for (final Proposition proposition : propositionEntry.getValue()) {
                 convertedPropositions.add(proposition.toEventData());
             }
         }
@@ -328,19 +328,19 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        final Map<Surface, List<MessagingProposition>> ruleConsequencePropositions = getPropositionsFromFeedRulesEngine(event);
-        Map<Surface, List<MessagingProposition>> requestedPropositions = retrieveCachedPropositions(requestedSurfaces);
+        final Map<Surface, List<Proposition>> ruleConsequencePropositions = getPropositionsFromFeedRulesEngine(event);
+        Map<Surface, List<Proposition>> requestedPropositions = retrieveCachedPropositions(requestedSurfaces);
 
-        for (final Map.Entry<Surface, List<MessagingProposition>> entry: ruleConsequencePropositions.entrySet()) {
+        for (final Map.Entry<Surface, List<Proposition>> entry: ruleConsequencePropositions.entrySet()) {
             requestedPropositions = MessagingUtils.updatePropositionMapForSurface(entry.getKey(), entry.getValue(), requestedPropositions);
         }
 
         // dispatch an event with the cached feed propositions
         final Map<String, Object> eventData = new HashMap<>();
         final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
-        for (final Map.Entry<Surface, List<MessagingProposition>> propositionEntry : requestedPropositions.entrySet()) {
-            for (final MessagingProposition messagingProposition : propositionEntry.getValue()) {
-                convertedPropositions.add(messagingProposition.toEventData());
+        for (final Map.Entry<Surface, List<Proposition>> propositionEntry : requestedPropositions.entrySet()) {
+            for (final Proposition proposition : propositionEntry.getValue()) {
+                convertedPropositions.add(proposition.toEventData());
             }
         }
         eventData.put(PROPOSITIONS, convertedPropositions);
@@ -385,7 +385,7 @@ class EdgePersonalizationResponseHandler {
             Log.trace(LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no propositions.");
             return;
         }
-        List<MessagingProposition> propositions = null;
+        List<Proposition> propositions = null;
         try {
             propositions = InternalMessagingUtils.getPropositionsFromPayloads(payloads);
         } catch (final Exception exception) {
@@ -397,7 +397,7 @@ class EdgePersonalizationResponseHandler {
         }
 
         // loop through propositions for this event and add them to existing proposition map by surface
-        for (final MessagingProposition proposition : propositions) {
+        for (final Proposition proposition : propositions) {
             final Surface surface = Surface.fromUriString(proposition.getScope());
             inProgressPropositions = MessagingUtils.updatePropositionMapForSurface(surface, proposition, inProgressPropositions);
         }
@@ -537,19 +537,19 @@ class EdgePersonalizationResponseHandler {
         propositionInfo = tempPropositionInfoMap;
     }
 
-    private Map<Surface, List<MessagingProposition>> getPropositionsFromFeedRulesEngine(final Event event) {
-        Map<Surface, List<MessagingProposition>> surfacePropositions = new HashMap<>();
+    private Map<Surface, List<Proposition>> getPropositionsFromFeedRulesEngine(final Event event) {
+        Map<Surface, List<Proposition>> surfacePropositions = new HashMap<>();
         final Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(event);
         if (!MapUtils.isNullOrEmpty(propositionItemsBySurface)) {
             for (final Map.Entry<Surface, List<PropositionItem>> entry: propositionItemsBySurface.entrySet()){
-                final List<MessagingProposition> tempPropositions = new ArrayList<>();
+                final List<Proposition> tempPropositions = new ArrayList<>();
                 for (final PropositionItem propositionItem: entry.getValue()) {
                     final PropositionInfo propositionInfo = this.propositionInfo.get(propositionItem.getPropositionItemId());
                     if (propositionInfo == null) {
                         continue;
                     }
 
-                    final MessagingProposition proposition = new MessagingProposition(
+                    final Proposition proposition = new Proposition(
                             propositionInfo.id,
                             propositionInfo.scope,
                             propositionInfo.scopeDetails,
@@ -559,8 +559,8 @@ class EdgePersonalizationResponseHandler {
                     // if yes, append the propositionItem.  if not, create a new entry for the
                     // proposition with the new item.
 
-                    MessagingProposition existingProposition = null;
-                    for (final MessagingProposition messagingProposition: tempPropositions) {
+                    Proposition existingProposition = null;
+                    for (final Proposition messagingProposition: tempPropositions) {
                         if (messagingProposition.getUniqueId().equals(proposition.getUniqueId())) {
                             existingProposition = messagingProposition;
                             break;
@@ -581,10 +581,10 @@ class EdgePersonalizationResponseHandler {
         return surfacePropositions;
     }
 
-    private void updatePropositions(final Map<Surface, List<MessagingProposition>> newPropositions, final List<Surface> surfacesToRemove) {
+    private void updatePropositions(final Map<Surface, List<Proposition>> newPropositions, final List<Surface> surfacesToRemove) {
         // add new surfaces or update replace existing surfaces
-        Map<Surface, List<MessagingProposition>> tempPropositionsMap = new HashMap<>(propositions);
-        for (final Map.Entry<Surface, List<MessagingProposition>> entry : newPropositions.entrySet()) {
+        Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositions);
+        for (final Map.Entry<Surface, List<Proposition>> entry : newPropositions.entrySet()) {
             tempPropositionsMap = MessagingUtils.updatePropositionMapForSurface(entry.getKey(), entry.getValue(), tempPropositionsMap);
         }
 
@@ -600,12 +600,12 @@ class EdgePersonalizationResponseHandler {
      * Returns propositions by surface from `propositions` matching the provided `surfaces`
      *
      * @param surfaces A {@link List<Surface>} of surfaces to retrieve feeds for
-     * @return {@link Map<Surface, List< MessagingProposition>>} containing previously fetched propositions
+     * @return {@link Map<Surface, List<  Proposition >>} containing previously fetched propositions
      */
-    private Map<Surface, List<MessagingProposition>> retrieveCachedPropositions(final List<Surface> surfaces) {
-        Map<Surface, List<MessagingProposition>> propositionMap = new HashMap<>();
+    private Map<Surface, List<Proposition>> retrieveCachedPropositions(final List<Surface> surfaces) {
+        Map<Surface, List<Proposition>> propositionMap = new HashMap<>();
         for (final Surface surface : surfaces) {
-            final List<MessagingProposition> propositionsList = propositions.get(surface);
+            final List<Proposition> propositionsList = propositions.get(surface);
             if (!MessagingUtils.isNullOrEmpty(propositionsList)) {
                 propositionMap.put(surface, propositionsList);
             }
@@ -709,7 +709,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
-    Map<Surface, List<MessagingProposition>> getInProgressPropositions () {
+    Map<Surface, List<Proposition>> getInProgressPropositions () {
         return inProgressPropositions;
     }
 }

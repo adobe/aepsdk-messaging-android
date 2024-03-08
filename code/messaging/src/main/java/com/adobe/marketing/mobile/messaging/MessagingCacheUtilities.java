@@ -81,11 +81,11 @@ final class MessagingCacheUtilities {
     }
 
     /**
-     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List<MessagingProposition>}.
+     * Retrieves cached {@code String} proposition payloads and returns them in a {@link List< Proposition >}.
      *
      * @return a {@code Map<Surface, List<Proposition>>} containing the cached proposition payloads.
      */
-    Map<Surface, List<MessagingProposition>> getCachedPropositions() {
+    Map<Surface, List<Proposition>> getCachedPropositions() {
         final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cacheResult == null) {
             Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
@@ -98,7 +98,7 @@ final class MessagingCacheUtilities {
         }
 
         ObjectInputStream objectInputStream = null;
-        Map<Surface, List<MessagingProposition>> cachedPropositions = new HashMap<>();
+        Map<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
         try {
             if (objectInputStream == null) {
                 objectInputStream = new ObjectInputStream(cacheResult.getData());
@@ -119,8 +119,8 @@ final class MessagingCacheUtilities {
             }
 
             // handle cached Proposition objects
-            if (firstElement instanceof MessagingProposition) {
-                cachedPropositions = (Map<Surface, List<MessagingProposition>>) cachedData;
+            if (firstElement instanceof Proposition) {
+                cachedPropositions = (Map<Surface, List<Proposition>>) cachedData;
             } else if (firstElement instanceof PropositionPayload) {
                 // handle cached PropositionPayload objects
                 final Map<Surface, List<PropositionPayload>> cachedPropositionPayloads = (Map<Surface, List<PropositionPayload>>) cachedData;
@@ -154,21 +154,21 @@ final class MessagingCacheUtilities {
     /**
      * Caches the provided {@code Map<Surface, List<Proposition>>}.
      *
-     * @param newPropositions the {@link Map<Surface, List<MessagingProposition>>} containing the propositions to be cached.
+     * @param newPropositions the {@link Map<Surface, List< Proposition >>} containing the propositions to be cached.
      * @param surfacesToRemove {@link List<Surface>} containing surfaces to be removed from the cache
      */
-    void cachePropositions(final Map<Surface, List<MessagingProposition>> newPropositions, final List<Surface> surfacesToRemove) {
-        final Map<Surface, List<MessagingProposition>> cachedPropositions = getCachedPropositions();
-        final Map<Surface, List<MessagingProposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
+    void cachePropositions(final Map<Surface, List<Proposition>> newPropositions, final List<Surface> surfacesToRemove) {
+        final Map<Surface, List<Proposition>> cachedPropositions = getCachedPropositions();
+        final Map<Surface, List<Proposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
         updatedPropositions.putAll(newPropositions);
-        for (final Map.Entry<Surface, List<MessagingProposition>> entry : updatedPropositions.entrySet()) {
+        for (final Map.Entry<Surface, List<Proposition>> entry : updatedPropositions.entrySet()) {
             if (surfacesToRemove.contains(entry.getKey())) {
                 updatedPropositions.remove(entry);
             }
         }
 
         // clean any existing cached propositions first if the provided propositions are null or empty
-        final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>(updatedPropositions);
+        final Map<Surface, List<Proposition>> propositions = new HashMap<>(updatedPropositions);
         if (MapUtils.isNullOrEmpty(propositions)) {
             cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
@@ -212,17 +212,17 @@ final class MessagingCacheUtilities {
      * Converts the provided {@code PropositionPayload} into a {@code Proposition}.
      *
      * @param propositionPayloads {@link List<PropositionPayload>} to be converted
-     * @return a {@link List<MessagingProposition>} created from the provided {@code PropositionPayload}
+     * @return a {@link List< Proposition >} created from the provided {@code PropositionPayload}
      */
-    private List<MessagingProposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
-        final List<MessagingProposition> propositions = new ArrayList<>();
+    private List<Proposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
+        final List<Proposition> propositions = new ArrayList<>();
         final List<PropositionItem> propositionItems = new ArrayList<>();
         for (final PropositionPayload propositionPayload : propositionPayloads) {
             for (final PayloadItem payloadItem : propositionPayload.items) {
                 final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
                 propositionItems.add(propositionItem);
             }
-            propositions.add(new MessagingProposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+            propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
         }
         return propositions;
     }

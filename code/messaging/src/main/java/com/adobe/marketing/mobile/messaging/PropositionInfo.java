@@ -85,19 +85,19 @@ class PropositionInfo implements Serializable {
         return new PropositionInfo(propositionInfoMap);
     }
 
-    static PropositionInfo createFromProposition(final MessagingProposition messagingProposition) {
-        if (messagingProposition == null) {
+    static PropositionInfo createFromProposition(final Proposition proposition) {
+        if (proposition == null) {
             return null;
         }
-        final String id = messagingProposition.getUniqueId();
+        final String id = proposition.getUniqueId();
         if (StringUtils.isNullOrEmpty(id)) {
             return null;
         }
-        final String scope = messagingProposition.getScope();
+        final String scope = proposition.getScope();
         if (StringUtils.isNullOrEmpty(scope)) {
             return null;
         }
-        final Map scopeDetails = messagingProposition.getScopeDetails();
+        final Map scopeDetails = proposition.getScopeDetails();
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             return null;
         }

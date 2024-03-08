@@ -19,12 +19,12 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.MobileCore
-import com.adobe.marketing.mobile.messaging.MessagingProposition
+import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.services.ServiceProvider
 
-class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) :
+class FeedCardAdapter(propositions: MutableList<Proposition>) :
     RecyclerView.Adapter<FeedCardAdapter.ViewHolder>() {
-    private var messagingPropositions = mutableListOf<MessagingProposition>()
+    private var propositions = mutableListOf<Proposition>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view: View =
             LayoutInflater.from(parent.context).inflate(R.layout.card_feeditem, parent, false)
@@ -32,7 +32,7 @@ class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) 
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val proposition = messagingPropositions[position]
+        val proposition = propositions[position]
         for (item in proposition.items) {
             val inboundContent = item.feedItemSchemaData
             val feedItem = inboundContent.feedItem
@@ -54,7 +54,7 @@ class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) 
     }
 
     override fun getItemCount(): Int {
-        return messagingPropositions.size
+        return propositions.size
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -70,6 +70,6 @@ class FeedCardAdapter(messagingPropositions: MutableList<MessagingProposition>) 
     }
 
     init {
-        this.messagingPropositions = messagingPropositions
+        this.propositions = propositions
     }
 }

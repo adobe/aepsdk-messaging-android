@@ -31,18 +31,18 @@ public class ParsedPropositions {
     final Map<String, PropositionInfo> propositionInfoToCache = new HashMap<>();
 
     // non-in-app propositions should be cached and not persisted
-    Map<Surface, List<MessagingProposition>> propositionsToCache = new HashMap<>();
+    Map<Surface, List<Proposition>> propositionsToCache = new HashMap<>();
 
     // in-app propositions don't need to stay in cache, but must be persisted
     // also need to store tracking info for in-app propositions as `PropositionInfo`
-    Map<Surface, List<MessagingProposition>> propositionsToPersist = new HashMap<>();
+    Map<Surface, List<Proposition>> propositionsToPersist = new HashMap<>();
 
     // in-app and feed rules that need to be applied to their respective rules engines
     final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType = new HashMap<>();
 
-    ParsedPropositions(final Map<Surface, List<MessagingProposition>> propositions, final List<Surface> requestedSurfaces, final ExtensionApi extensionApi) {
-        for (final List<MessagingProposition> propositionList : propositions.values()) {
-            for (final MessagingProposition proposition : propositionList) {
+    ParsedPropositions(final Map<Surface, List<Proposition>> propositions, final List<Surface> requestedSurfaces, final ExtensionApi extensionApi) {
+        for (final List<Proposition> propositionList : propositions.values()) {
+            for (final Proposition proposition : propositionList) {
                 final String scope = proposition.getScope();
                 boolean found = false;
                 for (final Surface surface : requestedSurfaces) {
