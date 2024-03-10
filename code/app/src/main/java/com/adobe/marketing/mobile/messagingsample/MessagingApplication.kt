@@ -12,7 +12,12 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
-import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.Assurance
+import com.adobe.marketing.mobile.Edge
+import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.MobileCore
+import com.adobe.marketing.mobile.LoggingMode
+import com.adobe.marketing.mobile.Lifecycle
 import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 

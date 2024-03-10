@@ -35,7 +35,7 @@ aepLibrary {
 
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation("com.google.firebase:firebase-messaging:23.4.1")
+    compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
@@ -43,7 +43,13 @@ dependencies {
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE
-    androidTestImplementation("com.adobe.marketing.mobile:edge:3.0.0-SNAPSHOT")
-    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-SNAPSHOT")
+    androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
+    androidTestImplementation("com.adobe.marketing.mobile:edge:3.0.0-SNAPSHOT") {
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
+        exclude(group = "com.adobe.marketing.mobile", module = "edgeidentity")
+    }
+    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-SNAPSHOT") {
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
+    }
     androidTestImplementation(project(":messagingtestutils"))
 }

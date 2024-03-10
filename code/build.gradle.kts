@@ -20,5 +20,6 @@ buildscript {
     }
     dependencies {
         classpath("com.github.adobe:aepsdk-commons:884c937705")
+        classpath("com.google.gms:google-services:4.4.1")
     }
 }
