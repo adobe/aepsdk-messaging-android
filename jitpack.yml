@@ -10,7 +10,12 @@
 # governing permissions and limitations under the License.
 #
 
-template: |
-  ## What’s Changed
-
-  $CHANGES
+jdk:
+  - openjdk17
+# before_install:
+#    - ./custom_setup.sh
+install:
+   - echo "Running a custom install command"
+   - make ci-publish-maven-local-jitpack
+# env:
+#    MYVAR: "custom environment variable"

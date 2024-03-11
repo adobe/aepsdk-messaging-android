@@ -10,7 +10,6 @@
 */
 
 package com.adobe.marketing.mobile.messagingsample
-
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View

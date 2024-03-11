@@ -39,7 +39,7 @@ class NotificationBroadcastReceiver : BroadcastReceiver() {
         } else {
             PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java).apply {
                 Messaging.addPushTrackingDetails(this, "messageId", XDM_DATA)
-            }, 0)
+            }, PendingIntent.FLAG_IMMUTABLE)
         }
         val id = intent?.getIntExtra(NOTIFICATION_ID, 0)
         id?.let { notificationManager.notify(it, notification) }

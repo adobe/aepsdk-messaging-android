@@ -88,7 +88,7 @@ public class PropositionItem implements Serializable {
     /**
      * Gets the {@code MessagingPropositionItem} data.
      *
-     * @return {@licodenk Map<String, Object>} containing the {@link PropositionItem} data.
+     * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
      */
     public Map<String, Object> getData() {
         return itemData;
@@ -158,7 +158,7 @@ public class PropositionItem implements Serializable {
      * If the proposition reference within the item is released and no longer valid, the method returns null.
      *
      * @param eventType an enum of type {@link MessagingEdgeEventType} specifying event type for the interaction.
-     * @return {code Map<String, Object} containing XDM data for the proposition interaction.
+     * @return {@code Map<String, Object} containing XDM data for the proposition interaction.
      */
     public Map<String, Object> generateInteractionXdm(@NonNull final MessagingEdgeEventType eventType) {
         if (propositionReference == null) {
@@ -177,7 +177,7 @@ public class PropositionItem implements Serializable {
      * @param interaction custom {@link String} describing the interaction.
      * @param eventType an enum of type {@link MessagingEdgeEventType} specifying event type for the interaction.
      * @param tokens {@link List<String>} containing the sub-item tokens for recording interaction.
-     * @return {code Map<String, Object} containing XDM data for the proposition interaction.
+     * @return {@code Map<String, Object} containing XDM data for the proposition interaction.
      */
     public Map<String, Object> generateInteractionXdm(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
         if (propositionReference == null) {

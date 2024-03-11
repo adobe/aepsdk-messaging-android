@@ -1,0 +1,36 @@
+#
+# Copyright 2024 Adobe. All rights reserved.
+# This file is licensed to you under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License. You may obtain a copy
+# of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
+
+name: Project epic
+description: Create an internal epic that represents the top level parent of multiple tasks.
+labels: [epic]
+
+body:
+- type: textarea
+  id: description
+  attributes:
+    label: Epic description
+    description: Please provide a detailed description for this epic.
+  validations:
+    required: true
+
+- type: textarea
+  id: tasks
+  attributes:
+    label: Tasks
+    description: |
+      Provide a high-level definition of done for this epic as a list of tasks that need to be completed.
+      Tip: List out the task links if they already exist or list them out as text with a descriptive title so they can be easily converted to task items.
+    placeholder: |
+      - [ ] your task link here
+  validations:
+    required: false
