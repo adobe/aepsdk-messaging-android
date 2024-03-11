@@ -82,7 +82,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
      * @param parent             {@link MessagingExtension} instance that created this Message
      * @param consequence        {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} containing a {@code InternalMessage} defining payload
      * @param rawMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
-     * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
+     * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and its cached location
      * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
      */
     InternalMessage(final MessagingExtension parent, final RuleConsequence consequence, final Map<String, Object> rawMessageSettings, final Map<String, String> assetMap) throws MessageRequiredFieldMissingException {
@@ -271,7 +271,7 @@ class InternalMessage extends MessagingFullscreenMessageDelegate implements Mess
     }
 
     /**
-     * Called when a {@code Message} is triggered - i.e. it's conditional criteria have been met.
+     * Called when a {@code Message} is triggered - i.e. its conditional criteria have been met.
      */
     void trigger() {
         if (aepMessage != null) {
