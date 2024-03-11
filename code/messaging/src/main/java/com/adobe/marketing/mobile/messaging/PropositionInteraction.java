@@ -17,7 +17,7 @@ import java.util.Map;
 // `decisioning.propositionDisplay` or `decisioning.propositionInteract` event to the Experience Edge.
 class PropositionInteraction {
 
-    private static final String SELF_TAG = "MessagingPropositionInteraction";
+    private static final String SELF_TAG = "PropositionInteraction";
 
     // Edge event type represented by MessagingEdgeEventType
     private final MessagingEdgeEventType eventType;
