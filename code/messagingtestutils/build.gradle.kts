@@ -41,7 +41,4 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7")
     implementation("androidx.test.ext:junit:1.1.5")
-
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 }
