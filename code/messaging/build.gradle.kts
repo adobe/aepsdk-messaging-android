@@ -40,6 +40,7 @@ dependencies {
     // testImplementation dependencies provided by aep-library:
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
     testImplementation(project(":messagingtestutils"))
+    testImplementation("com.google.firebase:firebase-messaging:23.4.1")
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE
