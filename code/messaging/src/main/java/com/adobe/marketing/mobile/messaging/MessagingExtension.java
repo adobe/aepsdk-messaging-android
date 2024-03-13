@@ -210,7 +210,7 @@ public final class MessagingExtension extends Extension {
 
         final PropositionItem propositionItem = PropositionItem.fromEventData(detail);
         if (propositionItem == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "handleSchemaConsequence -  Ignoring rule consequence event, propositionItem is null");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "handleSchemaConsequence -  Ignoring rule consequence event, propositionItem is null");
             return;
         }
         switch (propositionItem.getSchema()) {

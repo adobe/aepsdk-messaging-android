@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
 
-import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -91,6 +90,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      * @param urlString         {@link String} containing the URL being loaded by the {@code AEPMessage}
      * @return true if the SDK wants to handle the URL
      */
+    @SuppressWarnings("NestedIfDepth")
     @Override
     public boolean onUrlLoading(@NonNull final Presentable<InAppMessage> fullscreenMessage, @NonNull final String urlString) {
         Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen overrideUrlLoad callback received with url (%s)", urlString);

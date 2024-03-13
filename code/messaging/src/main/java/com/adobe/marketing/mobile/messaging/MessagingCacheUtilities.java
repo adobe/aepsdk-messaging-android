@@ -217,7 +217,7 @@ final class MessagingCacheUtilities {
             try {
                 propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
             } catch (final MessageRequiredFieldMissingException exception) {
-                Log.warning(LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
             }
         }
         return propositions;
