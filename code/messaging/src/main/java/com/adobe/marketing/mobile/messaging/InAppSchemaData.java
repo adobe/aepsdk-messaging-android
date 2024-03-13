@@ -12,14 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.METADATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.WEB_PARAMETERS;
 
 import androidx.annotation.Nullable;
 
@@ -49,7 +41,7 @@ public class InAppSchemaData implements SchemaData {
 
     InAppSchemaData(final JSONObject schemaData) {
         try {
-            String contentTypeString = schemaData.optString(CONTENT_TYPE);
+            String contentTypeString = schemaData.optString(MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE);
             if(StringUtils.isNullOrEmpty(contentTypeString)) {
                 this.contentType = ContentType.fromString(contentTypeString);
                 return;
@@ -57,19 +49,19 @@ public class InAppSchemaData implements SchemaData {
             this.contentType = ContentType.fromString(contentTypeString);
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
                 try {
-                    this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+                    this.content = JSONUtils.toMap(schemaData.getJSONObject(MessagingConstants.ConsequenceDetailDataKeys.CONTENT));
                 } catch (JSONException e) {
-                    this.content = JSONUtils.toList(schemaData.getJSONArray(CONTENT));
+                    this.content = JSONUtils.toList(schemaData.getJSONArray(MessagingConstants.ConsequenceDetailDataKeys.CONTENT));
                 }
             } else {
-                this.content = schemaData.getString(CONTENT);
+                this.content = schemaData.getString(MessagingConstants.ConsequenceDetailDataKeys.CONTENT);
             }
-            this.publishedDate = schemaData.optInt(PUBLISHED_DATE);
-            this.expiryDate = schemaData.optInt(EXPIRY_DATE);
-            this.meta = JSONUtils.toMap(schemaData.optJSONObject(METADATA));
-            this.mobileParameters = JSONUtils.toMap(schemaData.optJSONObject(MOBILE_PARAMETERS));
-            this.webParameters = JSONUtils.toMap(schemaData.optJSONObject(WEB_PARAMETERS));
-            final List<Object> assetList = JSONUtils.toList(schemaData.optJSONArray(REMOTE_ASSETS));
+            this.publishedDate = schemaData.optInt(MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE);
+            this.expiryDate = schemaData.optInt(MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE);
+            this.meta = JSONUtils.toMap(schemaData.optJSONObject(MessagingConstants.ConsequenceDetailDataKeys.METADATA));
+            this.mobileParameters = JSONUtils.toMap(schemaData.optJSONObject(MessagingConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS));
+            this.webParameters = JSONUtils.toMap(schemaData.optJSONObject(MessagingConstants.ConsequenceDetailDataKeys.WEB_PARAMETERS));
+            final List<Object> assetList = JSONUtils.toList(schemaData.optJSONArray(MessagingConstants.ConsequenceDetailDataKeys.REMOTE_ASSETS));
             if (!MessagingUtils.isNullOrEmpty(assetList)) {
                 this.remoteAssets = new ArrayList<>();
                 for (final Object asset : assetList) {

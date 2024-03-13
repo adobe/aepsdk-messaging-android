@@ -12,8 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.SURFACE;
-
 import androidx.annotation.NonNull;
 
 import com.adobe.marketing.mobile.Event;
@@ -75,7 +73,7 @@ class FeedRulesEngine extends LaunchRulesEngine {
                 continue;
             }
 
-            final Surface surface = Surface.fromUriString(DataReader.optString(metadata, SURFACE, ""));
+            final Surface surface = Surface.fromUriString(DataReader.optString(metadata, MessagingConstants.MessageFeedKeys.SURFACE, ""));
             if (surface == null) {
                 continue;
             }

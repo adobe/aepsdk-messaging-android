@@ -12,11 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
 import androidx.annotation.NonNull;
 
 import com.adobe.marketing.mobile.Event;
@@ -111,7 +106,7 @@ public class PropositionItem implements Serializable {
     public void track(@NonNull final MessagingEdgeEventType eventType) {
         final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(eventType);
         if (propositionInteractionXdm == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
             return;
         }
 
@@ -137,7 +132,7 @@ public class PropositionItem implements Serializable {
     void track(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
         final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
             return;
         }
 
@@ -162,7 +157,7 @@ public class PropositionItem implements Serializable {
      */
     public Map<String, Object> generateInteractionXdm(@NonNull final MessagingEdgeEventType eventType) {
         if (propositionReference == null) {
-            Log.debug(LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
             return null;
         }
         final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType, null,
@@ -181,7 +176,7 @@ public class PropositionItem implements Serializable {
      */
     public Map<String, Object> generateInteractionXdm(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
         if (propositionReference == null) {
-            Log.debug(LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "Cannot generate interaction XDM for item (%s), proposition reference is not available.", itemId);
             return null;
         }
         final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType, interaction,
@@ -201,15 +196,15 @@ public class PropositionItem implements Serializable {
             if (MapUtils.isNullOrEmpty(details)) {
                 return null;
             }
-            final String uniqueId = DataReader.getString(details, ID);
-            final String schema = DataReader.getString(details, SCHEMA);
-            final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, DATA);
+            final String uniqueId = DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.ID);
+            final String schema = DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.SCHEMA);
+            final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(data)) {
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
         } catch (final DataReaderException dataReaderException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -271,7 +266,7 @@ public class PropositionItem implements Serializable {
      */
     private SchemaData createSchemaData(final SchemaType schemaType) {
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
             return null;
         }
 
@@ -303,17 +298,17 @@ public class PropositionItem implements Serializable {
     public static PropositionItem fromEventData(final Map<String, Object> eventData) {
         PropositionItem propositionItem = null;
         try {
-            final String uniqueId = DataReader.getString(eventData, ID);
-            final SchemaType schema = SchemaType.fromString(DataReader.getString(eventData, SCHEMA));
+            final String uniqueId = DataReader.getString(eventData, MessagingConstants.ConsequenceDetailKeys.ID);
+            final SchemaType schema = SchemaType.fromString(DataReader.getString(eventData, MessagingConstants.ConsequenceDetailKeys.SCHEMA));
 
-            final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, DATA);
+            final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
-                Log.trace(LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, schema, dataMap);
         } catch (final DataReaderException exception) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -327,12 +322,12 @@ public class PropositionItem implements Serializable {
     public Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(LOG_TAG, SELF_TAG, "MessagingPropositionItem content is null or empty, cannot create event data map.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "MessagingPropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
-        eventData.put(ID, this.itemId);
-        eventData.put(SCHEMA, this.schema.toString());
-        eventData.put(DATA, itemData);
+        eventData.put(MessagingConstants.ConsequenceDetailKeys.ID, this.itemId);
+        eventData.put(MessagingConstants.ConsequenceDetailKeys.SCHEMA, this.schema.toString());
+        eventData.put(MessagingConstants.ConsequenceDetailKeys.DATA, itemData);
 
         return eventData;
     }

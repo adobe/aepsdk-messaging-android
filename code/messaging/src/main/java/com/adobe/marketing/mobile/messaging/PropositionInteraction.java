@@ -1,6 +1,5 @@
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import androidx.annotation.NonNull;
 
@@ -47,11 +46,11 @@ class PropositionInteraction {
     // Returns proposition interaction XDM
     Map<String, Object> getPropositionInteractionXDM() {
         if (propositionInfo == null) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, PropositionInfo was not found for this message.");
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, PropositionInfo was not found for this message.");
             return null;
         }
         if (eventType == null) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, MessagingEdgeEventType was not found for this message.");
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create proposition interaction data, MessagingEdgeEventType was not found for this message.");
             return null;
         }
         final Map<String, Object> propositionDetailsData= new HashMap<>();

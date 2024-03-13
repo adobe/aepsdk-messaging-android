@@ -14,6 +14,7 @@ import com.adobe.marketing.mobile.gradle.BuildConstants
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
 }
 
 val mavenCoreVersion: String by project
@@ -45,8 +46,6 @@ android {
         viewBinding = true
     }
 }
-
-apply(plugin = "com.google.gms.google-services")
 
 dependencies {
     implementation(project(":messaging"))

@@ -12,35 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.AJO;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.INAPP_RESPONSE_FORMAT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.NAMESPACE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PAYLOAD;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.REFRESH_MESSAGES_EVENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.RESPONSE_CALLBACK_TIMEOUT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
-
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
@@ -122,7 +93,7 @@ class EdgePersonalizationResponseHandler {
         if (this.messagingCacheUtilities.arePropositionsCached()) {
             final Map<Surface, List<Proposition>> cachedPropositions = this.messagingCacheUtilities.getCachedPropositions();
             if (cachedPropositions != null && !cachedPropositions.isEmpty()) {
-                Log.trace(LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Retrieved cached propositions, attempting to load the propositions into the rules engine.");
                 propositions = cachedPropositions;
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
@@ -172,7 +143,7 @@ class EdgePersonalizationResponseHandler {
         } else {
             appSurface = new Surface();
             if (appSurface.getUri().equals("unknown")) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to update messages, couldn't create a valid app surface.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to update messages, couldn't create a valid app surface.");
                 return;
             }
             requestedSurfaces.add(appSurface);
@@ -190,35 +161,35 @@ class EdgePersonalizationResponseHandler {
         final Map<String, Object> personalizationData = new HashMap<>();
 
         // add query parameters containing supported schemas and requested surfaces
-        personalizationData.put(SCHEMAS, SUPPORTED_SCHEMAS);
-        personalizationData.put(SURFACES, validatedSurfaceUris);
-        messageRequestData.put(PERSONALIZATION, personalizationData);
-        eventData.put(QUERY, messageRequestData);
+        personalizationData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS, SUPPORTED_SCHEMAS);
+        personalizationData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES, validatedSurfaceUris);
+        messageRequestData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION, personalizationData);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY, messageRequestData);
 
         // add xdm with an event type of personalization.request
         final Map<String, Object> xdmData = new HashMap<String, Object>() {
             {
-                put(EVENT_TYPE, PERSONALIZATION_REQUEST);
+                put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE, MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST);
             }
         };
-        eventData.put(XDM, xdmData);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM, xdmData);
 
         // add a data object to the request specifying the format desired in the response from XAS
         final Map<String, Object> data = new HashMap<>();
         final Map<String, Object> ajo = new HashMap<>();
         final Map<String, Object> inAppResponseFormat = new HashMap<>();
-        inAppResponseFormat.put(INAPP_RESPONSE_FORMAT, NEW_IAM);
-        ajo.put(AJO, inAppResponseFormat);
-        data.put(NAMESPACE, ajo);
-        eventData.put(DATA, data);
+        inAppResponseFormat.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.INAPP_RESPONSE_FORMAT, MessagingConstants.EventDataKeys.Messaging.Data.Value.NEW_IAM);
+        ajo.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.AJO, inAppResponseFormat);
+        data.put(MessagingConstants.EventDataKeys.Messaging.Data.AdobeKeys.NAMESPACE, ajo);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA, data);
 
         // add a request object so we get a response event from edge when the propositions stream is closed for this event
         final Map<String, Object> request = new HashMap<>();
-        request.put(SEND_COMPLETION, true);
-        eventData.put(REQUEST, request);
+        request.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION, true);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST, request);
         // end construction of event data
 
-        final Event newEvent = new Event.Builder(REFRESH_MESSAGES_EVENT,
+        final Event newEvent = new Event.Builder(MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
                 EventType.EDGE, MessagingConstants.EventSource.REQUEST_CONTENT)
                 .setEventData(eventData)
                 .chainToParentEvent(event)
@@ -228,13 +199,13 @@ class EdgePersonalizationResponseHandler {
         beginRequestForSurfaces(newEvent, requestedSurfaces);
 
         // dispatch the event and handle the response callback
-        MobileCore.dispatchEventWithResponseCallback(newEvent, RESPONSE_CALLBACK_TIMEOUT, new AdobeCallbackWithError<Event>() {
+        MobileCore.dispatchEventWithResponseCallback(newEvent, MessagingConstants.RESPONSE_CALLBACK_TIMEOUT, new AdobeCallbackWithError<Event>() {
             @Override
             public void fail(final AdobeError adobeError) {
                 // response event failed or timed out, need to remove this event from the queue
                 requestedSurfacesForEventId.remove(newEvent.getUniqueIdentifier());
                 serialWorkDispatcher.resume();
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to run completion logic for a personalization request event - error occurred: %s", adobeError.getErrorName());
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to run completion logic for a personalization request event - error occurred: %s", adobeError.getErrorName());
             }
 
             // the callback is called by Edge extension when a request's stream has been closed
@@ -244,8 +215,8 @@ class EdgePersonalizationResponseHandler {
                 // it must be dispatched to the event queue to avoid a race with the events containing propositions
                 final String endingEventId = InternalMessagingUtils.getRequestEventId(responseCompleteEvent);
                 final Map<String, Object> eventData = new HashMap<>();
-                eventData.put(ENDING_EVENT_ID, endingEventId);
-                final Event processCompletedEvent = new Event.Builder(FINALIZE_PROPOSITIONS_RESPONSE,
+                eventData.put(MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, endingEventId);
+                final Event processCompletedEvent = new Event.Builder(MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE,
                         EventType.MESSAGING,
                         EventSource.CONTENT_COMPLETE)
                         .setEventData(eventData)
@@ -269,7 +240,7 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        Log.trace(LOG_TAG, SELF_TAG, "End of streaming response events for requesting event %s", endingEventId);
+        Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "End of streaming response events for requesting event %s", endingEventId);
         endRequestForEventId(endingEventId);
 
         // dispatch notification event for request
@@ -282,7 +253,7 @@ class EdgePersonalizationResponseHandler {
     private void dispatchNotificationEventForSurfaces(final List<Surface> requestedSurfaces) {
         final Map<Surface, List<Proposition>> requestedPropositionsMap = retrieveCachedPropositions(requestedSurfaces);
         if (MapUtils.isNullOrEmpty(requestedPropositionsMap)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Not dispatching a notification event, personalization:decisions response does not contain propositions.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Not dispatching a notification event, personalization:decisions response does not contain propositions.");
             return;
         }
 
@@ -294,9 +265,9 @@ class EdgePersonalizationResponseHandler {
                 convertedPropositions.add(proposition.toEventData());
             }
         }
-        eventData.put(PROPOSITIONS, convertedPropositions);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS, convertedPropositions);
 
-        final Event event = new Event.Builder(MESSAGE_PROPOSITIONS_NOTIFICATION,
+        final Event event = new Event.Builder(MessagingConstants.EventName.MESSAGE_PROPOSITIONS_NOTIFICATION,
                 EventType.MESSAGING, MessagingConstants.EventSource.NOTIFICATION)
                 .setEventData(eventData)
                 .build();
@@ -343,9 +314,9 @@ class EdgePersonalizationResponseHandler {
                 convertedPropositions.add(proposition.toEventData());
             }
         }
-        eventData.put(PROPOSITIONS, convertedPropositions);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS, convertedPropositions);
 
-        final Event responseEvent = new Event.Builder(MESSAGE_PROPOSITIONS_RESPONSE,
+        final Event responseEvent = new Event.Builder(MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE,
                 EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .setEventData(eventData)
                 .inResponseToEvent(event)
@@ -368,21 +339,21 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        Log.trace(LOG_TAG, SELF_TAG, "Processing propositions from personalization:decisions network response for event %s.", requestEventId);
+        Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Processing propositions from personalization:decisions network response for event %s.", requestEventId);
         updateInProgressPropositionsWithEvent(edgeResponseEvent);
     }
 
     private void updateInProgressPropositionsWithEvent(final Event event) {
         final String requestEventId = InternalMessagingUtils.getRequestEventId(event);
         if (StringUtils.isNullOrEmpty(requestEventId)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no requesting Event ID.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no requesting Event ID.");
             return;
         }
 
         // convert the payload into a list of Proposition(s)
-        final List<Map<String, Object>> payloads = DataReader.optTypedListOfMap(Object.class, event.getEventData(), PAYLOAD, null);
+        final List<Map<String, Object>> payloads = DataReader.optTypedListOfMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PAYLOAD, null);
         if(MessagingUtils.isNullOrEmpty(payloads)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no propositions.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no propositions.");
             return;
         }
         List<Proposition> propositions = null;
@@ -392,7 +363,7 @@ class EdgePersonalizationResponseHandler {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create propositions from the AJO personalization payload, an exception occurred: %s.", exception.getLocalizedMessage());
         }
         if (MessagingUtils.isNullOrEmpty(propositions)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no propositions.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Ignoring personalization:decisions response with no propositions.");
             return;
         }
 
@@ -462,7 +433,7 @@ class EdgePersonalizationResponseHandler {
             final Map<Surface, List<LaunchRule>> rulesMaps = newRules.getValue();
             switch (schemaType) {
                 case INAPP:
-                    Log.trace(LOG_TAG, SELF_TAG, "Updating in-app message definitions for surfaces %s.", newSurfaces);
+                    Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Updating in-app message definitions for surfaces %s.", newSurfaces);
 
                     // replace rules for each in-app surface we got back
                     inAppRulesBySurface.putAll(rulesMaps);
@@ -512,7 +483,7 @@ class EdgePersonalizationResponseHandler {
                     break;
                 default:
                     // no-op
-                    Log.trace(LOG_TAG, SELF_TAG, "No action will be taken updating messaging rules - the InboundType provided is not supported.");
+                    Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "No action will be taken updating messaging rules - the InboundType provided is not supported.");
                     break;
             }
         }
@@ -620,32 +591,32 @@ class EdgePersonalizationResponseHandler {
      */
     void createInAppMessage(final RuleConsequence triggeredConsequence) {
         if (triggeredConsequence == null) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null.");
             return;
         }
 
         final Map<String, Object> consequenceDetails = triggeredConsequence.getDetail();
         if (MapUtils.isNullOrEmpty(consequenceDetails)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
             return;
         }
 
-        final String consequenceType = DataReader.optString(consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        final String consequenceType = DataReader.optString(consequenceDetails, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
 
         // ensure we have a AJO IAM payload before creating a message
         if (StringUtils.isNullOrEmpty(consequenceType)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type.");
             return;
         }
 
-        if (!consequenceType.equals(SCHEMA_IAM)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
+        if (!consequenceType.equals(MessagingConstants.SchemaValues.SCHEMA_IAM)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
             return;
         }
 
         try {
-            final Map<String, Object> detailsDataMap = DataReader.optTypedMap(Object.class, consequenceDetails, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, Collections.emptyMap());
-            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, detailsDataMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
+            final Map<String, Object> detailsDataMap = DataReader.optTypedMap(Object.class, consequenceDetails, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, Collections.emptyMap());
+            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, detailsDataMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
             final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(
                     parent,
                     triggeredConsequence,
@@ -655,7 +626,7 @@ class EdgePersonalizationResponseHandler {
             message.trigger();
             message.show();
         } catch (final MessageRequiredFieldMissingException|IllegalStateException exception) {
-            Log.warning(LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, an exception occurred during creation: %s", exception.getLocalizedMessage());
         }
     }
 
@@ -680,12 +651,12 @@ class EdgePersonalizationResponseHandler {
                 if (MapUtils.isNullOrEmpty(details)) {
                     return;
                 }
-                final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, DATA);
-                final List<String> remoteAssets = DataReader.getStringList(data, MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
+                final Map<String, Object> data = DataReader.getTypedMap(Object.class, details, MessagingConstants.EventDataKeys.Messaging.Data.Key.DATA);
+                final List<String> remoteAssets = DataReader.getStringList(data, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS);
                 if (!MessagingUtils.isNullOrEmpty(remoteAssets)) {
                     for (final String remoteAsset : remoteAssets) {
                         if (UrlUtils.isValidUrl(remoteAsset) && !remoteAssetsList.contains(remoteAsset)) {
-                            Log.debug(LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", remoteAsset);
+                            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Image asset to be cached (%s) ", remoteAsset);
                             remoteAssetsList.add(remoteAsset);
                         }
                     }
@@ -693,7 +664,7 @@ class EdgePersonalizationResponseHandler {
             }
             messagingCacheUtilities.cacheImageAssets(remoteAssetsList);
         } catch (final DataReaderException exception) {
-            Log.warning(LOG_TAG, SELF_TAG, "Failed to cache image asset, exception occurred %s", exception.getLocalizedMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to cache image asset, exception occurred %s", exception.getLocalizedMessage());
         }
     }
 
