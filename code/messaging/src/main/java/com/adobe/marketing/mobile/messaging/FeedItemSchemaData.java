@@ -12,19 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.METADATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_TITLE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.ACTION_URL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.BODY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.IMAGE_URL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.MessageFeedKeys.TITLE;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
@@ -49,17 +36,17 @@ public class FeedItemSchemaData implements SchemaData {
 
     FeedItemSchemaData(final JSONObject schemaData) {
         try {
-            this.contentType = ContentType.fromString(schemaData.optString(CONTENT_TYPE));
+            this.contentType = ContentType.fromString(schemaData.optString(MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
-                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+                this.content = JSONUtils.toMap(schemaData.getJSONObject(MessagingConstants.ConsequenceDetailDataKeys.CONTENT));
             } else {
-                this.content = schemaData.getString(CONTENT);
+                this.content = schemaData.getString(MessagingConstants.ConsequenceDetailDataKeys.CONTENT);
             }
-            this.publishedDate = schemaData.optInt(PUBLISHED_DATE);
-            this.expiryDate = schemaData.optInt(EXPIRY_DATE);
-            this.meta = JSONUtils.toMap(schemaData.optJSONObject(METADATA));
+            this.publishedDate = schemaData.optInt(MessagingConstants.ConsequenceDetailDataKeys.PUBLISHED_DATE);
+            this.expiryDate = schemaData.optInt(MessagingConstants.ConsequenceDetailDataKeys.EXPIRY_DATE);
+            this.meta = JSONUtils.toMap(schemaData.optJSONObject(MessagingConstants.ConsequenceDetailDataKeys.METADATA));
         } catch (final JSONException exception) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating FeedItemSchemaData from json object: %s", exception.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating FeedItemSchemaData from json object: %s", exception.getLocalizedMessage());
         }
     }
 
@@ -97,11 +84,11 @@ public class FeedItemSchemaData implements SchemaData {
 
         try {
             final Map<String, Object> contentMap = (HashMap<String, Object>) content;
-            final String title = DataReader.optString(contentMap, TITLE, "");
-            final String body = DataReader.optString(contentMap, BODY, "");
-            final String imageUrl = DataReader.optString(contentMap, IMAGE_URL, "");
-            final String actionUrl = DataReader.optString(contentMap, ACTION_URL, "");
-            final String actionTitle = DataReader.optString(contentMap, ACTION_TITLE, "");
+            final String title = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.TITLE, "");
+            final String body = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.BODY, "");
+            final String imageUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.IMAGE_URL, "");
+            final String actionUrl = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_URL, "");
+            final String actionTitle = DataReader.optString(contentMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
             return new FeedItem.Builder(title, body)
                     .setImageUrl(imageUrl)
                     .setActionUrl(actionUrl)

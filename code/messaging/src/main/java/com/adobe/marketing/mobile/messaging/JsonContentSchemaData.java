@@ -12,10 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.ConsequenceDetailDataKeys.FORMAT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
 import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.services.Log;
@@ -35,19 +31,19 @@ public class JsonContentSchemaData implements SchemaData {
 
     JsonContentSchemaData(final JSONObject schemaData) {
         try {
-            final String decodedFormat = schemaData.optString(FORMAT);
+            final String decodedFormat = schemaData.optString(MessagingConstants.ConsequenceDetailDataKeys.FORMAT);
             if (StringUtils.isNullOrEmpty(decodedFormat)) {
                 format = ContentType.APPLICATION_JSON;
             } else {
                 format = ContentType.fromString(decodedFormat);
             }
             try {
-                this.content = JSONUtils.toMap(schemaData.getJSONObject(CONTENT));
+                this.content = JSONUtils.toMap(schemaData.getJSONObject(MessagingConstants.ConsequenceDetailDataKeys.CONTENT));
             } catch (JSONException e) {
-                this.content = JSONUtils.toList(schemaData.getJSONArray(CONTENT));
+                this.content = JSONUtils.toList(schemaData.getJSONArray(MessagingConstants.ConsequenceDetailDataKeys.CONTENT));
             }
         } catch (final JSONException jsonException) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating HtmlContentSchemaData from json object: %s", jsonException.getLocalizedMessage());
         }
     }
 

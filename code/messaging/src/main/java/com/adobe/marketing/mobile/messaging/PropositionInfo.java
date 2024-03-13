@@ -12,16 +12,9 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.CORRELATION_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PayloadKeys.ACTIVITY;
-
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.io.Serializable;
 import java.util.Map;
 
@@ -34,22 +27,22 @@ class PropositionInfo implements Serializable {
 
 
     private PropositionInfo(final Map<String, Object> propositionInfoMap) throws Exception {
-        id = DataReader.getString(propositionInfoMap, ID);
-        scope = DataReader.getString(propositionInfoMap, SCOPE);
+        id = DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID);
+        scope = DataReader.getString(propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE);
         if (StringUtils.isNullOrEmpty(id) || StringUtils.isNullOrEmpty(scope)) {
             throw new Exception("id and scope are required for constructing PropositionInfo objects.");
         }
-        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS);
+        scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS);
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             correlationId = "";
             activityId = "";
         } else {
-            correlationId = DataReader.getString(scopeDetails, CORRELATION_ID);
-            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, ACTIVITY, null);
+            correlationId = DataReader.getString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID);
+            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
             if (MapUtils.isNullOrEmpty(activityMap)) {
                 activityId = "";
             } else {
-                activityId = DataReader.optString(activityMap, ID, "");
+                activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
             }
         }
     }
@@ -62,24 +55,24 @@ class PropositionInfo implements Serializable {
             correlationId = "";
             activityId = "";
         } else {
-            correlationId = DataReader.optString(scopeDetails, CORRELATION_ID, "");
-            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, ACTIVITY, null);
+            correlationId = DataReader.optString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID, "");
+            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
             if (MapUtils.isNullOrEmpty(activityMap)) {
                 activityId = "";
             } else {
-                activityId = DataReader.optString(activityMap, ID, "");
+                activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
             }
         }
     }
 
     static PropositionInfo create(final Map<String, Object> propositionInfoMap) throws Exception {
-        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, ID))) {
+        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID))) {
             return null;
         }
-        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, SCOPE))) {
+        if (StringUtils.isNullOrEmpty(DataReader.getString(propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE))) {
             return null;
         }
-        if (MapUtils.isNullOrEmpty(DataReader.getTypedMap(Object.class, propositionInfoMap, SCOPE_DETAILS))) {
+        if (MapUtils.isNullOrEmpty(DataReader.getTypedMap(Object.class, propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS))) {
             return null;
         }
         return new PropositionInfo(propositionInfoMap);

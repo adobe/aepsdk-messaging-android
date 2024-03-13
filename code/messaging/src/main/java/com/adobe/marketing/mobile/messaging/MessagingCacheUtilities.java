@@ -12,10 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY;
-
 import androidx.annotation.VisibleForTesting;
 
 import com.adobe.marketing.mobile.services.Log;
@@ -67,7 +63,7 @@ final class MessagingCacheUtilities {
      * @return {@code boolean} containing true if cached propositions are found, false otherwise.
      */
     boolean arePropositionsCached() {
-        return cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY) != null;
+        return cacheService.get(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY) != null;
     }
 
     /**
@@ -75,9 +71,9 @@ final class MessagingCacheUtilities {
      */
     @VisibleForTesting
     void clearCachedData() {
-        cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
-        cacheService.remove(MessagingConstants.CACHE_BASE_DIR, IMAGES_CACHE_SUBDIRECTORY);
-        Log.trace(LOG_TAG, SELF_TAG, "In-app messaging %s and %s caches have been deleted.", PROPOSITIONS_CACHE_SUBDIRECTORY, IMAGES_CACHE_SUBDIRECTORY);
+        cacheService.remove(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
+        cacheService.remove(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.IMAGES_CACHE_SUBDIRECTORY);
+        Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging %s and %s caches have been deleted.", MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY, MessagingConstants.IMAGES_CACHE_SUBDIRECTORY);
     }
 
     /**
@@ -86,15 +82,15 @@ final class MessagingCacheUtilities {
      * @return a {@code Map<Surface, List<Proposition>>} containing the cached proposition payloads.
      */
     Map<Surface, List<Proposition>> getCachedPropositions() {
-        final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
+        final CacheResult cacheResult = cacheService.get(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
         if (cacheResult == null) {
-            Log.trace(LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to find a cached proposition.");
             return null;
         }
 
         final Map<String, String> fileMetadata = cacheResult.getMetadata();
         if (fileMetadata != null && !fileMetadata.isEmpty()) {
-            Log.trace(LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Loading cached proposition from (%s)", fileMetadata.get(METADATA_KEY_PATH_TO_FILE));
         }
 
         ObjectInputStream objectInputStream = null;
@@ -106,7 +102,7 @@ final class MessagingCacheUtilities {
 
             final Object cachedData = objectInputStream.readObject();
             if (cachedData == null) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to read cached data into an object.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to read cached data into an object.");
                 return null;
             }
 
@@ -114,7 +110,7 @@ final class MessagingCacheUtilities {
             try {
                 firstElement = ((Map<Surface, List<Object>>) cachedData).entrySet().iterator().next().getValue().get(0);
             } catch (final NoSuchElementException exception) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to retrieve first element of cached data list.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to retrieve first element of cached data list.");
                 return null;
             }
 
@@ -131,13 +127,13 @@ final class MessagingCacheUtilities {
                 }
             }
         } catch (final NullPointerException nullPointerException) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", nullPointerException.getMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred when retrieving the cached proposition file: %s", nullPointerException.getMessage());
             return null;
         } catch (final IOException ioException) {
-            Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when reading from the cached file: %s", ioException.getMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred when reading from the cached file: %s", ioException.getMessage());
             return null;
         } catch (final ClassNotFoundException classNotFoundException) {
-            Log.warning(LOG_TAG, SELF_TAG, "Class not found: %s", classNotFoundException.getMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Class not found: %s", classNotFoundException.getMessage());
             return null;
         } finally {
             try {
@@ -145,7 +141,7 @@ final class MessagingCacheUtilities {
                     objectInputStream.close();
                 }
             } catch (final IOException ioException) {
-                Log.warning(LOG_TAG, SELF_TAG, "Exception occurred when closing the FileInputStream: %s", ioException.getMessage());
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred when closing the FileInputStream: %s", ioException.getMessage());
             }
         }
         return cachedPropositions;
@@ -170,12 +166,12 @@ final class MessagingCacheUtilities {
         // clean any existing cached propositions first if the provided propositions are null or empty
         final Map<Surface, List<Proposition>> propositions = new HashMap<>(updatedPropositions);
         if (MapUtils.isNullOrEmpty(propositions)) {
-            cacheService.remove(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY);
+            cacheService.remove(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY);
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "In-app messaging cache has been deleted.");
             return;
         }
 
-        Log.debug(LOG_TAG, SELF_TAG, "Creating new cached propositions");
+        Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Creating new cached propositions");
         ByteArrayOutputStream byteArrayOutputStream = null;
         InputStream inputStream = null;
 
@@ -188,9 +184,9 @@ final class MessagingCacheUtilities {
             objectOutputStream.flush();
             inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
             final CacheEntry cacheEntry = new CacheEntry(inputStream, CacheExpiry.never(), null);
-            cacheService.set(MessagingConstants.CACHE_BASE_DIR, PROPOSITIONS_CACHE_SUBDIRECTORY, cacheEntry);
+            cacheService.set(MessagingConstants.CACHE_BASE_DIR, MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY, cacheEntry);
         } catch (final IOException e) {
-            Log.warning(LOG_TAG, SELF_TAG, "IOException while attempting to write remote file (%s)", e);
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "IOException while attempting to write remote file (%s)", e);
         } finally {
             try {
                 if (objectOutputStream != null) {
@@ -203,7 +199,7 @@ final class MessagingCacheUtilities {
                     inputStream.close();
                 }
             } catch (final IOException e) {
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to close the ObjectOutputStream (%s) ", e);
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to close the ObjectOutputStream (%s) ", e);
             }
         }
     }
@@ -238,12 +234,12 @@ final class MessagingCacheUtilities {
      */
     void cacheImageAssets(final List<String> assetsUrls) {
         if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Failed to cache asset, the asset cache location is not available.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to cache asset, the asset cache location is not available.");
             return;
         }
 
         if (cacheService == null) {
-            Log.trace(LOG_TAG, SELF_TAG, "Failed to cache asset, the cache manager is not available.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to cache asset, the cache manager is not available.");
             return;
         }
 

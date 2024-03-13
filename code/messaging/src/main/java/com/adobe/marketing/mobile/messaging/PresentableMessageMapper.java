@@ -10,14 +10,6 @@
  */
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.IAM_HISTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.EVENT_TYPE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.MESSAGE_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.TRACKING_ACTION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -172,19 +164,19 @@ class PresentableMessageMapper {
                 throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
             }
 
-            final String schemaType = DataReader.optString(details, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
-            if (!SCHEMA_IAM.equals(schemaType)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"schema\" is (%s) should be of type (%S).", consequence.toString(), schemaType, SCHEMA_IAM);
+            final String schemaType = DataReader.optString(details, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+            if (!MessagingConstants.SchemaValues.SCHEMA_IAM.equals(schemaType)) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"schema\" is (%s) should be of type (%S).", consequence.toString(), schemaType, MessagingConstants.SchemaValues.SCHEMA_IAM);
                 throw new MessageRequiredFieldMissingException("Required field: \"schema\" is not equal to \"https://ns.adobe.com/personalization/message/in-app\".");
             }
 
-            final Map<String, Object> data = DataReader.optTypedMap(Object.class, details, MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
+            final Map<String, Object> data = DataReader.optTypedMap(Object.class, details, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
             if (MapUtils.isNullOrEmpty(data)) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"data\" is null or empty.", consequence.toString());
                 throw new MessageRequiredFieldMissingException("Required field: \"data\" is null or empty.");
             }
 
-            final String html = DataReader.optString(data, MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "");
+            final String html = DataReader.optString(data, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "");
             if (StringUtils.isNullOrEmpty(html)) {
                 Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
                 throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
@@ -279,13 +271,13 @@ class PresentableMessageMapper {
             }
             // create maps for event history
             final Map<String, String> iamHistoryMap = new HashMap<>();
-            iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-            iamHistoryMap.put(MESSAGE_ID, propositionInfo.activityId);
-            iamHistoryMap.put(TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
+            iamHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, eventType.getPropositionEventType());
+            iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.activityId);
+            iamHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
             // Create the mask for storing event history
             final Map<String, Object> eventHistoryData = new HashMap<>();
-            eventHistoryData.put(IAM_HISTORY, iamHistoryMap);
+            eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, iamHistoryMap);
             final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
 
             InternalMessagingUtils.sendEvent(MessagingConstants.EventName.EVENT_HISTORY_WRITE,

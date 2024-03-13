@@ -12,9 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_VERSION_KEY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
 
 import androidx.annotation.Nullable;
 
@@ -33,10 +30,10 @@ public class RulesetSchemaData implements SchemaData {
 
     RulesetSchemaData(final JSONObject schemaData) {
         try {
-            this.version = schemaData.getInt(JSON_VERSION_KEY);
-            this.rules = (List<Map<String, Object>>) schemaData.get(JSON_RULES_KEY);
+            this.version = schemaData.getInt(MessagingConstants.EventDataKeys.RulesEngine.JSON_VERSION_KEY);
+            this.rules = (List<Map<String, Object>>) schemaData.get(MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY);
         } catch (final JSONException|ClassCastException exception) {
-            Log.trace(LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", exception.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating RulesetSchemaData from json object: %s", exception.getLocalizedMessage());
         }
     }
 

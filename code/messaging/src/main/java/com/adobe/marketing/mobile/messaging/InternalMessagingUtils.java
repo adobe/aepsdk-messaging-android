@@ -12,23 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.CACHE_BASE_DIR;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.REQUEST_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SchemaValues.SCHEMA_IAM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ECID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP;
 
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
@@ -82,9 +65,9 @@ class InternalMessagingUtils {
     static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
         JSONObject consequenceDetails = null;
         try {
-            consequenceDetails = getConsequence(ruleJson).getJSONObject(MESSAGE_CONSEQUENCE_DETAIL);
+            consequenceDetails = getConsequence(ruleJson).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
+            Log.debug(MessagingConstants.LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
         }
         return consequenceDetails;
     }
@@ -98,11 +81,11 @@ class InternalMessagingUtils {
     static JSONObject getConsequence(final JSONObject ruleJson) {
         JSONObject consequence = null;
         try {
-            final JSONArray rulesArray = ruleJson.getJSONArray(JSON_RULES_KEY);
-            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(JSON_CONSEQUENCES_KEY);
+            final JSONArray rulesArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY);
+            final JSONArray consequenceArray = rulesArray.getJSONObject(0).getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY);
             consequence = consequenceArray.getJSONObject(0);
         } catch (final JSONException jsonException) {
-            Log.debug(LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
+            Log.debug(MessagingConstants.LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving rule consequence: %s", jsonException.getLocalizedMessage());
         }
         return consequence;
     }
@@ -117,7 +100,7 @@ class InternalMessagingUtils {
         if (deviceInfoService != null) {
             final File applicationCacheDir = deviceInfoService.getApplicationCacheDir();
             if (applicationCacheDir != null) {
-                assetCacheLocation = applicationCacheDir + File.separator + CACHE_BASE_DIR + File.separator + IMAGES_CACHE_SUBDIRECTORY;
+                assetCacheLocation = applicationCacheDir + File.separator + MessagingConstants.CACHE_BASE_DIR + File.separator + MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
             }
         }
         return assetCacheLocation;
@@ -269,7 +252,7 @@ class InternalMessagingUtils {
         final List<Map<String, Object>> surfaces = DataReader.optTypedListOfMap(Object.class, eventData, MessagingConstants.EventDataKeys.Messaging.SURFACES, null);
 
         if (MessagingUtils.isNullOrEmpty(surfaces)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Surface URI's were not found in the provided event.");
             return null;
         }
 
@@ -294,7 +277,7 @@ class InternalMessagingUtils {
     static String getRequestEventId(final Event event) {
         String requestEventId = event.getParentID();
         if (StringUtils.isNullOrEmpty(requestEventId)) {
-            requestEventId = DataReader.optString(event.getEventData(), REQUEST_EVENT_ID, null);
+            requestEventId = DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.REQUEST_EVENT_ID, null);
         }
         return requestEventId;
     }
@@ -306,7 +289,7 @@ class InternalMessagingUtils {
      * @return {@code String} containing the ending event id
      */
     static String getEndingEventId(final Event event) {
-        return DataReader.optString(event.getEventData(), ENDING_EVENT_ID, null);
+        return DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, null);
     }
 
     // ========================================================================================
@@ -314,8 +297,8 @@ class InternalMessagingUtils {
     // ========================================================================================
     static boolean isFeedItem(final RuleConsequence ruleConsequence) {
         final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
-        return schema.equals(SCHEMA_FEED_ITEM);
+        final String schema = DataReader.optString(ruleDetailMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        return schema.equals(MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM);
     }
 
     // ========================================================================================
@@ -323,9 +306,9 @@ class InternalMessagingUtils {
     // ========================================================================================
     static boolean isInApp(final RuleConsequence ruleConsequence) {
         final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String schema = DataReader.optString(ruleDetailMap, MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
+        final String schema = DataReader.optString(ruleDetailMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
         final String consequenceType = ruleConsequence.getType();
-        return schema.equals(SCHEMA_IAM) || consequenceType.equals(MESSAGE_CONSEQUENCE_CJM_VALUE);
+        return schema.equals(MessagingConstants.SchemaValues.SCHEMA_IAM) || consequenceType.equals(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
     }
 
     // ========================================================================================
@@ -341,9 +324,9 @@ class InternalMessagingUtils {
      */
     static Event createErrorResponseEvent(final Event event, final AdobeError error) {
         final Map<String, Object> eventData = new HashMap<String, Object>() {{
-            put(RESPONSE_ERROR, error.getErrorName());
+            put(MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR, error.getErrorName());
         }};
-        return new Event.Builder(MESSAGE_PROPOSITIONS_RESPONSE, EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+        return new Event.Builder(MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE, EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .inResponseToEvent(event)
                 .setEventData(eventData)
                 .build();
@@ -405,16 +388,16 @@ class InternalMessagingUtils {
     // Shared State Helpers
     // ========================================================================================
     static String getSharedStateEcid(final Map<String, Object> edgeIdentityState) {
-        final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, IDENTITY_MAP, null);
+        final Map<String, Object> identityMap = DataReader.optTypedMap(Object.class, edgeIdentityState, MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, null);
         if (MapUtils.isNullOrEmpty(identityMap)) return null;
 
-        final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, ECID, null);
+        final List<Map<String, Object>> ecids = DataReader.optTypedListOfMap(Object.class, identityMap, MessagingConstants.SharedState.EdgeIdentity.ECID, null);
         if (MessagingUtils.isNullOrEmpty(ecids)) return null;
 
         final Map<String, Object> ecidMap = ecids.get(0);
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
-        return DataReader.optString(ecidMap, ID, null);
+        return DataReader.optString(ecidMap, MessagingConstants.SharedState.EdgeIdentity.ID, null);
     }
 
     // ========================================================================================

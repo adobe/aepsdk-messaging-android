@@ -12,33 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EXTENSION_VERSION;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.FEED_RULES_ENGINE_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.FRIENDLY_EXTENSION_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.JsonValues.ECID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.JsonValues.FCM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.RULES_ENGINE_NAME;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.CJM;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.COLLECT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.DATASET_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.EXPERIENCE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.META;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.MIXINS;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.TrackingKeys.XDM;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
@@ -66,7 +39,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class MessagingExtension extends Extension {
@@ -104,8 +76,8 @@ public final class MessagingExtension extends Extension {
     @VisibleForTesting
     MessagingExtension(final ExtensionApi extensionApi, final LaunchRulesEngine messagingRulesEngine, final FeedRulesEngine feedRulesEngine, final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
-        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(RULES_ENGINE_NAME, extensionApi);
-        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new FeedRulesEngine(FEED_RULES_ENGINE_NAME, extensionApi);
+        this.messagingRulesEngine = messagingRulesEngine != null ? messagingRulesEngine : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
+        this.feedRulesEngine = feedRulesEngine != null ? feedRulesEngine : new FeedRulesEngine(MessagingConstants.FEED_RULES_ENGINE_NAME, extensionApi);
         this.edgePersonalizationResponseHandler = edgePersonalizationResponseHandler != null ? edgePersonalizationResponseHandler : new EdgePersonalizationResponseHandler(this, extensionApi, this.messagingRulesEngine, this.feedRulesEngine);
     }
 
@@ -119,7 +91,7 @@ public final class MessagingExtension extends Extension {
     @NonNull
     @Override
     protected String getName() {
-        return EXTENSION_NAME;
+        return MessagingConstants.EXTENSION_NAME;
     }
 
     /**
@@ -130,7 +102,7 @@ public final class MessagingExtension extends Extension {
     @NonNull
     @Override
     protected String getFriendlyName() {
-        return FRIENDLY_EXTENSION_NAME;
+        return MessagingConstants.FRIENDLY_EXTENSION_NAME;
     }
 
     /**
@@ -141,7 +113,7 @@ public final class MessagingExtension extends Extension {
     @NonNull
     @Override
     protected String getVersion() {
-        return EXTENSION_VERSION;
+        return MessagingConstants.EXTENSION_VERSION;
     }
 
     @Override
@@ -178,12 +150,12 @@ public final class MessagingExtension extends Extension {
     @Override
     public boolean readyForEvent(@NonNull final Event event) {
         if (!hasValidSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Event processing is paused - waiting for valid Configuration");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Event processing is paused - waiting for valid Configuration");
             return false;
         }
 
         if (!hasValidXdmSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event)) {
-            Log.trace(LOG_TAG, SELF_TAG, "Event processing is paused - waiting for valid XDM shared state from Edge Identity extension.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Event processing is paused - waiting for valid XDM shared state from Edge Identity extension.");
             return false;
         }
 
@@ -260,7 +232,7 @@ public final class MessagingExtension extends Extension {
      */
     void processEvent(final Event eventToProcess) {
         if (!eventIsValid(eventToProcess)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Event or EventData is null, ignoring the event.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Event or EventData is null, ignoring the event.");
             return;
         }
 
@@ -290,7 +262,7 @@ public final class MessagingExtension extends Extension {
             final String experienceEventDatasetId = DataReader.optString(configSharedState, MessagingConstants.SharedState.Configuration.EXPERIENCE_EVENT_DATASET_ID, "");
             if (StringUtils.isNullOrEmpty(experienceEventDatasetId)) {
                 InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.NO_DATASET_CONFIGURED, getApi(),eventToProcess);
-                Log.warning(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to track push notification interaction, experience event dataset id is empty. Check the messaging launch extension to add the experience event dataset.");
                 return;
             }
             // handle the push tracking information from messaging request content event
@@ -312,7 +284,7 @@ public final class MessagingExtension extends Extension {
     void trackMessages(final Event event) {
         final Map<String, Object> propositionInteractionXdm = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION, new HashMap<>());
         if (MapUtils.isNullOrEmpty(propositionInteractionXdm)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Cannot track proposition item, proposition interaction XDM is not available.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot track proposition item, proposition interaction XDM is not available.");
             return;
         }
         sendPropositionInteraction(propositionInteractionXdm);
@@ -322,14 +294,14 @@ public final class MessagingExtension extends Extension {
         final String pushToken = DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.Identity.PUSH_IDENTIFIER, null);
 
         if (StringUtils.isNullOrEmpty(pushToken)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Failed to sync push token, token is null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to sync push token, token is null or empty.");
             return;
         }
 
         final Map<String, Object> edgeIdentitySharedState = getXDMSharedState(MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
         final String ecid = InternalMessagingUtils.getSharedStateEcid(edgeIdentitySharedState);
         if (StringUtils.isNullOrEmpty(ecid)) {
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to sync the push token. ECID is unavailable for the user.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to sync the push token. ECID is unavailable for the user.");
             return;
         }
 
@@ -362,7 +334,7 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> eventData = event.getEventData();
         if (eventData == null) {
             InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventData is null.");
             return;
         }
         final String eventType = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_EVENT_TYPE, "");
@@ -372,21 +344,21 @@ public final class MessagingExtension extends Extension {
 
         if (StringUtils.isNullOrEmpty(eventType)) {
             InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.UNKNOWN_ERROR, getApi(), event);
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to track push notification interaction, eventType is either null or empty.");
             return;
         }
 
         if (StringUtils.isNullOrEmpty(messageId)) {
             InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.INVALID_MESSAGE_ID, getApi(), event);
-            Log.debug(LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to track push notification interaction, messageId is either null or empty.");
             return;
         }
 
         // Creating the Meta Map
         final Map<String, Object> metaMap = new HashMap<>();
         final Map<String, Object> collectMap = new HashMap<>();
-        collectMap.put(DATASET_ID, datasetId);
-        metaMap.put(COLLECT, collectMap);
+        collectMap.put(MessagingConstants.TrackingKeys.DATASET_ID, datasetId);
+        metaMap.put(MessagingConstants.TrackingKeys.COLLECT, collectMap);
 
         // Create XDM data with tracking data
         final Map<String, Object> xdmMap = getXdmData(eventType, messageId, actionId);
@@ -398,8 +370,8 @@ public final class MessagingExtension extends Extension {
         addXDMData(eventData, xdmMap);
 
         final Map<String, Object> xdmData = new HashMap<>();
-        xdmData.put(XDM, xdmMap);
-        xdmData.put(META, metaMap);
+        xdmData.put(MessagingConstants.TrackingKeys.XDM, xdmMap);
+        xdmData.put(MessagingConstants.TrackingKeys.META, metaMap);
 
         InternalMessagingUtils.sendTrackingResponseEvent(PushTrackingStatus.TRACKING_INITIATED, getApi(), event);
 
@@ -418,7 +390,7 @@ public final class MessagingExtension extends Extension {
      */
     public void sendPropositionInteraction(final Map<String, Object> xdmMap) {
         final Map<String, Object> xdmEventData = new HashMap<>();
-        xdmEventData.put(XDM, xdmMap);
+        xdmEventData.put(MessagingConstants.TrackingKeys.XDM, xdmMap);
 
         // dispatch in-app tracking event
         InternalMessagingUtils.sendEvent(MessagingConstants.EventName.MESSAGE_INTERACTION_EVENT,
@@ -440,32 +412,32 @@ public final class MessagingExtension extends Extension {
      */
     private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
-            Log.error(LOG_TAG, MessagingExtension.SELF_TAG, "Failed to sync push token, ECID is null.");
+            Log.error(MessagingConstants.LOG_TAG, MessagingExtension.SELF_TAG, "Failed to sync push token, ECID is null.");
             return null;
         }
 
         final Map<String, String> namespace = new HashMap<>();
-        namespace.put(CODE, ECID);
+        namespace.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.CODE, MessagingConstants.JsonValues.ECID);
 
         final Map<String, Object> identity = new HashMap<>();
-        identity.put(NAMESPACE, namespace);
+        identity.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.NAMESPACE, namespace);
         identity.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.ID, ecid);
 
         final ArrayList<Map<String, Object>> pushNotificationDetailsArray = new ArrayList<>();
         final Map<String, Object> pushNotificationDetailsData = new HashMap<>();
-        pushNotificationDetailsData.put(IDENTITY, identity);
-        pushNotificationDetailsData.put(APP_ID, ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName());
-        pushNotificationDetailsData.put(TOKEN, token);
-        pushNotificationDetailsData.put(PLATFORM, FCM);
-        pushNotificationDetailsData.put(DENY_LISTED, false);
+        pushNotificationDetailsData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.IDENTITY, identity);
+        pushNotificationDetailsData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.APP_ID, ServiceProvider.getInstance().getDeviceInfoService().getApplicationPackageName());
+        pushNotificationDetailsData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.TOKEN, token);
+        pushNotificationDetailsData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PLATFORM, MessagingConstants.JsonValues.FCM);
+        pushNotificationDetailsData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DENY_LISTED, false);
 
         pushNotificationDetailsArray.add(pushNotificationDetailsData);
 
         final Map<String, Object> data = new HashMap<>();
-        data.put(PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
+        data.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.PUSH_NOTIFICATION_DETAILS, pushNotificationDetailsArray);
 
         final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(DATA, data);
+        eventData.put(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA, data);
 
         return eventData;
     }
@@ -488,7 +460,7 @@ public final class MessagingExtension extends Extension {
             trackingMap.put(XDMDataKeys.CUSTOM_ACTION, customActionMap);
         }
 
-        trackingMap.put(XDMDataKeys.PUSH_PROVIDER, FCM);
+        trackingMap.put(XDMDataKeys.PUSH_PROVIDER, MessagingConstants.JsonValues.FCM);
         trackingMap.put(XDMDataKeys.PUSH_PROVIDER_MESSAGE_ID, messageId);
         xdmMap.put(XDMDataKeys.EVENT_TYPE, eventType);
         xdmMap.put(XDMDataKeys.PUSH_NOTIFICATION_TRACKING_MIXIN_NAME, trackingMap);
@@ -514,7 +486,7 @@ public final class MessagingExtension extends Extension {
         // Extract the xdm adobe data string from the event data.
         final String adobe = DataReader.optString(eventData, MessagingConstants.EventDataKeys.Messaging.TRACK_INFO_KEY_ADOBE_XDM, "");
         if (StringUtils.isNullOrEmpty(adobe)) {
-            Log.warning(LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe XDM data is null.");
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe XDM data is null.");
             return;
         }
 
@@ -524,23 +496,23 @@ public final class MessagingExtension extends Extension {
             final Map<String, Object> xdmMapObject = JSONUtils.toMap(xdmJson);
 
             if (xdmMapObject == null) {
-                Log.warning(LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe XDM data conversion to map failed.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe XDM data conversion to map failed.");
                 return;
             }
 
             Map<String, Object> mixins = null;
 
             // Check for if the json has the required keys
-            if (xdmMapObject.containsKey(CJM) && xdmMapObject.get(CJM) instanceof Map) {
-                mixins = (Map<String, Object>) xdmMapObject.get(CJM);
+            if (xdmMapObject.containsKey(MessagingConstants.TrackingKeys.CJM) && xdmMapObject.get(MessagingConstants.TrackingKeys.CJM) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(MessagingConstants.TrackingKeys.CJM);
             }
 
-            if (xdmMapObject.containsKey(MIXINS) && xdmMapObject.get(MIXINS) instanceof Map) {
-                mixins = (Map<String, Object>) xdmMapObject.get(MIXINS);
+            if (xdmMapObject.containsKey(MessagingConstants.TrackingKeys.MIXINS) && xdmMapObject.get(MessagingConstants.TrackingKeys.MIXINS) instanceof Map) {
+                mixins = (Map<String, Object>) xdmMapObject.get(MessagingConstants.TrackingKeys.MIXINS);
             }
 
             if (mixins == null) {
-                Log.debug(LOG_TAG, SELF_TAG, "Failed to send cjm xdm data with the tracking, Missing XDM data.");
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to send cjm xdm data with the tracking, Missing XDM data.");
                 return;
             }
 
@@ -548,22 +520,22 @@ public final class MessagingExtension extends Extension {
 
             // Check if the xdm data provided by the customer is using cjm for tracking
             // Check if both {@link MessagingConstants#EXPERIENCE} and {@link MessagingConstants#CUSTOMER_JOURNEY_MANAGEMENT} exists
-            if (mixins.containsKey(EXPERIENCE) && mixins.get(EXPERIENCE) instanceof Map) {
-                Map<String, Object> experience = (Map<String, Object>) mixins.get(EXPERIENCE);
-                if (experience.containsKey(CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
-                    Map<String, Object> cjm = (Map<String, Object>) experience.get(CUSTOMER_JOURNEY_MANAGEMENT);
+            if (mixins.containsKey(MessagingConstants.TrackingKeys.EXPERIENCE) && mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE) instanceof Map) {
+                Map<String, Object> experience = (Map<String, Object>) mixins.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+                if (experience.containsKey(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT) && experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT) instanceof Map) {
+                    Map<String, Object> cjm = (Map<String, Object>) experience.get(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT);
                     // Adding Message profile and push channel context to CUSTOMER_JOURNEY_MANAGEMENT
-                    final JSONObject jObject = new JSONObject(MESSAGE_PROFILE_JSON);
+                    final JSONObject jObject = new JSONObject(MessagingConstants.TrackingKeys.MESSAGE_PROFILE_JSON);
                     cjm.putAll(JSONUtils.toMap(jObject));
 
-                    experience.put(CUSTOMER_JOURNEY_MANAGEMENT, cjm);
-                    xdmMap.put(EXPERIENCE, experience);
+                    experience.put(MessagingConstants.TrackingKeys.CUSTOMER_JOURNEY_MANAGEMENT, cjm);
+                    xdmMap.put(MessagingConstants.TrackingKeys.EXPERIENCE, experience);
                 }
             } else {
-                Log.warning(LOG_TAG, SELF_TAG, "Failed to send CJM XDM data with the tracking, required keys are missing.");
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to send CJM XDM data with the tracking, required keys are missing.");
             }
         } catch (final JSONException | ClassCastException e) {
-            Log.warning(LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe data is malformed : %s", e.getMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to send Adobe data with the tracking data, Adobe data is malformed : %s", e.getMessage());
         }
     }
 

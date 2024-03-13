@@ -12,8 +12,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG;
-
 import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.services.HttpConnecting;
 import com.adobe.marketing.mobile.services.HttpMethod;
@@ -65,7 +63,7 @@ class MessageAssetDownloader {
      */
     void downloadAssetCollection() {
         if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
-            Log.debug(LOG_TAG, SELF_TAG, "downloadAssetCollection - Failed to download assets, the asset cache location is not available.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "downloadAssetCollection - Failed to download assets, the asset cache location is not available.");
             return;
         }
 
@@ -190,7 +188,7 @@ class MessageAssetDownloader {
      */
     private void cacheAssetData(final HttpConnecting connection, final String key) {
         if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
-            Log.debug(LOG_TAG, SELF_TAG, "cacheAssetData - Failed to cache asset from %s, the asset cache location is not available.", key);
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "cacheAssetData - Failed to cache asset from %s, the asset cache location is not available.", key);
             return;
         }
 
@@ -213,7 +211,7 @@ class MessageAssetDownloader {
      */
     private boolean createAssetCacheDirectory() {
         if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
-            Log.debug(LOG_TAG, SELF_TAG, "createAssetCacheDirectory - Failed to create asset cache directory, the asset cache location is not available.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "createAssetCacheDirectory - Failed to create asset cache directory, the asset cache location is not available.");
             return false;
         }
 
