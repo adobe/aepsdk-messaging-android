@@ -22,8 +22,8 @@ import com.adobe.marketing.mobile.edge.identity.Identity
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
-    private val ENVIRONMENT_FILE_ID = ""
-    private val ASSURANCE_SESSION_ID = ""
+    private val ENVIRONMENT_FILE_ID = "3149c49c3910/aade5cbb52e4/launch-365a8d4bb1e7-development"
+    private val ASSURANCE_SESSION_ID = "messagingsampleapp://?adb_validation_sessionid=f3fbb3fb-45a8-49a6-ab1f-e729521a82d8"
 
     override fun onCreate() {
         super.onCreate()
@@ -36,6 +36,7 @@ class MessagingApplication : Application() {
             // Necessary property id which has the edge configuration id needed by aep sdk
             MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             MobileCore.lifecycleStart(null)
+            Assurance.startSession(ASSURANCE_SESSION_ID)
         }
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->

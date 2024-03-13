@@ -116,10 +116,8 @@ final class MessagingCacheUtilities {
             } else if (firstElement instanceof PropositionPayload) {
                 // handle cached PropositionPayload objects
                 final Map<Surface, List<PropositionPayload>> cachedPropositionPayloads = (Map<Surface, List<PropositionPayload>>) cachedData;
-                if (!MapUtils.isNullOrEmpty(cachedPropositionPayloads)) {
-                    for (final Map.Entry<Surface, List<PropositionPayload>> entry : cachedPropositionPayloads.entrySet()) {
-                        cachedPropositions.put(entry.getKey(), convertToPropositions(entry.getValue()));
-                    }
+                for (final Map.Entry<Surface, List<PropositionPayload>> entry : cachedPropositionPayloads.entrySet()) {
+                    cachedPropositions.put(entry.getKey(), convertToPropositions(entry.getValue()));
                 }
             }
         } catch (final NullPointerException nullPointerException) {
@@ -153,10 +151,14 @@ final class MessagingCacheUtilities {
         final Map<Surface, List<Proposition>> cachedPropositions = getCachedPropositions();
         final Map<Surface, List<Proposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
         updatedPropositions.putAll(newPropositions);
+        final List<Surface> propositionsToRemove = new ArrayList<>();
         for (final Map.Entry<Surface, List<Proposition>> entry : updatedPropositions.entrySet()) {
             if (surfacesToRemove.contains(entry.getKey())) {
-                updatedPropositions.remove(entry.getKey());
+                propositionsToRemove.add(entry.getKey());
             }
+        }
+        for (final Surface surface : propositionsToRemove) {
+            updatedPropositions.remove(surface);
         }
 
         // clean any existing cached propositions first if the provided propositions are null or empty
@@ -212,7 +214,11 @@ final class MessagingCacheUtilities {
                 final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
                 propositionItems.add(propositionItem);
             }
-            propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+            try {
+                propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+            } catch (final MessageRequiredFieldMissingException exception) {
+                Log.warning(LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
+            }
         }
         return propositions;
     }

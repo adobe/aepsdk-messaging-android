@@ -12,9 +12,14 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
+import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
@@ -40,13 +45,24 @@ public class Proposition implements Serializable {
     // Scope details map
     private final Map<String, Object> scopeDetails;
     // List containing proposition decision items
-    private final List<PropositionItem> propositionItems;
+    private final List<PropositionItem> propositionItems = new ArrayList<>();
 
-    public Proposition(final String uniqueId, final String scope, final Map<String, Object> scopeDetails, final List<PropositionItem> propositionItems) {
+    public Proposition(@NonNull final String uniqueId,
+                       @NonNull final String scope,
+                       @NonNull final Map<String, Object> scopeDetails,
+                       @NonNull final List<PropositionItem> propositionItems) throws MessageRequiredFieldMissingException {
+        if (StringUtils.isNullOrEmpty(uniqueId)
+                || StringUtils.isNullOrEmpty(scope)
+                || MapUtils.isNullOrEmpty(scopeDetails)) {
+            throw new MessageRequiredFieldMissingException("Id, scope or scope details is missing");
+        }
         this.uniqueId = uniqueId;
         this.scope = scope;
         this.scopeDetails = scopeDetails;
-        this.propositionItems = propositionItems;
+        if(propositionItems == null) {
+            return;
+        }
+        this.propositionItems.addAll(propositionItems);
         for (final PropositionItem item : this.propositionItems) {
             if (item.propositionReference == null) {
                 item.propositionReference = new SoftReference<>(this);
@@ -86,7 +102,7 @@ public class Proposition implements Serializable {
      *
      * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
      */
-    public Map<String, Object> getScopeDetails() {
+    Map<String, Object> getScopeDetails() {
         return scopeDetails;
     }
 
@@ -95,13 +111,14 @@ public class Proposition implements Serializable {
      *
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
+    @Nullable
     public static Proposition fromEventData(final Map<String, Object> eventData) {
         Proposition proposition = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
             final String scope = DataReader.getString(eventData, PAYLOAD_SCOPE);
             final Map<String, Object> scopeDetails = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS);
-            final List<Map<String, Object>> items = DataReader.getTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS);
+            final List<Map<String, Object>> items = DataReader.optTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS, new ArrayList<>());
             final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
                 final PropositionItem propositionItem = PropositionItem.fromEventData(item);
@@ -110,8 +127,8 @@ public class Proposition implements Serializable {
                 }
             }
             proposition = new Proposition(uniqueId, scope, scopeDetails, propositionItems);
-        } catch (final DataReaderException dataReaderException) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingProposition from event data map: %s", dataReaderException.getLocalizedMessage());
+        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingProposition from event data map: %s", exception.getLocalizedMessage());
         }
 
         return proposition;

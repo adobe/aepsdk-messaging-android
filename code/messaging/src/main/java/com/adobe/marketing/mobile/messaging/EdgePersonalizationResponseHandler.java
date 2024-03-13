@@ -515,16 +515,21 @@ class EdgePersonalizationResponseHandler {
             for (final Map.Entry<Surface, List<PropositionItem>> entry: propositionItemsBySurface.entrySet()){
                 final List<Proposition> tempPropositions = new ArrayList<>();
                 for (final PropositionItem propositionItem: entry.getValue()) {
-                    final PropositionInfo propositionInfo = this.propositionInfo.get(propositionItem.getPropositionItemId());
+                    final PropositionInfo propositionInfo = this.propositionInfo.get(propositionItem.getItemId());
                     if (propositionInfo == null) {
                         continue;
                     }
 
-                    final Proposition proposition = new Proposition(
-                            propositionInfo.id,
-                            propositionInfo.scope,
-                            propositionInfo.scopeDetails,
-                            new ArrayList<PropositionItem>() {{ add(propositionItem); }});
+                    final Proposition proposition;
+                    try {
+                        proposition = new Proposition(
+                                propositionInfo.id,
+                                propositionInfo.scope,
+                                propositionInfo.scopeDetails,
+                                new ArrayList<PropositionItem>() {{ add(propositionItem); }});
+                    } catch (MessageRequiredFieldMissingException e) {
+                        continue;
+                    }
 
                     // check to see if that proposition is already in the array (based on ID)
                     // if yes, append the propositionItem.  if not, create a new entry for the
@@ -587,42 +592,18 @@ class EdgePersonalizationResponseHandler {
     /**
      * Creates an in-app message object then attempts to display it.
      *
-     * @param triggeredConsequence A {@link RuleConsequence} containing an in-app message definition.
+     * @param propositionItem A {@link PropositionItem} containing an in-app message item data.
      */
-    void createInAppMessage(final RuleConsequence triggeredConsequence) {
-        if (triggeredConsequence == null) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, consequences are null.");
+    void createInAppMessage(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
             return;
         }
-
-        final Map<String, Object> consequenceDetails = triggeredConsequence.getDetail();
-        if (MapUtils.isNullOrEmpty(consequenceDetails)) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the consequence details are null or empty");
-            return;
-        }
-
-        final String consequenceType = DataReader.optString(consequenceDetails, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
-
-        // ensure we have a AJO IAM payload before creating a message
-        if (StringUtils.isNullOrEmpty(consequenceType)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, missing consequence type.");
-            return;
-        }
-
-        if (!consequenceType.equals(MessagingConstants.SchemaValues.SCHEMA_IAM)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, unknown message consequence type: %s.", consequenceType);
-            return;
-        }
-
         try {
-            final Map<String, Object> detailsDataMap = DataReader.optTypedMap(Object.class, consequenceDetails, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, Collections.emptyMap());
-            final Map<String, Object> mobileParameters = DataReader.optTypedMap(Object.class, detailsDataMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS, Collections.emptyMap());
             final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(
                     parent,
-                    triggeredConsequence,
-                    mobileParameters,
+                    propositionItem,
                     messagingCacheUtilities.getAssetsMap(),
-                    propositionInfo.get(triggeredConsequence.getId()));
+                    propositionInfo.get(propositionItem.getItemId()));
             message.trigger();
             message.show();
         } catch (final MessageRequiredFieldMissingException|IllegalStateException exception) {

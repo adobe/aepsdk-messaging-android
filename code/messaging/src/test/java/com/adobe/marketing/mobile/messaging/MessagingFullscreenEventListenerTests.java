@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.LoggingMode;
-import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
@@ -34,7 +33,6 @@ import com.adobe.marketing.mobile.services.ui.Presentable;
 import com.adobe.marketing.mobile.services.ui.PresentationError;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventHandler;
-import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
 
 import org.junit.After;
@@ -47,7 +45,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -64,7 +61,7 @@ public class MessagingFullscreenEventListenerTests {
     @Mock
     PresentableMessageMapper mockPresentableMessageMapper;
     @Mock
-    Message mockMessage;
+    PresentableMessageMapper.InternalMessage mockMessage;
     @Mock
     Presentable<InAppMessage> mockInAppPresentable;
     @Mock
@@ -73,9 +70,6 @@ public class MessagingFullscreenEventListenerTests {
     PresentationError mockPresentationError;
     @Mock
     InAppMessageEventHandler mockEventHandler;
-    @Mock
-    InAppMessageSettings mockMessageSettings;
-
     @Captor
     ArgumentCaptor<String> urlStringCaptor;
 
@@ -83,8 +77,6 @@ public class MessagingFullscreenEventListenerTests {
 
     @Before
     public void setup() {
-        MockitoAnnotations.openMocks(this);
-
         try {
             eventListener = new MessagingFullscreenEventListener();
         } catch (Exception exception) {
@@ -103,7 +95,6 @@ public class MessagingFullscreenEventListenerTests {
         reset(mockMessage);
         reset(mockInAppPresentable);
         reset(mockPresentation);
-        reset(mockMessageSettings);
         reset(mockPresentationError);
         reset(mockEventHandler);
     }
@@ -133,7 +124,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onShow(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISPLAY);
+            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
         });
     }
 
@@ -141,13 +133,14 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onMessageShow_withAutoTrackDisabled() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+            when(mockMessage.getAutoTrack()).thenReturn(false);
 
             // test
             eventListener.onShow(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
+            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
         });
     }
 
@@ -161,7 +154,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onShow(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.IN_APP_DISPLAY);
+            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
+            verify(mockMessage, times(0)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
         });
     }
 
@@ -175,7 +169,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onDismiss(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISMISS);
+            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
         });
     }
 
@@ -189,7 +184,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onDismiss(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
+            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
         });
     }
 
@@ -203,7 +199,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onDismiss(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.IN_APP_DISMISS);
+            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
+            verify(mockMessage, times(0)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
         });
     }
 
@@ -260,7 +257,7 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onUrlLoading_nullUrlString() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
+
 
             // test
             boolean result = eventListener.onUrlLoading(mockInAppPresentable, null);
@@ -268,7 +265,7 @@ public class MessagingFullscreenEventListenerTests {
             // verify no message tracking call
             assertTrue(result);
             verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
         });
     }
 
@@ -276,7 +273,7 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onUrlLoading_emptyUrlString() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
+
 
             // test
             boolean result = eventListener.onUrlLoading(mockInAppPresentable, "");
@@ -284,7 +281,7 @@ public class MessagingFullscreenEventListenerTests {
             // verify no message tracking call
             assertTrue(result);
             verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
         });
     }
 
@@ -292,7 +289,7 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onUrlLoading_withInvalidUri() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
+
 
             // test
             boolean result = eventListener.onUrlLoading(mockInAppPresentable, "{invalid}");
@@ -300,7 +297,7 @@ public class MessagingFullscreenEventListenerTests {
             // verify no message tracking call
             assertTrue(result);
             verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
         });
     }
 
@@ -308,46 +305,75 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onUrlLoading_withInvalidScheme() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
+
 
             // test
             boolean result = eventListener.onUrlLoading(mockInAppPresentable, "notadbinapp://com.adobe.com");
 
             // verify no message tracking call and message settings weren't created
             Assert.assertFalse(result);
-            verify(mockMessage, times(0)).track(anyString(), any(MessagingEdgeEventType.class));
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
             verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
         });
     }
 
     @Test
     public void test_overrideUrlLoad_URLWithNoQueryParameters() {
-        // setup
-        when(mockFullscreenMessage.getMessageSettings()).thenReturn(mockMessageSettings);
-        when(mockMessageSettings.getParent()).thenReturn(internalMessage);
+        runWithMockedServiceProvider(() -> {
+            // setup
 
-        // test
-        internalMessage.overrideUrlLoad(mockFullscreenMessage, "adbinapp://dismiss");
 
-        // verify no message tracking call and message settings weren't created
-        verify(mockMessagingExtension, times(0)).sendPropositionInteraction(anyString(), any(MessagingEdgeEventType.class), eq(internalMessage));
-        verify(mockMessageSettings, times(1)).getParent();
-        // TODO: To verify if that dismiss by mocking FullscreenMessage in internalMessage class
-        //verify(mockFullscreenMessage, times(1)).dismiss();
+            // test
+            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss");
+
+            // verify no message tracking call and message settings weren't created
+            Assert.assertFalse(result);
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
+        });
+    }
+
+    @Test
+    public void test_overrideUrlLoad_MissingInteractionInURLQueryParams() {
+        runWithMockedServiceProvider(() -> {
+            // test
+            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?q=1");
+
+            // verify no message tracking call and message settings weren't created
+            Assert.assertTrue(result);
+            verify(mockPresentableMessageMapper, times(1)).getMessageFromPresentableId(anyString());
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+        });
+    }
+
+    @Test
+    public void test_overrideUrlLoad_InternalMessageForPresentableNotAvailable() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+
+            // test
+            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=deeplink");
+
+            // verify no message tracking call and message settings weren't created
+            Assert.assertTrue(result);
+            verify(mockPresentableMessageMapper, times(1)).getMessageFromPresentableId(anyString());
+            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+        });
     }
 
     @Test
     public void test_onUrlLoading_withJavascriptPayload() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
-            when(((InAppMessage) mockPresentation).getEventHandler()).thenReturn(mockEventHandler);
+
+            when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
 
             // test
             eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=javascript&link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
 
             // verify no message tracking call and message settings weren't created
-            verify(mockMessage, times(1)).track(eq("javascript"), eq(MessagingEdgeEventType.IN_APP_INTERACT));
+            verify(mockMessage, times(1)).track(eq("javascript"), eq(MessagingEdgeEventType.INTERACT));
             ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
             verify(mockEventHandler, times(1)).evaluateJavascript(stringArgumentCaptor.capture(), any());
             assertEquals("js=(function() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
@@ -358,14 +384,14 @@ public class MessagingFullscreenEventListenerTests {
     public void test_onUrlLoading_withDeeplink() {
         runWithMockedServiceProvider(() -> {
             // setup
-            when(((InAppMessage) mockPresentation).getSettings()).thenReturn(mockMessageSettings);
-            when(((InAppMessage) mockPresentation).getEventHandler()).thenReturn(mockEventHandler);
+
+            when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
 
             // test
             eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=deeplink&link=scheme%3A%2F%2Fparameters%3Fparam1%3Dvalue1%26param2%3Dvalue2");
 
             // verify no message tracking call and message settings weren't created
-            verify(mockMessage, times(0)).track(eq("deeplink"), eq(MessagingEdgeEventType.IN_APP_DISMISS));
+            verify(mockMessage, times(0)).track(eq("deeplink"), eq(MessagingEdgeEventType.DISMISS));
             ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
             verify(mockUriOpening, times(1)).openUri(stringArgumentCaptor.capture());
             assertEquals("scheme://parameters?param1=value1&param2=value2", stringArgumentCaptor.getValue());
@@ -382,7 +408,8 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onBackPressed(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(1)).track("backPress", MessagingEdgeEventType.IN_APP_INTERACT);
+            verify(mockMessage, times(1)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
+            verify(mockMessage, times(1)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
         });
     }
 
@@ -396,7 +423,24 @@ public class MessagingFullscreenEventListenerTests {
             eventListener.onBackPressed(mockInAppPresentable);
 
             // verify
-            verify(mockMessage, times(0)).track("backPress", MessagingEdgeEventType.IN_APP_DISMISS);
+            verify(mockMessage, times(0)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.DISMISS);
+            verify(mockMessage, times(1)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
+        });
+    }
+
+    @Test
+    public void test_onBackPressed_InternalMessageForPresentableNotAvailable() {
+        runWithMockedServiceProvider(() -> {
+            // setup
+            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+            when(mockMessage.getAutoTrack()).thenReturn(true);
+
+            // test
+            eventListener.onBackPressed(mockInAppPresentable);
+
+            // verify
+            verify(mockMessage, times(0)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.DISMISS);
+            verify(mockMessage, times(0)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
         });
     }
 }

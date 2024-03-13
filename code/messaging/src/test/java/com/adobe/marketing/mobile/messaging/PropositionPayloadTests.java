@@ -113,6 +113,20 @@ public class PropositionPayloadTests {
     }
 
     @Test
+    public void testCreatePropositionPayload_EmptyItems() {
+        // setup
+        final List<Map<String, Object>> testPayload = new ArrayList<>();
+        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_empty_items.json"));
+        // test
+        try {
+            // verify proposition payload failed to be created
+            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
     public void testCreatePropositionPayload_MissingId() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();

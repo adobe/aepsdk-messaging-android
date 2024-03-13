@@ -129,7 +129,7 @@ public class MessagingCacheUtilitiesTests {
         propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");
-        eventDataMap.put("scope", "mobileapp://com.adobe.marketing.mobile.messaging.test");
+        eventDataMap.put("scope", "mobileapp://mockPackageName");
         eventDataMap.put("scopeDetails", scopeDetails);
         eventDataMap.put("items", propositionItemMaps);
         proposition = Proposition.fromEventData(eventDataMap);
@@ -142,7 +142,7 @@ public class MessagingCacheUtilitiesTests {
             final List<Proposition> propositions = new ArrayList<>();
             propositions.add(proposition);
             final Map<Surface, List<Proposition>> payload = new HashMap<>();
-            payload.put(new Surface(), propositions);
+            payload.put(Surface.fromUriString("mobileapp://mockPackageName"), propositions);
             propositionOos.writeObject(payload);
             propositionOos.flush();
             propositionInputStream = new ByteArrayInputStream(propositionBaos.toByteArray());
@@ -290,14 +290,12 @@ public class MessagingCacheUtilitiesTests {
                         when(mock.readObject()).thenReturn(null);
                     })) {
                 // test
-                final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+                final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
-            // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
-
-            // verify
-            verify(mockCacheService, times(1)).get(anyString(), anyString());
-            assertNull(retrievedPayload);
+                // verify
+                verify(mockCacheService, times(1)).get(anyString(), anyString());
+                assertNull(retrievedPayload);
+            }
         });
     }
 
@@ -334,14 +332,12 @@ public class MessagingCacheUtilitiesTests {
                         when(mock.readObject()).thenThrow(new ClassNotFoundException());
                     })) {
                 // test
-                final Map<Surface, List<MessagingProposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
+                final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
 
-            // test
-            final Map<Surface, List<Proposition>> retrievedPayload = messagingCacheUtilities.getCachedPropositions();
-
-            // verify
-            verify(mockCacheService, times(1)).get(anyString(), anyString());
-            assertNull(retrievedPayload);
+                // verify
+                verify(mockCacheService, times(1)).get(anyString(), anyString());
+                assertNull(retrievedPayload);
+            }
         });
     }
 
@@ -412,9 +408,9 @@ public class MessagingCacheUtilitiesTests {
             when(mockCacheResult.getMetadata()).thenReturn(fakeMetaData);
             when(mockCacheResult.getData()).thenReturn(propositionInputStream);
 
-            final List<MessagingProposition> list = new ArrayList<>();
-            list.add(messagingProposition);
-            final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
+            final List<Proposition> list = new ArrayList<>();
+            list.add(proposition);
+            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
             propositions.put(new Surface(), list);
 
             // test
@@ -457,9 +453,9 @@ public class MessagingCacheUtilitiesTests {
                         doThrow(new IOException()).when(mock).writeObject(any(Map.class));
                     })) {
 
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                final List<Proposition> list = new ArrayList<>();
+                list.add(proposition);
+                final Map<Surface, List<Proposition>> propositions = new HashMap<>();
 
                 // test
                 messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -481,13 +477,12 @@ public class MessagingCacheUtilitiesTests {
                     (mock, context) -> {
                         doThrow(new IOException()).when(mock).close();
                     })) {
-                final List<MessagingProposition> list = new ArrayList<>();
-                list.add(messagingProposition);
-                final Map<Surface, List<MessagingProposition>> propositions = new HashMap<>();
+                final List<Proposition> list = new ArrayList<>();
+                list.add(proposition);
+                final Map<Surface, List<Proposition>> propositions = new HashMap<>();
 
-            final List<Proposition> list = new ArrayList<>();
-            list.add(proposition);
-            final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+                // test
+                messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
 
                 // verify
                 verify(mockCacheService, times(1)).set(eq(MessagingConstants.CACHE_BASE_DIR), eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY), any());

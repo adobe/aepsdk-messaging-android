@@ -41,7 +41,7 @@ class PropositionPayload implements Serializable {
             return null;
         }
 
-        if (MessagingUtils.isNullOrEmpty(items) || items.size() == 0) {
+        if (MessagingUtils.isNullOrEmpty(items)) {
             return null;
         }
 

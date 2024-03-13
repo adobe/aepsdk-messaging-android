@@ -112,7 +112,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         // check adbinapp scheme
         final String messageScheme = uri.getScheme();
 
-        if (messageScheme == null || !messageScheme.equals(MessagingConstants.QueryParameters.ADOBE_INAPP)) {
+        if (!MessagingConstants.QueryParameters.ADOBE_INAPP.equals(messageScheme)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid message scheme found in URI. (%s)", urlString);
             return false;
         }
@@ -121,7 +121,7 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         final String queryParams;
         try {
             queryParams = URLDecoder.decode(uri.getQuery(), StandardCharsets.UTF_8.toString());
-        } catch (final UnsupportedEncodingException exception) {
+        } catch (final UnsupportedEncodingException|NullPointerException exception) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,  "UnsupportedEncodingException occurred when decoding query parameters %s.", uri.getQuery());
             return false;
         }
@@ -133,14 +133,11 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         if (!MapUtils.isNullOrEmpty(messageData)) {
             // handle optional tracking
             final String interaction = messageData.remove(MessagingConstants.QueryParameters.INTERACTION);
-            if (!StringUtils.isNullOrEmpty(interaction)) {
-                // ensure we have the MessagingExtension class available for tracking
-                if (message != null) {
+            if (message != null && !StringUtils.isNullOrEmpty(interaction)) {
                         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Tracking message interaction (%s)", interaction);
                         message.track(interaction, MessagingEdgeEventType.INTERACT);
                         message.recordEventHistory(interaction, MessagingEdgeEventType.INTERACT);
                     }
-                }
 
             // handle optional deep link
             String link = messageData.remove(MessagingConstants.QueryParameters.LINK);
@@ -175,13 +172,17 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
     }
 
     @Override
-    public void onHide(@NonNull final Presentable<InAppMessage> presentable) {}
+    public void onHide(@NonNull final Presentable<InAppMessage> presentable) {
+        Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message hidden.");
+    }
 
     @Override
     public void onBackPressed(@NonNull final Presentable<InAppMessage> fullscreenMessage) {
         final PresentableMessageMapper.InternalMessage message = (PresentableMessageMapper.InternalMessage) MessagingUtils.getMessageForPresentable(fullscreenMessage);
         if (message != null) {
-            message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
+            if (message.getAutoTrack()) {
+                message.track(INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
+            }
             message.recordEventHistory(INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
         }
     }

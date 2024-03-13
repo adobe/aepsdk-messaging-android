@@ -29,21 +29,13 @@ class PropositionInfo implements Serializable {
     private PropositionInfo(final Map<String, Object> propositionInfoMap) throws Exception {
         id = DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID);
         scope = DataReader.getString(propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE);
-        if (StringUtils.isNullOrEmpty(id) || StringUtils.isNullOrEmpty(scope)) {
-            throw new Exception("id and scope are required for constructing PropositionInfo objects.");
-        }
         scopeDetails = DataReader.getTypedMap(Object.class, propositionInfoMap, MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS);
-        if (MapUtils.isNullOrEmpty(scopeDetails)) {
-            correlationId = "";
+        correlationId = DataReader.getString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID);
+        final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
+        if (MapUtils.isNullOrEmpty(activityMap)) {
             activityId = "";
         } else {
-            correlationId = DataReader.getString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID);
-            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
-            if (MapUtils.isNullOrEmpty(activityMap)) {
-                activityId = "";
-            } else {
-                activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
-            }
+            activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
         }
     }
 
@@ -51,17 +43,12 @@ class PropositionInfo implements Serializable {
         this.id = id;
         this.scope = scope;
         this.scopeDetails = scopeDetails;
-        if (MapUtils.isNullOrEmpty(scopeDetails)) {
-            correlationId = "";
+        correlationId = DataReader.optString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID, "");
+        final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
+        if (MapUtils.isNullOrEmpty(activityMap)) {
             activityId = "";
         } else {
-            correlationId = DataReader.optString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID, "");
-            final Map<String, Object> activityMap = DataReader.optTypedMap(Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
-            if (MapUtils.isNullOrEmpty(activityMap)) {
-                activityId = "";
-            } else {
-                activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
-            }
+            activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
         }
     }
 
@@ -82,19 +69,7 @@ class PropositionInfo implements Serializable {
         if (proposition == null) {
             return null;
         }
-        final String id = proposition.getUniqueId();
-        if (StringUtils.isNullOrEmpty(id)) {
-            return null;
-        }
-        final String scope = proposition.getScope();
-        if (StringUtils.isNullOrEmpty(scope)) {
-            return null;
-        }
-        final Map scopeDetails = proposition.getScopeDetails();
-        if (MapUtils.isNullOrEmpty(scopeDetails)) {
-            return null;
-        }
-
-        return new PropositionInfo(id, scope, scopeDetails);
+        return new PropositionInfo(proposition.getUniqueId(),
+                proposition.getScope(), proposition.getScopeDetails());
     }
 }

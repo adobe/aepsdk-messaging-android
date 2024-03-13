@@ -43,6 +43,9 @@ public class ParsedPropositions {
     ParsedPropositions(final Map<Surface, List<Proposition>> propositions, final List<Surface> requestedSurfaces, final ExtensionApi extensionApi) {
         for (final List<Proposition> propositionList : propositions.values()) {
             for (final Proposition proposition : propositionList) {
+                if(proposition == null) {
+                    continue;
+                }
                 final String scope = proposition.getScope();
                 boolean found = false;
                 for (final Surface surface : requestedSurfaces) {
@@ -84,20 +87,12 @@ public class ParsedPropositions {
                             case INAPP:
                             case DEFAULT_CONTENT:
                                 final PropositionInfo propositionInfo = PropositionInfo.createFromProposition(proposition);
-                                if (propositionInfo == null) {
-                                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with missing / invalid proposition info.");
-                                    break;
-                                }
-                                propositionInfoToCache.put(consequence.getId(),propositionInfo);
+                                propositionInfoToCache.put(consequence.getId(), propositionInfo);
                                 propositionsToPersist = MessagingUtils.updatePropositionMapForSurface(surface, proposition, propositionsToPersist);
                                 mergeRules(parsedRules, surface, SchemaType.INAPP);
                                 break;
                             case FEED:
                                 final PropositionInfo feedPropositionInfo = PropositionInfo.createFromProposition(proposition);
-                                if (feedPropositionInfo == null) {
-                                    Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping proposition with missing / invalid proposition info.");
-                                    break;
-                                }
                                 propositionInfoToCache.put(consequence.getId(), feedPropositionInfo);
                                 mergeRules(parsedRules, surface, SchemaType.FEED);
                                 break;

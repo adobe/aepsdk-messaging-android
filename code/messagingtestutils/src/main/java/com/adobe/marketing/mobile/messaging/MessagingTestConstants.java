@@ -41,6 +41,8 @@ public class MessagingTestConstants {
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
         public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         public static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
+
+        static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
 
         private EventName() {
@@ -173,6 +175,9 @@ public class MessagingTestConstants {
             public static final String GET_PROPOSITIONS = "getpropositions";
             public static final String PROPOSITIONS = "propositions";
             public static final String RESPONSE_ERROR = "responseerror";
+            static final String TRACK_PROPOSITIONS = "trackpropositions";
+            static final String PROPOSITION_INTERACTION = "propositioninteraction";
+
 
             private Messaging() {
             }
@@ -247,6 +252,8 @@ public class MessagingTestConstants {
                     static final String PROPOSITION_ACTION = "propositionAction";
                     static final String LABEL = "label";
                     static final String SCHEMAS = "schemas";
+                    static final String CHARACTERISTICS = "characteristics";
+                    static final String TOKENS = "tokens";
 
                     private Key() {
                     }

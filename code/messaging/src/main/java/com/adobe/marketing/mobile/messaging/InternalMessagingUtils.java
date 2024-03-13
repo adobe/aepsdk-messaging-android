@@ -42,6 +42,9 @@ class InternalMessagingUtils {
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
+        if (MessagingUtils.isNullOrEmpty(payloads)) {
+            return propositions;
+        }
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
                 final Proposition proposition = Proposition.fromEventData(payload);
@@ -157,12 +160,7 @@ class InternalMessagingUtils {
      * @return {@code boolean} indicating if the passed in event is a refresh messages event.
      */
     static boolean isRefreshMessagesEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
-                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+        return isMessagingRequestContentEvent(event)
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
     }
 

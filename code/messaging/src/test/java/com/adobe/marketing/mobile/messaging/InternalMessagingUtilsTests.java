@@ -169,12 +169,12 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void getPropositionsFromPayloads_returnsListWithMessagingProposition_whenPayloadsContainsValidData() {
-        try (MockedStatic<Proposition> propositionMockedStatic = mockStatic(Proposition.class)) {
+    public void getPropositionsFromPayloads_returnsListWithProposition_whenPayloadsContainsValidData() {
+        try (MockedStatic<Proposition> messagingPropositionMockedStatic = mockStatic(Proposition.class)) {
             // setup
-            Proposition mockMessagingProposition = mock(Proposition.class);
-            propositionMockedStatic.when(() -> Proposition.fromEventData(anyMap()))
-                    .thenReturn(mockMessagingProposition);
+            Proposition mockProposition = mock(Proposition.class);
+            messagingPropositionMockedStatic.when(() -> Proposition.fromEventData(anyMap()))
+                    .thenReturn(mockProposition);
             List<Map<String, Object>> payloads = new ArrayList<>();
             Map<String, Object> payload = new HashMap<>();
             payload.put("key", "value");
@@ -185,7 +185,27 @@ public class InternalMessagingUtilsTests {
 
             // verify
             assertEquals(1, result.size());
-            assertEquals(mockMessagingProposition, result.get(0));
+            assertEquals(mockProposition, result.get(0));
+        }
+    }
+
+    @Test
+    public void getPropositionsFromPayloads_returnsListWithProposition_whenPayloadsContainsNullPropositionItem() {
+        try (MockedStatic<Proposition> messagingPropositionMockedStatic = mockStatic(Proposition.class)) {
+            // setup
+            Proposition mockProposition = mock(Proposition.class);
+            messagingPropositionMockedStatic.when(() -> Proposition.fromEventData(anyMap()))
+                    .thenReturn(null);
+            List<Map<String, Object>> payloads = new ArrayList<>();
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("key", "value");
+            payloads.add(payload);
+
+            // test
+            List<Proposition> result = InternalMessagingUtils.getPropositionsFromPayloads(payloads);
+
+            // verify
+            assertEquals(0, result.size());
         }
     }
 
@@ -194,14 +214,8 @@ public class InternalMessagingUtilsTests {
     // ========================================================================================
     @Test
     public void getConsequenceDetails_returnsNull_whenRuleJsonIsNull() {
-        // setup
-        JSONObject ruleJson = null;
-
-        // test
-        JSONObject result = InternalMessagingUtils.getConsequenceDetails(ruleJson);
-
         // verify
-        assertNull(result);
+        assertNull(InternalMessagingUtils.getConsequenceDetails(null));
     }
 
     @Test
@@ -217,9 +231,21 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void getConsequenceDetails_returnsNull_whenRuleJsonDoesNotContainConsequenceDetail() {
+    public void getConsequenceDetails_returnsNull_whenRuleJsonDoesNotContainConsequence() {
         // setup
         JSONObject ruleJson = getRuleJsonWithEmptyConsequence();
+
+        // test
+        JSONObject result = InternalMessagingUtils.getConsequenceDetails(ruleJson);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
+    public void getConsequenceDetails_returnsNull_whenRuleJsonDoesNotContainConsequenceDetail() {
+        // setup
+        JSONObject ruleJson = getRuleJsonWithNoConsequenceDetail();
 
         // test
         JSONObject result = InternalMessagingUtils.getConsequenceDetails(ruleJson);
@@ -243,14 +269,8 @@ public class InternalMessagingUtilsTests {
 
     @Test
     public void getConsequence_returnsNull_whenRuleJsonIsNull() {
-        // setup
-        JSONObject ruleJson = null;
-
-        // test
-        JSONObject result = InternalMessagingUtils.getConsequence(ruleJson);
-
         // verify
-        assertNull(result);
+        assertNull(InternalMessagingUtils.getConsequence(null));
     }
 
     @Test
@@ -348,7 +368,7 @@ public class InternalMessagingUtilsTests {
     // event validators
     // ========================================================================================
     @Test
-    public void testIsGenericIdentityRequest_validEvent() {
+    public void testIsGenericIdentityRequest_returnTrue_validEvent() {
         Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -356,7 +376,15 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsGenericIdentityRequest_invalidEvent() {
+    public void testIsGenericIdentityRequest_returnFalse_eventTypeIsNotGenericIdentity() {
+        Event event = new Event.Builder("generic identity event", EventType.EDGE, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap<>())
+                .build();
+        assertFalse(InternalMessagingUtils.isGenericIdentityRequestEvent(event));
+    }
+
+    @Test
+    public void testIsGenericIdentityRequest_returnFalse_eventSourceIsNotRequestContent() {
         Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.RESPONSE_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -364,12 +392,28 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsGenericIdentityRequest_nullEvent() {
+    public void testIsGenericIdentityRequest_returnFalse_invalidEvent() {
+        Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap<>())
+                .build();
+        assertFalse(InternalMessagingUtils.isGenericIdentityRequestEvent(event));
+    }
+
+    @Test
+    public void testIsGenericIdentityRequest_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isGenericIdentityRequestEvent(null));
     }
 
     @Test
-    public void testIsMessagingRequestContentEvent_validEvent() {
+    public void testIsGenericIdentityRequest_returnFalse_nullEventData() {
+        Event event = new Event.Builder("generic identity event", EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isGenericIdentityRequestEvent(event));
+    }
+
+    @Test
+    public void testIsMessagingRequestContentEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("messaging request event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -377,7 +421,23 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsMessagingRequestContentEvent_invalidEvent() {
+    public void testIsMessagingRequestContentEvent_returnTrue_eventTypeIsNotMessaging() {
+        Event event = new Event.Builder("messaging request event", EventType.EDGE, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap<>())
+                .build();
+        assertFalse(InternalMessagingUtils.isMessagingRequestContentEvent(event));
+    }
+
+    @Test
+    public void testIsMessagingRequestContentEvent_returnTrue_eventSourceIsNotRequestContent() {
+        Event event = new Event.Builder("messaging request event", EventType.EDGE, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap<>())
+                .build();
+        assertFalse(InternalMessagingUtils.isMessagingRequestContentEvent(event));
+    }
+
+    @Test
+    public void testIsMessagingRequestContentEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("messaging request event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -385,12 +445,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsMessagingRequestContentEvent_nullEvent() {
+    public void testIsMessagingRequestContentEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isMessagingRequestContentEvent(null));
     }
 
     @Test
-    public void testIsRefreshMessagesEvent_validEvent() {
+    public void testIsMessagingRequestContentEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("messaging request event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isMessagingRequestContentEvent(event));
+    }
+
+    @Test
+    public void testIsRefreshMessagesEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("refresh messages event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<String, Object>() {{
                     put("refreshmessages", true);
@@ -400,7 +468,27 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsRefreshMessagesEvent_invalidEvent() {
+    public void testIsRefreshMessagesEvent_returnFalse_eventTypeIsNotMessaging() {
+        Event event = new Event.Builder("refresh messages event", EventType.EDGE, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap<String, Object>() {{
+                    put("refreshmessages", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isRefreshMessagesEvent(event));
+    }
+
+    @Test
+    public void testIsRefreshMessagesEvent_returnFalse_eventSourceIsNotRequestContent() {
+        Event event = new Event.Builder("refresh messages event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap<String, Object>() {{
+                    put("refreshmessages", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isRefreshMessagesEvent(event));
+    }
+
+    @Test
+    public void testIsRefreshMessagesEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("refresh messages event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -408,12 +496,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsRefreshMessagesEvent_nullEvent() {
+    public void testIsRefreshMessagesEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isRefreshMessagesEvent(null));
     }
 
     @Test
-    public void testIsEdgePersonalizationDecisionEvent_validEvent() {
+    public void testIsRefreshMessagesEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("refresh messages event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isRefreshMessagesEvent(event));
+    }
+
+    @Test
+    public void testIsEdgePersonalizationDecisionEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("edge personalization event", EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
                 .setEventData(new HashMap())
                 .build();
@@ -421,7 +517,23 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsEdgePersonalizationDecisionEvent_invalidEvent() {
+    public void testIsEdgePersonalizationDecisionEvent_returnFalse_eventTypeIsNotEdge() {
+        Event event = new Event.Builder("edge personalization event", EventType.MESSAGING, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+                .setEventData(new HashMap())
+                .build();
+        assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
+    }
+
+    @Test
+    public void testIsEdgePersonalizationDecisionEvent_returnFalse_eventSourceIsNotPersonalizationDecisions() {
+        Event event = new Event.Builder("edge personalization event", EventType.EDGE, MessagingConstants.EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap())
+                .build();
+        assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
+    }
+
+    @Test
+    public void testIsEdgePersonalizationDecisionEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("edge personalization event", EventType.EDGE, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -429,12 +541,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsEdgePersonalizationDecisionEvent_nullEvent() {
+    public void testIsEdgePersonalizationDecisionEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(null));
     }
 
     @Test
-    public void testIsContentCompleteEvent_validEvent() {
+    public void testIsEdgePersonalizationDecisionEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("edge personalization event", EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
+    }
+
+    @Test
+    public void testIsPersonalizationRequestCompleteEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("messaging complete event", EventType.MESSAGING, EventSource.CONTENT_COMPLETE)
                 .setEventData(new HashMap())
                 .build();
@@ -442,7 +562,23 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsContentCompleteEvent_invalidEvent() {
+    public void testIsPersonalizationRequestCompleteEvent_returnFalse_eventTypeIsNotMessaging() {
+        Event event = new Event.Builder("messaging complete event", EventType.EDGE, EventSource.CONTENT_COMPLETE)
+                .setEventData(new HashMap())
+                .build();
+        assertFalse(InternalMessagingUtils.isPersonalizationRequestCompleteEvent(event));
+    }
+
+    @Test
+    public void testIsPersonalizationRequestCompleteEvent_returnFalse_eventSourceIsNotContentComplete() {
+        Event event = new Event.Builder("messaging complete event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap())
+                .build();
+        assertFalse(InternalMessagingUtils.isPersonalizationRequestCompleteEvent(event));
+    }
+
+    @Test
+    public void testIsPersonalizationRequestCompleteEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("messaging complete event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -450,12 +586,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsContentCompleteEvent_nullEvent() {
+    public void testIsPersonalizationRequestCompleteEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isPersonalizationRequestCompleteEvent(null));
     }
 
     @Test
-    public void testIsUpdatePropositionsEvent_validEvent() {
+    public void testIsPersonalizationRequestCompleteEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("messaging complete event", EventType.MESSAGING, EventSource.CONTENT_COMPLETE)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isPersonalizationRequestCompleteEvent(event));
+    }
+
+    @Test
+    public void testIsUpdatePropositionsEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap() {{
                     put("updatepropositions", true);
@@ -465,7 +609,37 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsUpdatePropositionsEvent_invalidEvent() {
+    public void testIsUpdatePropositionsEvent_returnFalse_eventTypeIsNotMessaging() {
+        Event event = new Event.Builder("update propositions event", EventType.EDGE, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("updatepropositions", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isUpdatePropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsUpdatePropositionsEvent_returnFalse_eventSourceIsNotRequestContent() {
+        Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("updatepropositions", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isUpdatePropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsUpdatePropositionsEvent_returnFalse_updatePropositionsIsFalse() {
+        Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("updatepropositions", false);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isUpdatePropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsUpdatePropositionsEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -473,12 +647,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsUpdatePropositionsEvent_nullEvent() {
+    public void testIsUpdatePropositionsEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isUpdatePropositionsEvent(null));
     }
 
     @Test
-    public void testIsGetPropositionsEvent_validEvent() {
+    public void testIsUpdatePropositionsEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isUpdatePropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsGetPropositionsEvent_returnTrue_validEvent() {
         Event event = new Event.Builder("get propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap() {{
                     put("getpropositions", true);
@@ -488,7 +670,37 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsGetPropositionsEvent_invalidEvent() {
+    public void testIsGetPropositionsEvent_returnFalse_eventTypeIsNotMessaging() {
+        Event event = new Event.Builder("update propositions event", EventType.EDGE, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("getpropositions", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isGetPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsGetPropositionsEvent_returnFalse_eventSourceIsNotRequestContent() {
+        Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("getpropositions", true);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isGetPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsGetPropositionsEvent_returnFalse_getPropositionsIsFalse() {
+        Event event = new Event.Builder("update propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(new HashMap() {{
+                    put("getpropositions", false);
+                }})
+                .build();
+        assertFalse(InternalMessagingUtils.isGetPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsGetPropositionsEvent_returnFalse_invalidEvent() {
         Event event = new Event.Builder("get propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
                 .build();
@@ -496,12 +708,20 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void testIsGetPropositionsEvent_nullEvent() {
+    public void testIsGetPropositionsEvent_returnFalse_nullEvent() {
         assertFalse(InternalMessagingUtils.isGetPropositionsEvent(null));
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsFalse_whenEventIsNull() {
+    public void testIsGetPropositionsEvent_returnFalse_nullEventData() {
+        Event event = new Event.Builder("get propositions event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
+                .setEventData(null)
+                .build();
+        assertFalse(InternalMessagingUtils.isGetPropositionsEvent(event));
+    }
+
+    @Test
+    public void testIsTrackingPropositionsEvent_returnFalse_nullEvent() {
         // setup
         Event event = null;
 
@@ -513,7 +733,7 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsFalse_whenEventDataIsNull() {
+    public void testIsTrackingPropositionsEvent_returnFalse_nullEventData() {
         // setup
         Event event = new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(null)
@@ -527,7 +747,7 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsFalse_whenEventTypeIsNotMessaging() {
+    public void testIsTrackingPropositionsEvent_returnFalse_EventTypeIsNotMessaging() {
         // setup
         Event event = new Event.Builder("event", EventType.IDENTITY, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
@@ -541,7 +761,7 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsFalse_whenEventSourceIsNotRequestContent() {
+    public void testIsTrackingPropositionsEvent_returnFalse_EventSourceIsNotRequestContent() {
         // setup
         Event event = new Event.Builder("event", EventType.MESSAGING, EventSource.RESPONSE_CONTENT)
                 .setEventData(new HashMap<>())
@@ -555,7 +775,7 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsFalse_whenTrackPropositionsIsNotPresentInEventData() {
+    public void testIsTrackingPropositionsEvent_returnFalse_TrackPropositionsIsNotPresentInEventData() {
         // setup
         Event event = new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<>())
@@ -569,7 +789,7 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void isTrackingPropositionsEvent_returnsTrue_whenTrackPropositionsIsFalse() {
+    public void testIsTrackingPropositionsEvent_returnFalse_trackPropositionsIsFalse() {
         // setup
         Event event = new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<String, Object>() {{
@@ -586,7 +806,7 @@ public class InternalMessagingUtilsTests {
 
 
     @Test
-    public void isTrackingPropositionsEvent_returnsTrue_whenAllConditionsAreMet() {
+    public void testIsTrackingPropositionsEvent_returnTrue_whenAllConditionsAreMet() {
         // setup
         Event event = new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                 .setEventData(new HashMap<String, Object>() {{
@@ -973,6 +1193,21 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
+    public void getSharedStateEcid_returnsNull_whenEcidListIsHasEmptyEcidMap() {
+        // setup
+        Map<String, Object> edgeIdentityState = new HashMap<>();
+        Map<String, Object> identityMap = new HashMap<>();
+        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, Collections.singletonList(new HashMap<>()));
+        edgeIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+
+        // test
+        String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
     public void getSharedStateEcid_returnsEcid_whenAllConditionsAreMet() {
         // setup
         Map<String, Object> edgeIdentityState = new HashMap<>();
@@ -1087,6 +1322,15 @@ public class InternalMessagingUtilsTests {
 
     private JSONObject getRuleJsonWithEmptyConsequence() {
         String rulesJson = MessagingTestUtils.loadStringFromFile("ruleWithNoConsequence.json");
+        try {
+            return new JSONObject(rulesJson);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    private JSONObject getRuleJsonWithNoConsequenceDetail() {
+        String rulesJson = MessagingTestUtils.loadStringFromFile("ruleWithNoConsequenceDetail.json");
         try {
             return new JSONObject(rulesJson);
         } catch (JSONException e) {

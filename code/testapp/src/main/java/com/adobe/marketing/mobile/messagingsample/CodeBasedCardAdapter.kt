@@ -62,7 +62,7 @@ class CodeBasedCardAdapter(propositions: MutableList<Proposition>) :
                     }
                 })
             } else if (mimeType == "application/json") {
-                var contentString = item.jsonArrayList
+                var contentString = item.jsonContentArrayList
                 if (contentString != null) { // we have a json array
                     val jsonArray = JSONArray(contentString)
                     holder.textView.text = jsonArray.toString(5)

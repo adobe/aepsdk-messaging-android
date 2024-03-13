@@ -63,7 +63,6 @@ public class FeedRulesEngineTests {
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
-
         // verify
         Assert.assertNull(propositionItemsBySurface);
     }
@@ -78,7 +77,6 @@ public class FeedRulesEngineTests {
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
-
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
@@ -116,7 +114,6 @@ public class FeedRulesEngineTests {
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
-
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
         Assert.assertEquals(1, propositionItemsBySurface.size());
@@ -134,8 +131,7 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
-
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertTrue(propositionItemsBySurface.isEmpty());
@@ -150,8 +146,7 @@ public class FeedRulesEngineTests {
         feedRulesEngine.replaceRules(rules);
 
         // test
-        Map<Surface, List<MessagingPropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
-
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface = feedRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertTrue(propositionItemsBySurface.isEmpty());

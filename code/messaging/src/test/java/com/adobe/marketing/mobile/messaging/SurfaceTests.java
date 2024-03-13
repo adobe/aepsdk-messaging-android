@@ -189,6 +189,22 @@ public class SurfaceTests {
     }
 
     @Test
+    public void test_fromEventData_nullEventKey() {
+        // test
+        Surface surface = Surface.fromEventData(null);
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
+    public void test_fromEventData_emptyEventKey() {
+        // test
+        Surface surface = Surface.fromEventData(new HashMap<>());
+        // verify
+        assertNull(surface);
+    }
+
+    @Test
     public void test_fromEventData_invalidUri() {
         // setup
         Map<String, Object> eventData = new HashMap<>();

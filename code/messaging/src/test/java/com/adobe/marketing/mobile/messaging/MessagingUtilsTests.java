@@ -36,7 +36,7 @@ public class MessagingUtilsTests {
     }};
 
     @Before
-    public void setup() {
+    public void setup() throws MessageRequiredFieldMissingException {
         mockSurface = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed");
         final Map<String, Object> propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
         final PropositionItem mockPropositionItem = PropositionItem.fromEventData(propositionItemMap);

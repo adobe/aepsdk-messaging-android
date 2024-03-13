@@ -25,7 +25,6 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
-import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 
 import java.util.HashMap;
@@ -63,32 +62,30 @@ class PresentableMessageMapper {
       * </ul>
       *
       * @param messagingExtension             {@link MessagingExtension} instance that created this Message
-      * @param consequence        {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} containing a {@code InternalMessage} defining payload
-      * @param rawInAppMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
+      * @param propositionItem                {@link PropositionItem} instance containing item data of type {@link InAppSchemaData}
       * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
       * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
       * @throws IllegalStateException if {@link UIService} is unavailable
       */
     Message createMessage(final MessagingExtension messagingExtension,
-                          final RuleConsequence consequence,
-                          final Map<String, Object> rawInAppMessageSettings,
+                          final PropositionItem propositionItem,
                           final Map<String, String> assetMap,
                           final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
-        final Message existingInternalMessage = findExistingInternalMessage(consequence);
+        final Message existingInternalMessage = findExistingInternalMessage(propositionItem);
         if (existingInternalMessage != null) {
             return existingInternalMessage;
         }
-        final InternalMessage internalMessage = new InternalMessage(messagingExtension, consequence, rawInAppMessageSettings, assetMap, propositionInfo);
+        final InternalMessage internalMessage = new InternalMessage(messagingExtension, propositionItem, assetMap, propositionInfo);
         presentableMessageMap.put(internalMessage.aepMessage.getPresentation().getId(), internalMessage);
         return internalMessage;
     }
 
-    private Message findExistingInternalMessage(final RuleConsequence consequence) {
-        if (consequence == null) {
+    private Message findExistingInternalMessage(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
             return null;
         }
         for (final Message message : presentableMessageMap.values()) {
-            if (message.getId().equals(consequence.getId())) {
+            if (message.getId().equals(propositionItem.getItemId())) {
                 return message;
             }
         }
@@ -126,70 +123,68 @@ class PresentableMessageMapper {
         PropositionInfo propositionInfo; // contains XDM data necessary for tracking in-app interactions with Adobe Journey Optimizer
 
          /**
-         * Constructor.
-         * <p>
-         * Every {@link InternalMessage} requires a {@link #id}, and must be of type "cjmiam".
-         * <p>
-         * The consequence {@code Map} for a {@code InternalMessage} is required to have valid values for the following fields:
-         * <ul>
-         *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
-         *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
-         *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
-         * </ul>
-         *
-         * @param parent             {@link MessagingExtension} instance that created this Message
-         * @param consequence        {@link com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} containing a {@code InternalMessage} defining payload
-         * @param rawInAppMessageSettings {@code Map<String, Object>} containing the raw message settings found in the "mobileParameters" present in the rule consequence
-         * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
-         * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
+          * Constructor.
+          * <p>
+          * Every {@link InternalMessage} requires a {@link #id}, and must be of type "cjmiam".
+          * <p>
+          * The consequence {@code Map} for a {@code InternalMessage} is required to have valid values for the following fields:
+          * <ul>
+          *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_ID} - {@code String} containing the message ID</li>
+          *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_TYPE} - {@code String} containing the consequence type</li>
+          *     <li>{@value MessagingConstants.EventDataKeys.RulesEngine#MESSAGE_CONSEQUENCE_DETAIL} - {@code Map<String, Object>} containing details of the Message to be displayed</li>
+          * </ul>
+          *
+          * @param parent             {@link MessagingExtension} instance that created this Message
+          * @param propositionItem                {@link PropositionItem} instance containing item data of type {@link InAppSchemaData}
+          * @param assetMap           {@code Map<String, Object>} containing a mapping of a remote image asset URL and it's cached location
+          * @throws MessageRequiredFieldMissingException if the consequence {@code Map} fails validation.
          */
         private InternalMessage(final MessagingExtension parent,
-                        final RuleConsequence consequence,
-                        final Map<String, Object> rawInAppMessageSettings,
-                        final Map<String, String> assetMap,
-                        final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
+                                final PropositionItem propositionItem,
+                                final Map<String, String> assetMap,
+                                final PropositionInfo propositionInfo) throws MessageRequiredFieldMissingException, IllegalStateException {
             messagingExtension = parent;
             this.propositionInfo = propositionInfo;
 
-            id = consequence.getId();
-            if (StringUtils.isNullOrEmpty(id)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"id\" is null or empty.", consequence.toString());
-                throw new MessageRequiredFieldMissingException("Required field: Message \"id\" is null or empty.");
+            if(propositionItem == null) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, PropositionItem is null.");
+                throw new MessageRequiredFieldMissingException("Required field: \"PropositionItem\" is null.");
             }
 
+            id = propositionItem.getItemId();
 
-            final Map<String, Object> details = consequence.getDetail();
-            if (MapUtils.isNullOrEmpty(details)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"detail\" is null or empty.", consequence.toString());
-                throw new MessageRequiredFieldMissingException("Required field: \"detail\" is null or empty.");
-            }
-
-            final String schemaType = DataReader.optString(details, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "");
-            if (!MessagingConstants.SchemaValues.SCHEMA_IAM.equals(schemaType)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"schema\" is (%s) should be of type (%S).", consequence.toString(), schemaType, MessagingConstants.SchemaValues.SCHEMA_IAM);
+            final SchemaType schemaType = propositionItem.getSchema();
+            if (!(SchemaType.INAPP == schemaType)) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Required field \"schema\" is (%s) should be of type (%S).", schemaType, MessagingConstants.SchemaValues.SCHEMA_IAM);
                 throw new MessageRequiredFieldMissingException("Required field: \"schema\" is not equal to \"https://ns.adobe.com/personalization/message/in-app\".");
             }
 
-            final Map<String, Object> data = DataReader.optTypedMap(Object.class, details, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
-            if (MapUtils.isNullOrEmpty(data)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid consequence (%s). Required field \"data\" is null or empty.", consequence.toString());
-                throw new MessageRequiredFieldMissingException("Required field: \"data\" is null or empty.");
+            final InAppSchemaData inAppSchemaData = propositionItem.getInAppSchemaData();
+            if (inAppSchemaData == null) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "In-app message proposition item data is null or empty.");
+                throw new MessageRequiredFieldMissingException("Required field: in-app message proposition item \"data\" is null or empty.");
             }
 
-            final String html = DataReader.optString(data, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, "");
-            if (StringUtils.isNullOrEmpty(html)) {
-                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
-                throw new MessageRequiredFieldMissingException("Required field: \"html\" is null or empty.");
-            }
+            try {
+                final String html = (String) inAppSchemaData.getContent();
+                if (StringUtils.isNullOrEmpty(html)) {
+                    Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, the html payload is null or empty.");
+                    throw new MessageRequiredFieldMissingException("Required field: in-app message \"content\" is null or empty.");
+                }
 
-            final InAppMessageSettings settings = InAppMessageSettingsFromMap(rawInAppMessageSettings, html, assetMap);
+                final InAppMessageSettings settings = InAppMessageSettingsFromMap(inAppSchemaData.getMobileParameters(), html, assetMap);
 
-            final UIService uiService = ServiceProvider.getInstance().getUIService();
-            if (uiService == null) {
-                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
-                throw new IllegalStateException("The UIService is unavailable");
+                final UIService uiService = ServiceProvider.getInstance().getUIService();
+                if (uiService == null) {
+                    Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
+                    throw new IllegalStateException("The UIService is unavailable");
+                }
+
+                aepMessage = uiService.create(new InAppMessage(settings, new MessagingFullscreenEventListener()), new DefaultPresentationUtilityProvider());
+            } catch (final ClassCastException exception) {
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, in-app message content is not of type String.");
+                throw new MessageRequiredFieldMissingException("Required field: in-app message content is not of type String.");
             }
-            aepMessage = uiService.create(new InAppMessage(settings, new MessagingFullscreenEventListener()), new DefaultPresentationUtilityProvider());
         }
 
         /**
@@ -205,6 +200,10 @@ class PresentableMessageMapper {
             }
             if (propositionInfo == null) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to send a proposition interaction (%s), PropositionInfo is not found for message (%s)", eventType.getPropositionEventType(), id);
+                return;
+            }
+            if (messagingExtension == null) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to send a proposition interaction (%s), MessagingExtension is not found for message (%s)", eventType.getPropositionEventType(), id);
                 return;
             }
             final PropositionInteraction propositionInteraction = new PropositionInteraction(eventType,
@@ -267,6 +266,10 @@ class PresentableMessageMapper {
             }
             if (propositionInfo == null) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to write event history event (%s), PropositionInfo is not found for message (%s)", eventType.getPropositionEventType(), id);
+                return;
+            }
+            if (messagingExtension == null) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to send a proposition interaction (%s), MessagingExtension is not found for message (%s)", eventType.getPropositionEventType(), id);
                 return;
             }
             // create maps for event history
