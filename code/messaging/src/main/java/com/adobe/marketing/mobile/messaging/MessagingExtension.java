@@ -171,7 +171,23 @@ public final class MessagingExtension extends Extension {
 
     //region Event listeners
     // Called on every event, used to allow processing of the Messaging rules engine
+    @SuppressWarnings("NestedIfDepth")
     void handleWildcardEvents(final Event event) {
+        // handling mock rules delivered from the assurance ui
+        final String eventName = event.getName();
+        if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
+            final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+            if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
+                final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+                if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+                    Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleWildcardEvents - Ignoring rule consequence event(spoof), consequence is not of type 'schema'");
+                    return;
+                }
+                final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
+                edgePersonalizationResponseHandler.createInAppMessage(PropositionItem.fromEventData(detail));
+            }
+            return;
+        }
         messagingRulesEngine.processEvent(event);
     }
 
@@ -199,7 +215,6 @@ public final class MessagingExtension extends Extension {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence is not of type 'schema'");
             return;
         }
-        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
         // detail is required
