@@ -1,11 +1,12 @@
 package com.adobe.marketing.mobile.messaging;
 import android.app.Activity;
 import android.app.NotificationManager;
-import android.app.TaskStackBuilder;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
 import androidx.annotation.Nullable;
 
 import com.adobe.marketing.mobile.Messaging;
@@ -134,9 +135,11 @@ public class MessagingPushTrackerActivity extends Activity {
      * @param uri the uri to open
      */
     private void openUri(final String uri) {
-        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addNextIntentWithParentStack(intent);
-        stackBuilder.startActivities();
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Unable to open the URI from the notification interaction. URI: %s", uri);
+        }
     }
 }
