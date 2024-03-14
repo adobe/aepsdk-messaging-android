@@ -24,7 +24,6 @@ import com.adobe.marketing.mobile.ExtensionEventListener;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -171,21 +170,24 @@ public final class MessagingExtension extends Extension {
     //endregion
 
     //region Event listeners
-
+    // Called on every event, used to allow processing of the Messaging rules engine
+    @SuppressWarnings("NestedIfDepth")
     void handleWildcardEvents(final Event event) {
         // handling mock rules delivered from the assurance ui
         final String eventName = event.getName();
         if (!StringUtils.isNullOrEmpty(eventName) && eventName.equals(MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
             final Map<String, Object> triggeredConsequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
             if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
-                final String id = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
                 final String type = DataReader.optString(triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE, "");
+                if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+                    Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleWildcardEvents - Ignoring rule consequence event(spoof), consequence is not of type 'schema'");
+                    return;
+                }
                 final Map detail = DataReader.optTypedMap(Object.class, triggeredConsequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
-                edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
+                edgePersonalizationResponseHandler.createInAppMessage(PropositionItem.fromEventData(detail));
             }
             return;
         }
-
         messagingRulesEngine.processEvent(event);
     }
 
@@ -197,10 +199,14 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleRuleEngineResponseEvents(final Event event) {
-        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
+        if (MapUtils.isNullOrEmpty(event.getEventData())) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, event data is null or empty.");
+            return;
+        }
 
+        final Map<String, Object> consequenceMap = DataReader.optTypedMap(Object.class, event.getEventData(), MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, null);
         if (MapUtils.isNullOrEmpty(consequenceMap)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequences found. Will not handle rules response event.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence is null or empty.");
             return;
         }
 
@@ -209,16 +215,25 @@ public final class MessagingExtension extends Extension {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence is not of type 'schema'");
             return;
         }
-        final String id = DataReader.optString(consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "");
         final Map<String, Object> detail = DataReader.optTypedMap(Object.class, consequenceMap, MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL, null);
 
         // detail is required
         if (MapUtils.isNullOrEmpty(detail)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - null or empty consequence details found. Will not handle rules response event.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "handleRulesResponseEvents - Ignoring rule consequence event, consequence detail is null or empty.");
             return;
         }
 
-        edgePersonalizationResponseHandler.createInAppMessage(new RuleConsequence(id, type, detail));
+        final PropositionItem propositionItem = PropositionItem.fromEventData(detail);
+        if (propositionItem == null) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "handleSchemaConsequence -  Ignoring rule consequence event, propositionItem is null");
+            return;
+        }
+        switch (propositionItem.getSchema()) {
+            case INAPP:
+                edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
+                break;
+            default:
+        }
     }
 
     //endregion

@@ -53,7 +53,7 @@ public class PropositionInfoTests {
     }
 
     @Test
-    public void testCreatePropositionInfoFromProposition() {
+    public void testCreatePropositionInfoFromProposition() throws MessageRequiredFieldMissingException {
         // setup
         Proposition proposition = new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
@@ -68,45 +68,6 @@ public class PropositionInfoTests {
         assertEquals("correlationId", propositionInfo.correlationId);
         assertEquals("mobileapp://mockScope", propositionInfo.scope);
         assertEquals(scopeDetails, propositionInfo.scopeDetails);
-    }
-
-    @Test
-    public void testCreatePropositionInfoFromProposition_nullId() {
-        // setup
-        Proposition proposition = new Proposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
-        // test
-        try {
-            propositionInfo = PropositionInfo.createFromProposition(proposition);
-        } catch (Exception e) {
-        }
-        // verify
-        assertNull(propositionInfo);
-    }
-
-    @Test
-    public void testCreatePropositionInfoFromProposition_nullScope() {
-        // setup
-        Proposition proposition = new Proposition("id", null, scopeDetails, propositionItems);
-        // test
-        try {
-            propositionInfo = PropositionInfo.createFromProposition(proposition);
-        } catch (Exception e) {
-        }
-        // verify
-        assertNull(propositionInfo);
-    }
-
-    @Test
-    public void testCreatePropositionInfoFromProposition_nullScopeDetails() {
-        // setup
-        Proposition proposition = new Proposition("id", "mobileapp://mockScope", null, propositionItems);
-        // test
-        try {
-            propositionInfo = PropositionInfo.createFromProposition(proposition);
-        } catch (Exception e) {
-        }
-        // verify
-        assertNull(propositionInfo);
     }
 
     @Test

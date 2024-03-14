@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messaging;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -69,7 +70,7 @@ public class PropositionTests {
     }
 
     @Test
-    public void test_propositionConstructor() {
+    public void test_propositionConstructor() throws MessageRequiredFieldMissingException {
         // test
         Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         // verify
@@ -78,6 +79,55 @@ public class PropositionTests {
         assertEquals("mobileapp://mockScope", proposition.getScope());
         assertEquals(scopeDetails, proposition.getScopeDetails());
         assertEquals(propositionItems, proposition.getItems());
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_MissingId() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition(null, "mobileapp://mockScope", scopeDetails, propositionItems);
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_MissingScope() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition("uniqueId", null, scopeDetails, propositionItems);
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_MissingScopeDetails() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition("uniqueId", "mobileapp://mockScope", null, propositionItems);
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_EmptyId() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition("", "mobileapp://mockScope", scopeDetails, propositionItems);
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_EmptyScope() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition("uniqueId", "", scopeDetails, propositionItems);
+    }
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_EmptyScopeDetails() throws MessageRequiredFieldMissingException {
+        // test
+        new Proposition("uniqueId", "mobileapp://mockScope", new HashMap<>(), propositionItems);
+    }
+
+
+    @Test(expected = MessageRequiredFieldMissingException.class)
+    public void test_propositionConstructor_MissingPropositionItems() throws MessageRequiredFieldMissingException {
+        // test
+        Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, null);
+        // verify
+        assertNotNull(proposition);
+        assertEquals("uniqueId", proposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", proposition.getScope());
+        assertEquals(scopeDetails, proposition.getScopeDetails());
+        assertEquals(0, proposition.getItems().size());
     }
 
     @Test
@@ -91,7 +141,7 @@ public class PropositionTests {
         assertEquals(scopeDetails, proposition.getScopeDetails());
         // need to verify proposition items individually as proposition soft references will be different as the proposition is created from a map
         for (PropositionItem item : proposition.getItems()) {
-            assertEquals(propositionItems.get(0).getPropositionItemId(), item.getPropositionItemId());
+            assertEquals(propositionItems.get(0).getItemId(), item.getItemId());
             assertEquals(propositionItems.get(0).getData(), item.getData());
             assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
             assertNotNull(item.getProposition());
@@ -99,7 +149,61 @@ public class PropositionTests {
     }
 
     @Test
-    public void test_createEventData_fromProposition() throws DataReaderException, JSONException {
+    public void test_createProposition_fromEventData_MissingId() {
+        // test
+        eventDataMap.remove("id");
+        // test
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        // verify
+        assertNull(proposition);
+    }
+
+    @Test
+    public void test_createProposition_fromEventData_MissingScope() {
+        // test
+        eventDataMap.remove("scope");
+        // test
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        // verify
+        assertNull(proposition);
+    }
+
+    @Test
+    public void test_createProposition_fromEventData_MissingScopeDetails() {
+        // test
+        eventDataMap.remove("scopeDetails");
+        // test
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        // verify
+        assertNull(proposition);
+    }
+
+    @Test
+    public void test_createProposition_fromEventData_EmptyScopeDetails() {
+        // test
+        eventDataMap.put("scopeDetails", new HashMap<>());
+        // test
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        // verify
+        assertNull(proposition);
+    }
+
+    @Test
+    public void test_createProposition_fromEventData_MissingPropositionItems() {
+        // test
+        eventDataMap.remove("items");
+        // test
+        Proposition proposition = Proposition.fromEventData(eventDataMap);
+        // verify
+        assertNotNull(proposition);
+        assertEquals("uniqueId", proposition.getUniqueId());
+        assertEquals("mobileapp://mockScope", proposition.getScope());
+        assertEquals(scopeDetails, proposition.getScopeDetails());
+        assertEquals(0, proposition.getItems().size());
+    }
+
+    @Test
+    public void test_createEventData_fromProposition() throws DataReaderException, JSONException, MessageRequiredFieldMissingException {
         // test
         Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         Map<String, Object> propositionMap = proposition.toEventData();
@@ -110,7 +214,7 @@ public class PropositionTests {
         for (Map<String, Object> item : itemList) {
             Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
             Map<String, Object> content = DataReader.getTypedMap(Object.class, data, "content");
-            assertEquals(propositionItem.getPropositionItemId(), item.get("id"));
+            assertEquals(propositionItem.getItemId(), item.get("id"));
             assertEquals(propositionItem.getSchema().toString(), item.get("schema"));
             Map<String, Object> expectedContent = JSONUtils.toMap(new JSONObject("{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\",\"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp/feeds/testFeed\",\"feedName\":\"testFeed\",\"campaignName\":\"testCampaign\"},\"content\":{\"actionUrl\":\"actionUrl\",\"actionTitle\":\"actionTitle\",\"title\":\"title\",\"body\":\"body\",\"imageUrl\":\"imageUrl\"}},\"id\":\"uniqueId\"}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}"));
             assertEquals(expectedContent, content);
@@ -118,7 +222,7 @@ public class PropositionTests {
     }
 
     @Test
-    public void test_equals() {
+    public void test_equals() throws MessageRequiredFieldMissingException {
         // test
         Proposition proposition1 = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
         Proposition proposition2 = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);

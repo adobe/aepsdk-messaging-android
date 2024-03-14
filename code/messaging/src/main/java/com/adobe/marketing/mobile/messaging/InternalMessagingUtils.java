@@ -42,6 +42,9 @@ class InternalMessagingUtils {
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
+        if (MessagingUtils.isNullOrEmpty(payloads)) {
+            return propositions;
+        }
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
                 final Proposition proposition = Proposition.fromEventData(payload);
@@ -63,8 +66,15 @@ class InternalMessagingUtils {
      * @return {@code JSONObject> containing the consequence details extracted from the rule json
      */
     static JSONObject getConsequenceDetails(final JSONObject ruleJson) {
+        if (ruleJson == null) {
+            return null;
+        }
         JSONObject consequenceDetails = null;
         try {
+            JSONObject consequence = getConsequence(ruleJson);
+            if (consequence == null) {
+                return null;
+            }
             consequenceDetails = getConsequence(ruleJson).getJSONObject(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL);
         } catch (final JSONException jsonException) {
             Log.debug(MessagingConstants.LOG_TAG, "getConsequenceDetails", "Exception occurred retrieving consequence details: %s", jsonException.getLocalizedMessage());
@@ -79,6 +89,9 @@ class InternalMessagingUtils {
      * @return {@code JSONObject> containing the consequence extracted from the rule json
      */
     static JSONObject getConsequence(final JSONObject ruleJson) {
+        if (ruleJson == null) {
+            return null;
+        }
         JSONObject consequence = null;
         try {
             final JSONArray rulesArray = ruleJson.getJSONArray(MessagingConstants.EventDataKeys.RulesEngine.JSON_RULES_KEY);
@@ -147,12 +160,7 @@ class InternalMessagingUtils {
      * @return {@code boolean} indicating if the passed in event is a refresh messages event.
      */
     static boolean isRefreshMessagesEvent(final Event event) {
-        if (event == null || event.getEventData() == null) {
-            return false;
-        }
-
-        return EventType.MESSAGING.equalsIgnoreCase(event.getType())
-                && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource())
+        return isMessagingRequestContentEvent(event)
                 && event.getEventData().containsKey(MessagingConstants.EventDataKeys.Messaging.REFRESH_MESSAGES);
     }
 
@@ -289,6 +297,9 @@ class InternalMessagingUtils {
      * @return {@code String} containing the ending event id
      */
     static String getEndingEventId(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
         return DataReader.optString(event.getEventData(), MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, null);
     }
 

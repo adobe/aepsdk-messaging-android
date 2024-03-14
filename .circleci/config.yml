@@ -31,12 +31,12 @@ jobs:
       - android/restore-build-cache
 
       # - run:
-      #     name: Check Format
-      #     command: make checkformat
+      #    name: Check Format
+      #    command: make checkformat
 
-      # - run:
-      #     name: Check Style
-      #     command: make checkstyle
+      - run:
+          name: Check Style
+          command: make checkstyle
 
       - android/save-gradle-cache
 

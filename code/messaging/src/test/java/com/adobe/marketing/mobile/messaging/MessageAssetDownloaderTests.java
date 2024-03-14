@@ -11,14 +11,16 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.services.DeviceInforming;
@@ -37,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -139,6 +142,44 @@ public class MessageAssetDownloaderTests {
         }
     }
 
+    @Test
+    public void testConstructor_when_assetLocationIsNull_then_AssetCacheDirectoryIsNotCreated() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            File mockCacheDir = mock(File.class);
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(null);
+            when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(mockCacheDir);
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(null);
+            when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(mockCacheDir);
+
+            // test
+            messageAssetsDownloader = new MessageAssetDownloader(assets);
+
+            // verify
+            verifyNoInteractions(mockCacheDir);
+        });
+    }
+
+    @Test
+    public void testConstructor_when_assetLocationIsValid_and_assetDirDoesNotExist_then_assetDirectoryIsCreated() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            final File[] mockedFile = new File[1];
+            try (MockedConstruction<File> fileMockedConstruction = Mockito.mockConstruction(File.class,
+                    (mock, context) -> {
+                        when(mock.exists()).thenReturn(false);
+                        mockedFile[0] = mock;
+                    })) {
+
+                // test
+                messageAssetsDownloader = new MessageAssetDownloader(assets);
+
+                // verify
+                verify(mockedFile[0], times(1)).mkdirs();
+            }
+        });
+    }
+
     // ====================================================================================================
     // void downloadAssetCollection()
     // ====================================================================================================
@@ -216,7 +257,7 @@ public class MessageAssetDownloaderTests {
             // verify new asset cached
             verify(mockCacheService, times(1)).set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
             // verify non matching cached asset deleted
-            assertEquals(false, existingCachedFile.exists());
+            assertFalse(existingCachedFile.exists());
         });
     }
 
@@ -239,6 +280,56 @@ public class MessageAssetDownloaderTests {
             verify(mockCacheService, times(1)).get(eq(expectedCacheLocation), eq(assetUrl));
             verify(mockNetworkService, times(1)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
             // verify asset not cached
+            verify(mockCacheService, times(0)).set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
+        });
+    }
+
+    @Test
+    public void testDownloadAssetCollection_when_assetLocationIsNull_then_assetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            when(mockServiceProvider.getDeviceInfoService()).thenReturn(null);
+
+            // test
+            messageAssetsDownloader = new MessageAssetDownloader(assets);
+            messageAssetsDownloader.downloadAssetCollection();
+
+            // verify
+            verify(mockCacheService, times(0)).get(eq(expectedCacheLocation), eq(assetUrl));
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+            // verify asset cached
+            verify(mockCacheService, times(0)).set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
+        });
+    }
+
+    @Test
+    public void testDownloadAssetCollection_when_assetIsNull_then_assetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            // test
+            messageAssetsDownloader = new MessageAssetDownloader(null);
+            messageAssetsDownloader.downloadAssetCollection();
+
+            // verify
+            verify(mockCacheService, times(0)).get(eq(expectedCacheLocation), eq(assetUrl));
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+            // verify asset cached
+            verify(mockCacheService, times(0)).set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
+        });
+    }
+
+    @Test
+    public void testDownloadAssetCollection_when_assetIsEmpty_then_assetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(() -> {
+            // test
+            messageAssetsDownloader = new MessageAssetDownloader(new ArrayList<>());
+            messageAssetsDownloader.downloadAssetCollection();
+
+            // verify
+            verify(mockCacheService, times(0)).get(eq(expectedCacheLocation), eq(assetUrl));
+            verify(mockNetworkService, times(0)).connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+            // verify asset cached
             verify(mockCacheService, times(0)).set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
         });
     }

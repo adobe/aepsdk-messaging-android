@@ -44,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.HashMap;
@@ -87,6 +88,33 @@ public class MessagingServiceTests {
         notificationManagerCompat.close();
     }
 
+    @Test
+    public void test_onNewToken_SetsPushIdentifierWhenTokenIsValid() {
+        //setup
+        String validToken = "valid_token";
+        MessagingService messagingService = new MessagingService();
+
+        //test
+        messagingService.onNewToken(validToken);
+
+        //verify
+        mobileCore.verify(() -> MobileCore.setPushIdentifier(validToken));
+    }
+
+    @Test
+    public void test_onMessageReceived_HandlesRemoteMessage() {
+        try (MockedStatic<MessagingService> messagingServiceMockedStatic = Mockito.mockStatic(MessagingService.class)) {
+            // setup
+            messagingServiceMockedStatic.when(() -> MessagingService.handleRemoteMessage(any(Context.class), any(RemoteMessage.class))).thenReturn(true);
+            MessagingService messagingService = new MessagingService();
+
+            // test
+            messagingService.onMessageReceived(remoteMessage);
+
+            // verify
+            messagingServiceMockedStatic.verify(() -> MessagingService.handleRemoteMessage(any(Context.class), eq(remoteMessage)));
+        }
+    }
 
     @Test
     public void test_handleRemoteMessage_WhenPushNotificationFromAJO() {

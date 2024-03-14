@@ -13,24 +13,21 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.app.Application;
-import android.content.Context;
-
+import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.services.AppContextService;
-import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ui.InAppMessage;
 import com.adobe.marketing.mobile.services.ui.Presentable;
@@ -41,6 +38,8 @@ import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +51,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,6 +80,8 @@ public class PresentableMessageMapperTests {
     InAppMessageSettings mockMessageSettings;
     @Mock
     MessagingExtension mockMessagingExtension;
+    @Mock
+    PropositionInfo mockPropositionInfo;
 
     private static final String html = "<html><head></head><body bgcolor=\"black\"><br /><br /><br /><br /><br /><br /><h1 align=\"center\" style=\"color: white;\">IN-APP MESSAGING POWERED BY <br />OFFER DECISIONING</h1><h1 align=\"center\"><a style=\"color: white;\" href=\"adbinapp://cancel\" >dismiss me</a></h1></body></html>";
     private PresentableMessageMapper.InternalMessage internalMessage;
@@ -105,6 +105,7 @@ public class PresentableMessageMapperTests {
         reset(mockPresentationError);
         reset(mockEventHandler);
         reset(mockMessagingExtension);
+        reset(mockPropositionInfo);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -115,20 +116,16 @@ public class PresentableMessageMapperTests {
             when(mockUIService.create(any(InAppMessage.class), any())).thenReturn(mockInAppPresentable);
             when(mockInAppPresentable.getPresentation()).thenReturn(mockPresentation);
             when(mockPresentation.getId()).thenReturn("mockId");
-
+            when(mockMessagingExtension.getApi()).thenReturn(mockExtensionApi);
             runnable.run();
         }
     }
 
-    RuleConsequence createRuleConsequence() {
-        Map<String, Object> details = new HashMap<>();
+    PropositionItem createPropositionItem() throws MessageRequiredFieldMissingException {
         Map<String, Object> data = new HashMap<>();
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
-        details.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-        return new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
+        return new PropositionItem("123456789", SchemaType.INAPP, data);
     }
 
     // ========================================================================================
@@ -140,7 +137,7 @@ public class PresentableMessageMapperTests {
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -157,8 +154,8 @@ public class PresentableMessageMapperTests {
             // test
             PresentableMessageMapper.InternalMessage internalMessageSameConsequence = null;
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-                internalMessageSameConsequence = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+                internalMessageSameConsequence = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -170,14 +167,12 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_MissingConsequenceDetails() {
+    public void test_createMessage_NullPropositionItem() {
         // setup
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, null);
-
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, null, new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -188,23 +183,17 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_MissingConsequenceId() {
+    public void test_createMessage_InvalidSchema() throws MessageRequiredFieldMissingException {
         // setup
-        RuleConsequence mockConsequence = mock(RuleConsequence.class);
-        Map<String, Object> details = new HashMap<>();
         Map<String, Object> data = new HashMap<>();
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-        when(mockConsequence.getId()).thenReturn(null);
-        when(mockConsequence.getDetail()).thenReturn(details);
-        when(mockConsequence.getType()).thenReturn(MessagingConstants.SchemaValues.SCHEMA_IAM);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
+        PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.FEED, data);
 
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, mockConsequence, new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -215,21 +204,32 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_InvalidSchema() {
+    public void test_createMessage_PropositionItemMissingItemData() {
+        runUsingMockedServiceProvider(() -> {
+            // test
+            try {
+                PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
+            } catch (Exception exception) {
+                assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
+            }
+
+            // verify
+            verify(mockUIService, times(0)).create(any(InAppMessage.class), any(DefaultPresentationUtilityProvider.class));
+        });
+    }
+
+    @Test
+    public void test_createMessage_InAppSchemaDataMissingContent() throws MessageRequiredFieldMissingException {
         // setup
-        Map<String, Object> details = new HashMap<>();
         Map<String, Object> data = new HashMap<>();
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, html);
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, "notASchema");
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
+        PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, data);
 
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -240,21 +240,17 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_DetailsMissingHtml() {
+    public void test_createMessage_InAppSchemaDataContentIsNotHtml() throws JSONException, MessageRequiredFieldMissingException {
         // setup
-        Map<String, Object> details = new HashMap<>();
         Map<String, Object> data = new HashMap<>();
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS, new ArrayList<String>());
-        data.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT, null);
-        data.put(MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID, "123456789");
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, data);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, new JSONObject("{\"key\":\"value\"}"));
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+        PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, data);
 
         runUsingMockedServiceProvider(() -> {
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
             }
@@ -264,26 +260,6 @@ public class PresentableMessageMapperTests {
         });
     }
 
-    @Test
-    public void test_createMessage_DetailsMissingData() {
-        // setup
-        Map<String, Object> details = new HashMap<>();
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA, null);
-        details.put(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA, MessagingConstants.SchemaValues.SCHEMA_IAM);
-        RuleConsequence consequence = new RuleConsequence("123456789", MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE, details);
-
-        runUsingMockedServiceProvider(() -> {
-            // test
-            try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, consequence, new HashMap<>(), new HashMap<>(), null);
-            } catch (Exception exception) {
-                assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
-            }
-
-            // verify
-            verify(mockUIService, times(0)).create(any(InAppMessage.class), any(DefaultPresentationUtilityProvider.class));
-        });
-    }
 
     @Test
     public void test_createMessage_NullUIService() {
@@ -292,7 +268,7 @@ public class PresentableMessageMapperTests {
             when(mockServiceProvider.getUIService()).thenReturn(null);
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(IllegalStateException.class, exception.getClass());
             }
@@ -306,39 +282,63 @@ public class PresentableMessageMapperTests {
     public void test_createMessage_WithMessageSettings() {
         // setup
         runUsingMockedServiceProvider(() -> {
-            Map<String, String> gestureMap = new HashMap<>();
-            Map<String, Object> rawMessageSettings = new HashMap();
-            gestureMap.put("backgroundTap", "adbinapp://dismiss");
-            gestureMap.put("swipeLeft", "adbinapp://dismiss?interaction=negative");
-            gestureMap.put("swipeRight", "adbinapp://dismiss?interaction=positive");
-            gestureMap.put("swipeUp", "adbinapp://dismiss");
-            gestureMap.put("swipeDown", "adbinapp://dismiss");
-            rawMessageSettings.put("width", 100);
-            rawMessageSettings.put("height", 100);
-            rawMessageSettings.put("backdropColor", "808080");
-            rawMessageSettings.put("backdropOpacity", 0.5f);
-            rawMessageSettings.put("cornerRadius", 70.0f);
-            rawMessageSettings.put("dismissAnimation", "fade");
-            rawMessageSettings.put("displayAnimation", "bottom");
-            rawMessageSettings.put("gestures", gestureMap);
-            rawMessageSettings.put("horizontalAlign", "right");
-            rawMessageSettings.put("horizontalInset", 5);
-            rawMessageSettings.put("verticalAlign", "top");
-            rawMessageSettings.put("verticalInset", 10);
-            rawMessageSettings.put("uiTakeover", true);
-
             // test
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), rawMessageSettings, new HashMap<>(), null);
+                Map<String, String> gestureMap = new HashMap<>();
+                Map<String, Object> rawMessageSettings = new HashMap();
+                gestureMap.put("tapBackground", "adbinapp://dismiss");
+                gestureMap.put("swipeLeft", "adbinapp://dismiss?interaction=negative");
+                gestureMap.put("swipeRight", "adbinapp://dismiss?interaction=positive");
+                gestureMap.put("swipeUp", "adbinapp://dismiss");
+                gestureMap.put("swipeDown", "adbinapp://dismiss");
+                rawMessageSettings.put("width", 100);
+                rawMessageSettings.put("height", 100);
+                rawMessageSettings.put("backdropColor", "808080");
+                rawMessageSettings.put("backdropOpacity", 0.5f);
+                rawMessageSettings.put("cornerRadius", 70.0f);
+                rawMessageSettings.put("dismissAnimation", "fade");
+                rawMessageSettings.put("displayAnimation", "bottom");
+                rawMessageSettings.put("gestures", gestureMap);
+                rawMessageSettings.put("horizontalAlign", "right");
+                rawMessageSettings.put("horizontalInset", 5);
+                rawMessageSettings.put("verticalAlign", "top");
+                rawMessageSettings.put("verticalInset", 10);
+                rawMessageSettings.put("uiTakeover", true);
+                Map<String, Object> data = new HashMap<>();
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS, rawMessageSettings);
+                PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, data);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
 
             // verify
-            verify(mockUIService, times(1)).create(any(InAppMessage.class), any(DefaultPresentationUtilityProvider.class));
+            ArgumentCaptor<InAppMessage> inAppMessageCaptor = ArgumentCaptor.forClass(InAppMessage.class);
+            verify(mockUIService, times(1)).create(inAppMessageCaptor.capture(), any(DefaultPresentationUtilityProvider.class));
+            InAppMessageSettings settings = inAppMessageCaptor.getValue().getSettings();
+            assertEquals(html, settings.getContent());
+            assertEquals(100, settings.getWidth());
+            assertEquals(100, settings.getHeight());
+            assertEquals("808080", settings.getBackdropColor());
+            assertEquals(0.5f, settings.getBackdropOpacity(), 0.0);
+            assertEquals(70.0f, settings.getCornerRadius(), 0.0);
+            assertEquals(InAppMessageSettings.MessageAnimation.FADE, settings.getDismissAnimation());
+            assertEquals(InAppMessageSettings.MessageAnimation.BOTTOM, settings.getDisplayAnimation());
+            assertEquals("adbinapp://dismiss", settings.getGestureMap().get(InAppMessageSettings.MessageGesture.TAP_BACKGROUND));
+            assertEquals("adbinapp://dismiss?interaction=negative", settings.getGestureMap().get(InAppMessageSettings.MessageGesture.SWIPE_LEFT));
+            assertEquals("adbinapp://dismiss?interaction=positive", settings.getGestureMap().get(InAppMessageSettings.MessageGesture.SWIPE_RIGHT));
+            assertEquals("adbinapp://dismiss", settings.getGestureMap().get(InAppMessageSettings.MessageGesture.SWIPE_UP));
+            assertEquals("adbinapp://dismiss", settings.getGestureMap().get(InAppMessageSettings.MessageGesture.SWIPE_DOWN));
+            assertEquals(InAppMessageSettings.MessageAlignment.RIGHT, settings.getHorizontalAlignment());
+            assertEquals(5, settings.getHorizontalInset());
+            assertEquals(InAppMessageSettings.MessageAlignment.TOP, settings.getVerticalAlignment());
+            assertEquals(10, settings.getVerticalInset());
+            assertTrue(settings.getShouldTakeOverUi());
         });
     }
-
+    
     // ========================================================================================
     // Message getId
     // ========================================================================================
@@ -347,7 +347,7 @@ public class PresentableMessageMapperTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -367,7 +367,7 @@ public class PresentableMessageMapperTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -387,7 +387,7 @@ public class PresentableMessageMapperTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }
@@ -399,139 +399,227 @@ public class PresentableMessageMapperTests {
         });
     }
 
-//   TODO: 3.0.0-beta.1 Fix these tests
-//    @Test
-//    public void test_messageDismiss_suppressAutoTrackFalse() {
-//        // setup
-//        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-//        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//            // test
-//            internalMessage.dismiss(false);
-//
-//            // verify fullscreen message dismiss called
-//            verify(mockInAppPresentable, times(1)).dismiss();
-//
-//            // verify tracking event data
-//            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(PresentableMessageMapper.InternalMessage.class));
-//            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-//            String interaction = interactionArgumentCaptor.getValue();
-//            assertEquals(eventType, MessagingEdgeEventType.IN_APP_DISMISS);
-//            assertEquals(null, interaction);
-//        });
-//    }
-//
-//    @Test
-//    public void test_messageDismiss_suppressAutoTrackTrue() {
-//        // setup
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//            // test
-//            internalMessage.dismiss(true);
-//
-//            // verify fullscreen message dismiss called
-//            verify(mockInAppPresentable, times(1)).dismiss();
-//
-//            // verify no tracking event
-//            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any(String.class), any(MessagingEdgeEventType.class), any(PresentableMessageMapper.InternalMessage.class));
-//        });
-//    }
-//
-//    @Test
-//    public void test_messageTrigger() {
-//        // setup
-//        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-//        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//            // test
-//            internalMessage.trigger();
-//
-//            // verify tracking event data
-//            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(PresentableMessageMapper.InternalMessage.class));
-//            MessagingEdgeEventType eventType = messagingEdgeEventTypeArgumentCaptor.getValue();
-//            String interaction = interactionArgumentCaptor.getValue();
-//            assertEquals(eventType, MessagingEdgeEventType.IN_APP_TRIGGER);
-//            assertEquals(null, interaction);
-//        });
-//    }
-//
-//    @Test
-//    public void test_messageTrigger_autoTrackFalse() {
-//        // setup
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//
-//            // test
-//            internalMessage.setAutoTrack(false);
-//            internalMessage.trigger();
-//
-//            // verify no tracking event
-//            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any(String.class), any(MessagingEdgeEventType.class), any(PresentableMessageMapper.InternalMessage.class));
-//        });
-//    }
-//
-//    // ========================================================================================
-//    // Message track tests
-//    // ========================================================================================
-//    @Test
-//    public void test_messageTrack() {
-//        // setup
-//        ArgumentCaptor<String> interactionArgumentCaptor = ArgumentCaptor.forClass(String.class);
-//        ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor = ArgumentCaptor.forClass(MessagingEdgeEventType.class);
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//
-//            // test
-//            internalMessage.track("mock track", MessagingEdgeEventType.IN_APP_INTERACT);
-//
-//            // verify tracking event
-//            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionArgumentCaptor.capture(), messagingEdgeEventTypeArgumentCaptor.capture(), any(PresentableMessageMapper.InternalMessage.class));
-//            MessagingEdgeEventType displayTrackingEvent = messagingEdgeEventTypeArgumentCaptor.getValue();
-//            String interaction = interactionArgumentCaptor.getValue();
-//            assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, displayTrackingEvent);
-//            assertEquals("mock track", interaction);
-//        });
-//    }
-//
-//    @Test
-//    public void test_messageTrackWithMissingMessagingEdgeEventType() {
-//        // setup
-//        runUsingMockedServiceProvider(() -> {
-//            try {
-//                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
-//            } catch (Exception exception) {
-//                fail(exception.getMessage());
-//            }
-//
-//            // test
-//            internalMessage.track("mock track", null);
-//
-//            // verify no tracking event
-//            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any(String.class), any(MessagingEdgeEventType.class), any(PresentableMessageMapper.InternalMessage.class));
-//        });
-//    }
+    @Test
+    public void test_messageDismiss() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+            // test
+            internalMessage.dismiss();
+
+            // verify fullscreen message dismiss called
+            verify(mockInAppPresentable, times(1)).dismiss();
+        });
+    }
+
+    @Test
+    public void test_messageTrigger() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), mockPropositionInfo);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+            PresentableMessageMapper.InternalMessage spyInternalMessage = Mockito.spy(internalMessage);
+
+            // test
+            spyInternalMessage.trigger();
+
+            // verify tracking event data
+            verify(spyInternalMessage, times(1)).track(eq(null), eq(MessagingEdgeEventType.TRIGGER));
+            verify(spyInternalMessage, times(1)).recordEventHistory(eq(null), eq(MessagingEdgeEventType.TRIGGER));
+        });
+    }
+
+    @Test
+    public void test_messageTrigger_autoTrackFalse() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.setAutoTrack(false);
+            internalMessage.trigger();
+
+            // verify no tracking event
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any());
+        });
+    }
+
+    // ========================================================================================
+    // Message track tests
+    // ========================================================================================
+    @Test
+    public void test_messageTrack() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            ArgumentCaptor<Map<String, Object>> interactionXdmCapture = ArgumentCaptor.forClass(Map.class);
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), mockPropositionInfo);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.track("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify tracking event
+            verify(mockMessagingExtension, times(1)).sendPropositionInteraction(interactionXdmCapture.capture());
+            Map<String, Object> interactionXdm = interactionXdmCapture.getValue();
+            assertEquals(MessagingEdgeEventType.INTERACT.toString(), interactionXdm.get(MessagingTestConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE));
+        });
+    }
+
+    @Test
+    public void test_messageTrack_MissingMessagingEdgeEventType() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.track("mock track", null);
+
+            // verify no tracking event
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any());
+        });
+    }
+
+    @Test
+    public void test_messageTrack_MissingPropositionInfo() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.track("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify no tracking event
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any());
+        });
+    }
+
+    @Test
+    public void test_messageTrack_MissingMessagingExtension() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(null, createPropositionItem(), new HashMap<>(), mockPropositionInfo);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.track("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify no tracking event
+            verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any());
+        });
+    }
+
+    // ========================================================================================
+    // recordEventHistory
+    // ========================================================================================
+    @Test
+    public void test_recordEventHistory_withValidParameters_recordsEventHistory() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            ArgumentCaptor<Event> recordEventCapture = ArgumentCaptor.forClass(Event.class);
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), mockPropositionInfo);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.recordEventHistory("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify tracking event
+            verify(mockExtensionApi, times(1)).dispatch(recordEventCapture.capture());
+            Event recordEvent = recordEventCapture.getValue();
+            assertEquals(MessagingTestConstants.EventName.EVENT_HISTORY_WRITE, recordEvent.getName());
+            assertEquals(MessagingTestConstants.EventType.MESSAGING, recordEvent.getType());
+            assertEquals(MessagingTestConstants.EventSource.EVENT_HISTORY_WRITE, recordEvent.getSource());
+            Map<String, Object> eventData = recordEvent.getEventData();
+            Map<String, String> inAppHistoryData = (Map<String, String>) eventData.get(MessagingTestConstants.EventDataKeys.IAM_HISTORY);
+            assertNotNull(inAppHistoryData);
+            assertEquals(MessagingEdgeEventType.INTERACT.getPropositionEventType(), inAppHistoryData.get(MessagingTestConstants.EventMask.Keys.EVENT_TYPE));
+            assertEquals(mockPropositionInfo.activityId, inAppHistoryData.get(MessagingTestConstants.EventMask.Keys.MESSAGE_ID));
+            assertEquals("mock track", inAppHistoryData.get(MessagingTestConstants.EventMask.Keys.TRACKING_ACTION));
+            final String[] mask = {MessagingConstants.EventMask.Mask.EVENT_TYPE, MessagingConstants.EventMask.Mask.MESSAGE_ID, MessagingConstants.EventMask.Mask.TRACKING_ACTION};
+            assertEquals(mask , recordEvent.getMask());
+        });
+    }
+
+    @Test
+    public void test_recordEventHistory_MissingMessagingEdgeEventType() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.recordEventHistory("mock track", null);
+
+            // verify no tracking event
+            verify(mockExtensionApi, times(0)).dispatch(any());
+        });
+    }
+
+    @Test
+    public void test_recordEventHistory_MissingPropositionInfo() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.recordEventHistory("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify no tracking event
+            verify(mockExtensionApi, times(0)).dispatch(any());
+        });
+    }
+
+    @Test
+    public void test_recordEventHistory_MissingMessagingExtension() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            try {
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(null, createPropositionItem(), new HashMap<>(), mockPropositionInfo);
+            } catch (Exception exception) {
+                fail(exception.getMessage());
+            }
+
+            // test
+            internalMessage.recordEventHistory("mock track", MessagingEdgeEventType.INTERACT);
+
+            // verify no tracking event
+            verify(mockExtensionApi, times(0)).dispatch(any());
+        });
+    }
 
     // ========================================================================================
     // getMessageFromPresentableId
@@ -541,7 +629,7 @@ public class PresentableMessageMapperTests {
         // setup
         runUsingMockedServiceProvider(() -> {
             try {
-                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createRuleConsequence(), new HashMap<>(), new HashMap<>(), null);
+                internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, createPropositionItem(), new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());
             }

@@ -46,8 +46,6 @@ final class MessagingCacheUtilities {
     private final String assetCacheLocation;
     private final String METADATA_KEY_PATH_TO_FILE = "pathToFile";
     private final Map<String, String> assetMap = new HashMap<>();
-    private ObjectInputStream objectInputStream;
-    private ObjectOutputStream objectOutputStream;
 
     public MessagingCacheUtilities() {
         this.cacheService = ServiceProvider.getInstance().getCacheService();
@@ -96,9 +94,7 @@ final class MessagingCacheUtilities {
         ObjectInputStream objectInputStream = null;
         Map<Surface, List<Proposition>> cachedPropositions = new HashMap<>();
         try {
-            if (objectInputStream == null) {
-                objectInputStream = new ObjectInputStream(cacheResult.getData());
-            }
+            objectInputStream = new ObjectInputStream(cacheResult.getData());
 
             final Object cachedData = objectInputStream.readObject();
             if (cachedData == null) {
@@ -120,10 +116,8 @@ final class MessagingCacheUtilities {
             } else if (firstElement instanceof PropositionPayload) {
                 // handle cached PropositionPayload objects
                 final Map<Surface, List<PropositionPayload>> cachedPropositionPayloads = (Map<Surface, List<PropositionPayload>>) cachedData;
-                if (!MapUtils.isNullOrEmpty(cachedPropositionPayloads)) {
-                    for (final Map.Entry<Surface, List<PropositionPayload>> entry : cachedPropositionPayloads.entrySet()) {
-                        cachedPropositions.put(entry.getKey(), convertToPropositions(entry.getValue()));
-                    }
+                for (final Map.Entry<Surface, List<PropositionPayload>> entry : cachedPropositionPayloads.entrySet()) {
+                    cachedPropositions.put(entry.getKey(), convertToPropositions(entry.getValue()));
                 }
             }
         } catch (final NullPointerException nullPointerException) {
@@ -157,10 +151,14 @@ final class MessagingCacheUtilities {
         final Map<Surface, List<Proposition>> cachedPropositions = getCachedPropositions();
         final Map<Surface, List<Proposition>> updatedPropositions = cachedPropositions != null ? cachedPropositions : new HashMap<>();
         updatedPropositions.putAll(newPropositions);
+        final List<Surface> propositionsToRemove = new ArrayList<>();
         for (final Map.Entry<Surface, List<Proposition>> entry : updatedPropositions.entrySet()) {
             if (surfacesToRemove.contains(entry.getKey())) {
-                updatedPropositions.remove(entry);
+                propositionsToRemove.add(entry.getKey());
             }
+        }
+        for (final Surface surface : propositionsToRemove) {
+            updatedPropositions.remove(surface);
         }
 
         // clean any existing cached propositions first if the provided propositions are null or empty
@@ -174,12 +172,10 @@ final class MessagingCacheUtilities {
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Creating new cached propositions");
         ByteArrayOutputStream byteArrayOutputStream = null;
         InputStream inputStream = null;
-
+        ObjectOutputStream objectOutputStream = null;
         try {
             byteArrayOutputStream = new ByteArrayOutputStream();
-            if (objectOutputStream == null) {
-                objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            }
+            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
             objectOutputStream.writeObject(propositions);
             objectOutputStream.flush();
             inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
@@ -213,12 +209,17 @@ final class MessagingCacheUtilities {
     private List<Proposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
         final List<Proposition> propositions = new ArrayList<>();
         final List<PropositionItem> propositionItems = new ArrayList<>();
-        for (final PropositionPayload propositionPayload : propositionPayloads) {
-            for (final PayloadItem payloadItem : propositionPayload.items) {
-                final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
-                propositionItems.add(propositionItem);
+        try {
+            for (final PropositionPayload propositionPayload : propositionPayloads) {
+                for (final PayloadItem payloadItem : propositionPayload.items) {
+                    final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
+                    propositionItems.add(propositionItem);
+                }
+                propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+
             }
-            propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
+        } catch (final MessageRequiredFieldMissingException exception) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
         }
         return propositions;
     }
@@ -280,15 +281,5 @@ final class MessagingCacheUtilities {
      */
     Map<String, String> getAssetsMap() {
         return assetMap;
-    }
-
-    @VisibleForTesting
-    void setObjectInputStream(final ObjectInputStream objectInputStream) {
-        this.objectInputStream = objectInputStream;
-    }
-
-    @VisibleForTesting
-    void setObjectOutputStream(final ObjectOutputStream objectOutputStream) {
-        this.objectOutputStream = objectOutputStream;
     }
 }

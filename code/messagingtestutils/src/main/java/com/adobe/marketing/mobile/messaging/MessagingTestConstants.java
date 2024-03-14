@@ -42,6 +42,9 @@ public class MessagingTestConstants {
         public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         public static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
 
+        static final String TRACK_PROPOSITIONS = "Track propositions";
+        static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
+
         private EventName() {
         }
     }
@@ -57,15 +60,56 @@ public class MessagingTestConstants {
         public static final String REQUEST_CONTENT = "com.adobe.eventSource.requestContent";
         public static final String NOTIFICATION = "com.adobe.eventSource.notification";
         public static final String RESPONSE_CONTENT = "com.adobe.eventSource.responseContent";
+        static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
 
         private EventSource() {
         }
     }
 
+    final class EventMask {
+        final class Keys {
+            static final String EVENT_TYPE = "eventType";
+            static final String MESSAGE_ID = "id";
+            static final String TRACKING_ACTION = "action";
+
+            private Keys() {
+            }
+        }
+
+        final class Mask {
+            static final String EVENT_TYPE = "iam.eventType";
+            static final String MESSAGE_ID = "iam.id";
+            static final String TRACKING_ACTION = "iam.action";
+
+            private Mask() {
+            }
+        }
+    }
+
     public static final class EventDataKey {
-        public static final String STATE_OWNER = "stateowner";
+        static final String REQUEST_EVENT_ID = "requestEventId";
 
         private EventDataKey() {
+        }
+
+        final class RulesEngine {
+            static final String JSON_RULES_KEY = "rules";
+            static final String JSON_CONSEQUENCES_KEY = "consequences";
+            static final String JSON_VERSION_KEY = "version";
+            static final String MESSAGE_CONSEQUENCE_ID = "id";
+            static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            static final String MESSAGE_CONSEQUENCE_CJM_VALUE = "cjmiam";
+            static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_DATA = "data";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
+            static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+
+            private RulesEngine() {
+            }
         }
     }
 
@@ -106,6 +150,7 @@ public class MessagingTestConstants {
 
     public static final class EventDataKeys {
         public static final String STATE_OWNER = "stateowner";
+        public static final String IAM_HISTORY = "iam";
 
         public static final class Identity {
             public static final String PUSH_IDENTIFIER = "pushidentifier";
@@ -130,19 +175,23 @@ public class MessagingTestConstants {
             public static final String GET_PROPOSITIONS = "getpropositions";
             public static final String PROPOSITIONS = "propositions";
             public static final String RESPONSE_ERROR = "responseerror";
+            static final String TRACK_PROPOSITIONS = "trackpropositions";
+            static final String PROPOSITION_INTERACTION = "propositioninteraction";
+
 
             private Messaging() {
             }
 
-            public static final class XDMDataKeys {
-                public static final String XDM_DATA_ACTION_ID = "actionID";
-                public static final String XDM_DATA_CUSTOM_ACTION = "customAction";
-                public static final String XDM_DATA_PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
-                public static final String XDM_DATA_PUSH_PROVIDER = "pushProvider";
-                public static final String XDM_DATA_EVENT_TYPE = "eventType";
-                public static final String XDM_DATA_PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
-                public static final String XDM_DATA_IN_APP_NOTIFICATION_TRACKING_MIXIN_NAME = "inappMessageTracking";
-                public static final String ACTION = "action";
+            final class XDMDataKeys {
+                static final String XDM = "xdm";
+                static final String ACTION_ID = "actionID";
+                static final String CUSTOM_ACTION = "customAction";
+                static final String PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
+                static final String PUSH_PROVIDER = "pushProvider";
+                static final String EVENT_TYPE = "eventType";
+                static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String REQUEST = "request";
+                static final String SEND_COMPLETION = "sendCompletion";
 
                 private XDMDataKeys() {
                 }
@@ -169,27 +218,27 @@ public class MessagingTestConstants {
                 }
             }
 
-            public static final class IAMDetailsDataKeys {
-                static final String IN_APP_MIXIN_NAME = "inappMessageTracking";
+            public final class Inbound {
                 static final String SURFACE_BASE = "mobileapp://";
 
-                private IAMDetailsDataKeys() {
+                private Inbound() {
                 }
 
-                public static final class EventType {
+                public final class EventType {
                     public static final String DISMISS = "decisioning.propositionDismiss";
                     public static final String INTERACT = "decisioning.propositionInteract";
                     public static final String TRIGGER = "decisioning.propositionTrigger";
                     public static final String DISPLAY = "decisioning.propositionDisplay";
                     public static final String PERSONALIZATION_REQUEST = "personalization.request";
+                    public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
+                    public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";
 
                     private EventType() {
                     }
                 }
 
-                public static final class Key {
+                final class Key {
                     static final String PERSONALIZATION = "personalization";
-                    static final String CHARACTERISTICS = "characteristics";
                     static final String DECISIONING = "decisioning";
                     static final String PAYLOAD = "payload";
                     static final String ITEMS = "items";
@@ -198,24 +247,15 @@ public class MessagingTestConstants {
                     static final String SCOPE_DETAILS = "scopeDetails";
                     static final String QUERY = "query";
                     static final String SURFACES = "surfaces";
-                    static final String ACTION = "action";
-                    static final String IN_APP_MESSAGE_TRACKING = "inappMessageTracking";
-                    static final String CJM_XDM = "cjmXdm";
                     static final String PROPOSITION_EVENT_TYPE = "propositionEventType";
                     static final String PROPOSITIONS = "propositions";
+                    static final String PROPOSITION_ACTION = "propositionAction";
+                    static final String LABEL = "label";
+                    static final String SCHEMAS = "schemas";
+                    static final String CHARACTERISTICS = "characteristics";
+                    static final String TOKENS = "tokens";
 
                     private Key() {
-                    }
-                }
-
-                public static final class Value {
-                    public static final String TRIGGERED = "triggered";
-                    public static final String DISPLAYED = "displayed";
-                    public static final String CLICKED = "clicked";
-                    public static final String DISMISSED = "dismissed";
-                    public static final String EMPTY_CONTENT = "{}";
-
-                    private Value() {
                     }
                 }
             }
@@ -259,6 +299,58 @@ public class MessagingTestConstants {
         }
 
         private SharedState() {
+        }
+    }
+
+    final class SchemaValues {
+        static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
+
+        private SchemaValues() {
+        }
+    }
+
+    final class ContentTypes {
+        static final String APPLICATION_JSON = "application/json";
+        static final String TEXT_HTML = "text/html";
+        static final String TEXT_XML = "text/xml";
+        static final String TEXT_PLAIN = "text/plain";
+        private ContentTypes() {
+        }
+    }
+
+    final class ConsequenceDetailDataKeys {
+        static final String FORMAT = "format";
+        static final String CONTENT = "content";
+        static final String CONTENT_TYPE = "contentType";
+        static final String PUBLISHED_DATE = "publishedDate";
+        static final String EXPIRY_DATE = "expiryDate";
+        static final String METADATA = "meta";
+        static final String MOBILE_PARAMETERS = "mobileParameters";
+        static final String WEB_PARAMETERS = "webParameters";
+        static final String REMOTE_ASSETS = "remoteAssets";
+
+        private ConsequenceDetailDataKeys() {
+        }
+    }
+
+    final class MessageFeedKeys {
+        static final String TITLE = "title";
+        static final String BODY = "body";
+        static final String CONTENT = "content";
+        static final String IMAGE_URL = "imageUrl";
+        static final String ACTION_TITLE = "actionTitle";
+        static final String ACTION_URL = "actionUrl";
+        static final String FEEDS = "feeds";
+        static final String FEED_NAME = "feedName";
+        static final String SURFACE = "surface";
+
+        private MessageFeedKeys() {
         }
     }
 }

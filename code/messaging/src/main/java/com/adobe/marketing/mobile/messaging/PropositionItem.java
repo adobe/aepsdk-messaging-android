@@ -22,6 +22,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONObject;
 
@@ -41,7 +42,7 @@ import java.util.Map;
  * This class provides helper access to get strongly typed content - e.g. `getHtmlContent`
  */
 public class PropositionItem implements Serializable {
-    private static final String SELF_TAG = "MessagingPropositionItem";
+    private static final String SELF_TAG = "PropositionItem";
     /// Unique identifier for this `PropositionItem`
     /// contains value for `id` in JSON
     private String itemId;
@@ -56,45 +57,53 @@ public class PropositionItem implements Serializable {
     // Soft reference to Proposition instance
     SoftReference<Proposition> propositionReference;
 
-    public PropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
+    public PropositionItem(@NonNull final String itemId,
+                           @NonNull final SchemaType schema,
+                           @NonNull final Map<String, Object> itemData) throws MessageRequiredFieldMissingException {
+        if(StringUtils.isNullOrEmpty(itemId) || schema == null || itemData == null) {
+            throw new MessageRequiredFieldMissingException("Id, schema or itemData is missing");
+        }
         this.itemId = itemId;
         this.schema = schema;
         this.itemData = itemData;
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} identifier.
+     * Gets the {@code PropositionItem} identifier.
      *
      * @return {@link String} containing the {@link PropositionItem} identifier.
      */
-    public String getPropositionItemId() {
+    @NonNull
+    public String getItemId() {
         return itemId;
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} content schema.
+     * Gets the {@code PropositionItem} content schema.
      *
      * @return {@link SchemaType} containing the {@link PropositionItem} content schema.
      */
+    @NonNull
     public SchemaType getSchema() {
         return schema;
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} data.
+     * Gets the {@code PropositionItem} data.
      *
      * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
      */
+    @NonNull
     public Map<String, Object> getData() {
         return itemData;
     }
 
     /**
-     * Gets the {@code MessagingProposition} referenced by the Proposition {@code SoftReference}.
+     * Gets the {@code PropositionItem} referenced by the Proposition {@code SoftReference}.
      *
      * @return {@link Proposition} referenced by the Proposition {@link SoftReference}.
      */
-    public Proposition getProposition() {
+    Proposition getProposition() {
         return propositionReference.get();
     }
 
@@ -129,7 +138,7 @@ public class PropositionItem implements Serializable {
      * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the interaction
      * @param tokens {@link List<String>} containing the sub-item tokens for recording interaction.
      */
-    void track(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
+    public void track(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens) {
         final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot track proposition interaction for item (%s), could not generate interactions XDM.", itemId);
@@ -185,13 +194,107 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Creates a {@code MessagingPropositionItem} object from the provided {@code RuleConsequence}.
+     * Returns this {@link PropositionItem}'s content as a json content {@code Map<String, Object>}.
+     *
+     * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
+     */
+    public Map<String, Object> getJsonContentMap() {
+        if (!schema.equals(SchemaType.JSON_CONTENT)) {
+            return null;
+        }
+        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
+        return schemaData != null ? schemaData.getJsonObjectContent() : null;
+    }
+
+    /**
+     * Returns this {@link PropositionItem}'s content as a json content {@code List<Map<String, Object>>}.
+     *
+     * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s content.
+     */
+    public List<Map<String, Object>> getJsonContentArrayList() {
+        if (!schema.equals(SchemaType.JSON_CONTENT)) {
+            return null;
+        }
+        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
+        return schemaData != null ? schemaData.getJsonArrayContent() : null;
+    }
+
+    /**
+     * Returns this {@link PropositionItem}'s content as a html content {@code String}.
+     *
+     * @return {@link String} containing the {@link PropositionItem}'s content.
+     */
+    public String getHtmlContent() {
+        if (!schema.equals(SchemaType.HTML_CONTENT)) {
+            return null;
+        }
+        final HtmlContentSchemaData schemaData = (HtmlContentSchemaData) createSchemaData(SchemaType.HTML_CONTENT);
+        return schemaData != null ? schemaData.getContent() : null;
+    }
+
+    /**
+     * Returns this {@link PropositionItem}'s content as a {@code InAppSchemaData} object.
+     *
+     * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
+     */
+    public InAppSchemaData getInAppSchemaData() {
+        if (!schema.equals(SchemaType.INAPP)) {
+            return null;
+        }
+        return (InAppSchemaData) createSchemaData(SchemaType.INAPP);
+    }
+
+    /**
+     * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
+     *
+     * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
+     */
+    public FeedItemSchemaData getFeedItemSchemaData() {
+        if (!schema.equals(SchemaType.FEED)) {
+            return null;
+        }
+        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+    }
+
+    /**
+     * Creates a schema data object from this {@code PropositionItem}'s content.
+     *
+     * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
+     * @return {@code SchemaData} object created from the provided {@link PropositionItem}'s content.
+     */
+    private SchemaData createSchemaData(final SchemaType schemaType) {
+        if (MapUtils.isNullOrEmpty(itemData)) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot decode content, PropositionItem data is null or empty.");
+            return null;
+        }
+
+        final JSONObject ruleJson = new JSONObject(itemData);
+        switch (schemaType) {
+            case HTML_CONTENT:
+                return new HtmlContentSchemaData(ruleJson);
+            case JSON_CONTENT:
+                return new JsonContentSchemaData(ruleJson);
+            case INAPP:
+                return new InAppSchemaData(ruleJson);
+            case FEED:
+                return new FeedItemSchemaData(ruleJson);
+            default:
+                break;
+        }
+        return null;
+    }
+
+    /**
+     * Creates a {@code PropositionItem} object from the provided {@code RuleConsequence}.
      *
      * @return {@link PropositionItem} object created from the provided {@link RuleConsequence}.
      */
-    public static PropositionItem fromRuleConsequence(final RuleConsequence consequence) {
+    static PropositionItem fromRuleConsequence(final RuleConsequence consequence) {
         PropositionItem propositionItem = null;
         try {
+            if (consequence == null) {
+                return null;
+            }
             final Map<String, Object> details = consequence.getDetail();
             if (MapUtils.isNullOrEmpty(details)) {
                 return null;
@@ -203,99 +306,20 @@ public class PropositionItem implements Serializable {
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
-        } catch (final DataReaderException dataReaderException) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
+        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating PropositionItem from rule consequence: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
     }
 
     /**
-     * Returns this {@link PropositionItem}'s content as a json content {@code Map<String, Object>}.
-     *
-     * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
-     */
-    public Map<String, Object> getJsonContentMap() {
-        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
-        return schemaData != null ? schemaData.getJsonObjectContent() : null;
-    }
-
-    /**
-     * Returns this {@link PropositionItem}'s content as a json content {@code List<Map<String, Object>>}.
-     *
-     * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s content.
-     */
-    public List<Map<String, Object>> getJsonArrayList() {
-        final JsonContentSchemaData schemaData = (JsonContentSchemaData) createSchemaData(SchemaType.JSON_CONTENT);
-        return schemaData != null ? schemaData.getJsonArrayContent() : null;
-    }
-
-    /**
-     * Returns this {@link PropositionItem}'s content as a html content {@code String}.
-     *
-     * @return {@link String} containing the {@link PropositionItem}'s content.
-     */
-    public String getHtmlContent() {
-        final HtmlContentSchemaData schemaData = (HtmlContentSchemaData) createSchemaData(SchemaType.HTML_CONTENT);
-        return schemaData != null ? schemaData.getContent() : null;
-    }
-
-    /**
-     * Returns this {@link PropositionItem}'s content as a {@code InAppSchemaData} object.
-     *
-     * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
-     */
-    public InAppSchemaData getInAppSchemaData() {
-        return (InAppSchemaData) createSchemaData(SchemaType.INAPP);
-    }
-
-    /**
-     * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
-     *
-     * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
-     */
-    public FeedItemSchemaData getFeedItemSchemaData() {
-        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
-    }
-
-    /**
-     * Creates a schema data object from this {@code MessagingPropositionItem}'s content.
-     *
-     * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
-     * @return {@code SchemaData} object created from the provided {@link PropositionItem}'s content.
-     */
-    private SchemaData createSchemaData(final SchemaType schemaType) {
-        if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
-            return null;
-        }
-
-        final JSONObject ruleJson = new JSONObject(itemData);
-        switch (schemaType) {
-            case UNKNOWN:
-            case DEFAULT_CONTENT:
-            case NATIVE_ALERT:
-            case RULESET:
-                break;
-            case HTML_CONTENT:
-                return new HtmlContentSchemaData(ruleJson);
-            case JSON_CONTENT:
-                return new JsonContentSchemaData(ruleJson);
-            case INAPP:
-                return new InAppSchemaData(ruleJson);
-            case FEED:
-                return new FeedItemSchemaData(ruleJson);
-        }
-        return null;
-    }
-
-    /**
-     * Creates a {@code MessagingPropositionItem} object from the provided {@code Map<String, Object>}.
+     * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
      *
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    public static PropositionItem fromEventData(final Map<String, Object> eventData) {
+    static PropositionItem fromEventData(final Map<String, Object> eventData) {
         PropositionItem propositionItem = null;
         try {
             final String uniqueId = DataReader.getString(eventData, MessagingConstants.ConsequenceDetailKeys.ID);
@@ -303,12 +327,12 @@ public class PropositionItem implements Serializable {
 
             final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
-                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot create PropositionItem, event data is null or empty.");
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, schema, dataMap);
-        } catch (final DataReaderException exception) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
+        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -319,10 +343,10 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} object created from this {@link PropositionItem}.
      */
-    public Map<String, Object> toEventData() {
+    Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "MessagingPropositionItem content is null or empty, cannot create event data map.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
         eventData.put(MessagingConstants.ConsequenceDetailKeys.ID, this.itemId);

@@ -58,7 +58,7 @@ public class ParsedPropositionsTests {
     private ExtensionApi mockExtensionApi;
 
     @Before
-    public void setup() throws JSONException {
+    public void setup() throws JSONException, MessageRequiredFieldMissingException {
 
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
         mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
@@ -240,9 +240,66 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_PropositionItemEmptyMap() {
+    public void test_parsedPropositionConstructor_withNullProposition() throws MessageRequiredFieldMissingException {
         // setup
-        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, null);
+        Map<Surface, List<Proposition>> propositions = new HashMap<Surface, List<Proposition>>() {{
+            put(mockInAppSurface, new ArrayList<Proposition>() {{
+                add(null);
+            }});
+        }};
+
+        // test
+        ParsedPropositions parsedPropositions = new ParsedPropositions(
+                propositions,
+                new ArrayList<Surface>() {{
+                    add(mockInAppSurface);
+                }},
+                mockExtensionApi);
+
+
+        //verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionConstructor_NoPropositionItems() throws MessageRequiredFieldMissingException {
+        // setup
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, new HashMap<>());
+        mockInAppProposition = new Proposition("inapp",
+                mockInAppSurface.getUri(),
+                mockScopeDetails,
+                new ArrayList<>());
+        Map<Surface, List<Proposition>> propositions = new HashMap<Surface, List<Proposition>>() {{
+            put(mockInAppSurface, new ArrayList<Proposition>() {{
+                add(mockInAppProposition);
+            }});
+        }};
+
+        // test
+        ParsedPropositions parsedPropositions = new ParsedPropositions(
+                propositions,
+                new ArrayList<Surface>() {{
+                    add(mockInAppSurface);
+                }},
+                mockExtensionApi);
+
+
+        //verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionConstructor_EmptyPropositionItemData() throws MessageRequiredFieldMissingException {
+        // setup
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, new HashMap<>());
         mockInAppProposition = new Proposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
@@ -273,7 +330,7 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_PropositionRuleWithNoConsequence() {
+    public void test_parsedPropositionConstructor_PropositionRuleWithNoConsequence() throws MessageRequiredFieldMissingException {
         // setup
         final Map<String, Object> ruleWithNoConsequenceContent = MessagingTestUtils.getMapFromFile("ruleWithNoConsequence.json");
         mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
@@ -307,7 +364,41 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_PropositionRuleWithDefaultSchema() {
+    public void test_parsedPropositionConstructor_PropositionRuleWithNoConsequenceDetailsData() throws MessageRequiredFieldMissingException {
+        // setup
+        final Map<String, Object> ruleWithNoConsequenceContent = MessagingTestUtils.getMapFromFile("ruleWithNoConsequenceDetail.json");
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
+        mockInAppProposition = new Proposition("inapp",
+                mockInAppSurface.getUri(),
+                mockScopeDetails,
+                new ArrayList<PropositionItem>() {{
+                    add(mockInAppPropositionItem);
+                }});
+        Map<Surface, List<Proposition>> propositions = new HashMap<Surface, List<Proposition>>() {{
+            put(mockInAppSurface, new ArrayList<Proposition>() {{
+                add(mockInAppProposition);
+            }});
+        }};
+
+        // test
+        ParsedPropositions parsedPropositions = new ParsedPropositions(
+                propositions,
+                new ArrayList<Surface>() {{
+                    add(mockInAppSurface);
+                }},
+                mockExtensionApi);
+
+
+        //verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionConstructor_PropositionRuleWithDefaultSchema() throws MessageRequiredFieldMissingException {
         // setup
         mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.DEFAULT_CONTENT, inappPropositionContent);
         mockInAppProposition = new Proposition("inapp",
@@ -342,7 +433,7 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_PropositionRuleWithUnknownSchema() {
+    public void test_parsedPropositionConstructor_PropositionRuleWithUnknownSchema() throws MessageRequiredFieldMissingException {
         // setup
         mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.UNKNOWN, inappPropositionContent);
         mockInAppProposition = new Proposition("inapp",

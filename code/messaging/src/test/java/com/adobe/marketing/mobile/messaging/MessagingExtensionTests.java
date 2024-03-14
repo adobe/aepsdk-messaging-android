@@ -397,7 +397,7 @@ public class MessagingExtensionTests {
         runUsingMockedServiceProvider(() -> {
             List<String> assetList = new ArrayList<>();
             assetList.add("remoteAsset.png");
-            Map<String, Object> detail =
+            Map<String, Object> data =
                     new HashMap<String, Object>() {
                         {
                             put("remoteAssets", assetList);
@@ -405,6 +405,13 @@ public class MessagingExtensionTests {
                             put("html", "iam html content");
                         }
                     };
+            Map<String, Object> detail = new HashMap<String, Object>() {
+                {
+                    put("id", "testId");
+                    put("schema", SchemaType.INAPP.toString());
+                    put("data", data);
+                }
+            };
             Map<String, Object> triggeredConsequence =
                     new HashMap<String, Object>() {
                         {
@@ -430,50 +437,7 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(any(RuleConsequence.class));
-        });
-    }
-
-    @Test
-    public void test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageNotCalled() {
-        // setup
-        runUsingMockedServiceProvider(() -> {
-            List<String> assetList = new ArrayList<>();
-            assetList.add("remoteAsset.png");
-            Map<String, Object> detail =
-                    new HashMap<String, Object>() {
-                        {
-                            put("remoteAssets", assetList);
-                            put("mobileParameters", new HashMap<String, Object>());
-                            put("html", "iam html content");
-                        }
-                    };
-            Map<String, Object> triggeredConsequence =
-                    new HashMap<String, Object>() {
-                        {
-                            put("id", "testId");
-                            put("type", "invalid");
-                            put("detail", detail);
-                        }
-                    };
-
-            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
-                {
-                    {
-                        put("triggeredconsequence", triggeredConsequence);
-                    }
-                }
-            };
-
-            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
-                    .setEventData(ruleConsequenceMap)
-                    .build();
-
-            // test
-            messagingExtension.handleRuleEngineResponseEvents(testEvent);
-
-            // verify
-            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(1)).createInAppMessage(any(PropositionItem.class));
         });
     }
 
@@ -499,7 +463,58 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(PropositionItem.class));
+        });
+    }
+
+
+    @Test
+    public void test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageNotCalled() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> data =
+                    new HashMap<String, Object>() {
+                        {
+                            put("remoteAssets", assetList);
+                            put("mobileParameters", new HashMap<String, Object>());
+                            put("html", "iam html content");
+                        }
+                    };
+            Map<String, Object> detail = new HashMap<String, Object>() {
+                {
+                    put("id", "testId");
+                    put("schema", SchemaType.INAPP.toString());
+                    put("data", data);
+                }
+            };
+            Map<String, Object> triggeredConsequence =
+                    new HashMap<String, Object>() {
+                        {
+                            put("id", "testId");
+                            put("type", "invalid");
+                            put("detail", detail);
+                        }
+                    };
+
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", triggeredConsequence);
+                    }
+                }
+            };
+
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
+
+            // test
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+            // verify
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(PropositionItem.class));
         });
     }
 
@@ -513,7 +528,7 @@ public class MessagingExtensionTests {
                     new HashMap<String, Object>() {
                         {
                             put("id", "testId");
-                            put("type", "cjmiam");
+                            put("type", "schema");
                             put("detail", null);
                         }
                     };
@@ -534,7 +549,57 @@ public class MessagingExtensionTests {
             messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
             // verify
-            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(RuleConsequence.class));
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(PropositionItem.class));
+        });
+    }
+
+    @Test
+    public void test_handleRuleEngineResponseEvents_when_schemaTypeIsNotInApp_then_createInAppMessageNotCalled() {
+        // setup
+        runUsingMockedServiceProvider(() -> {
+            List<String> assetList = new ArrayList<>();
+            assetList.add("remoteAsset.png");
+            Map<String, Object> data =
+                    new HashMap<String, Object>() {
+                        {
+                            put("remoteAssets", assetList);
+                            put("mobileParameters", new HashMap<String, Object>());
+                            put("html", "iam html content");
+                        }
+                    };
+            Map<String, Object> detail = new HashMap<String, Object>() {
+                {
+                    put("id", "testId");
+                    put("schema", SchemaType.HTML_CONTENT.toString());
+                    put("data", data);
+                }
+            };
+            Map<String, Object> triggeredConsequence =
+                    new HashMap<String, Object>() {
+                        {
+                            put("id", "testId");
+                            put("type", "schema");
+                            put("detail", detail);
+                        }
+                    };
+
+            Map<String, Object> ruleConsequenceMap = new HashMap<String, Object>() {
+                {
+                    {
+                        put("triggeredconsequence", triggeredConsequence);
+                    }
+                }
+            };
+
+            Event testEvent = new Event.Builder("Test event", EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT)
+                    .setEventData(ruleConsequenceMap)
+                    .build();
+
+            // test
+            messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+            // verify
+            verify(mockEdgePersonalizationResponseHandler, times(0)).createInAppMessage(any(PropositionItem.class));
         });
     }
 
