@@ -121,7 +121,7 @@ public class PresentableMessageMapperTests {
         }
     }
 
-    PropositionItem createPropositionItem() {
+    PropositionItem createPropositionItem() throws MessageRequiredFieldMissingException {
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
@@ -183,7 +183,7 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_InvalidSchema() {
+    public void test_createMessage_InvalidSchema() throws MessageRequiredFieldMissingException {
         // setup
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
@@ -205,12 +205,10 @@ public class PresentableMessageMapperTests {
 
     @Test
     public void test_createMessage_PropositionItemMissingItemData() {
-        // setup
-        PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, null);
-
         runUsingMockedServiceProvider(() -> {
             // test
             try {
+                PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, null);
                 internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 assertEquals(MessageRequiredFieldMissingException.class, exception.getClass());
@@ -222,7 +220,7 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_InAppSchemaDataMissingContent() {
+    public void test_createMessage_InAppSchemaDataMissingContent() throws MessageRequiredFieldMissingException {
         // setup
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
@@ -242,7 +240,7 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_createMessage_InAppSchemaDataContentIsNotHtml() throws JSONException {
+    public void test_createMessage_InAppSchemaDataContentIsNotHtml() throws JSONException, MessageRequiredFieldMissingException {
         // setup
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, new JSONObject("{\"key\":\"value\"}"));
@@ -284,34 +282,33 @@ public class PresentableMessageMapperTests {
     public void test_createMessage_WithMessageSettings() {
         // setup
         runUsingMockedServiceProvider(() -> {
-            Map<String, String> gestureMap = new HashMap<>();
-            Map<String, Object> rawMessageSettings = new HashMap();
-            gestureMap.put("tapBackground", "adbinapp://dismiss");
-            gestureMap.put("swipeLeft", "adbinapp://dismiss?interaction=negative");
-            gestureMap.put("swipeRight", "adbinapp://dismiss?interaction=positive");
-            gestureMap.put("swipeUp", "adbinapp://dismiss");
-            gestureMap.put("swipeDown", "adbinapp://dismiss");
-            rawMessageSettings.put("width", 100);
-            rawMessageSettings.put("height", 100);
-            rawMessageSettings.put("backdropColor", "808080");
-            rawMessageSettings.put("backdropOpacity", 0.5f);
-            rawMessageSettings.put("cornerRadius", 70.0f);
-            rawMessageSettings.put("dismissAnimation", "fade");
-            rawMessageSettings.put("displayAnimation", "bottom");
-            rawMessageSettings.put("gestures", gestureMap);
-            rawMessageSettings.put("horizontalAlign", "right");
-            rawMessageSettings.put("horizontalInset", 5);
-            rawMessageSettings.put("verticalAlign", "top");
-            rawMessageSettings.put("verticalInset", 10);
-            rawMessageSettings.put("uiTakeover", true);
-            Map<String, Object> data = new HashMap<>();
-            data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
-            data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
-            data.put(MessagingTestConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS, rawMessageSettings);
-            PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, data);
-
             // test
             try {
+                Map<String, String> gestureMap = new HashMap<>();
+                Map<String, Object> rawMessageSettings = new HashMap();
+                gestureMap.put("tapBackground", "adbinapp://dismiss");
+                gestureMap.put("swipeLeft", "adbinapp://dismiss?interaction=negative");
+                gestureMap.put("swipeRight", "adbinapp://dismiss?interaction=positive");
+                gestureMap.put("swipeUp", "adbinapp://dismiss");
+                gestureMap.put("swipeDown", "adbinapp://dismiss");
+                rawMessageSettings.put("width", 100);
+                rawMessageSettings.put("height", 100);
+                rawMessageSettings.put("backdropColor", "808080");
+                rawMessageSettings.put("backdropOpacity", 0.5f);
+                rawMessageSettings.put("cornerRadius", 70.0f);
+                rawMessageSettings.put("dismissAnimation", "fade");
+                rawMessageSettings.put("displayAnimation", "bottom");
+                rawMessageSettings.put("gestures", gestureMap);
+                rawMessageSettings.put("horizontalAlign", "right");
+                rawMessageSettings.put("horizontalInset", 5);
+                rawMessageSettings.put("verticalAlign", "top");
+                rawMessageSettings.put("verticalInset", 10);
+                rawMessageSettings.put("uiTakeover", true);
+                Map<String, Object> data = new HashMap<>();
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE, ContentType.TEXT_HTML.toString());
+                data.put(MessagingTestConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS, rawMessageSettings);
+                PropositionItem propositionItem = new PropositionItem("123456789", SchemaType.INAPP, data);
                 internalMessage = (PresentableMessageMapper.InternalMessage) PresentableMessageMapper.getInstance().createMessage(mockMessagingExtension, propositionItem, new HashMap<>(), null);
             } catch (Exception exception) {
                 fail(exception.getMessage());

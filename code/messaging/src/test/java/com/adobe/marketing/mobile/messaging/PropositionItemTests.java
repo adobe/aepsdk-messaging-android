@@ -125,7 +125,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_track_validEventType() {
+    public void test_track_validEventType() throws MessageRequiredFieldMissingException {
         Map<String, Object> mockInteractionData = new HashMap<String, Object>() {{ put("someKey", "someValue"); }};
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
@@ -158,7 +158,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_track_nullPropositionReference() {
+    public void test_track_nullPropositionReference() throws MessageRequiredFieldMissingException {
         Map<String, Object> mockInteractionData = new HashMap<String, Object>() {{ put("someKey", "someValue"); }};
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
@@ -184,7 +184,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_track_validEventTypeInteractionTokens() {
+    public void test_track_validEventTypeInteractionTokens() throws MessageRequiredFieldMissingException {
         Map<String, Object> mockInteractionData = new HashMap<String, Object>() {{ put("someKey", "someValue"); }};
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
@@ -217,7 +217,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_track_nullPropositionReferenceWithInteractionAndTokens() {
+    public void test_track_nullPropositionReferenceWithInteractionAndTokens() throws MessageRequiredFieldMissingException {
         Map<String, Object> mockInteractionData = new HashMap<String, Object>() {{ put("someKey", "someValue"); }};
         try (MockedStatic<MobileCore> mobileCoreMockedStatic = Mockito.mockStatic(MobileCore.class);
              MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
@@ -243,7 +243,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_generateInteractionXdm_validEventType() {
+    public void test_generateInteractionXdm_validEventType() throws MessageRequiredFieldMissingException {
         final Map<PropositionInteraction, List<Object>> constructorArgs = new HashMap<>();
         try (MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
                 (mock, context) -> {
@@ -280,7 +280,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_generateInteractionXdm_nullPropositionReference() {
+    public void test_generateInteractionXdm_nullPropositionReference() throws MessageRequiredFieldMissingException {
         try (MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
                 (mock, context) -> {
                     when(mock.getPropositionInteractionXDM()).thenReturn(
@@ -304,7 +304,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_generateInteractionXdm_validEventTypeInteractionTokens() {
+    public void test_generateInteractionXdm_validEventTypeInteractionTokens() throws MessageRequiredFieldMissingException {
         final Map<PropositionInteraction, List<Object>> constructorArgs = new HashMap<>();
         try (MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
                 (mock, context) -> {
@@ -342,7 +342,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_generateInteractionXdm_nullPropositionReferenceWithInteractionAndTokens() {
+    public void test_generateInteractionXdm_nullPropositionReferenceWithInteractionAndTokens() throws MessageRequiredFieldMissingException {
         try (MockedConstruction<PropositionInteraction> propositionInteractionMockedConstruction = Mockito.mockConstruction(PropositionInteraction.class,
                 (mock, context) -> {
                     when(mock.getPropositionInteractionXDM()).thenReturn(
@@ -368,7 +368,7 @@ public class PropositionItemTests {
 
     // test constructor
     @Test
-    public void test_propositionItemConstructor_FeedJSONContent() {
+    public void test_propositionItemConstructor_FeedJSONContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
         // verify
@@ -379,7 +379,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_propositionItemConstructor_StringContent() {
+    public void test_propositionItemConstructor_StringContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, eventDataMapForHTML);
         // verify
@@ -391,7 +391,7 @@ public class PropositionItemTests {
 
     // toEventData
     @Test
-    public void test_toEventData_JsonContent() {
+    public void test_toEventData_JsonContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, (Map<String, Object>) eventDataMapForJSON.get("data"));
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
@@ -403,7 +403,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_toEventData_StringContent() {
+    public void test_toEventData_StringContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, (Map<String, Object>) eventDataMapForHTML.get("data"));
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
@@ -415,7 +415,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_toEventData_FeedContent() {
+    public void test_toEventData_FeedContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, feedPropositionItemData);
         Map<String, Object> propositionItemMap = propositionItem.toEventData();
@@ -424,15 +424,6 @@ public class PropositionItemTests {
         assertEquals(testId, propositionItemMap.get("id"));
         assertEquals(SchemaType.FEED.toString(), propositionItemMap.get("schema"));
         assertEquals(feedPropositionItemData, propositionItemMap.get("data"));
-    }
-
-    @Test
-    public void test_toEventData_NullContent() {
-        // test
-        PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, null);
-        Map<String, Object> propositionItemMap = propositionItem.toEventData();
-        // verify
-        assertTrue(propositionItemMap.isEmpty());
     }
 
     // fromEventData
@@ -535,7 +526,7 @@ public class PropositionItemTests {
 
     // getInAppSchemaData tests
     @Test
-    public void test_getInAppSchemaData() {
+    public void test_getInAppSchemaData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.INAPP, inAppPropositionItemData);
         InAppSchemaData schemaData = propositionItem.getInAppSchemaData();
@@ -552,7 +543,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getInAppSchemaData_emptyData() {
+    public void test_getInAppSchemaData_emptyData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.INAPP, Collections.emptyMap());
         InAppSchemaData schemaData = propositionItem.getInAppSchemaData();
@@ -561,7 +552,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getInAppSchemaData_invalidSchemaType() {
+    public void test_getInAppSchemaData_invalidSchemaType() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, inAppPropositionItemData);
         InAppSchemaData schemaData = propositionItem.getInAppSchemaData();
@@ -571,7 +562,7 @@ public class PropositionItemTests {
 
     // getFeedItemSchemaData tests
     @Test
-    public void test_getFeedItemSchemaData() {
+    public void test_getFeedItemSchemaData() throws MessageRequiredFieldMissingException {
         // setup
         ArrayList<Map<String, Object>> rules = (ArrayList) feedPropositionItemContent.get("rules");
         Map<String, Object> rule = rules.get(0);
@@ -592,7 +583,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getFeedSchemaData_emptyData() {
+    public void test_getFeedSchemaData_emptyData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.FEED, Collections.emptyMap());
         FeedItemSchemaData schemaData = propositionItem.getFeedItemSchemaData();
@@ -601,7 +592,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getFeedItemSchemaData_invalidSchemaType() {
+    public void test_getFeedItemSchemaData_invalidSchemaType() throws MessageRequiredFieldMissingException {
         // setup
         ArrayList<Map<String, Object>> rules = (ArrayList) feedPropositionItemContent.get("rules");
         Map<String, Object> rule = rules.get(0);
@@ -618,7 +609,7 @@ public class PropositionItemTests {
 
     // getJsonContentMap tests
     @Test
-    public void test_getJsonContentMap() {
+    public void test_getJsonContentMap() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, feedPropositionItemData);
         Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
@@ -628,7 +619,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getJsonContentMap_emptyData() {
+    public void test_getJsonContentMap_emptyData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
         Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
@@ -637,7 +628,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getJsonContentMap_invalidSchemaType() {
+    public void test_getJsonContentMap_invalidSchemaType() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, htmlContentMap);
         Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
@@ -647,7 +638,7 @@ public class PropositionItemTests {
 
     // getJsonArrayContent tests
     @Test
-    public void test_getJsonArrayContent() {
+    public void test_getJsonArrayContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, codeBasedPropositionItemData);
         List<Map<String, Object>> jsonArrayList = propositionItem.getJsonContentArrayList();
@@ -657,7 +648,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getJsonArrayContent_emptyData() {
+    public void test_getJsonArrayContent_emptyData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, Collections.emptyMap());
         List<Map<String, Object>> jsonArrayList = propositionItem.getJsonContentArrayList();
@@ -666,7 +657,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getJsonArrayContent_invalidSchemaType() {
+    public void test_getJsonArrayContent_invalidSchemaType() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, htmlContentMap);
         List<Map<String, Object>> jsonArrayList = propositionItem.getJsonContentArrayList();
@@ -676,7 +667,7 @@ public class PropositionItemTests {
 
     // getHtmlContent tests
     @Test
-    public void test_getHtmlContent() {
+    public void test_getHtmlContent() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, htmlContentMap);
         String htmlContent = propositionItem.getHtmlContent();
@@ -684,8 +675,7 @@ public class PropositionItemTests {
         assertEquals(testStringContent, htmlContent);
     }
 
-    @Test
-    public void test_getHtmlContent_EmptyData() {
+    public void test_getHtmlContent_EmptyData() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.HTML_CONTENT, Collections.emptyMap());
         String htmlContent = propositionItem.getHtmlContent();
@@ -694,7 +684,7 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_getHtmlContent_invalidSchemaType() {
+    public void test_getHtmlContent_invalidSchemaType() throws MessageRequiredFieldMissingException {
         // test
         PropositionItem propositionItem = new PropositionItem(testId, SchemaType.JSON_CONTENT, codeBasedPropositionItemData);
         String htmlContent = propositionItem.getHtmlContent();

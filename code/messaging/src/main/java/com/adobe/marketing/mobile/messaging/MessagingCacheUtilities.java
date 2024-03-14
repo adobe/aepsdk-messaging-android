@@ -209,16 +209,17 @@ final class MessagingCacheUtilities {
     private List<Proposition> convertToPropositions(final List<PropositionPayload> propositionPayloads) {
         final List<Proposition> propositions = new ArrayList<>();
         final List<PropositionItem> propositionItems = new ArrayList<>();
-        for (final PropositionPayload propositionPayload : propositionPayloads) {
-            for (final PayloadItem payloadItem : propositionPayload.items) {
-                final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
-                propositionItems.add(propositionItem);
-            }
-            try {
+        try {
+            for (final PropositionPayload propositionPayload : propositionPayloads) {
+                for (final PayloadItem payloadItem : propositionPayload.items) {
+                    final PropositionItem propositionItem = new PropositionItem(payloadItem.id, SchemaType.fromString(payloadItem.schema), payloadItem.data);
+                    propositionItems.add(propositionItem);
+                }
                 propositions.add(new Proposition(propositionPayload.propositionInfo.id, propositionPayload.propositionInfo.scope, propositionPayload.propositionInfo.scopeDetails, propositionItems));
-            } catch (final MessageRequiredFieldMissingException exception) {
-                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
+
             }
+        } catch (final MessageRequiredFieldMissingException exception) {
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition: %s", exception.getLocalizedMessage());
         }
         return propositions;
     }

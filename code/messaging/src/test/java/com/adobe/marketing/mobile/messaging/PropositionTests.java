@@ -118,7 +118,7 @@ public class PropositionTests {
     }
 
 
-    @Test
+    @Test(expected = MessageRequiredFieldMissingException.class)
     public void test_propositionConstructor_MissingPropositionItems() throws MessageRequiredFieldMissingException {
         // test
         Proposition proposition = new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, null);

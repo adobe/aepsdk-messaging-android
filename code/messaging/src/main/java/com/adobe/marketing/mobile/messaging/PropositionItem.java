@@ -22,6 +22,7 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
+import com.adobe.marketing.mobile.util.StringUtils;
 
 import org.json.JSONObject;
 
@@ -56,7 +57,12 @@ public class PropositionItem implements Serializable {
     // Soft reference to Proposition instance
     SoftReference<Proposition> propositionReference;
 
-    public PropositionItem(final String itemId, final SchemaType schema, final Map<String, Object> itemData) {
+    public PropositionItem(@NonNull final String itemId,
+                           @NonNull final SchemaType schema,
+                           @NonNull final Map<String, Object> itemData) throws MessageRequiredFieldMissingException {
+        if(StringUtils.isNullOrEmpty(itemId) || schema == null || itemData == null) {
+            throw new MessageRequiredFieldMissingException("Id, schema or itemData is missing");
+        }
         this.itemId = itemId;
         this.schema = schema;
         this.itemData = itemData;
@@ -67,6 +73,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link String} containing the {@link PropositionItem} identifier.
      */
+    @NonNull
     public String getItemId() {
         return itemId;
     }
@@ -76,6 +83,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link SchemaType} containing the {@link PropositionItem} content schema.
      */
+    @NonNull
     public SchemaType getSchema() {
         return schema;
     }
@@ -85,6 +93,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
      */
+    @NonNull
     public Map<String, Object> getData() {
         return itemData;
     }
@@ -297,8 +306,8 @@ public class PropositionItem implements Serializable {
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
-        } catch (final DataReaderException dataReaderException) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", dataReaderException.getLocalizedMessage());
+        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -322,7 +331,7 @@ public class PropositionItem implements Serializable {
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, schema, dataMap);
-        } catch (final DataReaderException exception) {
+        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 

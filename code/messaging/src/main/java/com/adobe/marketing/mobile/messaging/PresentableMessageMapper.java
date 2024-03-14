@@ -146,6 +146,13 @@ class PresentableMessageMapper {
             messagingExtension = parent;
             this.propositionInfo = propositionInfo;
 
+
+            final UIService uiService = ServiceProvider.getInstance().getUIService();
+            if (uiService == null) {
+                Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
+                throw new IllegalStateException("The UIService is unavailable");
+            }
+
             if(propositionItem == null) {
                 Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, PropositionItem is null.");
                 throw new MessageRequiredFieldMissingException("Required field: \"PropositionItem\" is null.");
@@ -154,8 +161,8 @@ class PresentableMessageMapper {
             id = propositionItem.getItemId();
 
             final SchemaType schemaType = propositionItem.getSchema();
-            if (!(SchemaType.INAPP == schemaType)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Required field \"schema\" is (%s) should be of type (%S).", schemaType, MessagingConstants.SchemaValues.SCHEMA_IAM);
+            if (SchemaType.INAPP != schemaType) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Required field \"schema\" is (%s) should be of type (%s).", schemaType, MessagingConstants.SchemaValues.SCHEMA_IAM);
                 throw new MessageRequiredFieldMissingException("Required field: \"schema\" is not equal to \"https://ns.adobe.com/personalization/message/in-app\".");
             }
 
@@ -173,13 +180,6 @@ class PresentableMessageMapper {
                 }
 
                 final InAppMessageSettings settings = InAppMessageSettingsFromMap(inAppSchemaData.getMobileParameters(), html, assetMap);
-
-                final UIService uiService = ServiceProvider.getInstance().getUIService();
-                if (uiService == null) {
-                    Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "The UIService is unavailable. Aborting in-app message creation.");
-                    throw new IllegalStateException("The UIService is unavailable");
-                }
-
                 aepMessage = uiService.create(new InAppMessage(settings, new MessagingFullscreenEventListener()), new DefaultPresentationUtilityProvider());
             } catch (final ClassCastException exception) {
                 Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Unable to create an in-app message, in-app message content is not of type String.");

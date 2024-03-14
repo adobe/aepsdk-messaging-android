@@ -77,9 +77,9 @@
                 "id": "37427f80-91a1-4234-825b-2638a7586c56",
                 "type": "schema",
                 "detail": {
+                  "id": "37427f80-91a1-4234-825b-2638a7586c56",
                   "schema": "https://ns.adobe.com/personalization/message/in-app",
                   "data": {
-                    "id": "37427f80-91a1-4234-825b-2638a7586c56",
                     "mobileParameters": {
                       "verticalAlign": "center",
                       "dismissAnimation": "top",

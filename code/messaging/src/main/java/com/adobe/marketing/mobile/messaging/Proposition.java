@@ -53,15 +53,13 @@ public class Proposition implements Serializable {
                        @NonNull final List<PropositionItem> propositionItems) throws MessageRequiredFieldMissingException {
         if (StringUtils.isNullOrEmpty(uniqueId)
                 || StringUtils.isNullOrEmpty(scope)
-                || MapUtils.isNullOrEmpty(scopeDetails)) {
+                || MapUtils.isNullOrEmpty(scopeDetails)
+                || propositionItems == null) {
             throw new MessageRequiredFieldMissingException("Id, scope or scope details is missing");
         }
         this.uniqueId = uniqueId;
         this.scope = scope;
         this.scopeDetails = scopeDetails;
-        if(propositionItems == null) {
-            return;
-        }
         this.propositionItems.addAll(propositionItems);
         for (final PropositionItem item : this.propositionItems) {
             if (item.propositionReference == null) {

@@ -268,11 +268,11 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_NoPropositionItems() throws MessageRequiredFieldMissingException {
         // setup
-        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, null);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, new HashMap<>());
         mockInAppProposition = new Proposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
-                null);
+                new ArrayList<>());
         Map<Surface, List<Proposition>> propositions = new HashMap<Surface, List<Proposition>>() {{
             put(mockInAppSurface, new ArrayList<Proposition>() {{
                 add(mockInAppProposition);
@@ -299,7 +299,7 @@ public class ParsedPropositionsTests {
     @Test
     public void test_parsedPropositionConstructor_EmptyPropositionItemData() throws MessageRequiredFieldMissingException {
         // setup
-        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, null);
+        mockInAppPropositionItem = new PropositionItem("inapp", SchemaType.RULESET, new HashMap<>());
         mockInAppProposition = new Proposition("inapp",
                 mockInAppSurface.getUri(),
                 mockScopeDetails,
