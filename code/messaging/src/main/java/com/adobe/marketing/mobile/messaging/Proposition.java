@@ -32,7 +32,7 @@ import java.util.Map;
  * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
  */
 public class Proposition implements Serializable {
-    private static final String SELF_TAG = "MessagingProposition";
+    private static final String SELF_TAG = "Proposition";
     private static final String PAYLOAD_ID = "id";
     private static final String PAYLOAD_ITEMS = "items";
     private static final String PAYLOAD_SCOPE = "scope";
@@ -69,7 +69,7 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingProposition} identifier.
+     * Gets the {@code Proposition} identifier.
      *
      * @return {@link String} containing the {@link Proposition} identifier.
      */
@@ -78,16 +78,16 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} list.
+     * Gets the {@code PropositionItem} list.
      *
-     * @return {@code List<MessagingPropositionItem>} containing the {@link PropositionItem}s.
+     * @return {@code List<PropositionItem>} containing the {@link PropositionItem}s.
      */
     public List<PropositionItem> getItems() {
         return propositionItems;
     }
 
     /**
-     * Gets the {@code MessagingProposition} scope.
+     * Gets the {@code Proposition} scope.
      *
      * @return {@link String} containing the encoded {@link Proposition} scope.
      */
@@ -96,7 +96,7 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingProposition} scope details.
+     * Gets the {@code Proposition} scope details.
      *
      * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
      */
@@ -105,7 +105,7 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Creates a {@code MessagingProposition} object from the provided {@code Map<String, Object>}.
+     * Creates a {@code Proposition} object from the provided {@code Map<String, Object>}.
      *
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
@@ -126,14 +126,14 @@ public class Proposition implements Serializable {
             }
             proposition = new Proposition(uniqueId, scope, scopeDetails, propositionItems);
         } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingProposition from event data map: %s", exception.getLocalizedMessage());
+            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition from event data map: %s", exception.getLocalizedMessage());
         }
 
         return proposition;
     }
 
     /**
-     * Creates a {@code Map<String, Object>} object from this {@code MessagingProposition}.
+     * Creates a {@code Map<String, Object>} object from this {@code Proposition}.
      *
      * @return {@link Map<String, Object>} object created from this {@link Proposition}.
      */

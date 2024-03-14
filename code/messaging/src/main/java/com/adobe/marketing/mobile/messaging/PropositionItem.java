@@ -42,7 +42,7 @@ import java.util.Map;
  * This class provides helper access to get strongly typed content - e.g. `getHtmlContent`
  */
 public class PropositionItem implements Serializable {
-    private static final String SELF_TAG = "MessagingPropositionItem";
+    private static final String SELF_TAG = "PropositionItem";
     /// Unique identifier for this `PropositionItem`
     /// contains value for `id` in JSON
     private String itemId;
@@ -69,7 +69,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} identifier.
+     * Gets the {@code PropositionItem} identifier.
      *
      * @return {@link String} containing the {@link PropositionItem} identifier.
      */
@@ -79,7 +79,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} content schema.
+     * Gets the {@code PropositionItem} content schema.
      *
      * @return {@link SchemaType} containing the {@link PropositionItem} content schema.
      */
@@ -89,7 +89,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingPropositionItem} data.
+     * Gets the {@code PropositionItem} data.
      *
      * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
      */
@@ -99,7 +99,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Gets the {@code MessagingProposition} referenced by the Proposition {@code SoftReference}.
+     * Gets the {@code PropositionItem} referenced by the Proposition {@code SoftReference}.
      *
      * @return {@link Proposition} referenced by the Proposition {@link SoftReference}.
      */
@@ -257,14 +257,14 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Creates a schema data object from this {@code MessagingPropositionItem}'s content.
+     * Creates a schema data object from this {@code PropositionItem}'s content.
      *
      * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
      * @return {@code SchemaData} object created from the provided {@link PropositionItem}'s content.
      */
     private SchemaData createSchemaData(final SchemaType schemaType) {
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot decode content, MessagingPropositionItem data is null or empty.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot decode content, PropositionItem data is null or empty.");
             return null;
         }
 
@@ -285,7 +285,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Creates a {@code MessagingPropositionItem} object from the provided {@code RuleConsequence}.
+     * Creates a {@code PropositionItem} object from the provided {@code RuleConsequence}.
      *
      * @return {@link PropositionItem} object created from the provided {@link RuleConsequence}.
      */
@@ -307,14 +307,14 @@ public class PropositionItem implements Serializable {
             }
             propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
         } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating MessagingPropositionItem from rule consequence: %s", exception.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating PropositionItem from rule consequence: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
     }
 
     /**
-     * Creates a {@code MessagingPropositionItem} object from the provided {@code Map<String, Object>}.
+     * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
      *
      * @param eventData {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
@@ -327,12 +327,12 @@ public class PropositionItem implements Serializable {
 
             final Map<String, Object> dataMap = DataReader.getTypedMap(Object.class, eventData, MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
-                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot create MessagingPropositionItem, event data is null or empty.");
+                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Cannot create PropositionItem, event data is null or empty.");
                 return null;
             }
             propositionItem = new PropositionItem(uniqueId, schema, dataMap);
         } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a MessagingPropositionItem from an event data map: %s", exception.getLocalizedMessage());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Exception caught while attempting to create a PropositionItem from an event data map: %s", exception.getLocalizedMessage());
         }
 
         return propositionItem;
@@ -346,7 +346,7 @@ public class PropositionItem implements Serializable {
     Map<String, Object> toEventData() {
         final Map<String, Object> eventData = new HashMap<>();
         if (MapUtils.isNullOrEmpty(itemData)) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "MessagingPropositionItem content is null or empty, cannot create event data map.");
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "PropositionItem content is null or empty, cannot create event data map.");
             return eventData;
         }
         eventData.put(MessagingConstants.ConsequenceDetailKeys.ID, this.itemId);
