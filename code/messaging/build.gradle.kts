@@ -14,6 +14,7 @@ plugins {
 }
 
 val mavenCoreVersion: String by project
+val mavenEdgeVersion: String by project
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile"
@@ -23,6 +24,7 @@ aepLibrary {
     publishing {
         gitRepoName = "aepsdk-messaging-android"
         addCoreDependency(mavenCoreVersion)
+        addEdgeDependency(mavenEdgeVersion)
     }
 
     android {
