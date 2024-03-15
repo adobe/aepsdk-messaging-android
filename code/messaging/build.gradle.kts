@@ -17,7 +17,7 @@ val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 
 aepLibrary {
-    namespace = "com.adobe.marketing.mobile"
+    namespace = "com.adobe.marketing.mobile.messaging"
     enableSpotless = true
     enableCheckStyle = true
 
