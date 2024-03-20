@@ -14,13 +14,12 @@ package com.adobe.marketing.mobile.messaging;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionPayloadTests {
@@ -33,7 +32,8 @@ public class PropositionPayloadTests {
         testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
         // test
         try {
-            propositionPayload = MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
+            propositionPayload =
+                    MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -41,12 +41,16 @@ public class PropositionPayloadTests {
         assertEquals("activityId", propositionPayload.propositionInfo.activityId);
         assertEquals("correlationID", propositionPayload.propositionInfo.correlationId);
         assertEquals("uniqueId", propositionPayload.propositionInfo.id);
-        assertEquals("mobileapp://com.adobe.marketing.mobile.messaging.test", propositionPayload.propositionInfo.scope);
+        assertEquals(
+                "mobileapp://com.adobe.marketing.mobile.messaging.test",
+                propositionPayload.propositionInfo.scope);
         // verify scope details
         Map<String, Object> scopeDetails = propositionPayload.propositionInfo.scopeDetails;
-        Map<String, Object> characteristics = (Map<String, Object>) scopeDetails.get("characteristics");
+        Map<String, Object> characteristics =
+                (Map<String, Object>) scopeDetails.get("characteristics");
         Map<String, Object> cjmEvent = (Map<String, Object>) characteristics.get("cjmEvent");
-        Map<String, Object> messageExecution = (Map<String, Object>) cjmEvent.get("messageExecution");
+        Map<String, Object> messageExecution =
+                (Map<String, Object>) cjmEvent.get("messageExecution");
         Map<String, Object> messageProfile = (Map<String, Object>) cjmEvent.get("messageProfile");
         Map<String, Object> channel = (Map<String, Object>) messageProfile.get("channel");
         assertEquals("messageExecutionID", messageExecution.get("messageExecutionID"));
@@ -67,14 +71,20 @@ public class PropositionPayloadTests {
         // verify payload item data
         Map<String, Object> data = payloadItem.data;
         assertEquals("dataId", data.get("id"));
-        assertEquals("{\"version\":1,\"rules\":[{\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"definition\":{\"key\":\"foo\",\"matcher\":\"eq\",\"values\":[\"bar\"]},\"type\":\"matcher\"}],\"logic\":\"and\"}},\"consequences\":[{\"id\":\"ebdbd89e-3318-4720-afbc-d929890b28ae\",\"type\":\"schema\",\"detail\":{\"mobileParameters\":{\"verticalAlign\":\"center\",\"horizontalInset\":0,\"dismissAnimation\":\"bottom\",\"uiTakeover\":true,\"horizontalAlign\":\"center\",\"verticalInset\":0,\"displayAnimation\":\"bottom\",\"width\":100,\"height\":100,\"gestures\":{}},\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",\"remoteAssets\":[]}}]}]}", data.get("content"));
+        assertEquals(
+                "{\"version\":1,\"rules\":[{\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"definition\":{\"key\":\"foo\",\"matcher\":\"eq\",\"values\":[\"bar\"]},\"type\":\"matcher\"}],\"logic\":\"and\"}},\"consequences\":[{\"id\":\"ebdbd89e-3318-4720-afbc-d929890b28ae\",\"type\":\"schema\",\"detail\":{\"mobileParameters\":{\"verticalAlign\":\"center\",\"horizontalInset\":0,\"dismissAnimation\":\"bottom\",\"uiTakeover\":true,\"horizontalAlign\":\"center\",\"verticalInset\":0,\"displayAnimation\":\"bottom\",\"width\":100,\"height\":100,\"gestures\":{}},\"html\":\"<html><head></head><body>Hello"
+                    + " from InApp campaign:"
+                    + " [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",\"remoteAssets\":[]}}]}]}",
+                data.get("content"));
     }
 
     @Test
     public void testCreatePropositionPayload_MissingScopeDetails() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope_details.json"));
+        testPayload.add(
+                MessagingTestUtils.getMapFromFile(
+                        "personalization_payload_missing_scope_details.json"));
         // test
         try {
             // verify proposition payload failed to be created
@@ -88,7 +98,8 @@ public class PropositionPayloadTests {
     public void testCreatePropositionPayload_MissingScope() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope.json"));
+        testPayload.add(
+                MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope.json"));
         // test
         try {
             // verify proposition payload failed to be created
@@ -102,7 +113,8 @@ public class PropositionPayloadTests {
     public void testCreatePropositionPayload_MissingItems() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_items.json"));
+        testPayload.add(
+                MessagingTestUtils.getMapFromFile("personalization_payload_missing_items.json"));
         // test
         try {
             // verify proposition payload failed to be created
@@ -116,7 +128,8 @@ public class PropositionPayloadTests {
     public void testCreatePropositionPayload_EmptyItems() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_empty_items.json"));
+        testPayload.add(
+                MessagingTestUtils.getMapFromFile("personalization_payload_empty_items.json"));
         // test
         try {
             // verify proposition payload failed to be created
@@ -130,7 +143,8 @@ public class PropositionPayloadTests {
     public void testCreatePropositionPayload_MissingId() {
         // setup
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload_missing_id.json"));
+        testPayload.add(
+                MessagingTestUtils.getMapFromFile("personalization_payload_missing_id.json"));
         // test
         try {
             // verify proposition payload failed to be created

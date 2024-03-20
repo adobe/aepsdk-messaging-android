@@ -40,18 +40,16 @@ import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.test.BuildConfig;
 import com.adobe.marketing.mobile.util.TestHelper;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
 
 public class E2EFunctionalTests {
     static {
@@ -60,8 +58,9 @@ public class E2EFunctionalTests {
     }
 
     @Rule
-    public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRuleWithRealNetworkService())
-            .around(new TestHelper.RegisterMonitorExtensionRule());
+    public RuleChain rule =
+            RuleChain.outerRule(new TestHelper.SetupCoreRuleWithRealNetworkService())
+                    .around(new TestHelper.RegisterMonitorExtensionRule());
 
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
@@ -69,26 +68,35 @@ public class E2EFunctionalTests {
     @Before
     public void setup() throws Exception {
         MessagingTestUtils.cleanCache();
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "80195814545200720557089495418993853789"), TestHelper.getDefaultApplication());
+        MessagingTestUtils.setEdgeIdentityPersistence(
+                MessagingTestUtils.createIdentityMap(
+                        "ECID", "80195814545200720557089495418993853789"),
+                TestHelper.getDefaultApplication());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
-            add(Messaging.EXTENSION);
-            add(Identity.EXTENSION);
-            add(Edge.EXTENSION);
-        }};
+        final List<Class<? extends Extension>> extensions =
+                new ArrayList<Class<? extends Extension>>() {
+                    {
+                        add(Messaging.EXTENSION);
+                        add(Identity.EXTENSION);
+                        add(Edge.EXTENSION);
+                    }
+                };
 
-        MobileCore.registerExtensions(extensions, o -> {
-            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
-            MobileCore.updateConfiguration(testConfig);
-            // wait for configuration to be set
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException interruptedException) {
-                fail(interruptedException.getMessage());
-            }
-            latch.countDown();
-        });
+        MobileCore.registerExtensions(
+                extensions,
+                o -> {
+                    Map<String, Object> testConfig =
+                            MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
+                    MobileCore.updateConfiguration(testConfig);
+                    // wait for configuration to be set
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException interruptedException) {
+                        fail(interruptedException.getMessage());
+                    }
+                    latch.countDown();
+                });
 
         latch.await();
         resetTestExpectations();
@@ -98,24 +106,28 @@ public class E2EFunctionalTests {
     public void tearDown() {
         // clear loaded rules
         SDKHelper.resetSDK();
-
     }
 
     Map<String, Object> createExpectedEdgePersonalizationEventData() {
         final Map<String, Object> expectedEdgePersonalizationEventData = new HashMap<>();
         final Map<String, Object> messageRequestData = new HashMap<>();
         final Map<String, Object> personalizationData = new HashMap<>();
-        personalizationData.put(SURFACES, new ArrayList<String>() {{
-            add("mobileapp://com.adobe.marketing.mobile.messaging.test");
-        }});
+        personalizationData.put(
+                SURFACES,
+                new ArrayList<String>() {
+                    {
+                        add("mobileapp://com.adobe.marketing.mobile.messaging.test");
+                    }
+                });
         messageRequestData.put(PERSONALIZATION, personalizationData);
         expectedEdgePersonalizationEventData.put(QUERY, messageRequestData);
 
-        final Map<String, Object> xdmData = new HashMap<String, Object>() {
-            {
-                put(EVENT_TYPE, PERSONALIZATION_REQUEST);
-            }
-        };
+        final Map<String, Object> xdmData =
+                new HashMap<String, Object>() {
+                    {
+                        put(EVENT_TYPE, PERSONALIZATION_REQUEST);
+                    }
+                };
         expectedEdgePersonalizationEventData.put(XDM, xdmData);
 
         final Map<String, Object> data = new HashMap<>();
@@ -137,24 +149,27 @@ public class E2EFunctionalTests {
     public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
         // setup
         String edgePersonalizationRequestEventID;
-        final Map<String, Object> expectedEdgePersonalizationEventData = createExpectedEdgePersonalizationEventData();
+        final Map<String, Object> expectedEdgePersonalizationEventData =
+                createExpectedEdgePersonalizationEventData();
 
         // test
         Messaging.refreshInAppMessages();
 
         // verify messaging request content event from refreshInAppMessages API call
-        final List<Event> messagingRequestEvents = getDispatchedEventsWith(EventType.MESSAGING,
-                EventSource.REQUEST_CONTENT);
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(EventType.MESSAGING, EventSource.REQUEST_CONTENT);
         assertEquals(1, messagingRequestEvents.size());
         final Event messagingRequestEvent = messagingRequestEvents.get(0);
         assertEquals(true, messagingRequestEvent.getEventData().get("refreshmessages"));
 
         // verify message personalization request content event
-        final List<Event> edgePersonalizationRequestEvents = getDispatchedEventsWith(EventType.EDGE,
-                EventSource.REQUEST_CONTENT);
+        final List<Event> edgePersonalizationRequestEvents =
+                getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT);
         assertEquals(1, edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
-        assertEquals(expectedEdgePersonalizationEventData, edgePersonalizationRequestEvent.getEventData());
+        assertEquals(
+                expectedEdgePersonalizationEventData,
+                edgePersonalizationRequestEvent.getEventData());
         edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
 
         // verify edge personalization decision event

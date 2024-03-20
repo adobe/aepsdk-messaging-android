@@ -16,16 +16,13 @@ import static com.adobe.marketing.mobile.util.FunctionalTestConstants.LOG_TAG;
 import com.adobe.marketing.mobile.services.HttpMethod;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.NetworkRequest;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Class represents a network request received by the {@code NetworkService}.
- */
+/** Class represents a network request received by the {@code NetworkService}. */
 public class TestableNetworkRequest extends NetworkRequest {
     private static final String LOG_SOURCE = "TestableNetworkRequest";
     private final Map<String, String> queryParamMap;
@@ -40,8 +37,7 @@ public class TestableNetworkRequest extends NetworkRequest {
             byte[] connectPayload,
             Map<String, String> requestProperty,
             int connectTimeout,
-            int readTimeout
-    ) {
+            int readTimeout) {
         super(url, command, connectPayload, requestProperty, connectTimeout, readTimeout);
         queryParamMap = splitQueryParameters(url);
     }
@@ -81,11 +77,9 @@ public class TestableNetworkRequest extends NetworkRequest {
             // URL equality is based just on Protocol, Host, and Path
             URL rhUrl = new URL(this.getUrl());
             URL lhUrl = new URL(that.getUrl());
-            return (
-                    Objects.equals(rhUrl.getHost(), lhUrl.getHost()) &&
-                            Objects.equals(rhUrl.getProtocol(), lhUrl.getProtocol()) &&
-                            Objects.equals(rhUrl.getPath(), lhUrl.getPath())
-            );
+            return (Objects.equals(rhUrl.getHost(), lhUrl.getHost())
+                    && Objects.equals(rhUrl.getProtocol(), lhUrl.getProtocol())
+                    && Objects.equals(rhUrl.getPath(), lhUrl.getPath()));
         } catch (MalformedURLException e) {
             return false;
         }

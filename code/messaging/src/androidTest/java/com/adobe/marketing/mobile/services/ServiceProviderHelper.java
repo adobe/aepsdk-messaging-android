@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.services;
 
 import android.content.Context;
-
 import java.io.File;
 
 /**
@@ -39,7 +38,8 @@ public class ServiceProviderHelper {
      * @see DeviceInforming#getApplicationCacheDir()
      */
     public static void cleanCacheDir() {
-        File cacheDir = ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir();
+        File cacheDir =
+                ServiceProvider.getInstance().getDeviceInfoService().getApplicationCacheDir();
         deleteFiles(cacheDir);
     }
 
@@ -51,14 +51,14 @@ public class ServiceProviderHelper {
      */
     public static void cleanDatabaseDir() {
         final String databaseName = EXTENSION_NAME;
-        Context appContext = ServiceProvider.getInstance().getAppContextService().getApplicationContext();
+        Context appContext =
+                ServiceProvider.getInstance().getAppContextService().getApplicationContext();
         if (appContext == null) {
             Log.debug(
                     LOG_TAG,
                     LOG_SOURCE,
                     "Failed to clean database directory for (%s), the ApplicationContext is null",
-                    databaseName
-            );
+                    databaseName);
             return;
         }
 
@@ -84,7 +84,10 @@ public class ServiceProviderHelper {
             }
 
             boolean wasDeleted = f.delete();
-            String msg = wasDeleted ? "Successfully deleted cache file/folder " : "Unable to delete cache file/folder ";
+            String msg =
+                    wasDeleted
+                            ? "Successfully deleted cache file/folder "
+                            : "Unable to delete cache file/folder ";
             Log.debug(LOG_TAG, LOG_SOURCE, msg + "'" + f.getName() + "'");
         }
     }

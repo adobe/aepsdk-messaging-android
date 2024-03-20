@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -14,13 +13,11 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -29,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A {@link Proposition} object encapsulates offers and the information needed for tracking offer interactions.
+ * A {@link Proposition} object encapsulates offers and the information needed for tracking offer
+ * interactions.
  */
 public class Proposition implements Serializable {
     private static final String SELF_TAG = "Proposition";
@@ -47,10 +45,12 @@ public class Proposition implements Serializable {
     // List containing proposition decision items
     private final List<PropositionItem> propositionItems = new ArrayList<>();
 
-    public Proposition(@NonNull final String uniqueId,
-                       @NonNull final String scope,
-                       @NonNull final Map<String, Object> scopeDetails,
-                       @NonNull final List<PropositionItem> propositionItems) throws MessageRequiredFieldMissingException {
+    public Proposition(
+            @NonNull final String uniqueId,
+            @NonNull final String scope,
+            @NonNull final Map<String, Object> scopeDetails,
+            @NonNull final List<PropositionItem> propositionItems)
+            throws MessageRequiredFieldMissingException {
         if (StringUtils.isNullOrEmpty(uniqueId)
                 || StringUtils.isNullOrEmpty(scope)
                 || MapUtils.isNullOrEmpty(scopeDetails)
@@ -109,14 +109,16 @@ public class Proposition implements Serializable {
      *
      * @return {@link Proposition} object created from the provided {@link Map<String, Object>}.
      */
-    @Nullable
-    public static Proposition fromEventData(final Map<String, Object> eventData) {
+    @Nullable public static Proposition fromEventData(final Map<String, Object> eventData) {
         Proposition proposition = null;
         try {
             final String uniqueId = DataReader.getString(eventData, PAYLOAD_ID);
             final String scope = DataReader.getString(eventData, PAYLOAD_SCOPE);
-            final Map<String, Object> scopeDetails = DataReader.getTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS);
-            final List<Map<String, Object>> items = DataReader.optTypedListOfMap(Object.class, eventData, PAYLOAD_ITEMS, new ArrayList<>());
+            final Map<String, Object> scopeDetails =
+                    DataReader.getTypedMap(Object.class, eventData, PAYLOAD_SCOPE_DETAILS);
+            final List<Map<String, Object>> items =
+                    DataReader.optTypedListOfMap(
+                            Object.class, eventData, PAYLOAD_ITEMS, new ArrayList<>());
             final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
                 final PropositionItem propositionItem = PropositionItem.fromEventData(item);
@@ -125,8 +127,12 @@ public class Proposition implements Serializable {
                 }
             }
             proposition = new Proposition(uniqueId, scope, scopeDetails, propositionItems);
-        } catch (final DataReaderException|MessageRequiredFieldMissingException exception) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception occurred creating Proposition from event data map: %s", exception.getLocalizedMessage());
+        } catch (final DataReaderException | MessageRequiredFieldMissingException exception) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception occurred creating Proposition from event data map: %s",
+                    exception.getLocalizedMessage());
         }
 
         return proposition;
@@ -153,7 +159,8 @@ public class Proposition implements Serializable {
     public boolean equals(final Object object) {
         if (object instanceof Proposition) {
             final Proposition proposition = (Proposition) object;
-            final Map<String, Object> newPropositionContent = proposition.getItems().get(0).getData();
+            final Map<String, Object> newPropositionContent =
+                    proposition.getItems().get(0).getData();
             final Map<String, Object> propositionContent = this.getItems().get(0).getData();
             return newPropositionContent.equals(propositionContent);
         } else {

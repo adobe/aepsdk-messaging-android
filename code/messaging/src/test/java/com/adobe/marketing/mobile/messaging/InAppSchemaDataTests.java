@@ -1,3 +1,14 @@
+/*
+  Copyright 2024 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT;
@@ -11,9 +22,9 @@ import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.Conseq
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-
 import com.adobe.marketing.mobile.services.Log;
-
+import java.util.List;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,14 +35,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.List;
-import java.util.Map;
-
 @RunWith(MockitoJUnitRunner.class)
 public class InAppSchemaDataTests {
     @Test
     public void constructor_setsFieldsCorrectly_whenContentIsJsonObject() throws JSONException {
-        //setup
+        // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
         schemaData.put(CONTENT, new JSONObject().put("key", "value"));
@@ -42,10 +50,10 @@ public class InAppSchemaDataTests {
         schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
         schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
 
-        //test
+        // test
         InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-        //verify
+        // verify
         assertEquals(ContentType.APPLICATION_JSON, inAppSchemaData.getContentType());
         assertEquals("value", ((Map) inAppSchemaData.getContent()).get("key"));
         assertEquals(123456789, inAppSchemaData.getPublishedDate());
@@ -54,12 +62,13 @@ public class InAppSchemaDataTests {
         assertEquals("mobileValue", inAppSchemaData.getMobileParameters().get("mobileKey"));
         assertEquals("webValue", inAppSchemaData.getWebParameters().get("webKey"));
         assertEquals(1, inAppSchemaData.getRemoteAssets().size());
-        assertEquals("https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
+        assertEquals(
+                "https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
     }
 
     @Test
     public void constructor_setsFieldsCorrectly_whenContentIsJsonArray() throws JSONException {
-        //setup
+        // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
         JSONArray contentArray = new JSONArray();
@@ -73,10 +82,10 @@ public class InAppSchemaDataTests {
         schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
         schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
 
-        //test
+        // test
         InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-        //verify
+        // verify
         assertEquals(ContentType.APPLICATION_JSON, inAppSchemaData.getContentType());
         assertEquals(2, ((List) inAppSchemaData.getContent()).size());
         assertEquals("value1", ((Map) ((List) inAppSchemaData.getContent()).get(0)).get("key1"));
@@ -87,12 +96,14 @@ public class InAppSchemaDataTests {
         assertEquals("mobileValue", inAppSchemaData.getMobileParameters().get("mobileKey"));
         assertEquals("webValue", inAppSchemaData.getWebParameters().get("webKey"));
         assertEquals(1, inAppSchemaData.getRemoteAssets().size());
-        assertEquals("https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
+        assertEquals(
+                "https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
     }
 
     @Test
-    public void constructor_setsFieldsCorrectly_whenContentTypeIsNotApplicationJson() throws JSONException {
-        //setup
+    public void constructor_setsFieldsCorrectly_whenContentTypeIsNotApplicationJson()
+            throws JSONException {
+        // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.TEXT_HTML);
         schemaData.put(CONTENT, "content");
@@ -103,10 +114,10 @@ public class InAppSchemaDataTests {
         schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
         schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
 
-        //test
+        // test
         InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-        //verify
+        // verify
         assertEquals(ContentType.TEXT_HTML, inAppSchemaData.getContentType());
         assertEquals("content", inAppSchemaData.getContent());
         assertEquals(123456789, inAppSchemaData.getPublishedDate());
@@ -115,12 +126,13 @@ public class InAppSchemaDataTests {
         assertEquals("mobileValue", inAppSchemaData.getMobileParameters().get("mobileKey"));
         assertEquals("webValue", inAppSchemaData.getWebParameters().get("webKey"));
         assertEquals(1, inAppSchemaData.getRemoteAssets().size());
-        assertEquals("https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
+        assertEquals(
+                "https://somedomain.com/someimage.jpg", inAppSchemaData.getRemoteAssets().get(0));
     }
 
     @Test
     public void constructor_returns_whenContentTypeIsMissing() throws JSONException {
-        //setup
+        // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT, new JSONObject().put("key", "value"));
         schemaData.put(PUBLISHED_DATE, 123456789);
@@ -129,10 +141,10 @@ public class InAppSchemaDataTests {
         schemaData.put(MOBILE_PARAMETERS, new JSONObject().put("mobileKey", "mobileValue"));
         schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
         schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
-        //test
+        // test
         InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-        //verify
+        // verify
         assertEquals(ContentType.UNKNOWN, inAppSchemaData.getContentType());
         assertNull("content", inAppSchemaData.getContent());
         assertEquals(0, inAppSchemaData.getPublishedDate());
@@ -146,7 +158,7 @@ public class InAppSchemaDataTests {
     @Test
     public void constructor_logsException_whenContentIsMissing() throws JSONException {
         try (MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
-            //setup
+            // setup
             JSONObject schemaData = new JSONObject();
             schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
             schemaData.put(PUBLISHED_DATE, 123456789);
@@ -154,12 +166,19 @@ public class InAppSchemaDataTests {
             schemaData.put(METADATA, new JSONObject().put("metaKey", "metaValue"));
             schemaData.put(MOBILE_PARAMETERS, new JSONObject().put("mobileKey", "mobileValue"));
             schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
-            schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
-            //test
+            schemaData.put(
+                    REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
+            // test
             InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-            //verify
-            logMockedStatic.verify(() -> Log.trace(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()));
+            // verify
+            logMockedStatic.verify(
+                    () ->
+                            Log.trace(
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString()));
             assertEquals(ContentType.APPLICATION_JSON, inAppSchemaData.getContentType());
             assertNull("content", inAppSchemaData.getContent());
             assertEquals(0, inAppSchemaData.getPublishedDate());
@@ -172,9 +191,10 @@ public class InAppSchemaDataTests {
     }
 
     @Test
-    public void constructor_logsException_whenContentTypeIsJsonAndContentIsNot() throws JSONException {
+    public void constructor_logsException_whenContentTypeIsJsonAndContentIsNot()
+            throws JSONException {
         try (MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class)) {
-            //setup
+            // setup
             JSONObject schemaData = new JSONObject();
             schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
             schemaData.put(CONTENT, "invalidJson");
@@ -183,12 +203,19 @@ public class InAppSchemaDataTests {
             schemaData.put(METADATA, new JSONObject().put("metaKey", "metaValue"));
             schemaData.put(MOBILE_PARAMETERS, new JSONObject().put("mobileKey", "mobileValue"));
             schemaData.put(WEB_PARAMETERS, new JSONObject().put("webKey", "webValue"));
-            schemaData.put(REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
-            //test
+            schemaData.put(
+                    REMOTE_ASSETS, new JSONArray().put("https://somedomain.com/someimage.jpg"));
+            // test
             InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-            //verify
-            logMockedStatic.verify(() -> Log.trace(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()));
+            // verify
+            logMockedStatic.verify(
+                    () ->
+                            Log.trace(
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString()));
             assertEquals(ContentType.APPLICATION_JSON, inAppSchemaData.getContentType());
             assertNull("content", inAppSchemaData.getContent());
             assertEquals(0, inAppSchemaData.getPublishedDate());
@@ -201,16 +228,17 @@ public class InAppSchemaDataTests {
     }
 
     @Test
-    public void constructor_setsFieldsCorrectly_whenOnlyContentTypeAndContentArePresent() throws JSONException {
-        //setup
+    public void constructor_setsFieldsCorrectly_whenOnlyContentTypeAndContentArePresent()
+            throws JSONException {
+        // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
         schemaData.put(CONTENT, new JSONObject().put("key", "value"));
 
-        //test
+        // test
         InAppSchemaData inAppSchemaData = new InAppSchemaData(schemaData);
 
-        //verify
+        // verify
         assertEquals(ContentType.APPLICATION_JSON, inAppSchemaData.getContentType());
         assertEquals("value", ((Map) inAppSchemaData.getContent()).get("key"));
         assertEquals(0, inAppSchemaData.getPublishedDate());

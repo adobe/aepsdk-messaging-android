@@ -19,26 +19,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.json.JSONObject;
 
 public class FunctionalTestUtils {
 
     private static final String LOG_SOURCE = "FunctionalTestUtils";
 
-    private FunctionalTestUtils() {
-    }
+    private FunctionalTestUtils() {}
 
     /**
-     * Serialize the given {@code map} to a JSON Object, then flattens to {@code Map<String, String>}.
-     * For example, a JSON such as "{xdm: {stitchId: myID, eventType: myType}}" is flattened
-     * to two map elements "xdm.stitchId" = "myID" and "xdm.eventType" = "myType".
+     * Serialize the given {@code map} to a JSON Object, then flattens to {@code Map<String,
+     * String>}. For example, a JSON such as "{xdm: {stitchId: myID, eventType: myType}}" is
+     * flattened to two map elements "xdm.stitchId" = "myID" and "xdm.eventType" = "myType".
      *
      * @param map map with JSON structure to flatten
      * @return new map with flattened structure
@@ -61,10 +58,10 @@ public class FunctionalTestUtils {
     }
 
     /**
-     * Deserialize the given {@code bytes} to a flattened {@code Map<String, String>}.
-     * For example, a JSON such as "{xdm: {stitchId: myID, eventType: myType}}" is flattened
-     * to two map elements "xdm.stitchId" = "myID" and "xdm.eventType" = "myType".
-     * The given {@code bytes} must be a serialized JSON Object.
+     * Deserialize the given {@code bytes} to a flattened {@code Map<String, String>}. For example,
+     * a JSON such as "{xdm: {stitchId: myID, eventType: myType}}" is flattened to two map elements
+     * "xdm.stitchId" = "myID" and "xdm.eventType" = "myType". The given {@code bytes} must be a
+     * serialized JSON Object.
      *
      * @param bytes serialized JSON Object string
      * @return new map with flattned structure
@@ -85,16 +82,16 @@ public class FunctionalTestUtils {
     }
 
     /**
-     * Deserialize {@code JsonNode} and flatten to provided {@code map}.
-     * For example, a JSON such as "{xdm: {stitchId: myID, eventType: myType}}" is flattened
-     * to two map elements "xdm.stitchId" = "myID" and "xdm.eventType" = "myType".
-     * <p>
-     * Method is called recursively. To use, call with an empty path such as
-     * {@code addKeys("", new ObjectMapper().readTree(JsonNodeAsString), map);}
+     * Deserialize {@code JsonNode} and flatten to provided {@code map}. For example, a JSON such as
+     * "{xdm: {stitchId: myID, eventType: myType}}" is flattened to two map elements "xdm.stitchId"
+     * = "myID" and "xdm.eventType" = "myType".
+     *
+     * <p>Method is called recursively. To use, call with an empty path such as {@code addKeys("",
+     * new ObjectMapper().readTree(JsonNodeAsString), map);}
      *
      * @param currentPath the path in {@code JsonNode} to process
-     * @param jsonNode    {@link JsonNode} to deserialize
-     * @param map         {@code Map<String, String>} instance to store flattened JSON result
+     * @param jsonNode {@link JsonNode} to deserialize
+     * @param map {@code Map<String, String>} instance to store flattened JSON result
      * @see <a href="https://stackoverflow.com/a/24150263">Stack Overflow post</a>
      */
     private static void addKeys(String currentPath, JsonNode jsonNode, Map<String, String> map) {

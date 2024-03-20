@@ -17,14 +17,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
 
 public class PropositionInteractionTests {
 
@@ -43,118 +41,224 @@ public class PropositionInteractionTests {
 
     @Test
     public void test_getPropositionInteractionXDM_returnsNullWhenPropositionInfoIsNull() {
-        //setup
-        PropositionInteraction messagingPropositionInteraction = new PropositionInteraction(
-                MessagingEdgeEventType.DISMISS, "interaction", null, "mockItemId", null);
+        // setup
+        PropositionInteraction messagingPropositionInteraction =
+                new PropositionInteraction(
+                        MessagingEdgeEventType.DISMISS, "interaction", null, "mockItemId", null);
 
-        //test
+        // test
         Map<String, Object> result = messagingPropositionInteraction.getPropositionInteractionXDM();
 
-        //verify
+        // verify
         assertNull(result);
     }
 
     @Test
     public void test_getPropositionInteractionXDM_returnsNullWhenEventTypeIsNull() {
-        //setup
-        PropositionInteraction messagingPropositionInteraction = new PropositionInteraction(
-                null, "interaction", mockPropositionInfo, "mockItemId", null);
+        // setup
+        PropositionInteraction messagingPropositionInteraction =
+                new PropositionInteraction(
+                        null, "interaction", mockPropositionInfo, "mockItemId", null);
 
-        //test
+        // test
         Map<String, Object> result = messagingPropositionInteraction.getPropositionInteractionXDM();
 
-        //verify
+        // verify
         assertNull(result);
     }
 
-
     @Test
     public void test_getPropositionInteractionXDM_returnsValidMapWhenEventTypeIsInteract() {
-        //setup
-        String mockInteraction ="interaction";
+        // setup
+        String mockInteraction = "interaction";
         String mockItemId = "mockItemId";
         List<String> mockTokens = new ArrayList<>();
         mockTokens.add("token1");
         mockTokens.add("token2");
-        PropositionInteraction messagingPropositionInteraction = new PropositionInteraction(
-                MessagingEdgeEventType.INTERACT, mockInteraction, mockPropositionInfo, mockItemId, mockTokens);
+        PropositionInteraction messagingPropositionInteraction =
+                new PropositionInteraction(
+                        MessagingEdgeEventType.INTERACT,
+                        mockInteraction,
+                        mockPropositionInfo,
+                        mockItemId,
+                        mockTokens);
 
-        //test
+        // test
         Map<String, Object> xdm = messagingPropositionInteraction.getPropositionInteractionXDM();
 
-        //verify
+        // verify
         assertNotNull(xdm);
         assertFalse(xdm.isEmpty());
-        assertEquals(MessagingEdgeEventType.INTERACT.toString(), xdm.get(MessagingTestConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE));
-        Map<String, Object> experience = (Map<String, Object>) xdm.get(MessagingTestConstants.TrackingKeys.EXPERIENCE);
+        assertEquals(
+                MessagingEdgeEventType.INTERACT.toString(),
+                xdm.get(MessagingTestConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE));
+        Map<String, Object> experience =
+                (Map<String, Object>) xdm.get(MessagingTestConstants.TrackingKeys.EXPERIENCE);
         assertNotNull(experience);
 
-        Map<String, Object> decisioning = (Map<String, Object>) experience.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.DECISIONING);
+        Map<String, Object> decisioning =
+                (Map<String, Object>)
+                        experience.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .DECISIONING);
         assertNotNull(decisioning);
 
-        Map<String, Object> propositionEventType = (Map<String, Object>) decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_EVENT_TYPE);
+        Map<String, Object> propositionEventType =
+                (Map<String, Object>)
+                        decisioning.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .PROPOSITION_EVENT_TYPE);
         assertNotNull(propositionEventType);
         assertEquals(1, propositionEventType.get("interact"));
 
-        List<Map<String, Object>> propositions = (List<Map<String, Object>>) decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS);
+        List<Map<String, Object>> propositions =
+                (List<Map<String, Object>>)
+                        decisioning.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .PROPOSITIONS);
         assertNotNull(propositions);
         assertEquals(1, propositions.size());
-        assertEquals(mockPropositionInfo.id, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
-        assertEquals(mockPropositionInfo.scope, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE));
-        assertEquals(mockPropositionInfo.scopeDetails, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS));
+        assertEquals(
+                mockPropositionInfo.id,
+                propositions
+                        .get(0)
+                        .get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
+        assertEquals(
+                mockPropositionInfo.scope,
+                propositions
+                        .get(0)
+                        .get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE));
+        assertEquals(
+                mockPropositionInfo.scopeDetails,
+                propositions
+                        .get(0)
+                        .get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .SCOPE_DETAILS));
 
-        List<Map<String, Object>> items = (List<Map<String, Object>>) propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ITEMS);
+        List<Map<String, Object>> items =
+                (List<Map<String, Object>>)
+                        propositions
+                                .get(0)
+                                .get(
+                                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                                .ITEMS);
         assertNotNull(items);
         assertEquals(1, items.size());
-        assertEquals(mockItemId, items.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
-        Map<String, Object> characteristics = (Map<String, Object>) items.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.CHARACTERISTICS);
+        assertEquals(
+                mockItemId,
+                items.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
+        Map<String, Object> characteristics =
+                (Map<String, Object>)
+                        items.get(0)
+                                .get(
+                                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                                .CHARACTERISTICS);
         assertNotNull(characteristics);
-        String tokens = (String) characteristics.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.TOKENS);
+        String tokens =
+                (String)
+                        characteristics.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.TOKENS);
         assertEquals("token1,token2", tokens);
 
-        Map<String, Object> propositionAction = (Map<String, Object>) decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_ACTION);
+        Map<String, Object> propositionAction =
+                (Map<String, Object>)
+                        decisioning.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .PROPOSITION_ACTION);
         assertNotNull(propositionAction);
         assertEquals(2, propositionAction.size());
-        assertEquals(mockInteraction, propositionAction.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
-        assertEquals(mockInteraction, propositionAction.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.LABEL));
+        assertEquals(
+                mockInteraction,
+                propositionAction.get(
+                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
+        assertEquals(
+                mockInteraction,
+                propositionAction.get(
+                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.LABEL));
     }
 
     @Test
     public void test_getPropositionInteractionXDM_returnsValidMapWhenEventTypeIsDisplay() {
-        //setup
+        // setup
         String mockItemId = "mockItemId";
-        PropositionInteraction messagingPropositionInteraction = new PropositionInteraction(
-                MessagingEdgeEventType.DISPLAY, null, mockPropositionInfo, mockItemId, null);
+        PropositionInteraction messagingPropositionInteraction =
+                new PropositionInteraction(
+                        MessagingEdgeEventType.DISPLAY,
+                        null,
+                        mockPropositionInfo,
+                        mockItemId,
+                        null);
 
-        //test
+        // test
         Map<String, Object> xdm = messagingPropositionInteraction.getPropositionInteractionXDM();
 
-        //verify
+        // verify
         assertNotNull(xdm);
         assertFalse(xdm.isEmpty());
-        assertEquals(MessagingEdgeEventType.DISPLAY.toString(), xdm.get(MessagingTestConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE));
-        Map<String, Object> experience = (Map<String, Object>) xdm.get(MessagingTestConstants.TrackingKeys.EXPERIENCE);
+        assertEquals(
+                MessagingEdgeEventType.DISPLAY.toString(),
+                xdm.get(MessagingTestConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE));
+        Map<String, Object> experience =
+                (Map<String, Object>) xdm.get(MessagingTestConstants.TrackingKeys.EXPERIENCE);
         assertNotNull(experience);
 
-        Map<String, Object> decisioning = (Map<String, Object>) experience.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.DECISIONING);
+        Map<String, Object> decisioning =
+                (Map<String, Object>)
+                        experience.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .DECISIONING);
         assertNotNull(decisioning);
 
-        Map<String, Object> propositionEventType = (Map<String, Object>) decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_EVENT_TYPE);
+        Map<String, Object> propositionEventType =
+                (Map<String, Object>)
+                        decisioning.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .PROPOSITION_EVENT_TYPE);
         assertNotNull(propositionEventType);
         assertEquals(1, propositionEventType.get("display"));
 
-        List<Map<String, Object>> propositions = (List<Map<String, Object>>) decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS);
+        List<Map<String, Object>> propositions =
+                (List<Map<String, Object>>)
+                        decisioning.get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .PROPOSITIONS);
         assertNotNull(propositions);
         assertEquals(1, propositions.size());
-        assertEquals(mockPropositionInfo.id, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
-        assertEquals(mockPropositionInfo.scope, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE));
-        assertEquals(mockPropositionInfo.scopeDetails, propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS));
+        assertEquals(
+                mockPropositionInfo.id,
+                propositions
+                        .get(0)
+                        .get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
+        assertEquals(
+                mockPropositionInfo.scope,
+                propositions
+                        .get(0)
+                        .get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE));
+        assertEquals(
+                mockPropositionInfo.scopeDetails,
+                propositions
+                        .get(0)
+                        .get(
+                                MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                        .SCOPE_DETAILS));
 
-        List<Map<String, Object>> items = (List<Map<String, Object>>) propositions.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ITEMS);
+        List<Map<String, Object>> items =
+                (List<Map<String, Object>>)
+                        propositions
+                                .get(0)
+                                .get(
+                                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                                .ITEMS);
         assertNotNull(items);
         assertEquals(1, items.size());
-        assertEquals(mockItemId, items.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
+        assertEquals(
+                mockItemId,
+                items.get(0).get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.ID));
 
-        assertNull(decisioning.get(MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_ACTION));
+        assertNull(
+                decisioning.get(
+                        MessagingTestConstants.EventDataKeys.Messaging.Inbound.Key
+                                .PROPOSITION_ACTION));
     }
 }

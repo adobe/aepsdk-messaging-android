@@ -20,18 +20,18 @@ public class FunctionalTestConstants {
 
         public static final String MONITOR = "com.adobe.functional.eventType.monitor";
 
-        private EventType() {
-        }
+        private EventType() {}
     }
 
     public static class EventSource {
 
-        public static final String SHARED_STATE_REQUEST = "com.adobe.eventSource.sharedStateRequest";
-        public static final String SHARED_STATE_RESPONSE = "com.adobe.eventSource.sharedStateResponse";
+        public static final String SHARED_STATE_REQUEST =
+                "com.adobe.eventSource.sharedStateRequest";
+        public static final String SHARED_STATE_RESPONSE =
+                "com.adobe.eventSource.sharedStateResponse";
         public static final String UNREGISTER = "com.adobe.eventSource.unregister";
 
-        private EventSource() {
-        }
+        private EventSource() {}
     }
 
     public static class Defaults {
@@ -40,16 +40,14 @@ public class FunctionalTestConstants {
         public static final int WAIT_NETWORK_REQUEST_TIMEOUT_MS = 2000;
         public static final int WAIT_EVENT_TIMEOUT_MS = 2000;
 
-        private Defaults() {
-        }
+        private Defaults() {}
     }
 
     public static class EventDataKey {
         // Used by Monitor Extension
         public static final String STATE_OWNER = "stateowner";
 
-        private EventDataKey() {
-        }
+        private EventDataKey() {}
     }
 
     public static class SharedState {
@@ -60,8 +58,7 @@ public class FunctionalTestConstants {
         public static final String EDGE = "com.adobe.edge";
         public static final String LIFECYCLE = "com.adobe.module.lifecycle";
 
-        private SharedState() {
-        }
+        private SharedState() {}
     }
 
     public static class NetworkKeys {
@@ -71,10 +68,8 @@ public class FunctionalTestConstants {
         public static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
         public static final String HEADER_VALUE_APPLICATION_JSON = "application/json";
 
-        private NetworkKeys() {
-        }
+        private NetworkKeys() {}
     }
 
-    private FunctionalTestConstants() {
-    }
+    private FunctionalTestConstants() {}
 }

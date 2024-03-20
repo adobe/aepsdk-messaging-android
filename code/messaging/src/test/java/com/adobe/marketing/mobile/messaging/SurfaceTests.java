@@ -22,7 +22,8 @@ import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.ServiceProvider;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,16 +33,11 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class SurfaceTests {
 
-    @Mock
-    ServiceProvider mockServiceProvider;
-    @Mock
-    DeviceInforming mockDeviceInfoService;
+    @Mock ServiceProvider mockServiceProvider;
+    @Mock DeviceInforming mockDeviceInfoService;
 
     @After
     public void tearDown() {
@@ -50,8 +46,11 @@ public class SurfaceTests {
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
-        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class)) {
-            serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                Mockito.mockStatic(ServiceProvider.class)) {
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
@@ -61,75 +60,82 @@ public class SurfaceTests {
 
     @Test
     public void test_createSurfaceWithPath() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface = new Surface("surfacewithfeeds");
-            // verify
-            assertNotNull(surface);
-            assertEquals("mobileapp://mockPackageName/surfacewithfeeds", surface.getUri());
-            assertTrue(surface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface = new Surface("surfacewithfeeds");
+                    // verify
+                    assertNotNull(surface);
+                    assertEquals("mobileapp://mockPackageName/surfacewithfeeds", surface.getUri());
+                    assertTrue(surface.isValid());
+                });
     }
 
     @Test
     public void test_createSurfaceWithEmptyPath() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface = new Surface("");
-            // verify
-            assertNotNull(surface);
-            assertEquals("mobileapp://mockPackageName", surface.getUri());
-            assertTrue(surface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface = new Surface("");
+                    // verify
+                    assertNotNull(surface);
+                    assertEquals("mobileapp://mockPackageName", surface.getUri());
+                    assertTrue(surface.isValid());
+                });
     }
 
     @Test
     public void test_createSurfaceWithNullPath() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface = new Surface(null);
-            // verify
-            assertNotNull(surface);
-            assertEquals("mobileapp://mockPackageName", surface.getUri());
-            assertTrue(surface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface = new Surface(null);
+                    // verify
+                    assertNotNull(surface);
+                    assertEquals("mobileapp://mockPackageName", surface.getUri());
+                    assertTrue(surface.isValid());
+                });
     }
 
     @Test
     public void test_createSurfaceWithNoArguments() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface = new Surface();
-            // verify
-            assertNotNull(surface);
-            assertEquals("mobileapp://mockPackageName", surface.getUri());
-            assertTrue(surface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface = new Surface();
+                    // verify
+                    assertNotNull(surface);
+                    assertEquals("mobileapp://mockPackageName", surface.getUri());
+                    assertTrue(surface.isValid());
+                });
     }
 
     @Test
     public void test_createValidSurfaceWithPackageNameUnavailable() {
-        runUsingMockedServiceProvider(() -> {
-            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn(null);
-            // test
-            Surface surface = new Surface("validsurface");
-            // verify
-            assertNotNull(surface);
-            assertEquals("unknown", surface.getUri());
-            assertFalse(surface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockDeviceInfoService.getApplicationPackageName()).thenReturn(null);
+                    // test
+                    Surface surface = new Surface("validsurface");
+                    // verify
+                    assertNotNull(surface);
+                    assertEquals("unknown", surface.getUri());
+                    assertFalse(surface.isValid());
+                });
     }
 
     @Test
     public void test_createInvalidSurface() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface invalidSurface = new Surface("##invalid##");
-            // verify
-            assertNotNull(invalidSurface);
-            assertEquals("mobileapp://mockPackageName/##invalid##", invalidSurface.getUri());
-            assertFalse(invalidSurface.isValid());
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface invalidSurface = new Surface("##invalid##");
+                    // verify
+                    assertNotNull(invalidSurface);
+                    assertEquals(
+                            "mobileapp://mockPackageName/##invalid##", invalidSurface.getUri());
+                    assertFalse(invalidSurface.isValid());
+                });
     }
 
     @Test
@@ -168,13 +174,14 @@ public class SurfaceTests {
 
     @Test
     public void test_toEventData() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Map<String, Object> eventData = new Surface().toEventData();
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Map<String, Object> eventData = new Surface().toEventData();
 
-            // verify
-            Assert.assertEquals("mobileapp://mockPackageName", eventData.get("uri"));
-        });
+                    // verify
+                    Assert.assertEquals("mobileapp://mockPackageName", eventData.get("uri"));
+                });
     }
 
     @Test
@@ -239,42 +246,45 @@ public class SurfaceTests {
 
     @Test
     public void test_equals() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface1 = new Surface("surfacewithfeeds");
-            Surface surface2 = new Surface("surfacewithfeeds");
-            Surface surface3 = new Surface("othersurfacewithfeeds");
-            Object notASurface = new Object();
-            // verify
-            assertEquals(surface1, surface2);
-            assertNotEquals(surface1, surface3);
-            assertNotEquals(surface1, notASurface);
-        });
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface1 = new Surface("surfacewithfeeds");
+                    Surface surface2 = new Surface("surfacewithfeeds");
+                    Surface surface3 = new Surface("othersurfacewithfeeds");
+                    Object notASurface = new Object();
+                    // verify
+                    assertEquals(surface1, surface2);
+                    assertNotEquals(surface1, surface3);
+                    assertNotEquals(surface1, notASurface);
+                });
     }
 
     @Test
     public void test_equals_ConstructorWithoutPaths() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface1 = new Surface();
-            Surface surface2 = new Surface();
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface1 = new Surface();
+                    Surface surface2 = new Surface();
 
-            // verify
-            assertEquals(surface1, surface2);
-            assertTrue(surface1.equals(surface2));
-        });
+                    // verify
+                    assertEquals(surface1, surface2);
+                    assertTrue(surface1.equals(surface2));
+                });
     }
 
     @Test
     public void test_equals_DifferentSurfaces() {
-        runUsingMockedServiceProvider(() -> {
-            // test
-            Surface surface1 = new Surface();
-            Surface surface2 = new Surface("surfacewithfeeds");
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    Surface surface1 = new Surface();
+                    Surface surface2 = new Surface("surfacewithfeeds");
 
-            // verify
-            assertNotEquals(surface1, surface2);
-            assertFalse(surface1.equals(surface2));
-        });
+                    // verify
+                    assertNotEquals(surface1, surface2);
+                    assertFalse(surface1.equals(surface2));
+                });
     }
 }

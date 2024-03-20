@@ -3,22 +3,21 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.lang.ref.SoftReference;
 
 /**
- * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet interactive offer.
- * Customers can use the Messaging SDK to render the feed item data in a pre-defined format or implement their own rendering.
+ * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet
+ * interactive offer. Customers can use the Messaging SDK to render the feed item data in a
+ * pre-defined format or implement their own rendering.
  */
 public class FeedItem {
     // Plain-text title for the feed item
@@ -36,25 +35,24 @@ public class FeedItem {
 
     /**
      * Private constructor.
-     * <p>
-     * Use {@link Builder} to create {@link FeedItem} object.
+     *
+     * <p>Use {@link Builder} to create {@link FeedItem} object.
      */
     private FeedItem() {}
 
-    /**
-     * {@code FeedItem} Builder.
-     */
+    /** {@code FeedItem} Builder. */
     public static class Builder {
         private boolean didBuild;
-        final private FeedItem feedItem;
+        private final FeedItem feedItem;
 
         /**
          * Builder constructor with required {@code FeedItem} attributes as parameters.
-         * <p>
-         * It sets default values for the remaining {@link FeedItem} attributes.
+         *
+         * <p>It sets default values for the remaining {@link FeedItem} attributes.
          *
          * @param title required {@link String} plain-text title for the feed item
-         * @param body required {@link String} plain-text body representing the content for the feed item
+         * @param body required {@link String} plain-text body representing the content for the feed
+         *     item
          */
         public Builder(final String title, final String body) {
             feedItem = new FeedItem();
@@ -71,7 +69,8 @@ public class FeedItem {
          *
          * @param imageUrl {@link String} containing the {@link FeedItem} image url.
          * @return this FeedItem {@link Builder}
-         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         * @throws UnsupportedOperationException if this method is invoked after {@link
+         *     Builder#build()}.
          */
         public Builder setImageUrl(final String imageUrl) {
             throwIfAlreadyBuilt();
@@ -85,7 +84,8 @@ public class FeedItem {
          *
          * @param actionUrl {@link String} containing the {@link FeedItem} action url.
          * @return this FeedItem {@link Builder}
-         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         * @throws UnsupportedOperationException if this method is invoked after {@link
+         *     Builder#build()}.
          */
         public Builder setActionUrl(final String actionUrl) {
             throwIfAlreadyBuilt();
@@ -99,7 +99,8 @@ public class FeedItem {
          *
          * @param actionTitle {@link String} containing the {@link FeedItem} action title.
          * @return this FeedItem {@link Builder}
-         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         * @throws UnsupportedOperationException if this method is invoked after {@link
+         *     Builder#build()}.
          */
         public Builder setActionTitle(final String actionTitle) {
             throwIfAlreadyBuilt();
@@ -111,9 +112,11 @@ public class FeedItem {
         /**
          * Sets the {@code FeedItemSchemaData} parent object.
          *
-         * @param  parent {@link FeedItemSchemaData} object which is the parent for this {@link FeedItem}.
+         * @param parent {@link FeedItemSchemaData} object which is the parent for this {@link
+         *     FeedItem}.
          * @return this FeedItem {@link Builder}
-         * @throws UnsupportedOperationException if this method is invoked after {@link Builder#build()}.
+         * @throws UnsupportedOperationException if this method is invoked after {@link
+         *     Builder#build()}.
          */
         public Builder setParent(final FeedItemSchemaData parent) {
             throwIfAlreadyBuilt();
@@ -129,7 +132,8 @@ public class FeedItem {
          */
         public FeedItem build() {
             // title and body are required
-            if (StringUtils.isNullOrEmpty(feedItem.title) || StringUtils.isNullOrEmpty(feedItem.body)) {
+            if (StringUtils.isNullOrEmpty(feedItem.title)
+                    || StringUtils.isNullOrEmpty(feedItem.body)) {
                 return null;
             }
 
@@ -141,7 +145,8 @@ public class FeedItem {
 
         private void throwIfAlreadyBuilt() {
             if (didBuild) {
-                throw new UnsupportedOperationException("Attempted to call methods on FeedItem.Builder after build() was invoked.");
+                throw new UnsupportedOperationException(
+                        "Attempted to call methods on FeedItem.Builder after build() was invoked.");
             }
         }
     }

@@ -3,20 +3,17 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
 import java.util.List;
 
-/**
- * A {@link Feed} object aggregates one or more {@link FeedItem}s.
- */
+/** A {@link Feed} object aggregates one or more {@link FeedItem}s. */
 public class Feed {
     // Friendly name for the feed, provided in the AJO UI
     private final String name;
@@ -30,9 +27,9 @@ public class Feed {
     /**
      * Constructor.
      *
-     * @param name    {@link String} containing the friendly name for the feed, provided in the AJO UI
+     * @param name {@link String} containing the friendly name for the feed, provided in the AJO UI
      * @param surface {@link String} containing the AJO Surface URI used to retrieve the feed
-     * @param items   {@link List<FeedItem>} that are members of this {@link Feed}
+     * @param items {@link List<FeedItem>} that are members of this {@link Feed}
      */
     public Feed(final String name, final Surface surface, final List<FeedItem> items) {
         this.name = name;

@@ -3,42 +3,37 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.os.Build;
-
 import androidx.annotation.RequiresApi;
-
 import com.adobe.marketing.mobile.messaging.MessagingConstants;
-import com.adobe.marketing.mobile.util.StringUtils;
-
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.StringUtils;
 import com.google.firebase.messaging.RemoteMessage;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
- * This class is used to create push notification payload object from remote message.
- * It provides with functions for getting attributes of push payload (title, body, actions etc ...)
+ * This class is used to create push notification payload object from remote message. It provides
+ * with functions for getting attributes of push payload (title, body, actions etc ...)
  */
 public class MessagingPushPayload {
     static final String SELF_TAG = "MessagingPushPayload";
+
     static final class NotificationPriorities {
         static final String PRIORITY_DEFAULT = "PRIORITY_DEFAULT";
         static final String PRIORITY_MIN = "PRIORITY_MIN";
@@ -66,29 +61,39 @@ public class MessagingPushPayload {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    static final Map<String,Integer> notificationImportanceMap = new HashMap<String,Integer>() {{
-        put(NotificationPriorities.PRIORITY_MIN, NotificationManager.IMPORTANCE_MIN);
-        put(NotificationPriorities.PRIORITY_LOW, NotificationManager.IMPORTANCE_LOW);
-        put(NotificationPriorities.PRIORITY_DEFAULT, NotificationManager.IMPORTANCE_DEFAULT);
-        put(NotificationPriorities.PRIORITY_HIGH, NotificationManager.IMPORTANCE_HIGH);
-        put(NotificationPriorities.PRIORITY_MAX, NotificationManager.IMPORTANCE_MAX);
-    }};
-
+    static final Map<String, Integer> notificationImportanceMap =
+            new HashMap<String, Integer>() {
+                {
+                    put(NotificationPriorities.PRIORITY_MIN, NotificationManager.IMPORTANCE_MIN);
+                    put(NotificationPriorities.PRIORITY_LOW, NotificationManager.IMPORTANCE_LOW);
+                    put(
+                            NotificationPriorities.PRIORITY_DEFAULT,
+                            NotificationManager.IMPORTANCE_DEFAULT);
+                    put(NotificationPriorities.PRIORITY_HIGH, NotificationManager.IMPORTANCE_HIGH);
+                    put(NotificationPriorities.PRIORITY_MAX, NotificationManager.IMPORTANCE_MAX);
+                }
+            };
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    static final Map<String,Integer> notificationVisibilityMap = new HashMap<String,Integer>() {{
-        put(NotificationVisibility.PRIVATE, Notification.VISIBILITY_PRIVATE);
-        put(NotificationVisibility.PUBLIC, Notification.VISIBILITY_PUBLIC);
-        put(NotificationVisibility.SECRET, Notification.VISIBILITY_SECRET);
-    }};
+    static final Map<String, Integer> notificationVisibilityMap =
+            new HashMap<String, Integer>() {
+                {
+                    put(NotificationVisibility.PRIVATE, Notification.VISIBILITY_PRIVATE);
+                    put(NotificationVisibility.PUBLIC, Notification.VISIBILITY_PUBLIC);
+                    put(NotificationVisibility.SECRET, Notification.VISIBILITY_SECRET);
+                }
+            };
 
-    static final Map<String,Integer> notificationPriorityMap = new HashMap<String,Integer>() {{
-        put(NotificationPriorities.PRIORITY_MIN, Notification.PRIORITY_MIN);
-        put(NotificationPriorities.PRIORITY_LOW, Notification.PRIORITY_LOW);
-        put(NotificationPriorities.PRIORITY_DEFAULT, Notification.PRIORITY_DEFAULT);
-        put(NotificationPriorities.PRIORITY_HIGH, Notification.PRIORITY_HIGH);
-        put(NotificationPriorities.PRIORITY_MAX, Notification.PRIORITY_MAX);
-    }};
+    static final Map<String, Integer> notificationPriorityMap =
+            new HashMap<String, Integer>() {
+                {
+                    put(NotificationPriorities.PRIORITY_MIN, Notification.PRIORITY_MIN);
+                    put(NotificationPriorities.PRIORITY_LOW, Notification.PRIORITY_LOW);
+                    put(NotificationPriorities.PRIORITY_DEFAULT, Notification.PRIORITY_DEFAULT);
+                    put(NotificationPriorities.PRIORITY_HIGH, Notification.PRIORITY_HIGH);
+                    put(NotificationPriorities.PRIORITY_MAX, Notification.PRIORITY_MAX);
+                }
+            };
 
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
@@ -97,8 +102,10 @@ public class MessagingPushPayload {
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
     private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
+
     private String channelId;
     private String icon;
     private String imageUrl;
@@ -110,24 +117,34 @@ public class MessagingPushPayload {
 
     /**
      * Constructor
-     * <p>
-     * Provides the MessagingPushPayload object
      *
-     * @param message {@link RemoteMessage} object received from {@link com.google.firebase.messaging.FirebaseMessagingService}
+     * <p>Provides the MessagingPushPayload object
+     *
+     * @param message {@link RemoteMessage} object received from {@link
+     *     com.google.firebase.messaging.FirebaseMessagingService}
      */
     public MessagingPushPayload(final RemoteMessage message) {
         if (message == null) {
-            Log.error(MessagingConstants.LOG_TAG , SELF_TAG, "Failed to create MessagingPushPayload, remote message is null");
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, remote message is null");
             return;
         }
         if (message.getData().isEmpty()) {
-            Log.error(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, remote message data payload is null");
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, remote message data payload is null");
             return;
         }
 
         final String messageId = message.getMessageId();
-        if(StringUtils.isNullOrEmpty(messageId)) {
-            Log.error(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to create MessagingPushPayload, message id is null or empty");
+        if (StringUtils.isNullOrEmpty(messageId)) {
+            Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to create MessagingPushPayload, message id is null or empty");
             return;
         }
 
@@ -137,8 +154,8 @@ public class MessagingPushPayload {
 
     /**
      * Constructor
-     * <p>
-     * Provides the MessagingPushPayload object
+     *
+     * <p>Provides the MessagingPushPayload object
      *
      * @param data {@link Map} map which indicates the data part of {@link RemoteMessage}
      */
@@ -186,6 +203,7 @@ public class MessagingPushPayload {
     public String getImageUrl() {
         return imageUrl;
     }
+
     public String getMessageId() {
         return messageId;
     }
@@ -217,7 +235,10 @@ public class MessagingPushPayload {
     private void init(final Map<String, String> data) {
         this.data = data;
         if (data == null) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Payload extraction failed because data provided is null");
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Payload extraction failed because data provided is null");
             return;
         }
         this.title = data.get(MessagingConstants.Push.PayloadKeys.TITLE);
@@ -234,21 +255,34 @@ public class MessagingPushPayload {
                 this.badgeCount = Integer.parseInt(count);
             }
         } catch (NumberFormatException e) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting notification badge count to int - %s", e.getLocalizedMessage());
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception in converting notification badge count to int - %s",
+                    e.getLocalizedMessage());
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            this.notificationImportance = getNotificationImportanceFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
+            this.notificationImportance =
+                    getNotificationImportanceFromString(
+                            data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         } else {
-            this.notificationPriority = getNotificationPriorityFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
+            this.notificationPriority =
+                    getNotificationPriorityFromString(
+                            data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.notificationVisibility = getNotificationVisibilityFromString(data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY));
+            this.notificationVisibility =
+                    getNotificationVisibilityFromString(
+                            data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY));
         }
 
-        this.actionType = getActionTypeFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_TYPE));
-        this.actionButtons = getActionButtonsFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS));
+        this.actionType =
+                getActionTypeFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_TYPE));
+        this.actionButtons =
+                getActionButtonsFromString(
+                        data.get(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS));
     }
 
     private int getNotificationPriorityFromString(final String priority) {
@@ -257,7 +291,6 @@ public class MessagingPushPayload {
         if (resolvedPriority == null) return Notification.PRIORITY_DEFAULT;
         return resolvedPriority;
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private int getNotificationImportanceFromString(final String priority) {
@@ -299,7 +332,11 @@ public class MessagingPushPayload {
 
     private List<ActionButton> getActionButtonsFromString(final String actionButtons) {
         if (actionButtons == null) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : actionButtons is null");
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception in converting actionButtons json string to json object, Error :"
+                            + " actionButtons is null");
             return null;
         }
         List<ActionButton> actionButtonList = new ArrayList<>(ACTION_BUTTON_CAPACITY);
@@ -312,7 +349,11 @@ public class MessagingPushPayload {
                 actionButtonList.add(button);
             }
         } catch (final JSONException e) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception in converting actionButtons json string to json object, Error : %s",
+                    e.getLocalizedMessage());
             return null;
         }
         return actionButtonList;
@@ -331,36 +372,42 @@ public class MessagingPushPayload {
                 uri = jsonObject.optString(ActionButtons.URI);
             }
 
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "Creating an ActionButton with label (%s), uri (%s), and type (%s)", label, uri, type);
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Creating an ActionButton with label (%s), uri (%s), and type (%s)",
+                    label,
+                    uri,
+                    type);
             return new ActionButton(label, uri, type);
         } catch (final JSONException e) {
-            Log.warning(MessagingConstants.LOG_TAG, SELF_TAG, "Exception in converting actionButtons json string to json object, Error : %s", e.getLocalizedMessage());
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Exception in converting actionButtons json string to json object, Error : %s",
+                    e.getLocalizedMessage());
             return null;
         }
     }
 
-    /**
-     * Enum to denote the type of action
-     */
+    /** Enum to denote the type of action */
     public enum ActionType {
         DEEPLINK,
         WEBURL,
         /**
          * @deprecated Unsupported, will be removed in future versions.
          */
-        @Deprecated DISMISS,
+        @Deprecated
+        DISMISS,
         OPENAPP,
         NONE
     }
 
-    /**
-     * Class representing the action button with label, link and type
-     */
+    /** Class representing the action button with label, link and type */
     public class ActionButton {
         private final String label;
         private final String link;
         private final ActionType type;
-
 
         public ActionButton(final String label, final String link, final String type) {
             this.label = label;
@@ -382,7 +429,8 @@ public class MessagingPushPayload {
     }
 
     // Check if the push notification is silent push notification.
-    // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to talk with herald team)
+    // TODO: Find a better way to distinguish between silent and non-silent push notifications. (to
+    // talk with herald team)
     boolean isSilentPushMessage() {
         return data != null && title == null && body == null;
     }

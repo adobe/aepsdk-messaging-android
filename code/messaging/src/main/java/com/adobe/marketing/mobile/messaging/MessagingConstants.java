@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -31,20 +30,24 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
 
-    private MessagingConstants() {
-    }
+    private MessagingConstants() {}
 
     final class SchemaValues {
-        static final String SCHEMA_HTML_CONTENT = "https://ns.adobe.com/personalization/html-content-item";
-        static final String SCHEMA_JSON_CONTENT = "https://ns.adobe.com/personalization/json-content-item";
-        static final String SCHEMA_RULESET_ITEM = "https://ns.adobe.com/personalization/ruleset-item";
+        static final String SCHEMA_HTML_CONTENT =
+                "https://ns.adobe.com/personalization/html-content-item";
+        static final String SCHEMA_JSON_CONTENT =
+                "https://ns.adobe.com/personalization/json-content-item";
+        static final String SCHEMA_RULESET_ITEM =
+                "https://ns.adobe.com/personalization/ruleset-item";
         static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
-        static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
-        static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
-        static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
+        static final String SCHEMA_FEED_ITEM =
+                "https://ns.adobe.com/personalization/message/feed-item";
+        static final String SCHEMA_NATIVE_ALERT =
+                "https://ns.adobe.com/personalization/message/native-alert";
+        static final String SCHEMA_DEFAULT_CONTENT =
+                "https://ns.adobe.com/personalization/default-content-item";
 
-        private SchemaValues() {
-        }
+        private SchemaValues() {}
     }
 
     final class ContentTypes {
@@ -52,8 +55,8 @@ public final class MessagingConstants {
         static final String TEXT_HTML = "text/html";
         static final String TEXT_XML = "text/xml";
         static final String TEXT_PLAIN = "text/plain";
-        private ContentTypes() {
-        }
+
+        private ContentTypes() {}
     }
 
     final class ConsequenceDetailKeys {
@@ -62,8 +65,7 @@ public final class MessagingConstants {
         static final String DATA = "data";
         static final String CONTENT = "content";
 
-        private ConsequenceDetailKeys() {
-        }
+        private ConsequenceDetailKeys() {}
     }
 
     final class ConsequenceDetailDataKeys {
@@ -77,8 +79,7 @@ public final class MessagingConstants {
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
 
-        private ConsequenceDetailDataKeys() {
-        }
+        private ConsequenceDetailDataKeys() {}
     }
 
     final class QueryParameters {
@@ -90,8 +91,7 @@ public final class MessagingConstants {
         static final String DEEPLINK = "adb_deeplink";
         static final String LINK = "link";
 
-        private QueryParameters() {
-        }
+        private QueryParameters() {}
     }
 
     final class MessageFeedKeys {
@@ -105,15 +105,13 @@ public final class MessagingConstants {
         static final String FEED_NAME = "feedName";
         static final String SURFACE = "surface";
 
-        private MessageFeedKeys() {
-        }
+        private MessageFeedKeys() {}
     }
 
     final class MessageFeedValues {
         static final String SCHEMA = "schema";
 
-        private MessageFeedValues() {
-        }
+        private MessageFeedValues() {}
     }
 
     final class TrackingKeys {
@@ -123,32 +121,31 @@ public final class MessagingConstants {
         static final String MIXINS = "mixins";
         static final String EXPERIENCE = "_experience";
         static final String CUSTOMER_JOURNEY_MANAGEMENT = "customerJourneyManagement";
-        static final String MESSAGE_PROFILE_JSON = "{\n" +
-                "   \"messageProfile\":{\n" +
-                "      \"channel\":{\n" +
-                "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n" +
-                "      }\n" +
-                "   },\n" +
-                "   \"pushChannelContext\":{\n" +
-                "      \"platform\":\"fcm\"\n" +
-                "   }\n" +
-                "}";
+        static final String MESSAGE_PROFILE_JSON =
+                "{\n"
+                        + "   \"messageProfile\":{\n"
+                        + "      \"channel\":{\n"
+                        + "         \"_id\":\"https://ns.adobe.com/xdm/channels/push\"\n"
+                        + "      }\n"
+                        + "   },\n"
+                        + "   \"pushChannelContext\":{\n"
+                        + "      \"platform\":\"fcm\"\n"
+                        + "   }\n"
+                        + "}";
         static final String APPLICATION = "application";
         static final String LAUNCHES = "launches";
         static final String LAUNCHES_VALUE = "value";
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
 
-        private TrackingKeys() {
-        }
+        private TrackingKeys() {}
     }
 
     final class JsonValues {
         static final String FCM = "fcm";
         static final String ECID = "ECID";
 
-        private JsonValues() {
-        }
+        private JsonValues() {}
     }
 
     final class PayloadKeys {
@@ -159,8 +156,7 @@ public final class MessagingConstants {
         static final String CORRELATION_ID = "correlationID";
         static final String ACTIVITY = "activity";
 
-        private PayloadKeys() {
-        }
+        private PayloadKeys() {}
     }
 
     final class EventDataKeys {
@@ -171,8 +167,7 @@ public final class MessagingConstants {
         final class Identity {
             static final String PUSH_IDENTIFIER = "pushidentifier";
 
-            private Identity() {
-            }
+            private Identity() {}
         }
 
         final class Messaging {
@@ -191,8 +186,8 @@ public final class MessagingConstants {
             static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             static final String PROPOSITION_INTERACTION = "propositioninteraction";
-            private Messaging() {
-            }
+
+            private Messaging() {}
 
             final class Data {
                 final class AdobeKeys {
@@ -200,26 +195,22 @@ public final class MessagingConstants {
                     static final String AJO = "ajo";
                     static final String INAPP_RESPONSE_FORMAT = "in-app-response-format";
 
-                    private AdobeKeys() {
-                    }
+                    private AdobeKeys() {}
                 }
 
                 final class Key {
                     static final String DATA = "data";
 
-                    private Key() {
-                    }
+                    private Key() {}
                 }
 
                 final class Value {
                     static final int NEW_IAM = 2;
 
-                    private Value() {
-                    }
+                    private Value() {}
                 }
 
-                private Data() {
-                }
+                private Data() {}
             }
 
             final class XDMDataKeys {
@@ -229,12 +220,12 @@ public final class MessagingConstants {
                 static final String PUSH_PROVIDER_MESSAGE_ID = "pushProviderMessageID";
                 static final String PUSH_PROVIDER = "pushProvider";
                 static final String EVENT_TYPE = "eventType";
-                static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME = "pushNotificationTracking";
+                static final String PUSH_NOTIFICATION_TRACKING_MIXIN_NAME =
+                        "pushNotificationTracking";
                 static final String REQUEST = "request";
                 static final String SEND_COMPLETION = "sendCompletion";
 
-                private XDMDataKeys() {
-                }
+                private XDMDataKeys() {}
             }
 
             final class PushNotificationDetailsDataKeys {
@@ -249,23 +240,20 @@ public final class MessagingConstants {
                 static final String PLATFORM = "platform";
                 static final String DENY_LISTED = "denylisted";
 
-                private PushNotificationDetailsDataKeys() {
-                }
+                private PushNotificationDetailsDataKeys() {}
 
                 final class EventType {
                     static final String OPENED = "pushTracking.applicationOpened";
                     static final String CUSTOM_ACTION = "pushTracking.customAction";
 
-                    private EventType() {
-                    }
+                    private EventType() {}
                 }
             }
 
             final class Inbound {
                 static final String SURFACE_BASE = "mobileapp://";
 
-                private Inbound() {
-                }
+                private Inbound() {}
 
                 final class EventType {
                     static final String DISMISS = "decisioning.propositionDismiss";
@@ -274,8 +262,7 @@ public final class MessagingConstants {
                     static final String DISPLAY = "decisioning.propositionDisplay";
                     static final String PERSONALIZATION_REQUEST = "personalization.request";
 
-                    private EventType() {
-                    }
+                    private EventType() {}
                 }
 
                 final class Key {
@@ -296,8 +283,7 @@ public final class MessagingConstants {
                     static final String CHARACTERISTICS = "characteristics";
                     static final String TOKENS = "tokens";
 
-                    private Key() {
-                    }
+                    private Key() {}
                 }
             }
         }
@@ -315,11 +301,11 @@ public final class MessagingConstants {
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_HTML = "html";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
             static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
-            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS = "mobileParameters";
+            static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_MOBILE_PARAMETERS =
+                    "mobileParameters";
             static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
 
-            private RulesEngine() {
-            }
+            private RulesEngine() {}
         }
 
         final class MobileParametersKeys {
@@ -337,8 +323,7 @@ public final class MessagingConstants {
             static final String CORNER_RADIUS = "cornerRadius";
             static final String GESTURES = "gestures";
 
-            private MobileParametersKeys() {
-            }
+            private MobileParametersKeys() {}
         }
     }
 
@@ -346,8 +331,7 @@ public final class MessagingConstants {
         static final String MESSAGING = "com.adobe.eventType.messaging";
         static final String EDGE = "com.adobe.eventType.edge";
 
-        private EventType() {
-        }
+        private EventType() {}
     }
 
     final class EventName {
@@ -363,8 +347,7 @@ public final class MessagingConstants {
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
 
-        private EventName() {
-        }
+        private EventName() {}
     }
 
     final class EventSource {
@@ -373,8 +356,7 @@ public final class MessagingConstants {
         static final String NOTIFICATION = "com.adobe.eventSource.notification";
         static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
 
-        private EventSource() {
-        }
+        private EventSource() {}
     }
 
     final class EventMask {
@@ -383,8 +365,7 @@ public final class MessagingConstants {
             static final String MESSAGE_ID = "id";
             static final String TRACKING_ACTION = "action";
 
-            private Keys() {
-            }
+            private Keys() {}
         }
 
         final class Mask {
@@ -392,15 +373,13 @@ public final class MessagingConstants {
             static final String MESSAGE_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
-            private Mask() {
-            }
+            private Mask() {}
         }
     }
 
     final class SharedState {
 
-        private SharedState() {
-        }
+        private SharedState() {}
 
         final class Configuration {
             static final String EXTENSION_NAME = "com.adobe.module.configuration";
@@ -408,8 +387,7 @@ public final class MessagingConstants {
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
 
-            private Configuration() {
-            }
+            private Configuration() {}
         }
 
         final class EdgeIdentity {
@@ -418,15 +396,13 @@ public final class MessagingConstants {
             static final String ECID = "ECID";
             static final String ID = "id";
 
-            private EdgeIdentity() {
-            }
+            private EdgeIdentity() {}
         }
 
         final class Messaging {
             static final String PUSH_IDENTIFIER = "pushidentifier";
 
-            private Messaging() {
-            }
+            private Messaging() {}
         }
     }
 
@@ -445,8 +421,7 @@ public final class MessagingConstants {
             public static final String ACTION_URI = "adb_uri";
             public static final String ACTION_BUTTONS = "adb_act";
 
-            private PayloadKeys() {
-            }
+            private PayloadKeys() {}
         }
     }
 }
