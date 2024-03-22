@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.util;
 import static com.adobe.marketing.mobile.util.FunctionalTestConstants.LOG_TAG;
 
 import androidx.annotation.NonNull;
-
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
@@ -24,7 +23,6 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.services.Log;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +40,7 @@ public class MonitorExtension extends Extension {
         super(extensionApi);
     }
 
-    @NonNull
-    @Override
+    @NonNull @Override
     protected String getName() {
         return "MonitorExtension";
     }
@@ -51,28 +48,27 @@ public class MonitorExtension extends Extension {
     @Override
     protected void onRegistered() {
         super.onRegistered();
-        getApi().registerEventListener(EventType.WILDCARD, EventSource.WILDCARD, this::wildcardProcessor);
+        getApi().registerEventListener(
+                        EventType.WILDCARD, EventSource.WILDCARD, this::wildcardProcessor);
     }
 
-    /**
-     * Unregister the Monitor Extension from the EventHub.
-     */
+    /** Unregister the Monitor Extension from the EventHub. */
     public static void unregisterExtension() {
-        Event event = new Event.Builder(
-                "Unregister Monitor Extension Request",
-                FunctionalTestConstants.EventType.MONITOR,
-                FunctionalTestConstants.EventSource.UNREGISTER
-        )
-                .build();
+        Event event =
+                new Event.Builder(
+                                "Unregister Monitor Extension Request",
+                                FunctionalTestConstants.EventType.MONITOR,
+                                FunctionalTestConstants.EventSource.UNREGISTER)
+                        .build();
         MobileCore.dispatchEvent(event);
     }
 
     /**
      * Add an event to the list of expected events.
      *
-     * @param type   the type of the event.
+     * @param type the type of the event.
      * @param source the source of the event.
-     * @param count  the number of events expected to be received.
+     * @param count the number of events expected to be received.
      */
     public static void setExpectedEvent(final String type, final String source, final int count) {
         EventSpec eventSpec = new EventSpec(source, type);
@@ -87,9 +83,7 @@ public class MonitorExtension extends Extension {
         return receivedEvents;
     }
 
-    /**
-     * Resets the map of received and expected events.
-     */
+    /** Resets the map of received and expected events. */
     public static void reset() {
         Log.trace(LOG_TAG, LOG_SOURCE, "Reset expected and received events.");
         receivedEvents.clear();
@@ -97,19 +91,19 @@ public class MonitorExtension extends Extension {
     }
 
     /**
-     * Processor for all heard events.
-     * If the event type is of this Monitor Extension, then
-     * the action is performed per the event source.
-     * All other events are added to the map of received events. If the event is in the map
-     * of expected events, its latch is counted down.
+     * Processor for all heard events. If the event type is of this Monitor Extension, then the
+     * action is performed per the event source. All other events are added to the map of received
+     * events. If the event is in the map of expected events, its latch is counted down.
      *
      * @param event current event to be processed
      */
     public void wildcardProcessor(final Event event) {
         if (FunctionalTestConstants.EventType.MONITOR.equalsIgnoreCase(event.getType())) {
-            if (FunctionalTestConstants.EventSource.SHARED_STATE_REQUEST.equalsIgnoreCase(event.getSource())) {
+            if (FunctionalTestConstants.EventSource.SHARED_STATE_REQUEST.equalsIgnoreCase(
+                    event.getSource())) {
                 processSharedStateRequest(event);
-            } else if (FunctionalTestConstants.EventSource.UNREGISTER.equalsIgnoreCase(event.getSource())) {
+            } else if (FunctionalTestConstants.EventSource.UNREGISTER.equalsIgnoreCase(
+                    event.getSource())) {
                 processUnregisterRequest(event);
             }
 
@@ -132,8 +126,8 @@ public class MonitorExtension extends Extension {
     }
 
     /**
-     * Processor which retrieves and dispatches the shared state for the state owner specified
-     * in the request.
+     * Processor which retrieves and dispatches the shared state for the state owner specified in
+     * the request.
      *
      * @param event current event to be processed
      */
@@ -144,21 +138,26 @@ public class MonitorExtension extends Extension {
             return;
         }
 
-        String stateOwner = DataReader.optString(eventData, FunctionalTestConstants.EventDataKey.STATE_OWNER, null);
+        String stateOwner =
+                DataReader.optString(
+                        eventData, FunctionalTestConstants.EventDataKey.STATE_OWNER, null);
         if (stateOwner == null) {
             return;
         }
 
-        SharedStateResult sharedStateResult = getApi()
-                .getSharedState(stateOwner, event, false, SharedStateResolution.ANY);
-        Event responseEvent = new Event.Builder(
-                "Get Shared State Response",
-                FunctionalTestConstants.EventType.MONITOR,
-                FunctionalTestConstants.EventSource.SHARED_STATE_RESPONSE
-        )
-                .setEventData(sharedStateResult != null ? sharedStateResult.getValue() : new HashMap<>())
-                .inResponseToEvent(event)
-                .build();
+        SharedStateResult sharedStateResult =
+                getApi().getSharedState(stateOwner, event, false, SharedStateResolution.ANY);
+        Event responseEvent =
+                new Event.Builder(
+                                "Get Shared State Response",
+                                FunctionalTestConstants.EventType.MONITOR,
+                                FunctionalTestConstants.EventSource.SHARED_STATE_RESPONSE)
+                        .setEventData(
+                                sharedStateResult != null
+                                        ? sharedStateResult.getValue()
+                                        : new HashMap<>())
+                        .inResponseToEvent(event)
+                        .build();
         MobileCore.dispatchEvent(responseEvent);
     }
 
@@ -172,9 +171,7 @@ public class MonitorExtension extends Extension {
         getApi().unregisterExtension();
     }
 
-    /**
-     * Class defining {@link Event} specifications, contains Event's source and type.
-     */
+    /** Class defining {@link Event} specifications, contains Event's source and type. */
     public static class EventSpec {
 
         public final String source;
@@ -194,8 +191,7 @@ public class MonitorExtension extends Extension {
             this.type = type.toLowerCase();
         }
 
-        @NonNull
-        @Override
+        @NonNull @Override
         public String toString() {
             return "type '" + type + "' and source '" + source + "'";
         }

@@ -1,3 +1,14 @@
+/*
+  Copyright 2024 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
 package com.adobe.marketing.mobile.messaging;
 
 import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT;
@@ -15,7 +26,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.adobe.marketing.mobile.services.Log;
-
+import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -25,13 +36,12 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Map;
-
 @RunWith(MockitoJUnitRunner.class)
 public class FeedItemSchemaDataTests {
 
     @Test
-    public void constructor_setsAllFieldsCorrectly_whenContentTypeIsApplicationJson() throws JSONException {
+    public void constructor_setsAllFieldsCorrectly_whenContentTypeIsApplicationJson()
+            throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.APPLICATION_JSON);
@@ -86,7 +96,13 @@ public class FeedItemSchemaDataTests {
             FeedItemSchemaData feedItemSchemaData = new FeedItemSchemaData(schemaData);
 
             // verify
-            logMockedStatic.verify(() -> Log.trace(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()));
+            logMockedStatic.verify(
+                    () ->
+                            Log.trace(
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString()));
             assertEquals(ContentType.APPLICATION_JSON, feedItemSchemaData.getContentType());
             assertNull(feedItemSchemaData.getContent());
             assertEquals(0, feedItemSchemaData.getPublishedDate());
@@ -106,7 +122,13 @@ public class FeedItemSchemaDataTests {
             FeedItemSchemaData feedItemSchemaData = new FeedItemSchemaData(schemaData);
 
             // verify
-            logMockedStatic.verify(() -> Log.trace(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()));
+            logMockedStatic.verify(
+                    () ->
+                            Log.trace(
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString(),
+                                    ArgumentMatchers.anyString()));
             assertEquals(ContentType.APPLICATION_JSON, feedItemSchemaData.getContentType());
             assertNull(feedItemSchemaData.getContent());
             assertEquals(0, feedItemSchemaData.getPublishedDate());
@@ -116,7 +138,8 @@ public class FeedItemSchemaDataTests {
     }
 
     @Test
-    public void constructor_setsAllFieldsCorrectly_whenPublishedDateExpiryDateMetaAreMissing() throws JSONException {
+    public void constructor_setsAllFieldsCorrectly_whenPublishedDateExpiryDateMetaAreMissing()
+            throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.APPLICATION_JSON);
@@ -135,16 +158,19 @@ public class FeedItemSchemaDataTests {
     }
 
     @Test
-    public void getFeedItem_returnsFeedItem_whenContentTypeIsApplicationJson() throws JSONException {
+    public void getFeedItem_returnsFeedItem_whenContentTypeIsApplicationJson()
+            throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
         schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
-        schemaData.put(CONTENT, new JSONObject()
-                .put(TITLE, "title")
-                .put(BODY, "body")
-                .put(IMAGE_URL, "imageUrl")
-                .put(ACTION_URL, "actionUrl")
-                .put(ACTION_TITLE, "actionTitle"));
+        schemaData.put(
+                CONTENT,
+                new JSONObject()
+                        .put(TITLE, "title")
+                        .put(BODY, "body")
+                        .put(IMAGE_URL, "imageUrl")
+                        .put(ACTION_URL, "actionUrl")
+                        .put(ACTION_TITLE, "actionTitle"));
 
         // test
         FeedItemSchemaData feedItemSchemaData = new FeedItemSchemaData(schemaData);

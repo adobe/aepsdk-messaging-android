@@ -3,12 +3,11 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
@@ -16,31 +15,39 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionInfoTests {
-    Map<String, Object> characteristics = new HashMap<String, Object>() {{
-        put("eventToken", "eventToken");
-    }};
-    Map<String, Object> activity = new HashMap<String, Object>() {{
-        put("id", "activityId");
-    }};
-    Map<String, Object> scopeDetails = new HashMap<String, Object>() {{
-        put("decisionProvider", "AJO");
-        put("correlationID", "correlationId");
-        put("characteristics", characteristics);
-        put("activity", activity);
-    }};
+    Map<String, Object> characteristics =
+            new HashMap<String, Object>() {
+                {
+                    put("eventToken", "eventToken");
+                }
+            };
+    Map<String, Object> activity =
+            new HashMap<String, Object>() {
+                {
+                    put("id", "activityId");
+                }
+            };
+    Map<String, Object> scopeDetails =
+            new HashMap<String, Object>() {
+                {
+                    put("decisionProvider", "AJO");
+                    put("correlationID", "correlationId");
+                    put("characteristics", characteristics);
+                    put("activity", activity);
+                }
+            };
     List<PropositionItem> propositionItems = new ArrayList<>();
     Map<String, Object> propositionItemMap = new HashMap<>();
     private PropositionInfo propositionInfo;
@@ -53,9 +60,11 @@ public class PropositionInfoTests {
     }
 
     @Test
-    public void testCreatePropositionInfoFromProposition() throws MessageRequiredFieldMissingException {
+    public void testCreatePropositionInfoFromProposition()
+            throws MessageRequiredFieldMissingException {
         // setup
-        Proposition proposition = new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
+        Proposition proposition =
+                new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
         try {
             propositionInfo = PropositionInfo.createFromProposition(proposition);

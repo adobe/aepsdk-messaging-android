@@ -34,7 +34,6 @@ import com.adobe.marketing.mobile.services.ui.PresentationError;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventHandler;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,28 +49,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingFullscreenEventListenerTests {
 
-    @Mock
-    ServiceProvider mockServiceProvider;
-    @Mock
-    Logging mockLogging;
-    @Mock
-    UIService mockUIService;
-    @Mock
-    UriOpening mockUriOpening;
-    @Mock
-    PresentableMessageMapper mockPresentableMessageMapper;
-    @Mock
-    PresentableMessageMapper.InternalMessage mockMessage;
-    @Mock
-    Presentable<InAppMessage> mockInAppPresentable;
-    @Mock
-    InAppMessage mockPresentation;
-    @Mock
-    PresentationError mockPresentationError;
-    @Mock
-    InAppMessageEventHandler mockEventHandler;
-    @Captor
-    ArgumentCaptor<String> urlStringCaptor;
+    @Mock ServiceProvider mockServiceProvider;
+    @Mock Logging mockLogging;
+    @Mock UIService mockUIService;
+    @Mock UriOpening mockUriOpening;
+    @Mock PresentableMessageMapper mockPresentableMessageMapper;
+    @Mock PresentableMessageMapper.InternalMessage mockMessage;
+    @Mock Presentable<InAppMessage> mockInAppPresentable;
+    @Mock InAppMessage mockPresentation;
+    @Mock PresentationError mockPresentationError;
+    @Mock InAppMessageEventHandler mockEventHandler;
+    @Captor ArgumentCaptor<String> urlStringCaptor;
 
     private MessagingFullscreenEventListener eventListener;
 
@@ -100,14 +88,21 @@ public class MessagingFullscreenEventListenerTests {
     }
 
     void runWithMockedServiceProvider(final Runnable runnable) {
-        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic = Mockito.mockStatic(ServiceProvider.class);
-             MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic = Mockito.mockStatic(PresentableMessageMapper.class)) {
-            serviceProviderMockedStatic.when(ServiceProvider::getInstance).thenReturn(mockServiceProvider);
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                        Mockito.mockStatic(ServiceProvider.class);
+                MockedStatic<PresentableMessageMapper> presentableMessageMapperMockedStatic =
+                        Mockito.mockStatic(PresentableMessageMapper.class)) {
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
             when(mockServiceProvider.getLoggingService()).thenReturn(mockLogging);
             when(mockServiceProvider.getUIService()).thenReturn(mockUIService);
             when(mockServiceProvider.getUriService()).thenReturn(mockUriOpening);
-            presentableMessageMapperMockedStatic.when(PresentableMessageMapper::getInstance).thenReturn(mockPresentableMessageMapper);
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(mockMessage);
+            presentableMessageMapperMockedStatic
+                    .when(PresentableMessageMapper::getInstance)
+                    .thenReturn(mockPresentableMessageMapper);
+            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString()))
+                    .thenReturn(mockMessage);
             when(mockInAppPresentable.getPresentation()).thenReturn(mockPresentation);
             when(mockPresentation.getId()).thenReturn("mockId");
             runnable.run();
@@ -116,331 +111,405 @@ public class MessagingFullscreenEventListenerTests {
 
     @Test
     public void test_onMessageShow_withTracking() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(true);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(true);
 
-            // test
-            eventListener.onShow(mockInAppPresentable);
+                    // test
+                    eventListener.onShow(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISPLAY);
-            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
-        });
+                    // verify
+                    verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISPLAY);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
+                });
     }
 
     @Test
     public void test_onMessageShow_withAutoTrackDisabled() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(false);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(false);
 
-            // test
-            eventListener.onShow(mockInAppPresentable);
+                    // test
+                    eventListener.onShow(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
-            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
-        });
+                    // verify
+                    verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
+                });
     }
 
     @Test
     public void test_onMessageShow_presentableMessageNotInMap() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString()))
+                            .thenReturn(null);
 
-            // test
-            eventListener.onShow(mockInAppPresentable);
+                    // test
+                    eventListener.onShow(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
-            verify(mockMessage, times(0)).recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
-        });
+                    // verify
+                    verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISPLAY);
+                    verify(mockMessage, times(0))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISPLAY);
+                });
     }
 
     @Test
     public void test_onMessageDismiss_withAutoTrack() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(true);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(true);
 
-            // test
-            eventListener.onDismiss(mockInAppPresentable);
+                    // test
+                    eventListener.onDismiss(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISMISS);
-            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
-        });
+                    // verify
+                    verify(mockMessage, times(1)).track(null, MessagingEdgeEventType.DISMISS);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISMISS);
+                });
     }
 
     @Test
     public void test_onMessageDismiss_withAutoTrackDisabled() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(false);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(false);
 
-            // test
-            eventListener.onDismiss(mockInAppPresentable);
+                    // test
+                    eventListener.onDismiss(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
-            verify(mockMessage, times(1)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
-        });
+                    // verify
+                    verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISMISS);
+                });
     }
 
     @Test
     public void test_onMessageDismiss_presentableMessageNotInMap() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString()))
+                            .thenReturn(null);
 
-            // test
-            eventListener.onDismiss(mockInAppPresentable);
+                    // test
+                    eventListener.onDismiss(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
-            verify(mockMessage, times(0)).recordEventHistory(null, MessagingEdgeEventType.DISMISS);
-        });
+                    // verify
+                    verify(mockMessage, times(0)).track(null, MessagingEdgeEventType.DISMISS);
+                    verify(mockMessage, times(0))
+                            .recordEventHistory(null, MessagingEdgeEventType.DISMISS);
+                });
     }
 
     @Test
     public void test_onMessageError() {
-        runWithMockedServiceProvider(() -> {
-            try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
-                // test
-                eventListener.onError(mockInAppPresentable, mockPresentationError);
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+                        // test
+                        eventListener.onError(mockInAppPresentable, mockPresentationError);
 
-                // verify
-                logMockedStatic.verify(() -> Log.debug(anyString(), anyString(), anyString()), times(1));
-            }
-        });
+                        // verify
+                        logMockedStatic.verify(
+                                () -> Log.debug(anyString(), anyString(), anyString()), times(1));
+                    }
+                });
     }
 
     @Test
     public void test_openUrlWithAdbDeeplink() {
         // setup
-        runWithMockedServiceProvider(() -> {
-            // test
-            eventListener.openUrl("adb_deeplink://signup");
+        runWithMockedServiceProvider(
+                () -> {
+                    // test
+                    eventListener.openUrl("adb_deeplink://signup");
 
-            // verify the ui service is called to handle the deeplink
-            verify(mockUriOpening, times(1)).openUri(urlStringCaptor.capture());
-            assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
-        });
+                    // verify the ui service is called to handle the deeplink
+                    verify(mockUriOpening, times(1)).openUri(urlStringCaptor.capture());
+                    assertEquals("adb_deeplink://signup", urlStringCaptor.getValue());
+                });
     }
 
     @Test
     public void test_openUrlWithWebLink() {
-        runWithMockedServiceProvider(() -> {
-            // test
-            eventListener.openUrl("https://www.adobe.com");
+        runWithMockedServiceProvider(
+                () -> {
+                    // test
+                    eventListener.openUrl("https://www.adobe.com");
 
-            // verify the ui service is called to show the url
-            verify(mockUriOpening, times(1)).openUri(urlStringCaptor.capture());
-            assertEquals("https://www.adobe.com", urlStringCaptor.getValue());
-        });
+                    // verify the ui service is called to show the url
+                    verify(mockUriOpening, times(1)).openUri(urlStringCaptor.capture());
+                    assertEquals("https://www.adobe.com", urlStringCaptor.getValue());
+                });
     }
 
     @Test
     public void test_openUrlWithNullUrl() {
-        runWithMockedServiceProvider(() -> {
-            // test
-            eventListener.openUrl(null);
+        runWithMockedServiceProvider(
+                () -> {
+                    // test
+                    eventListener.openUrl(null);
 
-            // verify no internal open url method is called
-            verify(mockUriOpening, times(0)).openUri(urlStringCaptor.capture());
-        });
+                    // verify no internal open url method is called
+                    verify(mockUriOpening, times(0)).openUri(urlStringCaptor.capture());
+                });
     }
 
     @Test
     public void test_onUrlLoading_nullUrlString() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
+                    // test
+                    boolean result = eventListener.onUrlLoading(mockInAppPresentable, null);
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, null);
-
-            // verify no message tracking call
-            assertTrue(result);
-            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-        });
+                    // verify no message tracking call
+                    assertTrue(result);
+                    verify(mockPresentableMessageMapper, times(0))
+                            .getMessageFromPresentableId(anyString());
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                });
     }
 
     @Test
     public void test_onUrlLoading_emptyUrlString() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
+                    // test
+                    boolean result = eventListener.onUrlLoading(mockInAppPresentable, "");
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "");
-
-            // verify no message tracking call
-            assertTrue(result);
-            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-        });
+                    // verify no message tracking call
+                    assertTrue(result);
+                    verify(mockPresentableMessageMapper, times(0))
+                            .getMessageFromPresentableId(anyString());
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                });
     }
 
     @Test
     public void test_onUrlLoading_withInvalidUri() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
+                    // test
+                    boolean result = eventListener.onUrlLoading(mockInAppPresentable, "{invalid}");
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "{invalid}");
-
-            // verify no message tracking call
-            assertTrue(result);
-            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-        });
+                    // verify no message tracking call
+                    assertTrue(result);
+                    verify(mockPresentableMessageMapper, times(0))
+                            .getMessageFromPresentableId(anyString());
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                });
     }
 
     @Test
     public void test_onUrlLoading_withInvalidScheme() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
+                    // test
+                    boolean result =
+                            eventListener.onUrlLoading(
+                                    mockInAppPresentable, "notadbinapp://com.adobe.com");
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "notadbinapp://com.adobe.com");
-
-            // verify no message tracking call and message settings weren't created
-            Assert.assertFalse(result);
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-        });
+                    // verify no message tracking call and message settings weren't created
+                    Assert.assertFalse(result);
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                    verify(mockPresentableMessageMapper, times(0))
+                            .getMessageFromPresentableId(anyString());
+                });
     }
 
     @Test
     public void test_overrideUrlLoad_URLWithNoQueryParameters() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
+                    // test
+                    boolean result =
+                            eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss");
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss");
-
-            // verify no message tracking call and message settings weren't created
-            Assert.assertFalse(result);
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-            verify(mockPresentableMessageMapper, times(0)).getMessageFromPresentableId(anyString());
-        });
+                    // verify no message tracking call and message settings weren't created
+                    Assert.assertFalse(result);
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                    verify(mockPresentableMessageMapper, times(0))
+                            .getMessageFromPresentableId(anyString());
+                });
     }
 
     @Test
     public void test_overrideUrlLoad_MissingInteractionInURLQueryParams() {
-        runWithMockedServiceProvider(() -> {
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?q=1");
+        runWithMockedServiceProvider(
+                () -> {
+                    // test
+                    boolean result =
+                            eventListener.onUrlLoading(
+                                    mockInAppPresentable, "adbinapp://dismiss?q=1");
 
-            // verify no message tracking call and message settings weren't created
-            Assert.assertTrue(result);
-            verify(mockPresentableMessageMapper, times(1)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-        });
+                    // verify no message tracking call and message settings weren't created
+                    Assert.assertTrue(result);
+                    verify(mockPresentableMessageMapper, times(1))
+                            .getMessageFromPresentableId(anyString());
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                });
     }
 
     @Test
     public void test_overrideUrlLoad_InternalMessageForPresentableNotAvailable() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString()))
+                            .thenReturn(null);
 
-            // test
-            boolean result = eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=deeplink");
+                    // test
+                    boolean result =
+                            eventListener.onUrlLoading(
+                                    mockInAppPresentable,
+                                    "adbinapp://dismiss?interaction=deeplink");
 
-            // verify no message tracking call and message settings weren't created
-            Assert.assertTrue(result);
-            verify(mockPresentableMessageMapper, times(1)).getMessageFromPresentableId(anyString());
-            verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
-        });
+                    // verify no message tracking call and message settings weren't created
+                    Assert.assertTrue(result);
+                    verify(mockPresentableMessageMapper, times(1))
+                            .getMessageFromPresentableId(anyString());
+                    verify(mockMessage, times(0)).track(any(), any(MessagingEdgeEventType.class));
+                });
     }
 
     @Test
     public void test_onUrlLoading_withJavascriptPayload() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
-            when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
+                    when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
 
-            // test
-            eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=javascript&link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
+                    // test
+                    eventListener.onUrlLoading(
+                            mockInAppPresentable,
+                            "adbinapp://dismiss?interaction=javascript&link=js%3D%28function%28%29+%7B+return+%27javascript+value%27%3B+%7D%29%28%29%3B");
 
-            // verify no message tracking call and message settings weren't created
-            verify(mockMessage, times(1)).track(eq("javascript"), eq(MessagingEdgeEventType.INTERACT));
-            ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-            verify(mockEventHandler, times(1)).evaluateJavascript(stringArgumentCaptor.capture(), any());
-            assertEquals("js=(function() { return 'javascript value'; })();", stringArgumentCaptor.getValue());
-        });
+                    // verify no message tracking call and message settings weren't created
+                    verify(mockMessage, times(1))
+                            .track(eq("javascript"), eq(MessagingEdgeEventType.INTERACT));
+                    ArgumentCaptor<String> stringArgumentCaptor =
+                            ArgumentCaptor.forClass(String.class);
+                    verify(mockEventHandler, times(1))
+                            .evaluateJavascript(stringArgumentCaptor.capture(), any());
+                    assertEquals(
+                            "js=(function() { return 'javascript value'; })();",
+                            stringArgumentCaptor.getValue());
+                });
     }
 
     @Test
     public void test_onUrlLoading_withDeeplink() {
-        runWithMockedServiceProvider(() -> {
-            // setup
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
 
-            when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
+                    when(mockPresentation.getEventHandler()).thenReturn(mockEventHandler);
 
-            // test
-            eventListener.onUrlLoading(mockInAppPresentable, "adbinapp://dismiss?interaction=deeplink&link=scheme%3A%2F%2Fparameters%3Fparam1%3Dvalue1%26param2%3Dvalue2");
+                    // test
+                    eventListener.onUrlLoading(
+                            mockInAppPresentable,
+                            "adbinapp://dismiss?interaction=deeplink&link=scheme%3A%2F%2Fparameters%3Fparam1%3Dvalue1%26param2%3Dvalue2");
 
-            // verify no message tracking call and message settings weren't created
-            verify(mockMessage, times(0)).track(eq("deeplink"), eq(MessagingEdgeEventType.DISMISS));
-            ArgumentCaptor<String> stringArgumentCaptor = ArgumentCaptor.forClass(String.class);
-            verify(mockUriOpening, times(1)).openUri(stringArgumentCaptor.capture());
-            assertEquals("scheme://parameters?param1=value1&param2=value2", stringArgumentCaptor.getValue());
-        });
+                    // verify no message tracking call and message settings weren't created
+                    verify(mockMessage, times(0))
+                            .track(eq("deeplink"), eq(MessagingEdgeEventType.DISMISS));
+                    ArgumentCaptor<String> stringArgumentCaptor =
+                            ArgumentCaptor.forClass(String.class);
+                    verify(mockUriOpening, times(1)).openUri(stringArgumentCaptor.capture());
+                    assertEquals(
+                            "scheme://parameters?param1=value1&param2=value2",
+                            stringArgumentCaptor.getValue());
+                });
     }
 
     @Test
     public void test_onBackPressed_WithAutoTrack() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(true);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(true);
 
-            // test
-            eventListener.onBackPressed(mockInAppPresentable);
+                    // test
+                    eventListener.onBackPressed(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(1)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
-            verify(mockMessage, times(1)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
-        });
+                    // verify
+                    verify(mockMessage, times(1))
+                            .track(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.INTERACT);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.INTERACT);
+                });
     }
 
     @Test
     public void test_onBackPressed_WithAutoTrackDisabled() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockMessage.getAutoTrack()).thenReturn(false);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessage.getAutoTrack()).thenReturn(false);
 
-            // test
-            eventListener.onBackPressed(mockInAppPresentable);
+                    // test
+                    eventListener.onBackPressed(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.DISMISS);
-            verify(mockMessage, times(1)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
-        });
+                    // verify
+                    verify(mockMessage, times(0))
+                            .track(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.DISMISS);
+                    verify(mockMessage, times(1))
+                            .recordEventHistory(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.INTERACT);
+                });
     }
 
     @Test
     public void test_onBackPressed_InternalMessageForPresentableNotAvailable() {
-        runWithMockedServiceProvider(() -> {
-            // setup
-            when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString())).thenReturn(null);
-            when(mockMessage.getAutoTrack()).thenReturn(true);
+        runWithMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockPresentableMessageMapper.getMessageFromPresentableId(anyString()))
+                            .thenReturn(null);
+                    when(mockMessage.getAutoTrack()).thenReturn(true);
 
-            // test
-            eventListener.onBackPressed(mockInAppPresentable);
+                    // test
+                    eventListener.onBackPressed(mockInAppPresentable);
 
-            // verify
-            verify(mockMessage, times(0)).track(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.DISMISS);
-            verify(mockMessage, times(0)).recordEventHistory(MessagingFullscreenEventListener.INTERACTION_BACK_PRESS, MessagingEdgeEventType.INTERACT);
-        });
+                    // verify
+                    verify(mockMessage, times(0))
+                            .track(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.DISMISS);
+                    verify(mockMessage, times(0))
+                            .recordEventHistory(
+                                    MessagingFullscreenEventListener.INTERACTION_BACK_PRESS,
+                                    MessagingEdgeEventType.INTERACT);
+                });
     }
 }

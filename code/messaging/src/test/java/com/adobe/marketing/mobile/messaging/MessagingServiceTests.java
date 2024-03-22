@@ -3,12 +3,11 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
@@ -27,16 +26,14 @@ import static org.mockito.Mockito.when;
 
 import android.app.Notification;
 import android.content.Context;
-
 import androidx.core.app.NotificationManagerCompat;
-
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.google.firebase.messaging.RemoteMessage;
-
+import java.util.HashMap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,18 +44,12 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.HashMap;
-
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingServiceTests {
-    @Mock
-    RemoteMessage remoteMessage;
-    @Mock
-    Context context;
-    @Mock
-    NotificationManagerCompat notificationManager;
-    @Mock
-    Notification notification;
+    @Mock RemoteMessage remoteMessage;
+    @Mock Context context;
+    @Mock NotificationManagerCompat notificationManager;
+    @Mock Notification notification;
     MockedStatic<MobileCore> mobileCore;
     MockedStatic<NotificationManagerCompat> notificationManagerCompat;
     MockedStatic<MessagingPushBuilder> pushBuilder;
@@ -68,7 +59,9 @@ public class MessagingServiceTests {
 
         // Mock NotificationManager
         notificationManagerCompat = mockStatic(NotificationManagerCompat.class);
-        notificationManagerCompat.when(() -> NotificationManagerCompat.from(any(Context.class))).thenReturn(notificationManager);
+        notificationManagerCompat
+                .when(() -> NotificationManagerCompat.from(any(Context.class)))
+                .thenReturn(notificationManager);
         doNothing().when(notificationManager).notify(anyInt(), any());
 
         // Mock MobileCore
@@ -76,7 +69,12 @@ public class MessagingServiceTests {
 
         // Mock PushNotificationBuilder
         pushBuilder = mockStatic(MessagingPushBuilder.class);
-        pushBuilder.when(() -> MessagingPushBuilder.build(any(MessagingPushPayload.class), any(Context.class))).thenReturn(notification);
+        pushBuilder
+                .when(
+                        () ->
+                                MessagingPushBuilder.build(
+                                        any(MessagingPushPayload.class), any(Context.class)))
+                .thenReturn(notification);
 
         when(remoteMessage.getMessageId()).thenReturn("someMessageID");
     }
@@ -90,40 +88,53 @@ public class MessagingServiceTests {
 
     @Test
     public void test_onNewToken_SetsPushIdentifierWhenTokenIsValid() {
-        //setup
+        // setup
         String validToken = "valid_token";
         MessagingService messagingService = new MessagingService();
 
-        //test
+        // test
         messagingService.onNewToken(validToken);
 
-        //verify
+        // verify
         mobileCore.verify(() -> MobileCore.setPushIdentifier(validToken));
     }
 
     @Test
     public void test_onMessageReceived_HandlesRemoteMessage() {
-        try (MockedStatic<MessagingService> messagingServiceMockedStatic = Mockito.mockStatic(MessagingService.class)) {
+        try (MockedStatic<MessagingService> messagingServiceMockedStatic =
+                Mockito.mockStatic(MessagingService.class)) {
             // setup
-            messagingServiceMockedStatic.when(() -> MessagingService.handleRemoteMessage(any(Context.class), any(RemoteMessage.class))).thenReturn(true);
+            messagingServiceMockedStatic
+                    .when(
+                            () ->
+                                    MessagingService.handleRemoteMessage(
+                                            any(Context.class), any(RemoteMessage.class)))
+                    .thenReturn(true);
             MessagingService messagingService = new MessagingService();
 
             // test
             messagingService.onMessageReceived(remoteMessage);
 
             // verify
-            messagingServiceMockedStatic.verify(() -> MessagingService.handleRemoteMessage(any(Context.class), eq(remoteMessage)));
+            messagingServiceMockedStatic.verify(
+                    () ->
+                            MessagingService.handleRemoteMessage(
+                                    any(Context.class), eq(remoteMessage)));
         }
     }
 
     @Test
     public void test_handleRemoteMessage_WhenPushNotificationFromAJO() {
-        //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
-            put("_xdm", "somevalues");
-            put("adb_title", "Sample Title");
-            put("adb_content", "Sample Content");
-        }});
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("_xdm", "somevalues");
+                                put("adb_title", "Sample Title");
+                                put("adb_content", "Sample Content");
+                            }
+                        });
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
 
         // test
@@ -143,27 +154,35 @@ public class MessagingServiceTests {
 
         // verify notification created from push notification builder is displayed
         verify(notificationManager, times(1)).notify(anyInt(), eq(notification));
-        pushBuilder.verify(() -> MessagingPushBuilder.build(any(MessagingPushPayload.class), eq(context)));
+        pushBuilder.verify(
+                () -> MessagingPushBuilder.build(any(MessagingPushPayload.class), eq(context)));
     }
 
     @Test
     public void test_handleRemoteMessage_WhenNotificationFromAssurance() {
-        //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
-            put("adb_title", "title");
-        }});
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("adb_title", "title");
+                            }
+                        });
 
         // test
         assertTrue(MessagingService.handleRemoteMessage(context, remoteMessage));
     }
 
-
     @Test
     public void test_handleRemoteMessage_whenNotAdobeGeneratedNotification() {
-        //setup
-        when(remoteMessage.getData()).thenReturn(new HashMap<String, String>() {{
-            put("key", "value");
-        }});
+        // setup
+        when(remoteMessage.getData())
+                .thenReturn(
+                        new HashMap<String, String>() {
+                            {
+                                put("key", "value");
+                            }
+                        });
 
         // test
         boolean isHandled = MessagingService.handleRemoteMessage(context, remoteMessage);
@@ -171,5 +190,4 @@ public class MessagingServiceTests {
         // verify
         assertFalse(isHandled);
     }
-
 }

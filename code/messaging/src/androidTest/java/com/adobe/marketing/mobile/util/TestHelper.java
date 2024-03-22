@@ -21,10 +21,8 @@ import android.app.Application;
 import android.app.Instrumentation;
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
-
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
@@ -37,11 +35,6 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.NetworkRequest;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.ServiceProviderHelper;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -57,15 +50,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 /**
- * Test helper for functional testing to read, write, reset and assert against eventhub events, shared states and persistence data.
+ * Test helper for functional testing to read, write, reset and assert against eventhub events,
+ * shared states and persistence data.
  */
 public class TestHelper {
     private static final String LOG_SOURCE = "TestHelper";
     // List of threads to wait for after test execution
     private static final List<String> knownThreads = new ArrayList<String>();
-    private static final FunctionalTestNetworkService testNetworkService = new FunctionalTestNetworkService();
+    private static final FunctionalTestNetworkService testNetworkService =
+            new FunctionalTestNetworkService();
     private static Application defaultApplication;
 
     // List of threads to wait for after test execution
@@ -79,8 +77,9 @@ public class TestHelper {
     /**
      * {@code TestRule} which sets up the MobileCore for testing before each test execution, and
      * tearsdown the MobileCore after test execution.
-     * <p>
-     * To use, add the following to your test class:
+     *
+     * <p>To use, add the following to your test class:
+     *
      * <pre>
      * 	&#064;Rule
      * 	public FunctionalTestHelper.SetupCoreRule coreRule = new FunctionalTestHelper.SetupCoreRule();
@@ -91,13 +90,16 @@ public class TestHelper {
         private static final String LOG_SOURCE = "SetupCoreRule";
 
         @Override
-        public Statement apply(@NonNull final Statement base, @NonNull final Description description) {
+        public Statement apply(
+                @NonNull final Statement base, @NonNull final Description description) {
             return new Statement() {
                 @Override
                 public void evaluate() throws Throwable {
                     if (defaultApplication == null) {
-                        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-                        defaultApplication = Instrumentation.newApplication(CustomApplication.class, context);
+                        Context context =
+                                InstrumentationRegistry.getInstrumentation().getTargetContext();
+                        defaultApplication =
+                                Instrumentation.newApplication(CustomApplication.class, context);
                     }
 
                     SDKHelper.resetSDK();
@@ -114,7 +116,8 @@ public class TestHelper {
                         throw e; // rethrow test failure
                     } finally {
                         // After test execution
-                        Log.debug(LOG_TAG, LOG_SOURCE, "Finished '%s'", description.getMethodName());
+                        Log.debug(
+                                LOG_TAG, LOG_SOURCE, "Finished '%s'", description.getMethodName());
                         waitForThreads(5000); // wait to allow thread to run after test execution
                         SDKHelper.resetSDK();
                         clearAllDatastores();
@@ -130,8 +133,9 @@ public class TestHelper {
      * {@code TestRule} which sets up the MobileCore for testing before each test execution, and
      * tearsdown the MobileCore after test execution. This version of the class uses the actual
      * network service.
-     * <p>
-     * To use, add the following to your test class:
+     *
+     * <p>To use, add the following to your test class:
+     *
      * <pre>
      * 	&#064;Rule
      * 	public FunctionalTestHelper.SetupCoreRuleWithRealNetworkService coreRule = new FunctionalTestHelper.SetupCoreRuleWithRealNetworkService();
@@ -141,13 +145,16 @@ public class TestHelper {
         private static final String LOG_SOURCE = "SetupCoreRuleWithRealNetworkService";
 
         @Override
-        public Statement apply(@NonNull final Statement base, @NonNull final Description description) {
+        public Statement apply(
+                @NonNull final Statement base, @NonNull final Description description) {
             return new Statement() {
                 @Override
                 public void evaluate() throws Throwable {
                     if (defaultApplication == null) {
-                        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-                        defaultApplication = Instrumentation.newApplication(CustomApplication.class, context);
+                        Context context =
+                                InstrumentationRegistry.getInstrumentation().getTargetContext();
+                        defaultApplication =
+                                Instrumentation.newApplication(CustomApplication.class, context);
                     }
 
                     SDKHelper.resetSDK();
@@ -163,7 +170,8 @@ public class TestHelper {
                         throw e; // rethrow test failure
                     } finally {
                         // After test execution
-                        Log.debug(LOG_TAG, LOG_SOURCE, "Finished '%s'", description.getMethodName());
+                        Log.debug(
+                                LOG_TAG, LOG_SOURCE, "Finished '%s'", description.getMethodName());
                         waitForThreads(5000); // wait to allow thread to run after test execution
                         SDKHelper.resetSDK();
                         clearAllDatastores();
@@ -176,11 +184,12 @@ public class TestHelper {
     }
 
     /**
-     * Reset the {@link MobileCore} and {@link com.adobe.marketing.mobile.services.ServiceProvider} without clearing persistence or database.
-     * Initializes {@code MobileCore} and {@code ServiceProvider} for testing after resetting by,
-     * setting the {@link FunctionalTestNetworkService} to the {@code ServiceProvider}, and setting
-     * the instrumented test application to {@code MobileCore}.
-     * This method does not clear the shared preferences, application cache directory, or database directory.
+     * Reset the {@link MobileCore} and {@link com.adobe.marketing.mobile.services.ServiceProvider}
+     * without clearing persistence or database. Initializes {@code MobileCore} and {@code
+     * ServiceProvider} for testing after resetting by, setting the {@link
+     * FunctionalTestNetworkService} to the {@code ServiceProvider}, and setting the instrumented
+     * test application to {@code MobileCore}. This method does not clear the shared preferences,
+     * application cache directory, or database directory.
      */
     public static void resetCoreHelper() {
         SDKHelper.resetSDK();
@@ -192,10 +201,11 @@ public class TestHelper {
 
     /**
      * {@code TestRule} which registers the {@code MonitorExtension}, allowing test cases to assert
-     * events passing through the {@code EventHub}. This {@code TestRule} must be applied after
-     * the {@link SetupCoreRule} to ensure the {@code MobileCore} is setup for testing first.
-     * <p>
-     * To use, add the following to your test class:
+     * events passing through the {@code EventHub}. This {@code TestRule} must be applied after the
+     * {@link SetupCoreRule} to ensure the {@code MobileCore} is setup for testing first.
+     *
+     * <p>To use, add the following to your test class:
+     *
      * <pre>
      *  &#064;Rule
      * 	public RuleChain rule = RuleChain.outerRule(new SetupCoreRule())
@@ -206,13 +216,15 @@ public class TestHelper {
 
         @Override
         @SuppressWarnings("deprecation")
-        public Statement apply(@NonNull final Statement base, @NonNull final Description description) {
+        public Statement apply(
+                @NonNull final Statement base, @NonNull final Description description) {
             return new Statement() {
                 @Override
                 public void evaluate() throws Throwable {
                     // Use registerExtension here to avoid starting the core yet, the tests should
                     // start it after all extensions have been registered
-                    MobileCore.registerExtensions(Collections.singletonList(MonitorExtension.class), null);
+                    MobileCore.registerExtensions(
+                            Collections.singletonList(MonitorExtension.class), null);
 
                     try {
                         base.evaluate();
@@ -227,7 +239,8 @@ public class TestHelper {
     public static class LogOnErrorRule implements TestRule {
 
         @Override
-        public Statement apply(@NonNull final Statement base, @NonNull final Description description) {
+        public Statement apply(
+                @NonNull final Statement base, @NonNull final Description description) {
             return new Statement() {
                 @Override
                 public void evaluate() throws Throwable {
@@ -241,19 +254,23 @@ public class TestHelper {
         }
     }
 
-    /**
-     * Get the LogCat logs
-     */
+    /** Get the LogCat logs */
     private static String collectLogCat(final String methodName) {
         Process process;
         StringBuilder log = new StringBuilder();
 
         try {
             // Setting to just last 50 lines as logs are passed as Throwable stack trace which
-            // has a line limit. The SDK logs have many multi-line entries which blow up the logs quickly
+            // has a line limit. The SDK logs have many multi-line entries which blow up the logs
+            // quickly
             // If the log string is too long, it can crash the Throwable call.
-            process = Runtime.getRuntime().exec("logcat -t 50 -d AdobeExperienceSDK:V TestRunner:I Hermetic:V *:S");
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            process =
+                    Runtime.getRuntime()
+                            .exec(
+                                    "logcat -t 50 -d AdobeExperienceSDK:V TestRunner:I Hermetic:V"
+                                            + " *:S");
+            BufferedReader bufferedReader =
+                    new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = "";
             boolean ignoreLines = false; // "started" line may not be in last 50 lines
 
@@ -274,8 +291,9 @@ public class TestHelper {
     }
 
     /**
-     * Waits for all the known SDK threads to finish or fails the test after timeoutMillis if some of them are still running
-     * when the timer expires. If timeoutMillis is 0, a default timeout will be set = 1000ms
+     * Waits for all the known SDK threads to finish or fails the test after timeoutMillis if some
+     * of them are still running when the timer expires. If timeoutMillis is 0, a default timeout
+     * will be set = 1000ms
      *
      * @param timeoutMillis max waiting time
      */
@@ -291,29 +309,34 @@ public class TestHelper {
         sleep(TEST_INITIAL_SLEEP_MS);
         Set<Thread> threadSet = getEligibleThreads();
 
-        while (threadSet.size() > 0 && ((System.currentTimeMillis() - startTime) < timeoutTestMillis)) {
-            Log.debug(LOG_TAG, LOG_SOURCE, "waitForThreads - Still waiting for " + threadSet.size() + " thread(s)");
+        while (threadSet.size() > 0
+                && ((System.currentTimeMillis() - startTime) < timeoutTestMillis)) {
+            Log.debug(
+                    LOG_TAG,
+                    LOG_SOURCE,
+                    "waitForThreads - Still waiting for " + threadSet.size() + " thread(s)");
 
             for (Thread t : threadSet) {
                 Log.debug(
                         LOG_TAG,
                         LOG_SOURCE,
-                        "waitForThreads - Waiting for thread " + t.getName() + " (" + t.getId() + ")"
-                );
+                        "waitForThreads - Waiting for thread "
+                                + t.getName()
+                                + " ("
+                                + t.getId()
+                                + ")");
                 boolean done = false;
                 boolean timedOut = false;
 
                 while (!done && !timedOut) {
-                    if (
-                            t.getState().equals(Thread.State.TERMINATED) ||
-                                    t.getState().equals(Thread.State.TIMED_WAITING) ||
-                                    t.getState().equals(Thread.State.WAITING)
-                    ) {
-                        //Cannot use the join() API since we use a cached thread pool, which
-                        //means that we keep idle threads around for 60secs (default timeout).
+                    if (t.getState().equals(Thread.State.TERMINATED)
+                            || t.getState().equals(Thread.State.TIMED_WAITING)
+                            || t.getState().equals(Thread.State.WAITING)) {
+                        // Cannot use the join() API since we use a cached thread pool, which
+                        // means that we keep idle threads around for 60secs (default timeout).
                         done = true;
                     } else {
-                        //blocking
+                        // blocking
                         sleep(sleepTime);
                         timedOut = (System.currentTimeMillis() - startTime) > timeoutTestMillis;
                     }
@@ -323,14 +346,20 @@ public class TestHelper {
                     Log.debug(
                             LOG_TAG,
                             LOG_SOURCE,
-                            "waitForThreads - Timeout out waiting for thread " + t.getName() + " (" + t.getId() + ")"
-                    );
+                            "waitForThreads - Timeout out waiting for thread "
+                                    + t.getName()
+                                    + " ("
+                                    + t.getId()
+                                    + ")");
                 } else {
                     Log.debug(
                             LOG_TAG,
                             LOG_SOURCE,
-                            "waitForThreads - Done waiting for thread " + t.getName() + " (" + t.getId() + ")"
-                    );
+                            "waitForThreads - Done waiting for thread "
+                                    + t.getName()
+                                    + " ("
+                                    + t.getId()
+                                    + ")");
                 }
             }
 
@@ -350,12 +379,10 @@ public class TestHelper {
         Set<Thread> eligibleThreads = new HashSet<>();
 
         for (Thread t : threadSet) {
-            if (
-                    isAppThread(t) &&
-                            !t.getState().equals(Thread.State.WAITING) &&
-                            !t.getState().equals(Thread.State.TERMINATED) &&
-                            !t.getState().equals(Thread.State.TIMED_WAITING)
-            ) {
+            if (isAppThread(t)
+                    && !t.getState().equals(Thread.State.WAITING)
+                    && !t.getState().equals(Thread.State.TERMINATED)
+                    && !t.getState().equals(Thread.State.TIMED_WAITING)) {
                 eligibleThreads.add(t);
             }
         }
@@ -364,8 +391,8 @@ public class TestHelper {
     }
 
     /**
-     * Checks if current thread is not a daemon and its name starts with one of the known SDK thread names specified here
-     * {@link #sdkThreadPrefixes}
+     * Checks if current thread is not a daemon and its name starts with one of the known SDK thread
+     * names specified here {@link #sdkThreadPrefixes}
      *
      * @param t current thread to verify
      * @return true if it is a known thread, false otherwise
@@ -384,11 +411,12 @@ public class TestHelper {
         return false;
     }
 
-    /**
-     * Resets the network and event test expectations.
-     */
+    /** Resets the network and event test expectations. */
     public static void resetTestExpectations() {
-        Log.debug(LOG_TAG, LOG_SOURCE, "Resetting functional test expectations for events and network requests");
+        Log.debug(
+                LOG_TAG,
+                LOG_SOURCE,
+                "Resetting functional test expectations for events and network requests");
 
         if (testNetworkService != null) {
             testNetworkService.reset();
@@ -402,14 +430,16 @@ public class TestHelper {
     // ---------------------------------------------------------------------------------------------
 
     /**
-     * Sets an expectation for a specific event type and source and how many times the event should be dispatched.
+     * Sets an expectation for a specific event type and source and how many times the event should
+     * be dispatched.
      *
-     * @param type   the event type
+     * @param type the event type
      * @param source the event source
-     * @param count  the expected number of times the event is dispatched
+     * @param count the expected number of times the event is dispatched
      * @throws IllegalArgumentException if {@code count} is less than 1
      */
-    public static void setExpectationEvent(final String type, final String source, final int count) {
+    public static void setExpectationEvent(
+            final String type, final String source, final int count) {
         if (count < 1) {
             throw new IllegalArgumentException("Cannot set expectation event count less than 1!");
         }
@@ -420,38 +450,41 @@ public class TestHelper {
     /**
      * Asserts if all the expected events were received and fails if an unexpected event was seen.
      *
-     * @param ignoreUnexpectedEvents if set on false, an assertion is made on unexpected events, otherwise the unexpected events are ignored
+     * @param ignoreUnexpectedEvents if set on false, an assertion is made on unexpected events,
+     *     otherwise the unexpected events are ignored
      * @throws InterruptedException
      * @see #setExpectationEvent(String, String, int)
      * @see #assertUnexpectedEvents()
      */
-    public static void assertExpectedEvents(final boolean ignoreUnexpectedEvents) throws InterruptedException {
+    public static void assertExpectedEvents(final boolean ignoreUnexpectedEvents)
+            throws InterruptedException {
         Map<EventSpec, ADBCountDownLatch> expectedEvents = MonitorExtension.getExpectedEvents();
 
         if (expectedEvents.isEmpty()) {
-            fail("There are no event expectations set, use this API after calling setExpectationEvent");
+            fail(
+                    "There are no event expectations set, use this API after calling"
+                            + " setExpectationEvent");
             return;
         }
 
         for (Map.Entry<EventSpec, ADBCountDownLatch> expected : expectedEvents.entrySet()) {
-            boolean awaitResult = expected
-                    .getValue()
-                    .await(FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            boolean awaitResult =
+                    expected.getValue()
+                            .await(
+                                    FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS,
+                                    TimeUnit.MILLISECONDS);
             assertTrue(
-                    "Timed out waiting for event type " +
-                            expected.getKey().type +
-                            " and source " +
-                            expected.getKey().source,
-                    awaitResult
-            );
+                    "Timed out waiting for event type "
+                            + expected.getKey().type
+                            + " and source "
+                            + expected.getKey().source,
+                    awaitResult);
             int expectedCount = expected.getValue().getInitialCount();
             int receivedCount = expected.getValue().getCurrentCount();
-            String failMessage = String.format(
-                    "Expected %d events for '%s', but received %d",
-                    expectedCount,
-                    expected.getKey(),
-                    receivedCount
-            );
+            String failMessage =
+                    String.format(
+                            "Expected %d events for '%s', but received %d",
+                            expectedCount, expected.getKey(), receivedCount);
             assertEquals(failMessage, expectedCount, receivedCount);
         }
 
@@ -478,7 +511,8 @@ public class TestHelper {
      * @param shouldWait waits a short time to allow events to be received when true
      * @see #setExpectationEvent
      */
-    public static void assertUnexpectedEvents(final boolean shouldWait) throws InterruptedException {
+    public static void assertUnexpectedEvents(final boolean shouldWait)
+            throws InterruptedException {
         // Short wait to allow events to come in
         if (shouldWait) {
             sleep(FunctionalTestConstants.Defaults.WAIT_TIMEOUT_MS);
@@ -494,15 +528,15 @@ public class TestHelper {
             ADBCountDownLatch expectedEventLatch = expectedEvents.get(receivedEvent.getKey());
 
             if (expectedEventLatch != null) {
-                expectedEventLatch.await(FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                expectedEventLatch.await(
+                        FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS,
+                        TimeUnit.MILLISECONDS);
                 int expectedCount = expectedEventLatch.getInitialCount();
                 int receivedCount = receivedEvent.getValue().size();
-                String failMessage = String.format(
-                        "Expected %d events for '%s', but received %d",
-                        expectedCount,
-                        receivedEvent.getKey(),
-                        receivedCount
-                );
+                String failMessage =
+                        String.format(
+                                "Expected %d events for '%s', but received %d",
+                                expectedCount, receivedEvent.getKey(), receivedCount);
                 assertEquals(failMessage, expectedCount, receivedCount);
             } else {
                 unexpectedEventsReceivedCount += receivedEvent.getValue().size();
@@ -511,59 +545,58 @@ public class TestHelper {
                                 "(%s,%s,%d)",
                                 receivedEvent.getKey().type,
                                 receivedEvent.getKey().source,
-                                receivedEvent.getValue().size()
-                        )
-                );
+                                receivedEvent.getValue().size()));
                 Log.debug(
                         LOG_TAG,
                         LOG_SOURCE,
                         "Received unexpected event with type: %s  source: %s",
                         receivedEvent.getKey().type,
-                        receivedEvent.getKey().source
-                );
+                        receivedEvent.getKey().source);
             }
         }
 
         assertEquals(
                 String.format(
                         "Received %d unexpected event(s): %s",
-                        unexpectedEventsReceivedCount,
-                        unexpectedEventsErrorString
-                ),
+                        unexpectedEventsReceivedCount, unexpectedEventsErrorString),
                 0,
-                unexpectedEventsReceivedCount
-        );
+                unexpectedEventsReceivedCount);
     }
 
     /**
      * Returns the {@code Event}(s) dispatched through the Event Hub, or empty if none was found.
-     * Use this API after calling {@link #setExpectationEvent(String, String, int)} to wait for
-     * the expected events. The wait time for each event is {@link FunctionalTestConstants.Defaults#WAIT_EVENT_TIMEOUT_MS}ms.
+     * Use this API after calling {@link #setExpectationEvent(String, String, int)} to wait for the
+     * expected events. The wait time for each event is {@link
+     * FunctionalTestConstants.Defaults#WAIT_EVENT_TIMEOUT_MS}ms.
      *
-     * @param type   the event type as in the expectation
+     * @param type the event type as in the expectation
      * @param source the event source as in the expectation
-     * @return list of events with the provided {@code type} and {@code source}, or empty if none was dispatched
+     * @return list of events with the provided {@code type} and {@code source}, or empty if none
+     *     was dispatched
      * @throws InterruptedException
      * @throws IllegalArgumentException if {@code type} or {@code source} are null or empty strings
      */
     public static List<Event> getDispatchedEventsWith(final String type, final String source)
             throws InterruptedException {
-        return getDispatchedEventsWith(type, source, FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS);
+        return getDispatchedEventsWith(
+                type, source, FunctionalTestConstants.Defaults.WAIT_EVENT_TIMEOUT_MS);
     }
 
     /**
      * Returns the {@code Event}(s) dispatched through the Event Hub, or empty if none was found.
-     * Use this API after calling {@link #setExpectationEvent(String, String, int)} to wait for the right amount of time
+     * Use this API after calling {@link #setExpectationEvent(String, String, int)} to wait for the
+     * right amount of time
      *
-     * @param type    the event type as in the expectation
-     * @param source  the event source as in the expectation
+     * @param type the event type as in the expectation
+     * @param source the event source as in the expectation
      * @param timeout how long should this method wait for the expected event, in milliseconds.
-     * @return list of events with the provided {@code type} and {@code source}, or empty if none was dispatched
+     * @return list of events with the provided {@code type} and {@code source}, or empty if none
+     *     was dispatched
      * @throws InterruptedException
      * @throws IllegalArgumentException if {@code type} or {@code source} are null or empty strings
      */
-    public static List<Event> getDispatchedEventsWith(final String type, final String source, int timeout)
-            throws InterruptedException {
+    public static List<Event> getDispatchedEventsWith(
+            final String type, final String source, int timeout) throws InterruptedException {
         EventSpec eventSpec = new EventSpec(source, type);
 
         Map<EventSpec, List<Event>> receivedEvents = MonitorExtension.getReceivedEvents();
@@ -574,40 +607,48 @@ public class TestHelper {
         if (expectedEventLatch != null) {
             boolean awaitResult = expectedEventLatch.await(timeout, TimeUnit.MILLISECONDS);
             assertTrue(
-                    "Timed out waiting for event type " + eventSpec.type + " and source " + eventSpec.source,
-                    awaitResult
-            );
+                    "Timed out waiting for event type "
+                            + eventSpec.type
+                            + " and source "
+                            + eventSpec.source,
+                    awaitResult);
         } else {
             sleep(FunctionalTestConstants.Defaults.WAIT_TIMEOUT_MS);
         }
 
-        return receivedEvents.containsKey(eventSpec) ? receivedEvents.get(eventSpec) : Collections.emptyList();
+        return receivedEvents.containsKey(eventSpec)
+                ? receivedEvents.get(eventSpec)
+                : Collections.emptyList();
     }
 
     /**
-     * Synchronous call to get the shared state for the specified {@code stateOwner}.
-     * This API throws an assertion failure in case of timeout.
+     * Synchronous call to get the shared state for the specified {@code stateOwner}. This API
+     * throws an assertion failure in case of timeout.
      *
-     * @param stateOwner the owner extension of the shared state (typically the name of the extension)
-     * @param timeout    how long should this method wait for the requested shared state, in milliseconds
-     * @return latest shared state of the given {@code stateOwner} or null if no shared state was found
+     * @param stateOwner the owner extension of the shared state (typically the name of the
+     *     extension)
+     * @param timeout how long should this method wait for the requested shared state, in
+     *     milliseconds
+     * @return latest shared state of the given {@code stateOwner} or null if no shared state was
+     *     found
      * @throws InterruptedException
      */
     public static Map<String, Object> getSharedStateFor(final String stateOwner, int timeout)
             throws InterruptedException {
-        Event event = new Event.Builder(
-                "Get Shared State Request",
-                FunctionalTestConstants.EventType.MONITOR,
-                FunctionalTestConstants.EventSource.SHARED_STATE_REQUEST
-        )
-                .setEventData(
-                        new HashMap<String, Object>() {
-                            {
-                                put(FunctionalTestConstants.EventDataKey.STATE_OWNER, stateOwner);
-                            }
-                        }
-                )
-                .build();
+        Event event =
+                new Event.Builder(
+                                "Get Shared State Request",
+                                FunctionalTestConstants.EventType.MONITOR,
+                                FunctionalTestConstants.EventSource.SHARED_STATE_REQUEST)
+                        .setEventData(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put(
+                                                FunctionalTestConstants.EventDataKey.STATE_OWNER,
+                                                stateOwner);
+                                    }
+                                })
+                        .build();
 
         final CountDownLatch latch = new CountDownLatch(1);
         final Map<String, Object> sharedState = new HashMap<>();
@@ -631,13 +672,13 @@ public class TestHelper {
                                 LOG_SOURCE,
                                 "Failed to get shared state for %s: %s",
                                 stateOwner,
-                                adobeError.getErrorName()
-                        );
+                                adobeError.getErrorName());
                     }
-                }
-        );
+                });
 
-        assertTrue("Timeout waiting for shared state " + stateOwner, latch.await(timeout, TimeUnit.MILLISECONDS));
+        assertTrue(
+                "Timeout waiting for shared state " + stateOwner,
+                latch.await(timeout, TimeUnit.MILLISECONDS));
         return sharedState.isEmpty() ? null : sharedState;
     }
 
@@ -648,117 +689,117 @@ public class TestHelper {
     /**
      * Set a custom network response to an Edge network request.
      *
-     * @param url                the url string for which to return the response
-     * @param method             the HTTP method for which to return the response
+     * @param url the url string for which to return the response
+     * @param method the HTTP method for which to return the response
      * @param responseConnection the network response to be returned when a request matching the
-     *                           {@code url} and {@code method} is received. If null is provided,
-     *                           a default '200' response is used.
+     *     {@code url} and {@code method} is received. If null is provided, a default '200' response
+     *     is used.
      */
     public static void setNetworkResponseFor(
-            final String url,
-            final HttpMethod method,
-            final HttpConnecting responseConnection
-    ) {
-        testNetworkService.setResponseConnectionFor(new TestableNetworkRequest(url, method), responseConnection);
+            final String url, final HttpMethod method, final HttpConnecting responseConnection) {
+        testNetworkService.setResponseConnectionFor(
+                new TestableNetworkRequest(url, method), responseConnection);
     }
 
     /**
      * Set a network request expectation.
      *
-     * @param url           the url string for which to set the expectation
-     * @param method        the HTTP method for which to set the expectation
-     * @param expectedCount how many times a request with this {@code url} and {@code method} is expected to be sent
+     * @param url the url string for which to set the expectation
+     * @param method the HTTP method for which to set the expectation
+     * @param expectedCount how many times a request with this {@code url} and {@code method} is
+     *     expected to be sent
      */
     public static void setExpectationNetworkRequest(
-            final String url,
-            final HttpMethod method,
-            final int expectedCount
-    ) {
-        testNetworkService.setExpectedNetworkRequest(new TestableNetworkRequest(url, method), expectedCount);
+            final String url, final HttpMethod method, final int expectedCount) {
+        testNetworkService.setExpectedNetworkRequest(
+                new TestableNetworkRequest(url, method), expectedCount);
     }
 
     /**
-     * Asserts that the correct number of network requests were being sent, based on the previously set expectations.
+     * Asserts that the correct number of network requests were being sent, based on the previously
+     * set expectations.
      *
      * @throws InterruptedException
      * @see #setExpectationNetworkRequest(String, HttpMethod, int)
      */
     public static void assertNetworkRequestCount() throws InterruptedException {
         waitForThreads(2000); // allow for some extra time for threads to finish before asserts
-        Map<TestableNetworkRequest, ADBCountDownLatch> expectedNetworkRequests = testNetworkService.getExpectedNetworkRequests();
+        Map<TestableNetworkRequest, ADBCountDownLatch> expectedNetworkRequests =
+                testNetworkService.getExpectedNetworkRequests();
 
         if (expectedNetworkRequests.isEmpty()) {
             fail(
-                    "There are no network request expectations set, use this API after calling setExpectationNetworkRequest"
-            );
+                    "There are no network request expectations set, use this API after calling"
+                            + " setExpectationNetworkRequest");
             return;
         }
 
-        for (Map.Entry<TestableNetworkRequest, ADBCountDownLatch> expectedRequest : expectedNetworkRequests.entrySet()) {
+        for (Map.Entry<TestableNetworkRequest, ADBCountDownLatch> expectedRequest :
+                expectedNetworkRequests.entrySet()) {
             boolean awaitResult = expectedRequest.getValue().await(5, TimeUnit.SECONDS);
             assertTrue(
-                    "Time out waiting for network request with URL '" +
-                            expectedRequest.getKey().getUrl() +
-                            "' and method '" +
-                            expectedRequest.getKey().getMethod().name() +
-                            "'",
-                    awaitResult
-            );
+                    "Time out waiting for network request with URL '"
+                            + expectedRequest.getKey().getUrl()
+                            + "' and method '"
+                            + expectedRequest.getKey().getMethod().name()
+                            + "'",
+                    awaitResult);
             int expectedCount = expectedRequest.getValue().getInitialCount();
             int receivedCount = expectedRequest.getValue().getCurrentCount();
-            String message = String.format(
-                    "Expected %d network requests for URL %s (%s), but received %d",
-                    expectedCount,
-                    expectedRequest.getKey().getUrl(),
-                    expectedRequest.getKey().getMethod(),
-                    receivedCount
-            );
+            String message =
+                    String.format(
+                            "Expected %d network requests for URL %s (%s), but received %d",
+                            expectedCount,
+                            expectedRequest.getKey().getUrl(),
+                            expectedRequest.getKey().getMethod(),
+                            receivedCount);
             assertEquals(message, expectedCount, receivedCount);
         }
     }
 
     /**
-     * Returns the {@link TestableNetworkRequest}(s) sent through the
-     * Core NetworkService, or empty if none was found. Use this API after calling
-     * {@link #setExpectationNetworkRequest(String, HttpMethod, int)} to wait 2 seconds for each request.
+     * Returns the {@link TestableNetworkRequest}(s) sent through the Core NetworkService, or empty
+     * if none was found. Use this API after calling {@link #setExpectationNetworkRequest(String,
+     * HttpMethod, int)} to wait 2 seconds for each request.
      *
-     * @param url    The url string for which to retrieved the network requests sent
+     * @param url The url string for which to retrieved the network requests sent
      * @param method the HTTP method for which to retrieve the network requests
-     * @return list of network requests with the provided {@code url} and {@code method}, or empty if none was dispatched
-     * @throws InterruptedException
-     */
-    public static List<TestableNetworkRequest> getNetworkRequestsWith(final String url, final HttpMethod method)
-            throws InterruptedException {
-        return getNetworkRequestsWith(url, method, FunctionalTestConstants.Defaults.WAIT_NETWORK_REQUEST_TIMEOUT_MS);
-    }
-
-    /**
-     * Returns the {@link TestableNetworkRequest}(s) sent through the
-     * Core NetworkService, or empty if none was found. Use this API after calling
-     * {@link #setExpectationNetworkRequest(String, HttpMethod, int)} to wait for each request.
-     *
-     * @param url           The url string for which to retrieved the network requests sent
-     * @param method        the HTTP method for which to retrieve the network requests
-     * @param timeoutMillis how long should this method wait for the expected network requests, in milliseconds
-     * @return list of network requests with the provided {@code url} and {@code command}, or empty if none was dispatched
+     * @return list of network requests with the provided {@code url} and {@code method}, or empty
+     *     if none was dispatched
      * @throws InterruptedException
      */
     public static List<TestableNetworkRequest> getNetworkRequestsWith(
-            final String url,
-            final HttpMethod method,
-            final int timeoutMillis
-    ) throws InterruptedException {
+            final String url, final HttpMethod method) throws InterruptedException {
+        return getNetworkRequestsWith(
+                url, method, FunctionalTestConstants.Defaults.WAIT_NETWORK_REQUEST_TIMEOUT_MS);
+    }
+
+    /**
+     * Returns the {@link TestableNetworkRequest}(s) sent through the Core NetworkService, or empty
+     * if none was found. Use this API after calling {@link #setExpectationNetworkRequest(String,
+     * HttpMethod, int)} to wait for each request.
+     *
+     * @param url The url string for which to retrieved the network requests sent
+     * @param method the HTTP method for which to retrieve the network requests
+     * @param timeoutMillis how long should this method wait for the expected network requests, in
+     *     milliseconds
+     * @return list of network requests with the provided {@code url} and {@code command}, or empty
+     *     if none was dispatched
+     * @throws InterruptedException
+     */
+    public static List<TestableNetworkRequest> getNetworkRequestsWith(
+            final String url, final HttpMethod method, final int timeoutMillis)
+            throws InterruptedException {
         TestableNetworkRequest networkRequest = new TestableNetworkRequest(url, method);
 
         if (testNetworkService.isNetworkRequestExpected(networkRequest)) {
             assertTrue(
-                    "Time out waiting for network request(s) with URL '" +
-                            networkRequest.getUrl() +
-                            "' and method '" +
-                            networkRequest.getMethod().name() +
-                            "'",
-                    testNetworkService.awaitFor(networkRequest, timeoutMillis)
-            );
+                    "Time out waiting for network request(s) with URL '"
+                            + networkRequest.getUrl()
+                            + "' and method '"
+                            + networkRequest.getMethod().name()
+                            + "'",
+                    testNetworkService.awaitFor(networkRequest, timeoutMillis));
         } else {
             sleep(timeoutMillis);
         }
@@ -767,25 +808,33 @@ public class TestHelper {
     }
 
     /**
-     * Create a network response to be used when calling {@link #setNetworkResponseFor(String, HttpMethod, HttpConnecting)}.
+     * Create a network response to be used when calling {@link #setNetworkResponseFor(String,
+     * HttpMethod, HttpConnecting)}.
      *
-     * @param responseString the network response string, returned by {@link HttpConnecting#getInputStream()}
-     * @param code           the HTTP status code, returned by {@link HttpConnecting#getResponseCode()}
+     * @param responseString the network response string, returned by {@link
+     *     HttpConnecting#getInputStream()}
+     * @param code the HTTP status code, returned by {@link HttpConnecting#getResponseCode()}
      * @return an {@link HttpConnecting} object
      * @see #setNetworkResponseFor(String, HttpMethod, HttpConnecting)
      */
-    public static HttpConnecting createNetworkResponse(final String responseString, final int code) {
+    public static HttpConnecting createNetworkResponse(
+            final String responseString, final int code) {
         return createNetworkResponse(responseString, null, code, null, null);
     }
 
     /**
-     * Create a network response to be used when calling {@link #setNetworkResponseFor(String, HttpMethod, HttpConnecting)}.
+     * Create a network response to be used when calling {@link #setNetworkResponseFor(String,
+     * HttpMethod, HttpConnecting)}.
      *
-     * @param responseString  the network response string, returned by {@link HttpConnecting#getInputStream()}
-     * @param errorString     the network error string, returned by {@link HttpConnecting#getErrorStream()}
-     * @param code            the HTTP status code, returned by {@link HttpConnecting#getResponseCode()}
-     * @param responseMessage the network response message, returned by {@link HttpConnecting#getResponseMessage()}
-     * @param propertyMap     the network response header map, returned by {@link HttpConnecting#getResponsePropertyValue(String)}
+     * @param responseString the network response string, returned by {@link
+     *     HttpConnecting#getInputStream()}
+     * @param errorString the network error string, returned by {@link
+     *     HttpConnecting#getErrorStream()}
+     * @param code the HTTP status code, returned by {@link HttpConnecting#getResponseCode()}
+     * @param responseMessage the network response message, returned by {@link
+     *     HttpConnecting#getResponseMessage()}
+     * @param propertyMap the network response header map, returned by {@link
+     *     HttpConnecting#getResponsePropertyValue(String)}
      * @return an {@link HttpConnecting} object
      * @see #setNetworkResponseFor(String, HttpMethod, HttpConnecting)
      */
@@ -794,13 +843,13 @@ public class TestHelper {
             final String errorString,
             final int code,
             final String responseMessage,
-            final Map<String, String> propertyMap
-    ) {
+            final Map<String, String> propertyMap) {
         return new HttpConnecting() {
             @Override
             public InputStream getInputStream() {
                 if (responseString != null) {
-                    return new ByteArrayInputStream(responseString.getBytes(StandardCharsets.UTF_8));
+                    return new ByteArrayInputStream(
+                            responseString.getBytes(StandardCharsets.UTF_8));
                 }
 
                 return null;
@@ -835,8 +884,7 @@ public class TestHelper {
             }
 
             @Override
-            public void close() {
-            }
+            public void close() {}
         };
     }
 
@@ -867,23 +915,24 @@ public class TestHelper {
     }
 
     /**
-     * Use this API for JSON formatted {@code NetworkRequest} body in order to retrieve a flattened map containing its data.
+     * Use this API for JSON formatted {@code NetworkRequest} body in order to retrieve a flattened
+     * map containing its data.
      *
      * @param networkRequest the {@link NetworkRequest} to parse
      * @return The JSON request body represented as a flatten map
      */
-    public static Map<String, String> getFlattenedNetworkRequestBody(final NetworkRequest networkRequest) {
+    public static Map<String, String> getFlattenedNetworkRequestBody(
+            final NetworkRequest networkRequest) {
         return FunctionalTestUtils.flattenBytes(networkRequest.getBody());
     }
 
-    /**
-     * Get the default application
-     */
+    /** Get the default application */
     public static Application getDefaultApplication() {
         if (defaultApplication == null) {
             Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             try {
-                defaultApplication = Instrumentation.newApplication(CustomApplication.class, context);
+                defaultApplication =
+                        Instrumentation.newApplication(CustomApplication.class, context);
             } catch (Exception ignored) {
                 return null;
             }
@@ -891,42 +940,45 @@ public class TestHelper {
         return defaultApplication;
     }
 
-    /**
-     * Dummy Application for the test instrumentation
-     */
+    /** Dummy Application for the test instrumentation */
     public static class CustomApplication extends Application {
-        public CustomApplication() {
-        }
+        public CustomApplication() {}
     }
 
     private static void clearAllDatastores() {
-        final List<String> knownDatastores = new ArrayList<String>() {
-            {
-                add(FunctionalTestConstants.SharedState.IDENTITY);
-                add(FunctionalTestConstants.SharedState.MESSAGING);
-                add(FunctionalTestConstants.EDGE_DATA_STORAGE);
-                add("AdobeMobile_ConfigState");
-            }
-        };
+        final List<String> knownDatastores =
+                new ArrayList<String>() {
+                    {
+                        add(FunctionalTestConstants.SharedState.IDENTITY);
+                        add(FunctionalTestConstants.SharedState.MESSAGING);
+                        add(FunctionalTestConstants.EDGE_DATA_STORAGE);
+                        add("AdobeMobile_ConfigState");
+                    }
+                };
         final Application application = TestHelper.defaultApplication;
 
         if (application == null) {
-            fail("FunctionalTestHelper - Unable to clear datastores. Application is null, fast failing the test case.");
+            fail(
+                    "FunctionalTestHelper - Unable to clear datastores. Application is null, fast"
+                            + " failing the test case.");
         }
 
         final Context context = application.getApplicationContext();
 
         if (context == null) {
-            fail("FunctionalTestHelper - Unable to clear datastores. Context is null, fast failing the test case.");
+            fail(
+                    "FunctionalTestHelper - Unable to clear datastores. Context is null, fast"
+                            + " failing the test case.");
         }
 
         for (String datastore : knownDatastores) {
-            SharedPreferences sharedPreferences = context.getSharedPreferences(datastore, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences =
+                    context.getSharedPreferences(datastore, Context.MODE_PRIVATE);
 
             if (sharedPreferences == null) {
                 fail(
-                        "FunctionalTestHelper - Unable to clear datastores. sharedPreferences is null, fast failing the test case."
-                );
+                        "FunctionalTestHelper - Unable to clear datastores. sharedPreferences is"
+                                + " null, fast failing the test case.");
             }
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -937,7 +989,8 @@ public class TestHelper {
 
     /**
      * Reset the {@link ServiceProvider} by clearing all files under the application cache folder,
-     * clearing all files under the database folder, and instantiate new instances of each service provider
+     * clearing all files under the database folder, and instantiate new instances of each service
+     * provider
      */
     private static void resetServiceProvider() {
         ServiceProviderHelper.cleanCacheDir();
@@ -946,7 +999,8 @@ public class TestHelper {
     }
 
     /**
-     * Replaces the {@link com.adobe.marketing.mobile.services.Networking} service with a mock network service.
+     * Replaces the {@link com.adobe.marketing.mobile.services.Networking} service with a mock
+     * network service.
      */
     private static void setTestableNetworkService() {
         ServiceProvider.getInstance().setNetworkService(testNetworkService);

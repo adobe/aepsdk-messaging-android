@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
@@ -24,14 +23,6 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.test.BuildConfig;
 import com.adobe.marketing.mobile.util.TestHelper;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,6 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class MessageCachingFunctionalTests {
@@ -48,8 +45,10 @@ public class MessageCachingFunctionalTests {
     }
 
     @Rule
-    public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
-            .around(new TestHelper.RegisterMonitorExtensionRule());
+    public RuleChain rule =
+            RuleChain.outerRule(new TestHelper.SetupCoreRule())
+                    .around(new TestHelper.RegisterMonitorExtensionRule());
+
     MessagingCacheUtilities messagingCacheUtilities = new MessagingCacheUtilities();
 
     // --------------------------------------------------------------------------------------------
@@ -57,26 +56,34 @@ public class MessageCachingFunctionalTests {
     // --------------------------------------------------------------------------------------------
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
+        MessagingTestUtils.setEdgeIdentityPersistence(
+                MessagingTestUtils.createIdentityMap("ECID", "mockECID"),
+                TestHelper.getDefaultApplication());
 
         final CountDownLatch latch = new CountDownLatch(1);
-        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
-            add(Messaging.EXTENSION);
-            add(Identity.EXTENSION);
-            add(Edge.EXTENSION);
-        }};
+        final List<Class<? extends Extension>> extensions =
+                new ArrayList<Class<? extends Extension>>() {
+                    {
+                        add(Messaging.EXTENSION);
+                        add(Identity.EXTENSION);
+                        add(Edge.EXTENSION);
+                    }
+                };
 
-        MobileCore.registerExtensions(extensions, o -> {
-            Map<String, Object> testConfig = MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
-            MobileCore.updateConfiguration(testConfig);
-            // wait for configuration to be set
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException interruptedException) {
-                fail(interruptedException.getMessage());
-            }
-            latch.countDown();
-        });
+        MobileCore.registerExtensions(
+                extensions,
+                o -> {
+                    Map<String, Object> testConfig =
+                            MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
+                    MobileCore.updateConfiguration(testConfig);
+                    // wait for configuration to be set
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException interruptedException) {
+                        fail(interruptedException.getMessage());
+                    }
+                    latch.countDown();
+                });
 
         latch.await(2, TimeUnit.SECONDS);
 
@@ -97,7 +104,9 @@ public class MessageCachingFunctionalTests {
         final Surface surface = new Surface();
         final Map<Surface, List<Proposition>> propositions = new HashMap<>();
         final List<Proposition> propositionList = new ArrayList<>();
-        propositionList.add(Proposition.fromEventData(MessagingTestUtils.getMapFromFile("personalization_payload.json")));
+        propositionList.add(
+                Proposition.fromEventData(
+                        MessagingTestUtils.getMapFromFile("personalization_payload.json")));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -105,10 +114,15 @@ public class MessageCachingFunctionalTests {
         TestHelper.sleep(1000);
         // verify message payload was cached
         assertTrue(messagingCacheUtilities.arePropositionsCached());
-        final Map<Surface, List<Proposition>> cachedPropositions = messagingCacheUtilities.getCachedPropositions();
+        final Map<Surface, List<Proposition>> cachedPropositions =
+                messagingCacheUtilities.getCachedPropositions();
         final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
         expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
-        final String expectedPropositionString = MessagingTestUtils.convertPropositionsToString(InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));
-        assertEquals(expectedPropositionString, MessagingTestUtils.convertPropositionsToString(cachedPropositions.get(surface)));
+        final String expectedPropositionString =
+                MessagingTestUtils.convertPropositionsToString(
+                        InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));
+        assertEquals(
+                expectedPropositionString,
+                MessagingTestUtils.convertPropositionsToString(cachedPropositions.get(surface)));
     }
 }

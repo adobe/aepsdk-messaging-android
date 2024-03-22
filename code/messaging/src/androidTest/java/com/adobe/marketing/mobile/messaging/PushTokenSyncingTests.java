@@ -2,7 +2,7 @@
   Copyright 2021 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
-  of the License at http=//www.apache.org/licenses/LICENSE-2.0
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -30,7 +29,12 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.TestHelper;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,18 +42,12 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 @RunWith(AndroidJUnit4.class)
 public class PushTokenSyncingTests {
     @Rule
-    public RuleChain rule = RuleChain.outerRule(new TestHelper.SetupCoreRule())
-            .around(new TestHelper.RegisterMonitorExtensionRule());
+    public RuleChain rule =
+            RuleChain.outerRule(new TestHelper.SetupCoreRule())
+                    .around(new TestHelper.RegisterMonitorExtensionRule());
 
     // --------------------------------------------------------------------------------------------
     // Setup
@@ -57,31 +55,39 @@ public class PushTokenSyncingTests {
 
     @Before
     public void setup() throws Exception {
-        MessagingTestUtils.setEdgeIdentityPersistence(MessagingTestUtils.createIdentityMap("ECID", "mockECID"), TestHelper.getDefaultApplication());
-        HashMap<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("someconfig", "someConfigValue");
-            }
-        };
+        MessagingTestUtils.setEdgeIdentityPersistence(
+                MessagingTestUtils.createIdentityMap("ECID", "mockECID"),
+                TestHelper.getDefaultApplication());
+        HashMap<String, Object> config =
+                new HashMap<String, Object>() {
+                    {
+                        put("someconfig", "someConfigValue");
+                    }
+                };
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        final List<Class<? extends Extension>> extensions = new ArrayList<Class<? extends Extension>>() {{
-            add(Messaging.EXTENSION);
-            add(Identity.EXTENSION);
-            add(Edge.EXTENSION);
-        }};
+        final List<Class<? extends Extension>> extensions =
+                new ArrayList<Class<? extends Extension>>() {
+                    {
+                        add(Messaging.EXTENSION);
+                        add(Identity.EXTENSION);
+                        add(Edge.EXTENSION);
+                    }
+                };
 
-        MobileCore.registerExtensions(extensions, o -> {
-            MobileCore.updateConfiguration(config);
-            // wait for configuration to be set
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException interruptedException) {
-                fail(interruptedException.getMessage());
-            }
-            latch.countDown();
-        });
+        MobileCore.registerExtensions(
+                extensions,
+                o -> {
+                    MobileCore.updateConfiguration(config);
+                    // wait for configuration to be set
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException interruptedException) {
+                        fail(interruptedException.getMessage());
+                    }
+                    latch.countDown();
+                });
 
         latch.await(2, TimeUnit.SECONDS);
         resetTestExpectations();
@@ -98,24 +104,32 @@ public class PushTokenSyncingTests {
     @Test
     public void testPushTokenSync() throws InterruptedException {
         // expected results
-        String expectedEdgeEvent = "{data={pushNotificationDetails=[{denylisted=false, identity={namespace={code=ECID}, id=mockECID}, appID=com.adobe.marketing.mobile.messaging.test, platform=fcm, token=mockPushToken}]}}";
+        String expectedEdgeEvent =
+                "{data={pushNotificationDetails=[{denylisted=false,"
+                        + " identity={namespace={code=ECID}, id=mockECID},"
+                        + " appID=com.adobe.marketing.mobile.messaging.test, platform=fcm,"
+                        + " token=mockPushToken}]}}";
         // test
         MobileCore.setPushIdentifier("mockPushToken");
 
         // verify messaging event
-        List<Event> genericIdentityEvents = getDispatchedEventsWith(EventType.GENERIC_IDENTITY,
-                EventSource.REQUEST_CONTENT);
+        List<Event> genericIdentityEvents =
+                getDispatchedEventsWith(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT);
         assertEquals(1, genericIdentityEvents.size());
 
         // verify push profile sync edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
-                EventSource.REQUEST_CONTENT);
+        List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
         assertEquals(1, edgeRequestEvents.size());
         assertEquals(expectedEdgeEvent, edgeRequestEvents.get(0).getEventData().toString());
 
         // verify shared state is updated with the push token
-        Map<String, String> sharedStateMap = MessagingTestUtils.flattenMap(getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
-        String pushToken = sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER);
+        Map<String, String> sharedStateMap =
+                MessagingTestUtils.flattenMap(
+                        getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
+        String pushToken =
+                sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertEquals("mockPushToken", pushToken);
     }
 
@@ -125,17 +139,20 @@ public class PushTokenSyncingTests {
         MobileCore.setPushIdentifier(null);
 
         // verify messaging event
-        List<Event> genericIdentityEvents = getDispatchedEventsWith(EventType.GENERIC_IDENTITY,
-                EventSource.REQUEST_CONTENT);
+        List<Event> genericIdentityEvents =
+                getDispatchedEventsWith(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT);
         assertEquals(1, genericIdentityEvents.size());
 
         // verify no push profile sync edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
-                EventSource.REQUEST_CONTENT);
+        List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is not updated with the push token
-        Map<String, String> sharedStateMap = MessagingTestUtils.flattenMap(getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
+        Map<String, String> sharedStateMap =
+                MessagingTestUtils.flattenMap(
+                        getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
         assertEquals(0, sharedStateMap.size());
     }
 
@@ -145,18 +162,22 @@ public class PushTokenSyncingTests {
         MobileCore.setPushIdentifier("");
 
         // verify messaging event
-        List<Event> genericIdentityEvents = getDispatchedEventsWith(EventType.GENERIC_IDENTITY,
-                EventSource.REQUEST_CONTENT);
+        List<Event> genericIdentityEvents =
+                getDispatchedEventsWith(EventType.GENERIC_IDENTITY, EventSource.REQUEST_CONTENT);
         assertEquals(1, genericIdentityEvents.size());
 
         // verify no push profile sync edge event
-        List<Event> edgeRequestEvents = getDispatchedEventsWith(MessagingTestConstants.EventType.EDGE,
-                EventSource.REQUEST_CONTENT);
+        List<Event> edgeRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
         assertEquals(0, edgeRequestEvents.size());
 
         // verify shared state is not updated with the push token
-        Map<String, String> sharedStateMap = MessagingTestUtils.flattenMap(getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
-        String pushToken = sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER);
+        Map<String, String> sharedStateMap =
+                MessagingTestUtils.flattenMap(
+                        getSharedStateFor(MessagingTestConstants.EXTENSION_NAME, 1000));
+        String pushToken =
+                sharedStateMap.get(MessagingTestConstants.SharedState.Messaging.PUSH_IDENTIFIER);
         assertNull(pushToken);
     }
 }

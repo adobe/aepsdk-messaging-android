@@ -14,17 +14,24 @@ package com.adobe.marketing.mobile;
 import static org.junit.Assert.assertEquals;
 
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants;
-
 import org.junit.Test;
 
 public class PropositionEventTypeTests {
 
     @Test
     public void test_PropositionEventType_valueOf() {
-        assertEquals(PropositionEventType.IN_APP_DISMISS, PropositionEventType.valueOf("IN_APP_DISMISS"));
-        assertEquals(PropositionEventType.IN_APP_INTERACT, PropositionEventType.valueOf("IN_APP_INTERACT"));
-        assertEquals(PropositionEventType.IN_APP_TRIGGER, PropositionEventType.valueOf("IN_APP_TRIGGER"));
-        assertEquals(PropositionEventType.IN_APP_DISPLAY, PropositionEventType.valueOf("IN_APP_DISPLAY"));
+        assertEquals(
+                PropositionEventType.IN_APP_DISMISS,
+                PropositionEventType.valueOf("IN_APP_DISMISS"));
+        assertEquals(
+                PropositionEventType.IN_APP_INTERACT,
+                PropositionEventType.valueOf("IN_APP_INTERACT"));
+        assertEquals(
+                PropositionEventType.IN_APP_TRIGGER,
+                PropositionEventType.valueOf("IN_APP_TRIGGER"));
+        assertEquals(
+                PropositionEventType.IN_APP_DISPLAY,
+                PropositionEventType.valueOf("IN_APP_DISPLAY"));
     }
 
     @Test
@@ -37,17 +44,33 @@ public class PropositionEventTypeTests {
 
     @Test
     public void test_PropositionEventType_toString() {
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS, PropositionEventType.IN_APP_DISMISS.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT, PropositionEventType.IN_APP_INTERACT.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER, PropositionEventType.IN_APP_TRIGGER.toString());
-        assertEquals(MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY, PropositionEventType.IN_APP_DISPLAY.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS,
+                PropositionEventType.IN_APP_DISMISS.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT,
+                PropositionEventType.IN_APP_INTERACT.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER,
+                PropositionEventType.IN_APP_TRIGGER.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY,
+                PropositionEventType.IN_APP_DISPLAY.toString());
     }
 
     @Test
     public void test_PropositionEventType_getPropositionEventType() {
-        assertEquals(PropositionEventType.PROPOSITION_EVENT_TYPE_DISMISS, PropositionEventType.IN_APP_DISMISS.getPropositionEventType());
-        assertEquals(PropositionEventType.PROPOSITION_EVENT_TYPE_INTERACT, PropositionEventType.IN_APP_INTERACT.getPropositionEventType());
-        assertEquals(PropositionEventType.PROPOSITION_EVENT_TYPE_TRIGGER, PropositionEventType.IN_APP_TRIGGER.getPropositionEventType());
-        assertEquals(PropositionEventType.PROPOSITION_EVENT_TYPE_DISPLAY, PropositionEventType.IN_APP_DISPLAY.getPropositionEventType());
+        assertEquals(
+                PropositionEventType.PROPOSITION_EVENT_TYPE_DISMISS,
+                PropositionEventType.IN_APP_DISMISS.getPropositionEventType());
+        assertEquals(
+                PropositionEventType.PROPOSITION_EVENT_TYPE_INTERACT,
+                PropositionEventType.IN_APP_INTERACT.getPropositionEventType());
+        assertEquals(
+                PropositionEventType.PROPOSITION_EVENT_TYPE_TRIGGER,
+                PropositionEventType.IN_APP_TRIGGER.getPropositionEventType());
+        assertEquals(
+                PropositionEventType.PROPOSITION_EVENT_TYPE_DISPLAY,
+                PropositionEventType.IN_APP_DISPLAY.getPropositionEventType());
     }
 }

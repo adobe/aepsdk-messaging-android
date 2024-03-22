@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -43,8 +42,10 @@ public enum MessagingEdgeEventType {
     static final String PROPOSITION_EVENT_TYPE_INTERACT = "interact";
     static final String PROPOSITION_EVENT_TYPE_TRIGGER = "trigger";
     static final String PROPOSITION_EVENT_TYPE_DISPLAY = "display";
-    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
-    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";
+    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED =
+            "pushTracking.applicationOpened";
+    static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION =
+            "pushTracking.customAction";
     static final String PROPOSITION_EVENT_TYPE_TRIGGER_STRING = "decisioning.propositionTrigger";
     static final String PROPOSITION_EVENT_TYPE_DISPLAY_STRING = "decisioning.propositionDisplay";
     static final String PROPOSITION_EVENT_TYPE_INTERACT_STRING = "decisioning.propositionInteract";
@@ -83,8 +84,7 @@ public enum MessagingEdgeEventType {
         }
     }
 
-    @NonNull
-    @Override
+    @NonNull @Override
     public String toString() {
         switch (this) {
             case IN_APP_DISMISS:

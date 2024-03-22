@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -13,12 +12,10 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
-
 import com.adobe.marketing.mobile.Message;
 import com.adobe.marketing.mobile.services.ui.InAppMessage;
 import com.adobe.marketing.mobile.services.ui.Presentable;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,7 +31,8 @@ public class MessagingUtils {
      * Checks if the given {@code collection} is null or empty.
      *
      * @param collection input {@code Collection<?>} to be tested.
-     * @return {@code boolean} result indicating whether the provided {@code collection} is null or empty.
+     * @return {@code boolean} result indicating whether the provided {@code collection} is null or
+     *     empty.
      */
     static boolean isNullOrEmpty(final Collection<?> collection) {
         return collection == null || collection.isEmpty();
@@ -65,20 +63,28 @@ public class MessagingUtils {
     }
 
     /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code Surface} and {@code List<Proposition>} objects.
+     * Updates the provided {@code Map<Surface, List<Proposition>>} with the provided {@code
+     * Surface} and {@code List<Proposition>} objects.
      *
-     * @param surface           A {@link Surface} key used to update a {@link List<  Proposition  >} value in the provided {@link Map<Surface, List<  Proposition  >>}
-     * @param propositionsToAdd A {@link List<  Proposition  >} list to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param mapToUpdate       The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<  Proposition  >>} map
+     * @param surface A {@link Surface} key used to update a {@link List< Proposition >} value in
+     *     the provided {@link Map<Surface, List< Proposition >>}
+     * @param propositionsToAdd A {@link List< Proposition >} list to add in the provided {@code
+     *     Map<Surface, List<Proposition>>}
+     * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the
+     *     provided {@code Surface} and {@code List<Proposition>} objects
+     * @return the updated {@link Map<Surface, List< Proposition >>} map
      */
-    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final List<Proposition> propositionsToAdd, final Map<Surface, List<Proposition>> mapToUpdate) {
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(
+            final Surface surface,
+            final List<Proposition> propositionsToAdd,
+            final Map<Surface, List<Proposition>> mapToUpdate) {
         if (isNullOrEmpty(propositionsToAdd) || mapToUpdate == null) {
             return mapToUpdate;
         }
         final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
         final List<Proposition> existingList = updatedMap.get(surface);
-        final List<Proposition> updatedList = existingList != null ? existingList : createMutableList(propositionsToAdd);
+        final List<Proposition> updatedList =
+                existingList != null ? existingList : createMutableList(propositionsToAdd);
         if (existingList != null) {
             for (final Proposition proposition : propositionsToAdd) {
                 if (!updatedList.contains(proposition)) {
@@ -91,20 +97,28 @@ public class MessagingUtils {
     }
 
     /**
-     * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code Surface} and {@code Proposition} objects.
+     * Updates the provided {@code Map<Surface, List<Proposition>>} map with the provided {@code
+     * Surface} and {@code Proposition} objects.
      *
-     * @param surface     A {@link Surface} key used to update a {@link List<  Proposition  >} value in the provided {@link Map<Surface, List<  Proposition  >>}
-     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface, List<Proposition>>}
-     * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the provided {@code Surface} and {@code List<Proposition>} objects
-     * @return the updated {@link Map<Surface, List<  Proposition  >>} map
+     * @param surface A {@link Surface} key used to update a {@link List< Proposition >} value in
+     *     the provided {@link Map<Surface, List< Proposition >>}
+     * @param proposition A {@link Proposition} object to add in the provided {@code Map<Surface,
+     *     List<Proposition>>}
+     * @param mapToUpdate The {@code Map<Surface, List<Proposition>>} to be updated with the
+     *     provided {@code Surface} and {@code List<Proposition>} objects
+     * @return the updated {@link Map<Surface, List< Proposition >>} map
      */
-    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(final Surface surface, final Proposition proposition, final Map<Surface, List<Proposition>> mapToUpdate) {
+    public static Map<Surface, List<Proposition>> updatePropositionMapForSurface(
+            final Surface surface,
+            final Proposition proposition,
+            final Map<Surface, List<Proposition>> mapToUpdate) {
         if (proposition == null || mapToUpdate == null) {
             return mapToUpdate;
         }
         final Map<Surface, List<Proposition>> updatedMap = new HashMap<>(mapToUpdate);
         final List<Proposition> existingList = updatedMap.get(surface);
-        final List<Proposition> updatedList = existingList != null ? existingList : createMutableList(proposition);
+        final List<Proposition> updatedList =
+                existingList != null ? existingList : createMutableList(proposition);
         if (existingList != null) {
             updatedList.add(proposition);
         }
@@ -117,7 +131,8 @@ public class MessagingUtils {
     // ========================================================================================
 
     /**
-     * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link com.adobe.marketing.mobile.Messaging} public API class
+     * Wraps the internal {@link Surface#fromUriString(String)} method for use by the {@link
+     * com.adobe.marketing.mobile.Messaging} public API class
      *
      * @param scope A {@link String} containing a {@link Proposition} scope
      * @return the created {@link Surface}
@@ -133,16 +148,18 @@ public class MessagingUtils {
     // Presentable message utils
     // ========================================================================================
     /**
-     * Returns the {@code Message} object from the provided {@code Presentable<InAppMessage>} object.
+     * Returns the {@code Message} object from the provided {@code Presentable<InAppMessage>}
+     * object.
      *
      * @param presentable A {@link Presentable<InAppMessage>} object
-     * @return the {@link Message} object linked to the presentable or null if the presentable is null
+     * @return the {@link Message} object linked to the presentable or null if the presentable is
+     *     null
      */
-    @Nullable
-    public static Message getMessageForPresentable(final Presentable<InAppMessage> presentable) {
+    @Nullable public static Message getMessageForPresentable(final Presentable<InAppMessage> presentable) {
         if (presentable == null) {
             return null;
         }
-        return PresentableMessageMapper.getInstance().getMessageFromPresentableId(presentable.getPresentation().getId());
+        return PresentableMessageMapper.getInstance()
+                .getMessageFromPresentableId(presentable.getPresentation().getId());
     }
 }

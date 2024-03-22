@@ -3,7 +3,6 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
@@ -16,15 +15,13 @@ import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.google.firebase.messaging.RemoteMessage;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushPayloadTests {
@@ -38,8 +35,39 @@ public class MessagingPushPayloadTests {
     private final String mockImageUrl = "mockImageUrl";
     private final String mockActionType = "DEEPLINK";
     private final String mockActionUri = "mockActionUri";
-    private final String mockActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"uri\" : \"notificationapp://\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\",\n \"type\" : \"WEBURL\"\n},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
-    private final String mockMalformedActionButtons = "[\n            {\n \"label\" : \"deeplink\",\n \"type\" : \"DEEPLINK\"\n },\n {\n \"label\" : \"weburl\",\n \"uri\" : \"https://www.yahoo.com\"},\n{\n\"label\" : \"dismiss\",\n\"uri\" : \"\",\n \"type\" : \"DISMISS\"\n}\n]";
+    private final String mockActionButtons =
+            "[\n"
+                    + "            {\n"
+                    + " \"label\" : \"deeplink\",\n"
+                    + " \"uri\" : \"notificationapp://\",\n"
+                    + " \"type\" : \"DEEPLINK\"\n"
+                    + " },\n"
+                    + " {\n"
+                    + " \"label\" : \"weburl\",\n"
+                    + " \"uri\" : \"https://www.yahoo.com\",\n"
+                    + " \"type\" : \"WEBURL\"\n"
+                    + "},\n"
+                    + "{\n"
+                    + "\"label\" : \"dismiss\",\n"
+                    + "\"uri\" : \"\",\n"
+                    + " \"type\" : \"DISMISS\"\n"
+                    + "}\n"
+                    + "]";
+    private final String mockMalformedActionButtons =
+            "[\n"
+                    + "            {\n"
+                    + " \"label\" : \"deeplink\",\n"
+                    + " \"type\" : \"DEEPLINK\"\n"
+                    + " },\n"
+                    + " {\n"
+                    + " \"label\" : \"weburl\",\n"
+                    + " \"uri\" : \"https://www.yahoo.com\"},\n"
+                    + "{\n"
+                    + "\"label\" : \"dismiss\",\n"
+                    + "\"uri\" : \"\",\n"
+                    + " \"type\" : \"DISMISS\"\n"
+                    + "}\n"
+                    + "]";
     private MessagingPushPayload payload;
     private Map<String, String> mockData;
 
@@ -126,7 +154,8 @@ public class MessagingPushPayloadTests {
         mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, mockActionType);
         mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, mockActionUri);
         if (testingMalformedButtonString) {
-            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
+            mockData.put(
+                    MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
         } else {
             mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
         }

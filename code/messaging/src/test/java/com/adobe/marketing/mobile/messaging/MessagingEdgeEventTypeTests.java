@@ -14,19 +14,30 @@ package com.adobe.marketing.mobile.messaging;
 import static org.junit.Assert.assertEquals;
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
-
 import org.junit.Test;
 
 public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_valueOf() {
-        assertEquals(MessagingEdgeEventType.IN_APP_DISMISS, MessagingEdgeEventType.valueOf("IN_APP_DISMISS"));
-        assertEquals(MessagingEdgeEventType.IN_APP_INTERACT, MessagingEdgeEventType.valueOf("IN_APP_INTERACT"));
-        assertEquals(MessagingEdgeEventType.IN_APP_TRIGGER, MessagingEdgeEventType.valueOf("IN_APP_TRIGGER"));
-        assertEquals(MessagingEdgeEventType.IN_APP_DISPLAY, MessagingEdgeEventType.valueOf("IN_APP_DISPLAY"));
-        assertEquals(MessagingEdgeEventType.PUSH_APPLICATION_OPENED, MessagingEdgeEventType.valueOf("PUSH_APPLICATION_OPENED"));
-        assertEquals(MessagingEdgeEventType.PUSH_CUSTOM_ACTION, MessagingEdgeEventType.valueOf("PUSH_CUSTOM_ACTION"));
+        assertEquals(
+                MessagingEdgeEventType.IN_APP_DISMISS,
+                MessagingEdgeEventType.valueOf("IN_APP_DISMISS"));
+        assertEquals(
+                MessagingEdgeEventType.IN_APP_INTERACT,
+                MessagingEdgeEventType.valueOf("IN_APP_INTERACT"));
+        assertEquals(
+                MessagingEdgeEventType.IN_APP_TRIGGER,
+                MessagingEdgeEventType.valueOf("IN_APP_TRIGGER"));
+        assertEquals(
+                MessagingEdgeEventType.IN_APP_DISPLAY,
+                MessagingEdgeEventType.valueOf("IN_APP_DISPLAY"));
+        assertEquals(
+                MessagingEdgeEventType.PUSH_APPLICATION_OPENED,
+                MessagingEdgeEventType.valueOf("PUSH_APPLICATION_OPENED"));
+        assertEquals(
+                MessagingEdgeEventType.PUSH_CUSTOM_ACTION,
+                MessagingEdgeEventType.valueOf("PUSH_CUSTOM_ACTION"));
     }
 
     @Test
@@ -41,11 +52,25 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_toString() {
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS, MessagingEdgeEventType.IN_APP_DISMISS.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT, MessagingEdgeEventType.IN_APP_INTERACT.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER, MessagingEdgeEventType.IN_APP_TRIGGER.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY, MessagingEdgeEventType.IN_APP_DISPLAY.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.OPENED, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.toString());
-        assertEquals(MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType.CUSTOM_ACTION, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS,
+                MessagingEdgeEventType.IN_APP_DISMISS.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT,
+                MessagingEdgeEventType.IN_APP_INTERACT.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER,
+                MessagingEdgeEventType.IN_APP_TRIGGER.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY,
+                MessagingEdgeEventType.IN_APP_DISPLAY.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType
+                        .OPENED,
+                MessagingEdgeEventType.PUSH_APPLICATION_OPENED.toString());
+        assertEquals(
+                MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.EventType
+                        .CUSTOM_ACTION,
+                MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
     }
 }
