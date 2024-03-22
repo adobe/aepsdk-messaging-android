@@ -349,7 +349,7 @@ public class ParsedPropositionsTests {
             throws MessageRequiredFieldMissingException {
         // setup
         mockInAppPropositionItem =
-                new PropositionItem("inapp", SchemaType.RULESET, new HashMap<>());
+                new PropositionItem("inapp", SchemaType.RULESET, null);
         mockInAppProposition =
                 new Proposition(
                         "inapp", mockInAppSurface.getUri(), mockScopeDetails, new ArrayList<>());

@@ -137,7 +137,7 @@ public class PropositionTests {
             throws MessageRequiredFieldMissingException {
         // test
         Proposition proposition =
-                new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, null);
+                new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, new ArrayList<>());
         // verify
         assertNotNull(proposition);
         assertEquals("uniqueId", proposition.getUniqueId());

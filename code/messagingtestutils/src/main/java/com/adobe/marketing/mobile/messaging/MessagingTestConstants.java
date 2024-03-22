@@ -16,6 +16,7 @@ package com.adobe.marketing.mobile.messaging;
  */
 public class MessagingTestConstants {
     public static final String EXTENSION_VERSION = MessagingConstants.EXTENSION_VERSION;
+    static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -176,7 +177,7 @@ public class MessagingTestConstants {
             public static final String PROPOSITIONS = "propositions";
             public static final String RESPONSE_ERROR = "responseerror";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
-            static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            public static final String PROPOSITION_INTERACTION = "propositioninteraction";
 
 
             private Messaging() {

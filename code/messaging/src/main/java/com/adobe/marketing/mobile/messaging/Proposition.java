@@ -73,6 +73,7 @@ public class Proposition implements Serializable {
      *
      * @return {@link String} containing the {@link Proposition} identifier.
      */
+    @NonNull
     public String getUniqueId() {
         return uniqueId;
     }
@@ -82,6 +83,7 @@ public class Proposition implements Serializable {
      *
      * @return {@code List<PropositionItem>} containing the {@link PropositionItem}s.
      */
+    @NonNull
     public List<PropositionItem> getItems() {
         return propositionItems;
     }
@@ -91,6 +93,7 @@ public class Proposition implements Serializable {
      *
      * @return {@link String} containing the encoded {@link Proposition} scope.
      */
+    @NonNull
     public String getScope() {
         return scope;
     }
@@ -100,6 +103,7 @@ public class Proposition implements Serializable {
      *
      * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
      */
+    @NonNull
     Map<String, Object> getScopeDetails() {
         return scopeDetails;
     }
