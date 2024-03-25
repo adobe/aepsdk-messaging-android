@@ -215,7 +215,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forHtmlContent() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_HTML_CONTENT;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -227,7 +227,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forJsonContent() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_JSON_CONTENT;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -239,7 +239,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forRuleset() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_RULESET_ITEM;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -251,7 +251,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forInapp() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_IAM;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_IAM;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -263,7 +263,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forFeed() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_FEED_ITEM;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -275,7 +275,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forNativeAlert() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_NATIVE_ALERT;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_NATIVE_ALERT;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);
@@ -287,7 +287,7 @@ public class SchemaTypeTests {
     @Test
     public void fromString_returnsCorrectEnum_forDefault() {
         // setup
-        String typeString = MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT;
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT;
 
         // test
         SchemaType schemaType = SchemaType.fromString(typeString);

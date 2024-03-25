@@ -528,13 +528,15 @@ public class MessagingExtensionTests {
                     Map<String, Object> eventData = new HashMap<>();
                     Map<String, Object> triggeredConsequenceMap = new HashMap<>();
                     triggeredConsequenceMap.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                            MessagingTestConstants.EventDataKeys.RulesEngine
+                                    .MESSAGE_CONSEQUENCE_TYPE,
                             MessagingTestConstants.ConsequenceDetailKeys.SCHEMA);
                     triggeredConsequenceMap.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                            MessagingTestConstants.EventDataKeys.RulesEngine
+                                    .MESSAGE_CONSEQUENCE_DETAIL,
                             new HashMap<>());
                     eventData.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                            MessagingTestConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
                             triggeredConsequenceMap);
 
                     Event mockEvent = mock(Event.class);
@@ -612,13 +614,15 @@ public class MessagingExtensionTests {
                     Map<String, Object> eventData = new HashMap<>();
                     Map<String, Object> triggeredConsequenceMap = new HashMap<>();
                     triggeredConsequenceMap.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                            MessagingTestConstants.EventDataKeys.RulesEngine
+                                    .MESSAGE_CONSEQUENCE_TYPE,
                             "notSchema");
                     triggeredConsequenceMap.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                            MessagingTestConstants.EventDataKeys.RulesEngine
+                                    .MESSAGE_CONSEQUENCE_DETAIL,
                             new HashMap<>());
                     eventData.put(
-                            MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                            MessagingTestConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
                             triggeredConsequenceMap);
 
                     Event mockEvent = mock(Event.class);

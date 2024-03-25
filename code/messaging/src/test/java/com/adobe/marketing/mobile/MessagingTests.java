@@ -510,9 +510,7 @@ public class MessagingTests {
                     assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
                     assertEquals(
                             MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
-                    assertEquals(
-                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
-                            event.getName());
+                    assertEquals("Refresh in-app messages", event.getName());
                 });
     }
 

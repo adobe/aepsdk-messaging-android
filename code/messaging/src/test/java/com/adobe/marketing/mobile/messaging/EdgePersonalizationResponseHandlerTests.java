@@ -11,10 +11,10 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.ENDING_EVENT_ID;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.RESPONSE_ERROR;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventName.FINALIZE_PROPOSITIONS_RESPONSE;
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventName.MESSAGE_PROPOSITIONS_RESPONSE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -215,7 +215,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
                     assertEquals(
-                            MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
                             edgeRequestEvent.getName());
                     assertEquals(expectedEventData, edgeRequestEvent.getEventData());
 
@@ -264,7 +264,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
                     assertEquals(
-                            MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
                             edgeRequestEvent.getName());
                     assertEquals(expectedEventData, edgeRequestEvent.getEventData());
 
@@ -334,7 +334,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
                     assertEquals(
-                            MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
                             edgeRequestEvent.getName());
                     assertEquals(expectedEventData, edgeRequestEvent.getEventData());
 
@@ -389,7 +389,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
                     assertEquals(
-                            MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
                             edgeRequestEvent.getName());
                     assertEquals(expectedEventData, edgeRequestEvent.getEventData());
 
@@ -459,7 +459,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
                     assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
                     assertEquals(
-                            MessagingConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
                             edgeRequestEvent.getName());
                     assertEquals(expectedEventData, edgeRequestEvent.getEventData());
 

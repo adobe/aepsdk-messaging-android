@@ -187,8 +187,8 @@ public class MessagingCacheUtilitiesTests {
                 () -> {
                     // setup
                     when(mockCacheService.get(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
                             .thenReturn(null);
 
                     // test
@@ -205,8 +205,8 @@ public class MessagingCacheUtilitiesTests {
                 () -> {
                     // setup
                     when(mockCacheService.get(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
                             .thenReturn(mockCacheResult);
 
                     // test
@@ -447,8 +447,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(1))
                             .set(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                     any());
                 });
     }
@@ -475,8 +475,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(0))
                             .set(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                     any());
                 });
     }
@@ -501,8 +501,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify cache cleared as no propositions were present
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
                 });
     }
 
@@ -568,8 +568,8 @@ public class MessagingCacheUtilitiesTests {
                         // verify
                         verify(mockCacheService, times(1))
                                 .set(
-                                        eq(MessagingConstants.CACHE_BASE_DIR),
-                                        eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                         any());
                     }
                 });
@@ -585,12 +585,12 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.IMAGES_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
                 });
     }
 }
