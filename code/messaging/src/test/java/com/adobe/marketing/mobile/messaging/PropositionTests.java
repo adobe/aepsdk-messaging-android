@@ -64,8 +64,8 @@ public class PropositionTests {
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
-        propositionItemMap2 = MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
+        propositionItemMap2 = MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
         PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
         PropositionItem propositionItem2 = PropositionItem.fromEventData(propositionItemMap2);
         propositionItems.add(propositionItem);
@@ -137,7 +137,7 @@ public class PropositionTests {
             throws MessageRequiredFieldMissingException {
         // test
         Proposition proposition =
-                new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, new ArrayList<>());
+                new Proposition("uniqueId", "mobileapp://mockScope", scopeDetails, null);
         // verify
         assertNotNull(proposition);
         assertEquals("uniqueId", proposition.getUniqueId());
@@ -234,14 +234,90 @@ public class PropositionTests {
         PropositionItem propositionItem = propositionItems.get(0);
         for (Map<String, Object> item : itemList) {
             Map<String, Object> data = DataReader.getTypedMap(Object.class, item, "data");
-            Map<String, Object> content = DataReader.getTypedMap(Object.class, data, "content");
             assertEquals(propositionItem.getItemId(), item.get("id"));
             assertEquals(propositionItem.getSchema().toString(), item.get("schema"));
-            Map<String, Object> expectedContent =
+            Map<String, Object> expectedData =
                     JSONUtils.toMap(
                             new JSONObject(
-                                    "{\"version\":1,\"rules\":[{\"consequences\":[{\"type\":\"schema\",\"id\":\"uniqueId\",\"detail\":{\"schema\":\"https://ns.adobe.com/personalization/message/feed-item\",\"data\":{\"expiryDate\":1717688797,\"publishedDate\":1717688797,\"contentType\":\"application/json\",\"meta\":{\"surface\":\"mobileapp://mockApp/feeds/testFeed\",\"feedName\":\"testFeed\",\"campaignName\":\"testCampaign\"},\"content\":{\"actionUrl\":\"actionUrl\",\"actionTitle\":\"actionTitle\",\"title\":\"title\",\"body\":\"body\",\"imageUrl\":\"imageUrl\"}},\"id\":\"uniqueId\"}}],\"condition\":{\"type\":\"group\",\"definition\":{\"conditions\":[{\"type\":\"matcher\",\"definition\":{\"matcher\":\"ge\",\"key\":\"~timestampu\",\"values\":[1686066397]}},{\"type\":\"matcher\",\"definition\":{\"matcher\":\"le\",\"key\":\"~timestampu\",\"values\":[1717688797]}}],\"logic\":\"and\"}}}]}"));
-            assertEquals(expectedContent, content);
+                                    "{\n"
+                                        + "        \"version\": 1,\n"
+                                        + "        \"rules\": [\n"
+                                        + "            {\n"
+                                        + "                \"condition\": {\n"
+                                        + "                    \"type\": \"group\",\n"
+                                        + "                    \"definition\": {\n"
+                                        + "                        \"logic\": \"and\",\n"
+                                        + "                        \"conditions\": [\n"
+                                        + "                            {\n"
+                                        + "                                \"type\": \"matcher\",\n"
+                                        + "                                \"definition\": {\n"
+                                        + "                                    \"key\":"
+                                        + " \"~timestampu\",\n"
+                                        + "                                    \"matcher\":"
+                                        + " \"ge\",\n"
+                                        + "                                    \"values\": [\n"
+                                        + "                                        1686066397\n"
+                                        + "                                    ]\n"
+                                        + "                                }\n"
+                                        + "                            },\n"
+                                        + "                            {\n"
+                                        + "                                \"type\": \"matcher\",\n"
+                                        + "                                \"definition\": {\n"
+                                        + "                                    \"key\":"
+                                        + " \"~timestampu\",\n"
+                                        + "                                    \"matcher\":"
+                                        + " \"le\",\n"
+                                        + "                                    \"values\": [\n"
+                                        + "                                        1717688797\n"
+                                        + "                                    ]\n"
+                                        + "                                }\n"
+                                        + "                            }\n"
+                                        + "                        ]\n"
+                                        + "                    }\n"
+                                        + "                },\n"
+                                        + "                \"consequences\": [\n"
+                                        + "                    {\n"
+                                        + "                        \"id\": \"uniqueId\",\n"
+                                        + "                        \"type\": \"schema\",\n"
+                                        + "                        \"detail\": {\n"
+                                        + "                            \"id\": \"uniqueId\",\n"
+                                        + "                            \"schema\":"
+                                        + " \"https://ns.adobe.com/personalization/message/feed-item\",\n"
+                                        + "                            \"data\": {\n"
+                                        + "                                \"expiryDate\":"
+                                        + " 1717688797,\n"
+                                        + "                                \"meta\": {\n"
+                                        + "                                    \"feedName\":"
+                                        + " \"testFeed\",\n"
+                                        + "                                    \"campaignName\":"
+                                        + " \"testCampaign\",\n"
+                                        + "                                    \"surface\":"
+                                        + " \"mobileapp://mockApp/feeds/testFeed\"\n"
+                                        + "                                },\n"
+                                        + "                                \"content\": {\n"
+                                        + "                                    \"title\":"
+                                        + " \"title\",\n"
+                                        + "                                    \"body\":"
+                                        + " \"body\",\n"
+                                        + "                                    \"imageUrl\":"
+                                        + " \"imageUrl\",\n"
+                                        + "                                    \"actionUrl\":"
+                                        + " \"actionUrl\",\n"
+                                        + "                                    \"actionTitle\":"
+                                        + " \"actionTitle\"\n"
+                                        + "                                },\n"
+                                        + "                                \"contentType\":"
+                                        + " \"application/json\",\n"
+                                        + "                                \"publishedDate\":"
+                                        + " 1717688797\n"
+                                        + "                            }\n"
+                                        + "                        }\n"
+                                        + "                    }\n"
+                                        + "                ]\n"
+                                        + "            }\n"
+                                        + "        ]\n"
+                                        + "    }"));
+            assertEquals(expectedData, data);
         }
     }
 

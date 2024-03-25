@@ -12,7 +12,9 @@
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,20 +25,19 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionPayloadTests {
-    private PropositionPayload propositionPayload;
 
     @Test
     public void testCreatePropositionPayload() {
         // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        final Map<String, Object> testPayload =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
+        final PropositionInfo propositionInfo = PropositionInfo.create(testPayload);
+
         // test
-        try {
-            propositionPayload =
-                    MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        final PropositionPayload propositionPayload =
+                PropositionPayload.create(
+                        propositionInfo, (List<Map<String, Object>>) testPayload.get("items"));
+
         // verify proposition info
         assertEquals("activityId", propositionPayload.propositionInfo.activityId);
         assertEquals("correlationID", propositionPayload.propositionInfo.correlationId);
@@ -79,78 +80,60 @@ public class PropositionPayloadTests {
     }
 
     @Test
-    public void testCreatePropositionPayload_MissingScopeDetails() {
-        // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(
-                MessagingTestUtils.getMapFromFile(
-                        "personalization_payload_missing_scope_details.json"));
+    public void testCreatePropositionPayload_NullPropositionInfo() {
         // test
-        try {
-            // verify proposition payload failed to be created
-            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        final PropositionPayload propositionPayload =
+                PropositionPayload.create(null, new ArrayList<>());
+
+        // verify proposition payload failed to be created
+        assertNull(propositionPayload);
     }
 
     @Test
-    public void testCreatePropositionPayload_MissingScope() {
+    public void testCreatePropositionPayload_NullItems() {
         // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(
-                MessagingTestUtils.getMapFromFile("personalization_payload_missing_scope.json"));
-        // test
-        try {
-            // verify proposition payload failed to be created
-            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-    }
+        final Map<String, Object> testPayload =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
+        final PropositionInfo propositionInfo = PropositionInfo.create(testPayload);
 
-    @Test
-    public void testCreatePropositionPayload_MissingItems() {
-        // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(
-                MessagingTestUtils.getMapFromFile("personalization_payload_missing_items.json"));
         // test
-        try {
-            // verify proposition payload failed to be created
-            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        final PropositionPayload propositionPayload =
+                PropositionPayload.create(propositionInfo, null);
+
+        // verify proposition payload failed to be created
+        assertNull(propositionPayload);
     }
 
     @Test
     public void testCreatePropositionPayload_EmptyItems() {
         // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(
-                MessagingTestUtils.getMapFromFile("personalization_payload_empty_items.json"));
+        final Map<String, Object> testPayload =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
+        final PropositionInfo propositionInfo = PropositionInfo.create(testPayload);
+
         // test
-        try {
-            // verify proposition payload failed to be created
-            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        final PropositionPayload propositionPayload =
+                PropositionPayload.create(propositionInfo, new ArrayList<>());
+
+        // verify proposition payload failed to be created
+        assertNull(propositionPayload);
     }
 
     @Test
-    public void testCreatePropositionPayload_MissingId() {
+    public void testCreatePropositionPayload_InvalidItems() {
         // setup
-        final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(
-                MessagingTestUtils.getMapFromFile("personalization_payload_missing_id.json"));
+        final Map<String, Object> testPayload =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1InvalidItems.json");
+        final PropositionInfo propositionInfo = PropositionInfo.create(testPayload);
+
         // test
-        try {
-            // verify proposition payload failed to be created
-            assertEquals(0, MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).size());
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        final PropositionPayload propositionPayload =
+                PropositionPayload.create(
+                        propositionInfo, (List<Map<String, Object>>) testPayload.get("items"));
+
+        // verify proposition payload is created
+        assertNotNull(propositionPayload);
+        assertEquals(propositionInfo, propositionPayload.propositionInfo);
+        assertTrue(propositionPayload.items.isEmpty());
     }
 }

@@ -1,5 +1,5 @@
 {
-    "scope": "mobileapp://com.adobe.marketing.mobile.messaging.test/cbe",
+    "scope": "mobileapp://mockPackageName/cbeJson",
     "scopeDetails": {
         "activity": {
             "id": "7a5fcd59-70a1-4d29-9280-730393c1eb09#988d6414-7c62-42c3-beaa-f2bb13f940c6"
@@ -13,9 +13,12 @@
     "items": [
         {
           "id": "e572a8fa-eada-4d72-a643-ec4de447678c",
-          "schema": "https:\/\/ns.adobe.com\/personalization\/html-content-item",
+          "schema": "https:\/\/ns.adobe.com\/personalization\/json-content-item",
           "data": {
-              "content": "<!DOCTYPE html> <html> <body> <p style=\"color:black;font-size:60px;\">!!Spring sale!!<\/p> <p style=\"color:green;font-size:40px;\">Get 20% off on your first purchase.<\/p> <\/body> <\/html>"
+              "content": {
+                  "category": "wintersale"
+              },
+              "format": "application/json"
           }
         }
     ],

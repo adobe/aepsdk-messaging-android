@@ -241,7 +241,7 @@ public final class MessagingExtension extends Extension {
                                     + " consequence is not of type 'schema'");
                     return;
                 }
-                final Map detail =
+                final Map<String, Object> detail =
                         DataReader.optTypedMap(
                                 Object.class,
                                 triggeredConsequenceMap,
@@ -721,8 +721,7 @@ public final class MessagingExtension extends Extension {
      * @param eventData eventData map which contains the xdm data forwarded by the customer.
      * @param xdmMap xdmMap map which is updated.
      */
-    private void addXDMData(
-            final Map<String, Object> eventData, final Map<String, Object> xdmMap) {
+    private void addXDMData(final Map<String, Object> eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
         final String adobe =
                 DataReader.optString(

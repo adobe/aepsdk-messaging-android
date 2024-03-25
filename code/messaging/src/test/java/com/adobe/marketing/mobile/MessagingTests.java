@@ -85,8 +85,7 @@ public class MessagingTests {
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
-            when(mockDeviceInfoService.getApplicationPackageName())
-                    .thenReturn("com.adobe.marketing.mobile.messaging.test");
+            when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
             testRunnable.run();
         }
     }
@@ -226,22 +225,24 @@ public class MessagingTests {
     @Test
     public void test_handleNotificationResponse() {
         final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
         runWithMockedMobileCore(
                 eventCaptor,
-                null,
+                callbackCaptor,
                 () -> {
                     String mockActionId = "mockActionId";
                     String mockXdm = "mockXdm";
-
                     when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
+                    final AdobeCallback<PushTrackingStatus> mockCallback =
+                            Mockito.mock(AdobeCallback.class);
 
                     // test
-                    Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
+                    Messaging.handleNotificationResponse(
+                            mockIntent, true, mockActionId, mockCallback);
 
                     // verify
                     verify(mockIntent, times(2)).getStringExtra(anyString());
-                    MobileCore.dispatchEventWithResponseCallback(
-                            eventCaptor.capture(), any(Long.class), any());
 
                     // verify event
                     Event event = eventCaptor.getValue();
@@ -249,6 +250,124 @@ public class MessagingTests {
                     assertNotNull(eventData);
                     assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
                     assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+
+                    // verify callback
+                    Map<String, Object> responseEventData = new HashMap<>();
+                    responseEventData.put(
+                            MessagingTestConstants.EventDataKeys.Messaging
+                                    .PUSH_NOTIFICATION_TRACKING_STATUS,
+                            PushTrackingStatus.TRACKING_INITIATED.getValue());
+                    responseEventData.put(
+                            MessagingTestConstants.EventDataKeys.Messaging
+                                    .PUSH_NOTIFICATION_TRACKING_MESSAGE,
+                            PushTrackingStatus.TRACKING_INITIATED.getDescription());
+                    Event responseEvent =
+                            new Event.Builder(
+                                            MessagingTestConstants.EventName
+                                                    .PUSH_TRACKING_STATUS_EVENT,
+                                            MessagingTestConstants.EventType.MESSAGING,
+                                            MessagingTestConstants.EventSource.RESPONSE_CONTENT)
+                                    .setEventData(responseEventData)
+                                    .build();
+                    callbackCaptor.getValue().call(responseEvent);
+
+                    // verify callback
+                    verify(mockCallback, times(1)).call(PushTrackingStatus.TRACKING_INITIATED);
+                });
+    }
+
+    @Test
+    public void test_handleNotificationResponse_ResponseEventDataIsNull() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    String mockActionId = "mockActionId";
+                    String mockXdm = "mockXdm";
+                    when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
+                    final AdobeCallback<PushTrackingStatus> mockCallback =
+                            Mockito.mock(AdobeCallback.class);
+
+                    // test
+                    Messaging.handleNotificationResponse(
+                            mockIntent, true, mockActionId, mockCallback);
+
+                    // verify
+                    verify(mockIntent, times(2)).getStringExtra(anyString());
+
+                    // verify event
+                    Event event = eventCaptor.getValue();
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+                    assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+
+                    // verify callback
+                    Event responseEvent =
+                            new Event.Builder(
+                                            MessagingTestConstants.EventName
+                                                    .PUSH_TRACKING_STATUS_EVENT,
+                                            MessagingTestConstants.EventType.MESSAGING,
+                                            MessagingTestConstants.EventSource.RESPONSE_CONTENT)
+                                    .setEventData(null)
+                                    .build();
+                    callbackCaptor.getValue().call(responseEvent);
+
+                    // verify callback
+                    verify(mockCallback, times(1)).call(PushTrackingStatus.UNKNOWN_ERROR);
+                });
+    }
+
+    @Test
+    public void test_handleNotificationResponse_ResponseEventDataDoesNotHavePushTrackingStatus() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackCaptor =
+                ArgumentCaptor.forClass(AdobeCallbackWithError.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                callbackCaptor,
+                () -> {
+                    String mockActionId = "mockActionId";
+                    String mockXdm = "mockXdm";
+                    when(mockIntent.getStringExtra(anyString())).thenReturn(mockXdm);
+                    final AdobeCallback<PushTrackingStatus> mockCallback =
+                            Mockito.mock(AdobeCallback.class);
+
+                    // test
+                    Messaging.handleNotificationResponse(
+                            mockIntent, true, mockActionId, mockCallback);
+
+                    // verify
+                    verify(mockIntent, times(2)).getStringExtra(anyString());
+
+                    // verify event
+                    Event event = eventCaptor.getValue();
+                    Map<String, Object> eventData = event.getEventData();
+                    assertNotNull(eventData);
+                    assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
+                    assertEquals(eventData.get(TRACK_INFO_KEY_ACTION_ID), mockActionId);
+
+                    // verify callback
+                    Event responseEvent =
+                            new Event.Builder(
+                                            MessagingTestConstants.EventName
+                                                    .PUSH_TRACKING_STATUS_EVENT,
+                                            MessagingTestConstants.EventType.MESSAGING,
+                                            MessagingTestConstants.EventSource.RESPONSE_CONTENT)
+                                    .setEventData(
+                                            new HashMap<String, Object>() {
+                                                {
+                                                    put("SomeKey", "SomeValue");
+                                                }
+                                            })
+                                    .build();
+                    callbackCaptor.getValue().call(responseEvent);
+
+                    // verify callback
+                    verify(mockCallback, times(1)).call(PushTrackingStatus.UNKNOWN_ERROR);
                 });
     }
 
@@ -411,7 +530,7 @@ public class MessagingTests {
                 () -> {
                     List<Surface> surfacePaths = new ArrayList<>();
                     Surface feedSurface = new Surface("apifeed");
-                    Surface codeBasedSurface = new Surface("cbe");
+                    Surface codeBasedSurface = new Surface("cbeHtml");
                     surfacePaths.add(feedSurface);
                     surfacePaths.add(codeBasedSurface);
 
@@ -459,7 +578,7 @@ public class MessagingTests {
                                                 {
                                                     put(
                                                             "uri",
-                                                            "mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed");
+                                                            "mobileapp://mockPackageName/apifeed");
                                                 }
                                             });
                                     add(
@@ -467,7 +586,7 @@ public class MessagingTests {
                                                 {
                                                     put(
                                                             "uri",
-                                                            "mobileapp://com.adobe.marketing.mobile.messaging.test/cbe");
+                                                            "mobileapp://mockPackageName/cbeHtml");
                                                 }
                                             });
                                 }
@@ -481,7 +600,7 @@ public class MessagingTests {
                     final Map<String, Object> feedPropositionData =
                             MessagingTestUtils.getMapFromFile("feedProposition.json");
                     final Map<String, Object> codeBasedPropositionData =
-                            MessagingTestUtils.getMapFromFile("codeBasedProposition.json");
+                            MessagingTestUtils.getMapFromFile("codeBasedPropositionHtml.json");
                     propositionsList.add(feedPropositionData);
                     propositionsList.add(codeBasedPropositionData);
 
@@ -514,7 +633,7 @@ public class MessagingTests {
                             "c2aa4a73-a534-44c2-baa4-a12980e5bb9d",
                             feedPropositions.get(0).getUniqueId());
                     Assert.assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/apifeed",
+                            "mobileapp://mockPackageName/apifeed",
                             feedPropositions.get(0).getScope());
                     Assert.assertEquals(1, feedPropositions.get(0).getItems().size());
 
@@ -526,7 +645,7 @@ public class MessagingTests {
                             "d5072be7-5317-4ee4-b52b-1710ab60748f",
                             codeBasedPropositions.get(0).getUniqueId());
                     Assert.assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/cbe",
+                            "mobileapp://mockPackageName/cbeHtml",
                             codeBasedPropositions.get(0).getScope());
                     Assert.assertEquals(1, codeBasedPropositions.get(0).getItems().size());
                 });
@@ -971,12 +1090,8 @@ public class MessagingTests {
                         }
                     }
                     sortedList.sort(null);
-                    assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
-                            sortedList.get(0));
-                    assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
-                            sortedList.get(1));
+                    assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
+                    assertEquals("mobileapp://mockPackageName/promos/feed2", sortedList.get(1));
                     assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
                     assertEquals(
                             MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
@@ -1033,12 +1148,8 @@ public class MessagingTests {
                         }
                     }
                     sortedList.sort(null);
-                    assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
-                            sortedList.get(0));
-                    assertEquals(
-                            "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed3",
-                            sortedList.get(1));
+                    assertEquals("mobileapp://mockPackageName/promos/feed1", sortedList.get(0));
+                    assertEquals("mobileapp://mockPackageName/promos/feed3", sortedList.get(1));
                     assertEquals(MessagingTestConstants.EventType.MESSAGING, event.getType());
                     assertEquals(
                             MessagingTestConstants.EventSource.REQUEST_CONTENT, event.getSource());
@@ -1058,6 +1169,50 @@ public class MessagingTests {
 
                     // test
                     Messaging.updatePropositionsForSurfaces(new ArrayList<>());
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    // verify no event dispatched
+                    assertNull(eventCaptor.getValue());
+                });
+    }
+
+    @Test
+    public void
+            test_updatePropositionsForSurfaces_whenNullListProvided_thenNoUpdateMessageFeedsEventDispatched() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(null);
+
+                    // verify
+                    MobileCore.dispatchEvent(eventCaptor.capture());
+
+                    // verify no event dispatched
+                    assertNull(eventCaptor.getValue());
+                });
+    }
+
+    @Test
+    public void
+            test_updatePropositionsForSurfaces_whenInvalidListProvided_thenNoUpdateMessageFeedsEventDispatched() {
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        runWithMockedMobileCore(
+                eventCaptor,
+                null,
+                () -> {
+                    // setup
+                    List<Surface> surfacePaths = new ArrayList<>();
+                    surfacePaths.add(new Surface("##invalid"));
+                    surfacePaths.add(new Surface("##alsoinvalid"));
+
+                    // test
+                    Messaging.updatePropositionsForSurfaces(surfacePaths);
 
                     // verify
                     MobileCore.dispatchEvent(eventCaptor.capture());

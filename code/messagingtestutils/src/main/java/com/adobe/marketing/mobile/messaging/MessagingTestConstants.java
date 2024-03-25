@@ -37,12 +37,13 @@ public class MessagingTestConstants {
         public static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
         public static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
         public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        public static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
         public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
         public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         public static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
-
+        public static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
 
@@ -178,6 +179,8 @@ public class MessagingTestConstants {
             public static final String RESPONSE_ERROR = "responseerror";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
             public static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            public static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
+            public static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
 
 
             private Messaging() {
@@ -323,6 +326,15 @@ public class MessagingTestConstants {
         static final String TEXT_PLAIN = "text/plain";
         private ContentTypes() {
         }
+    }
+
+    final class ConsequenceDetailKeys {
+        static final String ID = "id";
+        static final String SCHEMA = "schema";
+        static final String DATA = "data";
+        static final String CONTENT = "content";
+
+        private ConsequenceDetailKeys() {}
     }
 
     final class ConsequenceDetailDataKeys {

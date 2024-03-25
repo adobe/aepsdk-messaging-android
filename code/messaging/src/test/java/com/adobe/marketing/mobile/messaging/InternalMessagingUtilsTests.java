@@ -1594,7 +1594,7 @@ public class InternalMessagingUtilsTests {
     // Test utilities
     // ========================================================================================
     private JSONObject getValidRuleJson() {
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionContent.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
         try {
             return new JSONObject(rulesJson);
         } catch (JSONException e) {

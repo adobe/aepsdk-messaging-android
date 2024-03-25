@@ -79,7 +79,7 @@ public class MessagingCacheUtilitiesTests {
 
         // setup mock cached PropositionPayloads
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        testPayload.add(MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json"));
         propositionPayload = MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
 
         ByteArrayOutputStream propositionPayloadBaos = null;
@@ -119,7 +119,7 @@ public class MessagingCacheUtilitiesTests {
         scopeDetails.put("characteristics", characteristics);
         scopeDetails.put("activity", activity);
 
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
         propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
@@ -414,7 +414,7 @@ public class MessagingCacheUtilitiesTests {
                     when(mockCacheResult.getData())
                             .thenReturn(
                                     MessagingTestUtils.convertResourceFileToInputStream(
-                                            "invalid.json"));
+                                            "invalidRules.json"));
 
                     // test
                     final Map<Surface, List<Proposition>> retrievedPayload =

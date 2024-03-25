@@ -106,7 +106,7 @@ public class MessageCachingFunctionalTests {
         final List<Proposition> propositionList = new ArrayList<>();
         propositionList.add(
                 Proposition.fromEventData(
-                        MessagingTestUtils.getMapFromFile("personalization_payload.json")));
+                        MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json")));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
