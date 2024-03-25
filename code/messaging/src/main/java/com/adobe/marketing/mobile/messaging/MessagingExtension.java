@@ -241,7 +241,7 @@ public final class MessagingExtension extends Extension {
                                     + " consequence is not of type 'schema'");
                     return;
                 }
-                final Map detail =
+                final Map<String, Object> detail =
                         DataReader.optTypedMap(
                                 Object.class,
                                 triggeredConsequenceMap,
@@ -620,7 +620,7 @@ public final class MessagingExtension extends Extension {
      * @param ecid experience cloud id of the device
      * @return {@link Map} of profile data in the correct format with token
      */
-    private static Map<String, Object> getProfileEventData(final String token, final String ecid) {
+    private Map<String, Object> getProfileEventData(final String token, final String ecid) {
         if (ecid == null) {
             Log.error(
                     MessagingConstants.LOG_TAG,
@@ -687,7 +687,7 @@ public final class MessagingExtension extends Extension {
      *     notification
      * @return {@link Map} object containing the xdm formatted data
      */
-    private static Map<String, Object> getXdmData(
+    private Map<String, Object> getXdmData(
             final String eventType, final String messageId, final String actionId) {
         final Map<String, Object> xdmMap = new HashMap<>();
         final Map<String, Object> trackingMap = new HashMap<>();
@@ -706,7 +706,7 @@ public final class MessagingExtension extends Extension {
         return xdmMap;
     }
 
-    private static void addApplicationData(
+    private void addApplicationData(
             final boolean applicationOpened, final Map<String, Object> xdmMap) {
         final Map<String, Object> applicationMap = new HashMap<>();
         final Map<String, Object> launchesMap = new HashMap<>();
@@ -721,8 +721,7 @@ public final class MessagingExtension extends Extension {
      * @param eventData eventData map which contains the xdm data forwarded by the customer.
      * @param xdmMap xdmMap map which is updated.
      */
-    private static void addXDMData(
-            final Map<String, Object> eventData, final Map<String, Object> xdmMap) {
+    private void addXDMData(final Map<String, Object> eventData, final Map<String, Object> xdmMap) {
         // Extract the xdm adobe data string from the event data.
         final String adobe =
                 DataReader.optString(

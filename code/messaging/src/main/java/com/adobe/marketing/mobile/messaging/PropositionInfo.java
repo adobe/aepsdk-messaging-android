@@ -25,26 +25,15 @@ class PropositionInfo implements Serializable {
     final String activityId;
 
     private PropositionInfo(final Map<String, Object> propositionInfoMap) throws Exception {
-        id = DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID);
-        scope =
+        this(
+                DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID),
                 DataReader.getString(
                         propositionInfoMap,
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE);
-        scopeDetails =
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE),
                 DataReader.getTypedMap(
                         Object.class,
                         propositionInfoMap,
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS);
-        correlationId =
-                DataReader.getString(scopeDetails, MessagingConstants.PayloadKeys.CORRELATION_ID);
-        final Map<String, Object> activityMap =
-                DataReader.optTypedMap(
-                        Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
-        if (MapUtils.isNullOrEmpty(activityMap)) {
-            activityId = "";
-        } else {
-            activityId = DataReader.optString(activityMap, MessagingConstants.PayloadKeys.ID, "");
-        }
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS));
     }
 
     private PropositionInfo(
@@ -65,32 +54,31 @@ class PropositionInfo implements Serializable {
         }
     }
 
-    static PropositionInfo create(final Map<String, Object> propositionInfoMap) throws Exception {
-        if (StringUtils.isNullOrEmpty(
-                DataReader.getString(propositionInfoMap, MessagingConstants.PayloadKeys.ID))) {
+    static PropositionInfo create(final Map<String, Object> propositionInfoMap) {
+        try {
+            PropositionInfo propositionInfo = new PropositionInfo(propositionInfoMap);
+            if (StringUtils.isNullOrEmpty(propositionInfo.id)
+                    || StringUtils.isNullOrEmpty(propositionInfo.scope)
+                    || MapUtils.isNullOrEmpty(propositionInfo.scopeDetails)) {
+                return null;
+            }
+            return propositionInfo;
+        } catch (final Exception exception) {
             return null;
         }
-        if (StringUtils.isNullOrEmpty(
-                DataReader.getString(
-                        propositionInfoMap,
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE))) {
-            return null;
-        }
-        if (MapUtils.isNullOrEmpty(
-                DataReader.getTypedMap(
-                        Object.class,
-                        propositionInfoMap,
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCOPE_DETAILS))) {
-            return null;
-        }
-        return new PropositionInfo(propositionInfoMap);
     }
 
     static PropositionInfo createFromProposition(final Proposition proposition) {
         if (proposition == null) {
             return null;
         }
-        return new PropositionInfo(
-                proposition.getUniqueId(), proposition.getScope(), proposition.getScopeDetails());
+        try {
+            return new PropositionInfo(
+                    proposition.getUniqueId(),
+                    proposition.getScope(),
+                    proposition.getScopeDetails());
+        } catch (final Exception exception) {
+            return null;
+        }
     }
 }

@@ -74,8 +74,7 @@ public class FeedRulesEngineTests {
     @Test
     public void test_evaluate_WithInAppV2Consequence() {
         // setup
-        String rulesJson =
-                MessagingTestUtils.loadStringFromFile("inappPropositionAllDataPresent.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         feedRulesEngine.replaceRules(rules);
@@ -105,8 +104,7 @@ public class FeedRulesEngineTests {
         Assert.assertNotNull(propositionItemsBySurface);
         Assert.assertEquals(1, propositionItemsBySurface.size());
         List<PropositionItem> inboundMessageList =
-                propositionItemsBySurface.get(
-                        Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
+                propositionItemsBySurface.get(Surface.fromUriString("mobileapp://mockPackageName"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(1, inboundMessageList.size());
         Assert.assertEquals(SchemaType.FEED, inboundMessageList.get(0).getSchema());

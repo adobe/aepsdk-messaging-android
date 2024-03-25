@@ -73,7 +73,7 @@ public class Proposition implements Serializable {
      *
      * @return {@link String} containing the {@link Proposition} identifier.
      */
-    public String getUniqueId() {
+    @NonNull public String getUniqueId() {
         return uniqueId;
     }
 
@@ -82,7 +82,7 @@ public class Proposition implements Serializable {
      *
      * @return {@code List<PropositionItem>} containing the {@link PropositionItem}s.
      */
-    public List<PropositionItem> getItems() {
+    @NonNull public List<PropositionItem> getItems() {
         return propositionItems;
     }
 
@@ -91,7 +91,7 @@ public class Proposition implements Serializable {
      *
      * @return {@link String} containing the encoded {@link Proposition} scope.
      */
-    public String getScope() {
+    @NonNull public String getScope() {
         return scope;
     }
 
@@ -100,7 +100,7 @@ public class Proposition implements Serializable {
      *
      * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
      */
-    Map<String, Object> getScopeDetails() {
+    @NonNull Map<String, Object> getScopeDetails() {
         return scopeDetails;
     }
 
@@ -160,8 +160,8 @@ public class Proposition implements Serializable {
         if (object instanceof Proposition) {
             final Proposition proposition = (Proposition) object;
             final Map<String, Object> newPropositionContent =
-                    proposition.getItems().get(0).getData();
-            final Map<String, Object> propositionContent = this.getItems().get(0).getData();
+                    proposition.getItems().get(0).getItemData();
+            final Map<String, Object> propositionContent = this.getItems().get(0).getItemData();
             return newPropositionContent.equals(propositionContent);
         } else {
             return false;

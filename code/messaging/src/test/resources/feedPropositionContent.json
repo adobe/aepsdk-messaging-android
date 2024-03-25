@@ -42,7 +42,7 @@
                             "meta": {
                                 "feedName": "testFeed",
                                 "campaignName": "testCampaign",
-                                "surface": "mobileapp://com.feeds.testing/feeds/apifeed"
+                                "surface": "mobileapp://mockPackageName"
                             },
                             "content": {
                                 "title": "Guacamole!",

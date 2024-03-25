@@ -143,21 +143,22 @@ public class MessagingPushPayloadTests {
     // ========================================================================================
     private Map<String, String> getMockData(boolean testingMalformedButtonString) {
         Map<String, String> mockData = new HashMap<>();
-        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, mockTitle);
-        mockData.put(MessagingConstants.Push.PayloadKeys.BODY, mockBody);
-        mockData.put(MessagingConstants.Push.PayloadKeys.SOUND, mockSound);
-        mockData.put(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER, mockBadgeCount);
-        mockData.put(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, mockPriority);
-        mockData.put(MessagingConstants.Push.PayloadKeys.CHANNEL_ID, mockChannelId);
-        mockData.put(MessagingConstants.Push.PayloadKeys.ICON, mockIcon);
-        mockData.put(MessagingConstants.Push.PayloadKeys.IMAGE_URL, mockImageUrl);
-        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, mockActionType);
-        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, mockActionUri);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.TITLE, mockTitle);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.BODY, mockBody);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.SOUND, mockSound);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.BADGE_NUMBER, mockBadgeCount);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, mockPriority);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.CHANNEL_ID, mockChannelId);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.ICON, mockIcon);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.IMAGE_URL, mockImageUrl);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.ACTION_TYPE, mockActionType);
+        mockData.put(MessagingTestConstants.Push.PayloadKeys.ACTION_URI, mockActionUri);
         if (testingMalformedButtonString) {
             mockData.put(
-                    MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockMalformedActionButtons);
+                    MessagingTestConstants.Push.PayloadKeys.ACTION_BUTTONS,
+                    mockMalformedActionButtons);
         } else {
-            mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
+            mockData.put(MessagingTestConstants.Push.PayloadKeys.ACTION_BUTTONS, mockActionButtons);
         }
 
         return mockData;

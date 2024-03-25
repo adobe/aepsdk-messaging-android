@@ -16,11 +16,17 @@ package com.adobe.marketing.mobile.messaging;
  */
 public class MessagingTestConstants {
     public static final String EXTENSION_VERSION = MessagingConstants.EXTENSION_VERSION;
+    static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CACHE_BASE_DIR = "messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String METADATA_PATH = "pathToFile";
+    static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
+    static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
+    static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
+    static final String HTTP_HEADER_ETAG = "Etag";
 
     public static final class EventType {
         public static final String MONITOR = "com.adobe.functional.eventType.monitor";
@@ -36,14 +42,16 @@ public class MessagingTestConstants {
         public static final String MESSAGE_INTERACTION_EVENT = "Messaging interaction event";
         public static final String PUSH_NOTIFICATION_INTERACTION_EVENT = "Push notification interaction event";
         public static final String PUSH_TRACKING_EDGE_EVENT = "Push tracking edge event";
+        public static final String PUSH_TRACKING_STATUS_EVENT = "Push tracking status event";
         public static final String PUSH_PROFILE_EDGE_EVENT = "Push notification profile edge event";
-        public static final String REFRESH_MESSAGES_EVENT = "Refresh in-app messages";
+        public static final String REFRESH_MESSAGES_EVENT = "Retrieve message definitions";
         public static final String UPDATE_PROPOSITIONS = "Update propositions";
         public static final String MESSAGE_PROPOSITIONS_NOTIFICATION = "Message propositions notification";
         public static final String MESSAGE_PROPOSITIONS_RESPONSE = "Message propositions response";
-
+        public static final String ASSURANCE_SPOOFED_IAM_EVENT_NAME = "Rule Consequence Event (Spoof)";
         static final String TRACK_PROPOSITIONS = "Track propositions";
         static final String EVENT_HISTORY_WRITE = "Write IAM event to history";
+        static final String FINALIZE_PROPOSITIONS_RESPONSE = "Finalize propositions response";
 
         private EventName() {
         }
@@ -172,11 +180,14 @@ public class MessagingTestConstants {
             public static final String REFRESH_MESSAGES = "refreshmessages";
             public static final String UPDATE_PROPOSITIONS = "updatepropositions";
             public static final String SURFACES = "surfaces";
+            public static final String ENDING_EVENT_ID = "endingEventId";
             public static final String GET_PROPOSITIONS = "getpropositions";
             public static final String PROPOSITIONS = "propositions";
             public static final String RESPONSE_ERROR = "responseerror";
             static final String TRACK_PROPOSITIONS = "trackpropositions";
-            static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            public static final String PROPOSITION_INTERACTION = "propositioninteraction";
+            public static final String PUSH_NOTIFICATION_TRACKING_STATUS = "pushTrackingStatus";
+            public static final String PUSH_NOTIFICATION_TRACKING_MESSAGE = "pushTrackingStatusMessage";
 
 
             private Messaging() {
@@ -267,6 +278,10 @@ public class MessagingTestConstants {
             public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA = "schema";
             public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_CONTENT = "content";
             public static final String MESSAGE_CONSEQUENCE_DETAIL_KEY_REMOTE_ASSETS = "remoteAssets";
+            public static final String MESSAGE_CONSEQUENCE_TYPE = "type";
+            public static final String MESSAGE_CONSEQUENCE_DETAIL = "detail";
+            public static final String CONSEQUENCE_TRIGGERED = "triggeredconsequence";
+
 
             private RulesEngine() {
             }
@@ -324,6 +339,15 @@ public class MessagingTestConstants {
         }
     }
 
+    final class ConsequenceDetailKeys {
+        static final String ID = "id";
+        static final String SCHEMA = "schema";
+        static final String DATA = "data";
+        static final String CONTENT = "content";
+
+        private ConsequenceDetailKeys() {}
+    }
+
     final class ConsequenceDetailDataKeys {
         static final String FORMAT = "format";
         static final String CONTENT = "content";
@@ -351,6 +375,25 @@ public class MessagingTestConstants {
         static final String SURFACE = "surface";
 
         private MessageFeedKeys() {
+        }
+    }
+
+    public final class Push {
+        public class PayloadKeys {
+            public static final String TITLE = "adb_title";
+            public static final String BODY = "adb_body";
+            public static final String SOUND = "adb_sound";
+            public static final String BADGE_NUMBER = "adb_n_count";
+            public static final String NOTIFICATION_VISIBILITY = "adb_n_visibility";
+            public static final String NOTIFICATION_PRIORITY = "adb_n_priority";
+            public static final String CHANNEL_ID = "adb_channel_id";
+            public static final String ICON = "adb_icon";
+            public static final String IMAGE_URL = "adb_image";
+            public static final String ACTION_TYPE = "adb_a_type";
+            public static final String ACTION_URI = "adb_uri";
+            public static final String ACTION_BUTTONS = "adb_act";
+
+            private PayloadKeys() {}
         }
     }
 }

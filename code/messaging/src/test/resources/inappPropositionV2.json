@@ -1,0 +1,120 @@
+{
+    "id": "c2aa4a73-a534-44c2-baa4-a12980e4bb9e",
+    "scope": "mobileapp://mockPackageName",
+    "scopeDetails": {
+        "decisionProvider": "AJO",
+        "correlationID": "b5095046-7fd7-4961-871f-9d68f2ac335f",
+        "characteristics": {
+            "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6Ik5BIiwibWVzc2FnZUlEIjoiYjUwOTUwNDYtN2ZkNy00OTYxLTg3MWYtOWQ2OGYyZGMzMzVmIiwibWVzc2FnZVB1YmxpY2F0aW9uSUQiOiJiNzFlNDhiYS1mNzY3LTQ5NWItOWQxMS01YzA3MTg4NWNkODkiLCJtZXNzYWdlVHlwZSI6Im1hcmtldGluZyIsImNhbXBhaWduSUQiOiI5YzhlYzAzNS02YjNiLTQ3MGUtOGFlNS1lNTM5YzcxMjM4MDkiLCJjYW1wYWlnblZlcnNpb25JRCI6IjdkZGEyZGM2LTE5MjMtNGU2My1iZWFjLTU0ZGM3ODczNjFlYiIsImNhbXBhaWduQWN0aW9uSUQiOiJjN2MxNDk3ZS1lNWEzLTQ0MjMtYWUzNy1iYTc2ZTFlNDQzNDIifSwibWVzc2FnZVByb2ZpbGUiOnsibWVzc2FnZVByb2ZpbGVJRCI6IjQ0YWQ1NTA3LTZlODItNGY2MS05N2U1LTUzMmNhNmZkMDhhOCIsImNoYW5uZWwiOnsiX2lkIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWxzL3dlYiIsIl90eXBlIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWwtdHlwZXMvd2ViIn19fQ=="
+        },
+        "activity": {
+            "id": "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4423-ae37-ba76e1e44342"
+        }
+    },
+    "items": [
+        {
+            "id": "9d6eff2c-39a7-4aa1-9657-d642e26c5176",
+            "schema": "https://ns.adobe.com/personalization/ruleset-item",
+            "data": {
+                "version": 1,
+                "rules": [
+                    {
+                        "condition": {
+                            "definition": {
+                                "conditions": [
+                                    {
+                                        "definition": {
+                                            "conditions": [
+                                                {
+                                                    "definition": {
+                                                        "key": "~type",
+                                                        "matcher": "eq",
+                                                        "values": [
+                                                            "com.adobe.eventType.generic.track"
+                                                        ]
+                                                    },
+                                                    "type": "matcher"
+                                                },
+                                                {
+                                                    "definition": {
+                                                        "key": "~source",
+                                                        "matcher": "eq",
+                                                        "values": [
+                                                            "com.adobe.eventSource.requestContent"
+                                                        ]
+                                                    },
+                                                    "type": "matcher"
+                                                },
+                                                {
+                                                    "definition": {
+                                                        "key": "action",
+                                                        "matcher": "ex"
+                                                    },
+                                                    "type": "matcher"
+                                                }
+                                            ],
+                                            "logic": "and"
+                                        },
+                                        "type": "group"
+                                    },
+                                    {
+                                        "definition": {
+                                            "key": "action",
+                                            "matcher": "eq",
+                                            "values": [
+                                                "fullscreen"
+                                            ]
+                                        },
+                                        "type": "matcher"
+                                    }
+                                ],
+                                "logic": "and"
+                            },
+                            "type": "group"
+                        },
+                        "consequences": [
+                            {
+                                "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+                                "type": "schema",
+                                "detail": {
+                                    "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+                                    "schema": "https://ns.adobe.com/personalization/message/in-app",
+                                    "data": {
+                                        "publishedDate": 1691541497,
+                                        "expiryDate": 1723163897,
+                                        "meta": {
+                                            "metaKey": "metaValue"
+                                        },
+                                        "mobileParameters": {
+                                            "verticalAlign": "center",
+                                            "dismissAnimation": "bottom",
+                                            "verticalInset": 0,
+                                            "backdropOpacity": 0.2,
+                                            "cornerRadius": 15,
+                                            "gestures": {},
+                                            "horizontalInset": 0,
+                                            "uiTakeover": true,
+                                            "horizontalAlign": "center",
+                                            "width": 100,
+                                            "displayAnimation": "bottom",
+                                            "backdropColor": "#000000",
+                                            "height": 100
+                                        },
+                                        "webParameters": {
+                                            "webParamKey": "webParamValue"
+                                        },
+                                        "remoteAssets": [
+                                            "urlToAnImage"
+                                        ],
+                                        "contentType": "text/html",
+                                        "content": "<html><body>Is this thing even on?</body></html>"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

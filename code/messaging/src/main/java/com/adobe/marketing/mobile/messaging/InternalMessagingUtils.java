@@ -17,7 +17,6 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
-import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -353,37 +352,6 @@ class InternalMessagingUtils {
                 event.getEventData(),
                 MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID,
                 null);
-    }
-
-    // ========================================================================================
-    // feed item type verification using rule consequence object
-    // ========================================================================================
-    static boolean isFeedItem(final RuleConsequence ruleConsequence) {
-        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String schema =
-                DataReader.optString(
-                        ruleDetailMap,
-                        MessagingConstants.EventDataKeys.RulesEngine
-                                .MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA,
-                        "");
-        return schema.equals(MessagingConstants.SchemaValues.SCHEMA_FEED_ITEM);
-    }
-
-    // ========================================================================================
-    // in app type verification using rule consequence object
-    // ========================================================================================
-    static boolean isInApp(final RuleConsequence ruleConsequence) {
-        final Map<String, Object> ruleDetailMap = ruleConsequence.getDetail();
-        final String schema =
-                DataReader.optString(
-                        ruleDetailMap,
-                        MessagingConstants.EventDataKeys.RulesEngine
-                                .MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA,
-                        "");
-        final String consequenceType = ruleConsequence.getType();
-        return schema.equals(MessagingConstants.SchemaValues.SCHEMA_IAM)
-                || consequenceType.equals(
-                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_CJM_VALUE);
     }
 
     // ========================================================================================

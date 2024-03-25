@@ -1,0 +1,13 @@
+{
+    "content": [
+        {
+            "category": "wintersale",
+            "name": "Winter Sale"
+        },
+        {
+            "category": "newarrivals",
+            "name": "New Arrivals"
+        }
+    ],
+    "format": "application/json"
+}

@@ -819,9 +819,9 @@ public class PresentableMessageMapperTests {
                             inAppHistoryData.get(
                                     MessagingTestConstants.EventMask.Keys.TRACKING_ACTION));
                     final String[] mask = {
-                        MessagingConstants.EventMask.Mask.EVENT_TYPE,
-                        MessagingConstants.EventMask.Mask.MESSAGE_ID,
-                        MessagingConstants.EventMask.Mask.TRACKING_ACTION
+                        MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
+                        MessagingTestConstants.EventMask.Mask.MESSAGE_ID,
+                        MessagingTestConstants.EventMask.Mask.TRACKING_ACTION
                     };
                     assertEquals(mask, recordEvent.getMask());
                 });

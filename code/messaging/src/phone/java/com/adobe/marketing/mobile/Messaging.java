@@ -233,8 +233,9 @@ public final class Messaging {
                     public void call(final Event event) {
                         final Map<String, Object> responseEventData = event.getEventData();
 
-                        if (responseEventData == null) {
+                        if (MapUtils.isNullOrEmpty(responseEventData)) {
                             callTrackingCallback(PushTrackingStatus.UNKNOWN_ERROR, callback);
+                            return;
                         }
 
                         try {

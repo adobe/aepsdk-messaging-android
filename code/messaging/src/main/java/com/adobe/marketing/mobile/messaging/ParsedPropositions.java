@@ -75,7 +75,8 @@ public class ParsedPropositions {
                 final PropositionItem firstPropositionItem = proposition.getItems().get(0);
                 switch (firstPropositionItem.getSchema()) {
                     case RULESET:
-                        final JSONObject content = new JSONObject(firstPropositionItem.getData());
+                        final JSONObject content =
+                                new JSONObject(firstPropositionItem.getItemData());
                         final List<LaunchRule> parsedRules =
                                 JSONRulesParser.parse(content.toString(), extensionApi);
                         // iam and feed items will be wrapped in a valid rules engine rule -

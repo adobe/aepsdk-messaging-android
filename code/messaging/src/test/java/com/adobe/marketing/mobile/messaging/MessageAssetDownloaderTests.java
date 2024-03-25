@@ -67,9 +67,9 @@ public class MessageAssetDownloaderTests {
     private HashMap<String, String> metadataMap;
     private static final String assetUrl = "https://www.adobe.com/logo.png";
     private static final String MESSAGES_CACHE =
-            MessagingConstants.CACHE_BASE_DIR
+            MessagingTestConstants.CACHE_BASE_DIR
                     + File.separator
-                    + MessagingConstants.IMAGES_CACHE_SUBDIRECTORY;
+                    + MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY;
 
     @Before
     public void setup() {
@@ -79,7 +79,8 @@ public class MessageAssetDownloaderTests {
                 sha256HashForRemoteUrl + ".12345"; // 12345 is just a random extension.
         metadataMap = new HashMap<>();
         metadataMap.put(
-                MessagingConstants.METADATA_PATH, MESSAGES_CACHE + File.separator + cachedFileName);
+                MessagingTestConstants.METADATA_PATH,
+                MESSAGES_CACHE + File.separator + cachedFileName);
 
         // setup assets for testing
         assets = new ArrayList<>();

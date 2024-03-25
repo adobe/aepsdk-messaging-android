@@ -613,7 +613,7 @@ public class InternalMessagingUtilsTests {
                 new Event.Builder(
                                 "edge personalization event",
                                 EventType.EDGE,
-                                MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+                                MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                         .setEventData(new HashMap())
                         .build();
         assertTrue(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
@@ -625,7 +625,7 @@ public class InternalMessagingUtilsTests {
                 new Event.Builder(
                                 "edge personalization event",
                                 EventType.MESSAGING,
-                                MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+                                MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                         .setEventData(new HashMap())
                         .build();
         assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
@@ -638,7 +638,7 @@ public class InternalMessagingUtilsTests {
                 new Event.Builder(
                                 "edge personalization event",
                                 EventType.EDGE,
-                                MessagingConstants.EventSource.REQUEST_CONTENT)
+                                MessagingTestConstants.EventSource.REQUEST_CONTENT)
                         .setEventData(new HashMap())
                         .build();
         assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
@@ -667,7 +667,7 @@ public class InternalMessagingUtilsTests {
                 new Event.Builder(
                                 "edge personalization event",
                                 EventType.EDGE,
-                                MessagingConstants.EventSource.PERSONALIZATION_DECISIONS)
+                                MessagingTestConstants.EventSource.PERSONALIZATION_DECISIONS)
                         .setEventData(null)
                         .build();
         assertFalse(InternalMessagingUtils.isEdgePersonalizationDecisionEvent(event));
@@ -1015,7 +1015,7 @@ public class InternalMessagingUtilsTests {
                                 new HashMap<String, Object>() {
                                     {
                                         put(
-                                                MessagingConstants.EventDataKeys.Messaging
+                                                MessagingTestConstants.EventDataKeys.Messaging
                                                         .TRACK_PROPOSITIONS,
                                                 false);
                                     }
@@ -1038,7 +1038,7 @@ public class InternalMessagingUtilsTests {
                                 new HashMap<String, Object>() {
                                     {
                                         put(
-                                                MessagingConstants.EventDataKeys.Messaging
+                                                MessagingTestConstants.EventDataKeys.Messaging
                                                         .TRACK_PROPOSITIONS,
                                                 true);
                                     }
@@ -1102,7 +1102,7 @@ public class InternalMessagingUtilsTests {
         // setup
         List<Map<String, Object>> surfaces = new ArrayList<>();
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.SURFACES, surfaces);
+        eventData.put(MessagingTestConstants.EventDataKeys.Messaging.SURFACES, surfaces);
         Event event =
                 new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                         .setEventData(eventData)
@@ -1126,7 +1126,7 @@ public class InternalMessagingUtilsTests {
         surfaces.add(surfaceData1);
         surfaces.add(surfaceData2);
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.SURFACES, surfaces);
+        eventData.put(MessagingTestConstants.EventDataKeys.Messaging.SURFACES, surfaces);
         Event event =
                 new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                         .setEventData(eventData)
@@ -1240,7 +1240,7 @@ public class InternalMessagingUtilsTests {
         // setup
         Map<String, Object> eventData = new HashMap<>();
         eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, "ending-event-id");
+                MessagingTestConstants.EventDataKeys.Messaging.ENDING_EVENT_ID, "ending-event-id");
         Event event =
                 new Event.Builder("event", EventType.MESSAGING, EventSource.REQUEST_CONTENT)
                         .setEventData(eventData)
@@ -1347,7 +1347,8 @@ public class InternalMessagingUtilsTests {
         Mockito.verify(extensionApi).dispatch(eventCaptor.capture());
         Event dispatchedEvent = eventCaptor.getValue();
         assertEquals(
-                MessagingConstants.EventName.PUSH_TRACKING_STATUS_EVENT, dispatchedEvent.getName());
+                MessagingTestConstants.EventName.PUSH_TRACKING_STATUS_EVENT,
+                dispatchedEvent.getName());
         assertEquals(EventType.MESSAGING, dispatchedEvent.getType());
         assertEquals(EventSource.RESPONSE_CONTENT, dispatchedEvent.getSource());
         assertEquals(
@@ -1355,14 +1356,14 @@ public class InternalMessagingUtilsTests {
                 dispatchedEvent
                         .getEventData()
                         .get(
-                                MessagingConstants.EventDataKeys.Messaging
+                                MessagingTestConstants.EventDataKeys.Messaging
                                         .PUSH_NOTIFICATION_TRACKING_STATUS));
         assertEquals(
                 status.getDescription(),
                 dispatchedEvent
                         .getEventData()
                         .get(
-                                MessagingConstants.EventDataKeys.Messaging
+                                MessagingTestConstants.EventDataKeys.Messaging
                                         .PUSH_NOTIFICATION_TRACKING_MESSAGE));
         assertEquals(requestEvent.getUniqueIdentifier(), dispatchedEvent.getResponseID());
     }
@@ -1398,7 +1399,7 @@ public class InternalMessagingUtilsTests {
     public void getSharedStateEcid_returnsNull_whenIdentityMapIsNull() {
         // setup
         Map<String, Object> edgeIdentityState = new HashMap<>();
-        edgeIdentityState.put(MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, null);
+        edgeIdentityState.put(MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, null);
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1412,7 +1413,7 @@ public class InternalMessagingUtilsTests {
         // setup
         Map<String, Object> edgeIdentityState = new HashMap<>();
         edgeIdentityState.put(
-                MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, new HashMap<>());
+                MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, new HashMap<>());
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1426,9 +1427,9 @@ public class InternalMessagingUtilsTests {
         // setup
         Map<String, Object> edgeIdentityState = new HashMap<>();
         Map<String, Object> identityMap = new HashMap<>();
-        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, null);
+        identityMap.put(MessagingTestConstants.SharedState.EdgeIdentity.ECID, null);
         edgeIdentityState.put(
-                MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+                MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1442,9 +1443,9 @@ public class InternalMessagingUtilsTests {
         // setup
         Map<String, Object> edgeIdentityState = new HashMap<>();
         Map<String, Object> identityMap = new HashMap<>();
-        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, new ArrayList<>());
+        identityMap.put(MessagingTestConstants.SharedState.EdgeIdentity.ECID, new ArrayList<>());
         edgeIdentityState.put(
-                MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+                MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1459,10 +1460,10 @@ public class InternalMessagingUtilsTests {
         Map<String, Object> edgeIdentityState = new HashMap<>();
         Map<String, Object> identityMap = new HashMap<>();
         identityMap.put(
-                MessagingConstants.SharedState.EdgeIdentity.ECID,
+                MessagingTestConstants.SharedState.EdgeIdentity.ECID,
                 Collections.singletonList(new HashMap<>()));
         edgeIdentityState.put(
-                MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+                MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1477,12 +1478,12 @@ public class InternalMessagingUtilsTests {
         Map<String, Object> edgeIdentityState = new HashMap<>();
         Map<String, Object> identityMap = new HashMap<>();
         Map<String, Object> ecidMap = new HashMap<>();
-        ecidMap.put(MessagingConstants.SharedState.EdgeIdentity.ID, "ecid-value");
+        ecidMap.put(MessagingTestConstants.SharedState.EdgeIdentity.ID, "ecid-value");
         List<Map<String, Object>> ecids = new ArrayList<>();
         ecids.add(ecidMap);
-        identityMap.put(MessagingConstants.SharedState.EdgeIdentity.ECID, ecids);
+        identityMap.put(MessagingTestConstants.SharedState.EdgeIdentity.ECID, ecids);
         edgeIdentityState.put(
-                MessagingConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
+                MessagingTestConstants.SharedState.EdgeIdentity.IDENTITY_MAP, identityMap);
 
         // test
         String result = InternalMessagingUtils.getSharedStateEcid(edgeIdentityState);
@@ -1594,7 +1595,7 @@ public class InternalMessagingUtilsTests {
     // Test utilities
     // ========================================================================================
     private JSONObject getValidRuleJson() {
-        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionContent.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
         try {
             return new JSONObject(rulesJson);
         } catch (JSONException e) {

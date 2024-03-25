@@ -54,7 +54,7 @@ public class PropositionInfoTests {
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
         propositionItems.add(propositionItem);
     }
@@ -66,10 +66,7 @@ public class PropositionInfoTests {
         Proposition proposition =
                 new Proposition("id", "mobileapp://mockScope", scopeDetails, propositionItems);
         // test
-        try {
-            propositionInfo = PropositionInfo.createFromProposition(proposition);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.createFromProposition(proposition);
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -82,10 +79,7 @@ public class PropositionInfoTests {
     @Test
     public void testCreatePropositionInfoFromProposition_nullProposition() {
         // test
-        try {
-            propositionInfo = PropositionInfo.createFromProposition(null);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.createFromProposition(null);
         // verify
         assertNull(propositionInfo);
     }
@@ -98,10 +92,7 @@ public class PropositionInfoTests {
         propositionInfoMap.put("scope", "mobileapp://mockScope");
         propositionInfoMap.put("scopeDetails", scopeDetails);
         // test
-        try {
-            propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.create(propositionInfoMap);
         // verify
         assertNotNull(propositionInfo);
         assertEquals("id", propositionInfo.id);
@@ -119,10 +110,7 @@ public class PropositionInfoTests {
         propositionInfoMap.put("scope", "mobileapp://mockScope");
         propositionInfoMap.put("scopeDetails", scopeDetails);
         // test
-        try {
-            propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.create(propositionInfoMap);
         // verify
         assertNull(propositionInfo);
     }
@@ -135,10 +123,7 @@ public class PropositionInfoTests {
         propositionInfoMap.put("scope", null);
         propositionInfoMap.put("scopeDetails", scopeDetails);
         // test
-        try {
-            propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.create(propositionInfoMap);
         // verify
         assertNull(propositionInfo);
     }
@@ -151,10 +136,7 @@ public class PropositionInfoTests {
         propositionInfoMap.put("scope", "mobileapp://mockScope");
         propositionInfoMap.put("scopeDetails", null);
         // test
-        try {
-            propositionInfo = PropositionInfo.create(propositionInfoMap);
-        } catch (Exception e) {
-        }
+        propositionInfo = PropositionInfo.create(propositionInfoMap);
         // verify
         assertNull(propositionInfo);
     }

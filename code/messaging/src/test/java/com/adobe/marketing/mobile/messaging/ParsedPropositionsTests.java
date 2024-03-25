@@ -34,7 +34,7 @@ public class ParsedPropositionsTests {
     private Proposition mockInAppProposition;
 
     private Surface mockInAppSurface;
-    private final String mockInAppConsequenceId = "mockInAppConsequenceId";
+    private final String mockInAppConsequenceId = "6ac78390-84e3-4d35-b798-8e7080e69a67";
 
     private PropositionItem mockFeedPropositionItem;
     private Proposition mockFeedProposition;
@@ -62,7 +62,8 @@ public class ParsedPropositionsTests {
 
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
         mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
-        inappPropositionContent = MessagingTestUtils.getMapFromFile("inAppRule.json");
+        inappPropositionContent =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2Content.json");
         mockInAppPropositionItem =
                 new PropositionItem("inapp2", SchemaType.RULESET, inappPropositionContent);
         mockInAppProposition =
@@ -92,7 +93,7 @@ public class ParsedPropositionsTests {
 
         mockCodeBasedSurface = Surface.fromUriString("mobileapp://mockPackageName/codebased");
         mockCodeBasedContent =
-                MessagingTestUtils.getMapFromFile("codeBasedPropositionContent.json");
+                MessagingTestUtils.getMapFromFile("codeBasedPropositionHtmlContent.json");
         mockCodeBasedPropositionItem =
                 new PropositionItem("codebased", SchemaType.JSON_CONTENT, mockCodeBasedContent);
         mockCodeBasedProposition =
@@ -303,7 +304,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(1, parsedPropositions.propositionsToCache.size());
         Proposition codeBasedProp =
                 parsedPropositions.propositionsToCache.get(mockCodeBasedSurface).get(0);
-        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getData());
+        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getItemData());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
@@ -345,7 +346,7 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_NoPropositionItems()
+    public void test_parsedPropositionConstructor_EmptyPropositionItems()
             throws MessageRequiredFieldMissingException {
         // setup
         mockInAppPropositionItem =
