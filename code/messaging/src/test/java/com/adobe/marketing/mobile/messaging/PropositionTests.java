@@ -159,7 +159,7 @@ public class PropositionTests {
         // different as the proposition is created from a map
         for (PropositionItem item : proposition.getItems()) {
             assertEquals(propositionItems.get(0).getItemId(), item.getItemId());
-            assertEquals(propositionItems.get(0).getData(), item.getData());
+            assertEquals(propositionItems.get(0).getItemData(), item.getItemData());
             assertEquals(propositionItems.get(0).getSchema(), item.getSchema());
             assertNotNull(item.getProposition());
         }

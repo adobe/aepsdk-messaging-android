@@ -160,8 +160,8 @@ public class Proposition implements Serializable {
         if (object instanceof Proposition) {
             final Proposition proposition = (Proposition) object;
             final Map<String, Object> newPropositionContent =
-                    proposition.getItems().get(0).getData();
-            final Map<String, Object> propositionContent = this.getItems().get(0).getData();
+                    proposition.getItems().get(0).getItemData();
+            final Map<String, Object> propositionContent = this.getItems().get(0).getItemData();
             return newPropositionContent.equals(propositionContent);
         } else {
             return false;

@@ -91,7 +91,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getItemId());
         assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
-        assertEquals(htmlContentMap, propositionItem.getData());
+        assertEquals(htmlContentMap, propositionItem.getItemData());
     }
 
     @Test(expected = MessageRequiredFieldMissingException.class)
@@ -103,7 +103,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getItemId());
         assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
-        assertNull(propositionItem.getData());
+        assertNull(propositionItem.getItemData());
     }
 
     @Test(expected = MessageRequiredFieldMissingException.class)
@@ -115,7 +115,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getItemId());
         assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
-        assertNull(propositionItem.getData());
+        assertNull(propositionItem.getItemData());
     }
 
     @Test(expected = MessageRequiredFieldMissingException.class)
@@ -126,7 +126,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getItemId());
         assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
-        assertNull(propositionItem.getData());
+        assertNull(propositionItem.getItemData());
     }
 
     @Test(expected = MessageRequiredFieldMissingException.class)
@@ -138,7 +138,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(testId, propositionItem.getItemId());
         assertEquals(SchemaType.HTML_CONTENT, propositionItem.getSchema());
-        assertNull(propositionItem.getData());
+        assertNull(propositionItem.getItemData());
     }
 
     @Test
@@ -546,7 +546,7 @@ public class PropositionItemTests {
                 eventDataMapForJSON.get(MessagingTestConstants.ConsequenceDetailKeys.ID),
                 propositionItem.getItemId());
         assertEquals(SchemaType.JSON_CONTENT, propositionItem.getSchema());
-        assertEquals(jsonContentMap, propositionItem.getData());
+        assertEquals(jsonContentMap, propositionItem.getItemData());
     }
 
     @Test
@@ -616,7 +616,7 @@ public class PropositionItemTests {
         assertNotNull(propositionItem);
         assertEquals(ruleConsequence.getDetail().get("id"), propositionItem.getItemId());
         assertEquals(SchemaType.INAPP, propositionItem.getSchema());
-        assertEquals(ruleConsequence.getDetail().get("data"), propositionItem.getData());
+        assertEquals(ruleConsequence.getDetail().get("data"), propositionItem.getItemData());
     }
 
     @Test

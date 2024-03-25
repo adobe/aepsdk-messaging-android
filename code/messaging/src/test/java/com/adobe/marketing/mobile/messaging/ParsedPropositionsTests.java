@@ -304,7 +304,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(1, parsedPropositions.propositionsToCache.size());
         Proposition codeBasedProp =
                 parsedPropositions.propositionsToCache.get(mockCodeBasedSurface).get(0);
-        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getData());
+        Assert.assertEquals(mockCodeBasedContent, codeBasedProp.getItems().get(0).getItemData());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
     }
