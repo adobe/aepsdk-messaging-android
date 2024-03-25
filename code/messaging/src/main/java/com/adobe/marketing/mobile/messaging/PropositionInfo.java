@@ -37,8 +37,7 @@ class PropositionInfo implements Serializable {
     }
 
     private PropositionInfo(
-            final String id, final String scope, final Map<String, Object> scopeDetails)
-            throws Exception {
+            final String id, final String scope, final Map<String, Object> scopeDetails) {
         this.id = id;
         this.scope = scope;
         this.scopeDetails = scopeDetails;
