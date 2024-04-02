@@ -79,7 +79,7 @@ public class MessagingCacheUtilitiesTests {
 
         // setup mock cached PropositionPayloads
         final List<Map<String, Object>> testPayload = new ArrayList<>();
-        testPayload.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        testPayload.add(MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json"));
         propositionPayload = MessagingTestUtils.getPropositionPayloadsFromMaps(testPayload).get(0);
 
         ByteArrayOutputStream propositionPayloadBaos = null;
@@ -119,7 +119,7 @@ public class MessagingCacheUtilitiesTests {
         scopeDetails.put("characteristics", characteristics);
         scopeDetails.put("activity", activity);
 
-        propositionItemMap = MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
         propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
@@ -187,8 +187,8 @@ public class MessagingCacheUtilitiesTests {
                 () -> {
                     // setup
                     when(mockCacheService.get(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
                             .thenReturn(null);
 
                     // test
@@ -205,8 +205,8 @@ public class MessagingCacheUtilitiesTests {
                 () -> {
                     // setup
                     when(mockCacheService.get(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY)))
                             .thenReturn(mockCacheResult);
 
                     // test
@@ -414,7 +414,7 @@ public class MessagingCacheUtilitiesTests {
                     when(mockCacheResult.getData())
                             .thenReturn(
                                     MessagingTestUtils.convertResourceFileToInputStream(
-                                            "invalid.json"));
+                                            "invalidRules.json"));
 
                     // test
                     final Map<Surface, List<Proposition>> retrievedPayload =
@@ -447,8 +447,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(1))
                             .set(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                     any());
                 });
     }
@@ -475,8 +475,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(0))
                             .set(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                     any());
                 });
     }
@@ -501,8 +501,8 @@ public class MessagingCacheUtilitiesTests {
                     // verify cache cleared as no propositions were present
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
                 });
     }
 
@@ -568,8 +568,8 @@ public class MessagingCacheUtilitiesTests {
                         // verify
                         verify(mockCacheService, times(1))
                                 .set(
-                                        eq(MessagingConstants.CACHE_BASE_DIR),
-                                        eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
+                                        eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                        eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY),
                                         any());
                     }
                 });
@@ -585,12 +585,12 @@ public class MessagingCacheUtilitiesTests {
                     // verify
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.PROPOSITIONS_CACHE_SUBDIRECTORY));
                     verify(mockCacheService, times(1))
                             .remove(
-                                    eq(MessagingConstants.CACHE_BASE_DIR),
-                                    eq(MessagingConstants.IMAGES_CACHE_SUBDIRECTORY));
+                                    eq(MessagingTestConstants.CACHE_BASE_DIR),
+                                    eq(MessagingTestConstants.IMAGES_CACHE_SUBDIRECTORY));
                 });
     }
 }

@@ -40,7 +40,7 @@ public class MessagingUtilsTests {
     public void setup() throws MessageRequiredFieldMissingException {
         mockSurface = Surface.fromUriString("mobileapp://mockApp/feeds/testFeed");
         final Map<String, Object> propositionItemMap =
-                MessagingTestUtils.getMapFromFile("propositionItemFeed.json");
+                MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         final PropositionItem mockPropositionItem =
                 PropositionItem.fromEventData(propositionItemMap);
         Proposition mockProposition =
@@ -76,7 +76,7 @@ public class MessagingUtilsTests {
                             }
                         });
         Map<String, Object> propositionItemMap2 =
-                MessagingTestUtils.getMapFromFile("propositionItemFeed2.json");
+                MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
         PropositionItem propositionItemToAdd2 = PropositionItem.fromEventData(propositionItemMap2);
         mockPropositionToAdd2 =
                 new Proposition(

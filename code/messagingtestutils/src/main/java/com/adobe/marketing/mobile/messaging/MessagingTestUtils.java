@@ -299,7 +299,7 @@ public class MessagingTestUtils {
         return xdmMap;
     }
 
-    static List<PropositionPayload> getPropositionPayloadsFromMaps(final List<Map<String, Object>> payloads) throws Exception {
+    static List<PropositionPayload> getPropositionPayloadsFromMaps(final List<Map<String, Object>> payloads) {
         final List<PropositionPayload> propositionPayloads = new ArrayList<>();
         for (final Map<String, Object> payload : payloads) {
             if (payload != null) {
@@ -334,190 +334,73 @@ public class MessagingTestUtils {
     }
 
     static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
-        final Random random = new Random();
-        if (config.count <= 0) {
-            return null;
-        }
-        ArrayList<Map<String, Object>> items = new ArrayList<>();
-        Map<String, Object> scopeDetails = new HashMap<>();
-        int count;
-        for (count = 0; count < config.count; count++) {
-            Map<String, Object> item = new HashMap<>();
-            Map<String, Object> data = new HashMap<>();
-            Map<String, Object> characteristics = new HashMap<>();
-            Map<String, Object> cjmEvent = new HashMap<>();
-            Map<String, Object> messageExecution = new HashMap<>();
-            item.put("schema", "https://ns.adobe.com/personalization/ruleset-item");
-            item.put("id", "testItemId" + count);
-            messageExecution.put("messageExecutionID", "testExecutionId");
-            cjmEvent.put("messageExecution", messageExecution);
-            characteristics.put("cjmEvent", cjmEvent);
-            scopeDetails.put("scopeDetails", characteristics);
-            final int randomInt = random.nextInt(999999);
-            data.put("id", "a96f091a-d3c6-46e0-84e0-1059d9" + randomInt);
-            data.put("content", "{\"version\": 1 , " + (config.isMissingRulesKey ? "\"invalid\"" : "\"rules\"") + ": [{\"condition\":{\"type\":\"matcher\",\"definition\":{\"key\":\"isLoggedIn" + count + "\",\"matcher\":\"eq\",\"values\":[\"true\"]}},\"consequences\":[{" + (config.isMissingMessageId ? "" : "\"id\":\"fa99415e-dc8b-478a-84d2-21f67d" + randomInt + "\",") + (config.isMissingMessageType ? "" : "\"type\":\"cjmiam\",") + (config.isMissingMessageDetail ? "" : "\"detail\":{\"mobileParameters\":{\"schemaVersion\":\"0.0.1\",\"width\":100,\"height\":100,\"verticalAlign\":\"center\",\"verticalInset\":0,\"horizontalAlign\":\"center\",\"horizontalInset\":0,\"uiTakeover\":true,\"displayAnimation\":\"bottom\",\"dismissAnimation\":\"bottom\",\"gestures\":{\"swipeDown\":\"adbinapp://dismiss?interaction=swipeDown\",\"swipeUp\":\"adbinapp://dismiss?interaction=swipeUp\"}},") + (config.hasHtmlPayloadMissing ? "" : "\"html\":\"<html><head></head><body>Hello from InApp campaign: [CIT]::inapp::LqhnZy7y1Vo4EEWciU5qK</body></html>\",") + "\"remoteAssets\":[\"https://www.adobe.com/adobe.png\"]}}]}]}");
-            item.put("data", data);
-            items.add(item);
-        }
-        Map<String, Object> messagePayload = new HashMap<>();
 
-        // scope details modification
-        if (!config.isMissingScopeDetails) {
-            messagePayload.put("scopeDetails", scopeDetails);
-        }
-
-        // scope modification
-        if (!config.noValidAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://mockPackageName");
-        } else if (config.nonMatchingAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://invalidId");
-        }
-
-        if (config.isMissingScope) {
-            messagePayload.remove("scope");
-        }
-
-        messagePayload.put("items", items);
-        messagePayload.put("id", "testResponseId" + count);
         List<Map<String, Object>> payload = new ArrayList<>();
-        if (!config.hasEmptyPayload) {
-            payload.add(messagePayload);
+        if (config.hasEmptyPayload) {
+            return payload;
+        }
+
+        for (int count = 0; count < config.count; count++) {
+            Map<String, Object> iamProposition = getMapFromFile("inappPropositionV2.json");
+
+            // items modification
+            if (config.isMissingItems) {
+                iamProposition.remove("items");
+            }
+
+            // scope details modification
+            if (config.isMissingScopeDetails) {
+                iamProposition.remove("scopeDetails");
+            }
+
+            // scope modification
+            if (config.noValidAppSurfaceInPayload) {
+                iamProposition.remove("scope");
+            } else if (config.nonMatchingAppSurfaceInPayload) {
+                iamProposition.put("scope", "mobileapp://invalidId");
+            }
+
+            // id modification
+            if (config.isMissingMessageId) {
+                iamProposition.remove("id");
+            }
+
+            payload.add(iamProposition);
         }
         return payload;
     }
 
     static List<Map<String, Object>> generateFeedPayload(final MessageTestConfig config) {
-        if (config.count <= 0) {
-            return null;
-        }
-        ArrayList<Map<String, Object>> items = new ArrayList<>();
-        Map<String, Object> scopeDetails = new HashMap<>();
-
-        Map<String, Object> item = new HashMap<>();
-        Map<String, Object> data = new HashMap<>();
-        Map<String, Object> characteristics = new HashMap<>();
-        Map<String, Object> cjmEvent = new HashMap<>();
-        Map<String, Object> messageExecution = new HashMap<>();
-
-        // generate consequences containing "x = count" number of feed items
-        List<JSONArray> consequences = new ArrayList<>();
-        JSONArray array;
-        try {
-            for (int i = 0; i < config.count; i++) {
-                array = new JSONArray();
-                array.put(new JSONObject("{\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
-                        "\"type\": \"schema\",\n" +
-                        "\"detail\": {\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
-                        "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
-                        "\"data\": {\n" +
-                        "\"expiryDate\": 1723163897,\n" +
-                        "\"meta\": {\n" +
-                        "\"feedName\": \"apifeed\",\n" +
-                        "\"campaignName\": \"testCampaign\",\n" +
-                        "\"surface\": \"mobileapp://com.adobe.sampleApp/feed/promos\"\n" +
-                        "},\n" +
-                        "\"content\": {\n" +
-                        "\"body\": \"testBody\",\n" +
-                        "\"title\": \"testTitle\",\n" +
-                        "\"imageUrl\": \"https://someimage" + i + ".png\",\n" +
-                        "\"actionTitle\": \"testActionTitle\",\n" +
-                        "\"actionUrl\": \"https://someurl.com\",\n" +
-                        "},\n" +
-                        "\"contentType\": \"application/json\",\n" +
-                        "\"publishedDate\": 1691541497\n" +
-                        "}\n" +
-                        "}\n" +
-                        "}"));
-                consequences.add(array);
-            }
-
-        item.put("schema", "https://ns.adobe.com/personalization/ruleset-item");
-        item.put("id", "testItemId");
-        messageExecution.put("messageExecutionID", "testExecutionId");
-        cjmEvent.put("messageExecution", messageExecution);
-        characteristics.put("cjmEvent", cjmEvent);
-        scopeDetails.put("scopeDetails", characteristics);
-        JSONArray rulesArray = new JSONArray();
-            for (int i = 0; i < config.count; i++) {
-                rulesArray.put(i, new JSONObject("{ \n" +
-                        "    \"condition\": {\n" +
-                        "      \"type\": \"group\",\n" +
-                        "      \"definition\": {\n" +
-                        "        \"logic\": \"and\",\n" +
-                        "        \"conditions\": [{\n" +
-                        "            \"definition\": {\n" +
-                        "              \"key\": \"action\",\n" +
-                        "              \"matcher\": \"eq\",\n" +
-                        "              \"values\": [\n" +
-                        "                \"feed\"\n" +
-                        "              ]\n" +
-                        "            },\n" +
-                        "            \"type\": \"matcher\"\n" +
-                        "          },\n" +
-                        "          {\n" +
-                        "            \"type\": \"matcher\",\n" +
-                        "            \"definition\": {\n" +
-                        "              \"key\": \"~timestampu\",\n" +
-                        "              \"matcher\": \"ge\",\n" +
-                        "              \"values\": [\n" +
-                        "                1680555536\n" +
-                        "              ]\n" +
-                        "            }\n" +
-                        "          },\n" +
-                        "          {\n" +
-                        "            \"type\": \"matcher\",\n" +
-                        "            \"definition\": {\n" +
-                        "              \"key\": \"~timestampu\",\n" +
-                        "              \"matcher\": \"le\",\n" +
-                        "              \"values\": [\n" +
-                        "                1790873200\n" +
-                        "              ]\n" +
-                        "            }\n" +
-                        "          }\n" +
-                        "        ]\n" +
-                        "      }\n" +
-                        "    },\n" +
-                        "    \"consequences\":" +
-                        consequences.get(i) +
-                        " }\n"));
-            }
-        data.put("version", 1);
-        data.put("rules", rulesArray);
-
-        item.put("data", data);
-        items.add(item);
-
-        } catch (JSONException jsonException) {
-            Log.debug("MessagingTestUtils", "generateFeedPayload", "exception occurred when creating feed consequences: %s", jsonException.getLocalizedMessage());
-        }
-
-        Map<String, Object> messagePayload = new HashMap<>();
-
-        // scope details modification
-        if (!config.isMissingScopeDetails) {
-            messagePayload.put("scopeDetails", scopeDetails);
-        }
-
-        // scope modification
-        if (!config.noValidAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://mockPackageName");
-        }
-
-        if (config.nonMatchingAppSurfaceInPayload) {
-            messagePayload.put("scope", "mobileapp://invalidId");
-        }
-
-        if (config.isMissingScope) {
-            messagePayload.remove("scope");
-        }
-
-        messagePayload.put("items", items);
-        messagePayload.put("id", "testResponseId");
         List<Map<String, Object>> payload = new ArrayList<>();
-        if (!config.hasEmptyPayload) {
-            payload.add(messagePayload);
+        if (config.hasEmptyPayload) {
+            return payload;
+        }
+        for (int i = 0; i < config.count; i++) {
+            Map<String, Object> feedProposition = getMapFromFile("feedProposition.json");
+
+            // items modification
+            if (config.isMissingItems) {
+                feedProposition.remove("items");
+            }
+
+            // scope details modification
+            if (config.isMissingScopeDetails) {
+                feedProposition.remove("scopeDetails");
+            }
+
+            // scope modification
+            if (config.noValidAppSurfaceInPayload) {
+                feedProposition.remove("scope");
+            } else if (config.nonMatchingAppSurfaceInPayload) {
+                feedProposition.put("scope", "mobileapp://invalidId");
+            }
+
+            // id modification
+            if (config.isMissingMessageId) {
+                feedProposition.remove("id");
+            }
+
+            payload.add(feedProposition);
         }
         return payload;
     }
@@ -671,7 +554,7 @@ public class MessagingTestUtils {
         for (int i = 0; i < size; i++) {
             try {
                 JSONObject feedDetails = new JSONObject("{\n" +
-                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf" + i + "\",\n" +
+                        "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf\",\n" +
                         "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
                         "\"data\": {\n" +
                         "\"expiryDate\": 1723163897,\n" +
@@ -692,7 +575,7 @@ public class MessagingTestUtils {
                         "}\n" +
                         "}");
                 Map<String, Object> detail = JSONUtils.toMap(feedDetails);
-                RuleConsequence feedConsequence = new RuleConsequence("183639c4-cb37-458e-a8ef-4e130d767ebf" + i, MessagingConstants.MessageFeedValues.SCHEMA, detail);
+                RuleConsequence feedConsequence = new RuleConsequence("183639c4-cb37-458e-a8ef-4e130d767ebf", MessagingTestConstants.ConsequenceDetailKeys.SCHEMA, detail);
                 feedConsequences.add(feedConsequence);
             } catch (JSONException jsonException) {
                 fail(jsonException.getMessage());
