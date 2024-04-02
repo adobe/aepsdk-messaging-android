@@ -49,12 +49,6 @@ android {
 
 dependencies {
     implementation("com.adobe.marketing.mobile:messaging:3.0.0")
-    implementation("com.adobe.marketing.mobile:places:3.0.0")
-    implementation("com.adobe.marketing.mobile:target:3.0.0")
-    implementation("com.adobe.marketing.mobile:campaign:3.0.0")
-    implementation("com.adobe.marketing.mobile:optimize:3.0.0")
-
-
     implementation("com.adobe.marketing.mobile:core:3.0.0")
     implementation("com.adobe.marketing.mobile:lifecycle:3.0.0")
     implementation("com.adobe.marketing.mobile:assurance:3.0.0")
