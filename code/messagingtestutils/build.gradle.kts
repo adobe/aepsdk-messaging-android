@@ -37,7 +37,7 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion-SNAPSHOT")
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7")
     implementation("androidx.test.ext:junit:1.1.5")
