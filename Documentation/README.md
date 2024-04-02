@@ -1,11 +1,6 @@
 #  AEPMessage Documentation
 
 ### Prerequisites
-
-- Code-based Experiences (Beta)
-  - [Getting started](./sources/exd-cbe-beta/getting-started.md)
-  - [APIs usage](./sources/exd-cbe-beta/apis-usage.md)
-  - [Test app setup](./sources/exd-cbe-beta/testapp-setup.md)
 - Push Messaging
   - Enable push notifications in your app by [adding the Firebase dependency.](https://firebase.google.com/docs/cloud-messaging/android/client)
 - Push and In-app Messaging
@@ -14,7 +9,8 @@
 
 ### Getting started with AEPMessaging Extension
 
-- [Setup Sdk](./sources/setup-sdk.md)
+- [Getting started](./sources/getting-started.md)
+- [Test app setup](./sources/testapp-setup.md)
 - [API usage](./sources/api-usage.md)
 - [Handling the received push payload](./sources/messaging-push-payload.md)
 
@@ -34,5 +30,6 @@
 
 - [Message](./sources/enum-public-classes/class-message.md)
 - [MessagingEdgeEventType](./sources/enum-public-classes/enum-messaging-edge-event-type.md)
+- [Message Feed and Code Based Experiences](./sources/enum-public-classes/message-feed-and-code-based-experiences.md)
 - [MessagingPushPayload](./sources/enum-public-classes/messaging-push-payload.md)
 - [PushTrackingStatus](./sources/enum-public-classes/enum-push-tracking-status.md)

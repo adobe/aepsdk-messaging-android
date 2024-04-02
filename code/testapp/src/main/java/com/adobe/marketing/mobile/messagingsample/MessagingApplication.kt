@@ -19,7 +19,6 @@ import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.LoggingMode
 import com.adobe.marketing.mobile.Lifecycle
 import com.adobe.marketing.mobile.edge.identity.Identity
-import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/aade5cbb52e4/launch-365a8d4bb1e7-development"
@@ -37,17 +36,6 @@ class MessagingApplication : Application() {
             MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             MobileCore.lifecycleStart(null)
             Assurance.startSession(ASSURANCE_SESSION_ID)
-        }
-
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            // Log and toast
-            if (task.isSuccessful) {
-                // Get new FCM registration token
-                val token = task.result
-                print("MessagingApplication Firebase token :: $token")
-                // Syncing the push token with experience platform
-                MobileCore.setPushIdentifier(token)
-            }
         }
     }
 }
