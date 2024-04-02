@@ -89,7 +89,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
      */
-    @NonNull public Map<String, Object> getData() {
+    @NonNull public Map<String, Object> getItemData() {
         return itemData;
     }
 

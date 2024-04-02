@@ -32,7 +32,6 @@ import com.adobe.marketing.mobile.util.UrlUtils;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -454,24 +453,13 @@ class EdgePersonalizationResponseHandler {
                 "Processing propositions from personalization:decisions network response for event"
                         + " %s.",
                 requestEventId);
-        updateInProgressPropositionsWithEvent(edgeResponseEvent);
-    }
 
-    private void updateInProgressPropositionsWithEvent(final Event event) {
-        final String requestEventId = InternalMessagingUtils.getRequestEventId(event);
-        if (StringUtils.isNullOrEmpty(requestEventId)) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Ignoring personalization:decisions response with no requesting Event ID.");
-            return;
-        }
-
+        // update in progress propositions
         // convert the payload into a list of Proposition(s)
         final List<Map<String, Object>> payloads =
                 DataReader.optTypedListOfMap(
                         Object.class,
-                        event.getEventData(),
+                        edgeResponseEvent.getEventData(),
                         MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PAYLOAD,
                         null);
         if (MessagingUtils.isNullOrEmpty(payloads)) {
@@ -481,17 +469,9 @@ class EdgePersonalizationResponseHandler {
                     "Ignoring personalization:decisions response with no propositions.");
             return;
         }
-        List<Proposition> propositions = null;
-        try {
-            propositions = InternalMessagingUtils.getPropositionsFromPayloads(payloads);
-        } catch (final Exception exception) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Unable to create propositions from the AJO personalization payload, an"
-                            + " exception occurred: %s.",
-                    exception.getLocalizedMessage());
-        }
+        List<Proposition> propositions =
+                InternalMessagingUtils.getPropositionsFromPayloads(payloads);
+
         if (MessagingUtils.isNullOrEmpty(propositions)) {
             Log.trace(
                     MessagingConstants.LOG_TAG,
@@ -542,12 +522,8 @@ class EdgePersonalizationResponseHandler {
         // any requested surface that is absent from the response needs to be removed from cache and
         // persistence
         final Set<Surface> returnedSurfaces = inProgressPropositions.keySet();
-        final List<Surface> surfacesToRemove = new ArrayList<>();
-        for (final Surface surface : returnedSurfaces) {
-            if (!requestedSurfaces.contains(surface)) {
-                surfacesToRemove.add(surface);
-            }
-        }
+        final List<Surface> surfacesToRemove = new ArrayList<>(requestedSurfaces);
+        surfacesToRemove.removeAll(returnedSurfaces);
 
         // update persistence, reporting data cache, and finally rules engine for in-app messages
         // order matters here because the rules engine must be a full replace, and when we update
@@ -659,11 +635,9 @@ class EdgePersonalizationResponseHandler {
         final Map<String, PropositionInfo> tempPropositionInfoMap = new HashMap<>(propositionInfo);
         for (final Map.Entry<String, PropositionInfo> entry : tempPropositionInfoMap.entrySet()) {
             if (surfacesToRemove.contains(Surface.fromUriString(entry.getValue().scope))) {
-                tempPropositionInfoMap.remove(entry.getKey());
+                propositionInfo.remove(entry.getKey());
             }
         }
-
-        propositionInfo = tempPropositionInfoMap;
     }
 
     @SuppressWarnings("NestedForDepth")
@@ -858,9 +832,9 @@ class EdgePersonalizationResponseHandler {
     }
 
     @VisibleForTesting
-    void setMessagesRequestEventId(final String messagesRequestEventId) {
-        requestedSurfacesForEventId.put(
-                messagesRequestEventId, Collections.singletonList(new Surface()));
+    void setMessagesRequestEventId(
+            final String messagesRequestEventId, final List<Surface> surfaceList) {
+        requestedSurfacesForEventId.put(messagesRequestEventId, surfaceList);
     }
 
     @VisibleForTesting

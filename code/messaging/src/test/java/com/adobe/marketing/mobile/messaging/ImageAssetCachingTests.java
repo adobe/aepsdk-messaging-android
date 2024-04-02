@@ -82,9 +82,9 @@ public class ImageAssetCachingTests {
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
             Map<String, String> metaData = new HashMap<>();
-            metaData.put(MessagingConstants.HTTP_HEADER_ETAG, "etag");
-            metaData.put(MessagingConstants.HTTP_HEADER_LAST_MODIFIED, "lastModified");
-            metaData.put(MessagingConstants.METADATA_PATH, "testCachedAssetPath");
+            metaData.put(MessagingTestConstants.HTTP_HEADER_ETAG, "etag");
+            metaData.put(MessagingTestConstants.HTTP_HEADER_LAST_MODIFIED, "lastModified");
+            metaData.put(MessagingTestConstants.METADATA_PATH, "testCachedAssetPath");
             when(mockCacheResult.getMetadata()).thenReturn(metaData);
             when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
             when(mockCacheService.set(anyString(), anyString(), any(CacheEntry.class)))

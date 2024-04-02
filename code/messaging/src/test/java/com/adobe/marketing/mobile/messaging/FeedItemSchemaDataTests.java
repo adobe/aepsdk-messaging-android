@@ -44,7 +44,7 @@ public class FeedItemSchemaDataTests {
             throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
-        schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.APPLICATION_JSON);
+        schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
         schemaData.put(CONTENT, new JSONObject().put("key", "value"));
         schemaData.put(PUBLISHED_DATE, 123456789);
         schemaData.put(EXPIRY_DATE, 987654321);
@@ -66,7 +66,7 @@ public class FeedItemSchemaDataTests {
     public void constructor_setsAllFieldsCorrectly_whenContentTypeIsString() throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
-        schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.TEXT_PLAIN);
+        schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.TEXT_PLAIN);
         schemaData.put(CONTENT, "content");
         schemaData.put(PUBLISHED_DATE, 123456789);
         schemaData.put(EXPIRY_DATE, 987654321);
@@ -142,7 +142,7 @@ public class FeedItemSchemaDataTests {
             throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
-        schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.APPLICATION_JSON);
+        schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
         schemaData.put(CONTENT, new JSONObject().put("key", "value"));
 
         // test
@@ -188,7 +188,7 @@ public class FeedItemSchemaDataTests {
     public void getFeedItem_returnsNull_whenContentTypeIsNotApplicationJson() throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
-        schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.TEXT_PLAIN);
+        schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.TEXT_PLAIN);
         schemaData.put(CONTENT, "content");
 
         // test
@@ -203,7 +203,7 @@ public class FeedItemSchemaDataTests {
     public void getFeedItem_returnsNull_whenContentIsNotMap() throws JSONException {
         // setup
         JSONObject schemaData = new JSONObject();
-        schemaData.put(CONTENT_TYPE, MessagingConstants.ContentTypes.APPLICATION_JSON);
+        schemaData.put(CONTENT_TYPE, MessagingTestConstants.ContentTypes.APPLICATION_JSON);
         schemaData.put(CONTENT, "content");
 
         // test
