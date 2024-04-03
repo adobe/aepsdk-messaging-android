@@ -27,6 +27,14 @@ workflows:
       # - functional-test:
       #     requires:
       #       - validate-code
+      - build-test-app:
+          requires:
+            - validate-code
+          filters:
+            branches:
+              only:
+                - main
+                - staging
  
 jobs:
   validate-code:
@@ -79,10 +87,6 @@ jobs:
       - run:
           name: Assemble Phone
           command: make assemble-phone
-          
-      - run:
-          name: Assemble App
-          command: make assemble-app
 
       - android/run-tests:
           test-command: make unit-test-coverage
@@ -134,3 +138,23 @@ jobs:
 
       - store_test_results:
           path: code/messaging/build/outputs/androidTest-results
+  build-test-app:
+    executor:
+      name: android/android-docker
+      resource-class: medium
+      tag: 2024.01.1
+
+    steps:
+      - checkout
+
+      - android/restore-gradle-cache
+
+      - android/restore-build-cache
+
+      - run:
+          name: Assemble App
+          command: make assemble-app
+
+      - android/save-gradle-cache
+
+      - android/save-build-cache

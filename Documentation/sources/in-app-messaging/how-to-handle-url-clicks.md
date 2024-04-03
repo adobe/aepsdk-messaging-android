@@ -1,8 +1,8 @@
 # Handle URL clicks from an in-app message
 
-When a link is clicked in an in-app message, the `FullscreenMessageDelegate` is responsible for handling behavior.
+When a link is clicked in an in-app message, the `MessagingFullscreenEventListener` is responsible for handling behavior.
 
-If the scheme used in the link **is not** `adbinapp://`, the link will open in the containing WebView (default behavior).
+If the scheme used in the link **is not** `adbinapp://`, the link will open in the containing `Presentable` (default behavior).
 
 If the scheme used in the link **is** `adbinapp://`, the following behavior may occur:
 

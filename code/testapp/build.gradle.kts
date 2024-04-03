@@ -17,7 +17,11 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val moduleVersion: String by project
 val mavenCoreVersion: String by project
+val mavenAssuranceVersion: String by project
+val mavenEdgeVersion: String by project
+val mavenEdgeIdentityVersion: String by project
 
 android {
       namespace = "com.adobe.marketing.mobile.messagingsample"
@@ -48,18 +52,12 @@ android {
 }
 
 dependencies {
-    implementation("com.adobe.marketing.mobile:messaging:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:places:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:target:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:campaign:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:optimize:3.0.0-beta.1-SNAPSHOT")
-
-
-    implementation("com.adobe.marketing.mobile:core:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:lifecycle:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:assurance:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:edge:3.0.0-beta.1-SNAPSHOT")
-    implementation("com.adobe.marketing.mobile:edgeidentity:3.0.0-beta.1-SNAPSHOT")
+    implementation(project(":messaging"))
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    implementation("com.adobe.marketing.mobile:lifecycle:$mavenCoreVersion")
+    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
+    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
+    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
