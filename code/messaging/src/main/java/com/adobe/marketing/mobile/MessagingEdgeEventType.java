@@ -14,23 +14,6 @@ package com.adobe.marketing.mobile;
 import androidx.annotation.NonNull;
 
 public enum MessagingEdgeEventType {
-    /**
-     * @deprecated Use DISMISS instead.
-     */
-    @Deprecated
-    IN_APP_DISMISS(0),
-    /**
-     * @deprecated Use INTERACT instead.
-     */
-    IN_APP_INTERACT(1),
-    /**
-     * @deprecated Use TRIGGER instead.
-     */
-    IN_APP_TRIGGER(2),
-    /**
-     * @deprecated Use DISPLAY instead.
-     */
-    IN_APP_DISPLAY(3),
     PUSH_APPLICATION_OPENED(4),
     PUSH_CUSTOM_ACTION(5),
     DISMISS(6),
@@ -67,16 +50,12 @@ public enum MessagingEdgeEventType {
 
     public String getPropositionEventType() {
         switch (this) {
-            case IN_APP_DISMISS:
             case DISMISS:
                 return PROPOSITION_EVENT_TYPE_DISMISS;
-            case IN_APP_INTERACT:
             case INTERACT:
                 return PROPOSITION_EVENT_TYPE_INTERACT;
-            case IN_APP_TRIGGER:
             case TRIGGER:
                 return PROPOSITION_EVENT_TYPE_TRIGGER;
-            case IN_APP_DISPLAY:
             case DISPLAY:
                 return PROPOSITION_EVENT_TYPE_DISPLAY;
             default:
@@ -87,16 +66,12 @@ public enum MessagingEdgeEventType {
     @NonNull @Override
     public String toString() {
         switch (this) {
-            case IN_APP_DISMISS:
             case DISMISS:
                 return PROPOSITION_EVENT_TYPE_DISMISS_STRING;
-            case IN_APP_INTERACT:
             case INTERACT:
                 return PROPOSITION_EVENT_TYPE_INTERACT_STRING;
-            case IN_APP_TRIGGER:
             case TRIGGER:
                 return PROPOSITION_EVENT_TYPE_TRIGGER_STRING;
-            case IN_APP_DISPLAY:
             case DISPLAY:
                 return PROPOSITION_EVENT_TYPE_DISPLAY_STRING;
             case PUSH_APPLICATION_OPENED:
