@@ -28,16 +28,6 @@ Installation via [Maven](https://maven.apache.org/) & [Gradle](https://gradle.or
     implementation 'com.adobe.marketing.mobile:messaging'
 ```
 
-Add maven repository URL to `repositories` in the buildscript.
-```java
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-```
-
 ## Import and register the Messaging extension
 
 Import the Messaging extension and its dependencies, then register the Messaging extension and dependencies in the `onCreate` method in the `Application` class:

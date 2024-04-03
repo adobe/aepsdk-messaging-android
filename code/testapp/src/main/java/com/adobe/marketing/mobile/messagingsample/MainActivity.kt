@@ -497,6 +497,7 @@ class CustomDelegate : PresentationDelegate {
     }
 
     override fun onDismiss(presentable: Presentable<*>) {
+        if (!isInAppMessage(presentable)) return
         setCurrentMessage(presentable)
     }
 

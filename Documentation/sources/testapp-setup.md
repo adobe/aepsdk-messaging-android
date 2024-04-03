@@ -12,14 +12,14 @@ Please follow the below setup steps for Android apps:
     - Option 2: Select the `main` branch and download the code ZIP file.
     ![Download the ZIP](../assets/download-zip.png)
 
-3. Launch Android Studio and open the `build.gradle` file located in the `aepsdk-messaging-android/code` directory.
+3. Launch Android Studio and open the `build.gradle.kts` file located in the `aepsdk-messaging-android/code` directory.
 
     ![Open the gradle file](../assets/open-gradle-file.png)
 
 4. Configure the app for the following:
-    - Set the `ENVIRONMENT_FILE_ID` value in MessagingApplication.kt (located in the `app` directory) for the appropriate environment.
+    - Set the `ENVIRONMENT_FILE_ID` value in MessagingApplication.kt (located in the `testapp` directory) for the appropriate environment.
     ![Configure Environment file ID](../assets/configure-environment-file-id.png)
-    - Modify the surface path in CodeBasedExperienceActivity.kt (located in the `app` directory).
+    - Modify the surface path in CodeBasedExperienceActivity.kt (located in the `testapp` directory).
     ![Configure surface path](../assets/configure-surface-path.png)
 
 5. Select the `app` configuration in the Run/Debug configuration dropdown, select the preferred emulator, then run the app.
