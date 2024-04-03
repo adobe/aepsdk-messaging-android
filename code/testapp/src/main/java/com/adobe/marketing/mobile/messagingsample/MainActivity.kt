@@ -475,6 +475,7 @@ class CustomDelegate : PresentationDelegate {
     }
 
     override fun onShow(presentable: Presentable<*>) {
+        if (!isInAppMessage(presentable)) return
         setCurrentMessage(presentable)
 
         // example: in-line handling of javascript calls in the AJO in-app message html
