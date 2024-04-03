@@ -52,7 +52,7 @@ android {
 }
 
 dependencies {
-    implementation("com.adobe.marketing.mobile:messaging:$moduleVersion")
+    implementation(project(":messaging"))
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
     implementation("com.adobe.marketing.mobile:lifecycle:$mavenCoreVersion")
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")

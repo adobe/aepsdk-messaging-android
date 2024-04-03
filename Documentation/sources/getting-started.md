@@ -4,7 +4,7 @@
 
 ### [Gradle](https://gradle.org/)
 
-Installation via [Maven](https://maven.apache.org/) & [Gradle](https://gradle.org/) is the easiest and recommended way to get the Mobile SDK. Add the dependencies to `build.gradle` for Messaging extension.
+Installation via [Maven](https://maven.apache.org/) & [Gradle](https://gradle.org/) is the easiest and recommended way to get the Mobile SDK. Add the dependencies to `build.gradle.kts` for Messaging extension.
 
 #### Kotlin
 
@@ -96,8 +96,7 @@ class MessagingApplication : Application() {
         MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
 
-        val extensions = listOf(Assurance.EXTENSION, Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION, Lifecycle.EXTENSION)
-        MobileCore.registerExtensions(extensions) {
+        MobileCore.registerExtensions(listOf(Assurance.EXTENSION, Edge.EXTENSION, Identity.EXTENSION, Messaging.EXTENSION, Lifecycle.EXTENSION)) {
             // use the Environment file ID assigned for this application from Adobe Data Collection (formerly Adobe Launch)
             MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             MobileCore.lifecycleStart(null)

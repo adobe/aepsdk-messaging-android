@@ -26,7 +26,7 @@
 - [Execute Javascript code in an in-app message from native code](./sources/in-app-messaging/how-to-call-javascript-from-native.md)
 - [Handle URL clicks from an in-app message](./sources/in-app-messaging/how-to-handle-url-clicks.md)
 
-### Other public classes, methods, and enums
+### Other public classes, methods, and enums (TODO: to be updated with Messaging 3.0 classes)
 
 - [Message](./sources/enum-public-classes/class-message.md)
 - [MessagingEdgeEventType](./sources/enum-public-classes/enum-messaging-edge-event-type.md)
