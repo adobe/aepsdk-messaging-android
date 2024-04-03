@@ -22,7 +22,7 @@ Please follow the below setup steps for Android apps:
     - Modify the surface path in CodeBasedExperienceActivity.kt (located in the `testapp` directory).
     ![Configure surface path](../assets/configure-surface-path.png)
 
-5. Select the `app` configuration in the Run/Debug configuration dropdown, select the preferred emulator, then run the app.
+5. Select the `testapp` configuration in the Run/Debug configuration dropdown, select the preferred emulator, then run the app.
     ![Run app](../assets/run-app.png)
 
 6. For Code Based testing: In the testapp, press the `Check Code Based Experiences` button from the main app screen. You should see the Code-based experiences for the configured surface paths (mobileapp://com.adobe.marketing.mobile.messagingsample/cbe-path1 and mobileapp://com.adobe.marketing.mobile.messagingsample/cbe-path2).
