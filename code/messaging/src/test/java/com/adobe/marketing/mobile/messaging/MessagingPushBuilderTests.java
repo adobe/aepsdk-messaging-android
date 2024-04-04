@@ -3,19 +3,17 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -30,11 +28,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
-
 import androidx.core.app.NotificationCompat;
-
 import com.adobe.marketing.mobile.MessagingPushPayload;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +39,7 @@ import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushBuilderTests {
 
@@ -56,25 +52,17 @@ public class MessagingPushBuilderTests {
     private static final String LARGE_IMAGE_URL = "https://www.sampleimage.com";
     private static final int SAMPLE_PRIORITY = Notification.PRIORITY_HIGH;
     private static final String CUSTOM_SOUND_NAME = "customSound";
-    private static final Uri CUSTOM_SOUND_URI = Uri.parse("android.resource://com.adobe.sample/raw/customSound");
+    private static final Uri CUSTOM_SOUND_URI =
+            Uri.parse("android.resource://com.adobe.sample/raw/customSound");
 
-    @Mock
-    Context context;
-    @Mock
-    MessagingPushPayload payload;
-    @Mock
-    Notification notification;
-    @Mock
-    PackageManager packageManager;
-    @Mock
-    Intent launchIntent;
-    @Mock
-    Uri sampleUri;
-    @Mock
-    PendingIntent returnedPendingIntent;
-    @Mock
-    TaskStackBuilder taskStackBuilder;
-
+    @Mock Context context;
+    @Mock MessagingPushPayload payload;
+    @Mock Notification notification;
+    @Mock PackageManager packageManager;
+    @Mock Intent launchIntent;
+    @Mock Uri sampleUri;
+    @Mock PendingIntent returnedPendingIntent;
+    @Mock TaskStackBuilder taskStackBuilder;
 
     MessagingPushBuilder builder;
     MockedConstruction<NotificationCompat.Builder> mockBuilderConstructor;
@@ -82,7 +70,7 @@ public class MessagingPushBuilderTests {
     MockedStatic<MessagingPushUtils> utils;
     ArgumentCaptor<Intent> launchIntentCaptor;
     MockedStatic<PendingIntent> staticMockPendingIntent;
-    MockedStatic<TaskStackBuilder> staticMockTaskStackBuilder ;
+    MockedStatic<TaskStackBuilder> staticMockTaskStackBuilder;
     MockedStatic<Uri> staticMockUri;
     ArgumentCaptor<String> mockUriStringCaptor;
 
@@ -96,12 +84,14 @@ public class MessagingPushBuilderTests {
         staticMockTaskStackBuilder = mockStatic(TaskStackBuilder.class);
         staticMockUri = mockStatic(Uri.class);
 
-        mockBuilderConstructor = mockConstruction(NotificationCompat.Builder.class, (mock, context) -> {
-            when(mock.build()).thenReturn(notification);
-        });
+        mockBuilderConstructor =
+                mockConstruction(
+                        NotificationCompat.Builder.class,
+                        (mock, context) -> {
+                            when(mock.build()).thenReturn(notification);
+                        });
 
-        intentConstructor = mockConstruction(Intent.class, (mock, context) -> {
-        });
+        intentConstructor = mockConstruction(Intent.class, (mock, context) -> {});
 
         when(payload.getTitle()).thenReturn(NOTIFICATION_TITLE);
         when(payload.getBody()).thenReturn(NOTIFICATION_BODY);
@@ -115,18 +105,34 @@ public class MessagingPushBuilderTests {
         when(context.getPackageManager()).thenReturn(packageManager);
         when(context.getPackageName()).thenReturn("com.adobe.sample");
 
-        utils.when(() -> MessagingPushUtils.getDefaultAppIcon(context)).thenReturn(DEFAULT_ICON_RESOURCE_ID);
-        utils.when(() -> MessagingPushUtils.getSmallIconWithResourceName(CUSTOM_ICON_RESOURCE_NAME,context)).thenReturn(CUSTOM_ICON_RESOURCE_ID);
-        utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME ,context)).thenReturn(CUSTOM_SOUND_URI);
+        utils.when(() -> MessagingPushUtils.getDefaultAppIcon(context))
+                .thenReturn(DEFAULT_ICON_RESOURCE_ID);
+        utils.when(
+                        () ->
+                                MessagingPushUtils.getSmallIconWithResourceName(
+                                        CUSTOM_ICON_RESOURCE_NAME, context))
+                .thenReturn(CUSTOM_ICON_RESOURCE_ID);
+        utils.when(() -> MessagingPushUtils.getSoundUriForResourceName(CUSTOM_SOUND_NAME, context))
+                .thenReturn(CUSTOM_SOUND_URI);
 
-        when(taskStackBuilder.addNextIntentWithParentStack(any(Intent.class))).thenReturn(taskStackBuilder);
-        when(taskStackBuilder.getPendingIntent(anyInt(), anyInt())).thenReturn(returnedPendingIntent);
+        when(taskStackBuilder.addNextIntentWithParentStack(any(Intent.class)))
+                .thenReturn(taskStackBuilder);
+        when(taskStackBuilder.getPendingIntent(anyInt(), anyInt()))
+                .thenReturn(returnedPendingIntent);
 
-
-        staticMockTaskStackBuilder.when(() -> TaskStackBuilder.create(any(Context.class))).thenReturn(taskStackBuilder);
-        staticMockPendingIntent.when(() -> PendingIntent.getActivity(any(Context.class), any(Integer.class), launchIntentCaptor.capture(), any(Integer.class))).thenReturn(returnedPendingIntent);
+        staticMockTaskStackBuilder
+                .when(() -> TaskStackBuilder.create(any(Context.class)))
+                .thenReturn(taskStackBuilder);
+        staticMockPendingIntent
+                .when(
+                        () ->
+                                PendingIntent.getActivity(
+                                        any(Context.class),
+                                        any(Integer.class),
+                                        launchIntentCaptor.capture(),
+                                        any(Integer.class)))
+                .thenReturn(returnedPendingIntent);
         staticMockUri.when(() -> Uri.parse(mockUriStringCaptor.capture())).thenReturn(sampleUri);
-
     }
 
     @After
@@ -143,16 +149,17 @@ public class MessagingPushBuilderTests {
     public void test_notificationBuild() {
         // test
         Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
 
-        //verify
+        // verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setContentText(NOTIFICATION_BODY);
-        verify(mockNotificationBuilder,times(1)).setContentTitle(NOTIFICATION_TITLE);
-        verify(mockNotificationBuilder,times(1)).setPriority(SAMPLE_PRIORITY);
-        verify(mockNotificationBuilder,times(1)).setSmallIcon(CUSTOM_ICON_RESOURCE_ID);
-        verify(mockNotificationBuilder,times(1)).setNumber(BADGE_COUNT);
-        verify(mockNotificationBuilder,times(1)).setSound(CUSTOM_SOUND_URI);
+        verify(mockNotificationBuilder, times(1)).setContentText(NOTIFICATION_BODY);
+        verify(mockNotificationBuilder, times(1)).setContentTitle(NOTIFICATION_TITLE);
+        verify(mockNotificationBuilder, times(1)).setPriority(SAMPLE_PRIORITY);
+        verify(mockNotificationBuilder, times(1)).setSmallIcon(CUSTOM_ICON_RESOURCE_ID);
+        verify(mockNotificationBuilder, times(1)).setNumber(BADGE_COUNT);
+        verify(mockNotificationBuilder, times(1)).setSound(CUSTOM_SOUND_URI);
     }
 
     @Test
@@ -162,12 +169,14 @@ public class MessagingPushBuilderTests {
 
         // test
         Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
 
-        //verify
+        // verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
-        verify(mockNotificationBuilder,times(0)).setSound(any(Uri.class));
+        verify(mockNotificationBuilder, times(1))
+                .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+        verify(mockNotificationBuilder, times(0)).setSound(any(Uri.class));
     }
 
     @Test
@@ -177,11 +186,12 @@ public class MessagingPushBuilderTests {
 
         // test
         Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
 
-        //verify
+        // verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setSmallIcon(DEFAULT_ICON_RESOURCE_ID);
+        verify(mockNotificationBuilder, times(1)).setSmallIcon(DEFAULT_ICON_RESOURCE_ID);
     }
 
     @Test
@@ -191,10 +201,11 @@ public class MessagingPushBuilderTests {
 
         // test
         Notification notification = builder.build(payload, context);
-        NotificationCompat.Builder mockNotificationBuilder = mockBuilderConstructor.constructed().get(0);
+        NotificationCompat.Builder mockNotificationBuilder =
+                mockBuilderConstructor.constructed().get(0);
 
-        //verify
+        // verify
         assertNotNull(notification);
-        verify(mockNotificationBuilder,times(1)).setPriority(Notification.PRIORITY_DEFAULT);
+        verify(mockNotificationBuilder, times(1)).setPriority(Notification.PRIORITY_DEFAULT);
     }
 }

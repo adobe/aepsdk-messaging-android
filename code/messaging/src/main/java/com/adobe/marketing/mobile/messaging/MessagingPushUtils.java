@@ -3,12 +3,11 @@
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software distributed under
   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
   OF ANY KIND, either express or implied. See the License for the specific language
   governing permissions and limitations under the License.
- */
+*/
 
 package com.adobe.marketing.mobile.messaging;
 
@@ -28,9 +27,9 @@ import java.net.URL;
 
 /**
  * Utility class for Building AJO push notification.
- * <p>
- *     This class is used internally by the Messaging extension's push builder to build the push notification.
- *     This class is not intended to be used by the customers.
+ *
+ * <p>This class is used internally by the Messaging extension's push builder to build the push
+ * notification. This class is not intended to be used by the customers.
  */
 class MessagingPushUtils {
     private static final String SELF_TAG = "MessagingPushUtils";
@@ -45,14 +44,25 @@ class MessagingPushUtils {
             connection = (HttpURLConnection) imageUrl.openConnection();
             inputStream = connection.getInputStream();
             bitmap = BitmapFactory.decodeStream(inputStream);
-        } catch(IOException e) {
-            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Failed to download push notification image from url (%s). Exception: %s", url, e.getMessage());
+        } catch (IOException e) {
+            Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to download push notification image from url (%s). Exception: %s",
+                    url,
+                    e.getMessage());
         } finally {
             if (inputStream != null) {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "IOException during closing Input stream while push notification image from url (%s). Exception: %s ", url, e.getMessage());
+                    Log.warning(
+                            MessagingPushConstants.LOG_TAG,
+                            SELF_TAG,
+                            "IOException during closing Input stream while push notification image"
+                                    + " from url (%s). Exception: %s ",
+                            url,
+                            e.getMessage());
                 }
             }
 
@@ -69,32 +79,39 @@ class MessagingPushUtils {
         try {
             return context.getPackageManager().getApplicationInfo(packageName, 0).icon;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.warning(MessagingPushConstants.LOG_TAG, SELF_TAG, "Package manager NameNotFoundException while reading default application icon. Exception: %s", e.getMessage());
+            Log.warning(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Package manager NameNotFoundException while reading default application icon."
+                            + " Exception: %s",
+                    e.getMessage());
         }
         return -1;
     }
 
     /**
-     * Returns the Uri for the sound file with the given name.
-     * The sound file must be in the res/raw directory.
-     * The sound file should be in format of .mp3, .wav, or .ogg
+     * Returns the Uri for the sound file with the given name. The sound file must be in the res/raw
+     * directory. The sound file should be in format of .mp3, .wav, or .ogg
      *
      * @param soundName the name of the sound file
-     * @param context   the application {@link Context}
+     * @param context the application {@link Context}
      * @return the Uri for the sound file with the given name
      */
     static Uri getSoundUriForResourceName(final @NonNull String soundName, final Context context) {
-        return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName()
-                + "/raw/" + soundName);
+        return Uri.parse(
+                ContentResolver.SCHEME_ANDROID_RESOURCE
+                        + "://"
+                        + context.getPackageName()
+                        + "/raw/"
+                        + soundName);
     }
 
     /**
-     * Returns the resource id for the icon with the given name.
-     * The icon file must be in the res/drawable directory.
-     * If the icon file is not found, 0 is returned.
+     * Returns the resource id for the icon with the given name. The icon file must be in the
+     * res/drawable directory. If the icon file is not found, 0 is returned.
      *
      * @param iconName the name of the icon file
-     * @param context  the application {@link Context}
+     * @param context the application {@link Context}
      * @return the resource id for the icon with the given name
      */
     static int getSmallIconWithResourceName(final String iconName, final Context context) {

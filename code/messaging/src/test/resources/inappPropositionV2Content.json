@@ -1,0 +1,99 @@
+{
+    "version": 1,
+    "rules": [
+        {
+            "condition": {
+                "definition": {
+                    "conditions": [
+                        {
+                            "definition": {
+                                "conditions": [
+                                    {
+                                        "definition": {
+                                            "key": "~type",
+                                            "matcher": "eq",
+                                            "values": [
+                                                "com.adobe.eventType.generic.track"
+                                            ]
+                                        },
+                                        "type": "matcher"
+                                    },
+                                    {
+                                        "definition": {
+                                            "key": "~source",
+                                            "matcher": "eq",
+                                            "values": [
+                                                "com.adobe.eventSource.requestContent"
+                                            ]
+                                        },
+                                        "type": "matcher"
+                                    },
+                                    {
+                                        "definition": {
+                                            "key": "action",
+                                            "matcher": "ex"
+                                        },
+                                        "type": "matcher"
+                                    }
+                                ],
+                                "logic": "and"
+                            },
+                            "type": "group"
+                        },
+                        {
+                            "definition": {
+                                "key": "action",
+                                "matcher": "eq",
+                                "values": [
+                                    "fullscreen"
+                                ]
+                            },
+                            "type": "matcher"
+                        }
+                    ],
+                    "logic": "and"
+                },
+                "type": "group"
+            },
+            "consequences": [
+
+                {
+                    "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+                    "type": "schema",
+                    "detail": {
+                        "id": "6ac78390-84e3-4d35-b798-8e7080e69a67",
+                        "schema": "https://ns.adobe.com/personalization/message/in-app",
+                        "data": {
+                            "content": "<html>message here</html>",
+                            "contentType": "text/html",
+                            "publishedDate": 1701538942,
+                            "expiryDate": 1712190456,
+                            "meta": {
+                                "metaKey": "metaValue"
+                            },
+                            "mobileParameters": {
+                                "verticalAlign": "center",
+                                "dismissAnimation": "bottom",
+                                "verticalInset": 0,
+                                "backdropOpacity": 0.2,
+                                "cornerRadius": 15,
+                                "gestures": {},
+                                "horizontalInset": 0,
+                                "uiTakeover": true,
+                                "horizontalAlign": "center",
+                                "width": 100,
+                                "displayAnimation": "bottom",
+                                "backdropColor": "#000000",
+                                "height": 100
+                            },
+                            "webParameters": {
+                                "webParamKey": "webParamValue"
+                            },
+                            "remoteAssets": [ "urlToAnImage" ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

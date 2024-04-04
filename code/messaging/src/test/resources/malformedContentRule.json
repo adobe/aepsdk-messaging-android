@@ -1,0 +1,23 @@
+[
+    {
+        "id": "4287549f-8d2e-4da2-ae82-08b815e0dfa5",
+        "scope": "mobileapp:\/\/com.apple.dt.xctest.tool",
+        "scopeDetails": {
+            "characteristics": {
+                "cjmEvent": "{\"messageExecution\":{\"messageExecutionID\":\"d47d322f-741a-448a-afb6-c6d6e9ce6bdf\",\"messageID\":\"7a9ee5f9-f795-4ae3-b230-45d81973d265\",\"messageType\":\"marketing\",\"campaignID\":\"aa399b33-8042-4839-b702-bd02a10cca10\",\"campaignVersionID\":\"a7a0da8a-4562-42d8-9330-1a3822945f88\",\"campaignActionID\":\"799e4d91-9eac-4f6a-adb6-0514ec66bc02\",\"messagePublicationID\":\"2ba4573d-0541-4253-8721-6cb932e19caa\"},\"messageProfile\":{\"channel\":{\"_id\":\"https:\/\/ns.adobe.com\/xdm\/channels\/inApp\",\"_type\":\"https:\/\/ns.adobe.com\/xdm\/channel-types\/inApp\"},\"messageProfileID\":\"10dac676-46e4-453a-8616-f60a6241f926\"}}"
+            },
+            "correlationID": "7a9ee5f9-f795-4ae3-b230-45d81973d265",
+            "decisionProvider": "AJO"
+        },
+        "items": [
+            {
+                "id": "b5ec0bb4-a0f9-4adf-9be9-8a839fe8b5af",
+                "schema": "https:\/\/ns.adobe.com\/personalization\/json-content-item",
+                "data": {
+                    "id": "5908ae17-9b04-443e-baf9-6a2458b866e1",
+                    "content": "not the rule you are looking for"
+                }
+            }
+        ]
+    }
+]

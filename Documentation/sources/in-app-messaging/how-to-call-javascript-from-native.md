@@ -2,62 +2,80 @@
 
 You can execute JavaScript in an in-app message from native code by completing the following steps:
 
-* [Implement and assign a `MessagingDelegate`](#android_messaging_delegate)
-* [Obtain a reference to the `WebView`](#android_webview)
+* [Implement and assign a `PresentationDelegate`](#android_presentation_delegate)
+* [Obtain a reference to the `InAppEventHandler`](#android_event_handler)
 * [Call the JavaScript method](#android_call_javascript)
 
-### Implement and assign a `MessagingDelegate`<a name="android_messaging_delegate"></a>
+### Implement and assign a `PresentationDelegate`<a name="android_presentation_delegate"></a>
 
-To register a JavaScript event handler with a `Message` object, you will first need to implement and set a `MessagingDelegate`.
+To register a JavaScript event handler with a `Message` object, you will first need to implement and set a `PresentationDelegate`.
 
-For more detailed instructions on implementing and using a MessagingDelegate, please read the [tutorial on using MessagingDelegate](./how-to-messaging-delegate.md).
+For more detailed instructions on implementing and using a PresentationDelegate, please read the [tutorial on using PresentationDelegate](./how-to-presentation-delegate.md).
 
-### Obtain a reference to the `WebView`<a name="android_webview"></a>
+### Obtain a reference to the `InAppEventHandler`<a name="android_event_handler"></a>
 
-In the `shouldShowMessage` function of the `MessagingDelegate`, get a reference to the  `WebView` created for Javascript interactions.  
+In the `onShow` function of the `PresentationDelegate`, get a reference to the `InAppEventHandler` which can be used for Javascript interactions.
 
+#### Kotlin
+```kotlin
+var eventHandler: InAppMessageEventHandler? = null
+var currentMessagePresentable: Presentable<InAppMessage>? = null
+
+override fun onShow(presentable: Presentable<*>) {
+  if (!isInAppMessage(presentable)) return
+  currentMessagePresentable = presentable as Presentable<InAppMessage>
+  eventHandler = currentMessagePresentable?.getPresentation()?.eventHandler
+
+}
+```
 #### Java
 
 ```java
+InAppMessageEventHandler eventHandler = null;
+Presentable<InAppMessage> currentMessagePresentable = null;
+
 @Override
-public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-  // access to the whole message from the parent
-  Message message = (Message) fullscreenMessage.getParent();
-      
-  WebView webView = message.getWebView();
-  
-  ...
+public void onShow(Presentable<?> presentable) {
+    if (!isInAppMessage(presentable)) return;
+    currentMessagePresentable = (Presentable<InAppMessage>) presentable;
+    eventHandler = currentMessagePresentable.getPresentation().getEventHandler();
 }
 ```
 
 ### Call the JavaScript method<a name="android_call_javascript"></a>
 
-With a reference to the `WebView`, the instance method `public void evaluateJavascript(@NonNull String script, @Nullable ValueCallback<String> resultCallback)` can now be leveraged to call a JavaScript method.
+With a reference to the `InAppEventHandler`, the instance method `fun evaluateJavascript(jsContent: String, callback: AdobeCallback<String>)` can now be leveraged to call a JavaScript method.
 
 Further details of this API are explained in the [Android documentation](https://developer.android.com/reference/android/webkit/WebView#evaluateJavascript(java.lang.String,%20android.webkit.ValueCallback%3Cjava.lang.String%3E)) - the example below is provided for the purpose of demonstration:
 
-#### Java
+#### Kotlin
+```kotlin
+var eventHandler: InAppMessageEventHandler? = null
+var currentMessagePresentable: Presentable<InAppMessage>? = null
 
+override fun onShow(presentable: Presentable<*>) {
+  if (!isInAppMessage(presentable)) return
+  currentMessagePresentable = presentable as Presentable<InAppMessage>
+  eventHandler = currentMessagePresentable?.getPresentation()?.eventHandler
+  eventHandler?.evaluateJavascript("startTimer()") { content ->
+    // do something with the content
+  }
+}
+```
+#### Java
 ```java
+InAppMessageEventHandler eventHandler = null;
+Presentable<InAppMessage> currentMessagePresentable = null;
+
 @Override
-public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-  // access to the whole message from the parent
-  Message message = (Message) fullscreenMessage.getParent();
-      
-  WebView webView = message.getWebView();
-  // webview operations must be run on the ui thread
-  webView.post(new Runnable() {
-    @Override
-    public void run() {
-      webView.evaluateJavascript("startTimer()", new ValueCallback<String>() {
-        @Override
-        public void onReceiveValue(String s) {
-          // do something with the content
-        }
-      });
-    }
-  });
-  
-  ...
+public void onShow(Presentable<?> presentable) {
+  if (!isInAppMessage(presentable)) return;
+  currentMessagePresentable = (Presentable<InAppMessage>) presentable;
+  eventHandler = currentMessagePresentable.getPresentation().getEventHandler();
+  if (eventHandler != null) {
+    eventHandler.evaluateJavascript("startTimer()", s -> {
+    // do something with the content
+    });
+  }
 }
 ```

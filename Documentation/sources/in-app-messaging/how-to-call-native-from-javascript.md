@@ -2,39 +2,64 @@
 
 You can handle events from in-app message interactions natively within your application by completing the following steps:
 
-* [Implement and assign a `MessagingDelegate`](#android_messaging_delegate)
+* [Implement and assign a `PresentationDelegate`](#android_presentation_delegate)
 * [Register a JavaScript handler for your In-App Message](#android_javascript_handler)
 * [Post the JavaScript message from your In-App Message](#post-the-javascript-message-from-your-in-app-message)
 
-### Implement and assign a `MessagingDelegate`<a name="android_messaging_delegate"></a>
+### Implement and assign a `PresentationDelegate`<a name="android_presentation_delegate"></a>
 
-To register a JavaScript event handler with a `Message` object, you will first need to implement and set a `MessagingDelegate`.
+To register a JavaScript event handler with a `Message` object, you will first need to implement and set a `PresentationDelegate`.
 
-For more detailed instructions on implementing and using a MessagingDelegate, please read the [tutorial on using MessagingDelegate](./how-to-messaging-delegate.md).
+For more detailed instructions on implementing and using a PresentationDelegate, please read the [tutorial on using PresentationDelegate](./how-to-presentation-delegate.md).
 
 ### Register a JavaScript handler for your In-App Message<a name="android_javascript_handler"></a>
 
-In the `shouldShowMessage` function of the `MessagingDelegate`, call `public void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)` to register your handler.
+In the `onShow` function of the `PresentationDelegate`, call `fun handleJavascriptMessage(handlerName: String, callback: AdobeCallback<String>)` to register your handler.
 
 The name of the message you intend to pass from the JavaScript side should be specified in the first parameter.
 
 The following example shows a handler that dispatches an `decisioning.propositionInteract` Experience Event natively when the JavaScript of the in-app message posts a `myInappCallback` message:
 
+#### Kotlin
+```kotlin
+var eventHandler: InAppMessageEventHandler? = null
+var currentMessagePresentable: Presentable<InAppMessage>? = null
+
+override fun onShow(presentable: Presentable<*>) {
+  if (!isInAppMessage(presentable)) return
+  currentMessagePresentable = presentable as Presentable<InAppMessage>
+  eventHandler = currentMessagePresentable?.getPresentation()?.eventHandler
+  // in-line handling of JavaScript calls
+  eventHandler?.handleJavascriptMessage("myInappCallback") { content ->
+    if (content != null) {
+        println("JavaScript body passed to native callback: $content")
+        val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
+        message?.track(content, MessagingEdgeEventType.INTERACT);
+    }
+  }
+}
+```
 #### Java
 
 ```java
+InAppMessageEventHandler eventHandler = null;
+Presentable<InAppMessage> currentMessagePresentable = null;
+
 @Override
-public boolean shouldShowMessage(FullscreenMessage fullscreenMessage) {
-  Message message = (Message) fullscreenMessage.getParent();
-  
-  // in-line handling of JavaScript calls
-  message.handleJavascriptMessage("myInappCallback", new AdobeCallback<String>() {
-    @Override
-    public void call(String content) {
-      System.out.println("JavaScript body passed to native callback: " + content);
-      message.track(content, MessagingEdgeEventType.IN_APP_INTERACT);
-    }
-  });
+public void onShow(Presentable<?> presentable) {
+    if (!isInAppMessage(presentable)) return;
+    currentMessagePresentable = (Presentable<InAppMessage>) presentable;
+    eventHandler = currentMessagePresentable.getPresentation().getEventHandler();
+    // in-line handling of JavaScript calls
+    eventHandler.handleJavascriptMessage("myInappCallback", content -> {
+        if (content != null) {
+            System.out.println("JavaScript body passed to native callback: " + content);
+            Message message = MessagingUtils.getMessageForPresentable(currentMessagePresentable);
+            if (message != null) {
+                message.track(content, MessagingEdgeEventType.INTERACT);
+            }
+        }
+    });
 }
 ```
 
