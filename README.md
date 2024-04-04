@@ -1,30 +1,28 @@
-# Adobe Experience Platform - Messaging extension for Android (Beta feature - Experience Decisioning in Code Based Experiences)
+# Adobe Experience Platform - Messaging extension for Android
 
 [![CircleCI](https://img.shields.io/circleci/project/github/adobe/aepsdk-messaging-android/main.svg?logo=circleci)](https://circleci.com/gh/adobe/workflows/aepsdk-messaging-android)
 [![Code Coverage](https://codecov.io/gh/adobe/aepsdk-messaging-android/branch/main/graph/badge.svg?token=3RLMTJQ1TM)](https://codecov.io/gh/adobe/aepsdk-messaging-android)
 
-## Beta feature acknowledgment
-
-By using the AEPMessaging SDK (“Beta feature”), you hereby acknowledge that the Beta is provided “as is” without warranty of any kind. Adobe shall have no obligation to maintain, correct, update, change, modify or otherwise support the Beta. You are advised to use caution and not to rely in any way on the correct functioning or performance of such Beta and/or accompanying materials.
-
 ## About this project
-The AEPMessaging extension enables sending and tracking push notifications in the Adobe Experience Platform
+The AEPMessaging extension for Adobe Experience Platform Mobile SDKs powers push notifications, in-app messages, and code-based experiences for your mobile apps. This extension also helps you to collect user push tokens and manages interaction measurement with Adobe Experience Platform services.
 
 ## Installation
 
 Integrate the AEPMessaging extension into your app by including the following in your app level gradle file's `dependencies`:
 
 ```groovy
-implementation 'com.adobe.marketing.mobile:messaging:2.+'
-implementation 'com.adobe.marketing.mobile:edge:2.+'
-implementation 'com.adobe.marketing.mobile:edgeidentity:2.+'
-implementation 'com.adobe.marketing.core:2.+'
+    implementation platform('com.adobe.marketing.mobile:sdk-bom:3.+')
+    implementation 'com.adobe.marketing.mobile:core'
+    implementation 'com.adobe.marketing.mobile:assurance'
+    implementation 'com.adobe.marketing.mobile:edge'
+    implementation 'com.adobe.marketing.mobile:edgeidentity'
+    implementation 'com.adobe.marketing.mobile:messaging'
 ```
 
-If you use the Messaging extension alongside the Campaign Standard extension, Campaign Standard extension version 2.0.0 or newer must be used to resolve a compatibility issue:
+If you use the Messaging extension alongside the Campaign Standard extension, Campaign Standard extension version 3.0.0 or newer must be used to resolve a compatibility issue:
 
 ```groovy
-implementation 'com.adobe.marketing.mobile:campaign:2.+'
+implementation 'com.adobe.marketing.mobile:campaign:3.0.0'
 ```
 
 Adding Firebase messaging sdk as it is required for using [FCM](https://firebase.google.com/docs/cloud-messaging/android/client#add_firebase_sdks_to_your_app)
@@ -36,7 +34,7 @@ implementation 'com.google.firebase:firebase-messaging:<latest-version>'
 
 **Open the project**
 
-To open and run the project, open the `code/build.gradle` file in Android Studio
+To open and run the project, open the `code/build.gradle.kts` file in Android Studio
 
 **Run demo application**
 - Follow this [Firebase documentation](https://firebase.google.com/docs/cloud-messaging/android/client#add_a_firebase_configuration_file) to add the configuration file for your firebase project. 
