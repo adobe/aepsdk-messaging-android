@@ -117,8 +117,7 @@ class PropositionInteraction {
 
         // only add `propositionAction` data if this is an interact event and the interaction is not
         // empty
-        if ((eventType == MessagingEdgeEventType.INTERACT
-                        || eventType == MessagingEdgeEventType.IN_APP_INTERACT)
+        if ((eventType == MessagingEdgeEventType.INTERACT)
                 && !StringUtils.isNullOrEmpty(interaction)) {
             final Map<String, String> propositionAction = new HashMap<>();
             propositionAction.put(

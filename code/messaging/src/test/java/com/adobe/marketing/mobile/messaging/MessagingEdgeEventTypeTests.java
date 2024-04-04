@@ -20,18 +20,10 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_valueOf() {
-        assertEquals(
-                MessagingEdgeEventType.IN_APP_DISMISS,
-                MessagingEdgeEventType.valueOf("IN_APP_DISMISS"));
-        assertEquals(
-                MessagingEdgeEventType.IN_APP_INTERACT,
-                MessagingEdgeEventType.valueOf("IN_APP_INTERACT"));
-        assertEquals(
-                MessagingEdgeEventType.IN_APP_TRIGGER,
-                MessagingEdgeEventType.valueOf("IN_APP_TRIGGER"));
-        assertEquals(
-                MessagingEdgeEventType.IN_APP_DISPLAY,
-                MessagingEdgeEventType.valueOf("IN_APP_DISPLAY"));
+        assertEquals(MessagingEdgeEventType.DISMISS, MessagingEdgeEventType.valueOf("DISMISS"));
+        assertEquals(MessagingEdgeEventType.INTERACT, MessagingEdgeEventType.valueOf("INTERACT"));
+        assertEquals(MessagingEdgeEventType.TRIGGER, MessagingEdgeEventType.valueOf("TRIGGER"));
+        assertEquals(MessagingEdgeEventType.DISPLAY, MessagingEdgeEventType.valueOf("DISPLAY"));
         assertEquals(
                 MessagingEdgeEventType.PUSH_APPLICATION_OPENED,
                 MessagingEdgeEventType.valueOf("PUSH_APPLICATION_OPENED"));
@@ -42,10 +34,10 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_getValue() {
-        assertEquals(0, MessagingEdgeEventType.IN_APP_DISMISS.getValue());
-        assertEquals(1, MessagingEdgeEventType.IN_APP_INTERACT.getValue());
-        assertEquals(2, MessagingEdgeEventType.IN_APP_TRIGGER.getValue());
-        assertEquals(3, MessagingEdgeEventType.IN_APP_DISPLAY.getValue());
+        assertEquals(6, MessagingEdgeEventType.DISMISS.getValue());
+        assertEquals(7, MessagingEdgeEventType.INTERACT.getValue());
+        assertEquals(8, MessagingEdgeEventType.TRIGGER.getValue());
+        assertEquals(9, MessagingEdgeEventType.DISPLAY.getValue());
         assertEquals(4, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.getValue());
         assertEquals(5, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.getValue());
     }
@@ -54,16 +46,16 @@ public class MessagingEdgeEventTypeTests {
     public void test_MessagingEdgeEventType_toString() {
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISMISS,
-                MessagingEdgeEventType.IN_APP_DISMISS.toString());
+                MessagingEdgeEventType.DISMISS.toString());
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.INTERACT,
-                MessagingEdgeEventType.IN_APP_INTERACT.toString());
+                MessagingEdgeEventType.INTERACT.toString());
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.TRIGGER,
-                MessagingEdgeEventType.IN_APP_TRIGGER.toString());
+                MessagingEdgeEventType.TRIGGER.toString());
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY,
-                MessagingEdgeEventType.IN_APP_DISPLAY.toString());
+                MessagingEdgeEventType.DISPLAY.toString());
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys
                         .EventType.OPENED,
