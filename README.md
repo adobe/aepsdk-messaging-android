@@ -1,7 +1,11 @@
-# Adobe Experience Platform - Messaging extension for Android
+# Adobe Experience Platform - Messaging extension for Android (Beta feature - Experience Decisioning in Code Based Experiences)
 
 [![CircleCI](https://img.shields.io/circleci/project/github/adobe/aepsdk-messaging-android/main.svg?logo=circleci)](https://circleci.com/gh/adobe/workflows/aepsdk-messaging-android)
 [![Code Coverage](https://codecov.io/gh/adobe/aepsdk-messaging-android/branch/main/graph/badge.svg?token=3RLMTJQ1TM)](https://codecov.io/gh/adobe/aepsdk-messaging-android)
+
+## Beta feature acknowledgment
+
+By using the AEPMessaging SDK (“Beta feature”), you hereby acknowledge that the Beta is provided “as is” without warranty of any kind. Adobe shall have no obligation to maintain, correct, update, change, modify or otherwise support the Beta. You are advised to use caution and not to rely in any way on the correct functioning or performance of such Beta and/or accompanying materials.
 
 ## About this project
 The AEPMessaging extension enables sending and tracking push notifications in the Adobe Experience Platform
@@ -49,9 +53,9 @@ A comprehensive tutorial for getting started with In-app messaging can be found 
 
 | Project                                                      | Description                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [AEPEdgeIdentity Extension](https://github.com/adobe/aepsdk-edgeidentity-android) | The AEPEdgeIdentity enables handling of user identity data from a mobile app when using the AEPEdge extension. |
-| [AEP SDK Sample App for Android](https://github.com/adobe/aepsdk-sample-app-android) | Contains Android sample app for the AEP SDK.                 |
-| [AEP SDK Sample App for iOS](https://github.com/adobe/aepsdk-sample-app-ios) | Contains iOS sample apps for the AEP SDK. Apps are provided for both Objective-C and Swift implementations. |
+| [Core extensions](https://github.com/adobe/aepsdk-core-android) | The Mobile Core represents the foundation of the Adobe Experience Platform Mobile SDK. |
+| [Edge Network extension](https://github.com/adobe/aepsdk-edge-android) | The Edge Network extension allows you to send data to the Adobe Experience Platform (AEP) from a mobile application. |
+| [Identity for Edge Network extension](https://github.com/adobe/aepsdk-edgeidentity-android) | The Identity for Edge Network extension enables identity management from a mobile app when using the Edge Network extension. |
 
 ## Contributing
 Contributions are welcomed! Read the [CONTRIBUTING](.github/CONTRIBUTING.md) for more information.

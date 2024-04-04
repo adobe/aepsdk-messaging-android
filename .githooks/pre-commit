@@ -1,0 +1,5 @@
+#!/bin/bash
+
+make format
+git diff --cached --name-only --diff-filter=d | while read filename; do git add "$filename"; done
+
