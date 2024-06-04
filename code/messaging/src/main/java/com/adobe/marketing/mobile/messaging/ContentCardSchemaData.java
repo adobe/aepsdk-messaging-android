@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -19,14 +19,14 @@ import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-// represents the schema data object for a feed item schema
-@Deprecated
-public class FeedItemSchemaData implements SchemaData {
-    private static final String SELF_TAG = "FeedItemSchemaData";
+// represents the schema data object for a content-card schema
+public class ContentCardSchemaData implements SchemaData {
+    private static final String SELF_TAG = "ContentCardSchemaData";
     private Object content;
     private ContentType contentType;
     private int publishedDate;
@@ -35,7 +35,7 @@ public class FeedItemSchemaData implements SchemaData {
 
     PropositionItem parent;
 
-    FeedItemSchemaData(final JSONObject schemaData) {
+    ContentCardSchemaData(final JSONObject schemaData) {
         try {
             this.contentType =
                     ContentType.fromString(
@@ -89,11 +89,11 @@ public class FeedItemSchemaData implements SchemaData {
     }
 
     @VisibleForTesting
-    static FeedItemSchemaData getEmpty() {
-        return new FeedItemSchemaData(new JSONObject());
+    static ContentCardSchemaData getEmpty() {
+        return new ContentCardSchemaData(new JSONObject());
     }
 
-    @Nullable public FeedItem getFeedItem() {
+    @Nullable public ContentCard getContentCard() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
             return null;
         }
@@ -113,7 +113,7 @@ public class FeedItemSchemaData implements SchemaData {
             final String actionTitle =
                     DataReader.optString(
                             contentMap, MessagingConstants.MessageFeedKeys.ACTION_TITLE, "");
-            return new FeedItem.Builder(title, body)
+            return new ContentCard.Builder(title, body)
                     .setImageUrl(imageUrl)
                     .setActionUrl(actionUrl)
                     .setActionTitle(actionTitle)
@@ -134,7 +134,7 @@ public class FeedItemSchemaData implements SchemaData {
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (parent == null) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,
-                    "Unable to track FeedItemSchemaData, "
+                    "Unable to track ContentCardSchemaData, "
                             + "parent proposition item is unavailable.");
             return;
         }

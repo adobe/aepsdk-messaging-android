@@ -77,7 +77,8 @@ public class MessagingExtensionTests {
     @Mock CacheService mockCacheService;
     @Mock DeviceInforming mockDeviceInfoService;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
-    @Mock FeedRulesEngine mockFeedRulesEngine;
+    @Mock
+    ContentCardRulesEngine mockContentCardRulesEngine;
     @Mock EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock SharedStateResult mockConfigData;
     @Mock SharedStateResult mockEdgeIdentityData;
@@ -116,7 +117,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
-        reset(mockFeedRulesEngine);
+        reset(mockContentCardRulesEngine);
         reset(mockEdgePersonalizationResponseHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
@@ -157,7 +158,7 @@ public class MessagingExtensionTests {
                     new MessagingExtension(
                             mockExtensionApi,
                             mockMessagingRulesEngine,
-                            mockFeedRulesEngine,
+                            mockContentCardRulesEngine,
                             mockEdgePersonalizationResponseHandler);
 
             runnable.run();
@@ -291,7 +292,7 @@ public class MessagingExtensionTests {
                             new MessagingExtension(
                                     mockExtensionApi,
                                     mockMessagingRulesEngine,
-                                    mockFeedRulesEngine,
+                                    mockContentCardRulesEngine,
                                     mockEdgePersonalizationResponseHandler);
 
                     Event event = Mockito.mock(Event.class);

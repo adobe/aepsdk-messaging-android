@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging;
 import java.util.List;
 
 /** A {@link Feed} object aggregates one or more {@link FeedItem}s. */
+@Deprecated
 public class Feed {
     // Friendly name for the feed, provided in the AJO UI
     private final String name;

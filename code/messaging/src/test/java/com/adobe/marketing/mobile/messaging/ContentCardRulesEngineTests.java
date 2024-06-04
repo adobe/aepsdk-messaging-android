@@ -28,11 +28,11 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class FeedRulesEngineTests {
+public class ContentCardRulesEngineTests {
 
     @Mock private ExtensionApi mockExtensionApi;
 
-    private FeedRulesEngine feedRulesEngine;
+    private ContentCardRulesEngine contentCardRulesEngine;
 
     private Event defaultEvent =
             new Event.Builder("event", EventType.GENERIC_TRACK, EventSource.REQUEST_CONTENT)
@@ -46,13 +46,13 @@ public class FeedRulesEngineTests {
 
     @Before
     public void setup() {
-        feedRulesEngine = new FeedRulesEngine("mockRulesEngine", mockExtensionApi);
+        contentCardRulesEngine = new ContentCardRulesEngine("mockRulesEngine", mockExtensionApi);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_evaluate_WithNullEvent() {
         // test
-        feedRulesEngine.evaluate(null);
+        contentCardRulesEngine.evaluate(null);
     }
 
     @Test
@@ -61,11 +61,11 @@ public class FeedRulesEngineTests {
         String rulesJson = MessagingTestUtils.loadStringFromFile("ruleWithNoConsequence.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertNull(propositionItemsBySurface);
@@ -77,11 +77,11 @@ public class FeedRulesEngineTests {
         String rulesJson = MessagingTestUtils.loadStringFromFile("inappPropositionV2Content.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
@@ -94,11 +94,11 @@ public class FeedRulesEngineTests {
         String rulesJson = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
@@ -118,11 +118,11 @@ public class FeedRulesEngineTests {
                         "feedPropositionContentFeedItemConsequences.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
@@ -141,11 +141,11 @@ public class FeedRulesEngineTests {
                 MessagingTestUtils.loadStringFromFile("feedPropositionContentMissingData.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertTrue(propositionItemsBySurface.isEmpty());
@@ -159,11 +159,11 @@ public class FeedRulesEngineTests {
                         "feedPropositionContentMissingSurfaceMetadata.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
-        feedRulesEngine.replaceRules(rules);
+        contentCardRulesEngine.replaceRules(rules);
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
         Assert.assertTrue(propositionItemsBySurface.isEmpty());

@@ -148,6 +148,9 @@ public class PropositionItem implements Serializable {
             final String interaction,
             @NonNull final MessagingEdgeEventType eventType,
             final List<String> tokens) {
+        // record the event in event history
+
+
         final Map<String, Object> propositionInteractionXdm =
                 generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
@@ -297,15 +300,44 @@ public class PropositionItem implements Serializable {
     }
 
     /**
+     * Returns this {@link PropositionItem}'s content as a {@code ContentCardSchemaData} object.
+     *
+     * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s content.
+     */
+    public ContentCardSchemaData getContentCardSchemaData() {
+        if (!schema.equals(SchemaType.CONTENT_CARD)) {
+            return null;
+        }
+        final ContentCardSchemaData contentCardSchemaData =
+                (ContentCardSchemaData) createSchemaData(SchemaType.CONTENT_CARD);
+
+        if (contentCardSchemaData != null) {
+            contentCardSchemaData.parent = this;
+        }
+
+        return contentCardSchemaData;
+    }
+
+    /**
      * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
      *
      * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
+     * @deprecated
      */
+    @Deprecated
     public FeedItemSchemaData getFeedItemSchemaData() {
         if (!schema.equals(SchemaType.FEED)) {
             return null;
         }
-        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        final FeedItemSchemaData feedItemSchemaData =
+                (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        if (feedItemSchemaData != null) {
+            feedItemSchemaData.parent = this;
+        }
+
+        return feedItemSchemaData;
     }
 
     /**
@@ -334,6 +366,8 @@ public class PropositionItem implements Serializable {
                 return new InAppSchemaData(ruleJson);
             case FEED:
                 return new FeedItemSchemaData(ruleJson);
+            case CONTENT_CARD:
+                return new ContentCardSchemaData(ruleJson);
             default:
                 break;
         }

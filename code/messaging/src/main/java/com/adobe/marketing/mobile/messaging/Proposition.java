@@ -13,6 +13,8 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -104,6 +106,23 @@ public class Proposition implements Serializable {
         return scopeDetails;
     }
 
+    String getActivityId() {
+        // return early if we have no "scopeDetails"
+        if (MapUtils.isNullOrEmpty(scopeDetails)) {
+            return "";
+        }
+
+        final Map<String, Object> activity = DataReader.optTypedMap(Object.class, scopeDetails,
+                MessagingConstants.PayloadKeys.ACTIVITY, null);
+
+        // return early if we don't have an "activity" map in "scopeDetails"
+        if (MapUtils.isNullOrEmpty(activity)) {
+            return "";
+        }
+
+        return DataReader.optString(activity, MessagingConstants.PayloadKeys.ID, "");
+    }
+
     /**
      * Creates a {@code Proposition} object from the provided {@code Map<String, Object>}.
      *
@@ -156,6 +175,7 @@ public class Proposition implements Serializable {
         return eventData;
     }
 
+    // TODO: - do we need to update this equals function to look compare ONLY activityId instead?
     public boolean equals(final Object object) {
         if (object instanceof Proposition) {
             final Proposition proposition = (Proposition) object;

@@ -56,7 +56,7 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private final FeedRulesEngine feedRulesEngine;
+    private final ContentCardRulesEngine contentCardRulesEngine;
 
     private Map<Surface, List<Proposition>> propositions = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
@@ -76,15 +76,15 @@ class EdgePersonalizationResponseHandler {
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine {@link LaunchRulesEngine} instance to use for loading in-app message rule
      *     payloads
-     * @param feedRulesEngine {@link FeedRulesEngine} instance to use for loading message feed rule
+     * @param contentCardRulesEngine {@link ContentCardRulesEngine} instance to use for loading message feed rule
      *     payloads
      */
     EdgePersonalizationResponseHandler(
             final MessagingExtension parent,
             final ExtensionApi extensionApi,
             final LaunchRulesEngine rulesEngine,
-            final FeedRulesEngine feedRulesEngine) {
-        this(parent, extensionApi, rulesEngine, feedRulesEngine, null);
+            final ContentCardRulesEngine contentCardRulesEngine) {
+        this(parent, extensionApi, rulesEngine, contentCardRulesEngine, null);
     }
 
     @SuppressWarnings("NestedIfDepth")
@@ -93,12 +93,12 @@ class EdgePersonalizationResponseHandler {
             final MessagingExtension parent,
             final ExtensionApi extensionApi,
             final LaunchRulesEngine rulesEngine,
-            final FeedRulesEngine feedRulesEngine,
+            final ContentCardRulesEngine contentCardRulesEngine,
             final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
-        this.feedRulesEngine = feedRulesEngine;
+        this.contentCardRulesEngine = contentCardRulesEngine;
 
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities =
@@ -605,7 +605,7 @@ class EdgePersonalizationResponseHandler {
                     }
 
                     // update rules in feed rules engine
-                    feedRulesEngine.replaceRules(collectedFeedRules);
+                    contentCardRulesEngine.replaceRules(collectedFeedRules);
                     break;
                 default:
                     // no-op
@@ -644,7 +644,7 @@ class EdgePersonalizationResponseHandler {
     private Map<Surface, List<Proposition>> getPropositionsFromFeedRulesEngine(final Event event) {
         Map<Surface, List<Proposition>> surfacePropositions = new HashMap<>();
         final Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(event);
+                contentCardRulesEngine.evaluate(event);
         if (!MapUtils.isNullOrEmpty(propositionItemsBySurface)) {
             for (final Map.Entry<Surface, List<PropositionItem>> entry :
                     propositionItemsBySurface.entrySet()) {

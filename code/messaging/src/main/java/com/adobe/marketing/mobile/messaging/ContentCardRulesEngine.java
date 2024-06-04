@@ -24,10 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class FeedRulesEngine extends LaunchRulesEngine {
+class ContentCardRulesEngine extends LaunchRulesEngine {
     final ExtensionApi extensionApi;
 
-    FeedRulesEngine(@NonNull final String name, @NonNull final ExtensionApi extensionApi) {
+    ContentCardRulesEngine(@NonNull final String name, @NonNull final ExtensionApi extensionApi) {
         super(name, extensionApi);
         this.extensionApi = extensionApi;
     }
@@ -60,18 +60,18 @@ class FeedRulesEngine extends LaunchRulesEngine {
             if (propositionItem == null) {
                 continue;
             }
-            final FeedItemSchemaData propositionAsFeedItem =
-                    propositionItem.getFeedItemSchemaData();
 
-            if (propositionAsFeedItem == null) {
+            final ContentCardSchemaData propositionAsContentCard = propositionItem.getContentCardSchemaData();
+            if (propositionAsContentCard == null) {
                 continue;
             }
 
-            final Map metadata = propositionAsFeedItem.getMeta();
+            final Map metadata = propositionAsContentCard.getMeta();
             if (MapUtils.isNullOrEmpty(metadata)) {
                 continue;
             }
 
+            // the surface for a content card is automatically added to its meta data
             final Surface surface =
                     Surface.fromUriString(
                             DataReader.optString(

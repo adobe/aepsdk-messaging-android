@@ -1,5 +1,5 @@
 /*
-  Copyright 2023 Adobe. All rights reserved.
+  Copyright 2024 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -17,134 +17,134 @@ import com.adobe.marketing.mobile.util.StringUtils;
 import java.lang.ref.SoftReference;
 
 /**
- * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet
- * interactive offer. Customers can use the Messaging SDK to render the feed item data in a
+ * A {@link ContentCard} object encapsulates the information necessary for a non-disruptive yet
+ * interactive offer. Customers can use the Messaging SDK to render the content card in a
  * pre-defined format or implement their own rendering.
  */
-@Deprecated
-public class FeedItem {
-    private static final String SELF_TAG = "FeedItem";
-    // Plain-text title for the feed item
+public class ContentCard {
+    private static final String SELF_TAG = "ContentCard";
+
+    // Plain-text title for the content card
     private String title;
-    // Plain-text body representing the content for the feed item
+    // Plain-text body representing the content for the content card
     private String body;
-    // String representing a URI that contains an image to be used for this feed item
+    // String representing a URI that contains an image to be used for this content card
     private String imageUrl;
-    // Contains a URL to be opened if the user interacts with the feed item
+    // Contains a URL to be opened if the user interacts with the content card
     private String actionUrl;
-    // Required if actionUrl is provided. Text to be used in title of button or link in feed item
+    // Required if actionUrl is provided. Text to be used in title of button or link in content card
     private String actionTitle;
-    // Reference to parent feedItemSchemaData instance
-    FeedItemSchemaData parent;
+    // Reference to parent ContentCardSchemaData instance
+    ContentCardSchemaData parent;
 
     /**
      * Private constructor.
      *
-     * <p>Use {@link Builder} to create {@link FeedItem} object.
+     * <p>Use {@link Builder} to create {@link ContentCard} object.
      */
-    private FeedItem() {}
+    private ContentCard() {}
 
     /** {@code FeedItem} Builder. */
     public static class Builder {
         private boolean didBuild;
-        private final FeedItem feedItem;
+        private final ContentCard contentCard;
 
         /**
-         * Builder constructor with required {@code FeedItem} attributes as parameters.
+         * Builder constructor with required {@code ContentCard} attributes as parameters.
          *
-         * <p>It sets default values for the remaining {@link FeedItem} attributes.
+         * <p>It sets default values for the remaining {@link ContentCard} attributes.
          *
-         * @param title required {@link String} plain-text title for the feed item
-         * @param body required {@link String} plain-text body representing the content for the feed
-         *     item
+         * @param title required {@link String} plain-text title for the content card
+         * @param body required {@link String} plain-text body representing the content for the
+         *     content card
          */
         public Builder(final String title, final String body) {
-            feedItem = new FeedItem();
-            feedItem.title = StringUtils.isNullOrEmpty(title) ? "" : title;
-            feedItem.body = StringUtils.isNullOrEmpty(body) ? "" : body;
-            feedItem.imageUrl = "";
-            feedItem.actionUrl = "";
-            feedItem.actionTitle = "";
+            contentCard = new ContentCard();
+            contentCard.title = StringUtils.isNullOrEmpty(title) ? "" : title;
+            contentCard.body = StringUtils.isNullOrEmpty(body) ? "" : body;
+            contentCard.imageUrl = "";
+            contentCard.actionUrl = "";
+            contentCard.actionTitle = "";
             didBuild = false;
         }
 
         /**
-         * Sets the image url for this {@code FeedItem}.
+         * Sets the image url for this {@code ContentCard}.
          *
-         * @param imageUrl {@link String} containing the {@link FeedItem} image url.
-         * @return this FeedItem {@link Builder}
+         * @param imageUrl {@link String} containing the {@link ContentCard} image url.
+         * @return this ContentCard {@link Builder}
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
         public Builder setImageUrl(final String imageUrl) {
             throwIfAlreadyBuilt();
 
-            feedItem.imageUrl = imageUrl;
+            contentCard.imageUrl = imageUrl;
             return this;
         }
 
         /**
-         * Sets the action url for this {@code FeedItem}.
+         * Sets the action url for this {@code ContentCard}.
          *
-         * @param actionUrl {@link String} containing the {@link FeedItem} action url.
-         * @return this FeedItem {@link Builder}
+         * @param actionUrl {@link String} containing the {@link ContentCard} action url.
+         * @return this ContentCard {@link Builder}
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
         public Builder setActionUrl(final String actionUrl) {
             throwIfAlreadyBuilt();
 
-            feedItem.actionUrl = actionUrl;
+            contentCard.actionUrl = actionUrl;
             return this;
         }
 
         /**
-         * Sets the action title for this {@code FeedItem}.
+         * Sets the action title for this {@code ContentCard}.
          *
-         * @param actionTitle {@link String} containing the {@link FeedItem} action title.
-         * @return this FeedItem {@link Builder}
+         * @param actionTitle {@link String} containing the {@link ContentCard} action title.
+         * @return this ContentCard {@link Builder}
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
         public Builder setActionTitle(final String actionTitle) {
             throwIfAlreadyBuilt();
 
-            feedItem.actionTitle = actionTitle;
+            contentCard.actionTitle = actionTitle;
             return this;
         }
 
         /**
-         * Sets the {@code FeedItemSchemaData} parent object.
+         * Sets the {@code ContentCardSchemaData} parent object.
          *
-         * @param parent {@link FeedItemSchemaData} object which is the parent for this {@link
-         *     FeedItem}.
+         * @param parent {@link ContentCardSchemaData} object which is the parent for this {@link
+         *     ContentCard}.
          * @return this FeedItem {@link Builder}
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
-        public Builder setParent(final FeedItemSchemaData parent) {
+        public Builder setParent(final ContentCardSchemaData parent) {
             throwIfAlreadyBuilt();
 
-            feedItem.parent = parent;
+            contentCard.parent = parent;
             return this;
         }
 
         /**
-         * Builds and returns the {@code FeedItem} object.
+         * Builds and returns the {@code ContentCard} object.
          *
-         * @return {@link FeedItem} object or null.
+         * @return {@link ContentCard} object or null.
          */
-        public FeedItem build() {
+        public ContentCard build() {
             // title and body are required
-            if (StringUtils.isNullOrEmpty(feedItem.title)
-                    || StringUtils.isNullOrEmpty(feedItem.body)) {
+            if (StringUtils.isNullOrEmpty(contentCard.title)
+                    || StringUtils.isNullOrEmpty(contentCard.body)) {
                 return null;
             }
 
             throwIfAlreadyBuilt();
             didBuild = true;
 
-            return feedItem;
+            return contentCard;
         }
 
         private void throwIfAlreadyBuilt() {
@@ -156,45 +156,45 @@ public class FeedItem {
     }
 
     /**
-     * Gets the {@code FeedItem} title.
+     * Gets the {@code ContentCard} title.
      *
-     * @return {@link String} containing the {@link FeedItem} title.
+     * @return {@link String} containing the {@link ContentCard} title.
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * Gets the {@code FeedItem} body.
+     * Gets the {@code ContentCard} body.
      *
-     * @return {@link String} containing the {@link FeedItem} body.
+     * @return {@link String} containing the {@link ContentCard} body.
      */
     public String getBody() {
         return body;
     }
 
     /**
-     * Gets the {@code FeedItem} image url.
+     * Gets the {@code ContentCard} image url.
      *
-     * @return {@link String} containing the {@link FeedItem} image url.
+     * @return {@link String} containing the {@link ContentCard} image url.
      */
     public String getImageUrl() {
         return imageUrl;
     }
 
     /**
-     * Gets the {@code FeedItem} action url.
+     * Gets the {@code ContentCard} action url.
      *
-     * @return {@link String} containing the {@link FeedItem} action url.
+     * @return {@link String} containing the {@link ContentCard} action url.
      */
     public String getActionUrl() {
         return actionUrl;
     }
 
     /**
-     * Gets the {@code FeedItem} action title.
+     * Gets the {@code ContentCard} action title.
      *
-     * @return {@link String} containing the {@link FeedItem} action title.
+     * @return {@link String} containing the {@link ContentCard} action title.
      */
     public String getActionTitle() {
         return actionTitle;

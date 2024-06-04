@@ -42,7 +42,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
-    final FeedRulesEngine feedRulesEngine;
+    final ContentCardRulesEngine contentCardRulesEngine;
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
@@ -72,18 +72,18 @@ public final class MessagingExtension extends Extension {
     MessagingExtension(
             final ExtensionApi extensionApi,
             final LaunchRulesEngine messagingRulesEngine,
-            final FeedRulesEngine feedRulesEngine,
+            final ContentCardRulesEngine contentCardRulesEngine,
             final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
         this.messagingRulesEngine =
                 messagingRulesEngine != null
                         ? messagingRulesEngine
                         : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
-        this.feedRulesEngine =
-                feedRulesEngine != null
-                        ? feedRulesEngine
-                        : new FeedRulesEngine(
-                                MessagingConstants.FEED_RULES_ENGINE_NAME, extensionApi);
+        this.contentCardRulesEngine =
+                contentCardRulesEngine != null
+                        ? contentCardRulesEngine
+                        : new ContentCardRulesEngine(
+                                MessagingConstants.CONTENT_CARD_RULES_ENGINE_NAME, extensionApi);
         this.edgePersonalizationResponseHandler =
                 edgePersonalizationResponseHandler != null
                         ? edgePersonalizationResponseHandler
@@ -91,7 +91,7 @@ public final class MessagingExtension extends Extension {
                                 this,
                                 extensionApi,
                                 this.messagingRulesEngine,
-                                this.feedRulesEngine);
+                                this.contentCardRulesEngine);
     }
 
     // region Extension interface methods
