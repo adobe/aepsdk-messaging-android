@@ -269,7 +269,7 @@ public class MessagingExtensionTests {
 
                     // verify EdgePersonalizationResponseHandler.retrieveMessages called
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .retrieveMessages(any(), any());
+                            .retrieveCachedContentCards(any(), any());
                 });
     }
 
@@ -1752,7 +1752,7 @@ public class MessagingExtensionTests {
 
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .fetchMessages(mockEvent, null);
+                            .fetchPropositions(mockEvent, null);
                 });
     }
 
@@ -1815,7 +1815,7 @@ public class MessagingExtensionTests {
 
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .fetchMessages(any(Event.class), listArgumentCaptor.capture());
+                            .fetchPropositions(any(Event.class), listArgumentCaptor.capture());
                     List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
                     assertEquals(2, capturedSurfaces.size());
                     List<String> sortedList = new ArrayList<>();

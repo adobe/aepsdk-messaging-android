@@ -1292,7 +1292,7 @@ public class InternalMessagingUtilsTests {
 
         // test
         InternalMessagingUtils.sendEvent(
-                eventName, eventType, eventSource, data, mask, extensionApi);
+                eventName, eventType, eventSource, data, mask, extensionApi, null);
 
         // verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -1316,7 +1316,7 @@ public class InternalMessagingUtilsTests {
         ExtensionApi extensionApi = mock(ExtensionApi.class);
 
         // test
-        InternalMessagingUtils.sendEvent(eventName, eventType, eventSource, data, extensionApi);
+        InternalMessagingUtils.sendEvent(eventName, eventType, eventSource, data, extensionApi, null);
 
         // verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);

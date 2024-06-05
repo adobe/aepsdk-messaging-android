@@ -209,7 +209,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -258,7 +258,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -293,7 +293,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
@@ -328,7 +328,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -383,7 +383,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -421,7 +421,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     surfacePaths.add(new Surface("alsoinvalid##"));
 
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
@@ -453,7 +453,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -1197,7 +1197,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1305,7 +1305,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1372,7 +1372,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
 
                         // verify error response event dispatched
                         verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
@@ -1435,7 +1435,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
 
                         // verify no response event dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
