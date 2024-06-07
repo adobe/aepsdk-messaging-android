@@ -61,7 +61,8 @@ class ContentCardRulesEngine extends LaunchRulesEngine {
                 continue;
             }
 
-            final ContentCardSchemaData propositionAsContentCard = propositionItem.getContentCardSchemaData();
+            final ContentCardSchemaData propositionAsContentCard =
+                    propositionItem.getContentCardSchemaData();
             if (propositionAsContentCard == null) {
                 continue;
             }

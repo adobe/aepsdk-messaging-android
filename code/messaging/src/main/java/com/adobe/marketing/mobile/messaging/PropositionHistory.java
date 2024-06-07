@@ -11,34 +11,39 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.*;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.util.HashMap;
 import java.util.Map;
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.*;
 
 final class PropositionHistory {
     private PropositionHistory() {}
 
     private static final String SELF_TAG = "PropositionHistory";
     /**
-     * Dispatches an event to be recorded in Event History.
-     * If `activityId` is an empty string, calling this function results in a no-op
+     * Dispatches an event to be recorded in Event History. If `activityId` is an empty string,
+     * calling this function results in a no-op
      *
      * @param activityId {@link String} the Activity ID of the proposition being recorded.
      * @param eventType {@link MessagingEdgeEventType} the type of event being recorded.
-     * @param interaction {@code String} optional value containing the specific interaction recorded.
+     * @param interaction {@code String} optional value containing the specific interaction
+     *     recorded.
      */
-    static void record(@NonNull final String activityId, @NonNull final MessagingEdgeEventType eventType, @Nullable String interaction) {
+    static void record(
+            @NonNull final String activityId,
+            @NonNull final MessagingEdgeEventType eventType,
+            @Nullable String interaction) {
         if (StringUtils.isNullOrEmpty(activityId)) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
                     "Ignoring request to record PropositionHistory - activityId is empty.");
             return;
         }
@@ -47,8 +52,8 @@ final class PropositionHistory {
         final Map<String, String> iamHistoryMap = new HashMap<>();
         iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
         iamHistoryMap.put(MESSAGE_ID, activityId);
-        iamHistoryMap.put(TRACKING_ACTION,
-                (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
+        iamHistoryMap.put(
+                TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // wrap history in an "iam" object
         final Map<String, Object> eventHistoryData = new HashMap<>();
@@ -56,16 +61,19 @@ final class PropositionHistory {
 
         // create the mask for storing event history
         final String[] mask = {
-                MessagingConstants.EventMask.Mask.EVENT_TYPE,
-                MessagingConstants.EventMask.Mask.MESSAGE_ID,
-                MessagingConstants.EventMask.Mask.TRACKING_ACTION
+            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.TRACKING_ACTION
         };
 
-        final Event event = new Event.Builder(
-                MessagingConstants.EventName.EVENT_HISTORY_WRITE,
-                MessagingConstants.EventType.MESSAGING,
-                MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
-                mask).setEventData(eventHistoryData).build();
+        final Event event =
+                new Event.Builder(
+                                MessagingConstants.EventName.EVENT_HISTORY_WRITE,
+                                MessagingConstants.EventType.MESSAGING,
+                                MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                                mask)
+                        .setEventData(eventHistoryData)
+                        .build();
 
         MobileCore.dispatchEvent(event);
     }

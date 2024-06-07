@@ -33,11 +33,13 @@ public class MessagingUtilsTests {
             new HashMap<String, Object>() {
                 {
                     put("key", "value");
-                    put("activity", new HashMap<String, Object>() {
-                        {
-                            put("id", "mockActivityId");
-                        }
-                    });
+                    put(
+                            "activity",
+                            new HashMap<String, Object>() {
+                                {
+                                    put("id", "mockActivityId");
+                                }
+                            });
                 }
             };
 
@@ -77,11 +79,13 @@ public class MessagingUtilsTests {
                         new HashMap<String, Object>() {
                             {
                                 put("key", "value");
-                                put("activity", new HashMap<String, Object>() {
-                                    {
-                                        put("id", "mockActivityId2");
-                                    }
-                                });
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId2");
+                                            }
+                                        });
                             }
                         },
                         new ArrayList<PropositionItem>() {
@@ -99,11 +103,13 @@ public class MessagingUtilsTests {
                         new HashMap<String, Object>() {
                             {
                                 put("key", "value");
-                                put("activity", new HashMap<String, Object>() {
-                                    {
-                                        put("id", "mockActivityId3");
-                                    }
-                                });
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId3");
+                                            }
+                                        });
                             }
                         },
                         new ArrayList<PropositionItem>() {

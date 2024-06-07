@@ -24,7 +24,6 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
-import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -335,18 +334,21 @@ class PresentableMessageMapper {
         }
 
         /**
-         * Dispatches an event to be recorded in Event History.
-         * Does not write to event history if the activity ID cannot be retrieved from
-         * proposition info.
+         * Dispatches an event to be recorded in Event History. Does not write to event history if
+         * the activity ID cannot be retrieved from proposition info.
          *
          * @param interaction {@code String} if provided, adds a custom interaction to the hash
          * @param eventType {@link MessagingEdgeEventType} to be recorded
          */
         void recordEventHistory(final String interaction, final MessagingEdgeEventType eventType) {
             if (propositionInfo == null || StringUtils.isNullOrEmpty(propositionInfo.activityId)) {
-                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,
-                        "Unable to write event history event %s, proposition info is " +
-                                "not available for message %s", eventType.toString(), id);
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Unable to write event history event %s, proposition info is "
+                                + "not available for message %s",
+                        eventType.toString(),
+                        id);
                 return;
             }
 

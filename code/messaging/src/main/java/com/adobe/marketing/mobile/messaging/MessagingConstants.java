@@ -40,9 +40,11 @@ public final class MessagingConstants {
         static final String SCHEMA_RULESET_ITEM =
                 "https://ns.adobe.com/personalization/ruleset-item";
         static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+
         @Deprecated
         static final String SCHEMA_FEED_ITEM =
                 "https://ns.adobe.com/personalization/message/feed-item";
+
         static final String SCHEMA_CONTENT_CARD =
                 "https://ns.adobe.com/personalization/message/content-card";
         static final String SCHEMA_NATIVE_ALERT =

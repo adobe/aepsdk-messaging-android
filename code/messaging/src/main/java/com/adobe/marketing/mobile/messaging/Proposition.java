@@ -13,8 +13,6 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
@@ -112,8 +110,9 @@ public class Proposition implements Serializable {
             return "";
         }
 
-        final Map<String, Object> activity = DataReader.optTypedMap(Object.class, scopeDetails,
-                MessagingConstants.PayloadKeys.ACTIVITY, null);
+        final Map<String, Object> activity =
+                DataReader.optTypedMap(
+                        Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
 
         // return early if we don't have an "activity" map in "scopeDetails"
         if (MapUtils.isNullOrEmpty(activity)) {

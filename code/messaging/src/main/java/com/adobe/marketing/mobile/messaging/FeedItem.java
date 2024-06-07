@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
-import java.lang.ref.SoftReference;
 
 /**
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet
@@ -209,9 +208,10 @@ public class FeedItem {
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (parent == null) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,
-                    "Unable to track ContentCard, "
-                            + "parent schema object is unavailable.");
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unable to track ContentCard, " + "parent schema object is unavailable.");
             return;
         }
         parent.track(interaction, eventType);

@@ -13,13 +13,11 @@ package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,7 +131,9 @@ public class ContentCardSchemaData implements SchemaData {
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (parent == null) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG,
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
                     "Unable to track ContentCardSchemaData, "
                             + "parent proposition item is unavailable.");
             return;

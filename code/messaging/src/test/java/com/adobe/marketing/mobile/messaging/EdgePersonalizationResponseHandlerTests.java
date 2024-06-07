@@ -98,8 +98,7 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock CacheResult mockCacheResult;
     @Mock MessagingExtension mockMessagingExtension;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
-    @Mock
-    ContentCardRulesEngine mockContentCardRulesEngine;
+    @Mock ContentCardRulesEngine mockContentCardRulesEngine;
     @Mock MessagingCacheUtilities mockMessagingCacheUtilities;
     @Mock SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
     @Mock PresentableMessageMapper mockPresentableMessageMapper;
@@ -1197,7 +1196,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                                surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1305,7 +1305,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                                surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1372,7 +1373,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                                surfaces, mockEvent);
 
                         // verify error response event dispatched
                         verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
@@ -1435,7 +1437,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                                surfaces, mockEvent);
 
                         // verify no response event dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));

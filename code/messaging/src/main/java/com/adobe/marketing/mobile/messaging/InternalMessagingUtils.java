@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
-
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -401,8 +400,13 @@ class InternalMessagingUtils {
      * @param extensionApi {@link ExtensionApi} to use for dispatching the event
      * @param parentEvent {@link Event} used by the new event as the parent for event chaining
      */
-    static void sendEvent(final String eventName, final String eventType, final String eventSource,
-            final Map<String, Object> data, final String[] mask, final ExtensionApi extensionApi,
+    static void sendEvent(
+            final String eventName,
+            final String eventType,
+            final String eventSource,
+            final Map<String, Object> data,
+            final String[] mask,
+            final ExtensionApi extensionApi,
             final @Nullable Event parentEvent) {
         final Event.Builder builder = new Event.Builder(eventName, eventType, eventSource, mask);
         builder.setEventData(data);

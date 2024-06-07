@@ -326,40 +326,55 @@ public class PropositionTests {
         // test
         Proposition proposition1 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", new HashMap<String, Object>() {
-                    {
-                        put("key", "value");
-                        put("activity", new HashMap<String, Object>() {
+                        "uniqueId",
+                        "mobileapp://mockScope",
+                        new HashMap<String, Object>() {
                             {
-                                put("id", "mockActivityId");
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId");
+                                            }
+                                        });
                             }
-                        });
-                    }
-                }, propositionItems);
+                        },
+                        propositionItems);
         Proposition proposition2 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", new HashMap<String, Object>() {
-                    {
-                        put("key", "value");
-                        put("activity", new HashMap<String, Object>() {
+                        "uniqueId",
+                        "mobileapp://mockScope",
+                        new HashMap<String, Object>() {
                             {
-                                put("id", "mockActivityId");
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId");
+                                            }
+                                        });
                             }
-                        });
-                    }
-                }, propositionItems);
+                        },
+                        propositionItems);
         Proposition proposition3 =
                 new Proposition(
-                        "uniqueId2", "mobileapp://mockScope2", new HashMap<String, Object>() {
-                    {
-                        put("key", "value");
-                        put("activity", new HashMap<String, Object>() {
+                        "uniqueId2",
+                        "mobileapp://mockScope2",
+                        new HashMap<String, Object>() {
                             {
-                                put("id", "mockActivityId2");
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId2");
+                                            }
+                                        });
                             }
-                        });
-                    }
-                }, propositionItems2);
+                        },
+                        propositionItems2);
 
         Object notAMessagingProposition = new Object();
         // verify

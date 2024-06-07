@@ -150,7 +150,6 @@ public class PropositionItem implements Serializable {
             final List<String> tokens) {
         // record the event in event history
 
-
         final Map<String, Object> propositionInteractionXdm =
                 generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
@@ -302,7 +301,8 @@ public class PropositionItem implements Serializable {
     /**
      * Returns this {@link PropositionItem}'s content as a {@code ContentCardSchemaData} object.
      *
-     * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s content.
+     * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s
+     *     content.
      */
     public ContentCardSchemaData getContentCardSchemaData() {
         if (!schema.equals(SchemaType.CONTENT_CARD)) {

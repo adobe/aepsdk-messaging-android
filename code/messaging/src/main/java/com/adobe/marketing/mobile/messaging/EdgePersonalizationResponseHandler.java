@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.VisibleForTesting;
-
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
@@ -87,8 +86,8 @@ class EdgePersonalizationResponseHandler {
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine {@link LaunchRulesEngine} instance to use for loading in-app message rule
      *     payloads
-     * @param contentCardRulesEngine {@link ContentCardRulesEngine} instance to use for loading message feed rule
-     *     payloads
+     * @param contentCardRulesEngine {@link ContentCardRulesEngine} instance to use for loading
+     *     message feed rule payloads
      */
     EdgePersonalizationResponseHandler(
             final MessagingExtension parent,
@@ -393,7 +392,9 @@ class EdgePersonalizationResponseHandler {
         }
 
         if (requestedSurfaces.isEmpty()) {
-            Log.debug(MessagingConstants.LOG_TAG,SELF_TAG,
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
                     "Unable to retrieve messages, no valid surfaces found.");
             extensionApi.dispatch(
                     InternalMessagingUtils.createErrorResponseEvent(
@@ -614,8 +615,12 @@ class EdgePersonalizationResponseHandler {
                     // process a generic event to see if there are any content cards with:
                     // 1. no client-side qualification requirements, or
                     // 2. prior qualification by this device
-                    final Event event = new Event.Builder("Seed content cards",
-                            EventType.EDGE, EventSource.REQUEST_CONTENT).build();
+                    final Event event =
+                            new Event.Builder(
+                                            "Seed content cards",
+                                            EventType.EDGE,
+                                            EventSource.REQUEST_CONTENT)
+                                    .build();
                     updateQualifiedContentCardsForEvent(event);
 
                     break;
@@ -631,23 +636,26 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    /** Checks to see if the user has qualified for any content cards based on provided {@link Event}.
+    /**
+     * Checks to see if the user has qualified for any content cards based on provided {@link
+     * Event}.
      *
      * @param event may result in content card qualification.
      */
     void updateQualifiedContentCardsForEvent(final Event event) {
         final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                 getPropositionsFromContentCardRulesEngine(event);
-        for (final Map.Entry<Surface, List<Proposition>> entry : qualifiedContentCardsBySurface.entrySet()) {
+        for (final Map.Entry<Surface, List<Proposition>> entry :
+                qualifiedContentCardsBySurface.entrySet()) {
             addOrReplaceContentCards(entry.getValue(), entry.getKey());
         }
     }
 
     /**
-     * Manages qualified content cards by surface.
-     * Prevents multiple entries for the same proposition in {@code contentCardsBySurface}.
-     * If an existing entry for a proposition is found, it is replaced with the value in propositions.
-     * If no prior entry exists for a proposition, a `trigger` event will be sent and written to event history).
+     * Manages qualified content cards by surface. Prevents multiple entries for the same
+     * proposition in {@code contentCardsBySurface}. If an existing entry for a proposition is
+     * found, it is replaced with the value in propositions. If no prior entry exists for a
+     * proposition, a `trigger` event will be sent and written to event history).
      *
      * @param propositions list of qualified {@link Proposition}s for the given surface.
      * @param surface {@link Surface} to which qualified propositions belong.
@@ -686,11 +694,18 @@ class EdgePersonalizationResponseHandler {
         int newCount = updatedPropositionsArray == null ? 0 : updatedPropositionsArray.size();
         if (startingCount != newCount) {
             if (newCount > 0) {
-                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "User has qualified for %d "
-                        + "content card(s) for surface %s", newCount, surface.getUri());
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "User has qualified for %d " + "content card(s) for surface %s",
+                        newCount,
+                        surface.getUri());
             } else {
-                Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "User has not qualified for "
-                        + "any content card(s) for surface %s", surface.getUri());
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "User has not qualified for " + "any content card(s) for surface %s",
+                        surface.getUri());
             }
         }
     }
@@ -717,7 +732,8 @@ class EdgePersonalizationResponseHandler {
     }
 
     @SuppressWarnings("NestedForDepth")
-    private Map<Surface, List<Proposition>> getPropositionsFromContentCardRulesEngine(final Event event) {
+    private Map<Surface, List<Proposition>> getPropositionsFromContentCardRulesEngine(
+            final Event event) {
         Map<Surface, List<Proposition>> surfacePropositions = new HashMap<>();
         final Map<Surface, List<PropositionItem>> propositionItemsBySurface =
                 contentCardRulesEngine.evaluate(event);
