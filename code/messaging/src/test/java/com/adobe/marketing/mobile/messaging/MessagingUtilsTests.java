@@ -33,6 +33,11 @@ public class MessagingUtilsTests {
             new HashMap<String, Object>() {
                 {
                     put("key", "value");
+                    put("activity", new HashMap<String, Object>() {
+                        {
+                            put("id", "mockActivityId");
+                        }
+                    });
                 }
             };
 
@@ -69,7 +74,16 @@ public class MessagingUtilsTests {
                 new Proposition(
                         "mockId1",
                         mockSurface.getUri(),
-                        mockScopeDetails,
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put("activity", new HashMap<String, Object>() {
+                                    {
+                                        put("id", "mockActivityId2");
+                                    }
+                                });
+                            }
+                        },
                         new ArrayList<PropositionItem>() {
                             {
                                 add(mockPropositionItemToAdd1);
@@ -82,7 +96,16 @@ public class MessagingUtilsTests {
                 new Proposition(
                         "mockId2",
                         mockSurface.getUri(),
-                        mockScopeDetails,
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put("activity", new HashMap<String, Object>() {
+                                    {
+                                        put("id", "mockActivityId3");
+                                    }
+                                });
+                            }
+                        },
                         new ArrayList<PropositionItem>() {
                             {
                                 add(propositionItemToAdd2);

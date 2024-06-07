@@ -266,7 +266,7 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
         Map<Surface, List<LaunchRule>> feedRules =
-                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.FEED);
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD);
         Assert.assertNotNull(feedRules);
         Assert.assertEquals(1, feedRules.size());
     }

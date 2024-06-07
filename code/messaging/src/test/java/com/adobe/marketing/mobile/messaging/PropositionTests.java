@@ -282,7 +282,7 @@ public class PropositionTests {
                                         + "                        \"detail\": {\n"
                                         + "                            \"id\": \"uniqueId\",\n"
                                         + "                            \"schema\":"
-                                        + " \"https://ns.adobe.com/personalization/message/feed-item\",\n"
+                                        + " \"https://ns.adobe.com/personalization/message/content-card\",\n"
                                         + "                            \"data\": {\n"
                                         + "                                \"expiryDate\":"
                                         + " 1717688797,\n"
@@ -326,13 +326,40 @@ public class PropositionTests {
         // test
         Proposition proposition1 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+                        "uniqueId", "mobileapp://mockScope", new HashMap<String, Object>() {
+                    {
+                        put("key", "value");
+                        put("activity", new HashMap<String, Object>() {
+                            {
+                                put("id", "mockActivityId");
+                            }
+                        });
+                    }
+                }, propositionItems);
         Proposition proposition2 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+                        "uniqueId", "mobileapp://mockScope", new HashMap<String, Object>() {
+                    {
+                        put("key", "value");
+                        put("activity", new HashMap<String, Object>() {
+                            {
+                                put("id", "mockActivityId");
+                            }
+                        });
+                    }
+                }, propositionItems);
         Proposition proposition3 =
                 new Proposition(
-                        "uniqueId2", "mobileapp://mockScope2", scopeDetails, propositionItems2);
+                        "uniqueId2", "mobileapp://mockScope2", new HashMap<String, Object>() {
+                    {
+                        put("key", "value");
+                        put("activity", new HashMap<String, Object>() {
+                            {
+                                put("id", "mockActivityId2");
+                            }
+                        });
+                    }
+                }, propositionItems2);
 
         Object notAMessagingProposition = new Object();
         // verify

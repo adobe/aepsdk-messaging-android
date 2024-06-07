@@ -107,7 +107,7 @@ public class ContentCardRulesEngineTests {
                 propositionItemsBySurface.get(Surface.fromUriString("mobileapp://mockPackageName"));
         Assert.assertNotNull(inboundMessageList);
         Assert.assertEquals(1, inboundMessageList.size());
-        Assert.assertEquals(SchemaType.FEED, inboundMessageList.get(0).getSchema());
+        Assert.assertEquals(SchemaType.CONTENT_CARD, inboundMessageList.get(0).getSchema());
     }
 
     @Test

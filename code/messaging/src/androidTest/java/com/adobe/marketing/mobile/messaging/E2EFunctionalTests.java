@@ -38,7 +38,7 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
-import com.adobe.marketing.mobile.test.BuildConfig;
+//import com.adobe.marketing.mobile.test.BuildConfig;
 import com.adobe.marketing.mobile.util.TestHelper;
 import java.util.ArrayList;
 import java.util.HashMap;

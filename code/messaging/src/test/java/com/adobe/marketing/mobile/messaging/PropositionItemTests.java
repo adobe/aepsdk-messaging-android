@@ -776,7 +776,7 @@ public class PropositionItemTests {
 
         // verify
         assertNotNull(propositionItem);
-        FeedItemSchemaData schemaData = propositionItem.getFeedItemSchemaData();
+        ContentCardSchemaData schemaData = propositionItem.getContentCardSchemaData();
         assertNotNull(schemaData);
         Map<String, Object> inAppPropositionItemData =
                 (Map<String, Object>) ruleConsequences.get(0).getDetail().get("data");
