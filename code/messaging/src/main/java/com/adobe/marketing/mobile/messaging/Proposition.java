@@ -175,16 +175,18 @@ public class Proposition implements Serializable {
         return eventData;
     }
 
-    // TODO: - do we need to update this equals function to look compare ONLY activityId instead?
+    /**
+     * Two propositions are equal if their {@code decisionScope.activity.id} values are the same.
+     *
+     * @param object the other {@link Proposition} object to be checked against.
+     * @return {@code true} if both {@code Proposition}s share the same activityId.
+     */
     public boolean equals(final Object object) {
-        if (object instanceof Proposition) {
-            final Proposition proposition = (Proposition) object;
-            final Map<String, Object> newPropositionContent =
-                    proposition.getItems().get(0).getItemData();
-            final Map<String, Object> propositionContent = this.getItems().get(0).getItemData();
-            return newPropositionContent.equals(propositionContent);
-        } else {
+        if (!(object instanceof Proposition)) {
             return false;
         }
+
+        final Proposition proposition = (Proposition) object;
+        return proposition.getActivityId().equals(getActivityId());
     }
 }

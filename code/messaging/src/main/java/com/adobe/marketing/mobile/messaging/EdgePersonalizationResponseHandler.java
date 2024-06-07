@@ -658,9 +658,8 @@ class EdgePersonalizationResponseHandler {
         if (existingPropositionsArray != null) {
             startingCount = existingPropositionsArray.size();
             for (final Proposition proposition : propositions) {
-                // TODO: - this method of retrieval may not work
                 final int existingIndex = existingPropositionsArray.indexOf(proposition);
-                if (existingIndex > 0) {
+                if (existingIndex >= 0) {
                     existingPropositionsArray.remove(existingIndex);
                 } else {
                     final List<PropositionItem> propItems = proposition.getItems();

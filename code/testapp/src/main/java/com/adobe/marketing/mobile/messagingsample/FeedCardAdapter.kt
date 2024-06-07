@@ -35,13 +35,13 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = propositions[position]
         for (item in proposition.items) {
-            val inboundContent = item.feedItemSchemaData
-            val feedItem = inboundContent.feedItem
-            if (feedItem != null) {
-                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(feedItem.imageUrl))
+            val inboundContent = item.contentCardSchemaData
+            val contentCard = inboundContent.contentCard
+            if (contentCard != null) {
+                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(contentCard.imageUrl))
                 holder.feedItemImage.refreshDrawableState()
-                holder.feedItemTitle.text = feedItem.title
-                holder.feedBody.text = feedItem.body
+                holder.feedItemTitle.text = contentCard.title
+                holder.feedBody.text = contentCard.body
                 item.track(MessagingEdgeEventType.DISPLAY)
                 holder.itemView.setOnClickListener {
                     item.track(MessagingEdgeEventType.INTERACT)
