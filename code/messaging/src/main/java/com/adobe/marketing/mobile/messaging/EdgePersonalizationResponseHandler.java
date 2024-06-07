@@ -660,7 +660,9 @@ class EdgePersonalizationResponseHandler {
      * @param propositions list of qualified {@link Proposition}s for the given surface.
      * @param surface {@link Surface} to which qualified propositions belong.
      */
-    private void addOrReplaceContentCards(List<Proposition> propositions, Surface surface) {
+    @SuppressWarnings("NestedIfDepth")
+    private void addOrReplaceContentCards(
+            final List<Proposition> propositions, final Surface surface) {
         int startingCount = 0;
         final List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
         if (existingPropositionsArray != null) {

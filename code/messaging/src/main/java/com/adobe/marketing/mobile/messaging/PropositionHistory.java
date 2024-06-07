@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventMask.Keys.*;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.Event;
@@ -39,7 +37,7 @@ final class PropositionHistory {
     static void record(
             @NonNull final String activityId,
             @NonNull final MessagingEdgeEventType eventType,
-            @Nullable String interaction) {
+            @Nullable final String interaction) {
         if (StringUtils.isNullOrEmpty(activityId)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
@@ -50,10 +48,12 @@ final class PropositionHistory {
 
         // create map for event history
         final Map<String, String> iamHistoryMap = new HashMap<>();
-        iamHistoryMap.put(EVENT_TYPE, eventType.getPropositionEventType());
-        iamHistoryMap.put(MESSAGE_ID, activityId);
         iamHistoryMap.put(
-                TRACKING_ACTION, (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
+                MessagingConstants.EventMask.Keys.EVENT_TYPE, eventType.getPropositionEventType());
+        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, activityId);
+        iamHistoryMap.put(
+                MessagingConstants.EventMask.Keys.TRACKING_ACTION,
+                (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // wrap history in an "iam" object
         final Map<String, Object> eventHistoryData = new HashMap<>();
