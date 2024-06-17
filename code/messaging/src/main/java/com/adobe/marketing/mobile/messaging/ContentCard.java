@@ -16,7 +16,6 @@ import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.lang.ref.SoftReference;
 
 /**
