@@ -17,6 +17,8 @@ import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
 
+import java.lang.ref.SoftReference;
+
 /**
  * A {@link ContentCard} object encapsulates the information necessary for a non-disruptive yet
  * interactive offer. Customers can use the Messaging SDK to render the content card in a
@@ -36,7 +38,7 @@ public class ContentCard {
     // Required if actionUrl is provided. Text to be used in title of button or link in content card
     private String actionTitle;
     // Reference to parent ContentCardSchemaData instance
-    ContentCardSchemaData parent;
+    SoftReference<ContentCardSchemaData> parent;
 
     /**
      * Private constructor.
@@ -126,7 +128,7 @@ public class ContentCard {
         public Builder setParent(final ContentCardSchemaData parent) {
             throwIfAlreadyBuilt();
 
-            contentCard.parent = parent;
+            contentCard.parent = new SoftReference<>(parent);
             return this;
         }
 
@@ -216,6 +218,6 @@ public class ContentCard {
                     "Unable to track ContentCard, " + "parent schema object is unavailable.");
             return;
         }
-        parent.track(interaction, eventType);
+        parent.get().track(interaction, eventType);
     }
 }
