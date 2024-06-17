@@ -38,7 +38,9 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
             val inboundContent = item.contentCardSchemaData
             val contentCard = inboundContent.contentCard
             if (contentCard != null) {
-                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(contentCard.imageUrl))
+                if (!contentCard.imageUrl.isNullOrEmpty()) {
+                    holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(contentCard.imageUrl!!))
+                }
                 holder.feedItemImage.refreshDrawableState()
                 holder.feedItemTitle.text = contentCard.title
                 holder.feedBody.text = contentCard.body

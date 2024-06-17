@@ -31,6 +31,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         // create list of code based surface paths
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
+        surfaces.add(Surface("cbe/json"))
         surfaces.add(Surface("cbe-path1"))
         surfaces.add(Surface("cbe-path2"))
 
