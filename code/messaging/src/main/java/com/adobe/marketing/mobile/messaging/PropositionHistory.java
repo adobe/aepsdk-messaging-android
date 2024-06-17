@@ -47,17 +47,17 @@ final class PropositionHistory {
         }
 
         // create map for event history
-        final Map<String, String> iamHistoryMap = new HashMap<>();
-        iamHistoryMap.put(
+        final Map<String, String> historyMap = new HashMap<>();
+        historyMap.put(
                 MessagingConstants.EventMask.Keys.EVENT_TYPE, eventType.getPropositionEventType());
-        iamHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, activityId);
-        iamHistoryMap.put(
+        historyMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, activityId);
+        historyMap.put(
                 MessagingConstants.EventMask.Keys.TRACKING_ACTION,
                 (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
         // wrap history in an "iam" object
         final Map<String, Object> eventHistoryData = new HashMap<>();
-        eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, iamHistoryMap);
+        eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, historyMap);
 
         // create the mask for storing event history
         final String[] mask = {

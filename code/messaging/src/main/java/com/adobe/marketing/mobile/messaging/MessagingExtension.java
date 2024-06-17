@@ -161,7 +161,7 @@ public final class MessagingExtension extends Extension {
                             "MessagingEvents",
                             event -> {
                                 if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
-                                    edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                             InternalMessagingUtils.getSurfaces(event), event);
                                 } else if (event.getType().equals(EventType.EDGE)) {
                                     return !edgePersonalizationResponseHandler

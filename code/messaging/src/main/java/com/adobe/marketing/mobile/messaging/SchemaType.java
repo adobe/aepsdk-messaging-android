@@ -19,6 +19,9 @@ public enum SchemaType {
     JSON_CONTENT(2),
     RULESET(3),
     INAPP(4),
+    /**
+     * @deprecated Use {@link #CONTENT_CARD} instead.
+     */
     @Deprecated
     FEED(5),
     NATIVE_ALERT(6),

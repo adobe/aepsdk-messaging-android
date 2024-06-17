@@ -170,7 +170,8 @@ public class PropositionItemTests {
             spyPropositionItem.track(MessagingEdgeEventType.DISPLAY);
 
             // verify
-            verify(spyPropositionItem).generateInteractionXdm(MessagingEdgeEventType.DISPLAY);
+            verify(spyPropositionItem)
+                    .generateInteractionXdm(null, MessagingEdgeEventType.DISPLAY, null);
             assertEquals(1, propositionInteractionMockedConstruction.constructed().size());
             ArgumentCaptor<Event> trackingEventCaptor = ArgumentCaptor.forClass(Event.class);
             mobileCoreMockedStatic.verify(
@@ -229,7 +230,8 @@ public class PropositionItemTests {
             spyPropositionItem.track(MessagingEdgeEventType.DISPLAY);
 
             // verify
-            verify(spyPropositionItem).generateInteractionXdm(MessagingEdgeEventType.DISPLAY);
+            verify(spyPropositionItem)
+                    .generateInteractionXdm(null, MessagingEdgeEventType.DISPLAY, null);
             assertEquals(0, propositionInteractionMockedConstruction.constructed().size());
             mobileCoreMockedStatic.verifyNoInteractions();
         }

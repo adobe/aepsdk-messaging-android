@@ -1196,7 +1196,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                 surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
@@ -1305,7 +1305,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                 surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
@@ -1373,7 +1373,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                 surfaces, mockEvent);
 
                         // verify error response event dispatched
@@ -1437,11 +1437,23 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveCachedContentCards(
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                 surfaces, mockEvent);
 
-                        // verify no response event dispatched
-                        verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+                        // verify one response event dispatched
+                        verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                        Event propositionsResponseEvent = eventArgumentCaptor.getValue();
+                        assertEquals(
+                                MESSAGE_PROPOSITIONS_RESPONSE, propositionsResponseEvent.getName());
+                        assertEquals(EventType.MESSAGING, propositionsResponseEvent.getType());
+                        assertEquals(
+                                EventSource.RESPONSE_CONTENT,
+                                propositionsResponseEvent.getSource());
+                        eventData = propositionsResponseEvent.getEventData();
+                        assertEquals(RESPONSE_ERROR, eventData.keySet().stream().findFirst().get());
+                        assertEquals(
+                                AdobeErrorExt.INVALID_REQUEST.getErrorName(),
+                                eventData.get(RESPONSE_ERROR));
                     }
                 });
     }

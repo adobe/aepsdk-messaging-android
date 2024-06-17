@@ -347,7 +347,7 @@ class PresentableMessageMapper {
                         SELF_TAG,
                         "Unable to write event history event %s, proposition info is "
                                 + "not available for message %s",
-                        eventType.toString(),
+                        eventType != null ? eventType.toString() : "'unknown'",
                         id);
                 return;
             }

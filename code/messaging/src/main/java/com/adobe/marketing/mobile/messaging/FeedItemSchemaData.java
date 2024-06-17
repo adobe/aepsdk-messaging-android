@@ -22,7 +22,11 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-// represents the schema data object for a feed item schema
+/**
+ * Represents the schema data object for a feed item schema.
+ *
+ * @deprecated Use {@link ContentCardSchemaData} instead
+ */
 @Deprecated
 public class FeedItemSchemaData implements SchemaData {
     private static final String SELF_TAG = "FeedItemSchemaData";

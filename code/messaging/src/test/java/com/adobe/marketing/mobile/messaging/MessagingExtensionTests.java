@@ -268,7 +268,7 @@ public class MessagingExtensionTests {
 
                     // verify EdgePersonalizationResponseHandler.retrieveMessages called
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .retrieveCachedContentCards(any(), any());
+                            .retrieveInMemoryPropositions(any(), any());
                 });
     }
 

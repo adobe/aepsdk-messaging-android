@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -49,15 +51,15 @@ public class ContentCard {
         private final ContentCard contentCard;
 
         /**
-         * Builder constructor with required {@code ContentCard} attributes as parameters.
+         * Builder constructor with required {@link ContentCard} attributes as parameters.
          *
-         * <p>It sets default values for the remaining {@link ContentCard} attributes.
+         * <p>It sets default values for the remaining {@code ContentCard} attributes.
          *
          * @param title required {@link String} plain-text title for the content card
-         * @param body required {@link String} plain-text body representing the content for the
+         * @param body required {@code String} plain-text body representing the content for the
          *     content card
          */
-        public Builder(final String title, final String body) {
+        public Builder(@NonNull final String title, @NonNull final String body) {
             contentCard = new ContentCard();
             contentCard.title = StringUtils.isNullOrEmpty(title) ? "" : title;
             contentCard.body = StringUtils.isNullOrEmpty(body) ? "" : body;
@@ -133,7 +135,7 @@ public class ContentCard {
          *
          * @return {@link ContentCard} object or null.
          */
-        public ContentCard build() {
+        @Nullable public ContentCard build() {
             // title and body are required
             if (StringUtils.isNullOrEmpty(contentCard.title)
                     || StringUtils.isNullOrEmpty(contentCard.body)) {
@@ -177,7 +179,7 @@ public class ContentCard {
      *
      * @return {@link String} containing the {@link ContentCard} image url.
      */
-    public String getImageUrl() {
+    @Nullable public String getImageUrl() {
         return imageUrl;
     }
 
@@ -186,7 +188,7 @@ public class ContentCard {
      *
      * @return {@link String} containing the {@link ContentCard} action url.
      */
-    public String getActionUrl() {
+    @Nullable public String getActionUrl() {
         return actionUrl;
     }
 
@@ -195,7 +197,7 @@ public class ContentCard {
      *
      * @return {@link String} containing the {@link ContentCard} action title.
      */
-    public String getActionTitle() {
+    @Nullable public String getActionTitle() {
         return actionTitle;
     }
 

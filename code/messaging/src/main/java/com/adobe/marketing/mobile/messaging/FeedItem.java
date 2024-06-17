@@ -19,6 +19,8 @@ import com.adobe.marketing.mobile.util.StringUtils;
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet
  * interactive offer. Customers can use the Messaging SDK to render the feed item data in a
  * pre-defined format or implement their own rendering.
+ *
+ * @deprecated Use {@link ContentCard} instead.
  */
 @Deprecated
 public class FeedItem {
