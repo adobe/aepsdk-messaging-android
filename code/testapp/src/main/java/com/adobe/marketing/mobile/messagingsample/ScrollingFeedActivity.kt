@@ -32,7 +32,13 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // retrieve any cached feed propositions
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface("feeds/apifeed")
+
+        // staging environment - CJM Stage, AJO Web (VA7)
+        // surface for content card -
+        // mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms
+        val surface = Surface("card/ms")
+
+//        val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
         Messaging.updatePropositionsForSurfaces(surfaces)
         Messaging.getPropositionsForSurfaces(surfaces) {

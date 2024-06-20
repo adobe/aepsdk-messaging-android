@@ -109,31 +109,7 @@ public class PropositionItem implements Serializable {
      *     interaction
      */
     public void track(@NonNull final MessagingEdgeEventType eventType) {
-        final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(eventType);
-        if (propositionInteractionXdm == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Cannot track proposition interaction for item (%s), could not generate"
-                            + " interactions XDM.",
-                    itemId);
-            return;
-        }
-
-        final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, true);
-        eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION,
-                propositionInteractionXdm);
-
-        final Event trackingPropositionsEvent =
-                new Event.Builder(
-                                MessagingConstants.EventName.TRACK_PROPOSITIONS,
-                                MessagingConstants.EventType.MESSAGING,
-                                MessagingConstants.EventSource.REQUEST_CONTENT)
-                        .setEventData(eventData)
-                        .build();
-        MobileCore.dispatchEvent(trackingPropositionsEvent);
+        track(null, eventType, null);
     }
 
     /**
@@ -148,6 +124,11 @@ public class PropositionItem implements Serializable {
             final String interaction,
             @NonNull final MessagingEdgeEventType eventType,
             final List<String> tokens) {
+        // record the event in event history
+        if (propositionReference != null) {
+            PropositionHistory.record(getProposition().getActivityId(), eventType, interaction);
+        }
+
         final Map<String, Object> propositionInteractionXdm =
                 generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
@@ -177,7 +158,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given
+     * Creates a {@code Map<String, Object>} containing XDM data for interaction with the given
      * proposition item, for the provided event type. If the proposition reference within the item
      * is released and no longer valid, the method returns null.
      *
@@ -187,27 +168,11 @@ public class PropositionItem implements Serializable {
      */
     public Map<String, Object> generateInteractionXdm(
             @NonNull final MessagingEdgeEventType eventType) {
-        if (propositionReference == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Cannot generate interaction XDM for item (%s), proposition reference is not"
-                            + " available.",
-                    itemId);
-            return null;
-        }
-        final PropositionInteraction propositionInteraction =
-                new PropositionInteraction(
-                        eventType,
-                        null,
-                        PropositionInfo.createFromProposition(getProposition()),
-                        itemId,
-                        null);
-        return propositionInteraction.getPropositionInteractionXDM();
+        return generateInteractionXdm(null, eventType, null);
     }
 
     /**
-     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given
+     * Creates a {@code Map<String, Object>} containing XDM data for interaction with the given
      * proposition item, for the provided event type. If the proposition reference within the item
      * is released and no longer valid, the method returns null.
      *
@@ -297,15 +262,45 @@ public class PropositionItem implements Serializable {
     }
 
     /**
+     * Returns this {@link PropositionItem}'s content as a {@code ContentCardSchemaData} object.
+     *
+     * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s
+     *     content.
+     */
+    public ContentCardSchemaData getContentCardSchemaData() {
+        if (!schema.equals(SchemaType.CONTENT_CARD)) {
+            return null;
+        }
+        final ContentCardSchemaData contentCardSchemaData =
+                (ContentCardSchemaData) createSchemaData(SchemaType.CONTENT_CARD);
+
+        if (contentCardSchemaData != null) {
+            contentCardSchemaData.parent = this;
+        }
+
+        return contentCardSchemaData;
+    }
+
+    /**
      * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
      *
      * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
+     * @deprecated Use {@link #getContentCardSchemaData()} instead.
      */
+    @Deprecated
     public FeedItemSchemaData getFeedItemSchemaData() {
         if (!schema.equals(SchemaType.FEED)) {
             return null;
         }
-        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        final FeedItemSchemaData feedItemSchemaData =
+                (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        if (feedItemSchemaData != null) {
+            feedItemSchemaData.parent = this;
+        }
+
+        return feedItemSchemaData;
     }
 
     /**
@@ -334,6 +329,8 @@ public class PropositionItem implements Serializable {
                 return new InAppSchemaData(ruleJson);
             case FEED:
                 return new FeedItemSchemaData(ruleJson);
+            case CONTENT_CARD:
+                return new ContentCardSchemaData(ruleJson);
             default:
                 break;
         }

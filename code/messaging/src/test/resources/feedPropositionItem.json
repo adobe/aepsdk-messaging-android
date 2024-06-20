@@ -39,7 +39,7 @@
                         "type": "schema",
                         "detail": {
                             "id": "uniqueId",
-                            "schema": "https://ns.adobe.com/personalization/message/feed-item",
+                            "schema": "https://ns.adobe.com/personalization/message/content-card",
                             "data": {
                                 "expiryDate": 1717688797,
                                 "meta": {

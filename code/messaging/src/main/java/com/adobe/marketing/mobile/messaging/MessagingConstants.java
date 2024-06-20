@@ -18,7 +18,7 @@ public final class MessagingConstants {
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
-    static final String FEED_RULES_ENGINE_NAME = EXTENSION_NAME + "Feed.rulesengine";
+    static final String CONTENT_CARD_RULES_ENGINE_NAME = EXTENSION_NAME + "ContentCard.rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
@@ -40,8 +40,13 @@ public final class MessagingConstants {
         static final String SCHEMA_RULESET_ITEM =
                 "https://ns.adobe.com/personalization/ruleset-item";
         static final String SCHEMA_IAM = "https://ns.adobe.com/personalization/message/in-app";
+
+        @Deprecated
         static final String SCHEMA_FEED_ITEM =
                 "https://ns.adobe.com/personalization/message/feed-item";
+
+        static final String SCHEMA_CONTENT_CARD =
+                "https://ns.adobe.com/personalization/message/content-card";
         static final String SCHEMA_NATIVE_ALERT =
                 "https://ns.adobe.com/personalization/message/native-alert";
         static final String SCHEMA_DEFAULT_CONTENT =

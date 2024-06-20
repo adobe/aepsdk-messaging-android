@@ -11,15 +11,20 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
+import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
-import java.lang.ref.SoftReference;
 
 /**
  * A {@link FeedItem} object encapsulates the information necessary for a non-disruptive yet
  * interactive offer. Customers can use the Messaging SDK to render the feed item data in a
  * pre-defined format or implement their own rendering.
+ *
+ * @deprecated Use {@link ContentCard} instead.
  */
+@Deprecated
 public class FeedItem {
+    private static final String SELF_TAG = "FeedItem";
     // Plain-text title for the feed item
     private String title;
     // Plain-text body representing the content for the feed item
@@ -30,8 +35,8 @@ public class FeedItem {
     private String actionUrl;
     // Required if actionUrl is provided. Text to be used in title of button or link in feed item
     private String actionTitle;
-    // Soft reference to parent feedItemSchemaData instance
-    SoftReference<FeedItemSchemaData> parent;
+    // Reference to parent feedItemSchemaData instance
+    FeedItemSchemaData parent;
 
     /**
      * Private constructor.
@@ -121,7 +126,7 @@ public class FeedItem {
         public Builder setParent(final FeedItemSchemaData parent) {
             throwIfAlreadyBuilt();
 
-            feedItem.parent = new SoftReference<>(parent);
+            feedItem.parent = parent;
             return this;
         }
 
@@ -194,5 +199,23 @@ public class FeedItem {
      */
     public String getActionTitle() {
         return actionTitle;
+    }
+
+    /**
+     * Tracks interaction with the given content card.
+     *
+     * @param interaction {@link String} describing the interaction.
+     * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the
+     *     interaction.
+     */
+    public void track(final String interaction, final MessagingEdgeEventType eventType) {
+        if (parent == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unable to track ContentCard, " + "parent schema object is unavailable.");
+            return;
+        }
+        parent.track(interaction, eventType);
     }
 }

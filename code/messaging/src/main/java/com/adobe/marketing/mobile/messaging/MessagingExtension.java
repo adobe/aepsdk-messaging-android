@@ -42,7 +42,7 @@ public final class MessagingExtension extends Extension {
     final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
     private boolean initialMessageFetchComplete = false;
     final LaunchRulesEngine messagingRulesEngine;
-    final FeedRulesEngine feedRulesEngine;
+    final ContentCardRulesEngine contentCardRulesEngine;
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
@@ -72,18 +72,18 @@ public final class MessagingExtension extends Extension {
     MessagingExtension(
             final ExtensionApi extensionApi,
             final LaunchRulesEngine messagingRulesEngine,
-            final FeedRulesEngine feedRulesEngine,
+            final ContentCardRulesEngine contentCardRulesEngine,
             final EdgePersonalizationResponseHandler edgePersonalizationResponseHandler) {
         super(extensionApi);
         this.messagingRulesEngine =
                 messagingRulesEngine != null
                         ? messagingRulesEngine
                         : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
-        this.feedRulesEngine =
-                feedRulesEngine != null
-                        ? feedRulesEngine
-                        : new FeedRulesEngine(
-                                MessagingConstants.FEED_RULES_ENGINE_NAME, extensionApi);
+        this.contentCardRulesEngine =
+                contentCardRulesEngine != null
+                        ? contentCardRulesEngine
+                        : new ContentCardRulesEngine(
+                                MessagingConstants.CONTENT_CARD_RULES_ENGINE_NAME, extensionApi);
         this.edgePersonalizationResponseHandler =
                 edgePersonalizationResponseHandler != null
                         ? edgePersonalizationResponseHandler
@@ -91,7 +91,7 @@ public final class MessagingExtension extends Extension {
                                 this,
                                 extensionApi,
                                 this.messagingRulesEngine,
-                                this.feedRulesEngine);
+                                this.contentCardRulesEngine);
     }
 
     // region Extension interface methods
@@ -161,7 +161,7 @@ public final class MessagingExtension extends Extension {
                             "MessagingEvents",
                             event -> {
                                 if (InternalMessagingUtils.isGetPropositionsEvent(event)) {
-                                    edgePersonalizationResponseHandler.retrieveMessages(
+                                    edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
                                             InternalMessagingUtils.getSurfaces(event), event);
                                 } else if (event.getType().equals(EventType.EDGE)) {
                                     return !edgePersonalizationResponseHandler
@@ -202,7 +202,7 @@ public final class MessagingExtension extends Extension {
 
         // fetch propositions on initial launch once we have configuration and identity state set
         if (!initialMessageFetchComplete) {
-            edgePersonalizationResponseHandler.fetchMessages(event, null);
+            edgePersonalizationResponseHandler.fetchPropositions(event, null);
             initialMessageFetchComplete = true;
         }
 
@@ -254,6 +254,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
         messagingRulesEngine.processEvent(event);
+        edgePersonalizationResponseHandler.updateQualifiedContentCardsForEvent(event);
     }
 
     /**
@@ -362,7 +363,7 @@ public final class MessagingExtension extends Extension {
                     SELF_TAG,
                     "Processing manual request to refresh In-App Message definitions from the"
                             + " remote.");
-            edgePersonalizationResponseHandler.fetchMessages(eventToProcess, null);
+            edgePersonalizationResponseHandler.fetchPropositions(eventToProcess, null);
         } else if (InternalMessagingUtils.isUpdatePropositionsEvent(eventToProcess)) {
             // validate update propositions event then retrieve propositions via an Edge extension
             // event
@@ -370,7 +371,7 @@ public final class MessagingExtension extends Extension {
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "Processing request to retrieve propositions from the remote.");
-            edgePersonalizationResponseHandler.fetchMessages(
+            edgePersonalizationResponseHandler.fetchPropositions(
                     eventToProcess, InternalMessagingUtils.getSurfaces(eventToProcess));
         } else if (InternalMessagingUtils.isGetPropositionsEvent(eventToProcess)) {
             // Queue the get propositions event in the
@@ -495,7 +496,8 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 eventData,
-                getApi());
+                getApi(),
+                event);
     }
 
     /**
@@ -589,7 +591,8 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmData,
-                getApi());
+                getApi(),
+                event);
     }
 
     /**
@@ -607,7 +610,8 @@ public final class MessagingExtension extends Extension {
                 MessagingConstants.EventType.EDGE,
                 MessagingConstants.EventSource.REQUEST_CONTENT,
                 xdmEventData,
-                getApi());
+                getApi(),
+                null);
     }
     // endregion
 

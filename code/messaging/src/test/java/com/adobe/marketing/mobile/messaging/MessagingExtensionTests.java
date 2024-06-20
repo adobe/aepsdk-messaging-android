@@ -77,7 +77,7 @@ public class MessagingExtensionTests {
     @Mock CacheService mockCacheService;
     @Mock DeviceInforming mockDeviceInfoService;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
-    @Mock FeedRulesEngine mockFeedRulesEngine;
+    @Mock ContentCardRulesEngine mockContentCardRulesEngine;
     @Mock EdgePersonalizationResponseHandler mockEdgePersonalizationResponseHandler;
     @Mock SharedStateResult mockConfigData;
     @Mock SharedStateResult mockEdgeIdentityData;
@@ -116,7 +116,7 @@ public class MessagingExtensionTests {
         reset(mockServiceProvider);
         reset(mockCacheService);
         reset(mockMessagingRulesEngine);
-        reset(mockFeedRulesEngine);
+        reset(mockContentCardRulesEngine);
         reset(mockEdgePersonalizationResponseHandler);
         reset(mockConfigData);
         reset(mockEdgeIdentityData);
@@ -157,7 +157,7 @@ public class MessagingExtensionTests {
                     new MessagingExtension(
                             mockExtensionApi,
                             mockMessagingRulesEngine,
-                            mockFeedRulesEngine,
+                            mockContentCardRulesEngine,
                             mockEdgePersonalizationResponseHandler);
 
             runnable.run();
@@ -268,7 +268,7 @@ public class MessagingExtensionTests {
 
                     // verify EdgePersonalizationResponseHandler.retrieveMessages called
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .retrieveMessages(any(), any());
+                            .retrieveInMemoryPropositions(any(), any());
                 });
     }
 
@@ -291,7 +291,7 @@ public class MessagingExtensionTests {
                             new MessagingExtension(
                                     mockExtensionApi,
                                     mockMessagingRulesEngine,
-                                    mockFeedRulesEngine,
+                                    mockContentCardRulesEngine,
                                     mockEdgePersonalizationResponseHandler);
 
                     Event event = Mockito.mock(Event.class);
@@ -1751,7 +1751,7 @@ public class MessagingExtensionTests {
 
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .fetchMessages(mockEvent, null);
+                            .fetchPropositions(mockEvent, null);
                 });
     }
 
@@ -1814,7 +1814,7 @@ public class MessagingExtensionTests {
 
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .fetchMessages(any(Event.class), listArgumentCaptor.capture());
+                            .fetchPropositions(any(Event.class), listArgumentCaptor.capture());
                     List<Surface> capturedSurfaces = listArgumentCaptor.getValue();
                     assertEquals(2, capturedSurfaces.size());
                     List<String> sortedList = new ArrayList<>();
