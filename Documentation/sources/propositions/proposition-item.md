@@ -18,6 +18,33 @@ public class PropositionItem implements Serializable {
   // Soft reference to Proposition instance
   SoftReference<Proposition> propositionReference;
   
+  /**
+   * Gets the {@code PropositionItem} identifier.
+   *
+   * @return {@link String} containing the {@link PropositionItem} identifier.
+   */
+  @NonNull public String getItemId() {
+      return itemId;
+  }
+
+  /**
+   * Gets the {@code PropositionItem} content schema.
+   *
+   * @return {@link SchemaType} containing the {@link PropositionItem} content schema.
+   */
+  @NonNull public SchemaType getSchema() {
+      return schema;
+  }
+
+  /**
+   * Gets the {@code PropositionItem} data.
+   *
+   * @return {@link Map<String, Object>} containing the {@link PropositionItem} data.
+   */
+  @NonNull public Map<String, Object> getItemData() {
+      return itemData;
+  }
+  
   ...
 }
 ```
@@ -29,10 +56,7 @@ public class PropositionItem implements Serializable {
 Tracks an interaction with the given `PropositionItem`.
 
 ```java
-public void track(
-  final String interaction,
-  @NonNull final MessagingEdgeEventType eventType,
-  final List<String> tokens)
+public void track(final String interaction, @NonNull final MessagingEdgeEventType eventType, final List<String> tokens)
 ```
 
 #### Parameters
@@ -70,7 +94,7 @@ Tries to retrieve a `ContentCardSchemaData` object from this `PropositionItem`'s
 Returns a `ContentCardSchemaData` object if the schema for this `PropositionItem` is `SchemaType.CONTENT_CARD` and it is properly formed - `null` otherwise.
 
 ```java
-@Nullable public ContentCardSchemaData getContentCardSchemaData
+@Nullable public ContentCardSchemaData getContentCardSchemaData()
 ```
 
 #### Example

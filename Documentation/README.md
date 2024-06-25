@@ -35,6 +35,9 @@
 
 ### Code-based experiences and content cards
 
+- Prerequisites
+  - [Configure Adobe Data Collection and Adobe Experience Platform](./sources/edge-and-launch-configuration.md)
+
 - Developer Documentation
   - [API usage](./sources/api-usage.md#Message Feed and Code-based experiences APIs)
   - Public classes

@@ -15,21 +15,8 @@ public class Surface implements Serializable {
   // Unique surface URI string
   private String uri;
   
-  public Surface(final String path) {
-    this(false, path);
-  }
-
-  public Surface() {
-    this(
-      true,
-      !StringUtils.isNullOrEmpty(
-        ServiceProvider.getInstance()
-        .getDeviceInfoService()
-        .getApplicationPackageName())
-      ? SURFACE_BASE + ServiceProvider.getInstance()
-      .getDeviceInfoService()
-      .getApplicationPackageName()
-      : null);
+  public String getUri() {
+    return uri;
   }
   
   ...

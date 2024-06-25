@@ -18,5 +18,10 @@ public class JsonContentSchemaData implements SchemaData {
   @Nullable List<Map<String, Object>> getJsonArrayContent() {
     return content instanceof List ? (List<Map<String, Object>>) content : null;
   }
+  
+  @Override
+  @Nullable public Object getContent() {
+    return content;
+  }
 }
 ```

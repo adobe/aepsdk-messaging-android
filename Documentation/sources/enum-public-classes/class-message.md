@@ -81,7 +81,7 @@ Adds a handler for named JavaScript messages sent from the message's `WebView`.
 
 The  `AdobeCallback` will contain the body of the message passed from the `WebView`'s JavaScript.
 
-For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./how-to-call-native-from-javascript.md).
+For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./../in-app-messaging/how-to-call-native-from-javascript.md).
 
 ```java
 void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)

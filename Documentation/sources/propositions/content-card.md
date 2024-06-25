@@ -8,16 +8,28 @@ Content cards must be rendered by the app developer.  Tracking a content card is
 public class ContentCard {
   // Plain-text title for the content card
   private String title;
+
   // Plain-text body representing the content for the content card
   private String body;
+
   // String representing a URI that contains an image to be used for this content card
   private String imageUrl;
+
   // Contains a URL to be opened if the user interacts with the content card
   private String actionUrl;
+
   // Required if actionUrl is provided. Text to be used in title of button or link in content card
   private String actionTitle;
-  // Reference to parent ContentCardSchemaData instance
-  SoftReference<ContentCardSchemaData> parent;
+
+  public String getTitle() { return title; }
+
+  public String getBody() { return body; }
+
+  @Nullable public String getImageUrl() { return imageUrl; }
+
+  @Nullable public String getActionUrl() { return actionUrl; }
+
+  @Nullable public String getActionTitle() { return actionTitle; }
 
   ...
 }
