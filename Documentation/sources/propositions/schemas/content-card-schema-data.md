@@ -59,6 +59,19 @@ Returns `null` if the `contentType` is not equal to `ContentType.APPLICATION_JSO
 
 #### Example
 
+#### Kotlin
+
+```kotlin
+val propisitionItem: PropositionItem
+val contentCardData = item?.contentCardSchemaData
+val contentCard = contentCardData?.contentCard
+contentCard?.let {
+  // do something with the ContentCard object
+}
+```
+
+#### Java
+
 ```java
 PropositionItem propositionItem;
 ContentCardSchemaData contentCardSchemaData = propositionItem.getContentCardSchemaData();
@@ -82,6 +95,20 @@ public void track(final String interaction, final MessagingEdgeEventType eventTy
 - _eventType_ - the [`MessagingEdgeEventType`](./../../enum-public-classes/enum-messaging-edge-event-type.md) to be used for the ensuing Edge Event
 
 #### Example
+
+#### Kotlin
+
+```kotlin
+val contentCardSchemaData = item?.contentCardSchemaData
+
+// tracking a display
+contentCardSchemaData?.track(null, MessagingEdgeEventType.DISPLAY)
+
+// tracking a user interaction
+contentCardSchemaData?.track("itemSelected", MessagingEdgeEventType.INTERACT)
+```
+
+#### Java
 
 ```java
 ContentCardSchemaData contentCardSchemaData;

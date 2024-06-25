@@ -19,19 +19,26 @@ public class Surface implements Serializable {
     return uri;
   }
   
-  ...
+  public Surface(final String path) {}
   
-  // Creates a new surface by appending the given surface uri to the mobile app surface prefix.
-  static Surface fromUriString(final String uri) {
-    final Surface surface = new Surface(true, uri);
-    return !surface.isValid() ? null : surface;
-  }
+  public Surface() {}
+  
+  ...
 }
 ```
 
-##### Example
+#### Example
+
+#### Kotlin
+
+```kotlin
+// Creates a surface instance representing a banner within homeView view in my mobile application.
+val surface = Surface("homeView#banner")
+```
+
+#### Java
 
 ```java
 // Creates a surface instance representing a banner within homeView view in my mobile application.
-final Surface surface = Surface.fromUriString("homeView#banner");
+final Surface surface = new Surface("homeView#banner");
 ```

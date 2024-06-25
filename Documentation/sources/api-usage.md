@@ -16,6 +16,20 @@ Messaging.extensionVersion()
 
 Add the following code to the Application class's `onCreate()` method:
 
+#### Kotlin
+
+```kotlin
+FirebaseMessaging.getInstance().token.addOnCompleteListener { 
+  task ->
+  if (task.isSuccessful) {
+    val token = task.result
+    MobileCore.setPushIdentifier(token)
+  }
+}
+```
+
+#### Java
+
 ```java
     FirebaseMessaging.getInstance().getToken()
         .addOnCompleteListener(new OnCompleteListener<String>() {
@@ -56,6 +70,14 @@ boolean update = addPushTrackingDetails(final Intent intent, final String messag
 ##### Sending push notification interaction feedback when application is opened without any custom action. 
 Add the following code where you have access to `intent` after the user has interacted with the push notification:
 
+#### Kotlin
+
+```kotlin
+Messaging.handleNotificationResponse(intent, true, null)
+```
+
+#### Java
+
 ```java
 Messaging.handleNotificationResponse(intent, true, null);
 ```
@@ -63,12 +85,28 @@ Messaging.handleNotificationResponse(intent, true, null);
 ##### Sending feedback when application is opened with a custom action. 
 Similar to the example above, call the `handleNotificationResponse` API but this time with a custom action:
 
+#### Kotlin
+
+```kotlin
+Messaging.handleNotificationResponse(intent, true, <actionId>)
+```
+
+#### Java
+
 ```java
 Messaging.handleNotificationResponse(intent, true, <actionId>);
 ```
 
 ##### Sending feedback when application is not opened but a custom action is performed by the user. 
 Add the following code where you have access to `intent` after the user has interacted with the push notification:
+
+#### Kotlin
+
+```kotlin
+Messaging.handleNotificationResponse(intent, false, <actionId>)
+```
+
+#### Java
 
 ```java
 Messaging.handleNotificationResponse(intent, false, <actionId>);
@@ -81,6 +119,14 @@ Messaging.handleNotificationResponse(intent, false, <actionId>);
 By default, the SDK will automatically fetch in-app message definitions from the remote at the time the Messaging extension is registered. This generally happens once per app lifecycle.
 
 Some use cases may require the client to request an update from the remote more frequently. Calling the following API will force the Messaging extension to get an updated definition of messages from the remote:
+
+#### Kotlin
+
+```kotlin
+Messaging.refreshInAppMessages()
+```
+
+#### Java
 
 ```java
 Messaging.refreshInAppMessages();
@@ -104,6 +150,18 @@ public static void updatePropositionsForSurfaces(@NonNull final List<Surface> su
 
 ##### Example
 
+#### Kotlin
+
+```kotlin
+val surface1 = Surface("myActivity#button")
+val surface2 = Surface("myActivityAttributes")
+val surfaces = listOf(surface1, surface2)
+
+Messaging.updatePropositionsForSurfaces(surfaces)
+```
+
+#### Java
+
 ```java
 final Surface surface1 = new Surface("myActivity#button");
 final Surface surface2 = new Surface("myActivityAttributes");
@@ -112,7 +170,7 @@ final List<Surface> surfaces = new ArrayList<>();
 surfaces.add(surface1);
 surfaces.add(surface2);
 
-Messaging.updatePropositionsForSurfaces(surfaces)
+Messaging.updatePropositionsForSurfaces(surfaces);
 ```
 
 ### getPropositionsForSurfaces
@@ -130,6 +188,26 @@ public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfa
 ```
 
 ##### Example
+
+#### Kotlin
+
+```kotlin
+Messaging.getPropositionsForSurfaces(surfaces) {
+  it?.let { propositionsMap ->
+           if (propositionsMap.isNotEmpty()) {
+             // get the propositions for the given surfaces
+             propositionsMap[surface1]?.let {
+               // read surface1 propositions
+             }
+             propositionsMap[surface2]?.let {
+               // read surface2 propositions
+             }
+           }
+          }
+}
+```
+
+#### Java
 
 ```java
 final Surface surface1 = new Surface("myActivity#button");

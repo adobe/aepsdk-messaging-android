@@ -67,6 +67,23 @@ public void track(final String interaction, @NonNull final MessagingEdgeEventTyp
 
 #### Example
 
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+
+// tracking a display
+propositionItem?.track("interaction", MessagingEdgeEventType.DISPLAY, null)
+
+// tracking a user interaction
+propositionItem?.track("userAccept", MessagingEdgeEventType.INTERACT, null)
+
+// Extract the tokens from the PropositionItem's itemData map
+propositionItem?.track("click", MessagingEdgeEventType.INTERACT, listOf("dataItemToken1", "dataItemToken2"))
+```
+
+#### Java
+
 ```java
 PropositionItem propositionItem;
 
@@ -99,6 +116,18 @@ Returns a `ContentCardSchemaData` object if the schema for this `PropositionItem
 
 #### Example
 
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+val contentCardSchemaData = propositionItem?.contentCardSchemaData
+contentCardSchemaData?.let {
+  // do something with the ContentCardSchemaData object
+}
+```
+
+#### Java
+
 ```java
 PropositionItem propositionItem;
 ContentCardSchemaData contentCardSchemaData = propositionItem.getContentCardSchemaData();
@@ -119,9 +148,21 @@ Returns a string if the schema for this `PropositionItem` is `SchemaType.HTML_CO
 
 #### Example
 
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+val htmlContent = propositionItem?.htmlContent
+htmlContent?.let {
+  // do something with the html content
+}
+```
+
+#### Java
+
 ```java
 PropositionItem propositionItem;
-String htmlContent = propositionItem.getHtmlContent();
+String htmlContent = propositionItem.htmlContent();
 if (!StringUtils.isNullOrEmpty(htmlContent)) {
     // do something with the html content
 }
@@ -138,6 +179,18 @@ Returns an `InAppSchemaData` object if the schema for this `PropositionItem` is 
 ```
 
 #### Example
+
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+val inAppSchemaData = propositionItem?.inAppSchemaData
+inAppSchemaData?.let {
+  // do something with the InAppSchemaData object
+}
+```
+
+#### Java
 
 ```java
 PropositionItem propositionItem;
@@ -159,6 +212,18 @@ Returns a `Map` if the schema for this `PropositionItem` is `SchemaType.JSON_CON
 
 #### Example
 
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+val jsonContentMap = propositionItem?.jsonContentMap
+jsonContentMap?.let {
+  // do something with the map content
+}
+```
+
+#### Java
+
 ```java
 PropositionItem propositionItem;
 Map<String, Object> jsonContentMap = propositionItem.getJsonContentMap();
@@ -178,6 +243,18 @@ Returns a `List` if the schema for this `PropositionItem` is `SchemaType.JSON_CO
 ```
 
 #### Example
+
+#### Kotlin
+
+```kotlin
+val propositionItem: PropositionItem
+val jsonContentList = propositionItem?.jsonContentArrayList
+jsonContentList?.let {
+  // do something with the list content
+}
+```
+
+#### Java
 
 ```java
 PropositionItem propositionItem;

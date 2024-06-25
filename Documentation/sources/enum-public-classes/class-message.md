@@ -122,9 +122,9 @@ Below is the table of values returned by calling the `toString` method for each 
 
 | Case                      | String value                      |
 | ------------------------- | --------------------------------- |
-| `IN_APP_DISMISS`          | `decisioning.propositionDismiss`  |
-| `IN_APP_INTERACT`         | `decisioning.propositionInteract` |
-| `IN_APP_TRIGGER`          | `decisioning.propositionTrigger`  |
-| `IN_APP_DISPLAY`          | `decisioning.propositionDisplay`  |
+| `DISMISS`                 | `decisioning.propositionDismiss`  |
+| `INTERACT`                | `decisioning.propositionInteract` |
+| `TRIGGER`                 | `decisioning.propositionTrigger`  |
+| `DISPLAY`                 | `decisioning.propositionDisplay`  |
 | `PUSH_APPLICATION_OPENED` | `pushTracking.applicationOpened`  |
 | `PUSH_CUSTOM_ACTION`      | `pushTracking.customAction`       |
