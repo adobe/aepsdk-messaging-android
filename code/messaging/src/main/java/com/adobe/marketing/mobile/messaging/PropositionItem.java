@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
@@ -210,7 +211,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
      */
-    public Map<String, Object> getJsonContentMap() {
+    @Nullable public Map<String, Object> getJsonContentMap() {
         if (!schema.equals(SchemaType.JSON_CONTENT)) {
             return null;
         }
@@ -226,7 +227,7 @@ public class PropositionItem implements Serializable {
      * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s
      *     content.
      */
-    public List<Map<String, Object>> getJsonContentArrayList() {
+    @Nullable public List<Map<String, Object>> getJsonContentArrayList() {
         if (!schema.equals(SchemaType.JSON_CONTENT)) {
             return null;
         }
@@ -240,7 +241,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link String} containing the {@link PropositionItem}'s content.
      */
-    public String getHtmlContent() {
+    @Nullable public String getHtmlContent() {
         if (!schema.equals(SchemaType.HTML_CONTENT)) {
             return null;
         }
@@ -254,7 +255,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
      */
-    public InAppSchemaData getInAppSchemaData() {
+    @Nullable public InAppSchemaData getInAppSchemaData() {
         if (!schema.equals(SchemaType.INAPP)) {
             return null;
         }
@@ -267,7 +268,7 @@ public class PropositionItem implements Serializable {
      * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s
      *     content.
      */
-    public ContentCardSchemaData getContentCardSchemaData() {
+    @Nullable public ContentCardSchemaData getContentCardSchemaData() {
         if (!schema.equals(SchemaType.CONTENT_CARD)) {
             return null;
         }
@@ -288,7 +289,7 @@ public class PropositionItem implements Serializable {
      * @deprecated Use {@link #getContentCardSchemaData()} instead.
      */
     @Deprecated
-    public FeedItemSchemaData getFeedItemSchemaData() {
+    @Nullable public FeedItemSchemaData getFeedItemSchemaData() {
         if (!schema.equals(SchemaType.FEED)) {
             return null;
         }

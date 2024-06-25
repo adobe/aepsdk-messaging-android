@@ -36,18 +36,21 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
         val proposition = propositions[position]
         for (item in proposition.items) {
             val inboundContent = item.contentCardSchemaData
-            val contentCard = inboundContent.contentCard
-            if (contentCard != null) {
-                if (!contentCard.imageUrl.isNullOrEmpty()) {
-                    holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(contentCard.imageUrl!!))
+            val contentCard = inboundContent?.contentCard
+            contentCard?.let {
+                it.imageUrl?.let {
+                    holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(it))
                 }
                 holder.feedItemImage.refreshDrawableState()
-                holder.feedItemTitle.text = contentCard.title
-                holder.feedBody.text = contentCard.body
+                holder.feedItemTitle.text = it.title
+                holder.feedBody.text = it.body
                 item.track(MessagingEdgeEventType.DISPLAY)
                 holder.itemView.setOnClickListener {
                     item.track(MessagingEdgeEventType.INTERACT)
-                    val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
+                    val intent = Intent(
+                        ServiceProvider.getInstance().appContextService.applicationContext,
+                        SingleFeedActivity::class.java
+                    )
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     MobileCore.getApplication()?.startActivity(intent.apply {
                         val contentMap = inboundContent.content as HashMap<*, *>
