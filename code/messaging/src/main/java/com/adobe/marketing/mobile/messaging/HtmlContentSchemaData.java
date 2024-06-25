@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.StringUtils;
@@ -48,6 +49,7 @@ public class HtmlContentSchemaData implements SchemaData {
         return content;
     }
 
+    @NonNull
     public ContentType getFormat() {
         return format;
     }

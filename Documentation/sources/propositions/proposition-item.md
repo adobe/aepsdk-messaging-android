@@ -17,19 +17,9 @@ public class PropositionItem implements Serializable {
 
   // Soft reference to Proposition instance
   SoftReference<Proposition> propositionReference;
-
-  public PropositionItem(
-    @NonNull final String itemId,
-    @NonNull final SchemaType schema,
-    @NonNull final Map<String, Object> itemData)
-    throws MessageRequiredFieldMissingException {
-    if (StringUtils.isNullOrEmpty(itemId) || schema == null || itemData == null) {
-      throw new MessageRequiredFieldMissingException("Id, schema or itemData is missing");
-    }
-    this.itemId = itemId;
-    this.schema = schema;
-    this.itemData = itemData;
-  }
+  
+  ...
+}
 ```
 
 # Public functions
@@ -40,9 +30,9 @@ Tracks an interaction with the given `PropositionItem`.
 
 ```java
 public void track(
-  @Nullable final String interaction,
+  final String interaction,
   @NonNull final MessagingEdgeEventType eventType,
-  @Nullable final List<String> tokens)
+  final List<String> tokens)
 ```
 
 #### Parameters
@@ -80,7 +70,7 @@ Tries to retrieve a `ContentCardSchemaData` object from this `PropositionItem`'s
 Returns a `ContentCardSchemaData` object if the schema for this `PropositionItem` is `SchemaType.CONTENT_CARD` and it is properly formed - `null` otherwise.
 
 ```java
-public ContentCardSchemaData getContentCardSchemaData
+@Nullable public ContentCardSchemaData getContentCardSchemaData
 ```
 
 #### Example
@@ -99,8 +89,8 @@ Tries to retrieve `content` from this `PropositionItem`'s `itemData` map as an H
 
 Returns a string if the schema for this `PropositionItem` is `SchemaType.HTML_CONTENT` and it contains string content - `null` otherwise.
 
-```swift
-public String getHtmlContent()
+```java
+@Nullable public String getHtmlContent()
 ```
 
 #### Example
@@ -120,7 +110,7 @@ Tries to retrieve an `InAppSchemaData` object from this `PropositionItem`'s `con
 Returns an `InAppSchemaData` object if the schema for this `PropositionItem` is `SchemaType.INAPP` and it is properly formed - `null` otherwise.
 
 ```java
-public InAppSchemaData getInAppSchemaData()
+@Nullable public InAppSchemaData getInAppSchemaData()
 ```
 
 #### Example
@@ -140,7 +130,7 @@ Tries to retrieve `content` from this `PropositionItem`'s `itemData` map as an `
 Returns a `Map` if the schema for this `PropositionItem` is `SchemaType.JSON_CONTENT` and it contains JSON content - `null` otherwise.
 
 ```java
-public Map<String, Object> getJsonContentMap() 
+@Nullable public Map<String, Object> getJsonContentMap() 
 ```
 
 #### Example
@@ -160,7 +150,7 @@ Tries to retrieve `content` from this `PropositionItem`'s `itemData` map as a `M
 Returns a `List` if the schema for this `PropositionItem` is `SchemaType.JSON_CONTENT` and it contains JSON content - `null` otherwise.
 
 ```java
-public List<Map<String, Object>> getJsonContentArrayList()
+@Nullable public List<Map<String, Object>> getJsonContentArrayList()
 ```
 
 #### Example

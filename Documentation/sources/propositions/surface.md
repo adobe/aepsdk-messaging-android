@@ -31,21 +31,8 @@ public class Surface implements Serializable {
       .getApplicationPackageName()
       : null);
   }
-
-  private Surface(final boolean isFullPathString, final String path) {
-    if (!isFullPathString) {
-      final String packageName =
-        ServiceProvider.getInstance()
-        .getDeviceInfoService()
-        .getApplicationPackageName();
-      this.uri =
-        StringUtils.isNullOrEmpty(packageName)
-        ? UNKNOWN_SURFACE : StringUtils.isNullOrEmpty(path)
-          ? SURFACE_BASE + packageName : SURFACE_BASE + packageName + File.separator + path;
-    } else {
-      this.uri = StringUtils.isNullOrEmpty(path) ? UNKNOWN_SURFACE : path;
-    }
-  }
+  
+  ...
   
   // Creates a new surface by appending the given surface uri to the mobile app surface prefix.
   static Surface fromUriString(final String uri) {
