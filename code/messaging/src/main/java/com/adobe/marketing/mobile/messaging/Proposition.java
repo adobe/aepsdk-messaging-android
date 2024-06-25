@@ -139,7 +139,8 @@ public class Proposition implements Serializable {
                             Object.class, eventData, PAYLOAD_ITEMS, new ArrayList<>());
             final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
-                final PropositionItem propositionItem = PropositionItem.fromEventData(item);
+                final PropositionItem propositionItem =
+                        PropositionItem.fromRuleConsequenceDetail(item);
                 if (propositionItem != null) {
                     propositionItems.add(propositionItem);
                 }

@@ -19,6 +19,7 @@ plugins {
 
 val moduleVersion: String by project
 val mavenCoreVersion: String by project
+val mavenLifecycleVersion: String by project
 val mavenAssuranceVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
@@ -54,7 +55,7 @@ android {
 dependencies {
     implementation(project(":messaging"))
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation("com.adobe.marketing.mobile:lifecycle:$mavenCoreVersion")
+    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion")
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
     implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
     implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")

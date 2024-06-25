@@ -26,6 +26,7 @@ import com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Mes
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
+import com.adobe.marketing.mobile.util.EventUtils;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
@@ -151,6 +152,9 @@ public final class MessagingExtension extends Extension {
         getApi().registerEventListener(
                         EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
 
+        // register listener for handling debug events
+        getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
+
         // Handler function called for each queued event. If the queued event is a get propositions
         // event, process it
         // otherwise if it is an Edge event to update propositions, process it only if it is
@@ -212,6 +216,46 @@ public final class MessagingExtension extends Extension {
     // endregion
 
     // region Event listeners
+
+    /**
+     * Processes debug events triggered by the system. A debug event allows the messaging extension
+     * to processes non-production workflows.
+     *
+     * @param event the debug `Event` to be handled.
+     */
+    void handleDebugEvent(final Event event) {
+        // handle rules consequence debug events
+        if (EventType.RULES_ENGINE.equals(EventUtils.getDebugEventType(event))
+                && EventSource.RESPONSE_CONTENT.equals(EventUtils.getDebugEventSource(event))) {
+            if (!InternalMessagingUtils.isSchemaConsequence(event)
+                    || MapUtils.isNullOrEmpty(event.getEventData())) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "handleDebugEvent - Ignoring rule consequence event. Either consequence is"
+                                + " not of type 'schema' or 'eventData' is nil.");
+                return;
+            }
+
+            final PropositionItem tempPropositionItem =
+                    PropositionItem.fromSchemaConsequenceEvent(event);
+            if (tempPropositionItem == null) {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "handleDebugEvent -  Ignoring rule consequence event, could not create"
+                                + " propositionItem");
+                return;
+            }
+            switch (tempPropositionItem.getSchema()) {
+                case INAPP:
+                    edgePersonalizationResponseHandler.createInAppMessage(tempPropositionItem);
+                    break;
+                default:
+            }
+        }
+    }
+
     // Called on every event, used to allow processing of the Messaging rules engine
     @SuppressWarnings("NestedIfDepth")
     void handleWildcardEvents(final Event event) {
@@ -220,37 +264,16 @@ public final class MessagingExtension extends Extension {
         if (!StringUtils.isNullOrEmpty(eventName)
                 && eventName.equals(
                         MessagingConstants.EventName.ASSURANCE_SPOOFED_IAM_EVENT_NAME)) {
-            final Map<String, Object> triggeredConsequenceMap =
-                    DataReader.optTypedMap(
-                            Object.class,
-                            event.getEventData(),
-                            MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
-                            null);
-            if (!MapUtils.isNullOrEmpty(triggeredConsequenceMap)) {
-                final String type =
-                        DataReader.optString(
-                                triggeredConsequenceMap,
-                                MessagingConstants.EventDataKeys.RulesEngine
-                                        .MESSAGE_CONSEQUENCE_TYPE,
-                                "");
-                if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
-                    Log.trace(
-                            MessagingConstants.LOG_TAG,
-                            SELF_TAG,
-                            "handleWildcardEvents - Ignoring rule consequence event(spoof),"
-                                    + " consequence is not of type 'schema'");
-                    return;
-                }
-                final Map<String, Object> detail =
-                        DataReader.optTypedMap(
-                                Object.class,
-                                triggeredConsequenceMap,
-                                MessagingConstants.EventDataKeys.RulesEngine
-                                        .MESSAGE_CONSEQUENCE_DETAIL,
-                                null);
-                edgePersonalizationResponseHandler.createInAppMessage(
-                        PropositionItem.fromEventData(detail));
+            if (!InternalMessagingUtils.isSchemaConsequence(event)) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "handleWildcardEvents - Ignoring rule consequence event(spoof),"
+                                + " consequence is not of type 'schema'");
+                return;
             }
+            edgePersonalizationResponseHandler.createInAppMessage(
+                    PropositionItem.fromSchemaConsequenceEvent(event));
             return;
         }
         messagingRulesEngine.processEvent(event);
@@ -267,61 +290,7 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleRuleEngineResponseEvents(final Event event) {
-        if (MapUtils.isNullOrEmpty(event.getEventData())) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "handleRulesResponseEvents - Ignoring rule consequence event, event data is"
-                            + " null or empty.");
-            return;
-        }
-
-        final Map<String, Object> consequenceMap =
-                DataReader.optTypedMap(
-                        Object.class,
-                        event.getEventData(),
-                        MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
-                        null);
-        if (MapUtils.isNullOrEmpty(consequenceMap)) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "handleRulesResponseEvents - Ignoring rule consequence event, consequence is"
-                            + " null or empty.");
-            return;
-        }
-
-        final String type =
-                DataReader.optString(
-                        consequenceMap,
-                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
-                        "");
-        if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "handleRulesResponseEvents - Ignoring rule consequence event, consequence is"
-                            + " not of type 'schema'");
-            return;
-        }
-        final Map<String, Object> detail =
-                DataReader.optTypedMap(
-                        Object.class,
-                        consequenceMap,
-                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
-                        null);
-
-        // detail is required
-        if (MapUtils.isNullOrEmpty(detail)) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "handleRulesResponseEvents - Ignoring rule consequence event, consequence"
-                            + " detail is null or empty.");
-            return;
-        }
-
-        final PropositionItem propositionItem = PropositionItem.fromEventData(detail);
+        final PropositionItem propositionItem = PropositionItem.fromSchemaConsequenceEvent(event);
         if (propositionItem == null) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
