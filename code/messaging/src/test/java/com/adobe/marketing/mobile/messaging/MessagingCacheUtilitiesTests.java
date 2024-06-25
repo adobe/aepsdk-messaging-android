@@ -121,7 +121,7 @@ public class MessagingCacheUtilitiesTests {
 
         propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(propositionItemMap);
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
         propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");

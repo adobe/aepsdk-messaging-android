@@ -140,7 +140,7 @@ public class Proposition implements Serializable {
             final List<PropositionItem> propositionItems = new ArrayList<>();
             for (final Map<String, Object> item : items) {
                 final PropositionItem propositionItem =
-                        PropositionItem.fromPropositionItemsMap(item);
+                        PropositionItem.fromRuleConsequenceDetail(item);
                 if (propositionItem != null) {
                     propositionItems.add(propositionItem);
                 }

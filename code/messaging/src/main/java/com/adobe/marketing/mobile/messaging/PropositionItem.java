@@ -350,7 +350,7 @@ public class PropositionItem implements Serializable {
         if (MapUtils.isNullOrEmpty(details)) {
             return null;
         }
-        return fromPropositionItemsMap(details);
+        return fromRuleConsequenceDetail(details);
     }
 
     /**
@@ -359,7 +359,7 @@ public class PropositionItem implements Serializable {
      * @param consequenceDetail {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromPropositionItemsMap(final Map<String, Object> consequenceDetail) {
+    static PropositionItem fromRuleConsequenceDetail(final Map<String, Object> consequenceDetail) {
         PropositionItem propositionItem = null;
         try {
             final String uniqueId =
@@ -458,7 +458,7 @@ public class PropositionItem implements Serializable {
             return null;
         }
 
-        return fromPropositionItemsMap(detail);
+        return fromRuleConsequenceDetail(detail);
     }
 
     /**

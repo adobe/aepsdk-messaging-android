@@ -67,9 +67,9 @@ public class PropositionTests {
         propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         propositionItemMap2 = MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(propositionItemMap);
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
         PropositionItem propositionItem2 =
-                PropositionItem.fromPropositionItemsMap(propositionItemMap2);
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap2);
         propositionItems.add(propositionItem);
         propositionItems2.add(propositionItem2);
         propositionItemMaps.add(propositionItemMap);

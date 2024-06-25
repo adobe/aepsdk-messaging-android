@@ -538,12 +538,12 @@ public class PropositionItemTests {
         assertTrue(propositionItemMap.isEmpty());
     }
 
-    // fromPropositionItemsMap
+    // fromRuleConsequenceDetail
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_ValidContent() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_ValidContent() {
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNotNull(propositionItem);
         assertEquals(
@@ -554,59 +554,59 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_InvalidIdType() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidIdType() {
         // setup
         eventDataMapForJSON.put("id", new HashMap<>());
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_InvalidSchemaType() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidSchemaType() {
         // setup
         eventDataMapForJSON.put("schema", new HashMap<>());
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_NullData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_NullData() {
         // setup
         eventDataMapForJSON.put("data", null);
 
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_EmptyData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_EmptyData() {
         // setup
         eventDataMapForJSON.put("data", new HashMap<>());
 
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromPropositionItemsMap_InvalidData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidData() {
         // setup
         eventDataMapForJSON.put("data", "invalidData");
 
         // test
         PropositionItem propositionItem =
-                PropositionItem.fromPropositionItemsMap(eventDataMapForJSON);
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }

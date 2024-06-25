@@ -272,20 +272,8 @@ public final class MessagingExtension extends Extension {
                                 + " consequence is not of type 'schema'");
                 return;
             }
-            final Map<String, Object> triggeredConsequenceMap =
-                    DataReader.optTypedMap(
-                            Object.class,
-                            event.getEventData(),
-                            MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
-                            null);
-            final Map<String, Object> detail =
-                    DataReader.optTypedMap(
-                            Object.class,
-                            triggeredConsequenceMap,
-                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
-                            null);
             edgePersonalizationResponseHandler.createInAppMessage(
-                    PropositionItem.fromPropositionItemsMap(detail));
+                    PropositionItem.fromSchemaConsequenceEvent(event));
             return;
         }
         messagingRulesEngine.processEvent(event);
