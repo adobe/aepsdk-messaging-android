@@ -37,7 +37,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // staging environment - CJM Stage, AJO Web (VA7)
         // surface for content card -
         // mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms
-        val surface = Surface("android-cbe-preview")
+        val surface = Surface("card/ms")
 
 //        val surface = Surface("feeds/apifeed")
         surfaces.add(surface)

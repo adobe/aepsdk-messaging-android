@@ -60,8 +60,7 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
     }
 
     private fun isCBEProposition(proposition: Proposition): Boolean {
-        return proposition.items.isNotEmpty() && (
-                proposition.items[0].schema == SchemaType.HTML_CONTENT ||
-                        proposition.items[0].schema == SchemaType.JSON_CONTENT)
+        return proposition.items[0].schema == SchemaType.HTML_CONTENT ||
+                        proposition.items[0].schema == SchemaType.JSON_CONTENT
     }
 }
