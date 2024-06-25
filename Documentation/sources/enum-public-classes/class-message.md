@@ -41,7 +41,7 @@ void track(final String interaction, final MessagingEdgeEventType eventType)
 ###### Parameters
 
 * *interaction* - a custom `String` value to be recorded in the interaction
-* *eventType* - the [`MessagingEdgeEventType`](#enum-messagingedgeeventtype) to be used for the ensuing Edge Event
+* _eventType_ - the [`MessagingEdgeEventType`](./../enum-public-classes/enum-messaging-edge-event-type.md) to be used for the ensuing Edge Event
 
 ### getAutoTrack
 
@@ -81,7 +81,7 @@ Adds a handler for named JavaScript messages sent from the message's `WebView`.
 
 The  `AdobeCallback` will contain the body of the message passed from the `WebView`'s JavaScript.
 
-For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./how-to-call-native-from-javascript.md).
+For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./../in-app-messaging/how-to-call-native-from-javascript.md).
 
 ```java
 void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)
@@ -120,11 +120,11 @@ WebView getWebView()
 
 Below is the table of values returned by calling the `toString` method for each case, which are used as the XDM `eventType` in outgoing experience events:
 
-| Case                    | String value                      |
-| ----------------------- | --------------------------------- |
-| IN_APP_DISMISS          | `decisioning.propositionDismiss`  |
-| IN_APP_INTERACT         | `decisioning.propositionInteract` |
-| IN_APP_TRIGGER          | `decisioning.propositionTrigger`  |
-| IN_APP_DISPLAY          | `decisioning.propositionDisplay`  |
-| PUSH_APPLICATION_OPENED | `pushTracking.applicationOpened`  |
-| PUSH_CUSTOM_ACTION      | `pushTracking.customAction`       |
+| Case                      | String value                      |
+| ------------------------- | --------------------------------- |
+| `DISMISS`                 | `decisioning.propositionDismiss`  |
+| `INTERACT`                | `decisioning.propositionInteract` |
+| `TRIGGER`                 | `decisioning.propositionTrigger`  |
+| `DISPLAY`                 | `decisioning.propositionDisplay`  |
+| `PUSH_APPLICATION_OPENED` | `pushTracking.applicationOpened`  |
+| `PUSH_CUSTOM_ACTION`      | `pushTracking.customAction`       |
