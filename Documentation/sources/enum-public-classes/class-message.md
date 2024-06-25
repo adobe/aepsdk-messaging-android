@@ -63,35 +63,6 @@ void setAutoTrack(boolean enabled)
 
 * *enabled* - if true, Experience Edge events will automatically be generated when this `Message` is triggered, displayed, or dismissed.
 
-### evaluateJavascript
-
-Evaluates the passed in `String` content containing javascript code using the `Message's ` webview. `handleJavascriptMessage` must be called with a valid callback before calling `evaluateJavascript` as the body of the message passed from the javascript code execution will be returned in the `AdobeCallback` .
-
-```java
-void evaluateJavascript(final String content)
-```
-
-###### Parameters
-
-* *content* - a string containing the javascript code to be executed
-
-### handleJavascriptMessage
-
-Adds a handler for named JavaScript messages sent from the message's `WebView`.
-
-The  `AdobeCallback` will contain the body of the message passed from the `WebView`'s JavaScript.
-
-For a full guide on how to use `handleJavascriptMessage`, read [Call native code from the Javascript of an in-app message](./../in-app-messaging/how-to-call-native-from-javascript.md).
-
-```java
-void handleJavascriptMessage(final String name, final AdobeCallback<String> callback)
-```
-
-###### Parameters
-
-* *name* - the name of the message that should be handled by the `callback`
-* *callback* - a callback which will be called with the body of the message created in the Message's JavaScript
-
 ### getId
 
 Returns the message's id.
@@ -99,24 +70,6 @@ Returns the message's id.
 ```java
 String getId()
 ```
-
-### getParent
-
-Returns the `Object` which created this `Message`.
-
-```java
-Object getParent()
-```
-
-### getWebView
-
-Returns a reference to the message's  `WebView`  instance, if it exists.
-
-```java
-WebView getWebView()
-```
-
-### String values
 
 Below is the table of values returned by calling the `toString` method for each case, which are used as the XDM `eventType` in outgoing experience events:
 
