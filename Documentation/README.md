@@ -1,4 +1,4 @@
-#  AEPMessage Documentation
+#  AEPMessaging Documentation
 
 
 ### Installation
