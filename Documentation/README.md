@@ -1,16 +1,16 @@
 #  AEPMessage Documentation
 
 
-### Getting started with the AEPMessaging Extension
+### Installation
 
-- [Getting started](./sources/getting-started.md)
+- [Installing AEPMesssaging extension](./sources/getting-started.md)
+- [Configure Adobe Data Collection and Adobe Experience Platform](./sources/edge-and-launch-configuration.md)
 - [Test app setup](./sources/testapp-setup.md)
 
 ### Push messaging
 
 - Prerequisites
   - Enable push notifications in your app by [adding the Firebase dependency.](https://firebase.google.com/docs/cloud-messaging/android/client)
-  - [Configure Adobe Data Collection and Adobe Experience Platform](./sources/edge-and-launch-configuration.md)
 - Developer Documentation
   - [API usage](./sources/api-usage.md#Push Messaging APIs)
   - [PushTrackingStatus](./sources/enum-public-classes/enum-push-tracking-status.md)
@@ -22,8 +22,6 @@
 
 ### In-app Messaging
 
-- Prerequisites
-  - [Configure Adobe Data Collection and Adobe Experience Platform](./sources/edge-and-launch-configuration.md)
 - Developer Documentation
   - [API usage](./sources/api-usage.md#In-App Messaging APIs)
   - [Message](./sources/enum-public-classes/class-message.md)
@@ -34,9 +32,6 @@
   - [Handle URL clicks from an in-app message](./sources/in-app-messaging/how-to-handle-url-clicks.md)
 
 ### Code-based experiences and content cards
-
-- Prerequisites
-  - [Configure Adobe Data Collection and Adobe Experience Platform](./sources/edge-and-launch-configuration.md)
 
 - Developer Documentation
   - [API usage](./sources/api-usage.md#Message Feed and Code-based experiences APIs)
