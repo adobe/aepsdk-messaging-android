@@ -49,7 +49,7 @@ public class MessagingUtilsTests {
         final Map<String, Object> propositionItemMap =
                 MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         final PropositionItem mockPropositionItem =
-                PropositionItem.fromEventData(propositionItemMap);
+                PropositionItem.fromPropositionItemsMap(propositionItemMap);
         Proposition mockProposition =
                 new Proposition(
                         "mockId",
@@ -95,7 +95,8 @@ public class MessagingUtilsTests {
                         });
         Map<String, Object> propositionItemMap2 =
                 MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
-        PropositionItem propositionItemToAdd2 = PropositionItem.fromEventData(propositionItemMap2);
+        PropositionItem propositionItemToAdd2 =
+                PropositionItem.fromPropositionItemsMap(propositionItemMap2);
         mockPropositionToAdd2 =
                 new Proposition(
                         "mockId2",

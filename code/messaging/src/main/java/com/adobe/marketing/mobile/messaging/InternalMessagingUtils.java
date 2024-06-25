@@ -278,6 +278,28 @@ class InternalMessagingUtils {
                         false);
     }
 
+    static boolean isSchemaConsequence(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return false;
+        }
+
+        final Map<String, Object> consequence =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                        null);
+        if (MapUtils.isNullOrEmpty(consequence)) {
+            return false;
+        }
+        final String consequenceType =
+                DataReader.optString(
+                        consequence,
+                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                        "");
+        return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================

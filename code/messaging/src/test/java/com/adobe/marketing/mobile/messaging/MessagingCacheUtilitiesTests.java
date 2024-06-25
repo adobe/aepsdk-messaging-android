@@ -120,7 +120,8 @@ public class MessagingCacheUtilitiesTests {
         scopeDetails.put("activity", activity);
 
         propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
-        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
+        PropositionItem propositionItem =
+                PropositionItem.fromPropositionItemsMap(propositionItemMap);
         propositionItems.add(propositionItem);
         propositionItemMaps.add(propositionItemMap);
         eventDataMap.put("id", "uniqueId");

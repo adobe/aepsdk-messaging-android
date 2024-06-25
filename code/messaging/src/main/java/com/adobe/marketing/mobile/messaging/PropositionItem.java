@@ -343,56 +343,39 @@ public class PropositionItem implements Serializable {
      * @return {@link PropositionItem} object created from the provided {@link RuleConsequence}.
      */
     static PropositionItem fromRuleConsequence(final RuleConsequence consequence) {
-        PropositionItem propositionItem = null;
-        try {
-            if (consequence == null) {
-                return null;
-            }
-            final Map<String, Object> details = consequence.getDetail();
-            if (MapUtils.isNullOrEmpty(details)) {
-                return null;
-            }
-            final String uniqueId =
-                    DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.ID);
-            final String schema =
-                    DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.SCHEMA);
-            final Map<String, Object> data =
-                    DataReader.getTypedMap(
-                            Object.class, details, MessagingConstants.ConsequenceDetailKeys.DATA);
-            if (MapUtils.isNullOrEmpty(data)) {
-                return null;
-            }
-            propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
-        } catch (final DataReaderException | MessageRequiredFieldMissingException exception) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Exception occurred creating PropositionItem from rule consequence: %s",
-                    exception.getLocalizedMessage());
+        if (consequence == null) {
+            return null;
         }
-
-        return propositionItem;
+        final Map<String, Object> details = consequence.getDetail();
+        if (MapUtils.isNullOrEmpty(details)) {
+            return null;
+        }
+        return fromPropositionItemsMap(details);
     }
 
     /**
      * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
      *
-     * @param eventData {@link Map<String, Object>} event data
+     * @param consequenceDetail {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromEventData(final Map<String, Object> eventData) {
+    static PropositionItem fromPropositionItemsMap(final Map<String, Object> consequenceDetail) {
         PropositionItem propositionItem = null;
         try {
             final String uniqueId =
-                    DataReader.getString(eventData, MessagingConstants.ConsequenceDetailKeys.ID);
+                    DataReader.getString(
+                            consequenceDetail, MessagingConstants.ConsequenceDetailKeys.ID);
             final SchemaType schema =
                     SchemaType.fromString(
                             DataReader.getString(
-                                    eventData, MessagingConstants.ConsequenceDetailKeys.SCHEMA));
+                                    consequenceDetail,
+                                    MessagingConstants.ConsequenceDetailKeys.SCHEMA));
 
             final Map<String, Object> dataMap =
                     DataReader.getTypedMap(
-                            Object.class, eventData, MessagingConstants.ConsequenceDetailKeys.DATA);
+                            Object.class,
+                            consequenceDetail,
+                            MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
                 Log.trace(
                         MessagingConstants.LOG_TAG,
@@ -411,6 +394,71 @@ public class PropositionItem implements Serializable {
         }
 
         return propositionItem;
+    }
+
+    /**
+     * Creates a {@code PropositionItem} object from the provided rules consequence {@code Event}.
+     *
+     * @param event {@link Event} of type rules consequence to be used to create the {@link
+     *     PropositionItem}.
+     * @return {@link PropositionItem} object created from the provided {@link Event}.
+     */
+    static PropositionItem fromSchemaConsequenceEvent(final Event event) {
+        if (event == null || MapUtils.isNullOrEmpty(event.getEventData())) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, event data is"
+                            + " null or empty.");
+            return null;
+        }
+
+        final Map<String, Object> consequenceMap =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                        null);
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                            + " null or empty.");
+            return null;
+        }
+
+        final String type =
+                DataReader.optString(
+                        consequenceMap,
+                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                        "");
+        if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                            + " not of type 'schema'");
+            return null;
+        }
+        final Map<String, Object> detail =
+                DataReader.optTypedMap(
+                        Object.class,
+                        consequenceMap,
+                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                        null);
+
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence"
+                            + " detail is null or empty.");
+            return null;
+        }
+
+        return fromPropositionItemsMap(detail);
     }
 
     /**
