@@ -86,13 +86,13 @@ Some use cases may require the client to request an update from the remote more 
 Messaging.refreshInAppMessages();
 ```
 
-## Message Feed and Code-based experiences APIs
+## Code-based experiences and content cards APIs
 
 ### updatePropositionsForSurfaces
 
-Dispatches an event for the Edge network extension to fetch personalization decisions from the AJO campaigns for the provided surfaces array. The returned decision propositions are cached in-memory by the Messaging extension.
+Dispatches an event for the Edge network extension to fetch personalization decisions from the AJO campaigns for the provided `Surface`s array. The returned decision `Proposition`s are cached in-memory by the Messaging extension.
 
-To retrieve previously cached decision propositions, use `getPropositionsForSurfaces` API.
+To retrieve previously cached decision `Proposition`s, use `getPropositionsForSurfaces` API.
 
 #### Java
 
@@ -117,7 +117,7 @@ Messaging.updatePropositionsForSurfaces(surfaces)
 
 ### getPropositionsForSurfaces
 
-Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The callback is invoked with the decision propositions corresponding to the given surfaces or AdobeError, if it occurs. 
+Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The callback is invoked with the decision propositions corresponding to the given surfaces or `AdobeError`, if it occurs. 
 
 If a requested surface was not previously cached prior to calling `getPropositionsForSurfaces` (using the `updatePropositionsForSurfaces` API), no propositions will be returned for that surface.
 
