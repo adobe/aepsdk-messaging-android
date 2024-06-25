@@ -47,20 +47,23 @@ class CodeBasedCardAdapter(propositions: MutableList<Proposition>) :
             // show code based experiences with html content in a webview
             if (mimeType == "text/html") {
                 val contentString = item.htmlContent
-                holder.webView.loadData(
+                contentString?.let {
+                    holder.webView.loadData(
                         contentString,
                         mimeType,
-                        StandardCharsets.UTF_8.toString())
-                item.track(MessagingEdgeEventType.DISPLAY)
-                holder.webView.setOnTouchListener(object: View.OnTouchListener {
-                    override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
-                        if (event?.action == MotionEvent.ACTION_UP) {
-                            item.track(MessagingEdgeEventType.INTERACT)
-                            return true
+                        StandardCharsets.UTF_8.toString()
+                    )
+                    item.track(MessagingEdgeEventType.DISPLAY)
+                    holder.webView.setOnTouchListener(object : View.OnTouchListener {
+                        override fun onTouch(p0: View?, event: MotionEvent?): Boolean {
+                            if (event?.action == MotionEvent.ACTION_UP) {
+                                item.track(MessagingEdgeEventType.INTERACT)
+                                return true
+                            }
+                            return false
                         }
-                        return false
-                    }
-                })
+                    })
+                }
             } else if (mimeType == "application/json") {
                 var contentString = item.jsonContentArrayList
                 if (contentString != null) { // we have a json array

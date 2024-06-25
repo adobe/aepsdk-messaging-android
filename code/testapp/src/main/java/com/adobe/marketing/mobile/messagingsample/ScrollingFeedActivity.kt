@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 
@@ -36,7 +37,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // staging environment - CJM Stage, AJO Web (VA7)
         // surface for content card -
         // mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms
-        val surface = Surface("card/ms")
+        val surface = Surface("android-cbe-preview")
 
 //        val surface = Surface("feeds/apifeed")
         surfaces.add(surface)
@@ -44,7 +45,11 @@ class ScrollingFeedActivity : AppCompatActivity() {
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries for surface ${surface.uri}")
             for (entry in it.entries) {
-                propositions = entry.value
+                for (proposition in entry.value) {
+                    if (isContentCard(proposition)) {
+                        propositions.add(proposition)
+                    }
+                }
             }
 
             // show feed items
@@ -56,5 +61,9 @@ class ScrollingFeedActivity : AppCompatActivity() {
                 feedInboxRecyclerView.adapter = feedCardAdapter
             }
         }
+    }
+
+    private fun isContentCard(proposition: Proposition): Boolean {
+        return proposition.items[0].schema == SchemaType.CONTENT_CARD
     }
 }

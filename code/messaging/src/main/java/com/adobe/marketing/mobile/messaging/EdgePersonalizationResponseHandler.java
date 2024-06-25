@@ -809,13 +809,9 @@ class EdgePersonalizationResponseHandler {
     private void updatePropositions(
             final Map<Surface, List<Proposition>> newPropositions,
             final List<Surface> surfacesToRemove) {
-        // add new surfaces or update replace existing surfaces
+        // add new surfaces or replace existing surfaces
         Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(inMemoryPropositions);
-        for (final Map.Entry<Surface, List<Proposition>> entry : newPropositions.entrySet()) {
-            tempPropositionsMap =
-                    MessagingUtils.updatePropositionMapForSurface(
-                            entry.getKey(), entry.getValue(), tempPropositionsMap);
-        }
+        tempPropositionsMap.putAll(newPropositions);
 
         // remove any surfaces if necessary
         for (final Surface surface : surfacesToRemove) {

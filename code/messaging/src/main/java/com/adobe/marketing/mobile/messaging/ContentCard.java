@@ -47,7 +47,7 @@ public class ContentCard {
     private ContentCard() {}
 
     /** {@code FeedItem} Builder. */
-    public static class Builder {
+    static class Builder {
         private boolean didBuild;
         private final ContentCard contentCard;
 
@@ -60,7 +60,7 @@ public class ContentCard {
          * @param body required {@code String} plain-text body representing the content for the
          *     content card
          */
-        public Builder(@NonNull final String title, @NonNull final String body) {
+        Builder(@NonNull final String title, @NonNull final String body) {
             contentCard = new ContentCard();
             contentCard.title = StringUtils.isNullOrEmpty(title) ? "" : title;
             contentCard.body = StringUtils.isNullOrEmpty(body) ? "" : body;
@@ -78,7 +78,7 @@ public class ContentCard {
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
-        public Builder setImageUrl(final String imageUrl) {
+        Builder setImageUrl(final String imageUrl) {
             throwIfAlreadyBuilt();
 
             contentCard.imageUrl = imageUrl;
@@ -93,7 +93,7 @@ public class ContentCard {
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
-        public Builder setActionUrl(final String actionUrl) {
+        Builder setActionUrl(final String actionUrl) {
             throwIfAlreadyBuilt();
 
             contentCard.actionUrl = actionUrl;
@@ -108,7 +108,7 @@ public class ContentCard {
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
-        public Builder setActionTitle(final String actionTitle) {
+        Builder setActionTitle(final String actionTitle) {
             throwIfAlreadyBuilt();
 
             contentCard.actionTitle = actionTitle;
@@ -124,7 +124,7 @@ public class ContentCard {
          * @throws UnsupportedOperationException if this method is invoked after {@link
          *     Builder#build()}.
          */
-        public Builder setParent(final ContentCardSchemaData parent) {
+        Builder setParent(final ContentCardSchemaData parent) {
             throwIfAlreadyBuilt();
 
             contentCard.parent = new SoftReference<>(parent);
@@ -136,7 +136,7 @@ public class ContentCard {
          *
          * @return {@link ContentCard} object or null.
          */
-        @Nullable public ContentCard build() {
+        @Nullable ContentCard build() {
             // title and body are required
             if (StringUtils.isNullOrEmpty(contentCard.title)
                     || StringUtils.isNullOrEmpty(contentCard.body)) {
