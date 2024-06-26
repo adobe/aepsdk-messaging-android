@@ -20,15 +20,9 @@ void show()
 
 Signals to the UIService that the message should be removed from the UI.
 
-If `autoTrack` is true, calling this method will result in an "decisioning.propositionDismiss" Edge Event being dispatched.
-
 ```java
-void dismiss(final boolean suppressAutoTrack)
+void dismiss()
 ```
-
-###### Parameters
-
-* *suppressAutoTrack* - if set to `true`, the "decisioning.propositionDismiss" Edge Event will not be sent regardless of the `autoTrack` setting.
 
 ### track
 
