@@ -33,6 +33,13 @@ public class MessagingUtilsTests {
             new HashMap<String, Object>() {
                 {
                     put("key", "value");
+                    put(
+                            "activity",
+                            new HashMap<String, Object>() {
+                                {
+                                    put("id", "mockActivityId");
+                                }
+                            });
                 }
             };
 
@@ -42,7 +49,7 @@ public class MessagingUtilsTests {
         final Map<String, Object> propositionItemMap =
                 MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         final PropositionItem mockPropositionItem =
-                PropositionItem.fromEventData(propositionItemMap);
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
         Proposition mockProposition =
                 new Proposition(
                         "mockId",
@@ -69,7 +76,18 @@ public class MessagingUtilsTests {
                 new Proposition(
                         "mockId1",
                         mockSurface.getUri(),
-                        mockScopeDetails,
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId2");
+                                            }
+                                        });
+                            }
+                        },
                         new ArrayList<PropositionItem>() {
                             {
                                 add(mockPropositionItemToAdd1);
@@ -77,12 +95,24 @@ public class MessagingUtilsTests {
                         });
         Map<String, Object> propositionItemMap2 =
                 MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
-        PropositionItem propositionItemToAdd2 = PropositionItem.fromEventData(propositionItemMap2);
+        PropositionItem propositionItemToAdd2 =
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap2);
         mockPropositionToAdd2 =
                 new Proposition(
                         "mockId2",
                         mockSurface.getUri(),
-                        mockScopeDetails,
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId3");
+                                            }
+                                        });
+                            }
+                        },
                         new ArrayList<PropositionItem>() {
                             {
                                 add(propositionItemToAdd2);

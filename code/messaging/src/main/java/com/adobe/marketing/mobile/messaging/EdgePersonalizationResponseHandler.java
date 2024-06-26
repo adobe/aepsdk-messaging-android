@@ -18,11 +18,13 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DataReaderException;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,16 +59,25 @@ class EdgePersonalizationResponseHandler {
     private final MessagingCacheUtilities messagingCacheUtilities;
     private final ExtensionApi extensionApi;
     private final LaunchRulesEngine launchRulesEngine;
-    private final FeedRulesEngine feedRulesEngine;
+    private final ContentCardRulesEngine contentCardRulesEngine;
 
-    private Map<Surface, List<Proposition>> propositions = new HashMap<>();
+    private Map<Surface, List<Proposition>> inMemoryPropositions = new HashMap<>();
     private Map<String, PropositionInfo> propositionInfo = new HashMap<>();
+
     // keeps a list of all surfaces requested per personalization request event by event id
     private final Map<String, List<Surface>> requestedSurfacesForEventId = new HashMap<>();
+
     // used while processing streaming payloads for a single request
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
+
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
-    private final Map<Surface, List<LaunchRule>> feedRulesBySurface = new HashMap<>();
+
+    // used to manage content card rules between multiple surfaces and multiple requests
+    private final Map<Surface, List<LaunchRule>> contentCardRulesBySurface = new HashMap<>();
+
+    // holds content cards that the user has qualified for
+    private final Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
+
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
     /**
@@ -76,15 +88,15 @@ class EdgePersonalizationResponseHandler {
      * @param extensionApi {@link ExtensionApi} instance
      * @param rulesEngine {@link LaunchRulesEngine} instance to use for loading in-app message rule
      *     payloads
-     * @param feedRulesEngine {@link FeedRulesEngine} instance to use for loading message feed rule
-     *     payloads
+     * @param contentCardRulesEngine {@link ContentCardRulesEngine} instance to use for loading
+     *     content card rule payloads
      */
     EdgePersonalizationResponseHandler(
             final MessagingExtension parent,
             final ExtensionApi extensionApi,
             final LaunchRulesEngine rulesEngine,
-            final FeedRulesEngine feedRulesEngine) {
-        this(parent, extensionApi, rulesEngine, feedRulesEngine, null);
+            final ContentCardRulesEngine contentCardRulesEngine) {
+        this(parent, extensionApi, rulesEngine, contentCardRulesEngine, null);
     }
 
     @SuppressWarnings("NestedIfDepth")
@@ -93,12 +105,12 @@ class EdgePersonalizationResponseHandler {
             final MessagingExtension parent,
             final ExtensionApi extensionApi,
             final LaunchRulesEngine rulesEngine,
-            final FeedRulesEngine feedRulesEngine,
+            final ContentCardRulesEngine contentCardRulesEngine,
             final MessagingCacheUtilities messagingCacheUtilities) {
         this.parent = parent;
         this.extensionApi = extensionApi;
         this.launchRulesEngine = rulesEngine;
-        this.feedRulesEngine = feedRulesEngine;
+        this.contentCardRulesEngine = contentCardRulesEngine;
 
         // load cached propositions (if any) when EdgePersonalizationResponseHandler is instantiated
         this.messagingCacheUtilities =
@@ -114,7 +126,7 @@ class EdgePersonalizationResponseHandler {
                         SELF_TAG,
                         "Retrieved cached propositions, attempting to load the propositions into"
                                 + " the rules engine.");
-                propositions = cachedPropositions;
+                inMemoryPropositions = cachedPropositions;
                 final List<Surface> surfaces = new ArrayList<>();
                 // get surfaces
                 for (final Map.Entry<Surface, List<Proposition>> cacheEntry :
@@ -141,15 +153,15 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Generates and dispatches an event prompting the Edge extension to fetch in-app, feed
-     * messages, or code-based experiences. The surface URI's used in the request are generated
-     * using the application id of the app. If the application id is unavailable, calling this
-     * method will do nothing.
+     * Generates and dispatches an event prompting the Edge extension to fetch propositions
+     * (currently in-app messages, content cards, or code-based experiences). The surface URIs used
+     * in the request are generated using the application id of the app. If the application id is
+     * unavailable, calling this method will do nothing.
      *
-     * @param event The fetch message {@link Event}
+     * @param event The fetch propositions {@link Event}
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
-    void fetchMessages(final Event event, final List<Surface> surfaces) {
+    void fetchPropositions(final Event event, final List<Surface> surfaces) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
         Surface appSurface = null;
         // if surfaces are provided, use them - otherwise assume the request is for base surface
@@ -363,15 +375,22 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Retrieves the previously fetched (and cached) feeds content from the SDK for the provided
-     * surfaces.
+     * Dispatches an event with previously cached content cards and code based experiences from the
+     * SDK for the provided surfaces.
      *
      * @param surfaces A {@code List<Surface>} of surfaces to use for retrieving cached content
      * @param event The retrieve message {@link Event}
      */
-    void retrieveMessages(final List<Surface> surfaces, final Event event) {
+    void retrieveInMemoryPropositions(final List<Surface> surfaces, final Event event) {
         final List<Surface> requestedSurfaces = new ArrayList<>();
-        if (surfaces == null || surfaces.isEmpty()) {
+        if (MessagingUtils.isNullOrEmpty(surfaces)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unable to retrieve messages, no surfaces were requested.");
+            extensionApi.dispatch(
+                    InternalMessagingUtils.createErrorResponseEvent(
+                            event, AdobeErrorExt.INVALID_REQUEST));
             return;
         }
 
@@ -392,13 +411,17 @@ class EdgePersonalizationResponseHandler {
             return;
         }
 
-        final Map<Surface, List<Proposition>> ruleConsequencePropositions =
-                getPropositionsFromFeedRulesEngine(event);
+        // get a copy of qualified content cards and filter by requested surfaces
+        final Map<Surface, List<Proposition>> requestedContentCards =
+                new HashMap<>(contentCardsBySurface);
+        requestedContentCards.keySet().retainAll(requestedSurfaces);
+
+        // get a copy of in memory propositions (cbe)
         Map<Surface, List<Proposition>> requestedPropositions =
                 retrieveCachedPropositions(requestedSurfaces);
 
-        for (final Map.Entry<Surface, List<Proposition>> entry :
-                ruleConsequencePropositions.entrySet()) {
+        // merge their entries
+        for (final Map.Entry<Surface, List<Proposition>> entry : requestedContentCards.entrySet()) {
             requestedPropositions =
                     MessagingUtils.updatePropositionMapForSurface(
                             entry.getKey(), entry.getValue(), requestedPropositions);
@@ -582,30 +605,43 @@ class EdgePersonalizationResponseHandler {
                     // update rules in in-app engine
                     launchRulesEngine.replaceRules(collectedInAppRules);
                     break;
-                case FEED:
+                case CONTENT_CARD:
                     Log.trace(
                             MessagingConstants.LOG_TAG,
                             SELF_TAG,
-                            "Updating feed definitions for surfaces %s",
+                            "Updating content card definitions for surfaces %s",
                             newSurfaces);
 
                     // replace rules for each feed surface we got back
-                    feedRulesBySurface.putAll(rulesMaps);
+                    contentCardRulesBySurface.putAll(rulesMaps);
 
                     // remove any surfaces that were requested but had no feed content returned
                     for (final Surface surface : surfacesToRemove) {
-                        feedRulesBySurface.remove(surface);
+                        contentCardRulesBySurface.remove(surface);
                     }
 
                     // combine all our rules
-                    final Collection<List<LaunchRule>> allFeedRules = feedRulesBySurface.values();
-                    final List<LaunchRule> collectedFeedRules = new ArrayList<>();
-                    for (final List<LaunchRule> feedRules : allFeedRules) {
-                        collectedFeedRules.addAll(feedRules);
+                    final Collection<List<LaunchRule>> allContentCardRules =
+                            contentCardRulesBySurface.values();
+                    final List<LaunchRule> collectedContentCardRules = new ArrayList<>();
+                    for (final List<LaunchRule> contentCardRules : allContentCardRules) {
+                        collectedContentCardRules.addAll(contentCardRules);
                     }
 
-                    // update rules in feed rules engine
-                    feedRulesEngine.replaceRules(collectedFeedRules);
+                    // update rules in content card rules engine
+                    contentCardRulesEngine.replaceRules(collectedContentCardRules);
+
+                    // process a generic event to see if there are any content cards with:
+                    // 1. no client-side qualification requirements, or
+                    // 2. prior qualification by this device
+                    final Event event =
+                            new Event.Builder(
+                                            "Seed content cards",
+                                            EventType.MESSAGING,
+                                            EventSource.REQUEST_CONTENT)
+                                    .build();
+                    updateQualifiedContentCardsForEvent(event);
+
                     break;
                 default:
                     // no-op
@@ -616,6 +652,74 @@ class EdgePersonalizationResponseHandler {
                                     + " provided is not supported.");
                     break;
             }
+        }
+    }
+
+    /**
+     * Checks to see if the user has qualified for any content cards based on provided {@link
+     * Event}.
+     *
+     * @param event may result in content card qualification.
+     */
+    void updateQualifiedContentCardsForEvent(final Event event) {
+        final Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                getPropositionsFromContentCardRulesEngine(event);
+        for (final Map.Entry<Surface, List<Proposition>> entry :
+                qualifiedContentCardsBySurface.entrySet()) {
+            addOrReplaceContentCards(entry.getValue(), entry.getKey());
+        }
+    }
+
+    /**
+     * Manages qualified content cards by surface. Prevents multiple entries for the same
+     * proposition in {@code contentCardsBySurface}. If an existing entry for a proposition is
+     * found, it is replaced with the value in propositions. If no prior entry exists for a
+     * proposition, a `trigger` event will be sent and written to event history).
+     *
+     * @param propositions list of qualified {@link Proposition}s for the given surface.
+     * @param surface {@link Surface} to which qualified propositions belong.
+     */
+    @SuppressWarnings("NestedIfDepth")
+    private void addOrReplaceContentCards(
+            final List<Proposition> propositions, final Surface surface) {
+        List<Proposition> existingPropositionsArray = contentCardsBySurface.get(surface);
+        if (existingPropositionsArray == null) {
+            existingPropositionsArray = new ArrayList<>();
+        }
+
+        int startingCount = existingPropositionsArray.size();
+
+        for (final Proposition proposition : propositions) {
+            if (existingPropositionsArray.contains(proposition)) {
+                existingPropositionsArray.remove(proposition);
+            } else {
+                final List<PropositionItem> propItems = proposition.getItems();
+                final PropositionItem item = propItems.isEmpty() ? null : propItems.get(0);
+                if (item != null) {
+                    item.track(MessagingEdgeEventType.TRIGGER);
+                }
+            }
+            existingPropositionsArray.add(proposition);
+        }
+
+        contentCardsBySurface.put(surface, existingPropositionsArray);
+
+        int newCount = existingPropositionsArray.size();
+        if (startingCount != newCount) {
+            final Locale locale =
+                    ServiceProvider.getInstance().getDeviceInfoService().getActiveLocale();
+            String message =
+                    newCount > 0
+                            ? String.format(
+                                    locale,
+                                    "User has qualified for %d content card(s) for surface %s",
+                                    newCount,
+                                    surface.getUri())
+                            : String.format(
+                                    locale,
+                                    "User has not qualified for any content card(s) for surface %s",
+                                    surface.getUri());
+            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
         }
     }
 
@@ -641,10 +745,11 @@ class EdgePersonalizationResponseHandler {
     }
 
     @SuppressWarnings("NestedForDepth")
-    private Map<Surface, List<Proposition>> getPropositionsFromFeedRulesEngine(final Event event) {
+    private Map<Surface, List<Proposition>> getPropositionsFromContentCardRulesEngine(
+            final Event event) {
         Map<Surface, List<Proposition>> surfacePropositions = new HashMap<>();
         final Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                feedRulesEngine.evaluate(event);
+                contentCardRulesEngine.evaluate(event);
         if (!MapUtils.isNullOrEmpty(propositionItemsBySurface)) {
             for (final Map.Entry<Surface, List<PropositionItem>> entry :
                     propositionItemsBySurface.entrySet()) {
@@ -704,20 +809,16 @@ class EdgePersonalizationResponseHandler {
     private void updatePropositions(
             final Map<Surface, List<Proposition>> newPropositions,
             final List<Surface> surfacesToRemove) {
-        // add new surfaces or update replace existing surfaces
-        Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(propositions);
-        for (final Map.Entry<Surface, List<Proposition>> entry : newPropositions.entrySet()) {
-            tempPropositionsMap =
-                    MessagingUtils.updatePropositionMapForSurface(
-                            entry.getKey(), entry.getValue(), tempPropositionsMap);
-        }
+        // add new surfaces or replace existing surfaces
+        Map<Surface, List<Proposition>> tempPropositionsMap = new HashMap<>(inMemoryPropositions);
+        tempPropositionsMap.putAll(newPropositions);
 
         // remove any surfaces if necessary
         for (final Surface surface : surfacesToRemove) {
             tempPropositionsMap.remove(surface);
         }
 
-        propositions = tempPropositionsMap;
+        inMemoryPropositions = tempPropositionsMap;
     }
 
     /**
@@ -730,7 +831,7 @@ class EdgePersonalizationResponseHandler {
             final List<Surface> surfaces) {
         Map<Surface, List<Proposition>> propositionMap = new HashMap<>();
         for (final Surface surface : surfaces) {
-            final List<Proposition> propositionsList = propositions.get(surface);
+            final List<Proposition> propositionsList = inMemoryPropositions.get(surface);
             if (!MessagingUtils.isNullOrEmpty(propositionsList)) {
                 propositionMap.put(surface, propositionsList);
             }

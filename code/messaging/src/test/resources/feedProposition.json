@@ -53,7 +53,7 @@
                                 "type": "schema",
                                 "detail": {
                                     "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
-                                    "schema": "https://ns.adobe.com/personalization/message/feed-item",
+                                    "schema": "https://ns.adobe.com/personalization/message/content-card",
                                     "data": {
                                         "expiryDate": 1723163897,
                                         "meta": {

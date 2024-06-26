@@ -24,28 +24,31 @@ class SingleFeedActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_singlefeed)
 
-        val feedActivityItemTitle: TextView
-        val feedActivityItemImage: ImageView
-        val feedActivityBody: TextView
-        val feedActivityButton: Button
-
-        feedActivityItemImage = findViewById(R.id.feedActivityImage)
-        feedActivityItemTitle = findViewById(R.id.feedActivityTitle)
-        feedActivityBody = findViewById(R.id.feedActivityBody)
-        feedActivityButton = findViewById(R.id.feedActivityActionButton)
+        val feedActivityItemImage: ImageView = findViewById(R.id.feedActivityImage)
+        val feedActivityItemTitle: TextView = findViewById(R.id.feedActivityTitle)
+        val feedActivityBody: TextView = findViewById(R.id.feedActivityBody)
+        val feedActivityButton: Button = findViewById(R.id.feedActivityActionButton)
 
         // retrieve feed content from the intent
-        val contentMap = intent.extras?.get("content") as HashMap<String, String>
+        val contentMap = intent.getSerializableExtra("content") as HashMap<String, String?>
 
         // show single feed item
-        feedActivityItemTitle.text = contentMap.get("title")
-        feedActivityItemImage.setImageBitmap(contentMap.get("imageUrl")
+        feedActivityItemTitle.text = contentMap["title"]
+        feedActivityItemImage.setImageBitmap(
+            contentMap["imageUrl"]
             ?.let { ImageDownloader.getImage(it) })
         feedActivityItemImage.refreshDrawableState()
-        feedActivityBody.text = contentMap.get("body")
-        feedActivityButton.text = contentMap.get("actionTitle")
-        feedActivityButton.setOnClickListener {
-            contentMap.get("actionUrl")?.let { it1 -> ServiceProvider.getInstance().uriService.openUri(it1) }
+        feedActivityBody.text = contentMap["body"]
+        val feedbackButtonText = contentMap["actionTitle"]
+        if (feedbackButtonText.isNullOrEmpty()) {
+            feedActivityButton.visibility = Button.GONE
+        }
+        else {
+            feedActivityButton.text = feedbackButtonText
+            feedActivityButton.setOnClickListener {
+                contentMap["actionUrl"]
+                    ?.let { it1 -> ServiceProvider.getInstance().uriService.openUri(it1) }
+            }
         }
     }
 }

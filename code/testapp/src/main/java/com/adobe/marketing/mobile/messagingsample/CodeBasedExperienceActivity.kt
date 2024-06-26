@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.messaging.Proposition
+import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityCodebasedBinding
 
@@ -31,8 +32,8 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         // create list of code based surface paths
         var propositions = mutableListOf<Proposition>()
         val surfaces = mutableListOf<Surface>()
-        surfaces.add(Surface("cbe-path1"))
-        surfaces.add(Surface("cbe-path2"))
+        surfaces.add(Surface("cbe/json"))
+        surfaces.add(Surface("android-cbe-preview"))
 
         // fetch code based experiences
         Messaging.updatePropositionsForSurfaces(surfaces)
@@ -40,8 +41,11 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
         Messaging.getPropositionsForSurfaces(surfaces) {
             println("getPropositionsForSurfaces callback contained ${it.entries.size} entry/entries")
             for (entry in it.entries) {
-                println("Adding ${entry.value.size} proposition(s) from surface ${entry.key.uri}")
-                propositions.addAll(entry.value)
+                for (proposition in entry.value) {
+                    if(isCBEProposition(proposition)) {
+                        propositions.add(proposition)
+                    }
+                }
             }
 
             // show code based experiences
@@ -53,5 +57,10 @@ class CodeBasedExperienceActivity : AppCompatActivity() {
                 codeBasedRecyclerView.adapter = codeBasedCardAdapter
             }
         }
+    }
+
+    private fun isCBEProposition(proposition: Proposition): Boolean {
+        return proposition.items[0].schema == SchemaType.HTML_CONTENT ||
+                        proposition.items[0].schema == SchemaType.JSON_CONTENT
     }
 }

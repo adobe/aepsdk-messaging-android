@@ -555,7 +555,7 @@ public class MessagingTestUtils {
             try {
                 JSONObject feedDetails = new JSONObject("{\n" +
                         "\"id\": \"183639c4-cb37-458e-a8ef-4e130d767ebf\",\n" +
-                        "\"schema\": \"https://ns.adobe.com/personalization/message/feed-item\",\n" +
+                        "\"schema\": \"https://ns.adobe.com/personalization/message/content-card\",\n" +
                         "\"data\": {\n" +
                         "\"expiryDate\": 1723163897,\n" +
                         "\"meta\": {\n" +

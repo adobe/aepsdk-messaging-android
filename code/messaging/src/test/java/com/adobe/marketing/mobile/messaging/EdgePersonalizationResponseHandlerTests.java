@@ -98,7 +98,7 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock CacheResult mockCacheResult;
     @Mock MessagingExtension mockMessagingExtension;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
-    @Mock FeedRulesEngine mockFeedRulesEngine;
+    @Mock ContentCardRulesEngine mockContentCardRulesEngine;
     @Mock MessagingCacheUtilities mockMessagingCacheUtilities;
     @Mock SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
     @Mock PresentableMessageMapper mockPresentableMessageMapper;
@@ -131,7 +131,7 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockMessagingExtension);
         reset(mockMessagingCacheUtilities);
         reset(mockMessagingRulesEngine);
-        reset(mockFeedRulesEngine);
+        reset(mockContentCardRulesEngine);
         reset(mockSerialWorkDispatcher);
         reset(mockPresentableMessageMapper);
         reset(mockInternalMessage);
@@ -168,7 +168,7 @@ public class EdgePersonalizationResponseHandlerTests {
                             mockMessagingExtension,
                             mockExtensionApi,
                             mockMessagingRulesEngine,
-                            mockFeedRulesEngine,
+                            mockContentCardRulesEngine,
                             mockMessagingCacheUtilities);
             edgePersonalizationResponseHandler.setMessagesRequestEventId(
                     "TESTING_ID", Collections.singletonList(new Surface()));
@@ -208,7 +208,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -257,7 +257,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -292,7 +292,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
 
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, null);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
@@ -327,7 +327,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -382,7 +382,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -420,7 +420,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     surfacePaths.add(new Surface("alsoinvalid##"));
 
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
@@ -452,7 +452,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         fail(e.getMessage());
                     }
                     // test
-                    edgePersonalizationResponseHandler.fetchMessages(mockEvent, surfacePaths);
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -729,7 +729,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestUtils.createMessagingPropositionItemList(4));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress in-app propositions
@@ -779,7 +779,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         assertEquals(3, inAppRulesListCaptor.getValue().size());
 
                         // verify parsed rules replaced in feed rules engine
-                        verify(mockFeedRulesEngine, times(1))
+                        verify(mockContentCardRulesEngine, times(1))
                                 .replaceRules(feedRulesListCaptor.capture());
                         assertEquals(4, feedRulesListCaptor.getValue().size());
 
@@ -889,7 +889,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         assertEquals(3, inAppRulesListCaptor.getValue().size());
 
                         // verify parsed rules replaced in feed rules engine for both responses
-                        verify(mockFeedRulesEngine, times(2))
+                        verify(mockContentCardRulesEngine, times(2))
                                 .replaceRules(feedRulesListCaptor.capture());
                         assertEquals(4, feedRulesListCaptor.getAllValues().get(0).size());
                         assertEquals(4, feedRulesListCaptor.getAllValues().get(1).size());
@@ -966,7 +966,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         verifyNoInteractions(mockMessagingRulesEngine);
 
                         // verify feed rules engine not called
-                        verifyNoInteractions(mockFeedRulesEngine);
+                        verifyNoInteractions(mockContentCardRulesEngine);
 
                         // verify received propositions event is dispatched
                         ArgumentCaptor<Event> dispatchEventArgumentCaptor =
@@ -1028,7 +1028,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify rules not replaced in feed rules engine
-                        verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+                        verify(mockContentCardRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -1049,7 +1049,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 surface, MessagingTestUtils.createMessagingPropositionItemList(4));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress in-app propositions
@@ -1080,7 +1080,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify rules not replaced in feed rules engine
-                        verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+                        verify(mockContentCardRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -1131,7 +1131,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify rules not replaced in feed rules engine
-                        verify(mockFeedRulesEngine, times(0)).replaceRules(anyList());
+                        verify(mockContentCardRulesEngine, times(0)).replaceRules(anyList());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
@@ -1167,7 +1167,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestUtils.createMessagingPropositionItemList(3));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress feed propositions
@@ -1196,7 +1196,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1251,7 +1252,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
                         edgePersonalizationResponseHandler.setSerialWorkDispatcher(
                                 mockSerialWorkDispatcher);
@@ -1274,7 +1275,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestUtils.createMessagingPropositionItemList(3));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress feed propositions
@@ -1304,7 +1305,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
 
                         // verify message propositions response event dispatched with 1 feed
                         // proposition
@@ -1345,7 +1347,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestUtils.createMessagingPropositionItemList(3));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress feed propositions
@@ -1371,7 +1373,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
 
                         // verify error response event dispatched
                         verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
@@ -1408,7 +1411,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestUtils.createMessagingPropositionItemList(3));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockFeedRulesEngine.evaluate(any(Event.class)))
+                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
                                 .thenReturn(matchedFeedRules);
 
                         // setup in progress feed propositions
@@ -1434,10 +1437,23 @@ public class EdgePersonalizationResponseHandlerTests {
                         reset(mockExtensionApi);
 
                         // test retrieveMessages
-                        edgePersonalizationResponseHandler.retrieveMessages(surfaces, mockEvent);
+                        edgePersonalizationResponseHandler.retrieveInMemoryPropositions(
+                                surfaces, mockEvent);
 
-                        // verify no response event dispatched
-                        verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+                        // verify one response event dispatched
+                        verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+                        Event propositionsResponseEvent = eventArgumentCaptor.getValue();
+                        assertEquals(
+                                MESSAGE_PROPOSITIONS_RESPONSE, propositionsResponseEvent.getName());
+                        assertEquals(EventType.MESSAGING, propositionsResponseEvent.getType());
+                        assertEquals(
+                                EventSource.RESPONSE_CONTENT,
+                                propositionsResponseEvent.getSource());
+                        eventData = propositionsResponseEvent.getEventData();
+                        assertEquals(RESPONSE_ERROR, eventData.keySet().stream().findFirst().get());
+                        assertEquals(
+                                AdobeErrorExt.INVALID_REQUEST.getErrorName(),
+                                eventData.get(RESPONSE_ERROR));
                     }
                 });
     }
@@ -1486,7 +1502,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
 
                         // verify cached rules replaced in rules engine
@@ -1514,7 +1530,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
 
                         // verify cached rules not replaced in rules engine
@@ -1540,7 +1556,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
 
                         // verify cached rules not replaced in rules engine
@@ -1567,7 +1583,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
 
                         // verify cached rules not replaced in rules engine
@@ -1615,7 +1631,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                         mockMessagingExtension,
                                         mockExtensionApi,
                                         mockMessagingRulesEngine,
-                                        mockFeedRulesEngine,
+                                        mockContentCardRulesEngine,
                                         mockMessagingCacheUtilities);
 
                         // verify cached rules replaced in rules engine

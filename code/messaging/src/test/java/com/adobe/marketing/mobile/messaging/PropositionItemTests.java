@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -170,7 +171,8 @@ public class PropositionItemTests {
             spyPropositionItem.track(MessagingEdgeEventType.DISPLAY);
 
             // verify
-            verify(spyPropositionItem).generateInteractionXdm(MessagingEdgeEventType.DISPLAY);
+            verify(spyPropositionItem)
+                    .generateInteractionXdm(null, MessagingEdgeEventType.DISPLAY, null);
             assertEquals(1, propositionInteractionMockedConstruction.constructed().size());
             ArgumentCaptor<Event> trackingEventCaptor = ArgumentCaptor.forClass(Event.class);
             mobileCoreMockedStatic.verify(
@@ -229,7 +231,8 @@ public class PropositionItemTests {
             spyPropositionItem.track(MessagingEdgeEventType.DISPLAY);
 
             // verify
-            verify(spyPropositionItem).generateInteractionXdm(MessagingEdgeEventType.DISPLAY);
+            verify(spyPropositionItem)
+                    .generateInteractionXdm(null, MessagingEdgeEventType.DISPLAY, null);
             assertEquals(0, propositionInteractionMockedConstruction.constructed().size());
             mobileCoreMockedStatic.verifyNoInteractions();
         }
@@ -535,11 +538,12 @@ public class PropositionItemTests {
         assertTrue(propositionItemMap.isEmpty());
     }
 
-    // fromEventData
+    // fromRuleConsequenceDetail
     @Test
-    public void test_createPropositionItem_fromEventData_ValidContent() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_ValidContent() {
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNotNull(propositionItem);
         assertEquals(
@@ -550,54 +554,59 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_InvalidIdType() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidIdType() {
         // setup
         eventDataMapForJSON.put("id", new HashMap<>());
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_InvalidSchemaType() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidSchemaType() {
         // setup
         eventDataMapForJSON.put("schema", new HashMap<>());
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_NullData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_NullData() {
         // setup
         eventDataMapForJSON.put("data", null);
 
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_EmptyData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_EmptyData() {
         // setup
         eventDataMapForJSON.put("data", new HashMap<>());
 
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
 
     @Test
-    public void test_createPropositionItem_fromEventData_InvalidData() {
+    public void test_createPropositionItem_fromRuleConsequenceDetail_InvalidData() {
         // setup
         eventDataMapForJSON.put("data", "invalidData");
 
         // test
-        PropositionItem propositionItem = PropositionItem.fromEventData(eventDataMapForJSON);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(eventDataMapForJSON);
         // verify
         assertNull(propositionItem);
     }
@@ -690,6 +699,100 @@ public class PropositionItemTests {
         assertNull(propositionItem);
     }
 
+    @Test
+    public void fromSchemaConsequenceEvent_returnsNull_whenEventDataIsNull() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData()).thenReturn(null);
+
+        // test
+        PropositionItem result = PropositionItem.fromSchemaConsequenceEvent(event);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
+    public void fromSchemaConsequenceEvent_returnsNull_whenConsequenceMapIsNull() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData()).thenReturn(new HashMap<>());
+
+        // test
+        PropositionItem result = PropositionItem.fromSchemaConsequenceEvent(event);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
+    public void fromSchemaConsequenceEvent_returnsNull_whenConsequenceTypeIsNotSchema() {
+        // setup
+        Event event = mock(Event.class);
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                "not-schema");
+        eventData.put(
+                MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        when(event.getEventData()).thenReturn(eventData);
+
+        // test
+        PropositionItem result = PropositionItem.fromSchemaConsequenceEvent(event);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
+    public void fromSchemaConsequenceEvent_returnsNull_whenDetailIsNull() {
+        // setup
+        Event event = mock(Event.class);
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                MessagingConstants.ConsequenceDetailKeys.SCHEMA);
+        eventData.put(
+                MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        when(event.getEventData()).thenReturn(eventData);
+
+        // test
+        PropositionItem result = PropositionItem.fromSchemaConsequenceEvent(event);
+
+        // verify
+        assertNull(result);
+    }
+
+    @Test
+    public void fromSchemaConsequenceEvent_returnsPropositionItem_whenAllConditionsAreMet() {
+        // setup
+        Event event = mock(Event.class);
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        Map<String, Object> consequenceDetail =
+                MessagingTestUtils.createFeedConsequenceList(1).get(0).getDetail();
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                MessagingConstants.ConsequenceDetailKeys.SCHEMA);
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                consequenceDetail);
+        eventData.put(
+                MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        when(event.getEventData()).thenReturn(eventData);
+
+        // test
+        PropositionItem propositionItem = PropositionItem.fromSchemaConsequenceEvent(event);
+
+        // verify
+        assertNotNull(propositionItem);
+        assertEquals(consequenceDetail.get("id"), propositionItem.getItemId());
+        assertEquals(SchemaType.CONTENT_CARD, propositionItem.getSchema());
+        assertEquals(consequenceDetail.get("data"), propositionItem.getItemData());
+    }
+
     // getInAppSchemaData tests
     @Test
     public void test_getInAppSchemaData() {
@@ -776,7 +879,7 @@ public class PropositionItemTests {
 
         // verify
         assertNotNull(propositionItem);
-        FeedItemSchemaData schemaData = propositionItem.getFeedItemSchemaData();
+        ContentCardSchemaData schemaData = propositionItem.getContentCardSchemaData();
         assertNotNull(schemaData);
         Map<String, Object> inAppPropositionItemData =
                 (Map<String, Object>) ruleConsequences.get(0).getDetail().get("data");

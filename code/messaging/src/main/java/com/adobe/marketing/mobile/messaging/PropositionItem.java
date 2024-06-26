@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
@@ -109,31 +110,7 @@ public class PropositionItem implements Serializable {
      *     interaction
      */
     public void track(@NonNull final MessagingEdgeEventType eventType) {
-        final Map<String, Object> propositionInteractionXdm = generateInteractionXdm(eventType);
-        if (propositionInteractionXdm == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Cannot track proposition interaction for item (%s), could not generate"
-                            + " interactions XDM.",
-                    itemId);
-            return;
-        }
-
-        final Map<String, Object> eventData = new HashMap<>();
-        eventData.put(MessagingConstants.EventDataKeys.Messaging.TRACK_PROPOSITIONS, true);
-        eventData.put(
-                MessagingConstants.EventDataKeys.Messaging.PROPOSITION_INTERACTION,
-                propositionInteractionXdm);
-
-        final Event trackingPropositionsEvent =
-                new Event.Builder(
-                                MessagingConstants.EventName.TRACK_PROPOSITIONS,
-                                MessagingConstants.EventType.MESSAGING,
-                                MessagingConstants.EventSource.REQUEST_CONTENT)
-                        .setEventData(eventData)
-                        .build();
-        MobileCore.dispatchEvent(trackingPropositionsEvent);
+        track(null, eventType, null);
     }
 
     /**
@@ -148,6 +125,11 @@ public class PropositionItem implements Serializable {
             final String interaction,
             @NonNull final MessagingEdgeEventType eventType,
             final List<String> tokens) {
+        // record the event in event history
+        if (propositionReference != null) {
+            PropositionHistory.record(getProposition().getActivityId(), eventType, interaction);
+        }
+
         final Map<String, Object> propositionInteractionXdm =
                 generateInteractionXdm(interaction, eventType, tokens);
         if (propositionInteractionXdm == null) {
@@ -177,7 +159,7 @@ public class PropositionItem implements Serializable {
     }
 
     /**
-     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given
+     * Creates a {@code Map<String, Object>} containing XDM data for interaction with the given
      * proposition item, for the provided event type. If the proposition reference within the item
      * is released and no longer valid, the method returns null.
      *
@@ -187,27 +169,11 @@ public class PropositionItem implements Serializable {
      */
     public Map<String, Object> generateInteractionXdm(
             @NonNull final MessagingEdgeEventType eventType) {
-        if (propositionReference == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Cannot generate interaction XDM for item (%s), proposition reference is not"
-                            + " available.",
-                    itemId);
-            return null;
-        }
-        final PropositionInteraction propositionInteraction =
-                new PropositionInteraction(
-                        eventType,
-                        null,
-                        PropositionInfo.createFromProposition(getProposition()),
-                        itemId,
-                        null);
-        return propositionInteraction.getPropositionInteractionXDM();
+        return generateInteractionXdm(null, eventType, null);
     }
 
     /**
-     * Creates a {@code Map<String, Object} containing XDM data for interaction with the given
+     * Creates a {@code Map<String, Object>} containing XDM data for interaction with the given
      * proposition item, for the provided event type. If the proposition reference within the item
      * is released and no longer valid, the method returns null.
      *
@@ -245,7 +211,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link Map<String, Object>} object containing the {@link PropositionItem}'s content.
      */
-    public Map<String, Object> getJsonContentMap() {
+    @Nullable public Map<String, Object> getJsonContentMap() {
         if (!schema.equals(SchemaType.JSON_CONTENT)) {
             return null;
         }
@@ -261,7 +227,7 @@ public class PropositionItem implements Serializable {
      * @return {@link List<Map<String, Object>>} object containing the {@link PropositionItem}'s
      *     content.
      */
-    public List<Map<String, Object>> getJsonContentArrayList() {
+    @Nullable public List<Map<String, Object>> getJsonContentArrayList() {
         if (!schema.equals(SchemaType.JSON_CONTENT)) {
             return null;
         }
@@ -275,7 +241,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link String} containing the {@link PropositionItem}'s content.
      */
-    public String getHtmlContent() {
+    @Nullable public String getHtmlContent() {
         if (!schema.equals(SchemaType.HTML_CONTENT)) {
             return null;
         }
@@ -289,7 +255,7 @@ public class PropositionItem implements Serializable {
      *
      * @return {@link InAppSchemaData} object containing the {@link PropositionItem}'s content.
      */
-    public InAppSchemaData getInAppSchemaData() {
+    @Nullable public InAppSchemaData getInAppSchemaData() {
         if (!schema.equals(SchemaType.INAPP)) {
             return null;
         }
@@ -297,15 +263,45 @@ public class PropositionItem implements Serializable {
     }
 
     /**
+     * Returns this {@link PropositionItem}'s content as a {@code ContentCardSchemaData} object.
+     *
+     * @return {@link ContentCardSchemaData} object containing the {@link PropositionItem}'s
+     *     content.
+     */
+    @Nullable public ContentCardSchemaData getContentCardSchemaData() {
+        if (!schema.equals(SchemaType.CONTENT_CARD)) {
+            return null;
+        }
+        final ContentCardSchemaData contentCardSchemaData =
+                (ContentCardSchemaData) createSchemaData(SchemaType.CONTENT_CARD);
+
+        if (contentCardSchemaData != null) {
+            contentCardSchemaData.parent = this;
+        }
+
+        return contentCardSchemaData;
+    }
+
+    /**
      * Returns this {@link PropositionItem}'s content as a {@code FeedItemSchemaData} object.
      *
      * @return {@link FeedItemSchemaData} object containing the {@link PropositionItem}'s content.
+     * @deprecated Use {@link #getContentCardSchemaData()} instead.
      */
-    public FeedItemSchemaData getFeedItemSchemaData() {
+    @Deprecated
+    @Nullable public FeedItemSchemaData getFeedItemSchemaData() {
         if (!schema.equals(SchemaType.FEED)) {
             return null;
         }
-        return (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        final FeedItemSchemaData feedItemSchemaData =
+                (FeedItemSchemaData) createSchemaData(SchemaType.FEED);
+
+        if (feedItemSchemaData != null) {
+            feedItemSchemaData.parent = this;
+        }
+
+        return feedItemSchemaData;
     }
 
     /**
@@ -334,6 +330,8 @@ public class PropositionItem implements Serializable {
                 return new InAppSchemaData(ruleJson);
             case FEED:
                 return new FeedItemSchemaData(ruleJson);
+            case CONTENT_CARD:
+                return new ContentCardSchemaData(ruleJson);
             default:
                 break;
         }
@@ -346,56 +344,39 @@ public class PropositionItem implements Serializable {
      * @return {@link PropositionItem} object created from the provided {@link RuleConsequence}.
      */
     static PropositionItem fromRuleConsequence(final RuleConsequence consequence) {
-        PropositionItem propositionItem = null;
-        try {
-            if (consequence == null) {
-                return null;
-            }
-            final Map<String, Object> details = consequence.getDetail();
-            if (MapUtils.isNullOrEmpty(details)) {
-                return null;
-            }
-            final String uniqueId =
-                    DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.ID);
-            final String schema =
-                    DataReader.getString(details, MessagingConstants.ConsequenceDetailKeys.SCHEMA);
-            final Map<String, Object> data =
-                    DataReader.getTypedMap(
-                            Object.class, details, MessagingConstants.ConsequenceDetailKeys.DATA);
-            if (MapUtils.isNullOrEmpty(data)) {
-                return null;
-            }
-            propositionItem = new PropositionItem(uniqueId, SchemaType.fromString(schema), data);
-        } catch (final DataReaderException | MessageRequiredFieldMissingException exception) {
-            Log.trace(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Exception occurred creating PropositionItem from rule consequence: %s",
-                    exception.getLocalizedMessage());
+        if (consequence == null) {
+            return null;
         }
-
-        return propositionItem;
+        final Map<String, Object> details = consequence.getDetail();
+        if (MapUtils.isNullOrEmpty(details)) {
+            return null;
+        }
+        return fromRuleConsequenceDetail(details);
     }
 
     /**
      * Creates a {@code PropositionItem} object from the provided {@code Map<String, Object>}.
      *
-     * @param eventData {@link Map<String, Object>} event data
+     * @param consequenceDetail {@link Map<String, Object>} event data
      * @return {@link PropositionItem} object created from the provided {@code Map<String, Object>}.
      */
-    static PropositionItem fromEventData(final Map<String, Object> eventData) {
+    static PropositionItem fromRuleConsequenceDetail(final Map<String, Object> consequenceDetail) {
         PropositionItem propositionItem = null;
         try {
             final String uniqueId =
-                    DataReader.getString(eventData, MessagingConstants.ConsequenceDetailKeys.ID);
+                    DataReader.getString(
+                            consequenceDetail, MessagingConstants.ConsequenceDetailKeys.ID);
             final SchemaType schema =
                     SchemaType.fromString(
                             DataReader.getString(
-                                    eventData, MessagingConstants.ConsequenceDetailKeys.SCHEMA));
+                                    consequenceDetail,
+                                    MessagingConstants.ConsequenceDetailKeys.SCHEMA));
 
             final Map<String, Object> dataMap =
                     DataReader.getTypedMap(
-                            Object.class, eventData, MessagingConstants.ConsequenceDetailKeys.DATA);
+                            Object.class,
+                            consequenceDetail,
+                            MessagingConstants.ConsequenceDetailKeys.DATA);
             if (MapUtils.isNullOrEmpty(dataMap)) {
                 Log.trace(
                         MessagingConstants.LOG_TAG,
@@ -414,6 +395,71 @@ public class PropositionItem implements Serializable {
         }
 
         return propositionItem;
+    }
+
+    /**
+     * Creates a {@code PropositionItem} object from the provided rules consequence {@code Event}.
+     *
+     * @param event {@link Event} of type rules consequence to be used to create the {@link
+     *     PropositionItem}.
+     * @return {@link PropositionItem} object created from the provided {@link Event}.
+     */
+    static PropositionItem fromSchemaConsequenceEvent(final Event event) {
+        if (event == null || MapUtils.isNullOrEmpty(event.getEventData())) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, event data is"
+                            + " null or empty.");
+            return null;
+        }
+
+        final Map<String, Object> consequenceMap =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                        null);
+        if (MapUtils.isNullOrEmpty(consequenceMap)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                            + " null or empty.");
+            return null;
+        }
+
+        final String type =
+                DataReader.optString(
+                        consequenceMap,
+                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                        "");
+        if (!type.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                            + " not of type 'schema'");
+            return null;
+        }
+        final Map<String, Object> detail =
+                DataReader.optTypedMap(
+                        Object.class,
+                        consequenceMap,
+                        MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                        null);
+
+        // detail is required
+        if (MapUtils.isNullOrEmpty(detail)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence"
+                            + " detail is null or empty.");
+            return null;
+        }
+
+        return fromRuleConsequenceDetail(detail);
     }
 
     /**
