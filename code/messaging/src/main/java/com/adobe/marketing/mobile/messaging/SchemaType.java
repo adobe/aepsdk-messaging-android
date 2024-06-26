@@ -19,9 +19,14 @@ public enum SchemaType {
     JSON_CONTENT(2),
     RULESET(3),
     INAPP(4),
+    /**
+     * @deprecated Use {@link #CONTENT_CARD} instead.
+     */
+    @Deprecated
     FEED(5),
     NATIVE_ALERT(6),
-    DEFAULT_CONTENT(7);
+    DEFAULT_CONTENT(7),
+    CONTENT_CARD(8);
 
     private final int value;
 
@@ -50,6 +55,8 @@ public enum SchemaType {
                 return MessagingConstants.SchemaValues.SCHEMA_NATIVE_ALERT;
             case DEFAULT_CONTENT:
                 return MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT;
+            case CONTENT_CARD:
+                return MessagingConstants.SchemaValues.SCHEMA_CONTENT_CARD;
             default:
                 return "";
         }
@@ -81,6 +88,9 @@ public enum SchemaType {
                 break;
             case MessagingConstants.SchemaValues.SCHEMA_DEFAULT_CONTENT:
                 schemaType = SchemaType.DEFAULT_CONTENT;
+                break;
+            case MessagingConstants.SchemaValues.SCHEMA_CONTENT_CARD:
+                schemaType = SchemaType.CONTENT_CARD;
                 break;
             default:
                 schemaType = SchemaType.UNKNOWN;

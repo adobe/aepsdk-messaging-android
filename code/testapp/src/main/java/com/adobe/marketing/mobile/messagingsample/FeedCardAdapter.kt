@@ -35,17 +35,22 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val proposition = propositions[position]
         for (item in proposition.items) {
-            val inboundContent = item.feedItemSchemaData
-            val feedItem = inboundContent.feedItem
-            if (feedItem != null) {
-                holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(feedItem.imageUrl))
+            val inboundContent = item.contentCardSchemaData
+            val contentCard = inboundContent?.contentCard
+            contentCard?.let {
+                it.imageUrl?.let {
+                    holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(it))
+                }
                 holder.feedItemImage.refreshDrawableState()
-                holder.feedItemTitle.text = feedItem.title
-                holder.feedBody.text = feedItem.body
+                holder.feedItemTitle.text = it.title
+                holder.feedBody.text = it.body
                 item.track(MessagingEdgeEventType.DISPLAY)
                 holder.itemView.setOnClickListener {
                     item.track(MessagingEdgeEventType.INTERACT)
-                    val intent = Intent(ServiceProvider.getInstance().appContextService.applicationContext, SingleFeedActivity::class.java)
+                    val intent = Intent(
+                        ServiceProvider.getInstance().appContextService.applicationContext,
+                        SingleFeedActivity::class.java
+                    )
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     MobileCore.getApplication()?.startActivity(intent.apply {
                         val contentMap = inboundContent.content as HashMap<*, *>

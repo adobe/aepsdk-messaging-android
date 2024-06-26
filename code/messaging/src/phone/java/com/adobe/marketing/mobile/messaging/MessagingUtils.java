@@ -87,7 +87,10 @@ public class MessagingUtils {
                 existingList != null ? existingList : createMutableList(propositionsToAdd);
         if (existingList != null) {
             for (final Proposition proposition : propositionsToAdd) {
-                if (!updatedList.contains(proposition)) {
+                if (updatedList.contains(proposition)) {
+                    int index = updatedList.indexOf(proposition);
+                    updatedList.set(index, proposition);
+                } else {
                     updatedList.add(proposition);
                 }
             }

@@ -334,68 +334,25 @@ class PresentableMessageMapper {
         }
 
         /**
-         * Dispatches an event to be recorded in Event History.
+         * Dispatches an event to be recorded in Event History. Does not write to event history if
+         * the activity ID cannot be retrieved from proposition info.
          *
          * @param interaction {@code String} if provided, adds a custom interaction to the hash
          * @param eventType {@link MessagingEdgeEventType} to be recorded
          */
         void recordEventHistory(final String interaction, final MessagingEdgeEventType eventType) {
-            if (eventType == null) {
+            if (propositionInfo == null || StringUtils.isNullOrEmpty(propositionInfo.activityId)) {
                 Log.debug(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
-                        "Unable to write event history event, MessagingEdgeEventType was null for"
-                                + " message (%s).",
+                        "Unable to write event history event %s, proposition info is "
+                                + "not available for message %s",
+                        eventType != null ? eventType.toString() : "'unknown'",
                         id);
                 return;
             }
-            if (propositionInfo == null) {
-                Log.debug(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Unable to write event history event (%s), PropositionInfo is not found for"
-                                + " message (%s)",
-                        eventType.getPropositionEventType(),
-                        id);
-                return;
-            }
-            if (messagingExtension == null) {
-                Log.debug(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "Unable to send a proposition interaction (%s), MessagingExtension is not"
-                                + " found for message (%s)",
-                        eventType.getPropositionEventType(),
-                        id);
-                return;
-            }
-            // create maps for event history
-            final Map<String, String> iamHistoryMap = new HashMap<>();
-            iamHistoryMap.put(
-                    MessagingConstants.EventMask.Keys.EVENT_TYPE,
-                    eventType.getPropositionEventType());
-            iamHistoryMap.put(
-                    MessagingConstants.EventMask.Keys.MESSAGE_ID, propositionInfo.activityId);
-            iamHistoryMap.put(
-                    MessagingConstants.EventMask.Keys.TRACKING_ACTION,
-                    (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
 
-            // Create the mask for storing event history
-            final Map<String, Object> eventHistoryData = new HashMap<>();
-            eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, iamHistoryMap);
-            final String[] mask = {
-                MessagingConstants.EventMask.Mask.EVENT_TYPE,
-                MessagingConstants.EventMask.Mask.MESSAGE_ID,
-                MessagingConstants.EventMask.Mask.TRACKING_ACTION
-            };
-
-            InternalMessagingUtils.sendEvent(
-                    MessagingConstants.EventName.EVENT_HISTORY_WRITE,
-                    MessagingConstants.EventType.MESSAGING,
-                    MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
-                    eventHistoryData,
-                    mask,
-                    messagingExtension.getApi());
+            PropositionHistory.record(propositionInfo.activityId, eventType, interaction);
         }
 
         /**

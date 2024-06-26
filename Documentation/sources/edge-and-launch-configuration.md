@@ -8,7 +8,7 @@
     * Ensure the *Edge Segmentation* box is checked.
     * Ensure the *Adobe Journey Optimizer* box is checked.
 
-![Datastream](./../../assets/edge-config.png)
+![Datastream](./../assets/edge-config.png)
 
 ### Setup launch mobile property
 - To create the mobile property follow [this document](https://developer.adobe.com/client-sdks/documentation/getting-started/create-a-mobile-property/)

@@ -66,8 +66,10 @@ public class PropositionTests {
     public void setup() throws JSONException {
         propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
         propositionItemMap2 = MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
-        PropositionItem propositionItem = PropositionItem.fromEventData(propositionItemMap);
-        PropositionItem propositionItem2 = PropositionItem.fromEventData(propositionItemMap2);
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
+        PropositionItem propositionItem2 =
+                PropositionItem.fromRuleConsequenceDetail(propositionItemMap2);
         propositionItems.add(propositionItem);
         propositionItems2.add(propositionItem2);
         propositionItemMaps.add(propositionItemMap);
@@ -282,7 +284,7 @@ public class PropositionTests {
                                         + "                        \"detail\": {\n"
                                         + "                            \"id\": \"uniqueId\",\n"
                                         + "                            \"schema\":"
-                                        + " \"https://ns.adobe.com/personalization/message/feed-item\",\n"
+                                        + " \"https://ns.adobe.com/personalization/message/content-card\",\n"
                                         + "                            \"data\": {\n"
                                         + "                                \"expiryDate\":"
                                         + " 1717688797,\n"
@@ -326,13 +328,55 @@ public class PropositionTests {
         // test
         Proposition proposition1 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+                        "uniqueId",
+                        "mobileapp://mockScope",
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId");
+                                            }
+                                        });
+                            }
+                        },
+                        propositionItems);
         Proposition proposition2 =
                 new Proposition(
-                        "uniqueId", "mobileapp://mockScope", scopeDetails, propositionItems);
+                        "uniqueId",
+                        "mobileapp://mockScope",
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId");
+                                            }
+                                        });
+                            }
+                        },
+                        propositionItems);
         Proposition proposition3 =
                 new Proposition(
-                        "uniqueId2", "mobileapp://mockScope2", scopeDetails, propositionItems2);
+                        "uniqueId2",
+                        "mobileapp://mockScope2",
+                        new HashMap<String, Object>() {
+                            {
+                                put("key", "value");
+                                put(
+                                        "activity",
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("id", "mockActivityId2");
+                                            }
+                                        });
+                            }
+                        },
+                        propositionItems2);
 
         Object notAMessagingProposition = new Object();
         // verify

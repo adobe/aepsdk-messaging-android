@@ -106,12 +106,13 @@ public class ParsedPropositions {
                                                 surface, proposition, propositionsToPersist);
                                 mergeRules(parsedRules, surface, SchemaType.INAPP);
                                 break;
+                            case CONTENT_CARD:
                             case FEED:
-                                final PropositionInfo feedPropositionInfo =
+                                final PropositionInfo contentCardPropositionInfo =
                                         PropositionInfo.createFromProposition(proposition);
                                 propositionInfoToCache.put(
-                                        consequence.getId(), feedPropositionInfo);
-                                mergeRules(parsedRules, surface, SchemaType.FEED);
+                                        consequence.getId(), contentCardPropositionInfo);
+                                mergeRules(parsedRules, surface, SchemaType.CONTENT_CARD);
                                 break;
                             default:
                                 break;

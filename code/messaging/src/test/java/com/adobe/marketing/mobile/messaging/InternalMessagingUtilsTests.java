@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
@@ -1052,6 +1053,128 @@ public class InternalMessagingUtilsTests {
         assertTrue(result);
     }
 
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenEventIsNull() {
+        // setup
+        Event event = null;
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenEventDataIsNull() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData()).thenReturn(null);
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenEventDataIsEmpty() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData()).thenReturn(new HashMap<>());
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenConsequenceIsNull() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData())
+                .thenReturn(
+                        new HashMap<String, Object>() {
+                            {
+                                put(
+                                        MessagingConstants.EventDataKeys.RulesEngine
+                                                .CONSEQUENCE_TRIGGERED,
+                                        null);
+                            }
+                        });
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenConsequenceIsEmpty() {
+        // setup
+        Event event = mock(Event.class);
+        when(event.getEventData())
+                .thenReturn(
+                        new HashMap<String, Object>() {
+                            {
+                                put(
+                                        MessagingConstants.EventDataKeys.RulesEngine
+                                                .CONSEQUENCE_TRIGGERED,
+                                        new HashMap<>());
+                            }
+                        });
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsFalse_whenConsequenceTypeIsNotSchema() {
+        // setup
+        Event event = mock(Event.class);
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                "not-schema");
+        eventData.put(
+                MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        when(event.getEventData()).thenReturn(eventData);
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertFalse(result);
+    }
+
+    @Test
+    public void isSchemaConsequence_returnsTrue_whenConsequenceTypeIsSchema() {
+        // setup
+        Event event = mock(Event.class);
+        Map<String, Object> eventData = new HashMap<>();
+        Map<String, Object> consequence = new HashMap<>();
+        consequence.put(
+                MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                MessagingConstants.ConsequenceDetailKeys.SCHEMA);
+        eventData.put(
+                MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED, consequence);
+        when(event.getEventData()).thenReturn(eventData);
+
+        // test
+        boolean result = InternalMessagingUtils.isSchemaConsequence(event);
+
+        // verify
+        assertTrue(result);
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -1292,7 +1415,7 @@ public class InternalMessagingUtilsTests {
 
         // test
         InternalMessagingUtils.sendEvent(
-                eventName, eventType, eventSource, data, mask, extensionApi);
+                eventName, eventType, eventSource, data, mask, extensionApi, null);
 
         // verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -1316,7 +1439,8 @@ public class InternalMessagingUtilsTests {
         ExtensionApi extensionApi = mock(ExtensionApi.class);
 
         // test
-        InternalMessagingUtils.sendEvent(eventName, eventType, eventSource, data, extensionApi);
+        InternalMessagingUtils.sendEvent(
+                eventName, eventType, eventSource, data, extensionApi, null);
 
         // verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
