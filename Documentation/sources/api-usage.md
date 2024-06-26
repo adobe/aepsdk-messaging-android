@@ -192,6 +192,10 @@ public static void getPropositionsForSurfaces(@NonNull final List<Surface> surfa
 #### Kotlin
 
 ```kotlin
+val surface1 = Surface("myActivity#button")
+val surface2 = Surface("myActivityAttributes")
+val surfaces = listOf(surface1, surface2)
+
 Messaging.getPropositionsForSurfaces(surfaces) {
   it?.let { propositionsMap ->
            if (propositionsMap.isNotEmpty()) {
