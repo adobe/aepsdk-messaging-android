@@ -33,6 +33,11 @@ aepLibrary {
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
         }
+
+        sourceSets {
+            named("test").configure { resources.srcDir("src/test/resources") }
+            named("androidTest").configure { resources.srcDir("src/test/resources") }
+        }
     }
 }
 
