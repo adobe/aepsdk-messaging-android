@@ -108,9 +108,9 @@ public class MessageCachingFunctionalTests {
         final Surface surface = new Surface();
         final Map<Surface, List<Proposition>> propositions = new HashMap<>();
         final List<Proposition> propositionList = new ArrayList<>();
-        final Map<String, Object> propositionEventData = MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
-        propositionList.add(
-                Proposition.fromEventData(propositionEventData));
+        final Map<String, Object> propositionEventData =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
+        propositionList.add(Proposition.fromEventData(propositionEventData));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -135,9 +135,9 @@ public class MessageCachingFunctionalTests {
         final Surface surface = new Surface();
         final Map<Surface, List<Proposition>> propositions = new HashMap<>();
         final List<Proposition> propositionList = new ArrayList<>();
-        final Map<String, Object> propositionEventData = MessagingTestUtils.getMapFromFile("inappPropositionV2.json");
-        propositionList.add(
-                Proposition.fromEventData(propositionEventData));
+        final Map<String, Object> propositionEventData =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2.json");
+        propositionList.add(Proposition.fromEventData(propositionEventData));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);

@@ -616,7 +616,8 @@ class EdgePersonalizationResponseHandler {
                     // replace rules for each content card surface we got back
                     contentCardRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no content card content returned
+                    // remove any surfaces that were requested but had no content card content
+                    // returned
                     for (final Surface surface : surfacesToRemove) {
                         contentCardRulesBySurface.remove(surface);
                     }

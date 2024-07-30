@@ -79,7 +79,8 @@ public class ParsedPropositions {
                                 new JSONObject(firstPropositionItem.getItemData());
                         final List<LaunchRule> parsedRules =
                                 JSONRulesParser.parse(content.toString(), extensionApi);
-                        // iam and feed / content card items will be wrapped in a valid rules engine rule -
+                        // iam and feed / content card items will be wrapped in a valid rules engine
+                        // rule -
                         // code-based experiences are not
                         if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                             break;

@@ -16,11 +16,14 @@ import static com.adobe.marketing.mobile.util.TestHelper.getSharedStateFor;
 import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Intent;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.adobe.marketing.mobile.AdobeCallbackWithError;
+import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Edge;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -31,13 +34,13 @@ import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
+import com.adobe.marketing.mobile.util.TestRetryRule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,6 +59,9 @@ public class MessagingPublicAPITests {
             RuleChain.outerRule(new TestHelper.SetupCoreRule())
                     .around(new TestHelper.RegisterMonitorExtensionRule());
 
+    // A test will be retried at most 3 times
+    @Rule public TestRetryRule totalTestCount = new TestRetryRule(3);
+
     // --------------------------------------------------------------------------------------------
     // Setup
     // --------------------------------------------------------------------------------------------
@@ -69,6 +75,7 @@ public class MessagingPublicAPITests {
                 new HashMap<String, Object>() {
                     {
                         put("messaging.eventDataset", "somedatasetid");
+                        put("edge.configId", "someedgeconfigid");
                     }
                 };
         MobileCore.updateConfiguration(config);
@@ -89,7 +96,7 @@ public class MessagingPublicAPITests {
         // extension
         List<Event> dispatchedEvents =
                 getDispatchedEventsWith(
-                        MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
+                        MessagingTestConstants.EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
         assertEquals(1, dispatchedEvents.size());
         resetTestExpectations();
     }
@@ -99,7 +106,7 @@ public class MessagingPublicAPITests {
     // --------------------------------------------------------------------------------------------
     @Test
     public void testGetExtensionVersionAPI() {
-        Assert.assertEquals(MessagingConstants.EXTENSION_VERSION, Messaging.extensionVersion());
+        assertEquals(MessagingConstants.EXTENSION_VERSION, Messaging.extensionVersion());
     }
 
     // --------------------------------------------------------------------------------------------
@@ -647,15 +654,256 @@ public class MessagingPublicAPITests {
         assertEquals(0, messagingRequestEvents.size());
     }
 
-    // ========================================================================================
-    // Tests for Messaging.setPropositionsHandler API
-    // ========================================================================================
-    private static final String EXPECTED_SURFACE_URI =
-            "mobileapp://com.adobe.marketing.mobile.messaging.test";
+    // --------------------------------------------------------------------------------------------
+    // Tests for Messaging.getPropositionsForSurfaces API
+    // --------------------------------------------------------------------------------------------
+    @Test
+    public void testGetPropositionsForSurfaces() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(Surface.fromUriString("mobileapp://mockPackageName/apifeed"));
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put("uri", "mobileapp://mockPackageName/apifeed");
+                    }
+                });
+
+        // test
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AdobeError[] responseError = new AdobeError[1];
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(final AdobeError adobeError) {
+                        responseError[0] = adobeError;
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(final Map<Surface, List<Proposition>> surfaceListMap) {
+                        for (final List<Proposition> propositions : surfaceListMap.values()) {
+                            retrievedPropositions[0] = propositions;
+                            latch.countDown();
+                        }
+                    }
+                });
+        latch.await(1, TimeUnit.SECONDS);
+
+        // verify messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        assertEquals(true, messagingEventData.get("getpropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
+    }
+
+    @Test
+    public void testGetPropositionsForSurfaces_AdobeErrorOccurred() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(Surface.fromUriString("mobileapp://mockPackageName/apifeed"));
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put("uri", "mobileapp://mockPackageName/apifeed");
+                    }
+                });
+
+        // test
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AdobeError[] responseError = new AdobeError[1];
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        final AdobeCallbackWithError callback =
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(final AdobeError adobeError) {
+                        responseError[0] = adobeError;
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(final Map<Surface, List<Proposition>> surfaceListMap) {
+                        for (final List<Proposition> propositions : surfaceListMap.values()) {
+                            retrievedPropositions[0] = propositions;
+                            latch.countDown();
+                        }
+                    }
+                };
+        Messaging.getPropositionsForSurfaces(surfacePaths, callback);
+        callback.fail(AdobeError.UNEXPECTED_ERROR);
+        latch.await(1, TimeUnit.SECONDS);
+
+        // verify messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        assertEquals(true, messagingEventData.get("getpropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
+
+        // verify adobe error returned
+        assertNotNull(responseError[0]);
+        assertEquals(AdobeError.UNEXPECTED_ERROR, responseError[0]);
+    }
+
+    @Test
+    public void testGetPropositionsForSurfaces_someInvalidSurfaces() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(Surface.fromUriString("mobileapp://mockPackageName/apifeed"));
+        surfacePaths.add(new Surface("newcontentcard"));
+        surfacePaths.add(new Surface("##invalid##"));
+        final List<Map<String, Object>> expectedSurfaces = getExpectedSurfaces();
+
+        // test
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AdobeError[] responseError = new AdobeError[1];
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(final AdobeError adobeError) {
+                        responseError[0] = adobeError;
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(final Map<Surface, List<Proposition>> surfaceListMap) {
+                        for (final List<Proposition> propositions : surfaceListMap.values()) {
+                            retrievedPropositions[0] = propositions;
+                            latch.countDown();
+                        }
+                    }
+                });
+        latch.await(1, TimeUnit.SECONDS);
+
+        // verify messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(1, messagingRequestEvents.size());
+        final Map<String, Object> messagingEventData = messagingRequestEvents.get(0).getEventData();
+        assertEquals(true, messagingEventData.get("getpropositions"));
+        assertEquals(expectedSurfaces, messagingEventData.get("surfaces"));
+    }
+
+    @Test
+    public void testGetPropositionsForSurfaces_noValidSurfaces() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(new Surface("##invalid##"));
+        // test
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AdobeError[] responseError = new AdobeError[1];
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(final AdobeError adobeError) {
+                        responseError[0] = adobeError;
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(final Map<Surface, List<Proposition>> surfaceListMap) {
+                        for (final List<Proposition> propositions : surfaceListMap.values()) {
+                            retrievedPropositions[0] = propositions;
+                            latch.countDown();
+                        }
+                    }
+                });
+        latch.await(1, TimeUnit.SECONDS);
+
+        // verify no messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(0, messagingRequestEvents.size());
+    }
+
+    @Test
+    public void testGetPropositionsForSurfaces_emptySurfacesListProvided()
+            throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        // test
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AdobeError[] responseError = new AdobeError[1];
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        Messaging.getPropositionsForSurfaces(
+                surfacePaths,
+                new AdobeCallbackWithError<Map<Surface, List<Proposition>>>() {
+                    @Override
+                    public void fail(final AdobeError adobeError) {
+                        responseError[0] = adobeError;
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void call(final Map<Surface, List<Proposition>> surfaceListMap) {
+                        for (final List<Proposition> propositions : surfaceListMap.values()) {
+                            retrievedPropositions[0] = propositions;
+                            latch.countDown();
+                        }
+                    }
+                });
+        latch.await(1, TimeUnit.SECONDS);
+
+        // verify no messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(0, messagingRequestEvents.size());
+    }
+
+    @Test
+    public void testGetPropositionsForSurfaces_nullCallback() throws InterruptedException {
+        // setup
+        final List<Surface> surfacePaths = new ArrayList<>();
+        surfacePaths.add(new Surface("newcontentcard"));
+        // test
+        final List<Proposition>[] retrievedPropositions = new List[1];
+        Messaging.getPropositionsForSurfaces(surfacePaths, null);
+
+        // verify no messaging request content event
+        final List<Event> messagingRequestEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.MESSAGING, EventSource.REQUEST_CONTENT);
+        assertEquals(0, messagingRequestEvents.size());
+    }
 
     // --------------------------------------------------------------------------------------------
     // Helpers
     // --------------------------------------------------------------------------------------------
+    private List<Map<String, Object>> getExpectedSurfaces() {
+        final List<Map<String, Object>> expectedSurfaces = new ArrayList<>();
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put("uri", "mobileapp://mockPackageName/apifeed");
+                    }
+                });
+        expectedSurfaces.add(
+                new HashMap<String, Object>() {
+                    {
+                        put(
+                                "uri",
+                                "mobileapp://com.adobe.marketing.mobile.messaging.test/newcontentcard");
+                    }
+                });
+        return expectedSurfaces;
+    }
+
     private Intent getResponseIntent() {
         Intent intent = new Intent();
         intent.putExtra(
