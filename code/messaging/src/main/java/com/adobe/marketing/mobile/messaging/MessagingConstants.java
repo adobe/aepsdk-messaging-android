@@ -26,7 +26,6 @@ public final class MessagingConstants {
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String HTTP_HEADER_ETAG = "Etag";
-    static final String METADATA_PATH = "pathToFile";
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
 
@@ -102,21 +101,12 @@ public final class MessagingConstants {
     final class MessageFeedKeys {
         static final String TITLE = "title";
         static final String BODY = "body";
-        static final String CONTENT = "content";
         static final String IMAGE_URL = "imageUrl";
         static final String ACTION_TITLE = "actionTitle";
         static final String ACTION_URL = "actionUrl";
-        static final String FEEDS = "feeds";
-        static final String FEED_NAME = "feedName";
         static final String SURFACE = "surface";
 
         private MessageFeedKeys() {}
-    }
-
-    final class MessageFeedValues {
-        static final String SCHEMA = "schema";
-
-        private MessageFeedValues() {}
     }
 
     final class TrackingKeys {
@@ -246,25 +236,12 @@ public final class MessagingConstants {
                 static final String DENY_LISTED = "denylisted";
 
                 private PushNotificationDetailsDataKeys() {}
-
-                final class EventType {
-                    static final String OPENED = "pushTracking.applicationOpened";
-                    static final String CUSTOM_ACTION = "pushTracking.customAction";
-
-                    private EventType() {}
-                }
             }
 
             final class Inbound {
-                static final String SURFACE_BASE = "mobileapp://";
-
                 private Inbound() {}
 
                 final class EventType {
-                    static final String DISMISS = "decisioning.propositionDismiss";
-                    static final String INTERACT = "decisioning.propositionInteract";
-                    static final String TRIGGER = "decisioning.propositionTrigger";
-                    static final String DISPLAY = "decisioning.propositionDisplay";
                     static final String PERSONALIZATION_REQUEST = "personalization.request";
 
                     private EventType() {}
