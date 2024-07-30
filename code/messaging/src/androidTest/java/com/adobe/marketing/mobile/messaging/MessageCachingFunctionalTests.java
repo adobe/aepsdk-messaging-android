@@ -11,17 +11,22 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.Edge;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.TestHelper;
+import com.adobe.marketing.mobile.util.TestRetryRule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,6 +52,9 @@ public class MessageCachingFunctionalTests {
     public RuleChain rule =
             RuleChain.outerRule(new TestHelper.SetupCoreRule())
                     .around(new TestHelper.RegisterMonitorExtensionRule());
+
+    // A test will be retried at most 3 times
+    @Rule public TestRetryRule totalTestCount = new TestRetryRule(3);
 
     MessagingCacheUtilities messagingCacheUtilities = new MessagingCacheUtilities();
 
@@ -90,6 +98,14 @@ public class MessageCachingFunctionalTests {
                 });
 
         latch.await(2, TimeUnit.SECONDS);
+
+        // wait for the initial edge personalization request to be made before resetting the monitor
+        // extension
+        List<Event> dispatchedEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
+        assertEquals(1, dispatchedEvents.size());
+        resetTestExpectations();
 
         // ensure cache is cleared before testing
         MessagingTestUtils.cleanCache();
