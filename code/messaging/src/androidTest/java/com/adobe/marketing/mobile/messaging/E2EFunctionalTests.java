@@ -18,6 +18,7 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
@@ -25,7 +26,6 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
 import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -38,6 +38,7 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,12 +47,10 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 
-@Ignore
 public class E2EFunctionalTests {
     static {
         BuildConfig.IS_E2E_TEST.set(true);
@@ -87,12 +86,11 @@ public class E2EFunctionalTests {
         MobileCore.registerExtensions(
                 extensions,
                 o -> {
-                    Map<String, Object> testConfig =
-                            MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
-                    MobileCore.updateConfiguration(testConfig);
+                    // tag: android messaging functional test app, org: AEM Assets Departmental, Prod VA7
+                    MobileCore.configureWithAppID("3149c49c3910/473386a6e5b0/launch-6099493a8c97-development");
                     // wait for configuration to be set
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException interruptedException) {
                         fail(interruptedException.getMessage());
                     }
@@ -100,13 +98,14 @@ public class E2EFunctionalTests {
                 });
 
         latch.await();
-        resetTestExpectations();
     }
 
     @After
     public void tearDown() {
         // clear loaded rules
         SDKHelper.resetSDK();
+        // clear received events
+        MonitorExtension.reset();
     }
 
     Map<String, Object> createExpectedEdgePersonalizationEventData() {
@@ -118,6 +117,14 @@ public class E2EFunctionalTests {
                 new ArrayList<String>() {
                     {
                         add("mobileapp://com.adobe.marketing.mobile.messaging.test");
+                    }
+                });
+        personalizationData.put(SCHEMAS,
+                new ArrayList<String>() {
+                    {
+                        add(MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT);
+                        add(MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT);
+                        add(MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM);
                     }
                 });
         messageRequestData.put(PERSONALIZATION, personalizationData);
@@ -153,19 +160,9 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedEdgePersonalizationEventData =
                 createExpectedEdgePersonalizationEventData();
 
-        // test
-        Messaging.refreshInAppMessages();
-
-        // verify messaging request content event from refreshInAppMessages API call
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-        final Event messagingRequestEvent = messagingRequestEvents.get(0);
-        assertEquals(true, messagingRequestEvent.getEventData().get("refreshmessages"));
-
         // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents =
-                getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT);
+                getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT, 5000);
         assertEquals(1, edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
         assertEquals(
@@ -173,24 +170,32 @@ public class E2EFunctionalTests {
                 edgePersonalizationRequestEvent.getEventData());
         edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
 
-        // verify edge personalization decision event
-        /* TODO will be fixed in feature/feed
-        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-        assertEquals(1, edgePersonalizationDecisionsEvents.size());
-        final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
+        // verify personalization decisions event containing two in-app propositions
+        final List<Event> messagingPersonalizationEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, 3000);
+        final Event messagingPersonalizationEvent = messagingPersonalizationEvents.get(0);
+        assertEquals(2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
         final Map<String, Object> expectedInAppPayload = MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
-        final Map<String, Object> payload = (Map<String, Object>) ((List) edgePersonalizationDecisionEvent.getEventData().get("payload")).get(0);
-        final Map<String, Object> expectedScopeDetails = (Map<String, Object>) expectedInAppPayload.get("scopeDetails");
-        final Map<String, Object> scopeDetails = (Map<String, Object>) payload.get("scopeDetails");
-        assertEquals(expectedScopeDetails.get("activity"), scopeDetails.get("activity"));
-        assertEquals(expectedScopeDetails.get("correlationID"), scopeDetails.get("correlationID"));
-        assertEquals(expectedScopeDetails.get("decisionProvider"), scopeDetails.get("decisionProvider"));
-        assertEquals(expectedInAppPayload.get("scope"), payload.get("scope"));
+        final Map<String, Object> inAppProposition1 = (Map<String, Object>) ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(0);
+        final Map<String, Object> inAppProposition2 = (Map<String, Object>) ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(1);
+        final Map<String, Object> expectedProposition1 = (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(0);
+        final Map<String, Object> expectedProposition2 = (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(1);
+        final Map<String, Object> expectedScopeDetails1 = (Map<String, Object>) expectedProposition1.get("scopeDetails");
+        final Map<String, Object> expectedScopeDetails2 = (Map<String, Object>) expectedProposition2.get("scopeDetails");
+        final Map<String, Object> scopeDetails1 = (Map<String, Object>) inAppProposition1.get("scopeDetails");
+        final Map<String, Object> scopeDetails2 = (Map<String, Object>) inAppProposition2.get("scopeDetails");
+        assertEquals(expectedScopeDetails1.get("activity"), scopeDetails1.get("activity"));
+        assertEquals(expectedScopeDetails1.get("correlationID"), scopeDetails1.get("correlationID"));
+        assertEquals(expectedScopeDetails1.get("decisionProvider"), scopeDetails1.get("decisionProvider"));
+        assertEquals(expectedProposition1.get("scope"), inAppProposition1.get("scope"));
+        assertEquals(expectedScopeDetails2.get("activity"), scopeDetails2.get("activity"));
+        assertEquals(expectedScopeDetails2.get("correlationID"), scopeDetails2.get("correlationID"));
+        assertEquals(expectedScopeDetails2.get("decisionProvider"), scopeDetails2.get("decisionProvider"));
+        assertEquals(expectedProposition2.get("scope"), inAppProposition2.get("scope"));
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
         assertEquals(1, edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
-        assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID()); */
+        assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
     }
 }

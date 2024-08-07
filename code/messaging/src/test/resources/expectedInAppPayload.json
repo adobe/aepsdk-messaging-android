@@ -1,0 +1,317 @@
+{
+        "payload": [{
+            "id": "a02163ac-9d34-40ef-85f5-0af46efc20e0",
+            "scope": "mobileapp://com.adobe.marketing.mobile.messaging.test",
+            "scopeDetails": {
+                "decisionProvider": "AJO",
+                "correlationID": "005975e3-49f9-4a43-8a87-ff8b0b55a4a5-0",
+                "characteristics": {
+                    "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6IlVFOkluYm91bmQiLCJtZXNzYWdlSUQiOiI5ZjM3MDRmNC1iMmM5LTQ2NjEtYWJhMC1lMTMzYTM2NmJjYjMiLCJtZXNzYWdlUHVibGljYXRpb25JRCI6IjAwNTk3NWUzLTQ5ZjktNGE0My04YTg3LWZmOGIwYjU1YTRhNSIsIm1lc3NhZ2VUeXBlIjoibWFya2V0aW5nIiwiY2FtcGFpZ25JRCI6IjkyOTE0ZmEwLTE0NjEtNGVlNS1iMGM5LTA4ZTM5YzZjZTRlMyIsImNhbXBhaWduVmVyc2lvbklEIjoiM2UzMDhkZDgtMmVkNS00YTU1LWI1MmMtZDgyZDM2Y2Y0YTM4IiwiY2FtcGFpZ25BY3Rpb25JRCI6IjFjNmU2ZTFmLWRlZWUtNDY1ZC04NjMzLWZiZTQ1Y2U5YjVmZiJ9LCJtZXNzYWdlUHJvZmlsZSI6eyJtZXNzYWdlUHJvZmlsZUlEIjoiZDRlOGQwZmQtNTRlNS00MzcyLTgyMDItMWU1MjE1MGI2MjgwIiwiY2hhbm5lbCI6eyJfaWQiOiJodHRwczovL25zLmFkb2JlLmNvbS94ZG0vY2hhbm5lbHMvaW5BcHAiLCJfdHlwZSI6Imh0dHBzOi8vbnMuYWRvYmUuY29tL3hkbS9jaGFubmVsLXR5cGVzL2luQXBwIn19fQ=="
+                },
+                "activity": {
+                    "id": "92914fa0-1461-4ee5-b0c9-08e39c6ce4e3#1c6e6e1f-deee-465d-8633-fbe45ce9b5ff",
+                    "matchedSurfaces": ["mobileapp://com.adobe.marketing.mobile.messaging.test"]
+                }
+            },
+            "items": [{
+                "id": "7fc6a9cf-726f-4170-930a-9d4c610ae5f6",
+                "schema": "https://ns.adobe.com/personalization/ruleset-item",
+                "data": {
+                    "version": 1,
+                    "rules": [{
+                        "condition": {
+                            "definition": {
+                                "conditions": [{
+                                    "definition": {
+                                        "conditions": [{
+                                            "definition": {
+                                                "conditions": [{
+                                                    "definition": {
+                                                        "key": "~type",
+                                                        "matcher": "eq",
+                                                        "values": ["com.adobe.eventType.generic.track"]
+                                                    },
+                                                    "type": "matcher"
+                                                }, {
+                                                    "definition": {
+                                                        "key": "~source",
+                                                        "matcher": "eq",
+                                                        "values": ["com.adobe.eventSource.requestContent"]
+                                                    },
+                                                    "type": "matcher"
+                                                }, {
+                                                    "definition": {
+                                                        "key": "action",
+                                                        "matcher": "ex"
+                                                    },
+                                                    "type": "matcher"
+                                                }],
+                                                "logic": "and"
+                                            },
+                                            "type": "group"
+                                        }, {
+                                            "definition": {
+                                                "key": "action",
+                                                "matcher": "eq",
+                                                "values": ["once"]
+                                            },
+                                            "type": "matcher"
+                                        }],
+                                        "logic": "and"
+                                    },
+                                    "type": "group"
+                                }, {
+                                    "definition": {
+                                        "conditions": [{
+                                            "definition": {
+                                                "events": [{
+                                                    "iam.eventType": "display",
+                                                    "iam.id": "92914fa0-1461-4ee5-b0c9-08e39c6ce4e3#1c6e6e1f-deee-465d-8633-fbe45ce9b5ff"
+                                                }],
+                                                "matcher": "eq",
+                                                "value": 0
+                                            },
+                                            "type": "historical"
+                                        }],
+                                        "logic": "and"
+                                    },
+                                    "type": "group"
+                                }],
+                                "logic": "and"
+                            },
+                            "type": "group"
+                        },
+                        "consequences": [{
+                            "id": "44eae2c0-3350-446b-89ce-887afc25148e",
+                            "type": "schema",
+                            "detail": {
+                                "id": "44eae2c0-3350-446b-89ce-887afc25148e",
+                                "schema": "https://ns.adobe.com/personalization/message/in-app",
+                                "data": {
+                                    "content": "<!doctype html>\n<html><head>\n    <meta type=\"templateProperties\" name=\"fullscreen\" label=\"adobe-label:fullscreen\" icon=\"adobe-icon:fullscreen\">\n    <meta type=\"templateZone\" name=\"default\" label=\"Default\" classname=\"body\" definition=\"[&quot;CloseBtn&quot;, &quot;Image&quot;, &quot;Text&quot;, &quot;Buttons&quot;]\">\n\n    <meta type=\"templateDefaultAnimations\" displayanimation=\"bottom\" dismissanimation=\"bottom\">\n    <meta type=\"templateDefaultSize\" width=\"100\" height=\"100\">\n    <meta type=\"templateDefaultPosition\" verticalalign=\"center\" verticalinset=\"0\" horizontalalign=\"center\" horizontalinset=\"0\">\n    <meta type=\"templateDefaultGesture\">\n    <meta type=\"templateDefaultUiTakeover\" enable=\"true\">\n\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta charset=\"UTF-8\">\n    <style>\n      html,\n      body {\n        margin: 0;\n        padding: 0;\n        text-align: center;\n        width: 100%;\n        height: 100%;\n        font-family: adobe-clean, 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',\n          Roboto, sans-serif;\n      }\n\n      h3 {\n        margin: 0.4rem auto;\n      }\n      p {\n        margin: 0.4rem auto;\n      }\n\n      .body {\n        display: flex;\n        flex-direction: column;\n        background-color: #fff;\n        border-radius: 0.3rem;\n        color: #333333;\n        width: 100vw;\n        height: 100vh;\n        text-align: center;\n        align-items: center;\n        background-size: 'cover';\n      }\n\n      .content {\n        width: 100%;\n        height: 100%;\n        display: flex;\n        justify-content: center;\n        flex-direction: column;\n        position: relative;\n      }\n\n      a {\n        text-decoration: none;\n      }\n\n      .image {\n        height: 1rem;\n        flex-grow: 4;\n        flex-shrink: 1;\n        display: flex;\n        justify-content: center;\n        width: 90%;\n        flex-direction: column;\n        align-items: center;\n      }\n      .image img {\n        max-height: 100%;\n        max-width: 100%;\n      }\n\n      .image.empty-image {\n        display: none;\n      }\n\n      .empty-image ~ .text {\n        flex-grow: 1;\n      }\n\n      .text {\n        text-align: center;\n        color: #333333;\n        line-height: 1.25rem;\n        font-size: 0.875rem;\n        padding: 0 0.8rem;\n        width: 100%;\n        box-sizing: border-box;\n      }\n      .title {\n        line-height: 1.3125rem;\n        font-size: 1.025rem;\n      }\n\n      .buttons {\n        width: 100%;\n        display: flex;\n        flex-direction: column;\n        font-size: 1rem;\n        line-height: 1.3rem;\n        text-decoration: none;\n        text-align: center;\n        box-sizing: border-box;\n        padding: 0.8rem;\n        padding-top: 0.4rem;\n        gap: 0.3125rem;\n      }\n\n      .button {\n        flex-grow: 1;\n        background-color: #1473e6;\n        color: #ffffff;\n        border-radius: 0.25rem;\n        cursor: pointer;\n        padding: 0.3rem;\n        gap: 0.5rem;\n      }\n\n      .btnClose {\n        color: #000000;\n      }\n\n      .closeBtn {\n        align-self: flex-end;\n        width: 1.8rem;\n        height: 1.8rem;\n        margin-top: 1rem;\n        margin-right: 0.3rem;\n      }\n      .closeBtn img {\n        width: 100%;\n        height: 100%;\n      }\n    </style>\n    <style type=\"text/css\" id=\"editor-styles\">\n\n\n  .progressBar-title {\n    animation: delayedShow 0s 0.3s forwards;\n    opacity: 0;\n  }\n\n  .progressBar {\n    background-color: rgb(225, 225, 225);\n    color: rgb(75, 75, 75);\n    height: 6px;\n    overflow: hidden;\n    width: 192px;\n    border-radius: 3px;\n    z-index: 1;\n    margin: 5px;\n    animation: delayedShow 0s 0.3s forwards;\n    opacity: 0;\n  }\n\n  .progressBar-fill {\n    height: 6px;\n    position: relative;\n    width: 136px;\n    background-color: #1473e6;\n\n    will-change: transform;\n    transition: width 1s;\n    transition-timing-function: ease;\n    animation: indeterminate-loop-ltr 1s infinite;\n    animation-timing-function: ease;\n  }\n\n  @keyframes delayedShow {\n    to {\n      opacity: 1;\n    }\n  }\n\n  @keyframes indeterminate-loop-ltr {\n    from {\n      transform: translate(-136px);\n    }\n    to {\n      transform: translate(192px);\n    }\n  }\n\n  #loadingErrorMsg {\n    color: #ff0000;\n    font-weight: bold;\n  }\n</style>\n  </head>\n\n  <body>\n    <div class=\"body\"><div class=\"closeBtn\" data-uuid=\"f19b2462-195d-4e9f-bbf6-8c7a74efdaab\" data-btn-style=\"plain\"><a aria-label=\"Close\" class=\"btnClose\" href=\"adbinapp://dismiss?interaction=cancel\"><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"18\" viewBox=\"0 0 18 18\" width=\"18\" class=\"close\">\n  <rect id=\"Canvas\" fill=\"#ffffff\" opacity=\"0\" width=\"18\" height=\"18\"></rect>\n  <path fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" d=\"M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z\"></path>\n</svg></a></div><div class=\"image\" data-uuid=\"b28b1b06-1988-46cf-9085-99e7aec90c16\"><img src=\"https://cdn.experience.adobe.net/solutions/cjm-inapp-editor/assets/InAppBlockImageDefault.aa849e19.svg\" alt=\"\"></div><div class=\"text\" data-uuid=\"0200b60c-499b-4694-a4d5-164d0f10280f\"><h3>This is for an automated e2e test</h3><p>This should show at most 1 time</p></div><div class=\"buttons\" data-uuid=\"79f079d5-7e1c-407f-afd1-d704fa46ebed\"><a class=\"button\" data-uuid=\"ee72160a-a6d2-4f31-bbd6-076428b23d27\" href=\"adbinapp://dismiss?interaction=clicked\">Button</a></div></div>\n  \n</body></html>",
+                                    "contentType": "text/html",
+                                    "remoteAssets": ["https://cdn.experience.adobe.net/solutions/cjm-inapp-editor/assets/InAppBlockImageDefault.aa849e19.svg"],
+                                    "mobileParameters": {
+                                        "verticalAlign": "center",
+                                        "dismissAnimation": "bottom",
+                                        "verticalInset": 0,
+                                        "backdropOpacity": 0.2,
+                                        "gestures": {},
+                                        "cornerRadius": 15,
+                                        "horizontalInset": 0,
+                                        "uiTakeover": true,
+                                        "horizontalAlign": "center",
+                                        "displayAnimation": "bottom",
+                                        "width": 100,
+                                        "backdropColor": "#000000",
+                                        "height": 100
+                                    },
+                                    "webParameters": {
+                                        "alloy-content-iframe": {
+                                            "style": {
+                                                "border": "none",
+                                                "height": "100%",
+                                                "width": "100%"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "#alloy-messaging-container"
+                                            }
+                                        },
+                                        "alloy-messaging-container": {
+                                            "style": {
+                                                "backgroundColor": "#000000",
+                                                "border": "none",
+                                                "borderRadius": "15px",
+                                                "height": "100vh",
+                                                "overflow": "hidden",
+                                                "position": "fixed",
+                                                "width": "100%",
+                                                "left": "50%",
+                                                "transform": "translateX(-50%) translateY(-50%)",
+                                                "top": "50%"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "body"
+                                            }
+                                        },
+                                        "alloy-overlay-container": {
+                                            "style": {
+                                                "position": "fixed",
+                                                "top": "0",
+                                                "left": "0",
+                                                "width": "100%",
+                                                "height": "100%",
+                                                "background": "transparent",
+                                                "opacity": 0.2,
+                                                "backgroundColor": "#000000"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "body"
+                                            }
+                                        }
+                                    },
+                                    "publishedDate": 1723062307
+                                }
+                            }
+                        }]
+                    }]
+                }
+            }]
+        }, {
+            "id": "97a1aff5-9c57-44e7-bb52-e372dcb97ba5",
+            "scope": "mobileapp://com.adobe.marketing.mobile.messaging.test",
+            "scopeDetails": {
+                "decisionProvider": "AJO",
+                "correlationID": "50b2eb6b-b36f-4654-bcc0-6f3118fd2a2c-0",
+                "characteristics": {
+                    "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6IlVFOkluYm91bmQiLCJtZXNzYWdlSUQiOiJkYTU4NDA2MS1iYWU0LTRkYWQtODg3OC1kYzUzNWI1MTdlNzIiLCJtZXNzYWdlUHVibGljYXRpb25JRCI6IjUwYjJlYjZiLWIzNmYtNDY1NC1iY2MwLTZmMzExOGZkMmEyYyIsIm1lc3NhZ2VUeXBlIjoibWFya2V0aW5nIiwiY2FtcGFpZ25JRCI6Ijc2MmI4NzlhLThkM2QtNDMzNC05YjgyLTIwYTZjZDAwNWM0MiIsImNhbXBhaWduVmVyc2lvbklEIjoiNjg0NTY0NTEtMmUzMi00YjA3LTk0YjYtNDI1N2QyMzMxOWY1IiwiY2FtcGFpZ25BY3Rpb25JRCI6ImJlYWY3MjgzLTkyYzEtNDA3Zi04NzNjLTA3ZTZiNTNlYjE0NCJ9LCJtZXNzYWdlUHJvZmlsZSI6eyJtZXNzYWdlUHJvZmlsZUlEIjoiYjNhNDQzNjAtOGJiYS00MzZlLThkM2ItNzI1MDk0MGQ0NTdlIiwiY2hhbm5lbCI6eyJfaWQiOiJodHRwczovL25zLmFkb2JlLmNvbS94ZG0vY2hhbm5lbHMvaW5BcHAiLCJfdHlwZSI6Imh0dHBzOi8vbnMuYWRvYmUuY29tL3hkbS9jaGFubmVsLXR5cGVzL2luQXBwIn19fQ=="
+                },
+                "activity": {
+                    "id": "762b879a-8d3d-4334-9b82-20a6cd005c42#beaf7283-92c1-407f-873c-07e6b53eb144",
+                    "matchedSurfaces": ["mobileapp://com.adobe.marketing.mobile.messaging.test"]
+                }
+            },
+            "items": [{
+                "id": "0b7650ca-f36b-445e-92f4-9d3c0007bc75",
+                "schema": "https://ns.adobe.com/personalization/ruleset-item",
+                "data": {
+                    "version": 1,
+                    "rules": [{
+                        "condition": {
+                            "definition": {
+                                "conditions": [{
+                                    "definition": {
+                                        "conditions": [{
+                                            "definition": {
+                                                "key": "~type",
+                                                "matcher": "eq",
+                                                "values": ["com.adobe.eventType.generic.track"]
+                                            },
+                                            "type": "matcher"
+                                        }, {
+                                            "definition": {
+                                                "key": "~source",
+                                                "matcher": "eq",
+                                                "values": ["com.adobe.eventSource.requestContent"]
+                                            },
+                                            "type": "matcher"
+                                        }, {
+                                            "definition": {
+                                                "key": "action",
+                                                "matcher": "ex"
+                                            },
+                                            "type": "matcher"
+                                        }],
+                                        "logic": "and"
+                                    },
+                                    "type": "group"
+                                }, {
+                                    "definition": {
+                                        "key": "action",
+                                        "matcher": "eq",
+                                        "values": ["functional"]
+                                    },
+                                    "type": "matcher"
+                                }],
+                                "logic": "and"
+                            },
+                            "type": "group"
+                        },
+                        "consequences": [{
+                            "id": "0b219276-af42-4fc8-a710-3cc253569237",
+                            "type": "schema",
+                            "detail": {
+                                "id": "0b219276-af42-4fc8-a710-3cc253569237",
+                                "schema": "https://ns.adobe.com/personalization/message/in-app",
+                                "data": {
+                                    "content": "<!doctype html>\n<html><head>\n    <meta type=\"templateProperties\" name=\"modal\" label=\"adobe-label:modal\" icon=\"adobe-icon:modal\">\n    <meta type=\"templateZone\" name=\"default\" label=\"Default\" classname=\"body\" definition=\"[&quot;CloseBtn&quot;, &quot;Image&quot;, &quot;Text&quot;, &quot;Buttons&quot;]\">\n\n    <meta type=\"templateDefaultAnimations\" displayanimation=\"top\" dismissanimation=\"top\">\n    <meta type=\"templateDefaultSize\" width=\"80\" height=\"60\">\n    <meta type=\"templateDefaultPosition\" verticalalign=\"center\" verticalinset=\"0\" horizontalalign=\"center\" horizontalinset=\"0\">\n    <meta type=\"templateDefaultGesture\" swipeup=\"adbinapp://dismiss?interaction=swipeUp\" swipedown=\"adbinapp://dismiss?interaction=swipeDown\" swipeleft=\"adbinapp://dismiss?interaction=swipeLeft\" swiperight=\"adbinapp://dismiss?interaction=swipeRight\" tapbackground=\"adbinapp://dismiss?interaction=tapBackground\">\n    <meta type=\"templateDefaultUiTakeover\" enable=\"true\">\n\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta charset=\"UTF-8\">\n    <style>\n      html,\n      body {\n        margin: 0;\n        padding: 0;\n        text-align: center;\n        width: 100%;\n        height: 100%;\n        font-family: adobe-clean, 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',\n          Roboto, sans-serif;\n      }\n      h3 {\n        margin: 0.4rem auto;\n      }\n      p {\n        margin: 0.4rem auto;\n      }\n\n      .body {\n        display: flex;\n        flex-direction: column;\n        background-color: #fff;\n        border-radius: 0.3rem;\n        color: #333333;\n        width: 100vw;\n        height: 100vh;\n        text-align: center;\n        align-items: center;\n        background-size: 'cover';\n      }\n\n      .content {\n        width: 100%;\n        height: 100%;\n        display: flex;\n        justify-content: center;\n        flex-direction: column;\n        position: relative;\n      }\n\n      a {\n        text-decoration: none;\n      }\n\n      .image {\n        height: 1rem;\n        flex-grow: 4;\n        flex-shrink: 1;\n        display: flex;\n        justify-content: center;\n        width: 90%;\n        flex-direction: column;\n        align-items: center;\n      }\n      .image img {\n        max-height: 100%;\n        max-width: 100%;\n      }\n\n      .image.empty-image {\n        display: none;\n      }\n\n      .empty-image ~ .text {\n        flex-grow: 1;\n      }\n\n      .text {\n        text-align: center;\n        color: #333333;\n        line-height: 1.25rem;\n        font-size: 0.875rem;\n        padding: 0 0.8rem;\n        width: 100%;\n        box-sizing: border-box;\n      }\n      .title {\n        line-height: 1.3125rem;\n        font-size: 1.025rem;\n      }\n\n      .buttons {\n        width: 100%;\n        display: flex;\n        flex-direction: column;\n        font-size: 1rem;\n        line-height: 1.3rem;\n        text-decoration: none;\n        text-align: center;\n        box-sizing: border-box;\n        padding: 0.8rem;\n        padding-top: 0.4rem;\n        gap: 0.3125rem;\n      }\n\n      .button {\n        flex-grow: 1;\n        background-color: #1473e6;\n        color: #ffffff;\n        border-radius: 0.25rem;\n        cursor: pointer;\n        padding: 0.3rem;\n        gap: 0.5rem;\n      }\n\n      .btnClose {\n        color: #000000;\n      }\n\n      .closeBtn {\n        align-self: flex-end;\n        color: #000000;\n        width: 1.8rem;\n        height: 1.8rem;\n        margin-top: 1rem;\n        margin-right: 0.3rem;\n      }\n      .closeBtn img {\n        width: 100%;\n        height: 100%;\n      }\n    </style>\n    <style type=\"text/css\" id=\"editor-styles\">\n\n</style>\n  </head>\n\n  <body>\n    <div class=\"body\"><div class=\"closeBtn\" data-uuid=\"607c84df-7253-4fd9-a0f7-6eee916a182d\" data-btn-style=\"plain\"><a aria-label=\"Close\" class=\"btnClose\" href=\"adbinapp://dismiss?interaction=cancel\"><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"18\" viewbox=\"0 0 18 18\" width=\"18\" class=\"close\">\n  <rect id=\"Canvas\" fill=\"#ffffff\" opacity=\"0\" width=\"18\" height=\"18\"></rect>\n  <path fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\" d=\"M13.2425,3.343,9,7.586,4.7575,3.343a.5.5,0,0,0-.707,0L3.343,4.05a.5.5,0,0,0,0,.707L7.586,9,3.343,13.2425a.5.5,0,0,0,0,.707l.707.7075a.5.5,0,0,0,.707,0L9,10.414l4.2425,4.243a.5.5,0,0,0,.707,0l.7075-.707a.5.5,0,0,0,0-.707L10.414,9l4.243-4.2425a.5.5,0,0,0,0-.707L13.95,3.343a.5.5,0,0,0-.70711-.00039Z\"></path>\n</svg></a></div><div class=\"image\" data-uuid=\"842735fd-5c76-4e8b-9a85-0489d033ae9b\"><img src=\"https://exc-unifiedcontent.experience-stage.adobe.net/solutions/cjm-message-ui/static-assets/inapp/InAppBlockImageDefault.svg\" alt=\"\"></div><div class=\"text\" data-uuid=\"fb3891e1-3c3b-478a-affb-5ca5eb5d3fc8\"><h3>This is for functional testing</h3><p>Some description text here</p></div><div class=\"buttons\" data-uuid=\"e0733e65-677e-4940-a128-450b08897dfd\"><a class=\"button\" data-uuid=\"c57d0e3b-d1a6-4123-8f32-8d5a7743b8b2\" href=\"adbinapp://dismiss?interaction=clicked\">Button</a><a class=\"button\" data-uuid=\"db131cca-4a99-445f-a20f-7fd4d42de098\" href=\"adbinapp://dismiss?interaction=clicked\">Button2</a></div></div>\n  \n</body></html>",
+                                    "contentType": "text/html",
+                                    "remoteAssets": ["https://exc-unifiedcontent.experience-stage.adobe.net/solutions/cjm-message-ui/static-assets/inapp/InAppBlockImageDefault.svg"],
+                                    "mobileParameters": {
+                                        "verticalAlign": "center",
+                                        "dismissAnimation": "top",
+                                        "verticalInset": 0,
+                                        "backdropOpacity": 0.2,
+                                        "cornerRadius": 15,
+                                        "gestures": {
+                                            "swipeUp": "adbinapp://dismiss?interaction=swipeUp",
+                                            "swipeDown": "adbinapp://dismiss?interaction=swipeDown",
+                                            "swipeLeft": "adbinapp://dismiss?interaction=swipeLeft",
+                                            "swipeRight": "adbinapp://dismiss?interaction=swipeRight",
+                                            "tapBackground": "adbinapp://dismiss?interaction=tapBackground"
+                                        },
+                                        "horizontalInset": 0,
+                                        "uiTakeover": true,
+                                        "horizontalAlign": "center",
+                                        "width": 80,
+                                        "displayAnimation": "top",
+                                        "backdropColor": "#000000",
+                                        "height": 60
+                                    },
+                                    "webParameters": {
+                                        "alloy-content-iframe": {
+                                            "style": {
+                                                "border": "none",
+                                                "height": "100%",
+                                                "width": "100%"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "#alloy-messaging-container"
+                                            }
+                                        },
+                                        "alloy-messaging-container": {
+                                            "style": {
+                                                "backgroundColor": "#000000",
+                                                "border": "none",
+                                                "borderRadius": "15px",
+                                                "height": "60vh",
+                                                "overflow": "hidden",
+                                                "position": "fixed",
+                                                "width": "80%",
+                                                "left": "50%",
+                                                "transform": "translateX(-50%) translateY(-50%)",
+                                                "top": "50%"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "body"
+                                            }
+                                        },
+                                        "alloy-overlay-container": {
+                                            "style": {
+                                                "position": "fixed",
+                                                "top": "0",
+                                                "left": "0",
+                                                "width": "100%",
+                                                "height": "100%",
+                                                "background": "transparent",
+                                                "opacity": 0.2,
+                                                "backgroundColor": "#000000"
+                                            },
+                                            "params": {
+                                                "enabled": true,
+                                                "insertionMethod": "appendChild",
+                                                "parentElement": "body"
+                                            }
+                                        }
+                                    },
+                                    "publishedDate": 1698260358
+                                }
+                            }
+                        }]
+                    }]
+                }
+            }]
+        }],
+        "type": "personalization:decisions",
+        "eventIndex": 0
+}
