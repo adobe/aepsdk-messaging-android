@@ -25,6 +25,8 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -155,11 +157,28 @@ public class E2EFunctionalTests {
 
     @Test
     public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
-        // setup
-        String edgePersonalizationRequestEventID;
+        // test
+        verifyInAppPropositionsRetrievedFromEdge();
+
+        // trigger an in-app message
+        MobileCore.trackAction("functional", null);
+
+        // verify show always rule consequence event is dispatched
+        final Map<String, Object> expectedRulesConsequenceEventData = (Map<String, Object>) ((List) MessagingTestUtils.getMapFromFile("iam-show-always-consequence.json").get(JSON_CONSEQUENCES_KEY)).get(0);
+        final List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        final Map<String, Object> triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails = (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        final Map<String, Object> triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+    }
+
+    private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
         final Map<String, Object> expectedEdgePersonalizationEventData =
                 createExpectedEdgePersonalizationEventData();
-
         // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents =
                 getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT, 5000);
@@ -168,7 +187,7 @@ public class E2EFunctionalTests {
         assertEquals(
                 expectedEdgePersonalizationEventData,
                 edgePersonalizationRequestEvent.getEventData());
-        edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
+        final String edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
 
         // verify personalization decisions event containing two in-app propositions
         final List<Event> messagingPersonalizationEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, 3000);
