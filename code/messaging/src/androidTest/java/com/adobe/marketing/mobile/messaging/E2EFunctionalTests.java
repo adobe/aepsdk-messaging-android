@@ -156,16 +156,53 @@ public class E2EFunctionalTests {
     }
 
     @Test
-    public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
+    public void testIamTriggerShowAlways() throws InterruptedException {
         // test
         verifyInAppPropositionsRetrievedFromEdge();
 
-        // trigger an in-app message
+        // trigger a show always in-app message
         MobileCore.trackAction("functional", null);
 
         // verify show always rule consequence event is dispatched
         final Map<String, Object> expectedRulesConsequenceEventData = (Map<String, Object>) ((List) MessagingTestUtils.getMapFromFile("iam-show-always-consequence.json").get(JSON_CONSEQUENCES_KEY)).get(0);
-        final List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        Map<String, Object> triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails = (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        Map<String, Object> triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+
+        // clear received events
+        MonitorExtension.reset();
+
+        // trigger the show always in-app message again
+        MobileCore.trackAction("functional", null);
+
+        // verify rule consequence event is dispatched
+        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+    }
+
+    @Test
+    public void testIamTriggerShowOnce() throws InterruptedException {
+        // test
+        verifyInAppPropositionsRetrievedFromEdge();
+
+        // trigger a show once in-app message
+        MobileCore.trackAction("once", null);
+
+        // verify show once rule consequence event is dispatched
+        final Map<String, Object> expectedRulesConsequenceEventData = (Map<String, Object>) ((List) MessagingTestUtils.getMapFromFile("iam-show-once-consequence.json").get(JSON_CONSEQUENCES_KEY)).get(0);
+        List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
         final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         final Map<String, Object> triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
@@ -174,6 +211,16 @@ public class E2EFunctionalTests {
         assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
         assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
         assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+
+        // clear received events
+        MonitorExtension.reset();
+
+        // trigger the show once in-app message again
+        MobileCore.trackAction("e2e", null);
+
+        // verify no rule consequence event is dispatched
+        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 2000);
+        assertEquals(0, rulesConsequenceEvents.size());
     }
 
     private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
