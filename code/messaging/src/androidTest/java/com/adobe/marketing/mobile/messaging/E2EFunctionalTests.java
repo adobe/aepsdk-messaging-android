@@ -219,7 +219,7 @@ public class E2EFunctionalTests {
         MobileCore.trackAction("e2e", null);
 
         // verify no rule consequence event is dispatched
-        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 2000);
+        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(0, rulesConsequenceEvents.size());
     }
 
