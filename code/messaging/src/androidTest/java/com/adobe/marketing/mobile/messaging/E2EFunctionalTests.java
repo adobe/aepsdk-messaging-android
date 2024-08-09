@@ -43,7 +43,6 @@ import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
 import com.adobe.marketing.mobile.util.TestRetryRule;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -93,8 +92,10 @@ public class E2EFunctionalTests {
         MobileCore.registerExtensions(
                 extensions,
                 o -> {
-                    // tag: android messaging functional test app, org: AEM Assets Departmental, Prod VA7
-                    MobileCore.configureWithAppID("3149c49c3910/473386a6e5b0/launch-6099493a8c97-development");
+                    // tag: android messaging functional test app, org: AEM Assets Departmental,
+                    // Prod VA7
+                    MobileCore.configureWithAppID(
+                            "3149c49c3910/473386a6e5b0/launch-6099493a8c97-development");
                     // wait for configuration to be set
                     try {
                         Thread.sleep(3000);
@@ -126,7 +127,8 @@ public class E2EFunctionalTests {
                         add("mobileapp://com.adobe.marketing.mobile.messaging.test");
                     }
                 });
-        personalizationData.put(SCHEMAS,
+        personalizationData.put(
+                SCHEMAS,
                 new ArrayList<String>() {
                     {
                         add(MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT);
@@ -169,16 +171,33 @@ public class E2EFunctionalTests {
         MobileCore.trackAction("functional", null);
 
         // verify show always rule consequence event is dispatched
-        final Map<String, Object> expectedRulesConsequenceEventData = (Map<String, Object>) ((List) MessagingTestUtils.getMapFromFile("iam-show-always-consequence.json").get(JSON_CONSEQUENCES_KEY)).get(0);
-        List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        final Map<String, Object> expectedRulesConsequenceEventData =
+                (Map<String, Object>)
+                        ((List)
+                                        MessagingTestUtils.getMapFromFile(
+                                                        "iam-show-always-consequence.json")
+                                                .get(JSON_CONSEQUENCES_KEY))
+                                .get(0);
+        List<Event> rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
         Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
-        Map<String, Object> triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
-        final Map<String, Object> expectedRuleConsequenceDetails = (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
-        Map<String, Object> triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
-        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
-        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
-        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+        Map<String, Object> triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails =
+                (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        Map<String, Object> triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
 
         // clear received events
         MonitorExtension.reset();
@@ -187,14 +206,24 @@ public class E2EFunctionalTests {
         MobileCore.trackAction("functional", null);
 
         // verify rule consequence event is dispatched
-        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
         rulesConsequenceEvent = rulesConsequenceEvents.get(0);
-        triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
-        triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
-        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
-        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
-        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+        triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
     }
 
     @Test
@@ -206,16 +235,33 @@ public class E2EFunctionalTests {
         MobileCore.trackAction("once", null);
 
         // verify show once rule consequence event is dispatched
-        final Map<String, Object> expectedRulesConsequenceEventData = (Map<String, Object>) ((List) MessagingTestUtils.getMapFromFile("iam-show-once-consequence.json").get(JSON_CONSEQUENCES_KEY)).get(0);
-        List<Event> rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        final Map<String, Object> expectedRulesConsequenceEventData =
+                (Map<String, Object>)
+                        ((List)
+                                        MessagingTestUtils.getMapFromFile(
+                                                        "iam-show-once-consequence.json")
+                                                .get(JSON_CONSEQUENCES_KEY))
+                                .get(0);
+        List<Event> rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
         final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
-        final Map<String, Object> triggeredConsequenceEventData = (Map<String, Object>) rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
-        final Map<String, Object> expectedRuleConsequenceDetails = (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
-        final Map<String, Object> triggeredRuleConsequenceDetails = (Map<String, Object>) triggeredConsequenceEventData.get("detail");
-        assertEquals(expectedRuleConsequenceDetails.get("schema"), triggeredRuleConsequenceDetails.get("schema"));
-        assertEquals(expectedRuleConsequenceDetails.get("data"), triggeredRuleConsequenceDetails.get("data"));
-        assertEquals(expectedRulesConsequenceEventData.get("type"), triggeredConsequenceEventData.get("type"));
+        final Map<String, Object> triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails =
+                (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        final Map<String, Object> triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
 
         // clear received events
         MonitorExtension.reset();
@@ -224,7 +270,8 @@ public class E2EFunctionalTests {
         MobileCore.trackAction("e2e", null);
 
         // verify no rule consequence event is dispatched
-        rulesConsequenceEvents = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(0, rulesConsequenceEvents.size());
     }
 
@@ -239,32 +286,56 @@ public class E2EFunctionalTests {
         assertEquals(
                 expectedEdgePersonalizationEventData,
                 edgePersonalizationRequestEvent.getEventData());
-        final String edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
+        final String edgePersonalizationRequestEventID =
+                edgePersonalizationRequestEvent.getUniqueIdentifier();
 
         // verify personalization decisions event containing two in-app propositions
-        final List<Event> messagingPersonalizationEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS, 3000);
+        final List<Event> messagingPersonalizationEvents =
+                getDispatchedEventsWith(
+                        EventType.EDGE,
+                        MessagingConstants.EventSource.PERSONALIZATION_DECISIONS,
+                        3000);
         final Event messagingPersonalizationEvent = messagingPersonalizationEvents.get(0);
-        assertEquals(2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
-        final Map<String, Object> expectedInAppPayload = MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
-        final Map<String, Object> inAppProposition1 = (Map<String, Object>) ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(0);
-        final Map<String, Object> inAppProposition2 = (Map<String, Object>) ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(1);
-        final Map<String, Object> expectedProposition1 = (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(0);
-        final Map<String, Object> expectedProposition2 = (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(1);
-        final Map<String, Object> expectedScopeDetails1 = (Map<String, Object>) expectedProposition1.get("scopeDetails");
-        final Map<String, Object> expectedScopeDetails2 = (Map<String, Object>) expectedProposition2.get("scopeDetails");
-        final Map<String, Object> scopeDetails1 = (Map<String, Object>) inAppProposition1.get("scopeDetails");
-        final Map<String, Object> scopeDetails2 = (Map<String, Object>) inAppProposition2.get("scopeDetails");
+        assertEquals(
+                2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
+        final Map<String, Object> expectedInAppPayload =
+                MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
+        final Map<String, Object> inAppProposition1 =
+                (Map<String, Object>)
+                        ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(0);
+        final Map<String, Object> inAppProposition2 =
+                (Map<String, Object>)
+                        ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(1);
+        final Map<String, Object> expectedProposition1 =
+                (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(0);
+        final Map<String, Object> expectedProposition2 =
+                (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(1);
+        final Map<String, Object> expectedScopeDetails1 =
+                (Map<String, Object>) expectedProposition1.get("scopeDetails");
+        final Map<String, Object> expectedScopeDetails2 =
+                (Map<String, Object>) expectedProposition2.get("scopeDetails");
+        final Map<String, Object> scopeDetails1 =
+                (Map<String, Object>) inAppProposition1.get("scopeDetails");
+        final Map<String, Object> scopeDetails2 =
+                (Map<String, Object>) inAppProposition2.get("scopeDetails");
         assertEquals(expectedScopeDetails1.get("activity"), scopeDetails1.get("activity"));
-        assertEquals(expectedScopeDetails1.get("correlationID"), scopeDetails1.get("correlationID"));
-        assertEquals(expectedScopeDetails1.get("decisionProvider"), scopeDetails1.get("decisionProvider"));
+        assertEquals(
+                expectedScopeDetails1.get("correlationID"), scopeDetails1.get("correlationID"));
+        assertEquals(
+                expectedScopeDetails1.get("decisionProvider"),
+                scopeDetails1.get("decisionProvider"));
         assertEquals(expectedProposition1.get("scope"), inAppProposition1.get("scope"));
         assertEquals(expectedScopeDetails2.get("activity"), scopeDetails2.get("activity"));
-        assertEquals(expectedScopeDetails2.get("correlationID"), scopeDetails2.get("correlationID"));
-        assertEquals(expectedScopeDetails2.get("decisionProvider"), scopeDetails2.get("decisionProvider"));
+        assertEquals(
+                expectedScopeDetails2.get("correlationID"), scopeDetails2.get("correlationID"));
+        assertEquals(
+                expectedScopeDetails2.get("decisionProvider"),
+                scopeDetails2.get("decisionProvider"));
         assertEquals(expectedProposition2.get("scope"), inAppProposition2.get("scope"));
 
         // verify edge content complete event
-        final List<Event> edgeContentCompleteEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
+        final List<Event> edgeContentCompleteEvents =
+                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
         assertEquals(1, edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
         assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
