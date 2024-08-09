@@ -42,6 +42,8 @@ import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
+import com.adobe.marketing.mobile.util.TestRetryRule;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,6 +65,9 @@ public class E2EFunctionalTests {
     public RuleChain rule =
             RuleChain.outerRule(new TestHelper.SetupCoreRuleWithRealNetworkService())
                     .around(new TestHelper.RegisterMonitorExtensionRule());
+
+    // A test will be retried at most 3 times
+    @Rule public TestRetryRule totalTestCount = new TestRetryRule(3);
 
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
