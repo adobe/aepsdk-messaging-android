@@ -27,13 +27,10 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  functional-tests:
+
+  functional-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        api-level: [29]
-
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -57,24 +54,6 @@ jobs:
         distribution: 'zulu'
         java-version: 17
 
-    - name: Cache Gradle packages
-      uses: actions/cache@v2
-      with:
-        path: ~/.gradle/caches
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-        restore-keys: ${{ runner.os }}-gradle
-
-    - name: run tests
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: ${{ matrix.api-level }}
-        force-avd-creation: false
-        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-        disable-animations: true
-        script: make functional-test
-    
-    # Potential workflow solutions on job failure
-    - name: On failure
-      if: ${{ failure() }}
-      run: |
-        echo 'Job used branch: ' ${{ github.event.inputs.branch }}. Please make sure this is the branch to run off of.
+    # Runs a single command using the runners shell
+    - name: Execute functional tests
+      run: make functional-test
