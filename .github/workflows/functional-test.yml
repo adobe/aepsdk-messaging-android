@@ -54,6 +54,11 @@ jobs:
         distribution: 'zulu'
         java-version: 17
 
-    # Runs a single command using the runners shell
-    - name: Execute functional tests
-      run: make functional-test
+    - name: run tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        force-avd-creation: false
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: make functional-test
