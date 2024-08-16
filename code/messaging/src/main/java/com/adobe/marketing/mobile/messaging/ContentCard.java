@@ -22,7 +22,10 @@ import java.lang.ref.SoftReference;
  * A {@link ContentCard} object encapsulates the information necessary for a non-disruptive yet
  * interactive offer. Customers can use the Messaging SDK to render the content card in a
  * pre-defined format or implement their own rendering.
+ *
+ * @deprecated Use {@link ContentCardSchemaData} instead
  */
+@Deprecated
 public class ContentCard {
     private static final String SELF_TAG = "ContentCard";
 

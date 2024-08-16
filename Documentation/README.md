@@ -36,7 +36,7 @@
 - Developer Documentation
   - [API usage](./sources/api-usage.md#Message Feed and Code-based experiences APIs)
   - Public classes
-    - [ContentCard](./sources/propositions/content-card.md)
+    - [ContentCard - DEPRECATED](./sources/propositions/content-card.md)
     - [ContentType](./sources/propositions/schemas/content-type.md)
     - [Proposition](./sources/propositions/proposition.md)
     - [PropositionItem](./sources/propositions/proposition-item.md)
