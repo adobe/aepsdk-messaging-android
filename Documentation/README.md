@@ -12,7 +12,7 @@
 - Prerequisites
   - Enable push notifications in your app by [adding the Firebase dependency.](https://firebase.google.com/docs/cloud-messaging/android/client)
 - Developer Documentation
-  - [API usage](./sources/api-usage.md#Push Messaging APIs)
+  - [API usage](./sources/api-usage.md#push-messaging-apis)
   - [PushTrackingStatus](./sources/enum-public-classes/enum-push-tracking-status.md)
   - [MessagingPushPayload](./sources/enum-public-classes/messaging-push-payload.md)
 - Guides
@@ -23,7 +23,7 @@
 ### In-app Messaging
 
 - Developer Documentation
-  - [API usage](./sources/api-usage.md#In-App Messaging APIs)
+  - [API usage](./sources/api-usage.md#in-app-messaging-apis)
   - [Message](./sources/enum-public-classes/class-message.md)
 - Guides
   - [Programmatically control the display of in-app messages](./sources/in-app-messaging/how-to-presentation-delegate.md)
@@ -34,7 +34,7 @@
 ### Code-based experiences and content cards
 
 - Developer Documentation
-  - [API usage](./sources/api-usage.md#Message Feed and Code-based experiences APIs)
+  - [API usage](./sources/api-usage.md#code-based-experiences-and-content-cards-apis)
   - Public classes
     - [ContentCard - DEPRECATED](./sources/propositions/content-card.md)
     - [ContentType](./sources/propositions/schemas/content-type.md)
