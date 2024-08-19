@@ -1,4 +1,6 @@
-# ContentCard
+# ContentCard - DEPRECATED
+
+> This class is *DEPRECATED* as of `Messaging v3.2.0`. Use [ContentCardSchemaData](./schemas/content-card-schema-data.md) instead.
 
 An object representing the default content card created in the Adobe Journey Optimizer UI. 
 

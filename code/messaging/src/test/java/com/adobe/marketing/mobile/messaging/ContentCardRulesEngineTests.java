@@ -148,7 +148,7 @@ public class ContentCardRulesEngineTests {
                 contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
-        Assert.assertTrue(propositionItemsBySurface.isEmpty());
+        Assert.assertNull(propositionItemsBySurface);
     }
 
     @Test
@@ -166,6 +166,6 @@ public class ContentCardRulesEngineTests {
                 contentCardRulesEngine.evaluate(defaultEvent);
 
         // verify
-        Assert.assertTrue(propositionItemsBySurface.isEmpty());
+        Assert.assertNull(propositionItemsBySurface);
     }
 }
