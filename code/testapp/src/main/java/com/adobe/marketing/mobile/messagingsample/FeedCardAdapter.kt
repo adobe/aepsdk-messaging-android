@@ -36,7 +36,11 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
         val proposition = propositions[position]
         for (item in proposition.items) {
             val inboundContent = item.contentCardSchemaData
-            val contentCard = inboundContent?.contentCard
+            val contentMap = inboundContent?.content as HashMap<String, String>
+            val contentCard = MyContentCard()
+            contentCard.title = contentMap.get("title") ?: "defaultTitle"
+            contentCard.body = contentMap.get("body") ?: "defaultBody"
+            contentCard.imageUrl = contentMap.get("imageUrl") ?: "defaultImage"
             contentCard?.let {
                 it.imageUrl?.let {
                     holder.feedItemImage.setImageBitmap(ImageDownloader.getImage(it))
@@ -80,4 +84,10 @@ class FeedCardAdapter(propositions: MutableList<Proposition>) :
     init {
         this.propositions = propositions
     }
+}
+
+class MyContentCard {
+    var title: String = ""
+    var body: String = ""
+    var imageUrl: String = ""
 }
