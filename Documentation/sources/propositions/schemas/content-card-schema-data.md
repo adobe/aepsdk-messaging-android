@@ -45,7 +45,9 @@ public class ContentCardSchemaData implements SchemaData {
 
 # Public functions
 
-## getContentCard
+## getContentCard - DEPRECATED
+
+> The `ContentCard` class is *DEPRECATED* as of `Messaging v3.2.0`.
 
 Tries to convert the `content` of this `ContentCardSchemaData` into a [`ContentCard`](./../content-card.md) object.
 

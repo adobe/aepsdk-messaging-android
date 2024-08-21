@@ -91,6 +91,7 @@ public class ContentCardSchemaData implements SchemaData {
         return new ContentCardSchemaData(new JSONObject());
     }
 
+    @Deprecated
     @Nullable public ContentCard getContentCard() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
             return null;

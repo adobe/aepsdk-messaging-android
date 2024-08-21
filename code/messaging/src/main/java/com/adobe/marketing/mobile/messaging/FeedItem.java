@@ -20,7 +20,7 @@ import com.adobe.marketing.mobile.util.StringUtils;
  * interactive offer. Customers can use the Messaging SDK to render the feed item data in a
  * pre-defined format or implement their own rendering.
  *
- * @deprecated Use {@link ContentCard} instead.
+ * @deprecated Use {@link ContentCardSchemaData} instead
  */
 @Deprecated
 public class FeedItem {
