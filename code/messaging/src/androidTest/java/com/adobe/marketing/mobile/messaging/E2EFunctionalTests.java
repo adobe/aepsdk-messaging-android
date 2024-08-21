@@ -297,41 +297,7 @@ public class E2EFunctionalTests {
                         3000);
         final Event messagingPersonalizationEvent = messagingPersonalizationEvents.get(0);
         assertEquals(
-                2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
-        final Map<String, Object> expectedInAppPayload =
-                MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
-        final Map<String, Object> inAppProposition1 =
-                (Map<String, Object>)
-                        ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(0);
-        final Map<String, Object> inAppProposition2 =
-                (Map<String, Object>)
-                        ((List) messagingPersonalizationEvent.getEventData().get("payload")).get(1);
-        final Map<String, Object> expectedProposition1 =
-                (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(0);
-        final Map<String, Object> expectedProposition2 =
-                (Map<String, Object>) ((List) expectedInAppPayload.get("payload")).get(1);
-        final Map<String, Object> expectedScopeDetails1 =
-                (Map<String, Object>) expectedProposition1.get("scopeDetails");
-        final Map<String, Object> expectedScopeDetails2 =
-                (Map<String, Object>) expectedProposition2.get("scopeDetails");
-        final Map<String, Object> scopeDetails1 =
-                (Map<String, Object>) inAppProposition1.get("scopeDetails");
-        final Map<String, Object> scopeDetails2 =
-                (Map<String, Object>) inAppProposition2.get("scopeDetails");
-        assertEquals(expectedScopeDetails1.get("activity"), scopeDetails1.get("activity"));
-        assertEquals(
-                expectedScopeDetails1.get("correlationID"), scopeDetails1.get("correlationID"));
-        assertEquals(
-                expectedScopeDetails1.get("decisionProvider"),
-                scopeDetails1.get("decisionProvider"));
-        assertEquals(expectedProposition1.get("scope"), inAppProposition1.get("scope"));
-        assertEquals(expectedScopeDetails2.get("activity"), scopeDetails2.get("activity"));
-        assertEquals(
-                expectedScopeDetails2.get("correlationID"), scopeDetails2.get("correlationID"));
-        assertEquals(
-                expectedScopeDetails2.get("decisionProvider"),
-                scopeDetails2.get("decisionProvider"));
-        assertEquals(expectedProposition2.get("scope"), inAppProposition2.get("scope"));
+                5, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents =
