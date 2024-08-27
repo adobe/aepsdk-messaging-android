@@ -65,11 +65,11 @@ jobs:
         java-version: 17
 
     - name: ${{ github.event.inputs.id || 'scheduled' }}
-        run: echo Run Identifier is ${{ inputs.id || 'scheduled' }}
+      run: echo Run Identifier is ${{ inputs.id || 'scheduled' }}
 
-      # Update messaging build config to set the ADOBE_ENVIRONMENT value to use for testing
-      - name: Update environment
-        run: make set-environment ENV=${{ github.event.inputs.environment || 'prodVA7' }}
+    # Update messaging build config to set the ADOBE_ENVIRONMENT value to use for testing
+    - name: Update environment
+      run: make set-environment ENV=${{ github.event.inputs.environment || 'prodVA7' }}
 
     - name: run tests
       uses: reactivecircus/android-emulator-runner@v2
