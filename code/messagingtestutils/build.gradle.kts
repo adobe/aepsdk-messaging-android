@@ -13,6 +13,7 @@ import com.adobe.marketing.mobile.gradle.BuildConstants
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 val mavenCoreVersion: String by project
@@ -33,6 +34,11 @@ android {
             isMinifyEnabled = false
         }
     }
+    kotlinOptions {
+        jvmTarget = BuildConstants.Versions.KOTLIN_JVM_TARGET
+        languageVersion = BuildConstants.Versions.KOTLIN_LANGUAGE_VERSION
+        apiVersion = BuildConstants.Versions.KOTLIN_API_VERSION
+    }
 }
 
 dependencies {
@@ -41,4 +47,5 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7")
     implementation("androidx.test.ext:junit:1.1.5")
+    implementation("androidx.core:core-ktx:1.13.1")
 }

@@ -32,6 +32,8 @@ aepLibrary {
         defaultConfig {
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_E2E_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
             buildConfigField("java.util.concurrent.atomic.AtomicBoolean", "IS_FUNCTIONAL_TEST", "new java.util.concurrent.atomic.AtomicBoolean(false)")
+            buildConfigField("String", "ADOBE_ENVIRONMENT", "\"prodVA7\"")
+            testApplicationId = "com.adobe.marketing.mobile.messaging.e2etest"
         }
 
         sourceSets {
@@ -49,6 +51,7 @@ dependencies {
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
     testImplementation(project(":messagingtestutils"))
     testImplementation("com.google.firebase:firebase-messaging:23.4.1")
+    testImplementation("io.mockk:mockk:1.13.11")
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE

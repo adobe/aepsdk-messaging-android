@@ -15,15 +15,22 @@ name: E2E Functional Tests
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
 on:
+  schedule:
+    - cron: '0 11 * * *'
+    - cron: '0 23 * * *'
   workflow_dispatch:
     inputs:
       branch:
         description: 'Branch to use when running functional tests'
         required: false
-        default: 'functional-tests-for-refactored-classes'
+        default: 'configurable-e2e-tests'
       id:
         description: 'Identifier for the run'
         required: false
+      environment:
+        description: 'Environment and region to test (prodVA7, prodAUD5, prodNLD2, stageVA7)'
+        required: true
+        default: 'prodVA7'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -56,6 +63,13 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: 17
+
+    - name: ${{ github.event.inputs.id || 'scheduled' }}
+        run: echo Run Identifier is ${{ inputs.id || 'scheduled' }}
+
+      # Update messaging build config to set the ADOBE_ENVIRONMENT value to use for testing
+      - name: Update environment
+        run: make set-environment ENV=${{ github.event.inputs.environment || 'prodVA7' }}
 
     - name: run tests
       uses: reactivecircus/android-emulator-runner@v2

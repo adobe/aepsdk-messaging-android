@@ -92,10 +92,8 @@ public class E2EFunctionalTests {
         MobileCore.registerExtensions(
                 extensions,
                 o -> {
-                    // tag: android messaging functional test app, org: AEM Assets Departmental,
-                    // Prod VA7
-                    MobileCore.configureWithAppID(
-                            "3149c49c3910/473386a6e5b0/launch-6099493a8c97-development");
+                    MobileCore.configureWithAppID(Environment.getAppId());
+                    MobileCore.updateConfiguration(Environment.configurationUpdates());
                     // wait for configuration to be set
                     try {
                         Thread.sleep(3000);
@@ -124,7 +122,7 @@ public class E2EFunctionalTests {
                 SURFACES,
                 new ArrayList<String>() {
                     {
-                        add("mobileapp://com.adobe.marketing.mobile.messaging.test");
+                        add("mobileapp://com.adobe.marketing.mobile.messaging.e2etest");
                     }
                 });
         personalizationData.put(
@@ -172,12 +170,7 @@ public class E2EFunctionalTests {
 
         // verify show always rule consequence event is dispatched
         final Map<String, Object> expectedRulesConsequenceEventData =
-                (Map<String, Object>)
-                        ((List)
-                                        MessagingTestUtils.getMapFromFile(
-                                                        "iam-show-always-consequence.json")
-                                                .get(JSON_CONSEQUENCES_KEY))
-                                .get(0);
+                (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(false).get(0));
         List<Event> rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
@@ -236,12 +229,7 @@ public class E2EFunctionalTests {
 
         // verify show once rule consequence event is dispatched
         final Map<String, Object> expectedRulesConsequenceEventData =
-                (Map<String, Object>)
-                        ((List)
-                                        MessagingTestUtils.getMapFromFile(
-                                                        "iam-show-once-consequence.json")
-                                                .get(JSON_CONSEQUENCES_KEY))
-                                .get(0);
+                (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(true).get(0));
         List<Event> rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
         assertEquals(1, rulesConsequenceEvents.size());
@@ -297,7 +285,7 @@ public class E2EFunctionalTests {
                         3000);
         final Event messagingPersonalizationEvent = messagingPersonalizationEvents.get(0);
         assertEquals(
-                5, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
+                2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents =
@@ -305,5 +293,43 @@ public class E2EFunctionalTests {
         assertEquals(1, edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
         assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
+    }
+
+    private List getExpectedRulesConsequenceDataForEnvironment(final boolean isShowOnce) {
+        final String environment = Environment.Companion.getBuildConfigEnvironment();
+        switch (environment) {
+            case "stageVA7":
+                return isShowOnce ? (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-once-consequence-stageVA7.json")
+                                    .get(JSON_CONSEQUENCES_KEY) : (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-always-consequence-stageVA7.json")
+                                    .get(JSON_CONSEQUENCES_KEY);
+            case "prodNLD2":
+                return isShowOnce ? (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-once-consequence-prodNLD2.json")
+                                    .get(JSON_CONSEQUENCES_KEY) : (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-always-consequence-prodNLD2.json")
+                                    .get(JSON_CONSEQUENCES_KEY);
+            case "prodAUS5":
+                return isShowOnce ? (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-once-consequence-prodAUS5.json")
+                                    .get(JSON_CONSEQUENCES_KEY) : (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-always-consequence-prodAUS5.json")
+                                    .get(JSON_CONSEQUENCES_KEY);
+            default:
+                return isShowOnce ? (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-once-consequence-prodVA7.json")
+                                    .get(JSON_CONSEQUENCES_KEY) : (List)
+                            MessagingTestUtils.getMapFromFile(
+                                            "iam-show-always-consequence-prodVA7.json")
+                                    .get(JSON_CONSEQUENCES_KEY);
+        }
     }
 }
