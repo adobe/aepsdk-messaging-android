@@ -28,7 +28,7 @@ on:
         description: 'Identifier for the run'
         required: false
       environment:
-        description: 'Environment and region to test (prodVA7, prodAUD5, prodNLD2, stageVA7)'
+        description: 'Environment and region to test (prodVA7, prodAUS5, prodNLD2, stageVA7)'
         required: true
         default: 'prodVA7'
 
