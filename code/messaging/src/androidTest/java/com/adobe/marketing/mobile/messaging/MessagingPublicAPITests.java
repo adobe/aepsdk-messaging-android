@@ -632,10 +632,10 @@ public class MessagingPublicAPITests {
         assertEquals("personalization.request", xdmDataMap.get("eventType"));
         assertEquals(2, surfacesList.size());
         assertEquals(
-                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
+                "mobileapp://com.adobe.marketing.mobile.messaging.e2etest/promos/feed1",
                 surfacesList.get(0));
         assertEquals(
-                "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
+                "mobileapp://com.adobe.marketing.mobile.messaging.e2etest/promos/feed2",
                 surfacesList.get(1));
     }
 

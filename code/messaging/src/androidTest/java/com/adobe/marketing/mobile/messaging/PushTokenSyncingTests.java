@@ -107,7 +107,7 @@ public class PushTokenSyncingTests {
         String expectedEdgeEvent =
                 "{data={pushNotificationDetails=[{denylisted=false,"
                         + " identity={namespace={code=ECID}, id=mockECID},"
-                        + " appID=com.adobe.marketing.mobile.messaging.test, platform=fcm,"
+                        + " appID=com.adobe.marketing.mobile.messaging.e2etest, platform=fcm,"
                         + " token=mockPushToken}]}}";
         // test
         MobileCore.setPushIdentifier("mockPushToken");
