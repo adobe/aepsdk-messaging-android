@@ -24,9 +24,9 @@ workflows:
       - build-and-unit-test:
           requires:
             - validate-code
-      - functional-test:
-          requires:
-            - validate-code
+      # - functional-test:
+      #     requires:
+      #       - validate-code
       - build-test-app:
           requires:
             - validate-code

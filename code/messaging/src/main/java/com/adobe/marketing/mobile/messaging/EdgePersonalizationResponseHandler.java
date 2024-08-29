@@ -41,9 +41,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class is used to handle the retrieval and processing of AJO payloads containing in-app,
- * content card, or code based messages. It is also responsible for the display of AJO in-app
- * messages.
+ * This class is used to handle the retrieval and processing of AJO payloads containing in-app or
+ * feed messages. It is also responsible for the display of AJO in-app messages.
  */
 class EdgePersonalizationResponseHandler {
     private static final String SELF_TAG = "EdgePersonalizationResponseHandler";
@@ -428,7 +427,7 @@ class EdgePersonalizationResponseHandler {
                             entry.getKey(), entry.getValue(), requestedPropositions);
         }
 
-        // dispatch an event with the cached content card propositions
+        // dispatch an event with the cached feed propositions
         final Map<String, Object> eventData = new HashMap<>();
         final List<Map<String, Object>> convertedPropositions = new ArrayList<>();
         for (final Map.Entry<Surface, List<Proposition>> propositionEntry :
@@ -613,11 +612,10 @@ class EdgePersonalizationResponseHandler {
                             "Updating content card definitions for surfaces %s",
                             newSurfaces);
 
-                    // replace rules for each content card surface we got back
+                    // replace rules for each feed surface we got back
                     contentCardRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no content card content
-                    // returned
+                    // remove any surfaces that were requested but had no feed content returned
                     for (final Surface surface : surfacesToRemove) {
                         contentCardRulesBySurface.remove(surface);
                     }
