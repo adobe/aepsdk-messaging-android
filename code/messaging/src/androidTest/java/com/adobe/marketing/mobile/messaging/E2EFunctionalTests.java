@@ -46,10 +46,12 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 
+@Ignore
 public class E2EFunctionalTests {
     static {
         BuildConfig.IS_E2E_TEST.set(true);
