@@ -122,7 +122,7 @@ public class E2EFunctionalTests {
                 SURFACES,
                 new ArrayList<String>() {
                     {
-                        add("mobileapp://com.adobe.marketing.mobile.messaging.e2etest");
+                        add("mobileapp://com.adobe.marketing.mobile.messaging.test");
                     }
                 });
         personalizationData.put(
@@ -255,8 +255,7 @@ public class E2EFunctionalTests {
         final Map<String, String> mockHistoryMap = new HashMap<>();
         mockHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
         mockHistoryMap.put(
-                MessagingConstants.EventMask.Keys.MESSAGE_ID,
-                "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8");
+                MessagingConstants.EventMask.Keys.MESSAGE_ID, Environment.getShowOnceMessageId());
         mockHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
         final Map<String, Object> eventHistoryData = new HashMap<>();
         eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, mockHistoryMap);
@@ -314,37 +313,45 @@ public class E2EFunctionalTests {
         final String environment = Environment.Companion.getBuildConfigEnvironment();
         switch (environment) {
             case "stageVA7":
-                return isShowOnce ? (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-once-consequence-stageVA7.json")
-                                    .get(JSON_CONSEQUENCES_KEY) : (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-always-consequence-stageVA7.json")
-                                    .get(JSON_CONSEQUENCES_KEY);
+                return isShowOnce
+                        ? (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-once-consequence-stageVA7.json")
+                                        .get(JSON_CONSEQUENCES_KEY)
+                        : (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-always-consequence-stageVA7.json")
+                                        .get(JSON_CONSEQUENCES_KEY);
             case "prodNLD2":
-                return isShowOnce ? (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-once-consequence-prodNLD2.json")
-                                    .get(JSON_CONSEQUENCES_KEY) : (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-always-consequence-prodNLD2.json")
-                                    .get(JSON_CONSEQUENCES_KEY);
+                return isShowOnce
+                        ? (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-once-consequence-prodNLD2.json")
+                                        .get(JSON_CONSEQUENCES_KEY)
+                        : (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-always-consequence-prodNLD2.json")
+                                        .get(JSON_CONSEQUENCES_KEY);
             case "prodAUS5":
-                return isShowOnce ? (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-once-consequence-prodAUS5.json")
-                                    .get(JSON_CONSEQUENCES_KEY) : (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-always-consequence-prodAUS5.json")
-                                    .get(JSON_CONSEQUENCES_KEY);
+                return isShowOnce
+                        ? (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-once-consequence-prodAUS5.json")
+                                        .get(JSON_CONSEQUENCES_KEY)
+                        : (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-always-consequence-prodAUS5.json")
+                                        .get(JSON_CONSEQUENCES_KEY);
             default:
-                return isShowOnce ? (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-once-consequence-prodVA7.json")
-                                    .get(JSON_CONSEQUENCES_KEY) : (List)
-                            MessagingTestUtils.getMapFromFile(
-                                            "iam-show-always-consequence-prodVA7.json")
-                                    .get(JSON_CONSEQUENCES_KEY);
+                return isShowOnce
+                        ? (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-once-consequence-prodVA7.json")
+                                        .get(JSON_CONSEQUENCES_KEY)
+                        : (List)
+                                MessagingTestUtils.getMapFromFile(
+                                                "iam-show-always-consequence-prodVA7.json")
+                                        .get(JSON_CONSEQUENCES_KEY);
         }
     }
 }

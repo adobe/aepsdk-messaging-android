@@ -17,7 +17,7 @@ import androidx.annotation.VisibleForTesting
 // Org: AEM Assets Departmental - Campaign (906E3A095DC834230A495FD6@AdobeOrg)
 // Sandbox: Prod (VA7)
 // Data Collection tag: Android Messaging E2E Test ProdVA7
-// App Surface: android messaging functional tests (com.adobe.marketing.mobile.messaging.e2etest)
+// App Surface: android messaging functional tests (com.adobe.marketing.mobile.messaging.test)
 // Datastream: android messaging functional test datastream (63b13590-156b-427e-8981-548d711644ca)
 // AppID for SDK configuration: 3149c49c3910/d255d2ca2e85/launch-750429361c0c-development
 
@@ -25,7 +25,7 @@ import androidx.annotation.VisibleForTesting
 // Org: CJM Prod AUS5 (404C2CDA605B7E960A495FCE@AdobeOrg)
 // Sandbox: Prod (AUS5)
 // Data Collection tag: Android Messaging E2E Test AUS5
-// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.e2etest)
+// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.test)
 // Datastream: Android Messaging E2E Test ProdAUS5 (e027f69b-3bcf-4505-b100-01db317a16d1)
 // AppID for SDK configuration: 3269cfd2f1f9/13bf39b5c459/launch-e6e27a440c61-development
 
@@ -33,7 +33,7 @@ import androidx.annotation.VisibleForTesting
 // Org: CJM Prod NLD2 (4DA0571C5FDC4BF70A495FC2@AdobeOrg)
 // Sandbox: Prod (NLD2)
 // Data Collection tag: Android Messaging E2E Test ProdNLD2
-// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.e2etest)
+// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.test)
 // Datastream: Android Messaging E2E Test ProdNLD2 (6506a534-c67e-4e0a-9055-43deea6645ac)
 // AppID for SDK configuration: bf7248f92b53/ed0ea2d62097/launch-a0faa600f503-development
 
@@ -41,7 +41,7 @@ import androidx.annotation.VisibleForTesting
 // Org: CJM Stage (745F37C35E4B776E0A49421B@AdobeOrg)
 // Sandbox: AJO Web (VA7)
 // Data Collection tag: Android Messaging E2E Test CJMStage
-// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.e2etest)
+// App Surface: AJO - IAM E2E Automated tests (com.adobe.marketing.mobile.messaging.test)
 // Datastream: Android Messaging E2E Test CJMStage (bf13a388-bf50-461f-8567-eed128195a7a)
 // AppID for SDK configuration: staging/1b50a869c4a2/0ae7a3b5fdbf/launch-55942f2836d4-development
 
@@ -80,6 +80,20 @@ enum class Environment {
             return when (getEnvironmentFromBuildConfig()) {
                 STAGE_VA7 -> mapOf("edge.environment" to "int")
                 else -> mapOf("edge.environment" to "")
+            }
+        }
+
+        /**
+         * Gets the expected message ID for the show once in-app messages.
+         * @return a [String] containing the expected message ID for the show once in-app messages
+         */
+        @JvmStatic
+        fun getShowOnceMessageId(): String {
+            return when (getEnvironmentFromBuildConfig()) {
+                PROD_VA7 -> "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8"
+                PROD_AUS5 -> "5815a673-a48d-4486-aaad-bd3184d9fa9f#e314702b-afef-4e83-bb90-73e1b7dff6eb"
+                PROD_NLD2 -> "3ef2b330-fdd3-4c0a-817e-157f3c2947bd#7d828885-c0ab-4f7d-a0ea-1f94fa41f8c5"
+                STAGE_VA7 -> "tbd"
             }
         }
 
