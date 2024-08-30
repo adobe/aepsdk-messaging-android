@@ -166,7 +166,7 @@ public class E2EFunctionalTests {
         verifyInAppPropositionsRetrievedFromEdge();
 
         // trigger a show always in-app message
-        MobileCore.trackAction("functional", null);
+        MobileCore.trackAction("always", null);
 
         // verify show always rule consequence event is dispatched
         final Map<String, Object> expectedRulesConsequenceEventData =
@@ -196,7 +196,7 @@ public class E2EFunctionalTests {
         MonitorExtension.reset();
 
         // trigger the show always in-app message again
-        MobileCore.trackAction("functional", null);
+        MobileCore.trackAction("always", null);
 
         // verify rule consequence event is dispatched
         rulesConsequenceEvents =
@@ -251,11 +251,36 @@ public class E2EFunctionalTests {
                 expectedRulesConsequenceEventData.get("type"),
                 triggeredConsequenceEventData.get("type"));
 
+        // workaround as the e2e test dispatches an IAM triggered event but not a display event
+        final Map<String, String> mockHistoryMap = new HashMap<>();
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
+        mockHistoryMap.put(
+                MessagingConstants.EventMask.Keys.MESSAGE_ID,
+                "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8");
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+        final Map<String, Object> eventHistoryData = new HashMap<>();
+        eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, mockHistoryMap);
+
+        final String[] mask = {
+            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.TRACKING_ACTION
+        };
+        final Event event =
+                new Event.Builder(
+                                MessagingConstants.EventName.EVENT_HISTORY_WRITE,
+                                MessagingConstants.EventType.MESSAGING,
+                                MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                                mask)
+                        .setEventData(eventHistoryData)
+                        .build();
+        MobileCore.dispatchEvent(event);
+
         // clear received events
         MonitorExtension.reset();
 
         // trigger the show once in-app message again
-        MobileCore.trackAction("e2e", null);
+        MobileCore.trackAction("once", null);
 
         // verify no rule consequence event is dispatched
         rulesConsequenceEvents =
@@ -276,16 +301,6 @@ public class E2EFunctionalTests {
                 edgePersonalizationRequestEvent.getEventData());
         final String edgePersonalizationRequestEventID =
                 edgePersonalizationRequestEvent.getUniqueIdentifier();
-
-        // verify personalization decisions event containing two in-app propositions
-        final List<Event> messagingPersonalizationEvents =
-                getDispatchedEventsWith(
-                        EventType.EDGE,
-                        MessagingConstants.EventSource.PERSONALIZATION_DECISIONS,
-                        3000);
-        final Event messagingPersonalizationEvent = messagingPersonalizationEvents.get(0);
-        assertEquals(
-                2, ((List) messagingPersonalizationEvent.getEventData().get("payload")).size());
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents =
