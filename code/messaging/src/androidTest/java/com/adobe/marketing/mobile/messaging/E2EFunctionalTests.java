@@ -265,25 +265,25 @@ public class E2EFunctionalTests {
 
         // workaround as the e2e test dispatches an IAM triggered event but not a display event
         final Map<String, String> mockHistoryMap = new HashMap<>();
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
         mockHistoryMap.put(
-                MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
-        mockHistoryMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8");
-        mockHistoryMap.put(
-                MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+                MessagingConstants.EventMask.Keys.MESSAGE_ID,
+                "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8");
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
         final Map<String, Object> eventHistoryData = new HashMap<>();
         eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, mockHistoryMap);
 
         final String[] mask = {
-                MessagingConstants.EventMask.Mask.EVENT_TYPE,
-                MessagingConstants.EventMask.Mask.MESSAGE_ID,
-                MessagingConstants.EventMask.Mask.TRACKING_ACTION
+            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.TRACKING_ACTION
         };
         final Event event =
                 new Event.Builder(
-                        MessagingConstants.EventName.EVENT_HISTORY_WRITE,
-                        MessagingConstants.EventType.MESSAGING,
-                        MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
-                        mask)
+                                MessagingConstants.EventName.EVENT_HISTORY_WRITE,
+                                MessagingConstants.EventType.MESSAGING,
+                                MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                                mask)
                         .setEventData(eventHistoryData)
                         .build();
         MobileCore.dispatchEvent(event);
