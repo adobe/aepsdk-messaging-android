@@ -10,19 +10,17 @@
 # governing permissions and limitations under the License.
 #
 
-# Remote action to execute e2e functional tests
-
 name: E2E Functional Tests
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
 on:
   workflow_dispatch:
-    inputs: 
-      branch: 
+    inputs:
+      branch:
         description: 'Branch to use when running functional tests'
         required: false
-        default: 'feature/iam' # update this to main once feature/iam is merged to main
+        default: 'functional-tests-for-refactored-classes'
       id:
         description: 'Identifier for the run'
         required: false
@@ -33,18 +31,37 @@ jobs:
   functional-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        api-level: [29]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    
-    - name: ${{ github.event.inputs.id }}
-      run: echo Run Identifier is ${{ inputs.id }}
-      
+
+    - name: Job run identifier ${{ github.event.inputs.id }}
+      run: |
+        if [ -z "${{ github.event.inputs.id }}" ]; then \
+          echo No job run identifier was set.
+        else
+          echo 'Job run identifier is:' ${{ inputs.id }}
+        fi;
+
     - name: Checkout
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
       with:
         ref: ${{ github.event.inputs.branch }}
-    
-    # Runs a single command using the runners shell
-    - name: Execute functional tests
-      run: make functional-test
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: 17
+
+    - name: run tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        force-avd-creation: false
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: make functional-test

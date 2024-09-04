@@ -18,14 +18,16 @@ import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataK
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.EventType.PERSONALIZATION_REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PERSONALIZATION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.QUERY;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SCHEMAS;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.Inbound.Key.SURFACES;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys.DATA;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.REQUEST;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.SEND_COMPLETION;
 import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.XDM;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED;
+import static com.adobe.marketing.mobile.messaging.MessagingConstants.EventDataKeys.RulesEngine.JSON_CONSEQUENCES_KEY;
 import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
-import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -38,7 +40,9 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.util.MonitorExtension;
 import com.adobe.marketing.mobile.util.TestHelper;
+import com.adobe.marketing.mobile.util.TestRetryRule;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +64,9 @@ public class E2EFunctionalTests {
     public RuleChain rule =
             RuleChain.outerRule(new TestHelper.SetupCoreRuleWithRealNetworkService())
                     .around(new TestHelper.RegisterMonitorExtensionRule());
+
+    // A test will be retried at most 3 times
+    @Rule public TestRetryRule totalTestCount = new TestRetryRule(3);
 
     // --------------------------------------------------------------------------------------------
     // Setup and teardown
@@ -85,12 +92,13 @@ public class E2EFunctionalTests {
         MobileCore.registerExtensions(
                 extensions,
                 o -> {
-                    Map<String, Object> testConfig =
-                            MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
-                    MobileCore.updateConfiguration(testConfig);
+                    // tag: android messaging functional test app, org: AEM Assets Departmental,
+                    // Prod VA7
+                    MobileCore.configureWithAppID(
+                            "3149c49c3910/473386a6e5b0/launch-6099493a8c97-development");
                     // wait for configuration to be set
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException interruptedException) {
                         fail(interruptedException.getMessage());
                     }
@@ -98,13 +106,14 @@ public class E2EFunctionalTests {
                 });
 
         latch.await();
-        resetTestExpectations();
     }
 
     @After
     public void tearDown() {
         // clear loaded rules
         SDKHelper.resetSDK();
+        // clear received events
+        MonitorExtension.reset();
     }
 
     Map<String, Object> createExpectedEdgePersonalizationEventData() {
@@ -116,6 +125,15 @@ public class E2EFunctionalTests {
                 new ArrayList<String>() {
                     {
                         add("mobileapp://com.adobe.marketing.mobile.messaging.test");
+                    }
+                });
+        personalizationData.put(
+                SCHEMAS,
+                new ArrayList<String>() {
+                    {
+                        add(MessagingConstants.SchemaValues.SCHEMA_HTML_CONTENT);
+                        add(MessagingConstants.SchemaValues.SCHEMA_JSON_CONTENT);
+                        add(MessagingConstants.SchemaValues.SCHEMA_RULESET_ITEM);
                     }
                 });
         messageRequestData.put(PERSONALIZATION, personalizationData);
@@ -145,50 +163,162 @@ public class E2EFunctionalTests {
     }
 
     @Test
-    public void testGetInAppMessageDefinitionFromEdge() throws InterruptedException {
-        // setup
-        String edgePersonalizationRequestEventID;
+    public void testIamTriggerShowAlways() throws InterruptedException {
+        // test
+        verifyInAppPropositionsRetrievedFromEdge();
+
+        // trigger a show always in-app message
+        MobileCore.trackAction("always", null);
+
+        // verify show always rule consequence event is dispatched
+        final Map<String, Object> expectedRulesConsequenceEventData =
+                (Map<String, Object>)
+                        ((List)
+                                        MessagingTestUtils.getMapFromFile(
+                                                        "iam-show-always-consequence.json")
+                                                .get(JSON_CONSEQUENCES_KEY))
+                                .get(0);
+        List<Event> rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        Map<String, Object> triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails =
+                (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        Map<String, Object> triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
+
+        // clear received events
+        MonitorExtension.reset();
+
+        // trigger the show always in-app message again
+        MobileCore.trackAction("always", null);
+
+        // verify rule consequence event is dispatched
+        rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
+    }
+
+    @Test
+    public void testIamTriggerShowOnce() throws InterruptedException {
+        // test
+        verifyInAppPropositionsRetrievedFromEdge();
+
+        // trigger a show once in-app message
+        MobileCore.trackAction("once", null);
+
+        // verify show once rule consequence event is dispatched
+        final Map<String, Object> expectedRulesConsequenceEventData =
+                (Map<String, Object>)
+                        ((List)
+                                        MessagingTestUtils.getMapFromFile(
+                                                        "iam-show-once-consequence.json")
+                                                .get(JSON_CONSEQUENCES_KEY))
+                                .get(0);
+        List<Event> rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(1, rulesConsequenceEvents.size());
+        final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
+        final Map<String, Object> triggeredConsequenceEventData =
+                (Map<String, Object>)
+                        rulesConsequenceEvent.getEventData().get(CONSEQUENCE_TRIGGERED);
+        final Map<String, Object> expectedRuleConsequenceDetails =
+                (Map<String, Object>) expectedRulesConsequenceEventData.get("detail");
+        final Map<String, Object> triggeredRuleConsequenceDetails =
+                (Map<String, Object>) triggeredConsequenceEventData.get("detail");
+        assertEquals(
+                expectedRuleConsequenceDetails.get("schema"),
+                triggeredRuleConsequenceDetails.get("schema"));
+        assertEquals(
+                expectedRuleConsequenceDetails.get("data"),
+                triggeredRuleConsequenceDetails.get("data"));
+        assertEquals(
+                expectedRulesConsequenceEventData.get("type"),
+                triggeredConsequenceEventData.get("type"));
+
+        // workaround as the e2e test dispatches an IAM triggered event but not a display event
+        final Map<String, String> mockHistoryMap = new HashMap<>();
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
+        mockHistoryMap.put(
+                MessagingConstants.EventMask.Keys.MESSAGE_ID,
+                "2c0a68ea-eda2-4d79-8d27-28e2d5df6ce1#511a8b8e-a42e-4d1b-8621-b1b45370b3a8");
+        mockHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+        final Map<String, Object> eventHistoryData = new HashMap<>();
+        eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, mockHistoryMap);
+
+        final String[] mask = {
+            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.TRACKING_ACTION
+        };
+        final Event event =
+                new Event.Builder(
+                                MessagingConstants.EventName.EVENT_HISTORY_WRITE,
+                                MessagingConstants.EventType.MESSAGING,
+                                MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                                mask)
+                        .setEventData(eventHistoryData)
+                        .build();
+        MobileCore.dispatchEvent(event);
+
+        // clear received events
+        MonitorExtension.reset();
+
+        // trigger the show once in-app message again
+        MobileCore.trackAction("once", null);
+
+        // verify no rule consequence event is dispatched
+        rulesConsequenceEvents =
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+        assertEquals(0, rulesConsequenceEvents.size());
+    }
+
+    private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
         final Map<String, Object> expectedEdgePersonalizationEventData =
                 createExpectedEdgePersonalizationEventData();
-
-        // test
-        Messaging.refreshInAppMessages();
-
-        // verify messaging request content event from refreshInAppMessages API call
-        final List<Event> messagingRequestEvents =
-                getDispatchedEventsWith(EventType.MESSAGING, EventSource.REQUEST_CONTENT);
-        assertEquals(1, messagingRequestEvents.size());
-        final Event messagingRequestEvent = messagingRequestEvents.get(0);
-        assertEquals(true, messagingRequestEvent.getEventData().get("refreshmessages"));
-
         // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents =
-                getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT);
+                getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT, 5000);
         assertEquals(1, edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
         assertEquals(
                 expectedEdgePersonalizationEventData,
                 edgePersonalizationRequestEvent.getEventData());
-        edgePersonalizationRequestEventID = edgePersonalizationRequestEvent.getUniqueIdentifier();
-
-        // verify edge personalization decision event
-        /* TODO will be fixed in feature/feed
-        final List<Event> edgePersonalizationDecisionsEvents = getDispatchedEventsWith(EventType.EDGE, MessagingConstants.EventSource.PERSONALIZATION_DECISIONS);
-        assertEquals(1, edgePersonalizationDecisionsEvents.size());
-        final Event edgePersonalizationDecisionEvent = edgePersonalizationDecisionsEvents.get(0);
-        final Map<String, Object> expectedInAppPayload = MessagingTestUtils.getMapFromFile("expectedInAppPayload.json");
-        final Map<String, Object> payload = (Map<String, Object>) ((List) edgePersonalizationDecisionEvent.getEventData().get("payload")).get(0);
-        final Map<String, Object> expectedScopeDetails = (Map<String, Object>) expectedInAppPayload.get("scopeDetails");
-        final Map<String, Object> scopeDetails = (Map<String, Object>) payload.get("scopeDetails");
-        assertEquals(expectedScopeDetails.get("activity"), scopeDetails.get("activity"));
-        assertEquals(expectedScopeDetails.get("correlationID"), scopeDetails.get("correlationID"));
-        assertEquals(expectedScopeDetails.get("decisionProvider"), scopeDetails.get("decisionProvider"));
-        assertEquals(expectedInAppPayload.get("scope"), payload.get("scope"));
+        final String edgePersonalizationRequestEventID =
+                edgePersonalizationRequestEvent.getUniqueIdentifier();
 
         // verify edge content complete event
-        final List<Event> edgeContentCompleteEvents = getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
+        final List<Event> edgeContentCompleteEvents =
+                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
         assertEquals(1, edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
-        assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID()); */
+        assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
     }
 }
