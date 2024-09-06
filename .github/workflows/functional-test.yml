@@ -79,3 +79,15 @@ jobs:
         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: make functional-test
+
+     - name: Update Slack on failure
+        if: failure()
+        uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486      
+        with:        
+          status: ${{ job.status }}            
+          fields: repo,action,ref,workflow
+          text: |
+            E2E Testing for Inbound Personalization has Failed :(
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  
