@@ -46,7 +46,7 @@ class EnvironmentTests {
         assertEquals("bf7248f92b53/ed0ea2d62097/launch-a0faa600f503-development", Environment.getAppId())
 
         Environment.buildConfigEnvironment = "stageVA7"
-        assertEquals("staging/1b50a869c4a2/0ae7a3b5fdbf/launch-55942f2836d4-development", Environment.getAppId())
+        assertEquals("staging/1b50a869c4a2/dfc312636dbd/launch-325dd1746c45-development", Environment.getAppId())
     }
 
     @Test
@@ -59,7 +59,7 @@ class EnvironmentTests {
     @Test
     fun testConfigurationUpdates() {
         Environment.buildConfigEnvironment = "stageVA7"
-        assertEquals(mapOf("edge.environment" to "int"), Environment.configurationUpdates())
+        assertEquals(mapOf("edge.environment" to "int", "edge.configId" to "1ddb7c29-5a00-4fbc-b8b3-1370ddc5bacc"), Environment.configurationUpdates())
 
         Environment.buildConfigEnvironment = "prodVA7"
         assertEquals(mapOf("edge.environment" to ""), Environment.configurationUpdates())
