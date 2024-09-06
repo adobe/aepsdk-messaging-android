@@ -23,7 +23,7 @@ on:
       branch:
         description: 'Branch to use when running functional tests'
         required: false
-        default: 'configurable-e2e-tests'
+        default: 'main'
       id:
         description: 'Identifier for the run'
         required: false
