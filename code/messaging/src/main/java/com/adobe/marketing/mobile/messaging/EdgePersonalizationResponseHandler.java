@@ -34,6 +34,7 @@ import com.adobe.marketing.mobile.util.UrlUtils;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -143,6 +144,13 @@ class EdgePersonalizationResponseHandler {
                 if (inAppRules != null) {
                     final List<LaunchRule> rulesToReplace = new ArrayList<>();
                     for (final Map.Entry<Surface, List<LaunchRule>> entry : inAppRules.entrySet()) {
+                        // MOB-21846 - iam items are returned in reverse priority order, so we need
+                        // to
+                        // flip the order of the list prior to saving them and hydrating the rules
+                        // engine. this allows the highest priority item to be shown first when
+                        // rules
+                        // engine evaluates top-down
+                        Collections.reverse(entry.getValue());
                         rulesToReplace.addAll(entry.getValue());
                     }
                     if (!MessagingUtils.isNullOrEmpty(rulesToReplace)) {
@@ -581,6 +589,14 @@ class EdgePersonalizationResponseHandler {
                             "Updating in-app message definitions for surfaces %s.",
                             newSurfaces);
 
+                    // MOB-21846 - iam items are returned in reverse priority order, so we need to
+                    // flip the order of the list prior to saving them and hydrating the rules
+                    // engine. this allows the highest priority item to be shown first when rules
+                    // engine evaluates top-down
+                    for (final Map.Entry<Surface, List<LaunchRule>> entry : rulesMaps.entrySet()) {
+                        Collections.reverse(entry.getValue());
+                    }
+
                     // replace rules for each in-app surface we got back
                     inAppRulesBySurface.putAll(rulesMaps);
 
@@ -879,8 +895,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Cache any asset URL's present in each {@code RuleConsequence} {@link
-     * com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence} detail.
+     * Cache any asset URL's present in each {@code RuleConsequence} {@link RuleConsequence} detail.
      *
      * @param ruleConsequences A {@link List<RuleConsequence>} containing an in-app message rule
      *     consequences.
