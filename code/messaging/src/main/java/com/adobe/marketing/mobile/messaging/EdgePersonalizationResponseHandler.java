@@ -895,7 +895,7 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Cache any asset URL's present in each {@code RuleConsequence} {@link RuleConsequence} detail.
+     * Cache any asset URL's present in each {@link RuleConsequence} detail.
      *
      * @param ruleConsequences A {@link List<RuleConsequence>} containing an in-app message rule
      *     consequences.
