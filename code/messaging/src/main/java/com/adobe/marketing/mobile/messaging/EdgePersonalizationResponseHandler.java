@@ -145,11 +145,9 @@ class EdgePersonalizationResponseHandler {
                     final List<LaunchRule> rulesToReplace = new ArrayList<>();
                     for (final Map.Entry<Surface, List<LaunchRule>> entry : inAppRules.entrySet()) {
                         // MOB-21846 - iam items are returned in reverse priority order, so we need
-                        // to
-                        // flip the order of the list prior to saving them and hydrating the rules
-                        // engine. this allows the highest priority item to be shown first when
-                        // rules
-                        // engine evaluates top-down
+                        // to flip the order of the list prior to saving them and hydrating the
+                        // rules engine. this allows the highest priority item to be shown first
+                        // when rules engine evaluates top-down.
                         Collections.reverse(entry.getValue());
                         rulesToReplace.addAll(entry.getValue());
                     }
