@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.messaging.MessagingTestConstants.EventDataKeys.Messaging.Inbound.PropositionEventType.*;
 import static org.junit.Assert.assertEquals;
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
@@ -30,6 +31,9 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(
                 MessagingEdgeEventType.PUSH_CUSTOM_ACTION,
                 MessagingEdgeEventType.valueOf("PUSH_CUSTOM_ACTION"));
+        assertEquals(
+                MessagingEdgeEventType.SUPPRESSED_DISPLAY,
+                MessagingEdgeEventType.valueOf("SUPPRESSED_DISPLAY"));
     }
 
     @Test
@@ -38,8 +42,18 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(7, MessagingEdgeEventType.INTERACT.getValue());
         assertEquals(8, MessagingEdgeEventType.TRIGGER.getValue());
         assertEquals(9, MessagingEdgeEventType.DISPLAY.getValue());
+        assertEquals(11, MessagingEdgeEventType.SUPPRESSED_DISPLAY.getValue());
         assertEquals(4, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.getValue());
         assertEquals(5, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.getValue());
+    }
+
+    @Test
+    public void test_MessagingEdgeEventType_getPropositionEventType() {
+        assertEquals(PROPOSITION_EVENT_TYPE_DISMISS, MessagingEdgeEventType.DISMISS.getPropositionEventType());
+        assertEquals(PROPOSITION_EVENT_TYPE_INTERACT, MessagingEdgeEventType.INTERACT.getPropositionEventType());
+        assertEquals(PROPOSITION_EVENT_TYPE_TRIGGER, MessagingEdgeEventType.TRIGGER.getPropositionEventType());
+        assertEquals(PROPOSITION_EVENT_TYPE_DISPLAY, MessagingEdgeEventType.DISPLAY.getPropositionEventType());
+        assertEquals(PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY, MessagingEdgeEventType.SUPPRESSED_DISPLAY.getPropositionEventType());
     }
 
     @Test
@@ -64,5 +78,8 @@ public class MessagingEdgeEventTypeTests {
                 MessagingTestConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys
                         .EventType.CUSTOM_ACTION,
                 MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.SUPPRESSED_DISPLAY,
+                MessagingEdgeEventType.SUPPRESSED_DISPLAY.toString());
     }
 }

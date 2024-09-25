@@ -12,12 +12,17 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.ConflictingPresentation;
+import com.adobe.marketing.mobile.services.ui.DelegateGateNotMet;
 import com.adobe.marketing.mobile.services.ui.InAppMessage;
 import com.adobe.marketing.mobile.services.ui.Presentable;
 import com.adobe.marketing.mobile.services.ui.PresentationError;
+import com.adobe.marketing.mobile.services.ui.SuppressedByAppDeveloper;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventListener;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
@@ -83,7 +88,43 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
     public void onError(
             @NonNull final Presentable<InAppMessage> presentable,
             @NonNull final PresentationError presentationError) {
+        PresentableMessageMapper.InternalMessage message =
+                (PresentableMessageMapper.InternalMessage)
+                        PresentableMessageMapper.getInstance()
+                                .getMessageFromPresentableId(
+                                        presentable.getPresentation().getId());
+        if (message != null) {
+            final String errorReason = getErrorReason(presentationError);
+            if (!StringUtils.isNullOrEmpty(errorReason)) {
+                if (message.getAutoTrack()) {
+                    message.track(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                }
+                message.recordEventHistory(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+            }
+
+        }
+
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");
+    }
+
+    /**
+     * Returns the error reason from the {@code PresentationError} instance.
+     * For now we are only interested in {@link SuppressedByAppDeveloper} and
+     * {@link ConflictingPresentation}. An empty string will be returned for other
+     * {@code PresentationError} types.
+     *
+     * @param presentationError the {@link PresentationError} which occurred
+     * @return the error reason {@code String} if available, otherwise null
+     */
+    private static @Nullable String getErrorReason(@NonNull PresentationError presentationError) {
+        final Class presentationErrorClass = presentationError.getClass();
+        String errorReason = null;
+        if (presentationErrorClass.equals(SuppressedByAppDeveloper.class)) {
+            errorReason = ((SuppressedByAppDeveloper) presentationError).getReason();
+        } else if (presentationErrorClass.equals(ConflictingPresentation.class)) {
+            errorReason = ((ConflictingPresentation) presentationError).getReason();
+        }
+        return errorReason;
     }
 
     /**

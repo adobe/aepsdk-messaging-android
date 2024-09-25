@@ -253,6 +253,7 @@ public final class MessagingConstants {
                     static final String PAYLOAD = "payload";
                     static final String ITEMS = "items";
                     static final String ID = "id";
+                    static final String REASON = "reason";
                     static final String SCOPE = "scope";
                     static final String SCOPE_DETAILS = "scopeDetails";
                     static final String QUERY = "query";
