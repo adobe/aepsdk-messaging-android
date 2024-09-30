@@ -17,6 +17,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.util.DataReader
 
 class SingleFeedActivity : AppCompatActivity() {
 
@@ -30,24 +31,25 @@ class SingleFeedActivity : AppCompatActivity() {
         val feedActivityButton: Button = findViewById(R.id.feedActivityActionButton)
 
         // retrieve feed content from the intent
-        val contentMap = intent.getSerializableExtra("content") as HashMap<String, String?>
+        val contentMap = intent.getSerializableExtra("content") as HashMap<String, Object>
 
         // show single feed item
-        feedActivityItemTitle.text = contentMap["title"]
+        feedActivityItemTitle.text = DataReader.getStringMap(contentMap, "title")["content"] ?: "defaultTitle"
         feedActivityItemImage.setImageBitmap(
-            contentMap["imageUrl"]
-            ?.let { ImageDownloader.getImage(it) })
+            DataReader.getStringMap(contentMap, "image").get("url")?.let {
+                ImageDownloader.getImage(it)
+            })
         feedActivityItemImage.refreshDrawableState()
-        feedActivityBody.text = contentMap["body"]
-        val feedbackButtonText = contentMap["actionTitle"]
-        if (feedbackButtonText.isNullOrEmpty()) {
-            feedActivityButton.visibility = Button.GONE
-        }
-        else {
-            feedActivityButton.text = feedbackButtonText
+        feedActivityBody.text = DataReader.getStringMap(contentMap, "body")["content"] ?: "defaultBody"
+        val buttonList = DataReader.optTypedListOfMap(Object::class.java, contentMap, "buttons", emptyList())
+        if (buttonList.isNotEmpty()) {
+            feedActivityButton.text =
+                DataReader.optStringMap(buttonList[0], "text", emptyMap())["content"]
+                    ?: "defaultButton"
             feedActivityButton.setOnClickListener {
-                contentMap["actionUrl"]
-                    ?.let { it1 -> ServiceProvider.getInstance().uriService.openUri(it1) }
+                DataReader.getString(buttonList[0], "actionUrl")?.let { it1 ->
+                    ServiceProvider.getInstance().uriService.openUri(it1)
+                }
             }
         }
     }
