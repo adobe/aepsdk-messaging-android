@@ -140,5 +140,15 @@ public class ContentCardSchemaData implements SchemaData {
             return;
         }
         parent.track(interaction, eventType, null);
+
+        // MOB-21651 - manually write a disqualify event to event history if the card is being
+        // dismissed. this code will be removed later when we have rule consequences to manage
+        // the event history write.
+        if (eventType == MessagingEdgeEventType.DISMISS && parent.propositionReference != null) {
+            PropositionHistory.record(
+                    parent.getProposition().getActivityId(),
+                    MessagingEdgeEventType.DISQUALIFY,
+                    null);
+        }
     }
 }
