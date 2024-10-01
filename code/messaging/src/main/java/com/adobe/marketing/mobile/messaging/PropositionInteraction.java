@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 import androidx.annotation.NonNull;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;

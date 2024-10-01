@@ -54,7 +54,8 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    //implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    implementation("com.github.adobe.aepsdk-core-android:core:a0687ff642")
     implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion")
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
     implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")

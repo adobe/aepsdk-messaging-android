@@ -49,11 +49,21 @@ public class MessagingEdgeEventTypeTests {
 
     @Test
     public void test_MessagingEdgeEventType_getPropositionEventType() {
-        assertEquals(PROPOSITION_EVENT_TYPE_DISMISS, MessagingEdgeEventType.DISMISS.getPropositionEventType());
-        assertEquals(PROPOSITION_EVENT_TYPE_INTERACT, MessagingEdgeEventType.INTERACT.getPropositionEventType());
-        assertEquals(PROPOSITION_EVENT_TYPE_TRIGGER, MessagingEdgeEventType.TRIGGER.getPropositionEventType());
-        assertEquals(PROPOSITION_EVENT_TYPE_DISPLAY, MessagingEdgeEventType.DISPLAY.getPropositionEventType());
-        assertEquals(PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY, MessagingEdgeEventType.SUPPRESSED_DISPLAY.getPropositionEventType());
+        assertEquals(
+                PROPOSITION_EVENT_TYPE_DISMISS,
+                MessagingEdgeEventType.DISMISS.getPropositionEventType());
+        assertEquals(
+                PROPOSITION_EVENT_TYPE_INTERACT,
+                MessagingEdgeEventType.INTERACT.getPropositionEventType());
+        assertEquals(
+                PROPOSITION_EVENT_TYPE_TRIGGER,
+                MessagingEdgeEventType.TRIGGER.getPropositionEventType());
+        assertEquals(
+                PROPOSITION_EVENT_TYPE_DISPLAY,
+                MessagingEdgeEventType.DISPLAY.getPropositionEventType());
+        assertEquals(
+                PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY,
+                MessagingEdgeEventType.SUPPRESSED_DISPLAY.getPropositionEventType());
     }
 
     @Test

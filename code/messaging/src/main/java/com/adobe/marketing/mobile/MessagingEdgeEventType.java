@@ -35,7 +35,8 @@ public enum MessagingEdgeEventType {
     static final String PROPOSITION_EVENT_TYPE_DISPLAY_STRING = "decisioning.propositionDisplay";
     static final String PROPOSITION_EVENT_TYPE_INTERACT_STRING = "decisioning.propositionInteract";
     static final String PROPOSITION_EVENT_TYPE_DISMISS_STRING = "decisioning.propositionDismiss";
-    static final String PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY_STRING = "decisioning.propositionSuppressDisplay";
+    static final String PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY_STRING =
+            "decisioning.propositionSuppressDisplay";
 
     final int value;
 
