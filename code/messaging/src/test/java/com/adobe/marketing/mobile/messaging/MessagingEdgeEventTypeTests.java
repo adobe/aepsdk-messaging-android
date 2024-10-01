@@ -26,14 +26,16 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(MessagingEdgeEventType.TRIGGER, MessagingEdgeEventType.valueOf("TRIGGER"));
         assertEquals(MessagingEdgeEventType.DISPLAY, MessagingEdgeEventType.valueOf("DISPLAY"));
         assertEquals(
+                MessagingEdgeEventType.DISQUALIFY, MessagingEdgeEventType.valueOf("DISQUALIFY"));
+        assertEquals(
+                MessagingEdgeEventType.SUPPRESSED_DISPLAY,
+                MessagingEdgeEventType.valueOf("SUPPRESSED_DISPLAY"));
+        assertEquals(
                 MessagingEdgeEventType.PUSH_APPLICATION_OPENED,
                 MessagingEdgeEventType.valueOf("PUSH_APPLICATION_OPENED"));
         assertEquals(
                 MessagingEdgeEventType.PUSH_CUSTOM_ACTION,
                 MessagingEdgeEventType.valueOf("PUSH_CUSTOM_ACTION"));
-        assertEquals(
-                MessagingEdgeEventType.SUPPRESSED_DISPLAY,
-                MessagingEdgeEventType.valueOf("SUPPRESSED_DISPLAY"));
     }
 
     @Test
@@ -42,6 +44,7 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(7, MessagingEdgeEventType.INTERACT.getValue());
         assertEquals(8, MessagingEdgeEventType.TRIGGER.getValue());
         assertEquals(9, MessagingEdgeEventType.DISPLAY.getValue());
+        assertEquals(10, MessagingEdgeEventType.DISQUALIFY.getValue());
         assertEquals(11, MessagingEdgeEventType.SUPPRESSED_DISPLAY.getValue());
         assertEquals(4, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.getValue());
         assertEquals(5, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.getValue());
@@ -62,6 +65,9 @@ public class MessagingEdgeEventTypeTests {
                 PROPOSITION_EVENT_TYPE_DISPLAY,
                 MessagingEdgeEventType.DISPLAY.getPropositionEventType());
         assertEquals(
+                PROPOSITION_EVENT_TYPE_DISQUALIFY,
+                MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+        assertEquals(
                 PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY,
                 MessagingEdgeEventType.SUPPRESSED_DISPLAY.getPropositionEventType());
     }
@@ -80,6 +86,9 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISPLAY,
                 MessagingEdgeEventType.DISPLAY.toString());
+        assertEquals(
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.DISQUALIFY,
+                MessagingEdgeEventType.DISQUALIFY.toString());
         assertEquals(
                 MessagingTestConstants.EventDataKeys.Messaging.PushNotificationDetailsDataKeys
                         .EventType.OPENED,
