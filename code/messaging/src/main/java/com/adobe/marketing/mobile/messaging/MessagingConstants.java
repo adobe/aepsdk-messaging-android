@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messaging;
 public final class MessagingConstants {
 
     public static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "3.2.0";
+    static final String EXTENSION_VERSION = "3.2.1";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
@@ -253,6 +253,7 @@ public final class MessagingConstants {
                     static final String PAYLOAD = "payload";
                     static final String ITEMS = "items";
                     static final String ID = "id";
+                    static final String REASON = "reason";
                     static final String SCOPE = "scope";
                     static final String SCOPE_DETAILS = "scopeDetails";
                     static final String QUERY = "query";
