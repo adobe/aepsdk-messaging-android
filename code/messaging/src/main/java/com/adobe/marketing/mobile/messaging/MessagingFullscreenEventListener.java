@@ -111,11 +111,10 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
      */
     private static @Nullable String getErrorReason(
             @NonNull final PresentationError presentationError) {
-        final Class presentationErrorClass = presentationError.getClass();
         String errorReason = null;
-        if (presentationErrorClass.equals(SuppressedByAppDeveloper.class)) {
+        if (presentationError instanceof SuppressedByAppDeveloper) {
             errorReason = ((SuppressedByAppDeveloper) presentationError).getReason();
-        } else if (presentationErrorClass.equals(ConflictingPresentation.class)) {
+        } else if (presentationError instanceof ConflictingPresentation) {
             errorReason = ((ConflictingPresentation) presentationError).getReason();
         }
         return errorReason;
