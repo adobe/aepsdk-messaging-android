@@ -32,7 +32,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.messaging.Proposition
-import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.InAppMessage
