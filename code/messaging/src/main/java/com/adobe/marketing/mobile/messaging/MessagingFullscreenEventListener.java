@@ -103,8 +103,8 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
 
     /**
      * Returns the error reason from the {@code PresentationError} instance. For now we are only
-     * interested in {@link SuppressedByAppDeveloper} and {@link ConflictingPresentation}. An empty
-     * string will be returned for other {@code PresentationError} types.
+     * interested in {@link SuppressedByAppDeveloper} and {@link ConflictingPresentation}. Null will
+     * be returned for other {@code PresentationError} types.
      *
      * @param presentationError the {@link PresentationError} which occurred
      * @return the error reason {@code String} if available, otherwise null
