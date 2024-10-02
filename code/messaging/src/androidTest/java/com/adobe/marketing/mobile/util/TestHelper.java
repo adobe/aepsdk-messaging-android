@@ -131,7 +131,7 @@ public class TestHelper {
 
     /**
      * {@code TestRule} which sets up the MobileCore for testing before each test execution, and
-     * tearsdown the MobileCore after test execution. This version of the class uses the actual
+     * tears down the MobileCore after test execution. This version of the class uses the actual
      * network service.
      *
      * <p>To use, add the following to your test class:

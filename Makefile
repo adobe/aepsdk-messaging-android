@@ -1,5 +1,8 @@
 EXTENSION-LIBRARY-FOLDER-NAME = messaging
 TEST-APP-FOLDER-NAME = testapp
+CURRENT_DIRECTORY := ${CURDIR}
+MESSAGING_GRADLE_FILE = $(CURRENT_DIRECTORY)/code/messaging/build.gradle.kts
+MESSAGING_GRADLE_TEMP_FILE = $(MESSAGING_GRADLE_FILE).backup
 
 init:
 	git config core.hooksPath .githooks
@@ -56,3 +59,13 @@ ci-publish-staging: assemble-phone-release
 
 ci-publish: assemble-phone-release
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publishReleasePublicationToSonatypeRepository -Prelease)
+
+# usage - 
+# make set-environment ENV=[environment]
+set-environment:
+	@echo "Setting E2E functional testing to run in environment '$(ENV)'"
+	sed -i.backup 's|prodVA7|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
+	sed -i.backup 's|prodAUS5|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
+	sed -i.backup 's|prodNLD2|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
+	sed -i.backup 's|stageVA7|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
+	rm ${MESSAGING_GRADLE_TEMP_FILE}

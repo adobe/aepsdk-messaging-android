@@ -10,8 +10,10 @@
 */
 package com.adobe.marketing.mobile.messaging;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -48,7 +50,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * Util class used by both Functional and Unit tests
@@ -333,7 +334,32 @@ public class MessagingTestUtils {
         return PropositionInfo.create(messagePayload);
     }
 
-    static List<Map<String, Object>> generateMessagePayload(final MessageTestConfig config) {
+    /**
+     * Modify the last two digits of the generated in-app message proposition's
+     * consequence ID to be in the range of 00-99. This modification is used in the verification
+     * of the highest priority ordering of in-app messages loaded in the rules engine.
+     *
+     * @param index the index of the current in-app message proposition item being modified
+     * @param item the in-app message proposition item {@link Map<String, Object>} to be modified
+     * @return the modified in-app message proposition item {@link Map<String, Object>}
+     */
+    private static Map<String, Object> inAppMessageConsequenceIdModification(final int index, final Map<String, Object> item) {
+        final Map<String, Object> data = (Map<String, Object>) item.get("data");
+        final List<Map<String, Object>> rules = (List<Map<String, Object>>) data.get("rules");
+        final List<Map<String, Object>> consequences = (List<Map<String, Object>>) rules.get(0).get("consequences");
+        final Map<String, Object> consequence = consequences.get(0);
+        String id = consequence.get("id").toString();
+        id = id.replace(id.substring(id.length() - 2), String.format("%02d", index));
+        consequence.put("id", id);
+        consequences.remove(0);
+        consequences.add(consequence);
+        rules.get(0).put("consequences", consequences);
+        data.put("rules", rules);
+        item.put("data", data);
+        return item;
+    }
+
+    static List<Map<String, Object>> generateInAppPayload(final MessageTestConfig config) {
 
         List<Map<String, Object>> payload = new ArrayList<>();
         if (config.hasEmptyPayload) {
@@ -342,6 +368,11 @@ public class MessagingTestUtils {
 
         for (int count = 0; count < config.count; count++) {
             Map<String, Object> iamProposition = getMapFromFile("inappPropositionV2.json");
+
+            // modify the last two characters in the proposition's consequence id to verify
+            // highest priority ordering. the replaced id characters will be in the range of 00-99
+            Map<String, Object> item = inAppMessageConsequenceIdModification(count, (Map<String, Object>) ((List) iamProposition.get("items")).get(0));
+            iamProposition.put("items", Collections.singletonList(item));
 
             // items modification
             if (config.isMissingItems) {
@@ -368,6 +399,31 @@ public class MessagingTestUtils {
             payload.add(iamProposition);
         }
         return payload;
+    }
+
+    /**
+     * Verifies the provided {@link List<LaunchRule>} are in highest priority order. The consequence
+     * ID's of each in-app message have the last two characters modified to be in a range of 00-99.
+     * e.g. if there are 5 in-app messages, the values of the last two characters in each
+     * consequence ID are expected to be in the order of 04, 03, 02, 01, 00.
+     *
+     * @param inAppRules the list of in-app rules to be verified
+     */
+    static void verifyInAppRulesOrdering(final List<LaunchRule> inAppRules) {
+        // verify the parsed rule consequence ids are in highest priority order
+        int index = inAppRules.size() - 1;
+        for (final LaunchRule inAppRule : inAppRules) {
+            final String consequenceId = inAppRule.getConsequenceList().get(0).getId();
+            final String consequenceIdSubstring = consequenceId.substring(consequenceId.length() - 2);
+            final String expectedConsequenceId =
+                    index >= 10
+                            ? String.valueOf(index)
+                            : "0" + index;
+            assertEquals(
+                    expectedConsequenceId,
+                    consequenceIdSubstring);
+            index--;
+        }
     }
 
     static List<Map<String, Object>> generateFeedPayload(final MessageTestConfig config) {
