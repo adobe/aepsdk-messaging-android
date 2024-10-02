@@ -241,7 +241,7 @@ public class MessagingTestConstants {
                     public static final String PROPOSITION_EVENT_TYPE_TRIGGER = "trigger";
                     public static final String PROPOSITION_EVENT_TYPE_DISPLAY = "display";
                     public static final String PROPOSITION_EVENT_TYPE_DISQUALIFY = "disqualify";
-                    public static final String PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY = "suppressDisplay";
+                    public static final String PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY = "suppressDisplay";
 
                     private PropositionEventType() {
                     }
@@ -253,7 +253,7 @@ public class MessagingTestConstants {
                     public static final String TRIGGER = "decisioning.propositionTrigger";
                     public static final String DISPLAY = "decisioning.propositionDisplay";
                     public static final String DISQUALIFY = "decisioning.propositionDisqualify";
-                    public static final String SUPPRESSED_DISPLAY = "decisioning.propositionSuppressDisplay";
+                    public static final String SUPPRESS_DISPLAY = "decisioning.propositionSuppressDisplay";
                     public static final String PERSONALIZATION_REQUEST = "personalization.request";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";

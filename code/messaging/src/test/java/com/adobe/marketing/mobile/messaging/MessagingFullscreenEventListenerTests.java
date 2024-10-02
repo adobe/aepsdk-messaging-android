@@ -250,10 +250,10 @@ public class MessagingFullscreenEventListenerTests {
 
                         // verify
                         verify(mockMessage, times(0))
-                                .track("Conflict", MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                .track("Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         verify(mockMessage, times(1))
                                 .recordEventHistory(
-                                        "Conflict", MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        "Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         logMockedStatic.verify(
                                 () -> Log.debug(anyString(), anyString(), anyString()), times(1));
                     }
@@ -273,10 +273,10 @@ public class MessagingFullscreenEventListenerTests {
 
                         // verify
                         verify(mockMessage, times(1))
-                                .track("Conflict", MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                .track("Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         verify(mockMessage, times(1))
                                 .recordEventHistory(
-                                        "Conflict", MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        "Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         logMockedStatic.verify(
                                 () -> Log.debug(anyString(), anyString(), anyString()), times(1));
                     }
@@ -296,11 +296,11 @@ public class MessagingFullscreenEventListenerTests {
                         verify(mockMessage, times(0))
                                 .track(
                                         "SuppressedByAppDeveloper",
-                                        MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         verify(mockMessage, times(1))
                                 .recordEventHistory(
                                         "SuppressedByAppDeveloper",
-                                        MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         logMockedStatic.verify(
                                 () -> Log.debug(anyString(), anyString(), anyString()), times(1));
                     }
@@ -322,11 +322,11 @@ public class MessagingFullscreenEventListenerTests {
                         verify(mockMessage, times(1))
                                 .track(
                                         "SuppressedByAppDeveloper",
-                                        MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         verify(mockMessage, times(1))
                                 .recordEventHistory(
                                         "SuppressedByAppDeveloper",
-                                        MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         logMockedStatic.verify(
                                 () -> Log.debug(anyString(), anyString(), anyString()), times(1));
                     }

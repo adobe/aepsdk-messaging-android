@@ -28,8 +28,8 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(
                 MessagingEdgeEventType.DISQUALIFY, MessagingEdgeEventType.valueOf("DISQUALIFY"));
         assertEquals(
-                MessagingEdgeEventType.SUPPRESSED_DISPLAY,
-                MessagingEdgeEventType.valueOf("SUPPRESSED_DISPLAY"));
+                MessagingEdgeEventType.SUPPRESS_DISPLAY,
+                MessagingEdgeEventType.valueOf("SUPPRESS_DISPLAY"));
         assertEquals(
                 MessagingEdgeEventType.PUSH_APPLICATION_OPENED,
                 MessagingEdgeEventType.valueOf("PUSH_APPLICATION_OPENED"));
@@ -45,7 +45,7 @@ public class MessagingEdgeEventTypeTests {
         assertEquals(8, MessagingEdgeEventType.TRIGGER.getValue());
         assertEquals(9, MessagingEdgeEventType.DISPLAY.getValue());
         assertEquals(10, MessagingEdgeEventType.DISQUALIFY.getValue());
-        assertEquals(11, MessagingEdgeEventType.SUPPRESSED_DISPLAY.getValue());
+        assertEquals(11, MessagingEdgeEventType.SUPPRESS_DISPLAY.getValue());
         assertEquals(4, MessagingEdgeEventType.PUSH_APPLICATION_OPENED.getValue());
         assertEquals(5, MessagingEdgeEventType.PUSH_CUSTOM_ACTION.getValue());
     }
@@ -68,8 +68,8 @@ public class MessagingEdgeEventTypeTests {
                 PROPOSITION_EVENT_TYPE_DISQUALIFY,
                 MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
         assertEquals(
-                PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY,
-                MessagingEdgeEventType.SUPPRESSED_DISPLAY.getPropositionEventType());
+                PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY,
+                MessagingEdgeEventType.SUPPRESS_DISPLAY.getPropositionEventType());
     }
 
     @Test
@@ -98,7 +98,7 @@ public class MessagingEdgeEventTypeTests {
                         .EventType.CUSTOM_ACTION,
                 MessagingEdgeEventType.PUSH_CUSTOM_ACTION.toString());
         assertEquals(
-                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.SUPPRESSED_DISPLAY,
-                MessagingEdgeEventType.SUPPRESSED_DISPLAY.toString());
+                MessagingTestConstants.EventDataKeys.Messaging.Inbound.EventType.SUPPRESS_DISPLAY,
+                MessagingEdgeEventType.SUPPRESS_DISPLAY.toString());
     }
 }

@@ -93,9 +93,9 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         if (message != null) {
             final String errorReason = getErrorReason(presentationError);
             if (!StringUtils.isNullOrEmpty(errorReason) && message.getAutoTrack()) {
-                message.track(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                message.track(errorReason, MessagingEdgeEventType.SUPPRESS_DISPLAY);
             }
-            message.recordEventHistory(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+            message.recordEventHistory(errorReason, MessagingEdgeEventType.SUPPRESS_DISPLAY);
         }
 
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");

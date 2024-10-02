@@ -125,7 +125,7 @@ class PropositionInteraction {
                         MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, interaction);
                 propositionAction.put(
                         MessagingConstants.EventDataKeys.Messaging.Inbound.Key.LABEL, interaction);
-            } else if (eventType == MessagingEdgeEventType.SUPPRESSED_DISPLAY) {
+            } else if (eventType == MessagingEdgeEventType.SUPPRESS_DISPLAY) {
                 propositionAction.put(
                         MessagingConstants.EventDataKeys.Messaging.Inbound.Key.REASON, interaction);
             }
