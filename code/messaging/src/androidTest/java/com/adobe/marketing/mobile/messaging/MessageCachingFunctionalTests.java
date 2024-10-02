@@ -11,17 +11,22 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static com.adobe.marketing.mobile.util.TestHelper.getDispatchedEventsWith;
+import static com.adobe.marketing.mobile.util.TestHelper.resetTestExpectations;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.adobe.marketing.mobile.Edge;
+import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.edge.identity.Identity;
 import com.adobe.marketing.mobile.util.TestHelper;
+import com.adobe.marketing.mobile.util.TestRetryRule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +53,9 @@ public class MessageCachingFunctionalTests {
             RuleChain.outerRule(new TestHelper.SetupCoreRule())
                     .around(new TestHelper.RegisterMonitorExtensionRule());
 
+    // A test will be retried at most 3 times
+    @Rule public TestRetryRule totalTestCount = new TestRetryRule(3);
+
     MessagingCacheUtilities messagingCacheUtilities = new MessagingCacheUtilities();
 
     // --------------------------------------------------------------------------------------------
@@ -72,9 +80,14 @@ public class MessageCachingFunctionalTests {
         MobileCore.registerExtensions(
                 extensions,
                 o -> {
-                    Map<String, Object> testConfig =
-                            MessagingTestUtils.getMapFromFile("functionalTestConfig.json");
-                    MobileCore.updateConfiguration(testConfig);
+                    HashMap<String, Object> config =
+                            new HashMap<String, Object>() {
+                                {
+                                    put("messaging.eventDataset", "somedatasetid");
+                                    put("edge.configId", "someedgeconfigid");
+                                }
+                            };
+                    MobileCore.updateConfiguration(config);
                     // wait for configuration to be set
                     try {
                         Thread.sleep(1000);
@@ -85,6 +98,14 @@ public class MessageCachingFunctionalTests {
                 });
 
         latch.await(2, TimeUnit.SECONDS);
+
+        // wait for the initial edge personalization request to be made before resetting the monitor
+        // extension
+        List<Event> dispatchedEvents =
+                getDispatchedEventsWith(
+                        MessagingTestConstants.EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
+        assertEquals(1, dispatchedEvents.size());
+        resetTestExpectations();
 
         // ensure cache is cleared before testing
         MessagingTestUtils.cleanCache();
@@ -99,13 +120,13 @@ public class MessageCachingFunctionalTests {
     }
 
     @Test
-    public void testMessageCaching_CachePropositions() {
+    public void testMessageCaching_CacheThenRetrieveV1Propositions() {
         final Surface surface = new Surface();
         final Map<Surface, List<Proposition>> propositions = new HashMap<>();
         final List<Proposition> propositionList = new ArrayList<>();
-        propositionList.add(
-                Proposition.fromEventData(
-                        MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json")));
+        final Map<String, Object> propositionEventData =
+                MessagingTestUtils.getMapFromFile("personalizationPayloadV1.json");
+        propositionList.add(Proposition.fromEventData(propositionEventData));
         propositions.put(surface, propositionList);
         // add a messaging payload to the cache
         messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
@@ -116,7 +137,34 @@ public class MessageCachingFunctionalTests {
         final Map<Surface, List<Proposition>> cachedPropositions =
                 messagingCacheUtilities.getCachedPropositions();
         final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
-        expectedPropositions.add(MessagingTestUtils.getMapFromFile("personalization_payload.json"));
+        expectedPropositions.add(propositionEventData);
+        final String expectedPropositionString =
+                MessagingTestUtils.convertPropositionsToString(
+                        InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));
+        assertEquals(
+                expectedPropositionString,
+                MessagingTestUtils.convertPropositionsToString(cachedPropositions.get(surface)));
+    }
+
+    @Test
+    public void testMessageCaching_CacheThenRetrieveV2Propositions() {
+        final Surface surface = new Surface();
+        final Map<Surface, List<Proposition>> propositions = new HashMap<>();
+        final List<Proposition> propositionList = new ArrayList<>();
+        final Map<String, Object> propositionEventData =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2.json");
+        propositionList.add(Proposition.fromEventData(propositionEventData));
+        propositions.put(surface, propositionList);
+        // add a messaging payload to the cache
+        messagingCacheUtilities.cachePropositions(propositions, Collections.EMPTY_LIST);
+        // wait for event and rules processing
+        TestHelper.sleep(1000);
+        // verify message payload was cached
+        assertTrue(messagingCacheUtilities.arePropositionsCached());
+        final Map<Surface, List<Proposition>> cachedPropositions =
+                messagingCacheUtilities.getCachedPropositions();
+        final List<Map<String, Object>> expectedPropositions = new ArrayList<>();
+        expectedPropositions.add(propositionEventData);
         final String expectedPropositionString =
                 MessagingTestUtils.convertPropositionsToString(
                         InternalMessagingUtils.getPropositionsFromPayloads(expectedPropositions));

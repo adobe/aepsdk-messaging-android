@@ -493,7 +493,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 1;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
                         Map<String, Object> eventData = new HashMap<>();
                         eventData.put("payload", payload);
                         eventData.put("requestEventId", "TESTING_ID");
@@ -531,7 +531,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 3;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
                         Map<String, Object> eventData = new HashMap<>();
                         eventData.put("payload", payload);
                         eventData.put("requestEventId", "TESTING_ID");
@@ -554,7 +554,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // mock a second personalization event containing the same requestId
                         config.count = 1;
-                        payload = MessagingTestUtils.generateMessagePayload(config);
+                        payload = MessagingTestUtils.generateInAppPayload(config);
                         eventData = new HashMap<>();
                         eventData.put("payload", payload);
                         eventData.put("requestEventId", "TESTING_ID");
@@ -628,7 +628,7 @@ public class EdgePersonalizationResponseHandlerTests {
     }
 
     @Test
-    public void test_handleEdgePersonalizationNotification_InValidPayload() {
+    public void test_handleEdgePersonalizationNotification_InvalidPayload() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
@@ -638,7 +638,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         config.count = 1;
                         config.isMissingMessageId = true;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
                         Map<String, Object> eventData = new HashMap<>();
                         eventData.put("payload", payload);
                         eventData.put("requestEventId", "TESTING_ID");
@@ -736,7 +736,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 3;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
 
                         // setup in progress feed propositions and add them to the payload
                         config.count = 4;
@@ -777,6 +777,10 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingRulesEngine, times(1))
                                 .replaceRules(inAppRulesListCaptor.capture());
                         assertEquals(3, inAppRulesListCaptor.getValue().size());
+
+                        // verify in-app rules are in priority order
+                        MessagingTestUtils.verifyInAppRulesOrdering(
+                                inAppRulesListCaptor.getValue());
 
                         // verify parsed rules replaced in feed rules engine
                         verify(mockContentCardRulesEngine, times(1))
@@ -823,7 +827,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 3;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
 
                         // setup in progress feed propositions and add them to the payload
                         config.count = 4;
@@ -859,7 +863,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         // cache propositions initially
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
-                        // test : subsequent response does not contain cached previously in-app
+                        // test : subsequent response does not contain previously cached in-app
                         // propositions
                         Map<String, Object> secondEventData = new HashMap<>();
                         secondEventData.put("payload", feedPayload);
@@ -887,6 +891,10 @@ public class EdgePersonalizationResponseHandlerTests {
                         verify(mockMessagingRulesEngine, times(1))
                                 .replaceRules(inAppRulesListCaptor.capture());
                         assertEquals(3, inAppRulesListCaptor.getValue().size());
+
+                        // verify in-app rules are in priority order
+                        MessagingTestUtils.verifyInAppRulesOrdering(
+                                inAppRulesListCaptor.getValue());
 
                         // verify parsed rules replaced in feed rules engine for both responses
                         verify(mockContentCardRulesEngine, times(2))
@@ -1056,7 +1064,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         MessageTestConfig config = new MessageTestConfig();
                         config.count = 3;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
 
                         // setup in progress feed propositions and add them to the payload
                         config = new MessageTestConfig();
@@ -1100,7 +1108,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         config.isMissingRulesKey = true;
                         config.count = 1;
                         List<Map<String, Object>> payload =
-                                MessagingTestUtils.generateMessagePayload(config);
+                                MessagingTestUtils.generateInAppPayload(config);
 
                         // setup in progress invalid feed propositions and add them to the payload
                         config = new MessageTestConfig();
@@ -1241,7 +1249,7 @@ public class EdgePersonalizationResponseHandlerTests {
                             cachedPayload.put(
                                     new Surface(),
                                     InternalMessagingUtils.getPropositionsFromPayloads(
-                                            MessagingTestUtils.generateMessagePayload(config)));
+                                            MessagingTestUtils.generateInAppPayload(config)));
                         } catch (Exception e) {
                             fail(e.getMessage());
                         }
@@ -1464,7 +1472,6 @@ public class EdgePersonalizationResponseHandlerTests {
     @Test
     public void
             test_cachedPropositions_cacheLoadedOnEdgePersonalizationResponseHandlerConstruction() {
-        int inAppCount = 5;
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
@@ -1480,12 +1487,9 @@ public class EdgePersonalizationResponseHandlerTests {
                         Map<Surface, List<Proposition>> payload = new HashMap<>();
                         try {
                             MessageTestConfig config = new MessageTestConfig();
-                            config.count = 1;
+                            config.count = 5;
                             List<Map<String, Object>> payloadList = new ArrayList<>();
-                            for (int i = 0; i < inAppCount; i++) {
-                                payloadList.addAll(
-                                        MessagingTestUtils.generateMessagePayload(config));
-                            }
+                            payloadList.addAll(MessagingTestUtils.generateInAppPayload(config));
                             payload.put(
                                     new Surface(),
                                     InternalMessagingUtils.getPropositionsFromPayloads(
@@ -1507,8 +1511,13 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // verify cached rules replaced in rules engine
                         verify(mockMessagingRulesEngine, times(1))
-                                .replaceRules(listArgumentCaptor.capture());
-                        assertEquals(5, listArgumentCaptor.getValue().size());
+                                .replaceRules(inAppRulesListCaptor.capture());
+                        assertEquals(5, inAppRulesListCaptor.getValue().size());
+
+                        // verify in-app rules are in priority order after being loaded from the
+                        // cache
+                        MessagingTestUtils.verifyInAppRulesOrdering(
+                                inAppRulesListCaptor.getValue());
                     }
                 });
     }

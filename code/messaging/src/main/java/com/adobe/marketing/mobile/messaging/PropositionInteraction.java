@@ -115,18 +115,25 @@ class PropositionInteraction {
                 MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS,
                 Collections.singletonList(propositionDetailsData));
 
-        // only add `propositionAction` data if this is an interact event and the interaction is not
-        // empty
-        if ((eventType == MessagingEdgeEventType.INTERACT)
-                && !StringUtils.isNullOrEmpty(interaction)) {
+        // two use cases for including `propositionAction`:
+        // 1. if this is an interact event, include `id` and `label`
+        // 2. if this is a suppressDisplay event, include `reason`
+        if (!StringUtils.isNullOrEmpty(interaction)) {
             final Map<String, String> propositionAction = new HashMap<>();
-            propositionAction.put(
-                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, interaction);
-            propositionAction.put(
-                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key.LABEL, interaction);
-            decisioning.put(
-                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_ACTION,
-                    propositionAction);
+            if (eventType == MessagingEdgeEventType.INTERACT) {
+                propositionAction.put(
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, interaction);
+                propositionAction.put(
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.LABEL, interaction);
+            } else if (eventType == MessagingEdgeEventType.SUPPRESS_DISPLAY) {
+                propositionAction.put(
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.REASON, interaction);
+            }
+            if (!propositionAction.isEmpty()) {
+                decisioning.put(
+                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_ACTION,
+                        propositionAction);
+            }
         }
 
         final Map<String, Object> experience = new HashMap<>();

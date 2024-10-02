@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.2.0";
+    private static final String EXTENSION_VERSION = "3.2.1";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -271,15 +271,15 @@ public final class Messaging {
     }
 
     /**
-     * Dispatches an event to retrieve the previously fetched (and cached) feeds content from the
-     * SDK for the provided surfaces. If the feeds content for one or more surfaces isn't previously
-     * cached in the SDK, it will not be retrieved from Adobe Journey Optimizer via the Experience
-     * Edge network.
+     * Dispatches an event to retrieve the previously fetched (and cached) content card or code
+     * based content from the SDK for the provided surfaces. If the content for one or more surfaces
+     * isn't previously cached in the SDK, it will not be retrieved from Adobe Journey Optimizer via
+     * the Experience Edge network.
      *
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving
      *     previously fetched propositions
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface,
-     *     List< Proposition >>} containing previously fetched feeds content
+     *     List< Proposition >>} containing previously fetched content card or code based content
      */
     public static void getPropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,

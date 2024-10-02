@@ -28,9 +28,11 @@ import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.Logging;
 import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.ui.ConflictingPresentation;
 import com.adobe.marketing.mobile.services.ui.InAppMessage;
 import com.adobe.marketing.mobile.services.ui.Presentable;
 import com.adobe.marketing.mobile.services.ui.PresentationError;
+import com.adobe.marketing.mobile.services.ui.SuppressedByAppDeveloper;
 import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventHandler;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
@@ -58,6 +60,8 @@ public class MessagingFullscreenEventListenerTests {
     @Mock Presentable<InAppMessage> mockInAppPresentable;
     @Mock InAppMessage mockPresentation;
     @Mock PresentationError mockPresentationError;
+    @Mock ConflictingPresentation mockConflictingPresentationError;
+    @Mock SuppressedByAppDeveloper mockSuppressedByAppDeveloperError;
     @Mock InAppMessageEventHandler mockEventHandler;
     @Captor ArgumentCaptor<String> urlStringCaptor;
 
@@ -84,6 +88,8 @@ public class MessagingFullscreenEventListenerTests {
         reset(mockInAppPresentable);
         reset(mockPresentation);
         reset(mockPresentationError);
+        reset(mockConflictingPresentationError);
+        reset(mockSuppressedByAppDeveloperError);
         reset(mockEventHandler);
     }
 
@@ -105,6 +111,9 @@ public class MessagingFullscreenEventListenerTests {
                     .thenReturn(mockMessage);
             when(mockInAppPresentable.getPresentation()).thenReturn(mockPresentation);
             when(mockPresentation.getId()).thenReturn("mockId");
+            when(mockConflictingPresentationError.getReason()).thenReturn("Conflict");
+            when(mockSuppressedByAppDeveloperError.getReason())
+                    .thenReturn("SuppressedByAppDeveloper");
             runnable.run();
         }
     }
@@ -222,6 +231,102 @@ public class MessagingFullscreenEventListenerTests {
                         eventListener.onError(mockInAppPresentable, mockPresentationError);
 
                         // verify
+                        verify(mockMessage, times(0)).track(anyString(), any());
+                        verify(mockMessage, times(0)).recordEventHistory(anyString(), any());
+                        logMockedStatic.verify(
+                                () -> Log.debug(anyString(), anyString(), anyString()), times(1));
+                    }
+                });
+    }
+
+    @Test
+    public void test_onMessageError_ConflictingPresentationError_AutoTrackDisabled() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+                        // test
+                        eventListener.onError(
+                                mockInAppPresentable, mockConflictingPresentationError);
+
+                        // verify
+                        verify(mockMessage, times(0))
+                                .track("Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        verify(mockMessage, times(1))
+                                .recordEventHistory(
+                                        "Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        logMockedStatic.verify(
+                                () -> Log.debug(anyString(), anyString(), anyString()), times(1));
+                    }
+                });
+    }
+
+    @Test
+    public void test_onMessageError_ConflictingPresentationError_AutoTrackEnabled() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+                        // setup
+                        when(mockMessage.getAutoTrack()).thenReturn(true);
+                        // test
+                        eventListener.onError(
+                                mockInAppPresentable, mockConflictingPresentationError);
+
+                        // verify
+                        verify(mockMessage, times(1))
+                                .track("Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        verify(mockMessage, times(1))
+                                .recordEventHistory(
+                                        "Conflict", MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        logMockedStatic.verify(
+                                () -> Log.debug(anyString(), anyString(), anyString()), times(1));
+                    }
+                });
+    }
+
+    @Test
+    public void test_onMessageError_SuppressedByAppDeveloperError_AutoTrackDisabled() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+                        // test
+                        eventListener.onError(
+                                mockInAppPresentable, mockSuppressedByAppDeveloperError);
+
+                        // verify
+                        verify(mockMessage, times(0))
+                                .track(
+                                        "SuppressedByAppDeveloper",
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        verify(mockMessage, times(1))
+                                .recordEventHistory(
+                                        "SuppressedByAppDeveloper",
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        logMockedStatic.verify(
+                                () -> Log.debug(anyString(), anyString(), anyString()), times(1));
+                    }
+                });
+    }
+
+    @Test
+    public void test_onMessageError_SuppressedByAppDeveloperError_AutoTrackEnabled() {
+        runWithMockedServiceProvider(
+                () -> {
+                    try (MockedStatic<Log> logMockedStatic = mockStatic(Log.class)) {
+                        // setup
+                        when(mockMessage.getAutoTrack()).thenReturn(true);
+                        // test
+                        eventListener.onError(
+                                mockInAppPresentable, mockSuppressedByAppDeveloperError);
+
+                        // verify
+                        verify(mockMessage, times(1))
+                                .track(
+                                        "SuppressedByAppDeveloper",
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
+                        verify(mockMessage, times(1))
+                                .recordEventHistory(
+                                        "SuppressedByAppDeveloper",
+                                        MessagingEdgeEventType.SUPPRESS_DISPLAY);
                         logMockedStatic.verify(
                                 () -> Log.debug(anyString(), anyString(), anyString()), times(1));
                     }

@@ -409,7 +409,7 @@ public class PropositionItem implements Serializable {
             Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "fromRuleConsequenceEvent -Cannot create PropositionItem, event data is"
+                    "fromRuleConsequenceEvent - Cannot create PropositionItem, event data is"
                             + " null or empty.");
             return null;
         }
@@ -424,7 +424,7 @@ public class PropositionItem implements Serializable {
             Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                    "fromRuleConsequenceEvent - Cannot create PropositionItem, consequence is"
                             + " null or empty.");
             return null;
         }
@@ -438,7 +438,7 @@ public class PropositionItem implements Serializable {
             Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence is"
+                    "fromRuleConsequenceEvent - Cannot create PropositionItem, consequence is"
                             + " not of type 'schema'");
             return null;
         }
@@ -454,7 +454,7 @@ public class PropositionItem implements Serializable {
             Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "fromRuleConsequenceEvent -Cannot create PropositionItem, consequence"
+                    "fromRuleConsequenceEvent - Cannot create PropositionItem, consequence"
                             + " detail is null or empty.");
             return null;
         }

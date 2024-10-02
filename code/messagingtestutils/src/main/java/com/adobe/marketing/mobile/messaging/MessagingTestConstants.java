@@ -235,11 +235,25 @@ public class MessagingTestConstants {
                 private Inbound() {
                 }
 
+                public final class PropositionEventType {
+                    public static final String PROPOSITION_EVENT_TYPE_DISMISS = "dismiss";
+                    public static final String PROPOSITION_EVENT_TYPE_INTERACT = "interact";
+                    public static final String PROPOSITION_EVENT_TYPE_TRIGGER = "trigger";
+                    public static final String PROPOSITION_EVENT_TYPE_DISPLAY = "display";
+                    public static final String PROPOSITION_EVENT_TYPE_DISQUALIFY = "disqualify";
+                    public static final String PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY = "suppressDisplay";
+
+                    private PropositionEventType() {
+                    }
+                }
+
                 public final class EventType {
                     public static final String DISMISS = "decisioning.propositionDismiss";
                     public static final String INTERACT = "decisioning.propositionInteract";
                     public static final String TRIGGER = "decisioning.propositionTrigger";
                     public static final String DISPLAY = "decisioning.propositionDisplay";
+                    public static final String DISQUALIFY = "decisioning.propositionDisqualify";
+                    public static final String SUPPRESS_DISPLAY = "decisioning.propositionSuppressDisplay";
                     public static final String PERSONALIZATION_REQUEST = "personalization.request";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED = "pushTracking.applicationOpened";
                     public static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION = "pushTracking.customAction";

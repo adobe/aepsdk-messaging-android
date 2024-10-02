@@ -25,21 +25,22 @@ class ImageDownloader {
     companion object {
         fun getImage(url: String): Bitmap? {
             var bitmap: Bitmap? = null
-            try {
-                val latch = CountDownLatch(1)
-                Thread {
+
+            val latch = CountDownLatch(1)
+            Thread {
+                try {
                     val urlImage = URL(url)
                     val connection = urlImage.openConnection() as HttpURLConnection
                     val inputStream = connection.inputStream
                     bitmap = BitmapFactory.decodeStream(inputStream)
                     latch.countDown()
-                }.start()
-                latch.await(2, TimeUnit.SECONDS)
-            } catch (e: MalformedURLException) {
-                Log.e("ImageDownloader", "Malformed url exception: ${e.localizedMessage}")
-            } catch (e: IOException) {
-                Log.e("ImageDownloader", "IO Exception: ${e.localizedMessage}")
-            }
+                } catch (e: MalformedURLException) {
+                    Log.e("ImageDownloader", "Malformed url exception: ${e.localizedMessage}")
+                } catch (e: IOException) {
+                    Log.e("ImageDownloader", "IO Exception: ${e.localizedMessage}")
+                }
+            }.start()
+            latch.await(2, TimeUnit.SECONDS)
             return bitmap
         }
     }
