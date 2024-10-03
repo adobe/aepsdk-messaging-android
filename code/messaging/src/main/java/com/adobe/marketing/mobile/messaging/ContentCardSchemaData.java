@@ -86,11 +86,6 @@ public class ContentCardSchemaData implements SchemaData {
         return meta;
     }
 
-    @VisibleForTesting
-    static ContentCardSchemaData getEmpty() {
-        return new ContentCardSchemaData(new JSONObject());
-    }
-
     @Deprecated
     @Nullable public ContentCard getContentCard() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
