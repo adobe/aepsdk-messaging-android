@@ -43,8 +43,7 @@ aepLibrary {
 }
 
 dependencies {
-    //implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation("com.github.adobe.aepsdk-core-android:core:a0687ff642")
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:

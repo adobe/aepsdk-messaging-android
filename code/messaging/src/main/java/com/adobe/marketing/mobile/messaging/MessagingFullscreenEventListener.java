@@ -93,9 +93,9 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
         if (message != null) {
             final String errorReason = getErrorReason(presentationError);
             if (!StringUtils.isNullOrEmpty(errorReason) && message.getAutoTrack()) {
-                message.track(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+                message.track(errorReason, MessagingEdgeEventType.SUPPRESS_DISPLAY);
             }
-            message.recordEventHistory(errorReason, MessagingEdgeEventType.SUPPRESSED_DISPLAY);
+            message.recordEventHistory(errorReason, MessagingEdgeEventType.SUPPRESS_DISPLAY);
         }
 
         Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Fullscreen message failed to show.");
@@ -103,19 +103,18 @@ class MessagingFullscreenEventListener implements InAppMessageEventListener {
 
     /**
      * Returns the error reason from the {@code PresentationError} instance. For now we are only
-     * interested in {@link SuppressedByAppDeveloper} and {@link ConflictingPresentation}. An empty
-     * string will be returned for other {@code PresentationError} types.
+     * interested in {@link SuppressedByAppDeveloper} and {@link ConflictingPresentation}. Null will
+     * be returned for other {@code PresentationError} types.
      *
      * @param presentationError the {@link PresentationError} which occurred
      * @return the error reason {@code String} if available, otherwise null
      */
     private static @Nullable String getErrorReason(
             @NonNull final PresentationError presentationError) {
-        final Class presentationErrorClass = presentationError.getClass();
         String errorReason = null;
-        if (presentationErrorClass.equals(SuppressedByAppDeveloper.class)) {
+        if (presentationError instanceof SuppressedByAppDeveloper) {
             errorReason = ((SuppressedByAppDeveloper) presentationError).getReason();
-        } else if (presentationErrorClass.equals(ConflictingPresentation.class)) {
+        } else if (presentationError instanceof ConflictingPresentation) {
             errorReason = ((ConflictingPresentation) presentationError).getReason();
         }
         return errorReason;

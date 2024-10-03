@@ -21,14 +21,14 @@ public enum MessagingEdgeEventType {
     TRIGGER(8),
     DISPLAY(9),
     DISQUALIFY(10),
-    SUPPRESSED_DISPLAY(11);
+    SUPPRESS_DISPLAY(11);
 
     static final String PROPOSITION_EVENT_TYPE_DISMISS = "dismiss";
     static final String PROPOSITION_EVENT_TYPE_INTERACT = "interact";
     static final String PROPOSITION_EVENT_TYPE_TRIGGER = "trigger";
     static final String PROPOSITION_EVENT_TYPE_DISPLAY = "display";
     static final String PROPOSITION_EVENT_TYPE_DISQUALIFY = "disqualify";
-    static final String PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY = "suppressDisplay";
+    static final String PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY = "suppressDisplay";
     static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED =
             "pushTracking.applicationOpened";
     static final String PUSH_NOTIFICATION_EVENT_TYPE_STRING_CUSTOM_ACTION =
@@ -39,7 +39,7 @@ public enum MessagingEdgeEventType {
     static final String PROPOSITION_EVENT_TYPE_DISMISS_STRING = "decisioning.propositionDismiss";
     static final String PROPOSITION_EVENT_TYPE_DISQUALIFY_STRING =
             "decisioning.propositionDisqualify";
-    static final String PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY_STRING =
+    static final String PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY_STRING =
             "decisioning.propositionSuppressDisplay";
 
     final int value;
@@ -68,8 +68,8 @@ public enum MessagingEdgeEventType {
                 return PROPOSITION_EVENT_TYPE_DISPLAY;
             case DISQUALIFY:
                 return PROPOSITION_EVENT_TYPE_DISQUALIFY;
-            case SUPPRESSED_DISPLAY:
-                return PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY;
+            case SUPPRESS_DISPLAY:
+                return PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY;
             default:
                 return "";
         }
@@ -88,8 +88,8 @@ public enum MessagingEdgeEventType {
                 return PROPOSITION_EVENT_TYPE_DISPLAY_STRING;
             case DISQUALIFY:
                 return PROPOSITION_EVENT_TYPE_DISQUALIFY_STRING;
-            case SUPPRESSED_DISPLAY:
-                return PROPOSITION_EVENT_TYPE_SUPPRESSED_DISPLAY_STRING;
+            case SUPPRESS_DISPLAY:
+                return PROPOSITION_EVENT_TYPE_SUPPRESS_DISPLAY_STRING;
             case PUSH_APPLICATION_OPENED:
                 return PUSH_NOTIFICATION_EVENT_TYPE_STRING_OPENED;
             case PUSH_CUSTOM_ACTION:
