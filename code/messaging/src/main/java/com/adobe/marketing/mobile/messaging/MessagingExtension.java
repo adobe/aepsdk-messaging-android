@@ -151,6 +151,10 @@ public final class MessagingExtension extends Extension {
                         this::handleRuleEngineResponseEvents);
         getApi().registerEventListener(
                         EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
+        getApi().registerEventListener(
+                        MessagingConstants.EventType.MESSAGING,
+                        MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                        this::processEvent);
 
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
@@ -395,6 +399,9 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEventHistoryWriteEvent(eventToProcess)) {
+            // validate the event history write event then process the event history data
+            edgePersonalizationResponseHandler.handleEventHistoryWriteEvent(eventToProcess);
         }
     }
 

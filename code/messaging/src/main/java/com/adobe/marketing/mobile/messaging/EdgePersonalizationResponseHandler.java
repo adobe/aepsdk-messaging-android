@@ -345,6 +345,31 @@ class EdgePersonalizationResponseHandler {
         serialWorkDispatcher.resume();
     }
 
+    /**
+     * Process the event history write event by removing the content card activity from the
+     * in-memory cache using the proposition activity id.
+     *
+     * @param event A {@link Event} containing the event history write event.
+     */
+    void handleEventHistoryWriteEvent(final Event event) {
+        final String activityId = InternalMessagingUtils.getPropositionActivityId(event);
+        if (StringUtils.isNullOrEmpty(activityId)) {
+            // shouldn't ever get here, but if we do, we don't have anything to process so we should
+            // bail
+            return;
+        }
+
+        // remove the content card from the in-memory cache using the activity id
+        for (final List<Proposition> propositions : contentCardsBySurface.values()) {
+            for (final Proposition proposition : propositions) {
+                if (activityId.equals(proposition.getActivityId())) {
+                    propositions.remove(proposition);
+                    break;
+                }
+            }
+        }
+    }
+
     private void dispatchNotificationEventForSurfaces(final List<Surface> requestedSurfaces) {
         final Map<Surface, List<Proposition>> requestedPropositionsMap =
                 retrieveCachedPropositions(requestedSurfaces);

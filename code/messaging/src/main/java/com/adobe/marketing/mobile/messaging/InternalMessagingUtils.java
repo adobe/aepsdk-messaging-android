@@ -300,6 +300,19 @@ class InternalMessagingUtils {
         return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is an event history write event from the {@link
+     * MessagingExtension}.
+     *
+     * @param event An event history write {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an event history write event.
+     */
+    static boolean isEventHistoryWriteEvent(final Event event) {
+        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType())
+                && MessagingConstants.EventSource.EVENT_HISTORY_WRITE.equalsIgnoreCase(
+                        event.getSource());
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -375,6 +388,29 @@ class InternalMessagingUtils {
                 event.getEventData(),
                 MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID,
                 null);
+    }
+
+    /**
+     * Retrieves the proposition activity id {@code String} from the passed in {@code Event}'s event
+     * data.
+     *
+     * @param event A Messaging Event History Write {@link Event}.
+     * @return {@code String} containing the proposition activity id
+     */
+    static String getPropositionActivityId(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+
+        final Map<String, Object> eventHistoryData =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.IAM_HISTORY,
+                        new HashMap<>());
+
+        return DataReader.optString(
+                eventHistoryData, MessagingConstants.EventMask.Keys.MESSAGE_ID, null);
     }
 
     // ========================================================================================
