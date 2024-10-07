@@ -293,7 +293,7 @@ public class E2EFunctionalTests {
         // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents =
                 getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT, 5000);
-        assertEquals(1, edgePersonalizationRequestEvents.size());
+        assertEquals("edge personalization request event not received after 5 seconds.", 1, edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
         assertEquals(
                 expectedEdgePersonalizationEventData,
@@ -303,8 +303,8 @@ public class E2EFunctionalTests {
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents =
-                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
-        assertEquals(1, edgeContentCompleteEvents.size());
+                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
+        assertEquals("edge content complete event not received after 5 seconds.", 1, edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
         assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
     }
