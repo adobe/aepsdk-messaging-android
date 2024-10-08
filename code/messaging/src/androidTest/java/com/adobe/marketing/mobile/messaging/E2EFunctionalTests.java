@@ -173,7 +173,10 @@ public class E2EFunctionalTests {
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(false).get(0));
         List<Event> rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+        assertEquals(
+                "show always rule consequence failed to be dispatched.",
+                1,
+                rulesConsequenceEvents.size());
         Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         Map<String, Object> triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -201,7 +204,10 @@ public class E2EFunctionalTests {
         // verify rule consequence event is dispatched
         rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+        assertEquals(
+                "show always rule consequence should be dispatched again.",
+                1,
+                rulesConsequenceEvents.size());
         rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -232,7 +238,10 @@ public class E2EFunctionalTests {
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(true).get(0));
         List<Event> rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+        assertEquals(
+                "show once rule consequence failed to be dispatched.",
+                1,
+                rulesConsequenceEvents.size());
         final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         final Map<String, Object> triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -284,7 +293,10 @@ public class E2EFunctionalTests {
         // verify no rule consequence event is dispatched
         rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(0, rulesConsequenceEvents.size());
+        assertEquals(
+                "show once rule consequence shouldn't be dispatched again.",
+                0,
+                rulesConsequenceEvents.size());
     }
 
     private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
