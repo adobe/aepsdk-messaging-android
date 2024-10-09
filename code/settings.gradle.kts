@@ -34,6 +34,4 @@ include(
     ":testapp",
     ":messaging",
     ":messagingtestutils",
-    ":aepcomposeui",
-    ":aepuitemplates"
 )

@@ -21,6 +21,7 @@ aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
     enableSpotless = true
     enableCheckStyle = true
+    enableDokkaDoc = true
 
     publishing {
         gitRepoName = "aepsdk-messaging-android"
