@@ -172,7 +172,7 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(false).get(0));
         List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
         assertEquals(
                 "show always rule consequence failed to be dispatched.",
                 1,
@@ -203,7 +203,7 @@ public class E2EFunctionalTests {
 
         // verify rule consequence event is dispatched
         rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
         assertEquals(
                 "show always rule consequence should be dispatched again.",
                 1,
@@ -237,7 +237,7 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(true).get(0));
         List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
         assertEquals(
                 "show once rule consequence failed to be dispatched.",
                 1,
@@ -292,7 +292,7 @@ public class E2EFunctionalTests {
 
         // verify no rule consequence event is dispatched
         rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
         assertEquals(
                 "show once rule consequence shouldn't be dispatched again.",
                 0,
