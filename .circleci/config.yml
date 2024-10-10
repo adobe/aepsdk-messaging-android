@@ -113,11 +113,11 @@ jobs:
     steps:
       - checkout
 
-      - android/restore-build-cache
+      # - android/restore-build-cache
 
-      - run:
-          name: List available emulator images
-          command: sdkmanager --list
+      # - run:
+      #    name: List available emulator images
+      #    command: sdkmanager --list
 
       - android/start-emulator-and-run-tests:
           #   It should match the name seen in the "sdkmanager --list" output
@@ -127,17 +127,17 @@ jobs:
           #   The test command
           test-command: make functional-test-coverage
    
-      - android/save-build-cache
+      # - android/save-build-cache
 
       - codecov/upload:
           file: code/messaging/build/reports/coverage/androidTest/phone/debug/connected/report.xml
           flags: functional-tests
  
-      - store_artifacts:
-          path: code/messaging/build/reports/androidTests
+      # - store_artifacts:
+      #    path: code/messaging/build/reports/androidTests
 
-      - store_test_results:
-          path: code/messaging/build/outputs/androidTest-results
+      # - store_test_results:
+      #    path: code/messaging/build/outputs/androidTest-results
   build-test-app:
     executor:
       name: android/android-docker
