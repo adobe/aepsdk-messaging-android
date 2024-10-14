@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 
 /**
@@ -19,14 +21,15 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
  * This class contains properties for an image URL, title, and description.
  */
 class SmallImageTemplate : AepUITemplate {
-    /** The URL of the image for the small image template. */
-    val imageUrl: String = ""
 
-    /** The title for the small image template. */
-    val title: String = ""
+    /** The image component for the small image template, represented in model AEPImage. */
+    var image: AEPImage? = null
 
-    /** The description for the small image template. */
-    val description: String = ""
+    /** The title for the small image template, represented in model AEPText. */
+    var title: AEPText? = null
+
+    /** The description for the small image template, represented in model AEPText. */
+    var description: AEPText? = null
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
