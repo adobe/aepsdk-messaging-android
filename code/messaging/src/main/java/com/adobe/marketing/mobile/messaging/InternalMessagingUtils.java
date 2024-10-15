@@ -17,6 +17,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
@@ -301,16 +302,25 @@ class InternalMessagingUtils {
     }
 
     /**
-     * Determines if the passed in {@code Event} is an event history write event from the {@link
-     * MessagingExtension}.
+     * Determines if the passed in {@code Event} is an event history disqualify event.
      *
      * @param event An event history write {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is an event history write event.
+     * @return {@code boolean} indicating if the passed in event is an event history disqualify
+     *     event.
      */
-    static boolean isEventHistoryWriteEvent(final Event event) {
-        return MessagingConstants.EventType.MESSAGING.equalsIgnoreCase(event.getType())
-                && MessagingConstants.EventSource.EVENT_HISTORY_WRITE.equalsIgnoreCase(
-                        event.getSource());
+    static boolean isEventHistoryDisqualifyEvent(final Event event) {
+        final Map<String, Object> eventData = event.getEventData();
+        final Map<String, Object> eventHistoryMap =
+                DataReader.optTypedMap(
+                        Object.class,
+                        eventData,
+                        MessagingConstants.EventDataKeys.IAM_HISTORY,
+                        null);
+        return MessagingEdgeEventType.DISQUALIFY
+                .getPropositionEventType()
+                .equalsIgnoreCase(
+                        DataReader.optString(
+                                eventHistoryMap, MessagingConstants.EventMask.Keys.EVENT_TYPE, ""));
     }
 
     // ========================================================================================

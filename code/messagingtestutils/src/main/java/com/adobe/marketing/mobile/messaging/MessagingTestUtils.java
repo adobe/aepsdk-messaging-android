@@ -434,6 +434,17 @@ public class MessagingTestUtils {
         for (int i = 0; i < config.count; i++) {
             Map<String, Object> feedProposition = getMapFromFile("feedProposition.json");
 
+            // activity id modification. we want to modify the proposition activity id
+            // to be unique for each proposition by replacing the last two characters
+            // with a value in the range of 00-99.
+            String activityId = "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44342";
+            activityId = activityId.replace(activityId.substring(activityId.length() - 2), String.format("%02d", i));
+            Map<String, Object> scopeDetails = (Map<String, Object>) feedProposition.get("scopeDetails");
+            Map<String, Object> activtyMap = (Map<String, Object>) scopeDetails.get("activity");
+            activtyMap.put("id", activityId);
+            scopeDetails.put("activity", activtyMap);
+            feedProposition.put("scopeDetails", scopeDetails);
+
             // items modification
             if (config.isMissingItems) {
                 feedProposition.remove("items");
@@ -459,6 +470,15 @@ public class MessagingTestUtils {
             payload.add(feedProposition);
         }
         return payload;
+    }
+
+    static List<Proposition> generateQualifiedContentCards(final MessageTestConfig config) {
+        List<Map<String, Object>> payload = generateFeedPayload(config);
+        List<Proposition> propositions = new ArrayList<>();
+        for (Map<String, Object> proposition : payload) {
+            propositions.add(Proposition.fromEventData(proposition));
+        }
+        return propositions;
     }
 
     static String convertPropositionsToString(List<Proposition> propositions) {

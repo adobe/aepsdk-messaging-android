@@ -399,9 +399,10 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
-        } else if (InternalMessagingUtils.isEventHistoryWriteEvent(eventToProcess)) {
-            // validate the event history write event then process the event history data
-            edgePersonalizationResponseHandler.handleEventHistoryWriteEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
+            // validate the event is an event history disqualify event then process the event
+            // history data
+            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 
