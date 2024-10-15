@@ -81,12 +81,12 @@ internal fun SmallImageCard(
             ) {
                 ui.getTemplate().title.let {
                     Text(
-                        text = it,
+                        text = it?.content!!,
                         style = style.getTitleTextStyle(ui.getTemplate()),
                     )
                 }
                 Text(
-                    text = ui.getTemplate().description,
+                    text = ui.getTemplate().description?.content!!,
                     style = MaterialTheme.typography.body1
                 )
             }
