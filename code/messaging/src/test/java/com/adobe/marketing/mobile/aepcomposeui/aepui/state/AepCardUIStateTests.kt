@@ -11,17 +11,24 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.state
 
-/**
- * Class representing the state of an AEP card.
- *
- * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property selected Indicates whether the card is selected.
- * @property read Indicates whether the card has been read.
- */
-open class AepCardUIState(
-    open var dismissed: Boolean = false,
-    open var selected: Boolean = false,
-    open var read: Boolean = false
-)
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class AepCardUIStateTests {
+
+    @Test
+    fun test_AepCardUIState_defaultState() {
+        val state = AepCardUIState()
+        assertEquals(false, state.dismissed)
+        assertEquals(false, state.selected)
+        assertEquals(false, state.read)
+    }
+
+    @Test
+    fun test_AepCardUIState_createState() {
+        val state = AepCardUIState(dismissed = true, selected = true, read = true)
+        assertEquals(true, state.dismissed)
+        assertEquals(true, state.selected)
+        assertEquals(true, state.read)
+    }
+}
