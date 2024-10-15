@@ -30,8 +30,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "aepsdk-messaging-android"
-include (
-         ":testapp",
-         ":messaging",
-    ":messagingtestutils"
+include(
+    ":testapp",
+    ":messaging",
+    ":messagingtestutils",
 )

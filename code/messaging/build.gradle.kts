@@ -1,3 +1,5 @@
+import com.adobe.marketing.mobile.gradle.BuildConstants
+
 /*
  * Copyright 2024 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -21,6 +23,8 @@ aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
     enableSpotless = true
     enableCheckStyle = true
+    enableDokkaDoc = true
+    compose = true
 
     publishing {
         gitRepoName = "aepsdk-messaging-android"
@@ -39,6 +43,7 @@ aepLibrary {
             named("test").configure { resources.srcDir("src/test/resources") }
             named("androidTest").configure { resources.srcDir("src/test/resources") }
         }
+
     }
 }
 
