@@ -20,4 +20,10 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.state
  * @property timerDisplayed Indicates whether the timer has been displayed.
  * @property cardExpanded Indicates whether the card has been expanded.
  */
-data class SmallImageCardUIState(var timerDisplayed: Boolean = false, var cardExpanded: Boolean = false, override var dismissed: Boolean = false, override var selected: Boolean = false, override var read: Boolean = false) : AepCardUIState()
+data class SmallImageCardUIState(
+    var timerDisplayed: Boolean = false,
+    var cardExpanded: Boolean = false,
+    override var dismissed: Boolean = false,
+    override var selected: Boolean = false,
+    override var read: Boolean = false
+) : AepCardUIState()
