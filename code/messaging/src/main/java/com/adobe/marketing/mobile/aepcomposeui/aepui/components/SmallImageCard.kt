@@ -34,6 +34,7 @@ import com.adobe.marketing.mobile.aepcomposeui.aepui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepuitemplates.SmallImageTemplate
 
 /**
  * Composable function that renders a small image card UI.

@@ -11,22 +11,56 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButton
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPImage
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
+import com.adobe.marketing.mobile.messaging.UiTemplateConstructionFailedException
+import org.json.JSONObject
 
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
  *
  * This class contains properties for an image URL, title, and description.
  */
-class SmallImageTemplate : AepUITemplate {
-    /** The URL of the image for the small image template. */
-    val imageUrl: String = ""
+class SmallImageTemplate(val content: String) : AepUITemplate {
 
-    /** The title for the small image template. */
-    val title: String = ""
+    /** Title text and display settings  */
+    internal val title: AEPText
+
+    /** Body text and display settings */
+    internal val body: AEPText?
+
+    /** The details of the image to be displayed. */
+    internal val image: AEPImage?
+
+    /** If provided, interacting with this card will result in the opening of the actionUrl. */
+    internal val actionUrl: String?
+
+    /** The details of the buttons. */
+    internal val buttons: List<AEPButton>?
 
     /** The description for the small image template. */
-    val description: String = ""
+    internal val dismissBtn: JSONObject?
+
+    init {
+        try {
+            val contentJson = JSONObject(content)
+            title = AEPText(contentJson.getJSONObject("title"))
+            body = AEPText(contentJson.optJSONObject("body"))
+            image = AEPImage(contentJson.optJSONObject("image"))
+            actionUrl = contentJson.optString("actionUrl", "")
+            val buttonArray = contentJson.optJSONArray("buttons")
+            buttons = buttonArray?.let {
+                (0 until it.length()).mapNotNull { index ->
+                    AEPButton(it.optJSONObject(index))
+                }
+            }
+            dismissBtn = contentJson.optJSONObject("dismissBtn")
+        } catch (e: Exception) {
+            throw UiTemplateConstructionFailedException("Exception occurred while constructing SmallImageTemplate: ${e.localizedMessage}")
+        }
+    }
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
