@@ -21,7 +21,7 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.state
  * @property read Indicates whether the card has been read.
  */
 open class AepCardUIState(
-    open var dismissed: Boolean = false,
-    open var selected: Boolean = false,
-    open var read: Boolean = false
+    open val dismissed: Boolean = false,
+    open val selected: Boolean = false,
+    open val read: Boolean = false
 )

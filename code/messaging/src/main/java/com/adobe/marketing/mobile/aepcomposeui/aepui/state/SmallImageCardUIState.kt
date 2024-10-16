@@ -14,16 +14,14 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.state
 /**
  * Class representing the UI state of a Small Image template card.
  *
+ * @property expanded Indicates whether the card has been expanded.
  * @property dismissed Indicates whether the card has been dismissed.
  * @property selected Indicates whether the card is selected.
  * @property read Indicates whether the card has been read.
- * @property timerDisplayed Indicates whether the timer has been displayed.
- * @property cardExpanded Indicates whether the card has been expanded.
  */
 data class SmallImageCardUIState(
-    var timerDisplayed: Boolean = false,
-    var cardExpanded: Boolean = false,
-    override var dismissed: Boolean = false,
-    override var selected: Boolean = false,
-    override var read: Boolean = false
+    val expanded: Boolean = false,
+    override val dismissed: Boolean = false,
+    override val selected: Boolean = false,
+    override val read: Boolean = false
 ) : AepCardUIState()
