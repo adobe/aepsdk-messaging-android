@@ -82,14 +82,16 @@ internal fun SmallImageCard(
             ) {
                 ui.getTemplate().title.let {
                     Text(
-                        text = it,
+                        text = it.toString(),
                         style = style.getTitleTextStyle(ui.getTemplate()),
                     )
                 }
-                Text(
-                    text = ui.getTemplate().description,
+                ui.getTemplate().body.let {
+                    Text(
+                    text = it.toString(),
                     style = MaterialTheme.typography.body1
-                )
+                    )
+                }
             }
         }
     }

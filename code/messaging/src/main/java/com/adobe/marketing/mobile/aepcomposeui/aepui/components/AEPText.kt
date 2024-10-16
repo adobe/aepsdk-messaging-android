@@ -13,6 +13,6 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
 import org.json.JSONObject
 
-class AEPText(val textContent: JSONObject?) {
+class AEPText(textContent: JSONObject?) {
     // TODO: Implement the AEPText class
 }

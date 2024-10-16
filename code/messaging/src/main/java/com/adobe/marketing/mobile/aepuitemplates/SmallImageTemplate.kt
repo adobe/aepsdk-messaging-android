@@ -23,7 +23,7 @@ import org.json.JSONObject
  *
  * This class contains properties for an image URL, title, and description.
  */
-class SmallImageTemplate(val content: String) : AepUITemplate {
+class SmallImageTemplate(content: String) : AepUITemplate {
 
     /** Title text and display settings  */
     internal val title: AEPText

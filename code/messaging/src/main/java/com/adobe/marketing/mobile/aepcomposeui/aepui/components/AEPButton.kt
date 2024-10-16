@@ -13,6 +13,6 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
 import org.json.JSONObject
 
-class AEPButton(val buttonContent: JSONObject?) {
+class AEPButton(buttonContent: JSONObject?) {
     // TODO: Implement the AEPButton class
 }

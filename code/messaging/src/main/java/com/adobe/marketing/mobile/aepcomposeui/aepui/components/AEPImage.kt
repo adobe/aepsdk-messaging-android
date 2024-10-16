@@ -13,6 +13,6 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
 import org.json.JSONObject
 
-class AEPImage(val imageContent: JSONObject?) {
+class AEPImage(imageContent: JSONObject?) {
     // TODO: Implement the AEPImage class
 }
