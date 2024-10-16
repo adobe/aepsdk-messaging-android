@@ -13,7 +13,7 @@
 version: 2.1
 orbs:
   android: circleci/android@2.4.0
-  codecov: codecov/codecov@4.0.1
+  codecov: codecov/codecov@3.2.4
 
 # Workflows orchestrate a set of jobs to be run;
 workflows:
