@@ -11,31 +11,35 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepTemplateConstants
 
 /**
- * Data class representing a button element in the UI.
+ * Class representing a button element in the UI.
  *
  * @property interactId The unique interaction ID for the button.
  * @property actionUrl The URL to be opened when the button is clicked.
- * @property text The text to be displayed on the button, represented by an [AEPText] object.
+ * @property text The text to be displayed on the button, represented by an [AepText] object.
  * @property borWidth The border width of the button.
  * @property borColor The border color of the button.
  *
  * @param buttonSchemaMap A map containing key-value pairs to initialize the AEPButton properties.
  */
-data class AEPButton(
+data class AepButton(
     val interactId: String? = null,
     val actionUrl: String? = null,
-    val text: AEPText? = null,
+    val text: AepText? = null,
+    val bgClr: String? = null,
+    val bgImg: AepImage? = null,
     val borWidth: Int? = null,
     val borColor: String? = null
 ) {
     constructor(buttonSchemaMap: Map<String, Any>) : this(
-        interactId = buttonSchemaMap[Constants.CardTemplate.UIElement.Button.INTERACTION_ID] as? String,
-        actionUrl = buttonSchemaMap[Constants.CardTemplate.UIElement.Button.ACTION_URL] as? String,
-        text = (buttonSchemaMap[Constants.CardTemplate.UIElement.Button.TEXT] as? Map<String, Any>)?.let { AEPText(it) },
-        borWidth = (buttonSchemaMap[Constants.CardTemplate.UIElement.Button.BOR_WIDTH] as? Number)?.toInt(),
-        borColor = buttonSchemaMap[Constants.CardTemplate.UIElement.Button.BOR_COLOR] as? String
+        interactId = buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.INTERACTION_ID] as? String,
+        actionUrl = buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.ACTION_URL] as? String,
+        text = (buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.TEXT] as? Map<String, Any>)?.let { AepText(it) },
+        bgClr = buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.BG_CLR] as? String,
+        bgImg = (buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.BG_IMG] as? Map<String, Any>)?.let { AepImage(it) },
+        borWidth = (buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.BOR_WIDTH] as? Number)?.toInt(),
+        borColor = buttonSchemaMap[AepTemplateConstants.CardTemplate.UIElement.Button.BOR_COLOR] as? String
     )
 }

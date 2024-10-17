@@ -9,17 +9,16 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uicomposablepreviews
+package com.adobe.marketing.mobile.aepcomposeui.aepui.previews
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButtonComposable
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPButton
-import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.Composable
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepTemplateConstants
 
 /**
- * Preview composable function for [AEPButtonComposable].
- *
+ * Preview for [AepButton.Composable].
  * This function creates a sample button using predefined schema data for demonstration
  * purposes. It showcases how the button will appear with various styling options.
  */
@@ -28,32 +27,32 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
 fun PreviewButton() {
     // Sample button schema data
     val buttonSchemaMap = mapOf(
-        Constants.CardTemplate.UIElement.Button.INTERACTION_ID to "button1",
-        Constants.CardTemplate.UIElement.Button.TEXT to mapOf(
-            Constants.CardTemplate.UIElement.Text.CONTENT to "Click Me",
-            Constants.CardTemplate.UIElement.Text.CLR to "#FF0000CC",
-            Constants.CardTemplate.UIElement.Text.ALIGN to "center",
-            Constants.CardTemplate.UIElement.Text.FONT to mapOf(
+        AepTemplateConstants.CardTemplate.UIElement.Button.INTERACTION_ID to "button1",
+        AepTemplateConstants.CardTemplate.UIElement.Button.TEXT to mapOf(
+            AepTemplateConstants.CardTemplate.UIElement.Text.CONTENT to "Click Me",
+            AepTemplateConstants.CardTemplate.UIElement.Text.CLR to "#FF0000CC",
+            AepTemplateConstants.CardTemplate.UIElement.Text.ALIGN to "center",
+            AepTemplateConstants.CardTemplate.UIElement.Text.FONT to mapOf(
                 "name" to "Arial",
                 "size" to 16,
                 "weight" to "bold",
                 "style" to listOf("italic")
             )
         ),
-        Constants.CardTemplate.UIElement.Button.ACTION_URL to "https://www.adobe.com",
+        AepTemplateConstants.CardTemplate.UIElement.Button.ACTION_URL to "https://www.adobe.com",
         "borWidth" to 2,
         "borColor" to "#0FE608AC"
     )
 
     // Create an instance of AEPButton using the sample schema data
-    val aepButton = AEPButton(buttonSchemaMap)
+    val aepButton = AepButton(buttonSchemaMap)
 
     // Render the AEPButtonComposable with the properties from aepButton
-    AEPButtonComposable(
+    AepButton(
         interactId = aepButton.interactId!!,
         text = aepButton.text!!,
         actionUrl = aepButton.actionUrl!!,
         borWidth = aepButton.borWidth,
         borColor = aepButton.borColor
-    )
+    ).Composable(onClick = {})
 }

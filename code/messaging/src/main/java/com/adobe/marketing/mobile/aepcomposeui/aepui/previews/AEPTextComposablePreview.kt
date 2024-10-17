@@ -17,11 +17,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPTextComposable
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPFont
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.Composable
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
- * Preview function for testing the AEPTextComposable with various inputs.
+ * Preview for testing the [AepText.Composable] with various inputs.
  * This function showcases different variations of text properties, including colors,
  * alignments, fonts, and edge cases.
  */
@@ -31,55 +32,55 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPFont
     device = "spec:width=1080px,height=2340px,dpi=440"
 )
 @Composable
-fun AEPTextComposableTestPreviews() {
+fun AEPTextTestPreviews() {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
         // Basic usage
-        AEPTextComposable(content = "Basic Text")
+        AepText(content = "Basic Text").Composable()
 
         // Color variations
-        AEPTextComposable(content = "Red Text", clr = "#FF0000")
-        AEPTextComposable(content = "Green Text", clr = "#00FF00")
-        AEPTextComposable(content = "Blue Text", clr = "#0000FF")
-        AEPTextComposable(content = "Invalid Color", clr = "invalid") // Test invalid color
+        AepText(content = "Red Text", clr = "#FF0000").Composable()
+        AepText(content = "Green Text", clr = "#00FF00").Composable()
+        AepText(content = "Blue Text", clr = "#0000FF").Composable()
+        AepText(content = "Invalid Color", clr = "invalid").Composable() // Test invalid color
 
         // Alignment variations
-        AEPTextComposable(content = "Left Aligned", align = "left")
-        AEPTextComposable(content = "Center Aligned", align = "center")
-        AEPTextComposable(content = "Right Aligned", align = "right")
-        AEPTextComposable(content = "Invalid Alignment", align = "invalid") // Test invalid alignment
+        AepText(content = "Left Aligned", align = "left").Composable()
+        AepText(content = "Center Aligned", align = "center").Composable()
+        AepText(content = "Right Aligned", align = "right").Composable()
+        AepText(content = "Invalid Alignment", align = "invalid").Composable() // Test invalid alignment
 
         // Font variations
-        AEPTextComposable(content = "Large Text", font = AEPFont(size = 24))
-        AEPTextComposable(content = "Small Text", font = AEPFont(size = 10))
-        AEPTextComposable(content = "Bold Text", font = AEPFont(weight = "bold"))
-        AEPTextComposable(content = "Italic Text", font = AEPFont(style = listOf("italic")))
-        AEPTextComposable(content = "Bold Italic Text", font = AEPFont(weight = "bold", style = listOf("italic")))
+        AepText(content = "Large Text", font = AepFont(size = 24)).Composable()
+        AepText(content = "Small Text", font = AepFont(size = 10)).Composable()
+        AepText(content = "Bold Text", font = AepFont(weight = "bold")).Composable()
+        AepText(content = "Italic Text", font = AepFont(style = listOf("italic"))).Composable()
+        AepText(content = "Bold Italic Text", font = AepFont(weight = "bold", style = listOf("italic"))).Composable()
 
         // Combination of properties
-        AEPTextComposable(
+        AepText(
             content = "Complex Styling",
             clr = "#800080",
             align = "center",
-            font = AEPFont(size = 18, weight = "bold", style = listOf("italic"))
-        )
+            font = AepFont(size = 18, weight = "bold", style = listOf("italic"))
+        ).Composable()
 
         // Edge cases
-        AEPTextComposable(content = "Empty String") // Providing valid content instead of empty
-        AEPTextComposable(content = "Very Long Text ".repeat(20)) // Very long text
-        AEPTextComposable(content = "Special Characters: !@#$%^&*()_+{}[]|\\:;\"'<>,.?/")
-        AEPTextComposable(content = "Multi\nLine\nText") // Multi-line text
+        AepText(content = "Empty String").Composable() // Providing valid content instead of empty
+        AepText(content = "Very Long Text ".repeat(20)).Composable() // Very long text
+        AepText(content = "Special Characters: !@#$%^&*()_+{}[]|\\:;\"'<>,.?/").Composable()
+        AepText(content = "Multi\nLine\nText").Composable() // Multi-line text
 
         // Null values for optional parameters
-        AEPTextComposable(content = "Null Color", clr = null)
-        AEPTextComposable(content = "Null Alignment", align = null)
-        AEPTextComposable(content = "Null Font", font = null)
+        AepText(content = "Null Color", clr = null).Composable()
+        AepText(content = "Null Alignment", align = null).Composable()
+        AepText(content = "Null Font", font = null).Composable()
 
         // Extreme font sizes
-        AEPTextComposable(content = "Tiny Text", font = AEPFont(size = 1))
-        AEPTextComposable(content = "Huge Text", font = AEPFont(size = 100))
+        AepText(content = "Tiny Text", font = AepFont(size = 1)).Composable()
+        AepText(content = "Huge Text", font = AepFont(size = 100)).Composable()
     }
 }

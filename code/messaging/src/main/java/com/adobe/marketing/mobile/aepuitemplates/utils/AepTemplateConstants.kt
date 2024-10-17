@@ -18,7 +18,7 @@ package com.adobe.marketing.mobile.aepuitemplates.utils
  * UI elements, and specific styling details. These constants are referenced in various UI model
  * classes to ensure consistency and avoid hardcoding string values.
  */
-class Constants {
+class AepTemplateConstants {
 
     class CardTemplate {
 
@@ -40,19 +40,6 @@ class Constants {
             }
         }
 
-        class DismissButton {
-            companion object {
-                const val STYLE = "style" // Key for the style of the dismiss button
-            }
-
-            class Icon {
-                companion object {
-                    const val SIMPLE = "xmark" // Key for a simple icon
-                    const val CIRCLE = "xmark.circle.fill" // Key for a filled circle icon
-                }
-            }
-        }
-
         class UIElement {
             class Text {
                 companion object {
@@ -68,6 +55,8 @@ class Constants {
                     const val INTERACTION_ID = "interactId" // Key for the interaction ID of buttons
                     const val TEXT = "text" // Key for the text of buttons
                     const val ACTION_URL = "actionUrl" // Key for the action URL of buttons
+                    const val BG_CLR = "bgClr" // Key for the background color of buttons
+                    const val BG_IMG = "bgImg" // Key for the background image of buttons
                     const val BOR_WIDTH = "borWidth" // Key for the border width of buttons
                     const val BOR_COLOR = "borColor" // Key for the border color of buttons
                 }
@@ -82,6 +71,19 @@ class Constants {
                         "darkBundle" // Key for the image resource bundle in dark mode
                     const val ICON = "icon" // Key for the icon name or identifier
                     const val ICON_SIZE = "iconSize" // Key for the size of the icon
+                }
+            }
+
+            class DismissButton {
+                companion object {
+                    const val STYLE = "style" // Key for the style of the dismiss button
+                }
+
+                class Icon {
+                    companion object {
+                        const val SIMPLE = "xmark" // Key for a simple icon
+                        const val CIRCLE = "xmark.circle.fill" // Key for a filled circle icon
+                    }
                 }
             }
 

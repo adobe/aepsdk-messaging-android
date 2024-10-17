@@ -11,8 +11,10 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPImage
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPText
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 
 /**
@@ -20,16 +22,22 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
  *
  * This class contains properties for an image URL, title, and description.
  */
-class SmallImageTemplate : AepUITemplate {
+class SmallImageTemplate(templateMap: Map<String, Any>) : AepUITemplate {
 
     /** The image component for the small image template, represented in model AEPImage. */
-    var image: AEPImage? = null
+    var image: AepImage? = null
 
     /** The title for the small image template, represented in model AEPText. */
-    var title: AEPText? = null
+    var title: AepText? = null
 
     /** The description for the small image template, represented in model AEPText. */
-    var description: AEPText? = null
+    var body: AepText? = null
+
+    /** The CTA buttons for the small image template, represented in model AEPButton. */
+    var buttons: List<AepButton>? = null
+
+    /** The dismiss buttom for the small image template, represented in model AEPDismissButton. */
+    var dismiss: AepDismissButton? = null
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
@@ -37,4 +45,12 @@ class SmallImageTemplate : AepUITemplate {
      * @return A string representing the type of the template.
      */
     override fun getType() = AepUITemplateType.SMALL_IMAGE
+
+    init {
+        image = (templateMap["image"] as? Map<String, Any>)?.let { AepImage(it) }
+        title = (templateMap["title"] as? Map<String, Any>)?.let { AepText(it) }
+        body = (templateMap["body"] as? Map<String, Any>)?.let { AepText(it) }
+        buttons = (templateMap["buttons"] as? List<Map<String, Any>>)?.map { AepButton(it) }
+        dismiss = (templateMap["dismiss"] as? Map<String, Any>)?.let { AepDismissButton(it) }
+    }
 }
