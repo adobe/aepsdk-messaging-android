@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPFont
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
 
 /**
  * A composable function that displays a text element with customizable properties.
@@ -31,14 +31,14 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPFont
  *            If not provided or invalid, defaults to black.
  * @param align Optional. A string representing the alignment of the text.
  *              Accepted values are "left", "center", and "right". Defaults to start alignment.
- * @param font Optional. An [AEPFont] object containing font properties such as size, weight, and style.
+ * @param font Optional. An [AepFont] object containing font properties such as size, weight, and style.
  */
 @Composable
 fun AEPTextComposable(
     content: String,
     clr: String? = null,
     align: String? = null,
-    font: AEPFont? = null
+    font: AepFont? = null
 ) {
     // Check for mandatory field
     require(content.isNotEmpty()) { "content is mandatory for AEPTextComposable" }

@@ -18,7 +18,7 @@ package com.adobe.marketing.mobile.aepuitemplates.utils
  * UI elements, and specific styling details. These constants are referenced in various UI model
  * classes to ensure consistency and avoid hardcoding string values.
  */
-class Constants {
+class AepUIConstants {
 
     class CardTemplate {
 
@@ -70,6 +70,7 @@ class Constants {
                     const val ACTION_URL = "actionUrl" // Key for the action URL of buttons
                     const val BOR_WIDTH = "borWidth" // Key for the border width of buttons
                     const val BOR_COLOR = "borColor" // Key for the border color of buttons
+                    const val BG_COLOR = "bgClr" // Key for the border color of buttons
                 }
             }
 

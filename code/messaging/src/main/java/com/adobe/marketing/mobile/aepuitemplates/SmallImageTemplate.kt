@@ -11,8 +11,8 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPImage
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPText
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 
 /**
@@ -23,13 +23,13 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 class SmallImageTemplate : AepUITemplate {
 
     /** The image component for the small image template, represented in model AEPImage. */
-    var image: AEPImage? = null
+    var image: AepImage? = null
 
     /** The title for the small image template, represented in model AEPText. */
-    var title: AEPText? = null
+    var title: AepText? = null
 
     /** The description for the small image template, represented in model AEPText. */
-    var description: AEPText? = null
+    var description: AepText? = null
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].

@@ -16,17 +16,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPText
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
  * A composable function that displays a button element with customizable properties.
  *
  * @param interactId A unique identifier for the button interaction. This is a mandatory field.
- * @param text An [AEPText] object that contains the text to be displayed on the button.
+ * @param text An [AepText] object that contains the text to be displayed on the button.
  *             The text.content is mandatory for this button.
  * @param actionUrl A string representing the URL to be triggered when the button is clicked.
  *                  This is a mandatory field.
@@ -37,10 +38,11 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AEPText
 @Composable
 fun AEPButtonComposable(
     interactId: String,
-    text: AEPText,
+    text: AepText,
     actionUrl: String,
     borWidth: Int? = null,
-    borColor: String? = null
+    borColor: String? = null,
+    bgColor: String? = null
 ) {
     // Check for mandatory fields
     require(interactId.isNotEmpty()) { "interactId is mandatory for AEPButtonComposable" }
@@ -49,15 +51,20 @@ fun AEPButtonComposable(
 
     // Set optional border properties
     val borderColor = borColor?.let { Color(parseColor(it)) } ?: Color.Transparent
+    val backgroundColor = bgColor?.let { Color(parseColor(it)) } ?: MaterialTheme.colors.primary
+    var elevation = ButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 8.dp)
+    if (borWidth != null && borWidth > 0) {
+        elevation = ButtonDefaults.elevation()
+    }
 
     // Composable for Button
     Button(
         onClick = {
-            // Handle button click logic
-            println("Button clicked with action URL: $actionUrl")
+            // TODO handle button click
         },
+        elevation = elevation,
         border = borWidth?.let { BorderStroke(it.dp, borderColor) },
-        colors = ButtonDefaults.buttonColors(backgroundColor = Color.Gray),
+        colors = ButtonDefaults.buttonColors(backgroundColor = backgroundColor),
         modifier = Modifier.padding(8.dp) // Modifier with padding to avoid layout issues
     ) {
         // Use AEPTextComposable to render the button text

@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 
 /**
  * Data class representing font styling in the UI.
@@ -23,16 +23,16 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
  *
  * @param fontMap A map containing key-value pairs to initialize the AEPFont properties.
  */
-data class AEPFont(
+data class AepFont(
     val name: String? = null,
     val size: Int? = null,
     val weight: String? = null,
     val style: List<String>? = null
 ) {
     constructor(fontMap: Map<String, Any>) : this(
-        name = fontMap[Constants.CardTemplate.UIElement.Font.NAME] as? String,
-        size = (fontMap[Constants.CardTemplate.UIElement.Font.SIZE] as? Number)?.toInt(),
-        weight = fontMap[Constants.CardTemplate.UIElement.Font.WEIGHT] as? String,
-        style = (fontMap[Constants.CardTemplate.UIElement.Font.STYLE] as? List<*>)?.filterIsInstance<String>()
+        name = fontMap[AepUIConstants.CardTemplate.UIElement.Font.NAME] as? String,
+        size = (fontMap[AepUIConstants.CardTemplate.UIElement.Font.SIZE] as? Number)?.toInt(),
+        weight = fontMap[AepUIConstants.CardTemplate.UIElement.Font.WEIGHT] as? String,
+        style = (fontMap[AepUIConstants.CardTemplate.UIElement.Font.STYLE] as? List<*>)?.filterIsInstance<String>()
     )
 }

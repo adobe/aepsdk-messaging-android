@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 
 /**
  * Data class representing a text element in the UI.
@@ -19,22 +19,22 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
  * @property content The content of the text.
  * @property clr The color of the text.
  * @property align The alignment of the text (e.g., left, right, center).
- * @property font The font styling of the text, represented by an [AEPFont] object.
+ * @property font The font styling of the text, represented by an [AepFont] object.
  *
  * @param textSchemaMap A map containing key-value pairs to initialize the AEPText properties.
  */
-data class AEPText(
+data class AepText(
     val content: String? = null,
     val clr: String? = null,
     val align: String? = null,
-    val font: AEPFont? = null
+    val font: AepFont? = null
 ) {
     constructor(textSchemaMap: Map<String, Any>) : this(
-        content = textSchemaMap[Constants.CardTemplate.UIElement.Text.CONTENT] as? String,
-        clr = textSchemaMap[Constants.CardTemplate.UIElement.Text.CLR] as? String,
-        align = textSchemaMap[Constants.CardTemplate.UIElement.Text.ALIGN] as? String,
-        font = (textSchemaMap[Constants.CardTemplate.UIElement.Text.FONT] as? Map<String, Any>)?.let {
-            AEPFont(it)
+        content = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CONTENT] as? String,
+        clr = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CLR] as? String,
+        align = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.ALIGN] as? String,
+        font = (textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.FONT] as? Map<String, Any>)?.let {
+            AepFont(it)
         }
     )
 }

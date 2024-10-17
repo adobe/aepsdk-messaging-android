@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 
 /**
  * Data class representing an image element in the UI.
@@ -25,7 +25,7 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.Constants
  *
  * @param imageMap A map containing key-value pairs to initialize the AEPImage properties.
  */
-data class AEPImage(
+data class AepImage(
     val url: String? = null,
     val darkUrl: String? = null,
     val bundle: String? = null,
@@ -34,11 +34,11 @@ data class AEPImage(
     val iconSize: Int? = null
 ) {
     constructor(imageMap: Map<String, Any>) : this(
-        url = imageMap[Constants.CardTemplate.UIElement.Image.URL] as? String,
-        darkUrl = imageMap[Constants.CardTemplate.UIElement.Image.DARK_URL] as? String,
-        bundle = imageMap[Constants.CardTemplate.UIElement.Image.BUNDLE] as? String,
-        darkBundle = imageMap[Constants.CardTemplate.UIElement.Image.DARK_BUNDLE] as? String,
-        icon = imageMap[Constants.CardTemplate.UIElement.Image.ICON] as? String,
-        iconSize = (imageMap[Constants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toInt()
+        url = imageMap[AepUIConstants.CardTemplate.UIElement.Image.URL] as? String,
+        darkUrl = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_URL] as? String,
+        bundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.BUNDLE] as? String,
+        darkBundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_BUNDLE] as? String,
+        icon = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON] as? String,
+        iconSize = (imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toInt()
     )
 }
