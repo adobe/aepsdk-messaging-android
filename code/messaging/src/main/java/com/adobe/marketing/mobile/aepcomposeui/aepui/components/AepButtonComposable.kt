@@ -36,7 +36,7 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  *                 If not provided, the default border color is transparent.
  */
 @Composable
-fun AepButtonComposable(
+internal fun AepButtonComposable(
     interactId: String,
     text: AepText,
     actionUrl: String,

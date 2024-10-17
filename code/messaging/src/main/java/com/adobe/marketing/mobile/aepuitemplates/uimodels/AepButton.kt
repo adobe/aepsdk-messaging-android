@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
  *
  * @param buttonSchemaMap A map containing key-value pairs to initialize the AEPButton properties.
  */
-internal data class AepButton(
+data class AepButton(
     val interactId: String? = null,
     val actionUrl: String? = null,
     val text: AepText? = null,
@@ -39,7 +39,7 @@ internal data class AepButton(
         actionUrl = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.ACTION_URL] as? String,
         text = (buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.TEXT] as? Map<String, Any>)?.let { AepText(it) },
         borWidth = (buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BOR_WIDTH] as? Number)?.toFloat(),
-        borColor = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BOR_COLOR] as? AepColor,
-        bgColour = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BG_COLOR] as? AepColor
+        borColor = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BOR_COLOR]?.let { AepColor(it as Map<String, Any>) },
+        bgColour = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BG_COLOR]?.let { AepColor(it as Map<String, Any>) }
     )
 }

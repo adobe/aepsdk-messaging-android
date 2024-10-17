@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
+import com.adobe.marketing.mobile.aepuitemplates.uiproperties.AepColor
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 
 /**
@@ -25,13 +26,14 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
  *
  * @param imageMap A map containing key-value pairs to initialize the AEPImage properties.
  */
-data class AepImage(
+internal data class AepImage(
     val url: String? = null,
     val darkUrl: String? = null,
     val bundle: String? = null,
     val darkBundle: String? = null,
     val icon: String? = null,
     val iconSize: Float? = null,
+    val iconColor: AepColor? = null,
     val alt: String? = null,
     val placeholder: String? = null
 ) {
@@ -42,6 +44,7 @@ data class AepImage(
         darkBundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_BUNDLE] as? String,
         icon = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON] as? String,
         iconSize = (imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toFloat(),
+        iconColor = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_COLOR]?.let { AepColor(it as Map<String, Any>) },
         alt = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ALT] as? String,
         placeholder = imageMap[AepUIConstants.CardTemplate.UIElement.Image.PLACEHOLDER] as? String
     )

@@ -32,7 +32,7 @@ data class AepText(
 ) {
     constructor(textSchemaMap: Map<String, Any>) : this(
         content = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CONTENT] as? String,
-        clr = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CLR] as? AepColor,
+        clr = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CLR]?.let { AepColor(it as Map<String, Any>) },
         align = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.ALIGN] as? String,
         font = (textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.FONT] as? Map<String, Any>)?.let {
             AepFont(it)

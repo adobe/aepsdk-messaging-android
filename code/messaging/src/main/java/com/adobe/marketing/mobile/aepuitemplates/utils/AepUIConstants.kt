@@ -86,6 +86,7 @@ internal class AepUIConstants {
                         "darkBundle" // Key for the image resource bundle in dark mode
                     const val ICON = "icon" // Key for the icon name or identifier
                     const val ICON_SIZE = "iconSize" // Key for the size of the icon
+                    const val ICON_COLOR = "iconColor" // Key for the color of the icon
                     const val ALT = "alt" // Key for text that describes the image
                     const val PLACEHOLDER = "placeholder" // Key for the placeholder image url
                 }

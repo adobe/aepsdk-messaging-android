@@ -34,7 +34,7 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
  * @param font Optional. An [AepFont] object containing font properties such as size, weight, and style.
  */
 @Composable
-fun AepTextComposable(
+internal fun AepTextComposable(
     content: String,
     clr: String? = null,
     align: String? = null,
