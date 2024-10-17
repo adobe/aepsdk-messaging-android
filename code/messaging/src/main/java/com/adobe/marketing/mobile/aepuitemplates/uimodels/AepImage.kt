@@ -31,7 +31,9 @@ data class AepImage(
     val bundle: String? = null,
     val darkBundle: String? = null,
     val icon: String? = null,
-    val iconSize: Int? = null
+    val iconSize: Float? = null,
+    val alt: String? = null,
+    val placeholder: String? = null
 ) {
     constructor(imageMap: Map<String, Any>) : this(
         url = imageMap[AepUIConstants.CardTemplate.UIElement.Image.URL] as? String,
@@ -39,6 +41,8 @@ data class AepImage(
         bundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.BUNDLE] as? String,
         darkBundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_BUNDLE] as? String,
         icon = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON] as? String,
-        iconSize = (imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toInt()
+        iconSize = (imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toFloat(),
+        alt = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ALT] as? String,
+        placeholder = imageMap[AepUIConstants.CardTemplate.UIElement.Image.PLACEHOLDER] as? String
     )
 }

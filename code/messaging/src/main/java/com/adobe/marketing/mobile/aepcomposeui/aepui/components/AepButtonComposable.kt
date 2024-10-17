@@ -36,7 +36,7 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  *                 If not provided, the default border color is transparent.
  */
 @Composable
-fun AEPButtonComposable(
+fun AepButtonComposable(
     interactId: String,
     text: AepText,
     actionUrl: String,
@@ -44,6 +44,9 @@ fun AEPButtonComposable(
     borColor: String? = null,
     bgColor: String? = null
 ) {
+    // TODO: Implement the AEPButtonComposable
+    // Here code added as placeholder for reference, actual implementation is pending
+
     // Check for mandatory fields
     require(interactId.isNotEmpty()) { "interactId is mandatory for AEPButtonComposable" }
     require(text.content != null) { "text.content is mandatory for AEPButtonComposable" }
@@ -68,11 +71,6 @@ fun AEPButtonComposable(
         modifier = Modifier.padding(8.dp) // Modifier with padding to avoid layout issues
     ) {
         // Use AEPTextComposable to render the button text
-        AEPTextComposable(
-            content = text.content.orEmpty(),
-            clr = text.clr,
-            align = text.align,
-            font = text.font
-        )
+        // TODO to complete
     }
 }

@@ -34,13 +34,14 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
  * @param font Optional. An [AepFont] object containing font properties such as size, weight, and style.
  */
 @Composable
-fun AEPTextComposable(
+fun AepTextComposable(
     content: String,
     clr: String? = null,
     align: String? = null,
     font: AepFont? = null
 ) {
-    // Check for mandatory field
+    // TODO: Implement the AEPTextComposable
+    // Here code added as placeholder for reference, actual implementation is pending
     require(content.isNotEmpty()) { "content is mandatory for AEPTextComposable" }
 
     // Parse color from string to Color object, with exception handling

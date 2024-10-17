@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
+import com.adobe.marketing.mobile.aepuitemplates.uiproperties.AepColor
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 
 /**
@@ -25,13 +26,13 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
  */
 data class AepText(
     val content: String? = null,
-    val clr: String? = null,
+    val clr: AepColor? = null,
     val align: String? = null,
     val font: AepFont? = null
 ) {
     constructor(textSchemaMap: Map<String, Any>) : this(
         content = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CONTENT] as? String,
-        clr = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CLR] as? String,
+        clr = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.CLR] as? AepColor,
         align = textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.ALIGN] as? String,
         font = (textSchemaMap[AepUIConstants.CardTemplate.UIElement.Text.FONT] as? Map<String, Any>)?.let {
             AepFont(it)

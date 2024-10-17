@@ -18,7 +18,7 @@ package com.adobe.marketing.mobile.aepuitemplates.utils
  * UI elements, and specific styling details. These constants are referenced in various UI model
  * classes to ensure consistency and avoid hardcoding string values.
  */
-class AepUIConstants {
+internal class AepUIConstants {
 
     class CardTemplate {
 
@@ -40,19 +40,6 @@ class AepUIConstants {
             }
         }
 
-        class DismissButton {
-            companion object {
-                const val STYLE = "style" // Key for the style of the dismiss button
-            }
-
-            class Icon {
-                companion object {
-                    const val SIMPLE = "xmark" // Key for a simple icon
-                    const val CIRCLE = "xmark.circle.fill" // Key for a filled circle icon
-                }
-            }
-        }
-
         class UIElement {
             class Text {
                 companion object {
@@ -60,6 +47,22 @@ class AepUIConstants {
                     const val CLR = "clr" // Key for the color of text elements
                     const val ALIGN = "align" // Key for the alignment of text elements
                     const val FONT = "font" // Key for the font of text elements
+                }
+            }
+
+            class DismissButton {
+                companion object {
+                    const val STYLE = "style" // Key for the style of the dismiss button
+                    const val NONE_ICON = "none" // no icon for the dismiss button, default value
+                    const val SIMPLE_ICON = "icon" // icon style for the of the dismiss button
+                    const val CIRCLE_ICON = "circle" // circle icon style for the of the dismiss button
+                }
+
+                class Icon {
+                    companion object {
+                        const val SIMPLE = "xmark" // Key for a simple icon
+                        const val CIRCLE = "xmark.circle.fill" // Key for a filled circle icon
+                    }
                 }
             }
 
@@ -83,6 +86,8 @@ class AepUIConstants {
                         "darkBundle" // Key for the image resource bundle in dark mode
                     const val ICON = "icon" // Key for the icon name or identifier
                     const val ICON_SIZE = "iconSize" // Key for the size of the icon
+                    const val ALT = "alt" // Key for text that describes the image
+                    const val PLACEHOLDER = "placeholder" // Key for the placeholder image url
                 }
             }
 
@@ -92,6 +97,13 @@ class AepUIConstants {
                     const val SIZE = "size" // Key for the font size
                     const val WEIGHT = "weight" // Key for the font weight
                     const val STYLE = "style" // Key for the font style
+                }
+            }
+
+            class Color {
+                companion object {
+                    const val LIGHT = "light" // Key for the light color
+                    const val DARK = "dark" // Key for the dark color
                 }
             }
         }
