@@ -11,8 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
 
-class AEPButton(buttonContent: JSONObject?) {
-    // TODO: Implement the AEPButton class
-}
+@Serializable
+data class AEPButton(val interactId: String, val text: AEPText, val actionUrl: String)

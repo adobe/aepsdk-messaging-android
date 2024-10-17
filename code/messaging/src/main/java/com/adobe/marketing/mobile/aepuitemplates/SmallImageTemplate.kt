@@ -12,53 +12,45 @@
 package com.adobe.marketing.mobile.aepuitemplates
 
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButton
+import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPImage
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 import com.adobe.marketing.mobile.messaging.UiTemplateConstructionFailedException
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
  *
- * This class contains properties for an image URL, title, and description.
+ * @property title The title text and display settings.
+ * @property body The body text and display settings.
+ * @property image The details of the image to be displayed.
+ * @property actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
+ * @property buttons The details for the small image template buttons.
+ * @property dismissBtn The details for the small image template dismiss button.
  */
-class SmallImageTemplate(content: String) : AepUITemplate {
+@Serializable
+data class SmallImageTemplate(
+    val title: AEPText,
+    val body: AEPText? = null,
+    val image: AEPImage? = null,
+    val actionUrl: String? = null,
+    val buttons: List<AEPButton>? = null,
+    val dismissBtn: AEPDismissButton? = null
+) : AepUITemplate {
 
-    /** Title text and display settings  */
-    internal val title: AEPText
-
-    /** Body text and display settings */
-    internal val body: AEPText?
-
-    /** The details of the image to be displayed. */
-    internal val image: AEPImage?
-
-    /** If provided, interacting with this card will result in the opening of the actionUrl. */
-    internal val actionUrl: String?
-
-    /** The details of the buttons. */
-    internal val buttons: List<AEPButton>?
-
-    /** The description for the small image template. */
-    internal val dismissBtn: JSONObject?
-
-    init {
-        try {
-            val contentJson = JSONObject(content)
-            title = AEPText(contentJson.getJSONObject("title"))
-            body = AEPText(contentJson.optJSONObject("body"))
-            image = AEPImage(contentJson.optJSONObject("image"))
-            actionUrl = contentJson.optString("actionUrl", "")
-            val buttonArray = contentJson.optJSONArray("buttons")
-            buttons = buttonArray?.let {
-                (0 until it.length()).mapNotNull { index ->
-                    AEPButton(it.optJSONObject(index))
-                }
+    companion object {
+        @JvmStatic
+        fun fromJsonString(jsonString: String): SmallImageTemplate {
+            val json = Json { ignoreUnknownKeys = true }
+            val smallImageTemplate: SmallImageTemplate?
+            try {
+                smallImageTemplate = json.decodeFromString<SmallImageTemplate>(jsonString)
+            } catch (e: Exception) {
+                throw UiTemplateConstructionFailedException("Failed to create a small image template from the provided JSON string: ${e.localizedMessage}")
             }
-            dismissBtn = contentJson.optJSONObject("dismissBtn")
-        } catch (e: Exception) {
-            throw UiTemplateConstructionFailedException("Exception occurred while constructing SmallImageTemplate: ${e.localizedMessage}")
+            return smallImageTemplate
         }
     }
 

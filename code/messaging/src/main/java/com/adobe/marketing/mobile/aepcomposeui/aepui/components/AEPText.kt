@@ -11,8 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
-import org.json.JSONObject
+import kotlinx.serialization.Serializable
 
-class AEPText(textContent: JSONObject?) {
-    // TODO: Implement the AEPText class
-}
+@Serializable
+data class AEPText(val content: String)
