@@ -11,6 +11,9 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 
 /**
@@ -19,14 +22,21 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
  * This class contains properties for an image URL, title, and description.
  */
 class SmallImageTemplate : AepUITemplate {
-    /** The URL of the image for the small image template. */
-    val imageUrl: String = ""
 
-    /** The title for the small image template. */
-    val title: String = ""
+    // TODO complete the implementation of this class when DataProvider is implemented
 
-    /** The description for the small image template. */
-    val description: String = ""
+    /** The image component for the small image template, represented in model AEPImage. */
+    var image: AepImage? = null
+
+    /** The title for the small image template, represented in model AEPText. */
+    var title: AepText? = null
+
+    /** The description for the small image template, represented in model AEPText. */
+    var description: AepText? = null
+
+    /** The dismiss button for the small image template, represented in model AepDismissButton.
+     * This is optional and can be null. */
+    var dismissButton: AepDismissButton? = null
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
