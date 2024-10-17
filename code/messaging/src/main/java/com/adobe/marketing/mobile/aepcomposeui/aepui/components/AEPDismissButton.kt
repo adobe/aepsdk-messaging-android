@@ -14,4 +14,4 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AEPDismissButton(val style: String? = null)
+data class AEPDismissButton(val style: String)
