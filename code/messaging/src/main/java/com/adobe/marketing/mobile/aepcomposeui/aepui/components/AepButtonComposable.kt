@@ -28,9 +28,9 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  * A composable function that displays a button element with customizable properties.
  *
  * @param defaultButtonStyle The default style to be applied to the button element.
- * @param overriddenButtonStyle The style provided by app that overrides the default style.
+ * @param overriddenButtonStyle The button style provided by app that overrides the default button style.
  * @param defaultButtonTextStyle The default style to be applied to the button text.
- * @param overriddenButtonTextStyle The style provided by app that overrides the default text style.
+ * @param overriddenButtonTextStyle The style provided by app that overrides the default button text style.
  * @param onClick Method that is called when this button is clicked
  */
 @Composable
