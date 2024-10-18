@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.Composable
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
@@ -42,10 +43,10 @@ fun AEPTextTestPreviews() {
         AepText(content = "Basic Text").Composable()
 
         // Color variations
-        AepText(content = "Red Text", clr = "#FF0000").Composable()
-        AepText(content = "Green Text", clr = "#00FF00").Composable()
-        AepText(content = "Blue Text", clr = "#0000FF").Composable()
-        AepText(content = "Invalid Color", clr = "invalid").Composable() // Test invalid color
+        AepText(content = "Red Text", color = AepColor("#FF0000")).Composable()
+        AepText(content = "Green Text", color = AepColor("#00FF00")).Composable()
+        AepText(content = "Blue Text", color = AepColor("#0000FF")).Composable()
+        AepText(content = "Invalid Color", color = AepColor("invalid")).Composable() // Test invalid color
 
         // Alignment variations
         AepText(content = "Left Aligned", align = "left").Composable()
@@ -63,7 +64,7 @@ fun AEPTextTestPreviews() {
         // Combination of properties
         AepText(
             content = "Complex Styling",
-            clr = "#800080",
+            color = AepColor("#800080"),
             align = "center",
             font = AepFont(size = 18, weight = "bold", style = listOf("italic"))
         ).Composable()
@@ -75,7 +76,7 @@ fun AEPTextTestPreviews() {
         AepText(content = "Multi\nLine\nText").Composable() // Multi-line text
 
         // Null values for optional parameters
-        AepText(content = "Null Color", clr = null).Composable()
+        AepText(content = "Null Color", color = null).Composable()
         AepText(content = "Null Alignment", align = null).Composable()
         AepText(content = "Null Font", font = null).Composable()
 
