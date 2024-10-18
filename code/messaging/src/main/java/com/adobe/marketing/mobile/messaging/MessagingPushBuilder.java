@@ -230,7 +230,7 @@ class MessagingPushBuilder {
         NotificationCompat.BigPictureStyle bigPictureStyle =
                 new NotificationCompat.BigPictureStyle();
         bigPictureStyle.bigPicture(bitmap);
-        bigPictureStyle.bigLargeIcon(null);
+        bigPictureStyle.bigLargeIcon((Bitmap) null);
         bigPictureStyle.setBigContentTitle(payload.getTitle());
         bigPictureStyle.setSummaryText(payload.getBody());
         notificationBuilder.setStyle(bigPictureStyle);

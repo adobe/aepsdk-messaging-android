@@ -9,14 +9,22 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui
 
-/**
- * Represents a dismiss button for a content card in the small image template.
- *
- * @property style The style of the dismiss button, which can be one of the following:
- * - `none`: No icon displayed.
- * - `simple`: A simple dismiss icon.
- * - `circle`: A circular dismiss icon.
- */
-data class AepDismissButton(val style: String? = null)
+import androidx.compose.ui.text.font.FontWeight
+
+internal class AepUIConstants {
+
+    internal class SmallImageCard {
+        internal class DefaultStyle {
+            companion object {
+                const val TITLE_TEXT_SIZE = 15
+                val TITLE_FONT_WEIGHT = FontWeight.Medium
+                const val BODY_TEXT_SIZE = 13
+                val BODY_FONT_WEIGHT = FontWeight.Normal
+                const val BUTTON_TEXT_SIZE = 13
+                val BUTTON_FONT_WEIGHT = FontWeight.Normal
+            }
+        }
+    }
+}
