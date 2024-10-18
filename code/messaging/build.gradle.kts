@@ -13,6 +13,7 @@ import com.adobe.marketing.mobile.gradle.BuildConstants
  */
 plugins {
     id("aep-library")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.20"
 }
 
 val mavenCoreVersion: String by project
@@ -50,6 +51,7 @@ aepLibrary {
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
     // testImplementation dependencies provided by aep-library:
     // MOCKITO_CORE, MOCKITO_INLINE, JSON

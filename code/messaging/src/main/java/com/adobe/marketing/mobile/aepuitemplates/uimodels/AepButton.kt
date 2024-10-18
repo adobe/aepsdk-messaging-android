@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
+import kotlinx.serialization.Serializable
+
 /**
  * Data class representing a button element in the UI.
  *
@@ -22,6 +24,7 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property bgColour The background color of the button represented as AepColor object.
  *
  */
+@Serializable
 data class AepButton(
     val id: String,
     val actionUrl: String,

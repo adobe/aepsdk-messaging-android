@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
+import kotlinx.serialization.Serializable
+
 /**
  * Data class representing font styling in the UI.
  *
@@ -19,6 +21,7 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property weight The weight of the font (e.g., bold, regular).
  * @property style A list of styles for the font (e.g., italic, underline).
  **/
+@Serializable
 data class AepFont(
     val name: String? = null,
     val size: Int? = null,

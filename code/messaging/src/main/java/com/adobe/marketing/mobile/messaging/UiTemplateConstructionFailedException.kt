@@ -9,22 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
-
-import kotlinx.serialization.Serializable
+package com.adobe.marketing.mobile.messaging
 
 /**
- * Data class representing a text element in the UI.
+ * Exception indicating that construction of a UI template failed.
  *
- * @property content The content of the text.
- * @property clr The color of the text.
- * @property align The alignment of the text (e.g., left, right, center).
- * @property font The font styling of the text, represented by an [AepFont] object.
+ * @param message [String] containing the message for the new exception
  */
-@Serializable
-data class AepText(
-    val content: String,
-    val clr: AepColor? = null,
-    val align: String? = null,
-    val font: AepFont? = null
-)
+class UiTemplateConstructionFailedException(message: String) : Exception(message)
