@@ -18,6 +18,7 @@ plugins {
 val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
+val toolingPreviewVersion = "1.7.4"
 val viewModelComposeVersion = "2.8.6"
 val runtimeComposeVersion = "2.8.6"
 val material3Version = "1.3.0"
@@ -60,6 +61,9 @@ aepLibrary {
 
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    implementation(BuildConstants.Dependencies.COMPOSE_UI_TOOLING)
+    // Compose UI Tooling Preview
+    implementation("androidx.compose.ui:ui-tooling-preview:$toolingPreviewVersion")
     // Compose ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$viewModelComposeVersion")
     // Compose Runtime

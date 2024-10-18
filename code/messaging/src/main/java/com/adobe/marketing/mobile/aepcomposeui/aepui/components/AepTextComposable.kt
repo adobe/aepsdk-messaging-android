@@ -47,8 +47,8 @@ internal fun AepText.Composable(
     }
 
     // Convert server font properties from string to respective font objects
-    // map from `font.name` if needed
-    val fontFamily = null
+    // TODO map font string to FontFamily
+    // val fontFamily = null
     val fontSize = (font?.size)?.sp
     val fontWeight = when (font?.weight?.lowercase()) {
         "bold" -> FontWeight.Bold
@@ -66,7 +66,6 @@ internal fun AepText.Composable(
         defaultTextStyle
             .merge(textColor?.let { TextStyle(color = it) })
             .merge(textAlign?.let { TextStyle(textAlign = it) })
-            .merge(fontFamily?.let { TextStyle(fontFamily = it) })
             .merge(fontWeight?.let { TextStyle(fontWeight = it) })
             .merge(fontSize?.let { TextStyle(fontSize = it) })
             .merge(fontStyle?.let { TextStyle(fontStyle = it) })
