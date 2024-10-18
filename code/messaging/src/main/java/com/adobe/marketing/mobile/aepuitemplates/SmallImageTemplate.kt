@@ -15,6 +15,10 @@ import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButton
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPImage
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPText
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 import com.adobe.marketing.mobile.messaging.UiTemplateConstructionFailedException
 import kotlinx.serialization.Serializable
@@ -32,12 +36,13 @@ import kotlinx.serialization.json.Json
  */
 @Serializable
 data class SmallImageTemplate(
-    val title: AEPText,
-    val body: AEPText? = null,
-    val image: AEPImage? = null,
+    val id: String,
+    val title: AepText,
+    val body: AepText? = null,
+    val image: AepImage? = null,
     val actionUrl: String? = null,
-    val buttons: List<AEPButton>? = null,
-    val dismissBtn: AEPDismissButton? = null
+    val buttons: List<AepButton>? = null,
+    val dismissBtn: AepDismissButton? = null
 ) : AepUITemplate {
 
     companion object {

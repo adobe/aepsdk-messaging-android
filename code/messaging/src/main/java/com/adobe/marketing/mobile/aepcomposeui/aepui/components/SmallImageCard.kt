@@ -43,11 +43,14 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
  * @param observer An optional observer that listens to UI events.
  */
 @Composable
-internal fun SmallImageCard(
+fun SmallImageCard(
     ui: SmallImageUI,
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
+
+    // TODO - Implement the SmallImageCard composable
+    // Here code added as placeholder for reference, actual implementation is pending
 
     LaunchedEffect(key1 = Unit) {
         observer?.onEvent(UIEvent.Display(ui))
@@ -81,16 +84,14 @@ internal fun SmallImageCard(
             ) {
                 ui.getTemplate().title.let {
                     Text(
-                        text = it.toString(),
+                        text = it?.content ?: "",
                         style = style.getTitleTextStyle(ui.getTemplate()),
                     )
                 }
-                ui.getTemplate().body.let {
-                    Text(
-                        text = it.toString(),
-                        style = MaterialTheme.typography.body1
-                    )
-                }
+                Text(
+                    text = ui.getTemplate().body?.content ?: "",
+                    style = MaterialTheme.typography.body1
+                )
             }
         }
     }
