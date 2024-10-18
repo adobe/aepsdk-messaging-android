@@ -89,7 +89,7 @@ fun SmallImageCard(
                     )
                 }
                 Text(
-                    text = ui.getTemplate().description?.content ?: "",
+                    text = ui.getTemplate().body?.content ?: "",
                     style = MaterialTheme.typography.body1
                 )
             }
