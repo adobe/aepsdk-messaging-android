@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
+import kotlinx.serialization.Serializable
+
 /**
  * Data class representing an image element in the UI.
  *
@@ -21,6 +23,7 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property icon The icon name or identifier.
  * @property iconSize The size of the icon.
  */
+@Serializable
 data class AepImage(
     val url: String? = null,
     val darkUrl: String? = null,

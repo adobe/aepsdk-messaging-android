@@ -11,10 +11,10 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButton
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPDismissButton
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPImage
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPText
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 import com.adobe.marketing.mobile.messaging.UiTemplateConstructionFailedException
 import org.json.JSONObject
@@ -29,6 +29,7 @@ class SmallImageTemplateTests {
     fun setup() {
         smallContentCardString = """
             {
+                "id": "testId",
                 "actionUrl": "https://luma.com/sale",
                 "title": {
                     "content": "Card Title"
@@ -42,14 +43,14 @@ class SmallImageTemplateTests {
                 },
                 "buttons": [
                     {
-                        "interactId": "purchaseID",
+                        "id": "purchaseID",
                         "text": {
                             "content": "Purchase Now"
                         },
                         "actionUrl": "https://adobe.com/offer"
                     },
                     {
-                        "interactId": "cancelID",
+                        "id": "cancelID",
                         "text": {
                             "content": "Cancel"
                         },
@@ -69,16 +70,17 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(smallContentCardString)
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -88,28 +90,30 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_initialization_fromParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
-            AEPText("body"),
-            AEPImage("https://imagetoDownload.com/cardimage"),
+            "testId",
+            AepText("Card Title"),
+            AepText("body"),
+            AepImage("https://imagetoDownload.com/cardimage"),
             "https://luma.com/sale",
             listOf(
-                AEPButton("purchaseID", AEPText("Purchase Now"), "https://adobe.com/offer"),
-                AEPButton("cancelID", AEPText("Cancel"), "app://home")
+                AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
+                AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AEPDismissButton("circle")
+            AepDismissButton("circle")
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -132,6 +136,14 @@ class SmallImageTemplateTests {
         SmallImageTemplate.fromJsonString(contentJson.toString())
     }
 
+    @Test(expected = UiTemplateConstructionFailedException::class)
+    fun test_SmallImageTemplate_missingIdInJson() {
+        // setup
+        val contentJson = JSONObject(smallContentCardString)
+        contentJson.remove("id")
+        SmallImageTemplate.fromJsonString(contentJson.toString())
+    }
+
     @Test
     fun test_SmallImageTemplate_missingBodyInJson() {
         // setup
@@ -140,16 +152,17 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(contentJson.toString())
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals(null, template.body)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -163,16 +176,17 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(contentJson.toString())
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals(null, template.image)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -186,16 +200,17 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(contentJson.toString())
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals(null, template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -209,6 +224,7 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(contentJson.toString())
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -224,16 +240,17 @@ class SmallImageTemplateTests {
         val template = SmallImageTemplate.fromJsonString(contentJson.toString())
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals(null, template.dismissBtn)
@@ -243,28 +260,30 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_missingBodyInParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
+            "testId",
+            AepText("Card Title"),
             null,
-            AEPImage("https://imagetoDownload.com/cardimage"),
+            AepImage("https://imagetoDownload.com/cardimage"),
             "https://luma.com/sale",
             listOf(
-                AEPButton("purchaseID", AEPText("Purchase Now"), "https://adobe.com/offer"),
-                AEPButton("cancelID", AEPText("Cancel"), "app://home")
+                AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
+                AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AEPDismissButton("circle")
+            AepDismissButton("circle")
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals(null, template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -274,28 +293,30 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_missingImageInParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
-            AEPText("body"),
+            "testId",
+            AepText("Card Title"),
+            AepText("body"),
             null,
             "https://luma.com/sale",
             listOf(
-                AEPButton("purchaseID", AEPText("Purchase Now"), "https://adobe.com/offer"),
-                AEPButton("cancelID", AEPText("Cancel"), "app://home")
+                AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
+                AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AEPDismissButton("circle")
+            AepDismissButton("circle")
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals(null, template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -305,28 +326,30 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_missingActionUrlInParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
-            AEPText("body"),
-            AEPImage("https://imagetoDownload.com/cardimage"),
+            "testId",
+            AepText("Card Title"),
+            AepText("body"),
+            AepImage("https://imagetoDownload.com/cardimage"),
             null,
             listOf(
-                AEPButton("purchaseID", AEPText("Purchase Now"), "https://adobe.com/offer"),
-                AEPButton("cancelID", AEPText("Cancel"), "app://home")
+                AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
+                AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AEPDismissButton("circle")
+            AepDismissButton("circle")
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals(null, template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals("circle", template.dismissBtn?.style)
@@ -336,15 +359,17 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_missingButtonsInParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
-            AEPText("body"),
-            AEPImage("https://imagetoDownload.com/cardimage"),
+            "testId",
+            AepText("Card Title"),
+            AepText("body"),
+            AepImage("https://imagetoDownload.com/cardimage"),
             "https://luma.com/sale",
             null,
-            AEPDismissButton("circle")
+            AepDismissButton("circle")
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -357,28 +382,30 @@ class SmallImageTemplateTests {
     fun test_SmallImageTemplate_missingDismissButtonInParameters() {
         // setup
         val template = SmallImageTemplate(
-            AEPText("Card Title"),
-            AEPText("body"),
-            AEPImage("https://imagetoDownload.com/cardimage"),
-            null,
+            "testId",
+            AepText("Card Title"),
+            AepText("body"),
+            AepImage("https://imagetoDownload.com/cardimage"),
+            "https://luma.com/sale",
             listOf(
-                AEPButton("purchaseID", AEPText("Purchase Now"), "https://adobe.com/offer"),
-                AEPButton("cancelID", AEPText("Cancel"), "app://home")
+                AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
+                AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
             null
         )
 
         // verify
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
-        assertEquals(null, template.actionUrl)
+        assertEquals("https://luma.com/sale", template.actionUrl)
         val buttons = template.buttons
         assertEquals(2, buttons?.size)
-        assertEquals("purchaseID", buttons?.get(0)?.interactId)
+        assertEquals("purchaseID", buttons?.get(0)?.id)
         assertEquals("Purchase Now", buttons?.get(0)?.text?.content)
         assertEquals("https://adobe.com/offer", buttons?.get(0)?.actionUrl)
-        assertEquals("cancelID", buttons?.get(1)?.interactId)
+        assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
         assertEquals(null, template.dismissBtn)

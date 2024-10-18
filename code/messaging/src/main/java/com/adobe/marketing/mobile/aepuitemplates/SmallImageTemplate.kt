@@ -11,10 +11,6 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPButton
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPDismissButton
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPImage
-import com.adobe.marketing.mobile.aepcomposeui.aepui.components.AEPText
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
