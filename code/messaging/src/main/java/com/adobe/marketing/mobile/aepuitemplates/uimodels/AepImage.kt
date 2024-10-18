@@ -18,17 +18,21 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property darkUrl The URL of the image for dark mode.
  * @property bundle The resource bundle for the image.
  * @property darkBundle The resource bundle for the image in dark mode.
- * @property bundledResource The icon name or identifier.
- * @property size The size of the icon.
+ * @property icon The icon name or identifier.
+ * @property iconSize The size of the icon.
+ * @property iconColor The color of the icon.
+ * @property alt The alt text for the image.
+ * @property placeholder The placeholder image for the image.
  */
 data class AepImage(
     val url: String? = null,
     val darkUrl: String? = null,
     val bundle: String? = null,
     val darkBundle: String? = null,
-    val bundledResource: String? = null,
-    val size: Float? = null,
-    val tint: AepColor? = null,
+    // TODO: verify Android equivalent of icon
+    val icon: String? = null,
+    val iconSize: Float? = null,
+    val iconColor: AepColor? = null,
     val alt: String? = null,
     val placeholder: String? = null
 )
