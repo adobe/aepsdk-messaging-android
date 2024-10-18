@@ -26,8 +26,8 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  */
 @Preview(showBackground = true)
 @Composable
-fun AepButtonPreview() {
-    // Render the AEPButtonComposable with the properties from aepButton
+internal fun AepButtonComposablePreview() {
+    // Render the AepButtonComposable with the properties from AepButton
     AepButton(
         id = "button1",
         text = AepText(

@@ -28,7 +28,7 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  * A composable function that displays a text element with customizable properties.
  *
  * @param defaultStyle The default style to be applied to the text element.
- * @param overriddenStyle The style provided by app that overrides the default style.
+ * @param overriddenStyle The style provided by app that overrides the default text style.
  */
 @Composable
 internal fun AepText.Composable(

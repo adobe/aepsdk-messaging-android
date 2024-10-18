@@ -34,8 +34,8 @@ class SmallImageUIStyle(
         @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.DefaultStyle.TITLE_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.DefaultStyle.TITLE_FONT_WEIGHT
+                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_FONT_WEIGHT
             )
         )
 
@@ -44,8 +44,8 @@ class SmallImageUIStyle(
         @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.DefaultStyle.BODY_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.DefaultStyle.BODY_FONT_WEIGHT,
+                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BODY_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BODY_FONT_WEIGHT,
             )
         )
 
@@ -54,8 +54,8 @@ class SmallImageUIStyle(
         @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.DefaultStyle.BUTTON_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.DefaultStyle.BUTTON_FONT_WEIGHT,
+                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_FONT_WEIGHT,
             )
         )
 }

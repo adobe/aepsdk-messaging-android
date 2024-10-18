@@ -33,7 +33,7 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
     device = "spec:width=1080px,height=2340px,dpi=440"
 )
 @Composable
-fun AepTextPreview() {
+internal fun AepTextComposablePreview() {
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
