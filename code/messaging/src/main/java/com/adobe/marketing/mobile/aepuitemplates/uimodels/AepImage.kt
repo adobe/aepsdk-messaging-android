@@ -11,9 +11,6 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.uiproperties.AepColor
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
-
 /**
  * Data class representing an image element in the UI.
  *
@@ -23,10 +20,8 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
  * @property darkBundle The resource bundle for the image in dark mode.
  * @property icon The icon name or identifier.
  * @property iconSize The size of the icon.
- *
- * @param imageMap A map containing key-value pairs to initialize the AEPImage properties.
  */
-internal data class AepImage(
+data class AepImage(
     val url: String? = null,
     val darkUrl: String? = null,
     val bundle: String? = null,
@@ -36,16 +31,4 @@ internal data class AepImage(
     val iconColor: AepColor? = null,
     val alt: String? = null,
     val placeholder: String? = null
-) {
-    constructor(imageMap: Map<String, Any>) : this(
-        url = imageMap[AepUIConstants.CardTemplate.UIElement.Image.URL] as? String,
-        darkUrl = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_URL] as? String,
-        bundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.BUNDLE] as? String,
-        darkBundle = imageMap[AepUIConstants.CardTemplate.UIElement.Image.DARK_BUNDLE] as? String,
-        icon = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON] as? String,
-        iconSize = (imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_SIZE] as? Number)?.toFloat(),
-        iconColor = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ICON_COLOR]?.let { AepColor(it as Map<String, Any>) },
-        alt = imageMap[AepUIConstants.CardTemplate.UIElement.Image.ALT] as? String,
-        placeholder = imageMap[AepUIConstants.CardTemplate.UIElement.Image.PLACEHOLDER] as? String
-    )
-}
+)

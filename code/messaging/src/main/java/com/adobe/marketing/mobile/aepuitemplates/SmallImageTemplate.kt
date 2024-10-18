@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
@@ -19,29 +20,22 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
  *
- * This class contains properties for an image URL, title, and description.
+ * @property title The title text and display settings.
+ * @property body The body text and display settings.
+ * @property image The details of the image to be displayed.
+ * @property actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
+ * @property buttons The details for the small image template buttons.
+ * @property dismissBtn The details for the small image template dismiss button.
  */
-class SmallImageTemplate : AepUITemplate {
+data class SmallImageTemplate(
+    val id: String,
+    val title: AepText,
+    val body: AepText? = null,
+    val image: AepImage? = null,
+    val actionUrl: String? = null,
+    val buttons: List<AepButton>? = null,
+    val dismissBtn: AepDismissButton? = null
+) : AepUITemplate  {
 
-    // TODO complete the implementation of this class when DataProvider is implemented
-
-    /** The image component for the small image template, represented in model AEPImage. */
-    var image: AepImage? = null
-
-    /** The title for the small image template, represented in model AEPText. */
-    var title: AepText? = null
-
-    /** The description for the small image template, represented in model AEPText. */
-    var description: AepText? = null
-
-    /** The dismiss button for the small image template, represented in model AepDismissButton.
-     * This is optional and can be null. */
-    var dismissButton: AepDismissButton? = null
-
-    /**
-     * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
-     *
-     * @return A string representing the type of the template.
-     */
     override fun getType() = AepUITemplateType.SMALL_IMAGE
 }

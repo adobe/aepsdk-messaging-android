@@ -11,35 +11,23 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import com.adobe.marketing.mobile.aepuitemplates.uiproperties.AepColor
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
-
 /**
  * Data class representing a button element in the UI.
  *
- * @property interactId The unique interaction ID for the button.
+ * @property id The unique ID for the button.
  * @property actionUrl The URL to be opened when the button is clicked.
  * @property text The text to be displayed on the button, represented by an [AepText] object.
  * @property borWidth The border width of the button.
  * @property borColor The border color of the button represented as AepColor object.
  * @property bgColour The background color of the button represented as AepColor object.
  *
- * @param buttonSchemaMap A map containing key-value pairs to initialize the AEPButton properties.
  */
 data class AepButton(
-    val interactId: String? = null,
-    val actionUrl: String? = null,
-    val text: AepText? = null,
+    val id: String,
+    val actionUrl: String,
+    val text: AepText,
     val borWidth: Float? = null,
     val borColor: AepColor? = null,
-    val bgColour: AepColor? = null
-) {
-    constructor(buttonSchemaMap: Map<String, Any>) : this(
-        interactId = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.INTERACTION_ID] as? String,
-        actionUrl = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.ACTION_URL] as? String,
-        text = (buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.TEXT] as? Map<String, Any>)?.let { AepText(it) },
-        borWidth = (buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BOR_WIDTH] as? Number)?.toFloat(),
-        borColor = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BOR_COLOR]?.let { AepColor(it as Map<String, Any>) },
-        bgColour = buttonSchemaMap[AepUIConstants.CardTemplate.UIElement.Button.BG_COLOR]?.let { AepColor(it as Map<String, Any>) }
-    )
-}
+    val bgColour: AepColor? = null,
+    val bgImg: AepImage? = null
+)

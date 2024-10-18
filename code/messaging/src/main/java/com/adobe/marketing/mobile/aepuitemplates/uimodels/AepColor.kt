@@ -9,9 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uiproperties
-
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
+package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
 /**
  * Represents the colors used for UI elements in both light and dark themes.
@@ -28,9 +26,4 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUIConstants
 data class AepColor(
     val lightColour: String,
     val darkColour: String? = null
-) {
-    constructor(colorMap: Map<String, Any>) : this(
-        lightColour = colorMap[AepUIConstants.CardTemplate.UIElement.Color.LIGHT] as String,
-        darkColour = colorMap[AepUIConstants.CardTemplate.UIElement.Color.DARK] as? String
-    )
-}
+)
