@@ -11,31 +11,54 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.style
 
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.text.TextStyle
-import com.adobe.marketing.mobile.aepuitemplates.SmallImageTemplate
+import androidx.compose.ui.unit.sp
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 
 /**
  * Class representing the style for a small image AEP UI.
  *
- * @property titleTextStyle The text style for the title, if provided.
+ * @property titleTextStyle The custom text style for the title, if provided.
  */
-class SmallImageUIStyle(
-    private val titleTextStyle: TextStyle? = null
-) {
-    private var defaultTitleColor = Color.Red
 
-    /**
-     * Returns the text style for the title, merging the default style with the provided one.
-     *
-     * @param template The small image template used to determine the style.
-     * @return The merged text style for the title.
-     */
-    @Composable
-    fun getTitleTextStyle(template: SmallImageTemplate): TextStyle {
-        return MaterialTheme.typography.body1.copy(defaultTitleColor)
-            .merge(titleTextStyle)
-    }
+class SmallImageUIStyle(
+    var titleAepTextStyle: AepTextStyle? = null,
+    var bodyAepTextStyle: AepTextStyle? = null,
+    var buttonAepButtonStyle: Array<AepButtonStyle?> = arrayOfNulls(3),
+    var buttonAepTextStyle: Array<AepTextStyle?> = arrayOfNulls(3),
+) {
+    val defaultTitleTextStyle: AepTextStyle
+        @Composable
+        @ReadOnlyComposable
+        get() = AepTextStyle(
+            textStyle = TextStyle(
+                fontSize = AepUIConstants.DefaultStyle.TITLE_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.TITLE_FONT_WEIGHT
+            )
+        )
+
+    val defaultBodyTextStyle: AepTextStyle
+        @Composable
+        @ReadOnlyComposable
+        get() = AepTextStyle(
+            textStyle = TextStyle(
+                fontSize = AepUIConstants.DefaultStyle.BODY_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.BODY_FONT_WEIGHT,
+            )
+        )
+
+    val defaultButtonTextStyle: AepTextStyle
+        @Composable
+        @ReadOnlyComposable
+        get() = AepTextStyle(
+            textStyle = TextStyle(
+                fontSize = AepUIConstants.DefaultStyle.BUTTON_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.BUTTON_FONT_WEIGHT,
+            )
+        )
 }
+
+
+

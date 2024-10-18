@@ -11,76 +11,80 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Text
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
+import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
  * A composable function that displays a text element with customizable properties.
  *
- * @param content The text content to be displayed. This is a mandatory field.
- * @param clr Optional. A string representing the color of the text in hex format (e.g., "#FFFFFF").
- *            If not provided or invalid, defaults to black.
- * @param align Optional. A string representing the alignment of the text.
- *              Accepted values are "left", "center", and "right". Defaults to start alignment.
- * @param font Optional. An [AepFont] object containing font properties such as size, weight, and style.
+ * @param defaultStyle The default style to be applied to the text element.
+ * @param overriddenStyle The style provided by app that overrides the default style.
  */
 @Composable
-internal fun AepTextComposable(
-    content: String,
-    clr: String? = null,
-    align: String? = null,
-    font: AepFont? = null
+fun AepText.Composable(
+    defaultStyle: AepTextStyle? = null,
+    overriddenStyle: AepTextStyle? = null
 ) {
-    // TODO: Implement the AEPTextComposable
-    // Here code added as placeholder for reference, actual implementation is pending
-    require(content.isNotEmpty()) { "content is mandatory for AEPTextComposable" }
+    // Check for mandatory field
+    /* TODO uncomment this block when checks are added on authoring UI
+    require(!content.isNullOrEmpty()) { "content is mandatory for AEPTextComposable" }*/
 
-    // Parse color from string to Color object, with exception handling
-    val textColor = try {
-        clr?.let { Color(android.graphics.Color.parseColor(it)) } ?: androidx.compose.ui.graphics.Color.Black
-    } catch (e: IllegalArgumentException) {
-        Color.Black // Fallback to black if the color string is invalid
-    }
+    // Convert server color from string to Color object
+    val textColor = clr?.let { Color(android.graphics.Color.parseColor(if (isSystemInDarkTheme()) it.darkColour else it.lightColour)) }
 
-    // Determine text alignment safely
+    // Convert server text alignment from string to TextAlign object
     val textAlign = when (align?.lowercase()) {
         "left" -> TextAlign.Left
         "center" -> TextAlign.Center
         "right" -> TextAlign.Right
-        else -> TextAlign.Start
+        else -> null
     }
 
-    // Set font properties
-    val fontFamily = FontFamily.Default // Use default or map from `font.name` if needed
-    val fontSize = (font?.size ?: 14).sp
+    // Convert server font properties from string to respective font objects
+    // map from `font.name` if needed
+    val fontFamily = null
+    val fontSize = (font?.size)?.sp
     val fontWeight = when (font?.weight?.lowercase()) {
         "bold" -> FontWeight.Bold
-        else -> FontWeight.Normal
+        else -> null
     }
     val fontStyle = if (font?.style?.contains("italic") == true) {
         FontStyle.Italic
     } else {
-        FontStyle.Normal
+        null
     }
+
+    // Merge all text styles together
+    val defaultTextStyle = defaultStyle?.textStyle ?: TextStyle()
+    val mergedStyle =
+        defaultTextStyle
+            .merge(textColor?.let { TextStyle(color = it) })
+            .merge(textAlign?.let { TextStyle(textAlign = it) })
+            .merge(fontFamily?.let { TextStyle(fontFamily = it) })
+            .merge(fontWeight?.let { TextStyle(fontWeight = it) })
+            .merge(fontSize?.let { TextStyle(fontSize = it) })
+            .merge(fontStyle?.let { TextStyle(fontStyle = it) })
+            .merge(overriddenStyle?.textStyle)
 
     // Text Composable
     Text(
         text = content,
-        color = textColor,
-        textAlign = textAlign,
-        fontFamily = fontFamily,
-        fontSize = fontSize,
-        fontWeight = fontWeight,
-        fontStyle = fontStyle,
-        modifier = Modifier.fillMaxWidth()
+        style = mergedStyle,
+        modifier = overriddenStyle?.modifier ?: defaultStyle?.modifier ?: Modifier,
+        overflow = overriddenStyle?.overflow ?: defaultStyle?.overflow ?: TextOverflow.Clip,
+        softWrap = overriddenStyle?.softWrap ?: defaultStyle?.softWrap ?: true,
+        maxLines = overriddenStyle?.maxLines ?: defaultStyle?.maxLines ?: Int.MAX_VALUE,
+        minLines = overriddenStyle?.minLines ?: defaultStyle?.minLines ?: 1
     )
 }
