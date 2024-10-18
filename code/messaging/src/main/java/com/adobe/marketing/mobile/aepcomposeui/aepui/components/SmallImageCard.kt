@@ -15,14 +15,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,14 +37,11 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
  * @param observer An optional observer that listens to UI events.
  */
 @Composable
-fun SmallImageCard(
+internal fun SmallImageCard(
     ui: SmallImageUI,
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
-
-    // TODO - Implement the SmallImageCard composable
-    // Here code added as placeholder for reference, actual implementation is pending
 
     LaunchedEffect(key1 = Unit) {
         observer?.onEvent(UIEvent.Display(ui))
@@ -63,35 +54,35 @@ fun SmallImageCard(
     }
 
     Card(
-        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
             .clickable {
                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
-            },
-        elevation = 4.dp
+            }
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row{
             // TODO - Add image support
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                verticalArrangement = Arrangement.Center
-            ) {
-                ui.getTemplate().title.let {
-                    Text(
-                        text = it?.content ?: "",
-                        style = style.getTitleTextStyle(ui.getTemplate()),
-                    )
-                }
-                Text(
-                    text = ui.getTemplate().body?.content ?: "",
-                    style = MaterialTheme.typography.body1
+            Column {
+                ui.getTemplate().title.Composable(
+                    defaultStyle = style.defaultTitleTextStyle,
+                    overriddenStyle = style.titleAepTextStyle
                 )
+                ui.getTemplate().body?.Composable(
+                    defaultStyle = style.defaultBodyTextStyle,
+                    overriddenStyle = style.bodyAepTextStyle
+                )
+                Row{
+                    ui.getTemplate().buttons?.forEachIndexed { index, button ->
+                        button.Composable(
+                            defaultButtonStyle = null,
+                            overriddenButtonStyle = style.buttonAepButtonStyle[index],
+                            defaultButtonTextStyle = style.defaultButtonTextStyle,
+                            overriddenButtonTextStyle = style.buttonAepTextStyle[index],
+                            onClick = {
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                            }
+                        )
+                    }
+                }
             }
         }
     }
