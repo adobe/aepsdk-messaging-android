@@ -11,9 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
-import android.graphics.Color.parseColor
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
@@ -22,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
@@ -35,32 +34,26 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  * @param onClick Method that is called when this button is clicked
  */
 @Composable
-fun AepButton.Composable(
+internal fun AepButton.Composable(
     defaultButtonStyle: AepButtonStyle? = null,
     overriddenButtonStyle: AepButtonStyle? = null,
     defaultButtonTextStyle: AepTextStyle? = null,
     overriddenButtonTextStyle: AepTextStyle? = null,
     onClick: () -> Unit
 ) {
-    // Check for mandatory fields
-    /* TODO uncomment this block when checks are added on authoring UI
-    require(text != null) { "text is mandatory for AEPButtonComposable" }
-    require(!text.content.isNullOrEmpty()) { "text.content is mandatory for AEPButtonComposable" }
-    require(!actionUrl.isNullOrEmpty()) { "actionUrl is mandatory for AEPButtonComposable" }*/
-
     // Set button border properties
-    val border = overriddenButtonStyle?.border ?:
-        borWidth?.let {
+    val border = overriddenButtonStyle?.border
+        ?: borderWidth?.let {
             BorderStroke(
                 it.dp,
-                Color(parseColor(if(isSystemInDarkTheme()) borColor?.darkColour else borColor?.lightColour ?: "#000000"))
+                borderColor?.getColor() ?: Color.Unspecified
             )
         }
-    ?: defaultButtonStyle?.border
+        ?: defaultButtonStyle?.border
 
     // Set button color
     val colors = overriddenButtonStyle?.colors
-        ?: bgColour?.let { ButtonDefaults.buttonColors(containerColor = Color(parseColor(if (isSystemInDarkTheme()) bgColour.darkColour else bgColour.lightColour))) }
+        ?: backgroundColour?.let { ButtonDefaults.buttonColors(backgroundColour.getColor()) }
         ?: defaultButtonStyle?.colors
         ?: ButtonDefaults.buttonColors()
 
@@ -71,14 +64,14 @@ fun AepButton.Composable(
         enabled = overriddenButtonStyle?.enabled ?: defaultButtonStyle?.enabled ?: true,
         elevation = overriddenButtonStyle?.elevation ?: defaultButtonStyle?.elevation,
         shape = overriddenButtonStyle?.shape ?: defaultButtonStyle?.shape
-        ?: ButtonDefaults.shape,
+            ?: ButtonDefaults.shape,
         border = border,
         colors = colors,
     ) {
         // Use AEPText.Composable for button text
         AepText(
             content = text.content,
-            clr = text.clr,
+            color = text.color,
             align = text.align,
             font = text.font
         ).Composable(

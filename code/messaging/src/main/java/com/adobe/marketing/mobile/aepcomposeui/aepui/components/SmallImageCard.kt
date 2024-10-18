@@ -12,17 +12,13 @@
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIAction
@@ -59,7 +55,7 @@ internal fun SmallImageCard(
                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
             }
     ) {
-        Row{
+        Row {
             // TODO - Add image support
             Column {
                 ui.getTemplate().title.Composable(
@@ -70,7 +66,7 @@ internal fun SmallImageCard(
                     defaultStyle = style.defaultBodyTextStyle,
                     overriddenStyle = style.bodyAepTextStyle
                 )
-                Row{
+                Row {
                     ui.getTemplate().buttons?.forEachIndexed { index, button ->
                         button.Composable(
                             defaultButtonStyle = null,
