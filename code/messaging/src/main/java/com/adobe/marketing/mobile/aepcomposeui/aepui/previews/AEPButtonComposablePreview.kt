@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.adobe.marketing.mobile.aepcomposeui.aepui.components.Composable
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepTemplateConstants
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
  * Preview for [AepButton.Composable].
@@ -25,34 +27,22 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepTemplateConstants
 @Preview(showBackground = true)
 @Composable
 fun PreviewButton() {
-    // Sample button schema data
-    val buttonSchemaMap = mapOf(
-        AepTemplateConstants.CardTemplate.UIElement.Button.INTERACTION_ID to "button1",
-        AepTemplateConstants.CardTemplate.UIElement.Button.TEXT to mapOf(
-            AepTemplateConstants.CardTemplate.UIElement.Text.CONTENT to "Click Me",
-            AepTemplateConstants.CardTemplate.UIElement.Text.CLR to "#FF0000CC",
-            AepTemplateConstants.CardTemplate.UIElement.Text.ALIGN to "center",
-            AepTemplateConstants.CardTemplate.UIElement.Text.FONT to mapOf(
-                "name" to "Arial",
-                "size" to 16,
-                "weight" to "bold",
-                "style" to listOf("italic")
-            )
-        ),
-        AepTemplateConstants.CardTemplate.UIElement.Button.ACTION_URL to "https://www.adobe.com",
-        "borWidth" to 2,
-        "borColor" to "#0FE608AC"
-    )
-
-    // Create an instance of AEPButton using the sample schema data
-    val aepButton = AepButton(buttonSchemaMap)
-
     // Render the AEPButtonComposable with the properties from aepButton
     AepButton(
-        interactId = aepButton.interactId!!,
-        text = aepButton.text!!,
-        actionUrl = aepButton.actionUrl!!,
-        borWidth = aepButton.borWidth,
-        borColor = aepButton.borColor
+        id = "button1",
+        text = AepText(
+            "Click Me",
+            color = AepColor("#FF0000CC"),
+            align = "center",
+            font = AepFont(
+                name = "Arial",
+                size = 16,
+                weight = "bold",
+                style = listOf("italic")
+            )
+        ),
+        actionUrl = "https://www.adobe.com",
+        borderWidth = 2.0f,
+        borderColor = AepColor("#0FE608AC")
     ).Composable(onClick = {})
 }

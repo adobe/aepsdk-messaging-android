@@ -11,11 +11,9 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
@@ -32,16 +31,12 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
  * @param overriddenStyle The style provided by app that overrides the default style.
  */
 @Composable
-fun AepText.Composable(
+internal fun AepText.Composable(
     defaultStyle: AepTextStyle? = null,
     overriddenStyle: AepTextStyle? = null
 ) {
-    // Check for mandatory field
-    /* TODO uncomment this block when checks are added on authoring UI
-    require(!content.isNullOrEmpty()) { "content is mandatory for AEPTextComposable" }*/
-
     // Convert server color from string to Color object
-    val textColor = clr?.let { Color(android.graphics.Color.parseColor(if (isSystemInDarkTheme()) it.darkColour else it.lightColour)) }
+    val textColor = color?.getColor()
 
     // Convert server text alignment from string to TextAlign object
     val textAlign = when (align?.lowercase()) {
