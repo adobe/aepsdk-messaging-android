@@ -33,16 +33,18 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
  * @param observer An optional observer that listens to UI events.
  */
 @Composable
-internal fun SmallImageCard(
+fun SmallImageCard(
     ui: SmallImageUI,
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
 
+    // TODO - Add id for LaunchedEffect, test if it is working
     LaunchedEffect(key1 = Unit) {
         observer?.onEvent(UIEvent.Display(ui))
     }
 
+    // TODO - Add id for DisposableEffect, test if it is working
     DisposableEffect(key1 = Unit) {
         onDispose {
             observer?.onEvent(UIEvent.Dismiss(ui))
