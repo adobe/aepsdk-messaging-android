@@ -35,7 +35,7 @@ data class SmallImageTemplate(
     val actionUrl: String? = null,
     val buttons: List<AepButton>? = null,
     val dismissBtn: AepDismissButton? = null
-) : AepUITemplate  {
+) : AepUITemplate {
 
     override fun getType() = AepUITemplateType.SMALL_IMAGE
 }
