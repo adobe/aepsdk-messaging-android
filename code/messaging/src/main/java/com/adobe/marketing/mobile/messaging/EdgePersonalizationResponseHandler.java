@@ -78,7 +78,7 @@ class EdgePersonalizationResponseHandler {
     private final Map<Surface, List<LaunchRule>> contentCardRulesBySurface = new HashMap<>();
 
     // holds content cards that the user has qualified for
-    private final Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
+    private Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
 
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
@@ -343,6 +343,35 @@ class EdgePersonalizationResponseHandler {
                 SELF_TAG,
                 "handleProcessCompletedEvent - Starting serial work dispatcher.");
         serialWorkDispatcher.resume();
+    }
+
+    /**
+     * Process the event history disqualify event by removing the content card activity from the
+     * in-memory cache using the proposition activity id.
+     *
+     * @param event A {@link Event} containing the event history write event.
+     */
+    void handleEventHistoryDisqualifyEvent(final Event event) {
+        final String activityId = InternalMessagingUtils.getPropositionActivityId(event);
+        if (StringUtils.isNullOrEmpty(activityId)) {
+            // shouldn't ever get here, but if we do, we don't have anything to process so we should
+            // bail
+            return;
+        }
+
+        // remove the content card from the in-memory cache using the activity id
+        for (final Map.Entry<Surface, List<Proposition>> contentCardEntry :
+                contentCardsBySurface.entrySet()) {
+            final Surface surface = contentCardEntry.getKey();
+            final List<Proposition> propositions = contentCardEntry.getValue();
+            final List<Proposition> updatedPropositions = new ArrayList<>(propositions);
+            for (final Proposition proposition : propositions) {
+                if (activityId.equals(proposition.getActivityId())) {
+                    updatedPropositions.remove(proposition);
+                }
+            }
+            contentCardsBySurface.put(surface, updatedPropositions);
+        }
     }
 
     private void dispatchNotificationEventForSurfaces(final List<Surface> requestedSurfaces) {
@@ -940,13 +969,6 @@ class EdgePersonalizationResponseHandler {
         }
     }
 
-    // for testing, the size of the proposition info map should always mirror the number of rules
-    // currently loaded
-    @VisibleForTesting
-    int getRuleCount() {
-        return propositionInfo.size();
-    }
-
     @VisibleForTesting
     void setMessagesRequestEventId(
             final String messagesRequestEventId, final List<Surface> surfaceList) {
@@ -956,5 +978,15 @@ class EdgePersonalizationResponseHandler {
     @VisibleForTesting
     Map<Surface, List<Proposition>> getInProgressPropositions() {
         return inProgressPropositions;
+    }
+
+    @VisibleForTesting
+    void setQualifiedContentCardsBySurface(final Map<Surface, List<Proposition>> contentCards) {
+        contentCardsBySurface = contentCards;
+    }
+
+    @VisibleForTesting
+    Map<Surface, List<Proposition>> getQualifiedContentCardsBySurface() {
+        return contentCardsBySurface;
     }
 }
