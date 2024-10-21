@@ -11,7 +11,17 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class AEPDismissButton(val style: String)
+/**
+ * Data class representing font styling in the UI.
+ *
+ * @property name The name of the font.
+ * @property size The size of the font.
+ * @property weight The weight of the font (e.g., bold, regular).
+ * @property style A list of styles for the font (e.g., italic, underline).
+ **/
+data class AepFont(
+    val name: String? = null,
+    val size: Int? = null,
+    val weight: String? = null,
+    val style: List<String>? = null
+)

@@ -9,7 +9,13 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepuitemplates
+
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
+import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.

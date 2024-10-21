@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
 /**
  * Represents the colors used for UI elements in both light and dark themes.

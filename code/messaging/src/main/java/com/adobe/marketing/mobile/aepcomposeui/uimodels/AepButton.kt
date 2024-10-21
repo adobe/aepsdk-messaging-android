@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
 /**
  * Data class representing a button element in the UI.
