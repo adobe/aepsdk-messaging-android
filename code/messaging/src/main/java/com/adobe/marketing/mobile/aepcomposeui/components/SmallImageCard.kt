@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.components
+package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -19,9 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import com.adobe.marketing.mobile.aepcomposeui.aepui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.aepui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIAction
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 

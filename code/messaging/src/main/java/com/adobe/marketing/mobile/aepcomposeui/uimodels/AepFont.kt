@@ -9,14 +9,19 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.utils
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Enum class representing different types of UI templates in AEP.
+ * Data class representing font styling in the UI.
  *
- * @property typeName The name of the template type.
- */
-enum class AepUITemplateType(val typeName: String) {
-    /** Represents a small image template type. */
-    SMALL_IMAGE("SmallImage")
-}
+ * @property name The name of the font.
+ * @property size The size of the font.
+ * @property weight The weight of the font (e.g., bold, regular).
+ * @property style A list of styles for the font (e.g., italic, underline).
+ **/
+data class AepFont(
+    val name: String? = null,
+    val size: Int? = null,
+    val weight: String? = null,
+    val style: List<String>? = null
+)

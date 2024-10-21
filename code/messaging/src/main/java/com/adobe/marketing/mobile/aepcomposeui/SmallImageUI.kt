@@ -9,11 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui
+package com.adobe.marketing.mobile.aepcomposeui
 
 import androidx.compose.runtime.mutableStateOf
-import com.adobe.marketing.mobile.aepcomposeui.aepui.state.SmallImageCardUIState
-import com.adobe.marketing.mobile.aepuitemplates.SmallImageTemplate
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
  * Class representing a small image AEP UI, implementing the [AepUI] interface.

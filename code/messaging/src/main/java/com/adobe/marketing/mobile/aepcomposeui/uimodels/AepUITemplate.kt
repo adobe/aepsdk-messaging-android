@@ -9,11 +9,16 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.utils
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-class UIAction {
-    companion object {
-        const val CLICK = "click"
-        const val EXPAND = "expand"
-    }
+/**
+ * Interface representing a generic UI template in AEP.
+ */
+interface AepUITemplate {
+    /**
+     * Gets the type of the UI template.
+     *
+     * @return A string representing the type of the UI template.
+     */
+    fun getType(): AepUITemplateType
 }

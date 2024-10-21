@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
  * Class representing the state of an AEP card.

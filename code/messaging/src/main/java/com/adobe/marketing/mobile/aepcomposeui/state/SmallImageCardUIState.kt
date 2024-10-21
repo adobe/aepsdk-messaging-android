@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
  * Class representing the UI state of a Small Image template card.

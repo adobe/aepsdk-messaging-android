@@ -9,18 +9,14 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates
-
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Interface representing a generic UI template in AEP.
+ * Enum class representing different types of UI templates in AEP.
+ *
+ * @property typeName The name of the template type.
  */
-interface AepUITemplate {
-    /**
-     * Gets the type of the UI template.
-     *
-     * @return A string representing the type of the UI template.
-     */
-    fun getType(): AepUITemplateType
+enum class AepUITemplateType(val typeName: String) {
+    /** Represents a small image template type. */
+    SMALL_IMAGE("SmallImage")
 }

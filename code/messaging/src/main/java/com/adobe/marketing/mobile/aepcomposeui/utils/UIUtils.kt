@@ -9,12 +9,12 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.utils
+package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
 
 internal object UIUtils {
 

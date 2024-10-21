@@ -9,15 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.style
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Enumerates the style configuration for all supported types of AEP UI components.
+ * Represents a dismiss button for a content card in the small image template.
  *
- * This class provides the style configurations for different AEP UIs, such as small image components.
- *
- * @property smallImageUiStyle The style configuration for small image AEP UIs.
+ * @property style The style of the dismiss button, which can be one of the following:
+ * - `none`: No icon displayed.
+ * - `simple`: A simple dismiss icon.
+ * - `circle`: A circular dismiss icon.
  */
-class AepUIStyle(
-    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle()
-)
+// TODO change this class to be generic to IconButton
+data class AepDismissButton(val style: String? = null)

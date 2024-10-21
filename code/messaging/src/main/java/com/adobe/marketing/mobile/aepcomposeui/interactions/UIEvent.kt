@@ -11,9 +11,9 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.interactions
 
-import com.adobe.marketing.mobile.aepcomposeui.aepui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.aepui.state.AepCardUIState
-import com.adobe.marketing.mobile.aepuitemplates.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.state.AepCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 
 /**
  * Represents different types of UI events that can be triggered by the user interaction on the UI templates.
