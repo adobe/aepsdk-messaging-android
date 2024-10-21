@@ -16,15 +16,15 @@ import com.adobe.marketing.mobile.aepcomposeui.aepui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepuitemplates.SmallImageTemplate
 
 /**
- * Class representing a small image AEP UI, implementing the [AepUI] interface.
+ * Class representing a small image AEP UI, implementing the [AepUi] interface.
  *
  * @property template The template associated with the small image UI.
  * @property _state The current state of the small image UI.
  */
-class SmallImageUI(
+class SmallImageUi(
     private val template: SmallImageTemplate,
     state: SmallImageCardUIState
-) : AepUI<SmallImageTemplate, SmallImageCardUIState> {
+) : AepUi<SmallImageTemplate, SmallImageCardUIState> {
     private val _state = mutableStateOf(state)
 
     /**

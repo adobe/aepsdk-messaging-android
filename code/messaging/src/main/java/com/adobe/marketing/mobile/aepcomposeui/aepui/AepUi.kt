@@ -16,14 +16,14 @@ import com.adobe.marketing.mobile.aepuitemplates.AepUITemplate
 
 /**
  * Represents a UI component that can be rendered using AEP UI templates.
- * This interface can be implemented by various UI components like [SmallImageCardAepUi], [LargeImageCardAepUi], etc.
+ * This interface can be implemented by various UI components like [SmallImageUi], LargeImageUi, etc.
  * It associates a specific template and state to ensure consistency when rendering and managing UI components.
  *
  * @param T The type of the template associated with the UI component.
  * @param S The type of the state associated with the UI component.
  */
 
-sealed interface AepUI<T : AepUITemplate, S : AepCardUIState> {
+sealed interface AepUi<T : AepUITemplate, S : AepCardUIState> {
     /**
      * Retrieves the template associated with this UI component.
      * The template defines the structure and appearance of the UI element.

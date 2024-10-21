@@ -29,7 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.aepui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.aepui.SmallImageUi
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
@@ -44,7 +44,7 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
  */
 @Composable
 fun SmallImageCard(
-    ui: SmallImageUI,
+    ui: SmallImageUi,
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
