@@ -13,8 +13,10 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.style
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonElevation
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 
@@ -38,3 +40,32 @@ class AepButtonStyle(
     var colors: ButtonColors? = null,
     var contentPadding: PaddingValues? = null,
 )
+
+/**
+ * Returns a new [AepButtonStyle] that is a combination of this style and the other style.
+ *
+ * other AepButtonStyle's null or inherit properties are replaced with the non-null properties of this text style.
+ * Another way to think of it is that the "missing" properties of the other style are filled by the properties of this style.
+ * If this AepButtonStyle is null, returns the other AepButtonStyle.
+ * If the given AepButtonStyle is null, returns this AepButtonStyle.
+ *
+ * @param other The AepButtonStyle to merge with this AepButtonStyle
+ */
+@Composable
+fun AepButtonStyle?.merge(other: AepButtonStyle? = null): AepButtonStyle? {
+    if (this == null) {
+        return other
+    }
+    if (other == null) {
+        return this
+    }
+    return AepButtonStyle(
+        modifier = (modifier ?: Modifier).then(other.modifier ?: Modifier),
+        enabled = other.enabled ?: enabled,
+        elevation = other.elevation ?: elevation,
+        shape = other.shape ?: shape,
+        border = other.border ?: border,
+        colors = other.colors ?: colors,
+        contentPadding = other.contentPadding ?: contentPadding
+    )
+}
