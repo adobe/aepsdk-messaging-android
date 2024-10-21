@@ -15,9 +15,7 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.state
  * Class representing the UI state of a Small Image template card.
  *
  * @property dismissed Indicates whether the card has been dismissed.
- * @property selected Indicates whether the card is selected.
  */
 data class SmallImageCardUIState(
     override val dismissed: Boolean = false,
-    override val selected: Boolean = false
 ) : AepCardUIState()

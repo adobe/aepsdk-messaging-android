@@ -20,14 +20,12 @@ class SmallImageCardUIStateTests {
     fun test_SmallImageCardUIState_initialState() {
         val state = SmallImageCardUIState()
         assertEquals(false, state.dismissed)
-        assertEquals(false, state.selected)
     }
 
     @Test
     fun test_SmallImageCardUIState_updateState() {
-        val updatedState = SmallImageCardUIState(dismissed = true, selected = true)
+        val updatedState = SmallImageCardUIState(dismissed = true)
         assertEquals(true, updatedState.dismissed)
-        assertEquals(true, updatedState.selected)
     }
 
     @Test
@@ -35,20 +33,5 @@ class SmallImageCardUIStateTests {
         var state = SmallImageCardUIState()
         state = state.copy(dismissed = true)
         assertEquals(true, state.dismissed)
-    }
-
-    @Test
-    fun test_SmallImageCardUIState_updateSelected() {
-        var state = SmallImageCardUIState()
-        state = state.copy(selected = true)
-        assertEquals(true, state.selected)
-    }
-
-    @Test
-    fun test_SmallImageCardUIState_resetState() {
-        var state = SmallImageCardUIState(dismissed = true, selected = true)
-        state = state.copy(dismissed = false, selected = false)
-        assertEquals(false, state.dismissed)
-        assertEquals(false, state.selected)
     }
 }

@@ -17,9 +17,7 @@ package com.adobe.marketing.mobile.aepcomposeui.aepui.state
  * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
  *
  * @property dismissed Indicates whether the card has been dismissed.
- * @property selected Indicates whether the card is selected.
  */
 open class AepCardUIState(
     open val dismissed: Boolean = false,
-    open val selected: Boolean = false
 )

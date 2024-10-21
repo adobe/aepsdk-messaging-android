@@ -20,13 +20,11 @@ class AepCardUIStateTests {
     fun test_AepCardUIState_defaultState() {
         val state = AepCardUIState()
         assertEquals(false, state.dismissed)
-        assertEquals(false, state.selected)
     }
 
     @Test
     fun test_AepCardUIState_createState() {
-        val state = AepCardUIState(dismissed = true, selected = true)
+        val state = AepCardUIState(dismissed = true)
         assertEquals(true, state.dismissed)
-        assertEquals(true, state.selected)
     }
 }
