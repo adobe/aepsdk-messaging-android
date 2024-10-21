@@ -18,8 +18,8 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property actionUrl The URL to be opened when the button is clicked.
  * @property text The text to be displayed on the button, represented by an [AepText] object.
  * @property borderWidth The border width of the button.
- * @property borderColor The border color of the button represented as AepColor object.
- * @property backgroundColour The background color of the button represented as AepColor object.
+ * @property borderColor The border color of the button, represented by an [AepColor] object.
+ * @property backgroundColour The background color of the button, represented by an [AepColor] object.
  *
  */
 data class AepButton(
@@ -28,6 +28,5 @@ data class AepButton(
     val text: AepText,
     val borderWidth: Float? = null,
     val borderColor: AepColor? = null,
-    val backgroundColour: AepColor? = null,
-    val backgroundImage: AepImage? = null
+    val backgroundColour: AepColor? = null
 )
