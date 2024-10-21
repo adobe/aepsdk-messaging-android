@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.merge
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.getColor
 
 /**
  * A composable function that displays a text element with customizable properties.

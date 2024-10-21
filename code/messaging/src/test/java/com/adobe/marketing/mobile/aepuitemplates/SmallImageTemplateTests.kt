@@ -11,10 +11,11 @@
 
 package com.adobe.marketing.mobile.aepuitemplates
 
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

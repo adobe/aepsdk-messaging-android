@@ -20,10 +20,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 
 /**
  * Composable function that renders a small image card UI.
