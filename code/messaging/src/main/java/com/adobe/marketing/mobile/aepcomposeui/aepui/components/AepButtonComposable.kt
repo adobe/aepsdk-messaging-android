@@ -17,11 +17,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
+import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 
 /**
@@ -79,4 +82,32 @@ internal fun AepButton.Composable(
             overriddenStyle = overriddenButtonTextStyle
         )
     }
+}
+
+/**
+ * Preview for [AepButton.Composable].
+ * This function creates a sample button using predefined schema data for demonstration
+ * purposes. It showcases how the button will appear with various styling options.
+ */
+@Preview(showBackground = true)
+@Composable
+internal fun AepButtonComposablePreview() {
+    // Render the AepButtonComposable with the properties from AepButton
+    AepButton(
+        id = "button1",
+        text = AepText(
+            "Click Me",
+            color = AepColor("#FF0000CC"),
+            align = "center",
+            font = AepFont(
+                name = "Arial",
+                size = 16,
+                weight = "bold",
+                style = listOf("italic")
+            )
+        ),
+        actionUrl = "https://www.adobe.com",
+        borderWidth = 2.0f,
+        borderColor = AepColor("#0FE608AC")
+    ).Composable(onClick = {})
 }

@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Shape
  * @param elevation The elevation of the button.
  * @param shape The shape of the button.
  * @param border The border to draw around the container of this button.
- * @param colors [ButtonColors] colors that will be used to resolve the colors for this button in different states
+ * @param colors The colors that will be used to resolve the colors for this button in different states
  * @param contentPadding the spacing values to apply internally between the container and the text
  */
 class AepButtonStyle(
