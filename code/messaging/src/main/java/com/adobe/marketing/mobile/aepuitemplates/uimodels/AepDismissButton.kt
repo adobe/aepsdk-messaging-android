@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import kotlinx.serialization.Serializable
-
 /**
  * Represents a dismiss button for a content card in the small image template.
  *
@@ -21,5 +19,4 @@ import kotlinx.serialization.Serializable
  * - `simple`: A simple dismiss icon.
  * - `circle`: A circular dismiss icon.
  */
-@Serializable
 data class AepDismissButton(val style: String)

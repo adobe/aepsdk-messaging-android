@@ -16,9 +16,6 @@ import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepImage
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
 import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
-import com.adobe.marketing.mobile.messaging.UiTemplateConstructionFailedException
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
@@ -30,7 +27,6 @@ import kotlinx.serialization.json.Json
  * @property buttons The details for the small image template buttons.
  * @property dismissBtn The details for the small image template dismiss button.
  */
-@Serializable
 data class SmallImageTemplate(
     val id: String,
     val title: AepText,
@@ -40,20 +36,6 @@ data class SmallImageTemplate(
     val buttons: List<AepButton>? = null,
     val dismissBtn: AepDismissButton? = null
 ) : AepUITemplate {
-
-    companion object {
-        @JvmStatic
-        fun fromJsonString(jsonString: String): SmallImageTemplate {
-            val json = Json { ignoreUnknownKeys = true }
-            val smallImageTemplate: SmallImageTemplate?
-            try {
-                smallImageTemplate = json.decodeFromString<SmallImageTemplate>(jsonString)
-            } catch (e: Exception) {
-                throw UiTemplateConstructionFailedException("Failed to create a small image template from the provided JSON string: ${e.localizedMessage}")
-            }
-            return smallImageTemplate
-        }
-    }
 
     /**
      * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].

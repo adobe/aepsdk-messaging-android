@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import kotlinx.serialization.Serializable
-
 /**
  * Represents the colors used for UI elements in both light and dark themes.
  *
@@ -25,7 +23,6 @@ import kotlinx.serialization.Serializable
  * (including alpha). It is optional and can be null if not provided. For example, `#FFDA94CC`.
  *
  */
-@Serializable
 data class AepColor(
     val lightColour: String,
     val darkColour: String? = null

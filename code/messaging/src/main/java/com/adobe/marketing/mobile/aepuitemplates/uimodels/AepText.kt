@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
-import kotlinx.serialization.Serializable
-
 /**
  * Data class representing a text element in the UI.
  *
@@ -21,7 +19,6 @@ import kotlinx.serialization.Serializable
  * @property align The alignment of the text (e.g., left, right, center).
  * @property font The font styling of the text, represented by an [AepFont] object.
  */
-@Serializable
 data class AepText(
     val content: String,
     val clr: AepColor? = null,
