@@ -39,8 +39,6 @@ aepLibrary {
         addMavenDependency("androidx.appcompat", "appcompat", BuildConstants.Versions.ANDROIDX_APPCOMPAT)
         addMavenDependency("androidx.compose.runtime", "runtime", BuildConstants.Versions.COMPOSE)
         addMavenDependency("androidx.activity", "activity-compose", BuildConstants.Versions.ANDROIDX_ACTIVITY_COMPOSE)
-        addMavenDependency("androidx.lifecycle", "lifecycle-viewmodel-compose", viewModelComposeVersion)
-        addMavenDependency("androidx.lifecycle", "lifecycle-runtime-compose", runtimeComposeVersion)
         addMavenDependency("androidx.compose.material3", "material3", material3Version)
     }
 
