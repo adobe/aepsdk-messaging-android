@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.style
+package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable

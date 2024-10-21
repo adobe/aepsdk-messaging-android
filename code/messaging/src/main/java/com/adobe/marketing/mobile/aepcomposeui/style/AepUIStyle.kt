@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.style
+package com.adobe.marketing.mobile.aepcomposeui.style
 
 /**
  * Enumerates the style configuration for all supported types of AEP UI components.

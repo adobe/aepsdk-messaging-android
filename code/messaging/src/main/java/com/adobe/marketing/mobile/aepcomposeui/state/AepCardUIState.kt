@@ -9,15 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Data class representing the UI state of smallImage template card.
+ * Interface representing the state of an AEP card.
  *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property selected Indicates whether the card is selected.
+ * This interface includes common properties like `dismissed` and `selected`,
+ * which can be shared across different card states.
  */
-data class SmallImageCardUIState(
-    override val dismissed: Boolean = false,
-    override val selected: Boolean = false
-) : AepCardUIState
+interface AepCardUIState {
+    val dismissed: Boolean
+    val selected: Boolean
+}

@@ -9,11 +9,10 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.style
+package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonElevation
 import androidx.compose.runtime.Composable

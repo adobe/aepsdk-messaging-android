@@ -9,19 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Data class representing font styling in the UI.
+ * Data class representing the UI state of smallImage template card.
  *
- * @property name The name of the font.
- * @property size The size of the font.
- * @property weight The weight of the font (e.g., bold, regular).
- * @property style A list of styles for the font (e.g., italic, underline).
- **/
-data class AepFont(
-    val name: String? = null,
-    val size: Int? = null,
-    val weight: String? = null,
-    val style: List<String>? = null
-)
+ * @property dismissed Indicates whether the card has been dismissed.
+ * @property selected Indicates whether the card is selected.
+ */
+data class SmallImageCardUIState(
+    override val dismissed: Boolean = false,
+    override val selected: Boolean = false
+) : AepCardUIState

@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.components
+package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -26,12 +26,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.aepui.style.merge
-import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
-import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.merge
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.getColor
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
  * A composable function that displays a text element with customizable properties.

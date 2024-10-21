@@ -9,14 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.utils
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Enum class representing different types of UI templates in AEP.
+ * Represents a dismiss button for a content card in the small image template.
  *
- * @property typeName The name of the template type.
+ * @property style The style of the dismiss button, which can be one of the following:
+ * - `none`: No icon displayed.
+ * - `simple`: A simple dismiss icon.
+ * - `circle`: A circular dismiss icon.
  */
-enum class AepUITemplateType(val typeName: String) {
-    /** Represents a small image template type. */
-    SMALL_IMAGE("SmallImage")
-}
+// TODO change this class to be generic to IconButton
+data class AepDismissButton(val style: String? = null)

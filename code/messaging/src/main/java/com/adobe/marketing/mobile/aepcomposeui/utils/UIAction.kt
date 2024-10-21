@@ -9,15 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.utils
 
-/**
- * Represents a dismiss button for a content card in the small image template.
- *
- * @property style The style of the dismiss button, which can be one of the following:
- * - `none`: No icon displayed.
- * - `simple`: A simple dismiss icon.
- * - `circle`: A circular dismiss icon.
- */
-// TODO change this class to be generic to IconButton
-data class AepDismissButton(val style: String? = null)
+class UIAction {
+    companion object {
+        const val CLICK = "click"
+        const val EXPAND = "expand"
+    }
+}
