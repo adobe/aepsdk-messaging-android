@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.interactions
 
-import com.adobe.marketing.mobile.aepcomposeui.aepui.AepUi
+import com.adobe.marketing.mobile.aepcomposeui.aepui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.aepui.state.AepCardUIState
 import com.adobe.marketing.mobile.aepuitemplates.AepUITemplate
 
@@ -29,7 +29,7 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property _aepui The AEPUI associated with the display event.
      */
-    data class Display<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUi<T, S>) :
+    data class Display<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUI<T, S>) :
         UIEvent<T, S>
 
     /**
@@ -52,7 +52,7 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * ```
      */
     data class Interact<T : AepUITemplate, S : AepCardUIState>(
-        val aepUi: AepUi<T, S>,
+        val aepUi: AepUI<T, S>,
         val action: String
     ) : UIEvent<T, S>
 
@@ -63,6 +63,6 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property _aepui The AEPUI associated with the dismiss event.
      */
-    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUi<T, S>) :
+    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUI<T, S>) :
         UIEvent<T, S>
 }

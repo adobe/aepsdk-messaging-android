@@ -26,7 +26,7 @@ class SmallImageUiTests {
             AepText("Card Title")
         )
         val initialState = SmallImageCardUIState()
-        val ui = SmallImageUi(template, initialState)
+        val ui = SmallImageUI(template, initialState)
         assertEquals(initialState, ui.getState())
     }
 
@@ -37,7 +37,7 @@ class SmallImageUiTests {
             AepText("Card Title")
         )
         val initialState = SmallImageCardUIState()
-        val ui = SmallImageUi(template, initialState)
+        val ui = SmallImageUI(template, initialState)
         val newState = SmallImageCardUIState(dismissed = true, selected = true)
         ui.updateState(newState)
         assertEquals(newState, ui.getState())
@@ -50,7 +50,7 @@ class SmallImageUiTests {
             AepText("Card Title")
         )
         val initialState = SmallImageCardUIState()
-        val ui = SmallImageUi(template, initialState)
+        val ui = SmallImageUI(template, initialState)
         assertEquals(template, ui.getTemplate())
     }
 }
