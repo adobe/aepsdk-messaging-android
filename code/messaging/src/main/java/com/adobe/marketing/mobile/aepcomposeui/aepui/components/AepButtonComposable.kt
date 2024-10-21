@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.aepui.style.merge
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepButton
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
@@ -45,31 +46,29 @@ internal fun AepButton.Composable(
     onClick: () -> Unit
 ) {
     // Set button border properties
-    val border = overriddenButtonStyle?.border
-        ?: borderWidth?.let {
-            BorderStroke(
-                it.dp,
-                borderColor?.getColor() ?: Color.Unspecified
-            )
-        }
-        ?: defaultButtonStyle?.border
+    val border = borderWidth?.let {
+        BorderStroke(
+            it.dp,
+            borderColor?.getColor() ?: Color.Unspecified
+        )
+    }
 
     // Set button color
-    val colors = overriddenButtonStyle?.colors
-        ?: backgroundColour?.let { ButtonDefaults.buttonColors(backgroundColour.getColor()) }
-        ?: defaultButtonStyle?.colors
-        ?: ButtonDefaults.buttonColors()
+    val colors = backgroundColour?.let { ButtonDefaults.buttonColors(backgroundColour.getColor()) }
+
+    val mergedAepButtonStyle = defaultButtonStyle
+        .merge(AepButtonStyle(border = border, colors = colors))
+        .merge(overriddenButtonStyle)
 
     // Button Composable
     Button(
         onClick = onClick,
-        modifier = overriddenButtonStyle?.modifier ?: defaultButtonStyle?.modifier ?: Modifier,
-        enabled = overriddenButtonStyle?.enabled ?: defaultButtonStyle?.enabled ?: true,
-        elevation = overriddenButtonStyle?.elevation ?: defaultButtonStyle?.elevation,
-        shape = overriddenButtonStyle?.shape ?: defaultButtonStyle?.shape
-            ?: ButtonDefaults.shape,
-        border = border,
-        colors = colors,
+        modifier = mergedAepButtonStyle?.modifier ?: Modifier,
+        enabled = mergedAepButtonStyle?.enabled ?: true,
+        elevation = mergedAepButtonStyle?.elevation ?: ButtonDefaults.buttonElevation(),
+        shape = mergedAepButtonStyle?.shape ?: ButtonDefaults.shape,
+        border = mergedAepButtonStyle?.border,
+        colors = mergedAepButtonStyle?.colors ?: ButtonDefaults.buttonColors(),
     ) {
         // Use AEPText.Composable for button text
         AepText(

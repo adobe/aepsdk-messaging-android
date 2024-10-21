@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.aepui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.aepui.style.merge
 import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIUtils.getColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepColor
 import com.adobe.marketing.mobile.aepuitemplates.uimodels.AepFont
@@ -69,25 +70,31 @@ internal fun AepText.Composable(
     }
 
     // Merge all text styles together
-    val defaultTextStyle = defaultStyle?.textStyle ?: TextStyle()
-    val mergedStyle =
-        defaultTextStyle
-            .merge(textColor?.let { TextStyle(color = it) })
-            .merge(textAlign?.let { TextStyle(textAlign = it) })
-            .merge(fontWeight?.let { TextStyle(fontWeight = it) })
-            .merge(fontSize?.let { TextStyle(fontSize = it) })
-            .merge(fontStyle?.let { TextStyle(fontStyle = it) })
-            .merge(overriddenStyle?.textStyle)
+    val mergedAepTextStyle =
+        defaultStyle
+            .merge(textColor?.let { AepTextStyle(textStyle = TextStyle(color = it)) })
+            .merge(textAlign?.let { AepTextStyle(textStyle = TextStyle(textAlign = it)) })
+            .merge(fontSize?.let { AepTextStyle(textStyle = TextStyle(fontSize = it)) })
+            .merge(
+                AepTextStyle(
+                    textStyle = TextStyle(
+                        fontWeight = fontWeight,
+                        fontStyle = fontStyle
+                    )
+                )
+            )
+            .merge(fontStyle?.let { AepTextStyle(textStyle = TextStyle(fontStyle = it)) })
+            .merge(overriddenStyle)
 
     // Text Composable
     Text(
         text = content,
-        style = mergedStyle,
-        modifier = overriddenStyle?.modifier ?: defaultStyle?.modifier ?: Modifier,
-        overflow = overriddenStyle?.overflow ?: defaultStyle?.overflow ?: TextOverflow.Clip,
-        softWrap = overriddenStyle?.softWrap ?: defaultStyle?.softWrap ?: true,
-        maxLines = overriddenStyle?.maxLines ?: defaultStyle?.maxLines ?: Int.MAX_VALUE,
-        minLines = overriddenStyle?.minLines ?: defaultStyle?.minLines ?: 1
+        style = mergedAepTextStyle?.textStyle ?: TextStyle(),
+        modifier = mergedAepTextStyle?.modifier ?: Modifier,
+        overflow = mergedAepTextStyle?.overflow ?: TextOverflow.Clip,
+        softWrap = mergedAepTextStyle?.softWrap ?: true,
+        maxLines = mergedAepTextStyle?.maxLines ?: Int.MAX_VALUE,
+        minLines = mergedAepTextStyle?.minLines ?: 1
     )
 }
 
