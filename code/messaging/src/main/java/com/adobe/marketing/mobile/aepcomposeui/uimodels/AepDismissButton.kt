@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepuitemplates.uimodels
 
 /**
  * Represents a dismiss button for a content card in the small image template.
@@ -19,5 +19,4 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * - `simple`: A simple dismiss icon.
  * - `circle`: A circular dismiss icon.
  */
-// TODO change this class to be generic to IconButton
-data class AepDismissButton(val style: String? = null)
+data class AepDismissButton(val style: String)
