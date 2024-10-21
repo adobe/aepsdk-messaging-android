@@ -37,5 +37,10 @@ data class SmallImageTemplate(
     val dismissBtn: AepDismissButton? = null
 ) : AepUITemplate {
 
+    /**
+     * Returns the type of this template, which is [AepUITemplateType.SMALL_IMAGE].
+     *
+     * @return A string representing the type of the template.
+     */
     override fun getType() = AepUITemplateType.SMALL_IMAGE
 }
