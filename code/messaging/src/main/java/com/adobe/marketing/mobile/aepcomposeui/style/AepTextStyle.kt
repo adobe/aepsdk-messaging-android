@@ -42,6 +42,8 @@ class AepTextStyle(
          *
          * @param defaultStyle The default [AepTextStyle] to be applied to the text element.
          * @param overridingStyle The [AepTextStyle] provided by the app that overrides the default text style.
+         *
+         * @return The merged [AepTextStyle].
          */
         internal fun merge(
             defaultStyle: AepTextStyle? = null,

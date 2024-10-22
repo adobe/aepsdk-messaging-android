@@ -11,7 +11,11 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.style
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 
@@ -24,10 +28,34 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  */
 
 class SmallImageUIStyle(
+    var smallImageCardStyle: AepCardStyle? = null,
+    var rootRowStyle: AepRowStyle? = null,
+    var textColumnStyle: AepColumnStyle? = null,
     var titleAepTextStyle: AepTextStyle? = null,
     var bodyAepTextStyle: AepTextStyle? = null,
+    var buttonRowStyle: AepRowStyle? = null,
     var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?> = arrayOfNulls(3),
 ) {
+    val defaultCardStyle: AepCardStyle
+        get() = AepCardStyle(
+            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+
+    val defaultRootRowStyle: AepRowStyle
+        get() = AepRowStyle(
+            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+
+    val defaultTextColumnStyle: AepColumnStyle
+        get() = AepColumnStyle(
+            verticalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+
+    val defaultButtonRowStyle: AepRowStyle
+        get() = AepRowStyle(
+            horizontalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+
     val defaultTitleTextStyle: AepTextStyle
         get() = AepTextStyle(
             textStyle = TextStyle(
