@@ -11,11 +11,27 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.state
 
-/**
- * Class representing the UI state of a Small Image template card.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- */
-data class SmallImageCardUIState(
-    override val dismissed: Boolean = false,
-) : AepCardUIState()
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class SmallImageCardUIStateTests {
+
+    @Test
+    fun test_SmallImageCardUIState_initialState() {
+        val state = SmallImageCardUIState()
+        assertEquals(false, state.dismissed)
+    }
+
+    @Test
+    fun test_SmallImageCardUIState_updateState() {
+        val updatedState = SmallImageCardUIState(dismissed = true)
+        assertEquals(true, updatedState.dismissed)
+    }
+
+    @Test
+    fun test_SmallImageCardUIState_updateDismissed() {
+        var state = SmallImageCardUIState()
+        state = state.copy(dismissed = true)
+        assertEquals(true, state.dismissed)
+    }
+}

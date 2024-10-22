@@ -12,12 +12,12 @@
 package com.adobe.marketing.mobile.aepcomposeui.aepui.state
 
 /**
- * Interface representing the state of an AEP card.
+ * Class representing the state of an AEP card.
  *
- * This interface includes common properties like `dismissed` and `selected`,
- * which can be shared across different card states.
+ * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
+ *
+ * @property dismissed Indicates whether the card has been dismissed.
  */
-interface AepCardUIState {
-    val dismissed: Boolean
-    val selected: Boolean
-}
+open class AepCardUIState(
+    open val dismissed: Boolean = false,
+)
