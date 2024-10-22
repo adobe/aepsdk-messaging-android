@@ -18,10 +18,10 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class SmallImageUiTests {
+class SmallImageUITests {
 
     @Test
-    fun test_SmallImageUi_initialState() {
+    fun test_SmallImageUI_initialState() {
         val template = SmallImageTemplate(
             "testId",
             AepText("Card Title")
@@ -32,7 +32,7 @@ class SmallImageUiTests {
     }
 
     @Test
-    fun test_SmallImageUi_updateState() {
+    fun test_SmallImageUI_updateState() {
         val template = SmallImageTemplate(
             "testId",
             AepText("Card Title")
@@ -45,7 +45,7 @@ class SmallImageUiTests {
     }
 
     @Test
-    fun test_SmallImageUi_getTemplate() {
+    fun test_SmallImageUI_getTemplate() {
         val template = SmallImageTemplate(
             "testId",
             AepText("Card Title")
