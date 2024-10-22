@@ -52,29 +52,7 @@ class AepButtonStyle(
         internal fun merge(
             defaultStyle: AepButtonStyle? = null,
             overridingStyle: AepButtonStyle? = null
-            /* use when server side styling is added
-            serverStyle: AepButton? = null, */
         ): AepButtonStyle {
-            /* use when server side styling is added
-            // Convert server border width and color to BorderStroke object
-            val border = serverStyle?.borderWidth?.let {
-                BorderStroke(
-                    it.dp,
-                    serverStyle.borderColor?.getColor() ?: Color.Unspecified
-                )
-            }
-
-            // Convert server background color to ButtonColors object
-            val colors = serverStyle?.backgroundColour?.let {
-                ButtonColors(
-                    containerColor = serverStyle.backgroundColour.getColor(),
-                    contentColor = Color.Unspecified,
-                    disabledContainerColor = Color.Unspecified,
-                    disabledContentColor = Color.Unspecified,
-                )
-            }
-            */
-
             return AepButtonStyle(
                 modifier = (defaultStyle?.modifier ?: Modifier).then(
                     overridingStyle?.modifier ?: Modifier

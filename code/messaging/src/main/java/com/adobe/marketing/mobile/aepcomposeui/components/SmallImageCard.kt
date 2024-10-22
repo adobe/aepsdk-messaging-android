@@ -81,9 +81,9 @@ fun SmallImageCard(
                             onClick = {
                                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
                             },
-                            overridingButtonStyle = style.buttonAepButtonStyle[index],
+                            overridingButtonStyle = style.buttonStyle[index]?.first,
                             defaultButtonTextStyle = style.defaultButtonTextStyle,
-                            overridingButtonTextStyle = style.buttonAepTextStyle[index]
+                            overridingButtonTextStyle = style.buttonStyle[index]?.second
                         )
                     }
                 }
