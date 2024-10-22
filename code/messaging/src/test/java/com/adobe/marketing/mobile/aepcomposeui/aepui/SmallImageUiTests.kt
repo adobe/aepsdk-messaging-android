@@ -38,7 +38,7 @@ class SmallImageUiTests {
         )
         val initialState = SmallImageCardUIState()
         val ui = SmallImageUI(template, initialState)
-        val newState = SmallImageCardUIState(dismissed = true, selected = true)
+        val newState = SmallImageCardUIState(dismissed = true)
         ui.updateState(newState)
         assertEquals(newState, ui.getState())
     }

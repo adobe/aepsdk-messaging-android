@@ -72,6 +72,9 @@ class ContentCardRulesEngine extends LaunchRulesEngine {
                 continue;
             }
 
+            // store valid content card schema data in the ContentCardMapper for later use
+            ContentCardMapper.getInstance().storeContentCardSchemaData(propositionAsContentCard);
+
             // the surface for a content card is automatically added to its meta data
             final Surface surface =
                     Surface.fromUriString(

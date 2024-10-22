@@ -27,9 +27,9 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      *
      * @param T represents UI template model associated like [SmallImageTemplate], which backs the composable on which the event has occurred.
      * @param S representing the state of the AEP card composable on which the event has occurred.
-     * @property _aepui The AEPUI associated with the display event.
+     * @property aepUi The AEPUI associated with the display event.
      */
-    data class Display<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUI<T, S>) :
+    data class Display<T : AepUITemplate, S : AepCardUIState>(val aepUi: AepUI<T, S>) :
         UIEvent<T, S>
 
     /**
@@ -61,8 +61,8 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      *
      * @param T represents UI template model associated like [SmallImageTemplate], which backs the composable on which the event has occurred.
      * @param S representing the state of the AEP card composable on which the event has occurred.
-     * @property _aepui The AEPUI associated with the dismiss event.
+     * @property aepUi The AEPUI associated with the dismiss event.
      */
-    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(val _aepui: AepUI<T, S>) :
+    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(val aepUi: AepUI<T, S>) :
         UIEvent<T, S>
 }
