@@ -60,24 +60,30 @@ fun SmallImageCard(
         Row {
             // TODO - Add image support
             Column {
-                ui.getTemplate().title.Composable(
-                    defaultStyle = style.defaultTitleTextStyle,
-                    overriddenStyle = style.titleAepTextStyle
-                )
-                ui.getTemplate().body?.Composable(
-                    defaultStyle = style.defaultBodyTextStyle,
-                    overriddenStyle = style.bodyAepTextStyle
-                )
+                ui.getTemplate().title.let {
+                    AepTextComposable(
+                        it,
+                        style.defaultTitleTextStyle,
+                        style.titleAepTextStyle
+                    )
+                }
+                ui.getTemplate().body?.let {
+                    AepTextComposable(
+                        it,
+                        defaultStyle = style.defaultBodyTextStyle,
+                        overridingStyle = style.bodyAepTextStyle
+                    )
+                }
                 Row {
                     ui.getTemplate().buttons?.forEachIndexed { index, button ->
-                        button.Composable(
-                            defaultButtonStyle = null,
-                            overriddenButtonStyle = style.buttonAepButtonStyle[index],
-                            defaultButtonTextStyle = style.defaultButtonTextStyle,
-                            overriddenButtonTextStyle = style.buttonAepTextStyle[index],
+                        AepButtonComposable(
+                            button,
                             onClick = {
                                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
-                            }
+                            },
+                            overridingButtonStyle = style.buttonAepButtonStyle[index],
+                            defaultButtonTextStyle = style.defaultButtonTextStyle,
+                            overridingButtonTextStyle = style.buttonAepTextStyle[index]
                         )
                     }
                 }

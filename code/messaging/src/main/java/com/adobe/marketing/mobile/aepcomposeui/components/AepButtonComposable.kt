@@ -11,80 +11,59 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.merge
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.getColor
 
 /**
  * A composable function that displays a button element with customizable properties.
  *
- * @param defaultButtonStyle The default [AepButtonStyle] to be applied to the button element.
- * @param overriddenButtonStyle The [AepButtonStyle] provided by the app that overrides the default button style.
- * @param defaultButtonTextStyle The default [AepTextStyle] to be applied to the button text.
- * @param overriddenButtonTextStyle The [AepTextStyle] provided by the app that overrides the default button text style.
+ * @param model The [AepButton] model that contains the button properties.
  * @param onClick Method that is called when this button is clicked
+ * @param defaultButtonStyle The default [AepButtonStyle] to be applied to the button element.
+ * @param overridingButtonStyle The [AepButtonStyle] provided by the app that overrides the default button style.
+ * @param defaultButtonTextStyle The default [AepTextStyle] to be applied to the button text.
+ * @param overridingButtonTextStyle The [AepTextStyle] provided by the app that overrides the default button text style.
  */
 @Composable
-internal fun AepButton.Composable(
+internal fun AepButtonComposable(
+    model: AepButton,
+    onClick: () -> Unit,
     defaultButtonStyle: AepButtonStyle? = null,
-    overriddenButtonStyle: AepButtonStyle? = null,
+    overridingButtonStyle: AepButtonStyle? = null,
     defaultButtonTextStyle: AepTextStyle? = null,
-    overriddenButtonTextStyle: AepTextStyle? = null,
-    onClick: () -> Unit
+    overridingButtonTextStyle: AepTextStyle? = null,
 ) {
-    // Set button border properties
-    val border = borderWidth?.let {
-        BorderStroke(
-            it.dp,
-            borderColor?.getColor() ?: Color.Unspecified
-        )
-    }
-
-    // Set button color
-    val colors = backgroundColour?.let { ButtonDefaults.buttonColors(backgroundColour.getColor()) }
-
-    val mergedAepButtonStyle = defaultButtonStyle
-        .merge(AepButtonStyle(border = border, colors = colors))
-        .merge(overriddenButtonStyle)
-
-    // Button Composable
+    val mergedStyle = AepButtonStyle.merge(defaultButtonStyle, overridingButtonStyle)
     Button(
         onClick = onClick,
-        modifier = mergedAepButtonStyle?.modifier ?: Modifier,
-        enabled = mergedAepButtonStyle?.enabled ?: true,
-        elevation = mergedAepButtonStyle?.elevation ?: ButtonDefaults.buttonElevation(),
-        shape = mergedAepButtonStyle?.shape ?: ButtonDefaults.shape,
-        border = mergedAepButtonStyle?.border,
-        colors = mergedAepButtonStyle?.colors ?: ButtonDefaults.buttonColors(),
+        modifier = mergedStyle.modifier ?: Modifier,
+        enabled = mergedStyle.enabled ?: true,
+        shape = mergedStyle.shape ?: ButtonDefaults.shape,
+        colors = mergedStyle.colors ?: ButtonDefaults.buttonColors(),
+        elevation = mergedStyle.elevation,
+        border = mergedStyle.border,
+        contentPadding = mergedStyle.contentPadding ?: ButtonDefaults.ContentPadding,
     ) {
         // Use AEPText.Composable for button text
-        AepText(
-            content = text.content,
-            color = text.color,
-            align = text.align,
-            font = text.font
-        ).Composable(
+        AepTextComposable(
+            model.text,
             defaultStyle = defaultButtonTextStyle,
-            overriddenStyle = overriddenButtonTextStyle
+            overridingStyle = overridingButtonTextStyle
         )
     }
 }
 
 /**
- * Preview for [AepButton.Composable].
+ * Preview for [AepTextComposable].
  * This function creates a sample button using predefined schema data for demonstration
  * purposes. It showcases how the button will appear with various styling options.
  */
@@ -92,21 +71,24 @@ internal fun AepButton.Composable(
 @Composable
 internal fun AepButtonComposablePreview() {
     // Render the AepButtonComposable with the properties from AepButton
-    AepButton(
-        id = "button1",
-        text = AepText(
-            "Click Me",
-            color = AepColor("#FF0000CC"),
-            align = "center",
-            font = AepFont(
-                name = "Arial",
-                size = 16,
-                weight = "bold",
-                style = listOf("italic")
-            )
+    AepButtonComposable(
+        AepButton(
+            id = "button1",
+            text = AepText(
+                "Click Me",
+                color = AepColor("#FF0000CC"),
+                align = "center",
+                font = AepFont(
+                    name = "Arial",
+                    size = 16,
+                    weight = "bold",
+                    style = listOf("italic")
+                )
+            ),
+            actionUrl = "https://www.adobe.com",
+            borderWidth = 2.0f,
+            borderColor = AepColor("#0FE608AC")
         ),
-        actionUrl = "https://www.adobe.com",
-        borderWidth = 2.0f,
-        borderColor = AepColor("#0FE608AC")
-    ).Composable(onClick = {})
+        onClick = {}
+    )
 }

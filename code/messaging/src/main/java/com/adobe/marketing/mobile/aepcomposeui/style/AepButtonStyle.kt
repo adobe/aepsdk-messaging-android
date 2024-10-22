@@ -15,7 +15,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonElevation
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 
@@ -38,33 +37,55 @@ class AepButtonStyle(
     var border: BorderStroke? = null,
     var colors: ButtonColors? = null,
     var contentPadding: PaddingValues? = null,
-)
+) {
 
-/**
- * Returns a new [AepButtonStyle] that is a combination of this style and the other style.
- *
- * other AepButtonStyle's null or inherit properties are replaced with the non-null properties of this text style.
- * Another way to think of it is that the "missing" properties of the other style are filled by the properties of this style.
- * If this AepButtonStyle is null, returns the other AepButtonStyle.
- * If the given AepButtonStyle is null, returns this AepButtonStyle.
- *
- * @param other The AepButtonStyle to merge with this AepButtonStyle
- */
-@Composable
-fun AepButtonStyle?.merge(other: AepButtonStyle? = null): AepButtonStyle? {
-    if (this == null) {
-        return other
+    companion object {
+
+        /**
+         * Returns a new [AepButtonStyle] that is a combination of default style and overridden style.
+         * If the same property is present in all the styles, the property from the overridden style is used.
+         * If a property is not present in the overridden style, the property from the default style is used.
+         *
+         * @param defaultStyle The default [AepButtonStyle] to be applied to the button element.
+         * @param overridingStyle The [AepButtonStyle] provided by the app that overrides the default button style.
+         */
+        internal fun merge(
+            defaultStyle: AepButtonStyle? = null,
+            overridingStyle: AepButtonStyle? = null
+            /* use when server side styling is added
+            serverStyle: AepButton? = null, */
+        ): AepButtonStyle {
+            /* use when server side styling is added
+            // Convert server border width and color to BorderStroke object
+            val border = serverStyle?.borderWidth?.let {
+                BorderStroke(
+                    it.dp,
+                    serverStyle.borderColor?.getColor() ?: Color.Unspecified
+                )
+            }
+
+            // Convert server background color to ButtonColors object
+            val colors = serverStyle?.backgroundColour?.let {
+                ButtonColors(
+                    containerColor = serverStyle.backgroundColour.getColor(),
+                    contentColor = Color.Unspecified,
+                    disabledContainerColor = Color.Unspecified,
+                    disabledContentColor = Color.Unspecified,
+                )
+            }
+            */
+
+            return AepButtonStyle(
+                modifier = (defaultStyle?.modifier ?: Modifier).then(
+                    overridingStyle?.modifier ?: Modifier
+                ),
+                enabled = overridingStyle?.enabled ?: defaultStyle?.enabled,
+                elevation = overridingStyle?.elevation ?: defaultStyle?.elevation,
+                shape = overridingStyle?.shape ?: defaultStyle?.shape,
+                border = overridingStyle?.border ?: defaultStyle?.border,
+                colors = overridingStyle?.colors ?: defaultStyle?.colors,
+                contentPadding = overridingStyle?.contentPadding ?: defaultStyle?.contentPadding
+            )
+        }
     }
-    if (other == null) {
-        return this
-    }
-    return AepButtonStyle(
-        modifier = (modifier ?: Modifier).then(other.modifier ?: Modifier),
-        enabled = other.enabled ?: enabled,
-        elevation = other.elevation ?: elevation,
-        shape = other.shape ?: shape,
-        border = other.border ?: border,
-        colors = other.colors ?: colors,
-        contentPadding = other.contentPadding ?: contentPadding
-    )
 }
