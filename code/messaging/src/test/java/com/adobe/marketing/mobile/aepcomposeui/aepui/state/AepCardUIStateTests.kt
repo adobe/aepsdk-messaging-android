@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.aepui.state
 
+import com.adobe.marketing.mobile.aepcomposeui.state.AepCardUIState
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
