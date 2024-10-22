@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.style
 
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,32 +32,71 @@ class AepTextStyle(
     var softWrap: Boolean? = null,
     var maxLines: Int? = null,
     var minLines: Int? = null
-)
+) {
+    companion object {
 
-/**
- * Returns a new [AepTextStyle] that is a combination of this style and the other style.
- *
- * other AepTextStyle's null or inherit properties are replaced with the non-null properties of this text style.
- * Another way to think of it is that the "missing" properties of the other style are filled by the properties of this style.
- * If this AepTextStyle is null, returns the other AepTextStyle.
- * If the given AepTextStyle is null, returns this AepTextStyle.
- *
- * @param other The AepTextStyle to merge with this AepTextStyle
- */
-@Composable
-fun AepTextStyle?.merge(other: AepTextStyle? = null): AepTextStyle? {
-    if (this == null) {
-        return other
+        /**
+         * Returns a new [AepTextStyle] that is a combination of default style and overridden style.
+         * If the same property is present in all the styles, the property from the overridden style is used.
+         * If a property is not present in the overridden style, the property from the default style is used.
+         *
+         * @param defaultStyle The default [AepTextStyle] to be applied to the text element.
+         * @param overridingStyle The [AepTextStyle] provided by the app that overrides the default text style.
+         */
+        internal fun merge(
+            defaultStyle: AepTextStyle? = null,
+            overridingStyle: AepTextStyle? = null
+            /* use when server side styling is added
+            serverStyle: AepText? = null, */
+        ): AepTextStyle {
+            /* use when server side styling is added
+            val textColor = serverStyle?.color?.getColor() ?: Color.Unspecified
+
+            // Convert server text alignment from string to TextAlign object
+            val textAlign = when (serverStyle?.align?.lowercase()) {
+                "left" -> TextAlign.Left
+                "center" -> TextAlign.Center
+                "right" -> TextAlign.Right
+                else -> TextAlign.Unspecified
+            }
+
+            // Convert server font properties from string to respective font objects
+            // map from `font.name` if needed
+            val fontFamily = null
+            val fontSize = (serverStyle?.font?.size)?.sp ?: TextUnit.Unspecified
+            val fontWeight = when (serverStyle?.font?.weight?.lowercase()) {
+                "bold" -> FontWeight.Bold
+                else -> null
+            }
+            val fontStyle = if (serverStyle?.font?.style?.contains("italic") == true) {
+                FontStyle.Italic
+            } else {
+                null
+            }
+
+            val serverSideTextStyle = TextStyle(
+                color = textColor,
+                textAlign = textAlign,
+                fontFamily = fontFamily,
+                fontSize = fontSize,
+                fontWeight = fontWeight,
+                fontStyle = fontStyle
+            )*/
+
+            // Merge all text styles together
+            val mergedTextStyle = (defaultStyle?.textStyle ?: TextStyle())
+                .merge(overridingStyle?.textStyle)
+
+            return AepTextStyle(
+                modifier = (defaultStyle?.modifier ?: Modifier).then(
+                    overridingStyle?.modifier ?: Modifier
+                ),
+                textStyle = mergedTextStyle,
+                overflow = overridingStyle?.overflow ?: defaultStyle?.overflow,
+                softWrap = overridingStyle?.softWrap ?: defaultStyle?.softWrap,
+                maxLines = overridingStyle?.maxLines ?: defaultStyle?.maxLines,
+                minLines = overridingStyle?.minLines ?: defaultStyle?.minLines
+            )
+        }
     }
-    if (other == null) {
-        return this
-    }
-    return AepTextStyle(
-        modifier = (modifier ?: Modifier).then(other.modifier ?: Modifier),
-        textStyle = (textStyle ?: TextStyle()).merge(other.textStyle),
-        overflow = other.overflow ?: overflow,
-        softWrap = other.softWrap ?: softWrap,
-        maxLines = other.maxLines ?: maxLines,
-        minLines = other.minLines ?: minLines
-    )
 }

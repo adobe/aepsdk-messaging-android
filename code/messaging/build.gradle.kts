@@ -62,10 +62,6 @@ dependencies {
     implementation(BuildConstants.Dependencies.COMPOSE_UI_TOOLING)
     // Compose UI Tooling Preview
     implementation("androidx.compose.ui:ui-tooling-preview:$toolingPreviewVersion")
-    // Compose ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$viewModelComposeVersion")
-    // Compose Runtime
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:$runtimeComposeVersion")
     // Material 3
     implementation("androidx.compose.material3:material3:$material3Version")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
