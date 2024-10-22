@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.style
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
@@ -20,18 +18,17 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 /**
  * Class representing the style for a small image AEP UI.
  *
- * @property titleTextStyle The custom text style for the title, if provided.
+ * @property titleAepTextStyle The custom text style for the title.
+ * @property bodyAepTextStyle The custom text style for the body.
+ * @property buttonStyle The custom style for the buttons.
  */
 
 class SmallImageUIStyle(
     var titleAepTextStyle: AepTextStyle? = null,
     var bodyAepTextStyle: AepTextStyle? = null,
-    var buttonAepButtonStyle: Array<AepButtonStyle?> = arrayOfNulls(3),
-    var buttonAepTextStyle: Array<AepTextStyle?> = arrayOfNulls(3),
+    var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?> = arrayOfNulls(3),
 ) {
     val defaultTitleTextStyle: AepTextStyle
-        @Composable
-        @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_TEXT_SIZE.sp,
@@ -40,8 +37,6 @@ class SmallImageUIStyle(
         )
 
     val defaultBodyTextStyle: AepTextStyle
-        @Composable
-        @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BODY_TEXT_SIZE.sp,
@@ -50,8 +45,6 @@ class SmallImageUIStyle(
         )
 
     val defaultButtonTextStyle: AepTextStyle
-        @Composable
-        @ReadOnlyComposable
         get() = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_TEXT_SIZE.sp,

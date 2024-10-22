@@ -46,44 +46,7 @@ class AepTextStyle(
         internal fun merge(
             defaultStyle: AepTextStyle? = null,
             overridingStyle: AepTextStyle? = null
-            /* use when server side styling is added
-            serverStyle: AepText? = null, */
         ): AepTextStyle {
-            /* use when server side styling is added
-            val textColor = serverStyle?.color?.getColor() ?: Color.Unspecified
-
-            // Convert server text alignment from string to TextAlign object
-            val textAlign = when (serverStyle?.align?.lowercase()) {
-                "left" -> TextAlign.Left
-                "center" -> TextAlign.Center
-                "right" -> TextAlign.Right
-                else -> TextAlign.Unspecified
-            }
-
-            // Convert server font properties from string to respective font objects
-            // map from `font.name` if needed
-            val fontFamily = null
-            val fontSize = (serverStyle?.font?.size)?.sp ?: TextUnit.Unspecified
-            val fontWeight = when (serverStyle?.font?.weight?.lowercase()) {
-                "bold" -> FontWeight.Bold
-                else -> null
-            }
-            val fontStyle = if (serverStyle?.font?.style?.contains("italic") == true) {
-                FontStyle.Italic
-            } else {
-                null
-            }
-
-            val serverSideTextStyle = TextStyle(
-                color = textColor,
-                textAlign = textAlign,
-                fontFamily = fontFamily,
-                fontSize = fontSize,
-                fontWeight = fontWeight,
-                fontStyle = fontStyle
-            )*/
-
-            // Merge all text styles together
             val mergedTextStyle = (defaultStyle?.textStyle ?: TextStyle())
                 .merge(overridingStyle?.textStyle)
 
