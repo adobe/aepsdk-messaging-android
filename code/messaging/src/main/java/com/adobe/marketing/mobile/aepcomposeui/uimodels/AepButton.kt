@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
  * Data class representing a button element in the UI.
@@ -17,17 +17,16 @@ package com.adobe.marketing.mobile.aepuitemplates.uimodels
  * @property id The unique ID for the button.
  * @property actionUrl The URL to be opened when the button is clicked.
  * @property text The text to be displayed on the button, represented by an [AepText] object.
- * @property borWidth The border width of the button.
- * @property borColor The border color of the button represented as AepColor object.
- * @property bgColour The background color of the button represented as AepColor object.
+ * @property borderWidth The border width of the button.
+ * @property borderColor The border color of the button, represented by an [AepColor] object.
+ * @property backgroundColour The background color of the button, represented by an [AepColor] object.
  *
  */
 data class AepButton(
     val id: String,
     val actionUrl: String,
     val text: AepText,
-    val borWidth: Float? = null,
-    val borColor: AepColor? = null,
-    val bgColour: AepColor? = null,
-    val bgImg: AepImage? = null
+    val borderWidth: Float? = null,
+    val borderColor: AepColor? = null,
+    val backgroundColour: AepColor? = null
 )

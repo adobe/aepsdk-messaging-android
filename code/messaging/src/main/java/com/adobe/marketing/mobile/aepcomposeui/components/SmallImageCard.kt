@@ -9,31 +9,21 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.components
+package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.aepui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.aepui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.aepui.utils.UIAction
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 
 /**
  * Composable function that renders a small image card UI.
@@ -49,13 +39,12 @@ fun SmallImageCard(
     observer: AepUIEventObserver?,
 ) {
 
-    // TODO - Implement the SmallImageCard composable
-    // Here code added as placeholder for reference, actual implementation is pending
-
+    // TODO - Add id for LaunchedEffect, test if it is working
     LaunchedEffect(key1 = Unit) {
         observer?.onEvent(UIEvent.Display(ui))
     }
 
+    // TODO - Add id for DisposableEffect, test if it is working
     DisposableEffect(key1 = Unit) {
         onDispose {
             observer?.onEvent(UIEvent.Dismiss(ui))
@@ -63,35 +52,41 @@ fun SmallImageCard(
     }
 
     Card(
-        shape = RoundedCornerShape(8.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
             .clickable {
                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
-            },
-        elevation = 4.dp
+            }
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row {
             // TODO - Add image support
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                verticalArrangement = Arrangement.Center
-            ) {
+            Column {
                 ui.getTemplate().title.let {
-                    Text(
-                        text = it?.content ?: "",
-                        style = style.getTitleTextStyle(ui.getTemplate()),
+                    AepTextComposable(
+                        it,
+                        style.defaultTitleTextStyle,
+                        style.titleAepTextStyle
                     )
                 }
-                Text(
-                    text = ui.getTemplate().body?.content ?: "",
-                    style = MaterialTheme.typography.body1
-                )
+                ui.getTemplate().body?.let {
+                    AepTextComposable(
+                        it,
+                        defaultStyle = style.defaultBodyTextStyle,
+                        overridingStyle = style.bodyAepTextStyle
+                    )
+                }
+                Row {
+                    ui.getTemplate().buttons?.forEachIndexed { index, button ->
+                        AepButtonComposable(
+                            button,
+                            onClick = {
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                            },
+                            overridingButtonStyle = style.buttonStyle[index]?.first,
+                            defaultButtonTextStyle = style.defaultButtonTextStyle,
+                            overridingButtonTextStyle = style.buttonStyle[index]?.second
+                        )
+                    }
+                }
             }
         }
     }

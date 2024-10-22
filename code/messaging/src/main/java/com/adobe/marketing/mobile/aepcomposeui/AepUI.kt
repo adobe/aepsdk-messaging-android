@@ -9,10 +9,10 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui
+package com.adobe.marketing.mobile.aepcomposeui
 
-import com.adobe.marketing.mobile.aepcomposeui.aepui.state.AepCardUIState
-import com.adobe.marketing.mobile.aepuitemplates.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.state.AepCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 
 /**
  * Represents a UI component that can be rendered using AEP UI templates.

@@ -9,19 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.style
 
 /**
- * Data class representing font styling in the UI.
+ * Enumerates the style configuration for all supported types of AEP UI components.
  *
- * @property name The name of the font.
- * @property size The size of the font.
- * @property weight The weight of the font (e.g., bold, regular).
- * @property style A list of styles for the font (e.g., italic, underline).
- **/
-data class AepFont(
-    val name: String? = null,
-    val size: Int? = null,
-    val weight: String? = null,
-    val style: List<String>? = null
+ * This class provides the style configurations for different AEP UIs, such as small image components.
+ *
+ * @property smallImageUiStyle The style configuration for small image AEP UIs.
+ */
+class AepUIStyle(
+    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle()
 )

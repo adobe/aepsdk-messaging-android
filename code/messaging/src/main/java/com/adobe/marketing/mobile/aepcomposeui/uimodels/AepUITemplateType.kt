@@ -9,19 +9,14 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Data class representing a text element in the UI.
+ * Enum class representing different types of UI templates in AEP.
  *
- * @property content The content of the text.
- * @property clr The color of the text.
- * @property align The alignment of the text (e.g., left, right, center).
- * @property font The font styling of the text, represented by an [AepFont] object.
+ * @property typeName The name of the template type.
  */
-data class AepText(
-    val content: String,
-    val clr: AepColor? = null,
-    val align: String? = null,
-    val font: AepFont? = null
-)
+enum class AepUITemplateType(val typeName: String) {
+    /** Represents a small image template type. */
+    SMALL_IMAGE("SmallImage")
+}
