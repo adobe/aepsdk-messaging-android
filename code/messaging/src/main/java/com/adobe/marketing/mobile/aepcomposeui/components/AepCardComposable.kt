@@ -13,7 +13,6 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
@@ -23,23 +22,22 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 /**
  * A composable function that displays a card element with customizable properties.
  *
- * @param defaultCardStyle The default [AepCardStyle] to be applied to the card element.
- * @param overriddenCardStyle The [AepCardStyle] provided by the app that overrides the default card style.
+ * @param cardStyle The [AepCardStyle] to be applied to the card element.
+ * @param onClick Method that is called when this card is clicked
+ * @param content The content of the card.
  */
 @Composable
 internal fun AepCardComposable(
-    onClick: () -> Unit,
-    defaultCardStyle: AepCardStyle? = null,
-    overriddenCardStyle: AepCardStyle? = null,
+    cardStyle: AepCardStyle = AepCardStyle(),
+    onClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val mergedStyle = AepCardStyle.merge(defaultCardStyle, overriddenCardStyle)
     Card(
-        modifier = (mergedStyle.modifier ?: Modifier).then(Modifier.clickable { onClick() }),
-        shape = mergedStyle.shape ?: CardDefaults.shape,
-        colors = mergedStyle.colors ?: CardDefaults.cardColors(),
-        elevation = mergedStyle.elevation ?: CardDefaults.elevatedCardElevation(),
-        border = mergedStyle.border,
+        modifier = (cardStyle.modifier ?: Modifier).then(Modifier.clickable { onClick() }),
+        shape = cardStyle.shape ?: CardDefaults.shape,
+        colors = cardStyle.colors ?: CardDefaults.cardColors(),
+        elevation = cardStyle.elevation ?: CardDefaults.elevatedCardElevation(),
+        border = cardStyle.border,
         content = content
     )
 }

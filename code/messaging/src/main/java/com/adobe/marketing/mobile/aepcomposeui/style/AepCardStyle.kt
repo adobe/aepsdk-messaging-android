@@ -47,17 +47,20 @@ class AepCardStyle(
          *
          */
         internal fun merge(
-            defaultStyle: AepCardStyle? = null,
+            defaultStyle: AepCardStyle = AepCardStyle(),
             overridingStyle: AepCardStyle? = null
         ): AepCardStyle {
+            if (overridingStyle == null) {
+                return defaultStyle
+            }
             return AepCardStyle(
-                modifier = (defaultStyle?.modifier ?: Modifier).then(
-                    overridingStyle?.modifier ?: Modifier
+                modifier = (defaultStyle.modifier ?: Modifier).then(
+                    overridingStyle.modifier ?: Modifier
                 ),
-                shape = overridingStyle?.shape ?: defaultStyle?.shape,
-                colors = overridingStyle?.colors ?: defaultStyle?.colors,
-                elevation = overridingStyle?.elevation ?: defaultStyle?.elevation,
-                border = overridingStyle?.border ?: defaultStyle?.border
+                shape = overridingStyle.shape ?: defaultStyle.shape,
+                colors = overridingStyle.colors ?: defaultStyle.colors,
+                elevation = overridingStyle.elevation ?: defaultStyle.elevation,
+                border = overridingStyle.border ?: defaultStyle.border
             )
         }
     }

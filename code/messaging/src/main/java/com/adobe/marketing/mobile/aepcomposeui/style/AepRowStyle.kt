@@ -39,15 +39,19 @@ class AepRowStyle(
          * @return The merged [AepRowStyle]
          */
         fun merge(
-            defaultStyle: AepRowStyle? = null,
+            defaultStyle: AepRowStyle = AepRowStyle(),
             overridingStyle: AepRowStyle? = null
         ): AepRowStyle {
+            if (overridingStyle == null) {
+                return defaultStyle
+            }
+
             return AepRowStyle(
-                modifier = (defaultStyle?.modifier ?: Modifier).then(
-                    overridingStyle?.modifier ?: Modifier
+                modifier = (defaultStyle.modifier ?: Modifier).then(
+                    overridingStyle.modifier ?: Modifier
                 ),
-                horizontalArrangement = overridingStyle?.horizontalArrangement ?: defaultStyle?.horizontalArrangement,
-                verticalAlignment = overridingStyle?.verticalAlignment ?: defaultStyle?.verticalAlignment
+                horizontalArrangement = overridingStyle.horizontalArrangement ?: defaultStyle.horizontalArrangement,
+                verticalAlignment = overridingStyle.verticalAlignment ?: defaultStyle.verticalAlignment
             )
         }
     }

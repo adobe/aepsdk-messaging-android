@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -23,21 +22,18 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
 /**
  * A composable function that displays a column element with customizable properties.
  *
- * @param defaultColumnStyle The default [AepColumnStyle] to be applied to the column element.
- * @param overriddenColumnStyle The [AepColumnStyle] provided by the app that overrides the default column style.
+ * @param columnStyle The [AepColumnStyle] to be applied to the column element.
+ * @param content The content of the column.
  */
 @Composable
 internal fun AepColumnComposable(
-    defaultColumnStyle: AepColumnStyle? = null,
-    overriddenColumnStyle: AepColumnStyle? = null,
-    onClick: () -> Unit = {},
-    content: @Composable ColumnScope.() -> Unit
+    columnStyle: AepColumnStyle = AepColumnStyle(),
+    content: @Composable (ColumnScope.() -> Unit)
 ) {
-    val mergedStyle = AepColumnStyle.merge(defaultColumnStyle, overriddenColumnStyle)
     Column(
-        modifier = (mergedStyle.modifier ?: Modifier).clickable { onClick() },
-        verticalArrangement = mergedStyle.verticalArrangement ?: Arrangement.Top,
-        horizontalAlignment = mergedStyle.horizontalAlignment ?: Alignment.Start,
+        modifier = columnStyle.modifier ?: Modifier,
+        verticalArrangement = columnStyle.verticalArrangement ?: Arrangement.Top,
+        horizontalAlignment = columnStyle.horizontalAlignment ?: Alignment.Start,
         content = content
     )
 }

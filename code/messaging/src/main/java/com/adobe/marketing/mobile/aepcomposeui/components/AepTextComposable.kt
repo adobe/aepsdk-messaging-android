@@ -31,24 +31,21 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  * A composable function that displays a text element with customizable properties.
  *
  * @param model The [AepText] model that contains the text properties.
- * @param defaultStyle The default [AepTextStyle] to be applied to the text element.
- * @param overridingStyle The [AepTextStyle] provided by the app that overrides the default text style.
+ * @param textStyle The [AepTextStyle] to be applied to the text element.
  */
 @Composable
 internal fun AepTextComposable(
     model: AepText,
-    defaultStyle: AepTextStyle? = null,
-    overridingStyle: AepTextStyle? = null
+    textStyle: AepTextStyle = AepTextStyle()
 ) {
-    val mergedStyle = AepTextStyle.merge(defaultStyle, overridingStyle)
     Text(
         text = model.content,
-        style = mergedStyle.textStyle ?: TextStyle(),
-        modifier = mergedStyle.modifier ?: Modifier,
-        overflow = mergedStyle.overflow ?: TextOverflow.Clip,
-        softWrap = mergedStyle.softWrap ?: true,
-        maxLines = mergedStyle.maxLines ?: Int.MAX_VALUE,
-        minLines = mergedStyle.minLines ?: 1
+        style = textStyle.textStyle ?: TextStyle(),
+        modifier = textStyle.modifier ?: Modifier,
+        overflow = textStyle.overflow ?: TextOverflow.Clip,
+        softWrap = textStyle.softWrap ?: true,
+        maxLines = textStyle.maxLines ?: Int.MAX_VALUE,
+        minLines = textStyle.minLines ?: 1
     )
 }
 

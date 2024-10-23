@@ -47,38 +47,32 @@ fun SmallImageCard(
     }
 
     AepCardComposable(
-        defaultCardStyle = style.defaultCardStyle,
-        overriddenCardStyle = style.smallImageCardStyle,
+        cardStyle = style.smallImageCardStyle,
         onClick = {
             observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
         }
     ) {
         AepRowComposable(
-            defaultRowStyle = style.defaultRootRowStyle,
-            overriddenRowStyle = style.rootRowStyle
+            rowStyle = style.rootRowStyle
         ) {
             // TODO - Add image support
             AepColumnComposable(
-                defaultColumnStyle = style.defaultTextColumnStyle,
-                overriddenColumnStyle = style.textColumnStyle
+                columnStyle = style.textColumnStyle
             ) {
                 ui.getTemplate().title.let {
                     AepTextComposable(
-                        it,
-                        style.defaultTitleTextStyle,
-                        style.titleAepTextStyle
+                        model = it,
+                        textStyle = style.titleAepTextStyle
                     )
                 }
                 ui.getTemplate().body?.let {
                     AepTextComposable(
-                        it,
-                        defaultStyle = style.defaultBodyTextStyle,
-                        overridingStyle = style.bodyAepTextStyle
+                        model = it,
+                        textStyle = style.bodyAepTextStyle
                     )
                 }
                 AepRowComposable(
-                    defaultRowStyle = style.defaultButtonRowStyle,
-                    overriddenRowStyle = style.buttonRowStyle
+                    rowStyle = style.buttonRowStyle
                 ) {
                     ui.getTemplate().buttons?.forEachIndexed { index, button ->
                         AepButtonComposable(
@@ -86,9 +80,8 @@ fun SmallImageCard(
                             onClick = {
                                 observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
                             },
-                            overridingButtonStyle = style.buttonStyle[index]?.first,
-                            defaultButtonTextStyle = style.defaultButtonTextStyle,
-                            overridingButtonTextStyle = style.buttonStyle[index]?.second
+                            buttonStyle = style.buttonStyle[index].first,
+                            buttonTextStyle = style.buttonStyle[index].second
                         )
                     }
                 }

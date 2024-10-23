@@ -39,15 +39,18 @@ class AepColumnStyle(
          * @return The merged [AepColumnStyle]
          */
         fun merge(
-            defaultStyle: AepColumnStyle? = null,
+            defaultStyle: AepColumnStyle = AepColumnStyle(),
             overridingStyle: AepColumnStyle? = null
         ): AepColumnStyle {
+            if (overridingStyle == null) {
+                return defaultStyle
+            }
             return AepColumnStyle(
-                modifier = (defaultStyle?.modifier ?: Modifier).then(
-                    overridingStyle?.modifier ?: Modifier
+                modifier = (defaultStyle.modifier ?: Modifier).then(
+                    overridingStyle.modifier ?: Modifier
                 ),
-                verticalArrangement = overridingStyle?.verticalArrangement ?: defaultStyle?.verticalArrangement,
-                horizontalAlignment = overridingStyle?.horizontalAlignment ?: defaultStyle?.horizontalAlignment
+                verticalArrangement = overridingStyle.verticalArrangement ?: defaultStyle.verticalArrangement,
+                horizontalAlignment = overridingStyle.horizontalAlignment ?: defaultStyle.horizontalAlignment
             )
         }
     }

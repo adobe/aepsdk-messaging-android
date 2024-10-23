@@ -52,19 +52,22 @@ class AepButtonStyle(
          * @return The merged [AepButtonStyle]
          */
         internal fun merge(
-            defaultStyle: AepButtonStyle? = null,
+            defaultStyle: AepButtonStyle = AepButtonStyle(),
             overridingStyle: AepButtonStyle? = null
         ): AepButtonStyle {
+            if (overridingStyle == null) {
+                return defaultStyle
+            }
             return AepButtonStyle(
-                modifier = (defaultStyle?.modifier ?: Modifier).then(
-                    overridingStyle?.modifier ?: Modifier
+                modifier = (defaultStyle.modifier ?: Modifier).then(
+                    overridingStyle.modifier ?: Modifier
                 ),
-                enabled = overridingStyle?.enabled ?: defaultStyle?.enabled,
-                elevation = overridingStyle?.elevation ?: defaultStyle?.elevation,
-                shape = overridingStyle?.shape ?: defaultStyle?.shape,
-                border = overridingStyle?.border ?: defaultStyle?.border,
-                colors = overridingStyle?.colors ?: defaultStyle?.colors,
-                contentPadding = overridingStyle?.contentPadding ?: defaultStyle?.contentPadding
+                enabled = overridingStyle.enabled ?: defaultStyle.enabled,
+                elevation = overridingStyle.elevation ?: defaultStyle.elevation,
+                shape = overridingStyle.shape ?: defaultStyle.shape,
+                border = overridingStyle.border ?: defaultStyle.border,
+                colors = overridingStyle.colors ?: defaultStyle.colors,
+                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding
             )
         }
     }

@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -23,21 +22,18 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 /**
  * A composable function that displays a row element with customizable properties.
  *
- * @param defaultRowStyle The default [AepRowStyle] to be applied to the row element.
- * @param overriddenRowStyle The [AepRowStyle] provided by the app that overrides the default row style.
+ * @param rowStyle The [AepRowStyle] to be applied to the row element.
+ * @param content The content of the row.
  */
 @Composable
 internal fun AepRowComposable(
-    defaultRowStyle: AepRowStyle? = null,
-    overriddenRowStyle: AepRowStyle? = null,
-    onClick: () -> Unit = {},
+    rowStyle: AepRowStyle = AepRowStyle(),
     content: @Composable RowScope.() -> Unit
 ) {
-    val mergedStyle = AepRowStyle.merge(defaultRowStyle, overriddenRowStyle)
     Row(
-        modifier = (mergedStyle.modifier ?: Modifier).then(Modifier.clickable { onClick() }),
-        horizontalArrangement = mergedStyle.horizontalArrangement ?: Arrangement.Start,
-        verticalAlignment = mergedStyle.verticalAlignment ?: defaultRowStyle?.verticalAlignment ?: Alignment.Top,
+        modifier = (rowStyle.modifier ?: Modifier),
+        horizontalArrangement = rowStyle.horizontalArrangement ?: Arrangement.Start,
+        verticalAlignment = rowStyle.verticalAlignment ?: Alignment.Top,
         content = content
     )
 }
