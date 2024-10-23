@@ -18,6 +18,10 @@ plugins {
 val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
+val toolingPreviewVersion = "1.7.4"
+val viewModelComposeVersion = "2.8.6"
+val runtimeComposeVersion = "2.8.6"
+val material3Version = "1.3.0"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
@@ -30,6 +34,12 @@ aepLibrary {
         gitRepoName = "aepsdk-messaging-android"
         addCoreDependency(mavenCoreVersion)
         addEdgeDependency(mavenEdgeVersion)
+
+        addMavenDependency("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", BuildConstants.Versions.KOTLIN)
+        addMavenDependency("androidx.appcompat", "appcompat", BuildConstants.Versions.ANDROIDX_APPCOMPAT)
+        addMavenDependency("androidx.compose.runtime", "runtime", BuildConstants.Versions.COMPOSE)
+        addMavenDependency("androidx.activity", "activity-compose", BuildConstants.Versions.ANDROIDX_ACTIVITY_COMPOSE)
+        addMavenDependency("androidx.compose.material3", "material3", material3Version)
     }
 
     android {
@@ -49,6 +59,11 @@ aepLibrary {
 
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    implementation(BuildConstants.Dependencies.COMPOSE_UI_TOOLING)
+    // Compose UI Tooling Preview
+    implementation("androidx.compose.ui:ui-tooling-preview:$toolingPreviewVersion")
+    // Material 3
+    implementation("androidx.compose.material3:material3:$material3Version")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:

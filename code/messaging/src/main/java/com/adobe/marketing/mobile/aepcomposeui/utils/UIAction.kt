@@ -9,13 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.utils
 
-/**
- * Class representing the UI state of a Small Image template card.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- */
-data class SmallImageCardUIState(
-    override val dismissed: Boolean = false,
-) : AepCardUIState()
+class UIAction {
+    companion object {
+        const val CLICK = "click"
+        const val EXPAND = "expand"
+    }
+}

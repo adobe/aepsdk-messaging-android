@@ -9,23 +9,14 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-import com.adobe.marketing.mobile.aepcomposeui.state.AepCardUIState
-import org.junit.Assert.assertEquals
-import org.junit.Test
-
-class AepCardUIStateTests {
-
-    @Test
-    fun test_AepCardUIState_defaultState() {
-        val state = AepCardUIState()
-        assertEquals(false, state.dismissed)
-    }
-
-    @Test
-    fun test_AepCardUIState_createState() {
-        val state = AepCardUIState(dismissed = true)
-        assertEquals(true, state.dismissed)
-    }
-}
+/**
+ * Represents a dismiss button for a content card in the small image template.
+ *
+ * @property style The style of the dismiss button, which can be one of the following:
+ * - `none`: No icon displayed.
+ * - `simple`: A simple dismiss icon.
+ * - `circle`: A circular dismiss icon.
+ */
+data class AepDismissButton(val style: String)

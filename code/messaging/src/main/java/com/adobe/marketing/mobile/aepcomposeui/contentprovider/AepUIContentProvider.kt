@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.contentprovider
 
-import com.adobe.marketing.mobile.aepuitemplates.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import kotlinx.coroutines.flow.Flow
 
 /**

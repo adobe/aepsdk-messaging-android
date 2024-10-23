@@ -9,14 +9,19 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Represents a dismiss button for a content card in the small image template.
+ * Data class representing a text element in the UI.
  *
- * @property style The style of the dismiss button, which can be one of the following:
- * - `none`: No icon displayed.
- * - `simple`: A simple dismiss icon.
- * - `circle`: A circular dismiss icon.
+ * @property content The content of the text.
+ * @property color The color of the text.
+ * @property align The alignment of the text (e.g., left, right, center).
+ * @property font The font styling of the text, represented by an [AepFont] object.
  */
-data class AepDismissButton(val style: String)
+data class AepText(
+    val content: String,
+    val color: AepColor? = null,
+    val align: String? = null,
+    val font: AepFont? = null
+)

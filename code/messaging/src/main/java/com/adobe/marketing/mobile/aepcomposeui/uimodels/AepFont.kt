@@ -9,15 +9,19 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.state
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Class representing the state of an AEP card.
+ * Data class representing font styling in the UI.
  *
- * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- */
-open class AepCardUIState(
-    open val dismissed: Boolean = false,
+ * @property name The name of the font.
+ * @property size The size of the font.
+ * @property weight The weight of the font (e.g., bold, regular).
+ * @property style A list of styles for the font (e.g., italic, underline).
+ **/
+data class AepFont(
+    val name: String? = null,
+    val size: Int? = null,
+    val weight: String? = null,
+    val style: List<String>? = null
 )

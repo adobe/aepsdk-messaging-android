@@ -9,15 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.style
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Enumerates the style configuration for all supported types of AEP UI components.
+ * Class representing the state of an AEP card.
  *
- * This class provides the style configurations for different AEP UIs, such as small image components.
+ * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
  *
- * @property smallImageUiStyle The style configuration for small image AEP UIs.
+ * @property dismissed Indicates whether the card has been dismissed.
  */
-class AepUIStyle(
-    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle()
+open class AepCardUIState(
+    open val dismissed: Boolean = false,
 )

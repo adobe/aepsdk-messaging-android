@@ -9,18 +9,13 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepuitemplates
-
-import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Interface representing a generic UI template in AEP.
+ * Class representing the UI state of a Small Image template card.
+ *
+ * @property dismissed Indicates whether the card has been dismissed.
  */
-interface AepUITemplate {
-    /**
-     * Gets the type of the UI template.
-     *
-     * @return A string representing the type of the UI template.
-     */
-    fun getType(): AepUITemplateType
-}
+data class SmallImageCardUIState(
+    override val dismissed: Boolean = false,
+) : AepCardUIState()

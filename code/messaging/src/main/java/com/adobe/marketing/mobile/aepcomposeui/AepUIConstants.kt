@@ -9,11 +9,21 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.aepui.utils
+package com.adobe.marketing.mobile.aepcomposeui
 
-class UIAction {
-    companion object {
-        const val CLICK = "click"
-        const val EXPAND = "expand"
+import androidx.compose.ui.text.font.FontWeight
+
+internal object AepUIConstants {
+
+    internal object SmallImageCard {
+        internal object DefaultStyle {
+            const val TITLE_TEXT_SIZE = 15
+            val TITLE_FONT_WEIGHT = FontWeight.Medium
+            const val BODY_TEXT_SIZE = 13
+            val BODY_FONT_WEIGHT = FontWeight.Normal
+            const val BUTTON_TEXT_SIZE = 13
+            val BUTTON_FONT_WEIGHT = FontWeight.Normal
+            const val SPACING = 8
+        }
     }
 }
