@@ -42,23 +42,28 @@ class AepTextStyle(
          *
          * @param defaultStyle The default [AepTextStyle] to be applied to the text element.
          * @param overridingStyle The [AepTextStyle] provided by the app that overrides the default text style.
+         *
+         * @return The merged [AepTextStyle].
          */
         internal fun merge(
-            defaultStyle: AepTextStyle? = null,
+            defaultStyle: AepTextStyle = AepTextStyle(),
             overridingStyle: AepTextStyle? = null
         ): AepTextStyle {
-            val mergedTextStyle = (defaultStyle?.textStyle ?: TextStyle())
-                .merge(overridingStyle?.textStyle)
+            if (overridingStyle == null) {
+                return defaultStyle
+            }
+            val mergedTextStyle = (defaultStyle.textStyle ?: TextStyle())
+                .merge(overridingStyle.textStyle)
 
             return AepTextStyle(
-                modifier = (defaultStyle?.modifier ?: Modifier).then(
-                    overridingStyle?.modifier ?: Modifier
+                modifier = (defaultStyle.modifier ?: Modifier).then(
+                    overridingStyle.modifier ?: Modifier
                 ),
                 textStyle = mergedTextStyle,
-                overflow = overridingStyle?.overflow ?: defaultStyle?.overflow,
-                softWrap = overridingStyle?.softWrap ?: defaultStyle?.softWrap,
-                maxLines = overridingStyle?.maxLines ?: defaultStyle?.maxLines,
-                minLines = overridingStyle?.minLines ?: defaultStyle?.minLines
+                overflow = overridingStyle.overflow ?: defaultStyle.overflow,
+                softWrap = overridingStyle.softWrap ?: defaultStyle.softWrap,
+                maxLines = overridingStyle.maxLines ?: defaultStyle.maxLines,
+                minLines = overridingStyle.minLines ?: defaultStyle.minLines
             )
         }
     }
