@@ -41,8 +41,7 @@ public class ContentCardSchemaData implements SchemaData {
                                     MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
                 this.contentJsonString =
-                        schemaData.getString(
-                                MessagingConstants.ConsequenceDetailDataKeys.CONTENT);
+                        schemaData.getString(MessagingConstants.ConsequenceDetailDataKeys.CONTENT);
                 this.content =
                         JSONUtils.toMap(
                                 schemaData.getJSONObject(

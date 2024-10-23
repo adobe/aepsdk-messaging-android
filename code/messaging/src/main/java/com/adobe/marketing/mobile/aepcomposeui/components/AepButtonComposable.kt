@@ -19,8 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**

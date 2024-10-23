@@ -23,8 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
