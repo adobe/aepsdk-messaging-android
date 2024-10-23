@@ -15,11 +15,24 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class SmallImageTemplateTests {
+
+    @Test
+    fun `Get type should return SMALL_IMAGE template type`() {
+        // setup
+        val template = SmallImageTemplate(
+            "testId",
+            AepText("Card Title")
+        )
+
+        // verify
+        assertEquals(AepUITemplateType.SMALL_IMAGE, template.getType())
+    }
 
     @Test
     fun test_SmallImageTemplate_allParametersPresent() {
