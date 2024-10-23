@@ -38,7 +38,7 @@ class AepColumnStyle(
          *
          * @return The merged [AepColumnStyle]
          */
-        fun merge(
+        internal fun merge(
             defaultStyle: AepColumnStyle = AepColumnStyle(),
             overridingStyle: AepColumnStyle? = null
         ): AepColumnStyle {

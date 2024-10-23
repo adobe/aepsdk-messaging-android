@@ -22,12 +22,16 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 /**
  * Class representing the style for a small image AEP UI.
  *
- * @property titleAepTextStyle The custom text style for the title.
- * @property bodyAepTextStyle The custom text style for the body.
- * @property buttonStyle The custom style for the buttons.
+ * @param cardStyle The style for the card.
+ * @param rootRowStyle The style for the root row.
+ * @param textColumnStyle The style for the column containing the title, body and buttons.
+ * @property titleAepTextStyle The text style for the title.
+ * @property bodyAepTextStyle The text style for the body.
+ * @property buttonRowStyle The style for the row containing the buttons.
+ * @property buttonStyle The style for the buttons.
  */
 class SmallImageUIStyle private constructor(
-    val smallImageCardStyle: AepCardStyle,
+    val cardStyle: AepCardStyle,
     val rootRowStyle: AepRowStyle,
     val textColumnStyle: AepColumnStyle,
     val titleAepTextStyle: AepTextStyle,
@@ -87,7 +91,7 @@ class SmallImageUIStyle private constructor(
         fun buttonStyle(style: Array<Pair<AepButtonStyle?, AepTextStyle?>?>) = apply { this.buttonStyle = style }
 
         fun build() = SmallImageUIStyle(
-            smallImageCardStyle = AepCardStyle.merge(defaultSmallImageCardStyle, smallImageCardStyle),
+            cardStyle = AepCardStyle.merge(defaultSmallImageCardStyle, smallImageCardStyle),
             rootRowStyle = AepRowStyle.merge(defaultRootRowStyle, rootRowStyle),
             textColumnStyle = AepColumnStyle.merge(defaultTextColumnStyle, textColumnStyle),
             titleAepTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),

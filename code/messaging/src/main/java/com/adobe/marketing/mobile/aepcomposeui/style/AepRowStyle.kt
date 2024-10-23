@@ -38,7 +38,7 @@ class AepRowStyle(
          *
          * @return The merged [AepRowStyle]
          */
-        fun merge(
+        internal fun merge(
             defaultStyle: AepRowStyle = AepRowStyle(),
             overridingStyle: AepRowStyle? = null
         ): AepRowStyle {

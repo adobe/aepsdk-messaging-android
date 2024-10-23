@@ -47,7 +47,7 @@ fun SmallImageCard(
     }
 
     AepCardComposable(
-        cardStyle = style.smallImageCardStyle,
+        cardStyle = style.cardStyle,
         onClick = {
             observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
         }
