@@ -25,6 +25,7 @@ import org.json.JSONObject;
 public class ContentCardSchemaData implements SchemaData {
     private static final String SELF_TAG = "ContentCardSchemaData";
     private Object content;
+    @Nullable private String contentJsonString = null;
     private ContentType contentType;
     private int publishedDate;
     private int expiryDate;
@@ -39,6 +40,9 @@ public class ContentCardSchemaData implements SchemaData {
                             schemaData.optString(
                                     MessagingConstants.ConsequenceDetailDataKeys.CONTENT_TYPE));
             if (contentType.equals(ContentType.APPLICATION_JSON)) {
+                this.contentJsonString =
+                        schemaData.getString(
+                                MessagingConstants.ConsequenceDetailDataKeys.CONTENT);
                 this.content =
                         JSONUtils.toMap(
                                 schemaData.getJSONObject(
@@ -67,6 +71,10 @@ public class ContentCardSchemaData implements SchemaData {
     @Override
     public Object getContent() {
         return content;
+    }
+
+    public String getContentJsonString() {
+        return contentJsonString;
     }
 
     public ContentType getContentType() {

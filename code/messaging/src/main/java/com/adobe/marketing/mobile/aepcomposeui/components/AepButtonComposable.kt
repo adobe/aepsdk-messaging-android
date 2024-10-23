@@ -76,18 +76,8 @@ internal fun AepButtonComposablePreview() {
             id = "button1",
             text = AepText(
                 "Click Me",
-                color = AepColor("#FF0000CC"),
-                align = "center",
-                font = AepFont(
-                    name = "Arial",
-                    size = 16,
-                    weight = "bold",
-                    style = listOf("italic")
-                )
             ),
             actionUrl = "https://www.adobe.com",
-            borderWidth = 2.0f,
-            borderColor = AepColor("#0FE608AC")
         ),
         onClick = {}
     )

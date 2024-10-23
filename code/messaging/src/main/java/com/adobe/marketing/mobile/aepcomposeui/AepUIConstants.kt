@@ -26,4 +26,22 @@ internal object AepUIConstants {
             const val SPACING = 8
         }
     }
+
+    internal object Keys {
+        const val CONTENT = "content"
+        const val LIGHT_COLOUR = "lightColour"
+        const val DARK_COLOUR = "darkColour"
+        const val URL = "url"
+        const val DARK_URL = "darkUrl"
+        const val INTERACT_ID = "interactId"
+        const val ACTION_URL = "actionUrl"
+        const val TEXT = "text"
+        const val STYLE = "style"
+        const val ID = "id"
+        const val TITLE = "title"
+        const val BODY = "body"
+        const val IMAGE = "image"
+        const val BUTTONS = "buttons"
+        const val DISMISS_BTN = "dismissBtn"
+    }
 }
