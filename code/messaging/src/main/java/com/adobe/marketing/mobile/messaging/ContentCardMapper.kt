@@ -17,17 +17,15 @@ import com.adobe.marketing.mobile.util.StringUtils
  * Class to store a mapping between valid [ContentCardSchemaData] and unique proposition id's.
  */
 class ContentCardMapper private constructor() {
+    private val contentCardSchemaDataMap: MutableMap<String, ContentCardSchemaData> = HashMap()
+
     companion object {
-        private val contentCardSchemaDataMap: MutableMap<String, ContentCardSchemaData> = HashMap()
-
-        @Volatile
-        private var instance: ContentCardMapper? = null
-
         @JvmStatic
-        fun getInstance() =
-            instance ?: synchronized(this) {
-                instance ?: ContentCardMapper().also { instance = it }
-            }
+        val instance: ContentCardMapper by lazy { Holder.INSTANCE }
+    }
+
+    private object Holder {
+        val INSTANCE = ContentCardMapper()
     }
 
     fun storeContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData) {

@@ -37,7 +37,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -70,7 +70,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals(null, template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -103,7 +103,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals(null, template.image?.url)
@@ -136,7 +136,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -166,7 +166,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
@@ -192,7 +192,7 @@ class SmallImageTemplateTests {
         )
 
         // verify
-        assertEquals("testId", template.propositionId)
+        assertEquals("testId", template.id)
         assertEquals("Card Title", template.title.content)
         assertEquals("body", template.body?.content)
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)

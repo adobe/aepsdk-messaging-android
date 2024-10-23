@@ -748,6 +748,11 @@ class EdgePersonalizationResponseHandler {
                 }
             }
             existingPropositionsArray.add(proposition);
+
+            // store qualified content cards as schema data in the ContentCardMapper for later use
+            final ContentCardSchemaData propositionAsContentCard =
+                    proposition.getItems().get(0).getContentCardSchemaData();
+            ContentCardMapper.getInstance().storeContentCardSchemaData(propositionAsContentCard);
         }
 
         contentCardsBySurface.put(surface, existingPropositionsArray);

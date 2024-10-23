@@ -20,7 +20,7 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
  *
- * @property propositionId The proposition unique identifier.
+ * @property id The identifier for this template.
  * @property title The title text and display settings.
  * @property body The body text and display settings.
  * @property image The details of the image to be displayed.
@@ -29,7 +29,7 @@ import com.adobe.marketing.mobile.aepuitemplates.utils.AepUITemplateType
  * @property dismissBtn The details for the small image template dismiss button.
  */
 data class SmallImageTemplate(
-    val propositionId: String,
+    val id: String,
     val title: AepText,
     val body: AepText? = null,
     val image: AepImage? = null,

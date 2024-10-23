@@ -46,7 +46,7 @@ class MessagingUiEventObserver(private val callback: ContentCardCallback?) : Aep
 
     private fun handleSmallImageTracking(template: AepUITemplate, interaction: String?, eventType: MessagingEdgeEventType) {
         val template = template as SmallImageTemplate
-        val contentCardSchemaData = ContentCardMapper.getInstance().getContentCardSchemaDataForPropositionId(template.propositionId)
+        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(template.id)
         contentCardSchemaData?.track(interaction, eventType)
     }
 }
