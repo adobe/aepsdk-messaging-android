@@ -19,4 +19,4 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * - `simple`: A simple dismiss icon.
  * - `circle`: A circular dismiss icon.
  */
-data class AepDismissButton(val style: String? = null)
+data class AepDismissButton(val style: String)
