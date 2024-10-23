@@ -103,7 +103,6 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
                                     SELF_TAG,
                                     "Failed to build template: ${e.message}"
                                 )
-
                             }
                         }
                     }
