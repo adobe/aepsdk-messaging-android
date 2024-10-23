@@ -11,9 +11,15 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.utils
 
-class UIAction {
-    companion object {
-        const val CLICK = "click"
-        const val EXPAND = "expand"
+enum class UIAction(private val action: String) {
+    CLICK("click"),
+    DOUBLE_CLICK("doubleClick"),
+    DRAG("drag"),
+    EXPAND("expand"),
+    LONG_PRESS("longPress"),
+    SWIPE("swipe");
+
+    override fun toString(): String {
+        return action
     }
 }
