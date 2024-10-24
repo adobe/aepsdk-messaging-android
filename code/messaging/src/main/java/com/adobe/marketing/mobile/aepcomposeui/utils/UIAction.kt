@@ -11,15 +11,14 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.utils
 
-enum class UIAction(private val action: String) {
-    CLICK("click"),
-    DOUBLE_CLICK("doubleClick"),
-    DRAG("drag"),
-    EXPAND("expand"),
-    LONG_PRESS("longPress"),
-    SWIPE("swipe");
-
-    override fun toString(): String {
-        return action
-    }
+/**
+ * Represents an action that can be performed on a UI component.
+ */
+sealed class UIAction {
+    /**
+     * UIAction to represent a click action that can be performed on a UI component
+     * @property id optional unique identifier of the UI component
+     * @property actionUrl optional URL to be opened when the UI component is clicked
+     */
+    data class Click(val id: String?, val actionUrl: String?) : UIAction()
 }

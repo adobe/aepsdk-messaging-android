@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Card
+import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -54,7 +54,7 @@ fun SmallImageCard(
     Card(
         modifier = Modifier
             .clickable {
-                observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(null, ui.getTemplate().actionUrl)))
             }
     ) {
         Row {
@@ -79,7 +79,7 @@ fun SmallImageCard(
                         AepButtonComposable(
                             button,
                             onClick = {
-                                observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                             },
                             overridingButtonStyle = style.buttonStyle[index]?.first,
                             defaultButtonTextStyle = style.defaultButtonTextStyle,
