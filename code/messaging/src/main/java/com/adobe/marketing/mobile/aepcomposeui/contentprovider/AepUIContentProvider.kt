@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.contentprovider
 
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.Flow
 interface AepUIContentProvider {
     /**
      * Retrieves the content for the UI.
-     * @return The content for the UI as a flow of [AepTemplate]s.
+     * @return The content for the UI as a flow of [AepUI]s.
      */
-    suspend fun getContent(): Flow<List<AepUITemplate>>
+    suspend fun getContent(): Flow<List<AepUI<*, *>>>
 
     /**
      * Refreshes the content for the UI.

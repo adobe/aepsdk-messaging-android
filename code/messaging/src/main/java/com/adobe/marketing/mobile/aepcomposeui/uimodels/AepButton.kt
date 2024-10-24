@@ -17,16 +17,9 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @property id The unique ID for the button.
  * @property actionUrl The URL to be opened when the button is clicked.
  * @property text The text to be displayed on the button, represented by an [AepText] object.
- * @property borderWidth The border width of the button.
- * @property borderColor The border color of the button, represented by an [AepColor] object.
- * @property backgroundColour The background color of the button, represented by an [AepColor] object.
- *
  */
 data class AepButton(
     val id: String,
     val actionUrl: String,
     val text: AepText,
-    val borderWidth: Float? = null,
-    val borderColor: AepColor? = null,
-    val backgroundColour: AepColor? = null
 )

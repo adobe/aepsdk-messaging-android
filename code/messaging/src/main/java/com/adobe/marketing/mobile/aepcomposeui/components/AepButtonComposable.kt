@@ -19,8 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
@@ -69,18 +67,8 @@ internal fun AepButtonComposablePreview() {
             id = "button1",
             text = AepText(
                 "Click Me",
-                color = AepColor("#FF0000CC"),
-                align = "center",
-                font = AepFont(
-                    name = "Arial",
-                    size = 16,
-                    weight = "bold",
-                    style = listOf("italic")
-                )
             ),
             actionUrl = "https://www.adobe.com",
-            borderWidth = 2.0f,
-            borderColor = AepColor("#0FE608AC")
         ),
         onClick = {}
     )
