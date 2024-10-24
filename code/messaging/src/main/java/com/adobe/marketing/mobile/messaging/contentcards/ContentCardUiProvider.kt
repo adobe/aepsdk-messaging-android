@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 
 class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     companion object {
-        private const val SELF_TAG: String = "MessageAssetDownloader"
+        private const val SELF_TAG: String = "ContentCardUiProvider"
     }
 
     private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
@@ -41,23 +41,23 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
             val surface = Surface(surfaceString)
             val surfaceList = mutableListOf<Surface>()
             surfaceList.add(surface)
-            Messaging.updatePropositionsForSurfaces(surfaceList)
-            Messaging.getPropositionsForSurfaces(surfaceList) {
-                getCardsForSurface(surfaceList) {
-                    it.onSuccess { templateList ->
-                        _contentFlow.value = templateList
-                    }
-                    it.onFailure { error ->
-                        Log.error(MessagingConstants.LOG_TAG, SELF_TAG, "Failed to get content: ${error.message}")
-                        _contentFlow.value = emptyList()
-                    }
+            getAepUIForSurfaceList(surfaceList) {
+                it.onSuccess { templateList ->
+                    _contentFlow.value = templateList
+                }
+                it.onFailure { error ->
+                    Log.error(
+                        MessagingConstants.LOG_TAG, SELF_TAG,
+                        "Failed to get content: ${error.message}"
+                    )
+                    _contentFlow.value = emptyList()
                 }
             }
         }
         return contentFlow
     }
 
-    fun getCardsForSurface(
+    private suspend fun getAepUIForSurfaceList(
         surfaceList: MutableList<Surface>,
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
@@ -74,11 +74,7 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
                         completion(
                             Result.failure(
                                 Throwable(
-                                    "resultMap null for surfaces ${
-                                    surfaceList.joinToString(
-                                        ","
-                                    )
-                                    }"
+                                    "resultMap null for surfaces ${surfaceList.joinToString(",")}"
                                 )
                             )
                         )
@@ -131,7 +127,7 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         getContent()
     }
 
-    fun buildTemplate(proposition: Proposition): AepUITemplate? {
+    private fun buildTemplate(proposition: Proposition): AepUITemplate? {
         var baseTemplateModel: AepUITemplate? = null
         if (isContentCard(proposition)) {
             val propositionItem = proposition.items[0]

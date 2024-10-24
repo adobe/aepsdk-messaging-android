@@ -407,4 +407,22 @@ public final class MessagingConstants {
             private PayloadKeys() {}
         }
     }
+    
+    public final class AepUIKeys {
+        public static final String CONTENT = "content";
+        public static final String LIGHT_COLOUR = "lightColour";
+        public static final String DARK_COLOUR = "darkColour";
+        public static final String URL = "url";
+        public static final String DARK_URL = "darkUrl";
+        public static final String INTERACT_ID = "interactId";
+        public static final String ACTION_URL = "actionUrl";
+        public static final String TEXT = "text";
+        public static final String STYLE = "style";
+        public static final String ID = "id";
+        public static final String TITLE = "title";
+        public static final String BODY = "body";
+        public static final String IMAGE = "image";
+        public static final String BUTTONS = "buttons";
+        public static final String DISMISS_BTN = "dismissBtn";
+    }
 }

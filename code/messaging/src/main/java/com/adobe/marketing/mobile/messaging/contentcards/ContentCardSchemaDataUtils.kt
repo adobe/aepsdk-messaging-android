@@ -11,49 +11,40 @@
 
 package com.adobe.marketing.mobile.messaging.contentcards
 
-import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
-import org.json.JSONObject
+import com.adobe.marketing.mobile.messaging.MessagingConstants
 
-object AepModelUtils {
+object ContentCardSchemaDataUtils {
     fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
-            content = map[AepUIConstants.Keys.CONTENT] as String
-        )
-    }
-
-    fun createAepColor(map: Map<String, Any>): AepColor {
-        return AepColor(
-            lightColour = map[AepUIConstants.Keys.LIGHT_COLOUR] as String,
-            darkColour = map[AepUIConstants.Keys.DARK_COLOUR] as? String
+            content = map[MessagingConstants.AepUIKeys.CONTENT] as String
         )
     }
 
     fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
-            url = map[AepUIConstants.Keys.URL] as? String,
-            darkUrl = map[AepUIConstants.Keys.DARK_URL] as? String
+            url = map[MessagingConstants.AepUIKeys.URL] as? String,
+            darkUrl = map[MessagingConstants.AepUIKeys.DARK_URL] as? String
         )
     }
 
     fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
-            interactId = map[AepUIConstants.Keys.INTERACT_ID] as String,
-            actionUrl = map[AepUIConstants.Keys.ACTION_URL] as String,
-            text = (map[AepUIConstants.Keys.TEXT] as Map<String, Any>).let { createAepText(it) }
+            id = map[MessagingConstants.AepUIKeys.INTERACT_ID] as String,
+            actionUrl = map[MessagingConstants.AepUIKeys.ACTION_URL] as String,
+            text = (map[MessagingConstants.AepUIKeys.TEXT] as Map<String, Any>).let { createAepText(it) }
         )
     }
 
     fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
         return AepDismissButton(
-            style = map[AepUIConstants.Keys.STYLE] as? String ?: "NONE_ICON"
+            style = map[MessagingConstants.AepUIKeys.STYLE] as? String ?: "NONE_ICON"
         )
     }
 }
@@ -63,21 +54,21 @@ fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCard
     val contentMap =
         contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
     try {
-        val id = contentMap[AepUIConstants.Keys.ID] as String
+        val id = contentMap[MessagingConstants.AepUIKeys.ID] as String
         val title =
-            AepModelUtils.createAepText(contentMap[AepUIConstants.Keys.TITLE] as Map<String, Any>)
-        val body = (contentMap[AepUIConstants.Keys.BODY] as? Map<String, Any>)?.let {
-            AepModelUtils.createAepText(it)
+            ContentCardSchemaDataUtils.createAepText(contentMap[MessagingConstants.AepUIKeys.TITLE] as Map<String, Any>)
+        val body = (contentMap[MessagingConstants.AepUIKeys.BODY] as? Map<String, Any>)?.let {
+            ContentCardSchemaDataUtils.createAepText(it)
         }
-        val image = (contentMap[AepUIConstants.Keys.IMAGE] as? Map<String, Any>)?.let {
-            AepModelUtils.createAepImage(it)
+        val image = (contentMap[MessagingConstants.AepUIKeys.IMAGE] as? Map<String, Any>)?.let {
+            ContentCardSchemaDataUtils.createAepImage(it)
         }
-        val actionUrl = contentMap[AepUIConstants.Keys.ACTION_URL] as? String
-        val buttons = (contentMap[AepUIConstants.Keys.BUTTONS] as? List<Map<String, Any>>)?.map {
-            AepModelUtils.createAepButton(it)
+        val actionUrl = contentMap[MessagingConstants.AepUIKeys.ACTION_URL] as? String
+        val buttons = (contentMap[MessagingConstants.AepUIKeys.BUTTONS] as? List<Map<String, Any>>)?.map {
+            ContentCardSchemaDataUtils.createAepButton(it)
         }
-        val dismissBtn = (contentMap[AepUIConstants.Keys.DISMISS_BTN] as? Map<String, Any>)?.let {
-            AepModelUtils.createAepDismissButton(it)
+        val dismissBtn = (contentMap[MessagingConstants.AepUIKeys.DISMISS_BTN] as? Map<String, Any>)?.let {
+            ContentCardSchemaDataUtils.createAepDismissButton(it)
         }
         return SmallImageTemplate(
             id = id,

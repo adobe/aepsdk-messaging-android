@@ -13,31 +13,8 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.content.Context
 import android.content.res.Configuration
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.services.ServiceProvider
 
 internal object UIUtils {
-
-    /**
-     * Converts the [Color] from the [AepColor] based on system dark or light mode.
-     * If the color string is not valid, then returns [Color.Unspecified]
-     *
-     * @param AepColor The AepColor object
-     * @return The [Color] object
-     */
-    internal fun AepColor.getColor(): Color {
-        val context = ServiceProvider.getInstance().appContextService.applicationContext
-        context?.let {
-            val colorString = if (isSystemInDarkTheme(context)) darkColour else lightColour
-            return try {
-                Color(android.graphics.Color.parseColor(colorString))
-            } catch (e: IllegalArgumentException) {
-                Color.Unspecified
-            }
-        } ?: return Color.Unspecified
-    }
 
     internal fun isSystemInDarkTheme(context: Context): Boolean {
         val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK

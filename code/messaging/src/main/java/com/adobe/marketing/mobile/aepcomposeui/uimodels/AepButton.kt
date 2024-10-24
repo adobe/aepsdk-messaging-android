@@ -19,7 +19,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @property text The text to be displayed on the button, represented by an [AepText] object.
  */
 data class AepButton(
-    val interactId: String,
+    val id: String,
     val actionUrl: String,
     val text: AepText,
 )
