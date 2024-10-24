@@ -72,6 +72,7 @@ interface ContentCardCallback {
      * @param aepUI The AepUI instance that was interacted with.
      * @param interactionId An optional string identifier for the interaction event.
      * @param actionUrl An optional URL associated with the interaction.
+     * @return true if the interaction was handled, false otherwise.
      */
-    fun onInteract(aepUI: AepUI<*, *>, interactionId: String?, actionUrl: String?)
+    fun onInteract(aepUI: AepUI<*, *>, interactionId: String?, actionUrl: String?): Boolean
 }

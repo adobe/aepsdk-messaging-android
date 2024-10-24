@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.services.Log
+import com.adobe.marketing.mobile.services.ServiceProvider
 
 /**
  * Small Image Template Event Handler for content card interact events.
@@ -34,7 +35,18 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
             ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(template.id)
         when (event.action) {
             is UIAction.Click -> {
-                callback?.onInteract(event.aepUi, event.action.id, event.action.actionUrl)
+                val urlHandled = callback?.onInteract(event.aepUi, event.action.id, event.action.actionUrl)
+
+                // Open the URL if available and not handled by the listener
+                if (urlHandled != true && !event.action.actionUrl.isNullOrEmpty()) {
+                    Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "SmallImageUI opening URL: ${event.action.actionUrl}"
+                    )
+                    ServiceProvider.getInstance().uriService.openUri(event.action.actionUrl)
+                }
+
                 when (event.action.id) {
                     "none", "simple", "circle" -> { // handle content card dismiss button click
                         Log.trace(
