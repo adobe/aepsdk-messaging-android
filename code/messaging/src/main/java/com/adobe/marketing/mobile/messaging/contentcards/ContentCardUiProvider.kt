@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging.contentcards
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.messaging.MessagingConstants
@@ -28,22 +29,35 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ContentCardUiProvider is responsible for managing the content flow of [AepUI] elements
+ * for a given surface string. It fetches, updates, and refreshes content asynchronously.
+ *
+ * @property surfaceString The string representing the surface for which content is fetched.
+ */
+
 class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     companion object {
         private const val SELF_TAG: String = "ContentCardUiProvider"
     }
 
-    private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
-    private val contentFlow: StateFlow<List<AepUITemplate>> = _contentFlow
+    private val _contentFlow = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
+    private val contentFlow: StateFlow<List<AepUI<*, *>>> = _contentFlow
 
-    override suspend fun getContent(): Flow<List<AepUITemplate>> {
+    /**
+     * Retrieves the content as a Flow of a list of [AepUI] elements.
+     * The content is fetched asynchronously for the provided surface string.
+     *
+     * @return A Flow of a list of [AepUI] elements.
+     */
+    override suspend fun getContent(): Flow<List<AepUI<*, *>>> {
         CoroutineScope(Dispatchers.IO).launch {
             val surface = Surface(surfaceString)
             val surfaceList = mutableListOf<Surface>()
             surfaceList.add(surface)
             getAepUIForSurfaceList(surfaceList) {
                 it.onSuccess { templateList ->
-                    _contentFlow.value = templateList
+                    _contentFlow.value = templateList.map { provideAepUIfromAepUITemplate(it) }
                 }
                 it.onFailure { error ->
                     Log.error(
@@ -56,6 +70,14 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         }
         return contentFlow
     }
+
+    /**
+     * Retrieves the list of [AepUITemplate] for the provided surfaces.
+     * Updates the propositions and retrieves templates based on those propositions.
+     *
+     * @param surfaceList The list of surfaces for which to retrieve the templates.
+     * @param completion The callback to handle the result of the template retrieval.
+     */
 
     private suspend fun getAepUIForSurfaceList(
         surfaceList: MutableList<Surface>,
@@ -122,11 +144,20 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         )
     }
 
+    /**
+     * Refreshes the content by clearing the current content and fetching it again.
+     */
     override suspend fun refreshContent() {
         _contentFlow.value = emptyList()
         getContent()
     }
 
+    /**
+     * Builds an [AepUITemplate] from a given [Proposition].
+     *
+     * @param proposition The proposition to build the template from.
+     * @return The built [AepUITemplate] or null if the proposition is not a content card.
+     */
     private fun buildTemplate(proposition: Proposition): AepUITemplate? {
         var baseTemplateModel: AepUITemplate? = null
         if (isContentCard(proposition)) {
@@ -138,6 +169,12 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         return baseTemplateModel
     }
 
+    /**
+     * Checks if the given [Proposition] is a content card.
+     *
+     * @param proposition The proposition to check.
+     * @return True if the proposition is a content card, false otherwise.
+     */
     private fun isContentCard(proposition: Proposition): Boolean {
         return proposition.items[0].schema == SchemaType.CONTENT_CARD
     }
