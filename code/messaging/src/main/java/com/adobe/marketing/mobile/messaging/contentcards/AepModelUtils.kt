@@ -23,58 +23,63 @@ import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
 import org.json.JSONObject
 
 object AepModelUtils {
-    fun createAepText(jsonObject: JSONObject): AepText {
+    fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
-            content = jsonObject.optString(AepUIConstants.Keys.CONTENT)
+            content = map[AepUIConstants.Keys.CONTENT] as String
         )
     }
 
-    fun createAepColor(jsonObject: JSONObject): AepColor {
+    fun createAepColor(map: Map<String, Any>): AepColor {
         return AepColor(
-            lightColour = jsonObject.getString(AepUIConstants.Keys.LIGHT_COLOUR),
-            darkColour = jsonObject.optString(AepUIConstants.Keys.DARK_COLOUR, null)
+            lightColour = map[AepUIConstants.Keys.LIGHT_COLOUR] as String,
+            darkColour = map[AepUIConstants.Keys.DARK_COLOUR] as? String
         )
     }
 
-    fun createAepImage(jsonObject: JSONObject): AepImage {
+    fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
-            url = jsonObject.optString(AepUIConstants.Keys.URL),
-            darkUrl = jsonObject.optString(AepUIConstants.Keys.DARK_URL)
+            url = map[AepUIConstants.Keys.URL] as? String,
+            darkUrl = map[AepUIConstants.Keys.DARK_URL] as? String
         )
     }
 
-    fun createAepButton(jsonObject: JSONObject): AepButton {
+    fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
-            interactId = jsonObject.optString(AepUIConstants.Keys.INTERACT_ID),
-            actionUrl = jsonObject.optString(AepUIConstants.Keys.ACTION_URL),
-            text = createAepText(jsonObject.getJSONObject(AepUIConstants.Keys.TEXT))
+            interactId = map[AepUIConstants.Keys.INTERACT_ID] as String,
+            actionUrl = map[AepUIConstants.Keys.ACTION_URL] as String,
+            text = (map[AepUIConstants.Keys.TEXT] as Map<String, Any>).let { createAepText(it) }
         )
     }
 
-    fun createAepDismissButton(jsonObject: JSONObject): AepDismissButton {
+    fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
         return AepDismissButton(
-            style = jsonObject.optString(AepUIConstants.Keys.STYLE, "NONE_ICON")
+            style = map[AepUIConstants.Keys.STYLE] as? String ?: "NONE_ICON"
         )
     }
 }
 
 // Manual JSON parsing function
 fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
-    val jsonString = contentCardSchemaData.contentJsonString
-    return try {
-        val jsonObject = JSONObject(jsonString)
-        val id = jsonObject.getString(AepUIConstants.Keys.ID)
-        val title = AepModelUtils.createAepText(jsonObject.getJSONObject(AepUIConstants.Keys.TITLE))
-        val body = jsonObject.optJSONObject(AepUIConstants.Keys.BODY)?.let { AepModelUtils.createAepText(it) }
-        val image = jsonObject.optJSONObject(AepUIConstants.Keys.IMAGE)?.let { AepModelUtils.createAepImage(it) }
-        val actionUrl = jsonObject.optString(AepUIConstants.Keys.ACTION_URL, null)
-        val buttons = jsonObject.optJSONArray(AepUIConstants.Keys.BUTTONS)?.let { buttonsArray ->
-            List(buttonsArray.length()) { index ->
-                AepModelUtils.createAepButton(buttonsArray.getJSONObject(index))
-            }
+    val contentMap =
+        contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
+    try {
+        val id = contentMap[AepUIConstants.Keys.ID] as String
+        val title =
+            AepModelUtils.createAepText(contentMap[AepUIConstants.Keys.TITLE] as Map<String, Any>)
+        val body = (contentMap[AepUIConstants.Keys.BODY] as? Map<String, Any>)?.let {
+            AepModelUtils.createAepText(it)
         }
-        val dismissBtn = jsonObject.optJSONObject(AepUIConstants.Keys.DISMISS_BTN)?.let { AepModelUtils.createAepDismissButton(it) }
-        SmallImageTemplate(
+        val image = (contentMap[AepUIConstants.Keys.IMAGE] as? Map<String, Any>)?.let {
+            AepModelUtils.createAepImage(it)
+        }
+        val actionUrl = contentMap[AepUIConstants.Keys.ACTION_URL] as? String
+        val buttons = (contentMap[AepUIConstants.Keys.BUTTONS] as? List<Map<String, Any>>)?.map {
+            AepModelUtils.createAepButton(it)
+        }
+        val dismissBtn = (contentMap[AepUIConstants.Keys.DISMISS_BTN] as? Map<String, Any>)?.let {
+            AepModelUtils.createAepDismissButton(it)
+        }
+        return SmallImageTemplate(
             id = id,
             title = title,
             body = body,
@@ -84,7 +89,6 @@ fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCard
             dismissBtn = dismissBtn
         )
     } catch (e: Exception) {
-        // Handle parsing error
-        throw IllegalArgumentException("Error parsing JSON: ${e.message}")
+        throw IllegalArgumentException("Error parsing content map: ${e.message}")
     }
 }
