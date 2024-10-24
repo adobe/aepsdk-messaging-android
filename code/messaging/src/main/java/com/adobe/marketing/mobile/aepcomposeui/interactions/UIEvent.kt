@@ -47,7 +47,7 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      *
      * Example:
      * ```
-     * observer?.onEvent(AepUiEvent.Interact(ui, interactId = "purchaseID", action = UIAction.CLICK), actionUrl = "https://www.adobe.com")
+     * observer?.onEvent(AepUiEvent.Interact(ui, UIAction.Click(id = "purchaseID", actionUrl = "https://www.adobe.com"))
      * ```
      */
     data class Interact<T : AepUITemplate, S : AepCardUIState>(
