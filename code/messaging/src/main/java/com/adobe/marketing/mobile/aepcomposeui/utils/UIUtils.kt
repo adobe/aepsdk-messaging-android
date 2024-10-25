@@ -11,36 +11,62 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.utils
 
-import android.content.Context
-import android.content.res.Configuration
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.services.ServiceProvider
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
+import com.adobe.marketing.mobile.services.Log
+import java.io.IOException
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 internal object UIUtils {
 
-    /**
-     * Converts the [Color] from the [AepColor] based on system dark or light mode.
-     * If the color string is not valid, then returns [Color.Unspecified]
-     *
-     * @param AepColor The AepColor object
-     * @return The [Color] object
-     */
-    internal fun AepColor.getColor(): Color {
-        val context = ServiceProvider.getInstance().appContextService.applicationContext
-        context?.let {
-            val colorString = if (isSystemInDarkTheme(context)) darkColour else lightColour
-            return try {
-                Color(android.graphics.Color.parseColor(colorString))
-            } catch (e: IllegalArgumentException) {
-                Color.Unspecified
-            }
-        } ?: return Color.Unspecified
-    }
+    private const val SELF_TAG = "UIUtils"
 
-    internal fun isSystemInDarkTheme(context: Context): Boolean {
-        val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    /**
+     * Downloads the image from the given URL.
+     *
+     * @param url the URL of the image to download.
+     * @return the downloaded image as a [Bitmap].
+     */
+    fun downloadImage(url: String?): Bitmap? {
+        var bitmap: Bitmap? = null
+        var connection: HttpURLConnection? = null
+        var inputStream: InputStream? = null
+
+        try {
+            val imageUrl = URL(url)
+            connection = imageUrl.openConnection() as HttpURLConnection
+            inputStream = connection.inputStream
+            bitmap = BitmapFactory.decodeStream(inputStream)
+        } catch (e: IOException) {
+            Log.warning(
+                AepUIConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to download push notification image from url (%s). Exception: %s",
+                url,
+                e.message
+            )
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close()
+                } catch (e: IOException) {
+                    Log.warning(
+                        AepUIConstants.LOG_TAG,
+                        SELF_TAG,
+                        "IOException during closing Input stream while push notification image" +
+                            " from url (%s). Exception: %s ",
+                        url,
+                        e.message
+                    )
+                }
+            }
+
+            connection?.disconnect()
+        }
+
+        return bitmap
     }
 }

@@ -16,7 +16,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  *
  * @property style The style of the dismiss button, which can be one of the following:
  * - `none`: No icon displayed.
- * - `simple`: A simple dismiss icon.
- * - `circle`: A circular dismiss icon.
+ * - `dismiss_simple`: A simple dismiss icon.
+ * - `dismiss_circle`: A circular dismiss icon.
  */
 data class AepDismissButton(val style: String)
