@@ -11,9 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging.contentcards
 
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
@@ -23,29 +20,13 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
 import com.adobe.marketing.mobile.messaging.MessagingConstants
 
-/**
- * Utility object for creating instances of AEP model classes from Map data structures.
- * Provides functions to create [AepText], [AepImage], [AepButton], and [AepDismissButton].
- */
 object ContentCardSchemaDataUtils {
-    /**
-     * Creates an instance of [AepText] from a map of key-value pairs.
-     *
-     * @param map The map containing the data for [AepText].
-     * @return An instance of [AepText].
-     */
     fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
             content = map[MessagingConstants.AepUIKeys.CONTENT] as String
         )
     }
 
-    /**
-     * Creates an instance of [AepImage] from a map of key-value pairs.
-     *
-     * @param map The map containing the data for [AepImage].
-     * @return An instance of [AepImage].
-     */
     fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
             url = map[MessagingConstants.AepUIKeys.URL] as? String,
@@ -53,12 +34,6 @@ object ContentCardSchemaDataUtils {
         )
     }
 
-    /**
-     * Creates an instance of [AepButton] from a map of key-value pairs.
-     *
-     * @param map The map containing the data for [AepButton].
-     * @return An instance of [AepButton].
-     */
     fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
             id = map[MessagingConstants.AepUIKeys.INTERACT_ID] as String,
@@ -67,12 +42,6 @@ object ContentCardSchemaDataUtils {
         )
     }
 
-    /**
-     * Creates an instance of [AepDismissButton] from a map of key-value pairs.
-     *
-     * @param map The map containing the data for [AepDismissButton].
-     * @return An instance of [AepDismissButton].
-     */
     fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
         return AepDismissButton(
             style = map[MessagingConstants.AepUIKeys.STYLE] as? String ?: "NONE_ICON"
@@ -80,13 +49,7 @@ object ContentCardSchemaDataUtils {
     }
 }
 
-/**
- * Parses the given [ContentCardSchemaData] to create an [AepUITemplate].
- *
- * @param contentCardSchemaData The content card schema data containing the content map.
- * @return The parsed [AepUITemplate] or null if parsing fails.
- * @throws IllegalArgumentException If the content map is null or if there is an error during parsing.
- */
+// Manual JSON parsing function
 fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
     val contentMap =
         contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
@@ -118,21 +81,5 @@ fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCard
         )
     } catch (e: Exception) {
         throw IllegalArgumentException("Error parsing content map: ${e.message}")
-    }
-}
-
-/**
- * Provides an [AepUI] instance from the given [AepUITemplate].
- *
- * @param uiTemplate The template to convert into a UI component.
- * @return An instance of [AepUI] representing the given template.
- * @throws IllegalArgumentException If the provided template type is unsupported.
- */
-fun provideAepUIfromAepUITemplate(uiTemplate: AepUITemplate): AepUI<*, *> {
-    return when (uiTemplate) {
-        is SmallImageTemplate -> {
-            SmallImageUI(uiTemplate, SmallImageCardUIState())
-        }
-        else -> throw IllegalArgumentException("Unsupported template type")
     }
 }
