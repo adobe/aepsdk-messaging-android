@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 import android.graphics.Bitmap
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,14 +24,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
-import com.adobe.marketing.mobile.messaging.R
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.shimmerEffect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -53,9 +55,6 @@ fun SmallImageCard(
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-    }
-
-    LaunchedEffect(imageUrl) {
         if (imageUrl != null) {
             bitmap = withContext(Dispatchers.IO) {
                 UIUtils.downloadImage(imageUrl)
@@ -73,6 +72,7 @@ fun SmallImageCard(
             ui.getTemplate().dismissBtn?.let {
                 AepIconComposable(
                     drawableId = it.drawableId,
+                    // todo check if we can remember this calculation so that it is not repeated for recompositions
                     style = style.dismissButtonStyle.apply {
                         modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
                     },
@@ -91,10 +91,13 @@ fun SmallImageCard(
                         style = style.imageStyle
                     )
                 } ?: run {
-                    AepImageComposable(
-                        // todo replace with shimmer
-                        content = painterResource(R.drawable.baseline_pending_20),
-                        style = style.imageStyle
+                    Box(
+                        modifier = Modifier
+                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp)
+                            .shimmerEffect(
+                                shimmerColor1 = style.cardStyle.colors?.containerColor,
+                                shimmerColor2 = style.cardStyle.colors?.contentColor,
+                            )
                     )
                 }
                 AepColumnComposable(

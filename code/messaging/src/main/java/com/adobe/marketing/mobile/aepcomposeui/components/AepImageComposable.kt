@@ -24,7 +24,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 /**
  * A composable function that displays a image element with customizable properties.
  *
- * @param content Image to be displayed.
+ * @param content [Painter] representing image to be displayed.
  * @param style The [AepImageStyle] to be applied to the image element.
  * @param onClick Method that is called when this image is clicked
  */
