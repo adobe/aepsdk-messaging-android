@@ -21,13 +21,14 @@ class ContentCardMapper private constructor() {
 
     companion object {
         @JvmStatic
-        val instance: ContentCardMapper by lazy { Holder.INSTANCE }
+        val instance: ContentCardMapper by lazy { ContentCardMapper() }
     }
 
-    private object Holder {
-        val INSTANCE = ContentCardMapper()
-    }
-
+    /**
+     * Stores the [ContentCardSchemaData] for the given proposition id.
+     *
+     * @param contentCardSchemaData the [ContentCardSchemaData] to store
+     */
     fun storeContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData) {
         if (contentCardSchemaData.parent.propositionReference == null) {
             return
@@ -35,10 +36,21 @@ class ContentCardMapper private constructor() {
         contentCardSchemaDataMap[contentCardSchemaData.parent.proposition.uniqueId] = contentCardSchemaData
     }
 
+    /**
+     * Removes the [ContentCardSchemaData] for the given proposition id.
+     *
+     * @param propositionId the proposition id to remove the [ContentCardSchemaData] for
+     */
     fun removeContentCardSchemaDataFromMap(propositionId: String) {
         contentCardSchemaDataMap.remove(propositionId)
     }
 
+    /**
+     * Returns the [ContentCardSchemaData] for the given proposition id.
+     *
+     * @param propositionId the proposition id to retrieve the [ContentCardSchemaData] for
+     * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
+     */
     fun getContentCardSchemaDataForPropositionId(propositionId: String): ContentCardSchemaData? {
         if (StringUtils.isNullOrEmpty(propositionId)) {
             return null

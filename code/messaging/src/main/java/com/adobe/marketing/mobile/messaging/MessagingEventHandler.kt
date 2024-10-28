@@ -27,18 +27,14 @@ internal open class MessagingEventHandler(private val callback: ContentCardCallb
     }
 
     internal open fun onEvent(event: UIEvent<*, *>, propositionId: String) {
-        var eventType: MessagingEdgeEventType? = null
         if (event is UIEvent.Display) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Displayed")
             callback?.onDisplay(event.aepUi)
-            eventType = MessagingEdgeEventType.DISPLAY
+            MessagingEventHandlerUtils.track(propositionId, null, MessagingEdgeEventType.DISPLAY)
         } else if (event is UIEvent.Dismiss) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Dismissed")
             callback?.onDismiss(event.aepUi)
-            eventType = MessagingEdgeEventType.DISMISS
+            MessagingEventHandlerUtils.track(propositionId, null, MessagingEdgeEventType.DISMISS)
         }
-
-        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(propositionId)
-        contentCardSchemaData?.track(null, eventType)
     }
 }

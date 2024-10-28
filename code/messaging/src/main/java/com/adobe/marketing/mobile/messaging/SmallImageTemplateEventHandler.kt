@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.ServiceProvider
 
@@ -31,16 +30,13 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
 
     override fun onEvent(event: UIEvent<*, *>, propositionId: String) {
         if (event is UIEvent.Interact) {
-            onInteractEvent(event)
+            onInteractEvent(event, propositionId)
         } else {
             super.onEvent(event, propositionId)
         }
     }
 
-    private fun onInteractEvent(event: UIEvent.Interact<*, *>) {
-        val template: SmallImageTemplate = event.aepUi.getTemplate() as SmallImageTemplate
-        val contentCardSchemaData =
-            ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(template.id)
+    private fun onInteractEvent(event: UIEvent.Interact<*, *>, propositionId: String) {
         when (event.action) {
             is UIAction.Click -> {
                 val urlHandled = callback?.onInteract(event.aepUi, event.action.id, event.action.actionUrl)
@@ -55,17 +51,12 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
                     ServiceProvider.getInstance().uriService.openUri(event.action.actionUrl)
                 }
 
-                if (event.action.id.isNotEmpty()) {
-                    Log.trace(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "SmallImageUI ${event.action.id} button clicked"
-                    )
-                    contentCardSchemaData?.track(
-                        event.action.id,
-                        MessagingEdgeEventType.INTERACT
-                    )
-                }
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "SmallImageUI ${event.action.id} clicked"
+                )
+                MessagingEventHandlerUtils.track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
             }
         }
     }
