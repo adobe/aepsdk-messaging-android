@@ -14,12 +14,14 @@ package com.adobe.marketing.mobile.messaging.contentcards
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.messaging.MessagingConstants
 import com.adobe.marketing.mobile.messaging.Proposition
-import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.messaging.Surface
+import com.adobe.marketing.mobile.messaging.contentcards.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.contentcards.ContentCardSchemaDataUtils.getAepUI
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,23 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
     private val contentFlow: StateFlow<List<AepUITemplate>> = _contentFlow
 
+    private val _aepUiFlow = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
+    private val aepUiFlow: StateFlow<List<AepUI<*, *>>> = _aepUiFlow
+
+    suspend fun getAepUi(): Flow<List<AepUI<*, *>>> {
+        getContent()
+        return aepUiFlow
+    }
+
+    /**
+     * Clears the current content and re-fetches new content for the given surface.
+     */
+    override suspend fun refreshContent() {
+        _contentFlow.value = emptyList()
+        _aepUiFlow.value = emptyList()
+        getContent()
+    }
+
     /**
      * Retrieves a flow of AepUITemplate lists for the given surface.
      * The flow emits updates whenever new content is fetched.
@@ -53,9 +72,10 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
             val surface = Surface(surfaceString)
             val surfaceList = mutableListOf<Surface>()
             surfaceList.add(surface)
-            getAepUIForSurfaceList(surfaceList) {
+            getAepUITemplateList(surfaceList) { it ->
                 it.onSuccess { templateList ->
                     _contentFlow.value = templateList
+                    _aepUiFlow.value = templateList.map { item -> getAepUI(item) }
                 }
                 it.onFailure { error ->
                     Log.error(
@@ -63,13 +83,14 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
                         "Failed to get content: ${error.message}"
                     )
                     _contentFlow.value = emptyList()
+                    _aepUiFlow.value = emptyList()
                 }
             }
         }
         return contentFlow
     }
 
-    private suspend fun getAepUIForSurfaceList(
+    private suspend fun getAepUITemplateList(
         surfaceList: MutableList<Surface>,
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
@@ -129,28 +150,5 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
                 }
             }
         )
-    }
-
-    /**
-     * Clears the current content and re-fetches new content for the given surface.
-     */
-    override suspend fun refreshContent() {
-        _contentFlow.value = emptyList()
-        getContent()
-    }
-
-    private fun buildTemplate(proposition: Proposition): AepUITemplate? {
-        var baseTemplateModel: AepUITemplate? = null
-        if (isContentCard(proposition)) {
-            val propositionItem = proposition.items[0]
-            baseTemplateModel = propositionItem.contentCardSchemaData?.let {
-                getTemplateModel(it)
-            }
-        }
-        return baseTemplateModel
-    }
-
-    private fun isContentCard(proposition: Proposition): Boolean {
-        return proposition.items[0].schema == SchemaType.CONTENT_CARD
     }
 }
