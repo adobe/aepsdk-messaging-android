@@ -49,7 +49,7 @@ fun SmallImageCard(
     AepCardComposable(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(null, ui.getTemplate().actionUrl), ui.getTemplate().id))
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(ui.getTemplate().id, ui.getTemplate().actionUrl)))
         }
     ) {
         AepRowComposable(
@@ -78,7 +78,7 @@ fun SmallImageCard(
                         AepButtonComposable(
                             button,
                             onClick = {
-                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl), ui.getTemplate().id))
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                             },
                             buttonStyle = style.buttonStyle[index].first,
                             buttonTextStyle = style.buttonStyle[index].second

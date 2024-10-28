@@ -55,7 +55,7 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
                     ServiceProvider.getInstance().uriService.openUri(event.action.actionUrl)
                 }
 
-                if (!event.action.id.isNullOrEmpty()) {
+                if (event.action.id.isNotEmpty()) {
                     Log.trace(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,

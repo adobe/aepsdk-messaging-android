@@ -40,7 +40,6 @@ sealed class UIEvent<T : AepUITemplate, S : AepCardUIState>(open val aepUi: AepU
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property aepUi The [AepUI] associated with the interaction event, providing context about the UI component on which the interaction occurred.
      * @property action The [UIAction] that occurred.
-     * @property id The unique identifier of the UI component on which the interaction occurred.
      *
      * The `Interact` event captures the different types of interactions that a user can have with a UI component,
      * like clicking a button or expanding a card. Limiting the interaction types ensures consistency in event
@@ -53,8 +52,7 @@ sealed class UIEvent<T : AepUITemplate, S : AepCardUIState>(open val aepUi: AepU
      */
     data class Interact<T : AepUITemplate, S : AepCardUIState>(
         override val aepUi: AepUI<T, S>,
-        val action: UIAction,
-        val id: String
+        val action: UIAction
     ) : UIEvent<T, S>(aepUi)
 
     /**
