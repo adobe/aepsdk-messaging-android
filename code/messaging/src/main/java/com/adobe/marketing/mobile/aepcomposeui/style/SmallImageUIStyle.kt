@@ -11,44 +11,98 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.style
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 
 /**
  * Class representing the style for a small image AEP UI.
  *
- * @property titleAepTextStyle The custom text style for the title.
- * @property bodyAepTextStyle The custom text style for the body.
- * @property buttonStyle The custom style for the buttons.
+ * @param cardStyle The style for the card.
+ * @param rootRowStyle The style for the root row.
+ * @param textColumnStyle The style for the column containing the title, body and buttons.
+ * @property titleAepTextStyle The text style for the title.
+ * @property bodyAepTextStyle The text style for the body.
+ * @property buttonRowStyle The style for the row containing the buttons.
+ * @property buttonStyle The style for the buttons.
  */
-
-class SmallImageUIStyle(
-    var titleAepTextStyle: AepTextStyle? = null,
-    var bodyAepTextStyle: AepTextStyle? = null,
-    var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?> = arrayOfNulls(3),
+class SmallImageUIStyle private constructor(
+    val cardStyle: AepCardStyle,
+    val rootRowStyle: AepRowStyle,
+    val textColumnStyle: AepColumnStyle,
+    val titleAepTextStyle: AepTextStyle,
+    val bodyAepTextStyle: AepTextStyle,
+    val buttonRowStyle: AepRowStyle,
+    val buttonStyle: Array<Pair<AepButtonStyle, AepTextStyle>>
 ) {
-    val defaultTitleTextStyle: AepTextStyle
-        get() = AepTextStyle(
+    companion object {
+        private val defaultSmallImageCardStyle = AepCardStyle(
+            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+        private val defaultRootRowStyle = AepRowStyle(
+            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+        private val defaultTextColumnStyle = AepColumnStyle(
+            verticalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+        private val defaultTitleAepTextStyle = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_TEXT_SIZE.sp,
                 fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_FONT_WEIGHT
             )
         )
-
-    val defaultBodyTextStyle: AepTextStyle
-        get() = AepTextStyle(
+        private val defaultBodyAepTextStyle = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BODY_TEXT_SIZE.sp,
                 fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BODY_FONT_WEIGHT,
             )
         )
-
-    val defaultButtonTextStyle: AepTextStyle
-        get() = AepTextStyle(
+        private val defaultButtonRowStyle = AepRowStyle(
+            horizontalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+        )
+        private val defaultButtonTextStyle = AepTextStyle(
             textStyle = TextStyle(
                 fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_TEXT_SIZE.sp,
                 fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_FONT_WEIGHT,
             )
         )
+        private val defaultButtonStyle = AepButtonStyle()
+    }
+
+    class Builder {
+        private var smallImageCardStyle: AepCardStyle? = null
+        private var rootRowStyle: AepRowStyle? = null
+        private var textColumnStyle: AepColumnStyle? = null
+        private var titleAepTextStyle: AepTextStyle? = null
+        private var bodyAepTextStyle: AepTextStyle? = null
+        private var buttonRowStyle: AepRowStyle? = null
+        private var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?>? = arrayOfNulls(3)
+
+        fun smallImageCardStyle(style: AepCardStyle) = apply { this.smallImageCardStyle = style }
+        fun rootRowStyle(style: AepRowStyle) = apply { this.rootRowStyle = style }
+        fun textColumnStyle(style: AepColumnStyle) = apply { this.textColumnStyle = style }
+        fun titleAepTextStyle(style: AepTextStyle) = apply { this.titleAepTextStyle = style }
+        fun bodyAepTextStyle(style: AepTextStyle) = apply { this.bodyAepTextStyle = style }
+        fun buttonRowStyle(style: AepRowStyle) = apply { this.buttonRowStyle = style }
+        fun buttonStyle(style: Array<Pair<AepButtonStyle?, AepTextStyle?>?>) = apply { this.buttonStyle = style }
+
+        fun build() = SmallImageUIStyle(
+            cardStyle = AepCardStyle.merge(defaultSmallImageCardStyle, smallImageCardStyle),
+            rootRowStyle = AepRowStyle.merge(defaultRootRowStyle, rootRowStyle),
+            textColumnStyle = AepColumnStyle.merge(defaultTextColumnStyle, textColumnStyle),
+            titleAepTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
+            bodyAepTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
+            buttonRowStyle = AepRowStyle.merge(defaultButtonRowStyle, buttonRowStyle),
+            buttonStyle = (buttonStyle ?: arrayOfNulls(3)).map { pair ->
+                Pair(
+                    AepButtonStyle.merge(defaultButtonStyle, pair?.first),
+                    AepTextStyle.merge(defaultButtonTextStyle, pair?.second)
+                )
+            }.toTypedArray()
+        )
+    }
 }

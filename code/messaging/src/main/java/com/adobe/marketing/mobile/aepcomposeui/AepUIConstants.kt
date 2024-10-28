@@ -26,4 +26,6 @@ internal object AepUIConstants {
             const val SPACING = 8
         }
     }
+
+    const val TEXT_MAX_LINES = 3
 }

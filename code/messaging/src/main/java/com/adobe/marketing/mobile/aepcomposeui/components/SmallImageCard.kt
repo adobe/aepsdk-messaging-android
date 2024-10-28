@@ -11,19 +11,14 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.UIAction
-import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 
 /**
  * Composable function that renders a small image card UI.
@@ -51,39 +46,42 @@ fun SmallImageCard(
         }
     }
 
-    Card(
-        modifier = Modifier
-            .clickable {
-                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(null, ui.getTemplate().actionUrl), ui.getTemplate().id))
-            }
+    AepCardComposable(
+        cardStyle = style.cardStyle,
+        onClick = {
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+        }
     ) {
-        Row {
+        AepRowComposable(
+            rowStyle = style.rootRowStyle
+        ) {
             // TODO - Add image support
-            Column {
+            AepColumnComposable(
+                columnStyle = style.textColumnStyle
+            ) {
                 ui.getTemplate().title.let {
                     AepTextComposable(
-                        it,
-                        style.defaultTitleTextStyle,
-                        style.titleAepTextStyle
+                        model = it,
+                        textStyle = style.titleAepTextStyle
                     )
                 }
                 ui.getTemplate().body?.let {
                     AepTextComposable(
-                        it,
-                        defaultStyle = style.defaultBodyTextStyle,
-                        overridingStyle = style.bodyAepTextStyle
+                        model = it,
+                        textStyle = style.bodyAepTextStyle
                     )
                 }
-                Row {
+                AepRowComposable(
+                    rowStyle = style.buttonRowStyle
+                ) {
                     ui.getTemplate().buttons?.forEachIndexed { index, button ->
                         AepButtonComposable(
                             button,
                             onClick = {
-                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl), ui.getTemplate().id))
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
                             },
-                            overridingButtonStyle = style.buttonStyle[index]?.first,
-                            defaultButtonTextStyle = style.defaultButtonTextStyle,
-                            overridingButtonTextStyle = style.buttonStyle[index]?.second
+                            buttonStyle = style.buttonStyle[index].first,
+                            buttonTextStyle = style.buttonStyle[index].second
                         )
                     }
                 }

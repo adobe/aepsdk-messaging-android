@@ -12,62 +12,55 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardElevation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 
 /**
- * Class representing the style of an AEPButton Composable.
+ * Class representing the style for a Card Composable.
  *
- * @param modifier The modifier to be applied to the button.
- * @param enabled The enabled state of the button.
+ * @param modifier The modifier to be applied to the card.
+ * @param shape The shape of the card.
+ * @param colors The colors that will be used to resolve the colors for this card in different states
  * @param elevation The elevation of the button.
- * @param shape The shape of the button.
  * @param border The border to draw around the container of this button.
- * @param colors The colors that will be used to resolve the colors for this button in different states
- * @param contentPadding the spacing values to apply internally between the container and the text
  */
-class AepButtonStyle(
+class AepCardStyle(
     var modifier: Modifier? = null,
-    var enabled: Boolean? = null,
-    var elevation: ButtonElevation? = null,
     var shape: Shape? = null,
+    var colors: CardColors? = null,
+    var elevation: CardElevation? = null,
     var border: BorderStroke? = null,
-    var colors: ButtonColors? = null,
-    var contentPadding: PaddingValues? = null,
 ) {
-
     companion object {
 
         /**
-         * Returns a new [AepButtonStyle] that is a combination of default style and overridden style.
+         * Returns a new [AepCardStyle] that is a combination of default style and overridden style.
          * If the same property is present in all the styles, the property from the overridden style is used.
          * If a property is not present in the overridden style, the property from the default style is used.
          *
-         * @param defaultStyle The default [AepButtonStyle] to be applied to the button element.
-         * @param overridingStyle The [AepButtonStyle] provided by the app that overrides the default button style.
+         * @param defaultStyle The default [AepCardStyle] to be applied to the text element.
+         * @param overridingStyle The [AepCardStyle] provided by the app that overrides the default text style.
          *
-         * @return The merged [AepButtonStyle]
+         * @return The merged [AepCardStyle]
+         *
          */
         internal fun merge(
-            defaultStyle: AepButtonStyle = AepButtonStyle(),
-            overridingStyle: AepButtonStyle? = null
-        ): AepButtonStyle {
+            defaultStyle: AepCardStyle = AepCardStyle(),
+            overridingStyle: AepCardStyle? = null
+        ): AepCardStyle {
             if (overridingStyle == null) {
                 return defaultStyle
             }
-            return AepButtonStyle(
+            return AepCardStyle(
                 modifier = (defaultStyle.modifier ?: Modifier).then(
                     overridingStyle.modifier ?: Modifier
                 ),
-                enabled = overridingStyle.enabled ?: defaultStyle.enabled,
-                elevation = overridingStyle.elevation ?: defaultStyle.elevation,
                 shape = overridingStyle.shape ?: defaultStyle.shape,
-                border = overridingStyle.border ?: defaultStyle.border,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
-                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding
+                elevation = overridingStyle.elevation ?: defaultStyle.elevation,
+                border = overridingStyle.border ?: defaultStyle.border
             )
         }
     }
