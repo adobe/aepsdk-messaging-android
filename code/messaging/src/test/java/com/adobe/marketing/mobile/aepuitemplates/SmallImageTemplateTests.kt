@@ -12,7 +12,7 @@
 package com.adobe.marketing.mobile.aepuitemplates
 
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
@@ -34,7 +34,7 @@ class SmallImageTemplateTests {
                 AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
                 AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AepDismissButton("circle")
+            AepIcon(1234)
         )
 
         // verify
@@ -51,7 +51,7 @@ class SmallImageTemplateTests {
         assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
-        assertEquals("circle", template.dismissBtn?.style)
+        assertEquals(1234, template.dismissBtn?.drawableId)
     }
 
     @Test
@@ -67,7 +67,7 @@ class SmallImageTemplateTests {
                 AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
                 AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AepDismissButton("circle")
+            AepIcon(1234)
         )
 
         // verify
@@ -84,7 +84,7 @@ class SmallImageTemplateTests {
         assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
-        assertEquals("circle", template.dismissBtn?.style)
+        assertEquals(1234, template.dismissBtn?.drawableId)
     }
 
     @Test
@@ -100,7 +100,7 @@ class SmallImageTemplateTests {
                 AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
                 AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AepDismissButton("circle")
+            AepIcon(1234)
         )
 
         // verify
@@ -117,7 +117,7 @@ class SmallImageTemplateTests {
         assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
-        assertEquals("circle", template.dismissBtn?.style)
+        assertEquals(1234, template.dismissBtn?.drawableId)
     }
 
     @Test
@@ -133,7 +133,7 @@ class SmallImageTemplateTests {
                 AepButton("purchaseID", "https://adobe.com/offer", AepText("Purchase Now")),
                 AepButton("cancelID", "app://home", AepText("Cancel"))
             ),
-            AepDismissButton("circle")
+            AepIcon(1234)
         )
 
         // verify
@@ -150,7 +150,7 @@ class SmallImageTemplateTests {
         assertEquals("cancelID", buttons?.get(1)?.id)
         assertEquals("Cancel", buttons?.get(1)?.text?.content)
         assertEquals("app://home", buttons?.get(1)?.actionUrl)
-        assertEquals("circle", template.dismissBtn?.style)
+        assertEquals(1234, template.dismissBtn?.drawableId)
     }
 
     @Test
@@ -163,7 +163,7 @@ class SmallImageTemplateTests {
             AepImage("https://imagetoDownload.com/cardimage"),
             "https://luma.com/sale",
             null,
-            AepDismissButton("circle")
+            AepIcon(1234)
         )
 
         // verify
@@ -173,7 +173,7 @@ class SmallImageTemplateTests {
         assertEquals("https://imagetoDownload.com/cardimage", template.image?.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         assertEquals(null, template.buttons)
-        assertEquals("circle", template.dismissBtn?.style)
+        assertEquals(1234, template.dismissBtn?.drawableId)
     }
 
     @Test
