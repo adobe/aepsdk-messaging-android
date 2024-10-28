@@ -36,9 +36,9 @@ import kotlinx.coroutines.launch
  *
  * @property surfaceString The identifier of the surface for which content needs to be fetched.
  */
-class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
+class ContentCardUIProvider(val surfaceString: String) : AepUIContentProvider {
     companion object {
-        private const val SELF_TAG: String = "ContentCardUiProvider"
+        private const val SELF_TAG: String = "ContentCardUIProvider"
     }
 
     private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
@@ -47,6 +47,15 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     private val _aepUiFlow = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
     private val aepUiFlow: StateFlow<List<AepUI<*, *>>> = _aepUiFlow
 
+    /**
+     * Retrieves a flow of AepUI instances for the given surface.
+     *
+     * This function initiates the content fetch using [getContent] and then returns a flow of
+     * [AepUI] instances that represent the UI templates. The flow emits updates whenever new
+     * content is fetched or any changes occur.
+     *
+     * @return A [Flow] that emits a list of [AepUI] instances.
+     */
     suspend fun getAepUi(): Flow<List<AepUI<*, *>>> {
         getContent()
         return aepUiFlow
@@ -75,7 +84,7 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
             getAepUITemplateList(surfaceList) { it ->
                 it.onSuccess { templateList ->
                     _contentFlow.value = templateList
-                    _aepUiFlow.value = templateList.map { item -> getAepUI(item) }
+                    _aepUiFlow.value = templateList.mapNotNull { item -> getAepUI(item) }
                 }
                 it.onFailure { error ->
                     Log.error(

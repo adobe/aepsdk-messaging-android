@@ -28,7 +28,9 @@ import com.adobe.marketing.mobile.util.DataReader
 
 /**
  * Utility object for creating instances of AEP model classes from Map data structures.
- * Provides functions to create [AepText], [AepImage], [AepButton], and [AepDismissButton].
+ * This utility handles parsing and transforming content card data into the relevant AEP UI models,
+ * such as [AepText], [AepImage], [AepButton], and [AepDismissButton], as well as creating
+ * the corresponding UI templates like [SmallImageTemplate].
  */
 internal object ContentCardSchemaDataUtils {
     /**
@@ -39,7 +41,7 @@ internal object ContentCardSchemaDataUtils {
      */
     private fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
-            content = DataReader.optString(map, MessagingConstants.UIKeys.CONTENT, "")
+            content = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.CONTENT, "")
         )
     }
 
@@ -51,8 +53,8 @@ internal object ContentCardSchemaDataUtils {
      */
     private fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
-            url = DataReader.optString(map, MessagingConstants.UIKeys.URL, null),
-            darkUrl = DataReader.optString(map, MessagingConstants.UIKeys.DARK_URL, null)
+            url = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.URL, null),
+            darkUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.DARK_URL, null)
         )
     }
 
@@ -64,9 +66,9 @@ internal object ContentCardSchemaDataUtils {
      */
     private fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
-            id = DataReader.optString(map, MessagingConstants.UIKeys.INTERACT_ID, null),
-            actionUrl = DataReader.optString(map, MessagingConstants.UIKeys.ACTION_URL, null),
-            text = DataReader.optTypedMap(Any::class.java, map, MessagingConstants.UIKeys.TEXT, null).let { createAepText(it) }
+            id = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
+            actionUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null),
+            text = DataReader.optTypedMap(Any::class.java, map, MessagingConstants.ContentCard.UIKeys.TEXT, null).let { createAepText(it) }
         )
     }
 
@@ -78,7 +80,7 @@ internal object ContentCardSchemaDataUtils {
      */
     private fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
         return AepDismissButton(
-            style = DataReader.optString(map, MessagingConstants.UIKeys.STYLE, MessagingConstants.UIKeys.DismissButtonStyle.NONE)
+            style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
         )
     }
 
@@ -92,25 +94,25 @@ internal object ContentCardSchemaDataUtils {
         try {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
-            val id = DataReader.getString(contentMap, MessagingConstants.UIKeys.ID)
+            val id = DataReader.getString(contentMap, MessagingConstants.ContentCard.UIKeys.ID)
 
-            val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.TITLE)?.let {
+            val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
                 createAepText(it)
             }
             if (title == null || title.content.isEmpty()) {
                 return null
             }
-            val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.BODY, emptyMap())?.let {
+            val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, emptyMap())?.let {
                 createAepText(it)
             }
-            val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.IMAGE, emptyMap())?.let {
+            val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, emptyMap())?.let {
                 createAepImage(it)
             }
-            val actionUrl = DataReader.optString(contentMap, MessagingConstants.UIKeys.ACTION_URL, null)
-            val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.UIKeys.BUTTONS, emptyList()).map {
+            val actionUrl = DataReader.optString(contentMap, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null)
+            val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BUTTONS, emptyList()).map {
                 createAepButton(it)
             }
-            val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.DISMISS_BTN, emptyMap())?.let {
+            val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, emptyMap())?.let {
                 createAepDismissButton(it)
             }
             return SmallImageTemplate(
@@ -131,30 +133,45 @@ internal object ContentCardSchemaDataUtils {
      * Provides an [AepUI] instance from the given [AepUITemplate].
      *
      * @param uiTemplate The template to convert into a UI component.
-     * @return An instance of [AepUI] representing the given template.
-     * @throws IllegalArgumentException If the provided template type is unsupported.
+     * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
      */
-    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *> {
+    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
                 SmallImageUI(uiTemplate, SmallImageCardUIState())
             }
-            else -> throw IllegalArgumentException("Unsupported template type")
+            else -> {
+                return null
+            }
         }
     }
 
+    /**
+     * Builds an [AepUITemplate] from a given [Proposition].
+     *
+     * @param proposition The proposition containing the content card data.
+     * @return The built [AepUITemplate] or null if the proposition is not a content card or parsing fails.
+     */
     internal fun buildTemplate(proposition: Proposition): AepUITemplate? {
         var baseTemplateModel: AepUITemplate? = null
         if (isContentCard(proposition)) {
-            val propositionItem = proposition.items[0]
-            baseTemplateModel = propositionItem.contentCardSchemaData?.let {
-                getTemplateModel(it)
+            if (proposition.items.size > 0) {
+                val propositionItem = proposition.items[0]
+                baseTemplateModel = propositionItem.contentCardSchemaData?.let {
+                    getTemplateModel(it)
+                }
             }
         }
         return baseTemplateModel
     }
 
+    /**
+     * Checks if the given [Proposition] is a content card.
+     *
+     * @param proposition The proposition to check.
+     * @return `true` if the proposition is a content card, `false` otherwise.
+     */
     private fun isContentCard(proposition: Proposition): Boolean {
-        return proposition.items[0].schema == SchemaType.CONTENT_CARD
+        return proposition.items[0]?.schema == SchemaType.CONTENT_CARD
     }
 }
