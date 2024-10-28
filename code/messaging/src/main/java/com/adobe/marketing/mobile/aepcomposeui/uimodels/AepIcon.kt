@@ -12,11 +12,8 @@
 package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Represents a dismiss button for a content card in the small image template.
+ * Represents an icon element in the UI.
  *
- * @property style The style of the dismiss button, which can be one of the following:
- * - `none`: No icon displayed.
- * - `dismiss_simple`: A simple dismiss icon.
- * - `dismiss_circle`: A circular dismiss icon.
+ * @property drawableId The drawable resource ID for the icon.
  */
-data class AepDismissButton(val style: String)
+data class AepIcon(val drawableId: Int)

@@ -17,35 +17,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
-import com.adobe.marketing.mobile.messaging.R
 
 /**
  * A composable function that displays an icon element with customizable properties.
  *
- * @param iconName The name of icon to be displayed.
+ * @param drawableId The drawable resource ID to be displayed.
  * @param style The [AepIconStyle] to be applied to the icon element.
  * @param onClick Method that is called when this icon is clicked
  */
 @Composable
 internal fun AepIconComposable(
-    iconName: String,
+    drawableId: Int,
     style: AepIconStyle = AepIconStyle(),
     onClick: () -> Unit = {}
 ) {
-    val drawable = getIconDrawable(iconName)
-    drawable?.let {
-        Icon(
-            painter = painterResource(id = drawable),
-            contentDescription = style.contentDescription ?: "",
-            modifier = (style.modifier ?: Modifier).clickable { onClick() }
-        )
-    }
-}
-
-private fun getIconDrawable(iconName: String): Int? {
-    return when (iconName) {
-        "dismiss_simple" -> R.drawable.dismiss_simple
-        "dismiss_filled" -> R.drawable.dismiss_filled
-        else -> return null
-    }
+    Icon(
+        painter = painterResource(id = drawableId),
+        contentDescription = style.contentDescription ?: "",
+        modifier = (style.modifier ?: Modifier).clickable { onClick() }
+    )
 }

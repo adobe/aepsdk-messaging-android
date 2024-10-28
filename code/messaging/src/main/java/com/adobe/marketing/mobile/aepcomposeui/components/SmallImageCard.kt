@@ -72,7 +72,7 @@ fun SmallImageCard(
         Box {
             ui.getTemplate().dismissBtn?.let {
                 AepIconComposable(
-                    iconName = it.style,
+                    drawableId = it.drawableId,
                     style = style.dismissButtonStyle.apply {
                         modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
                     },

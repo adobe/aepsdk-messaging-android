@@ -30,6 +30,7 @@ internal object UIUtils {
      * @param url the URL of the image to download.
      * @return the downloaded image as a [Bitmap].
      */
+    // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
     fun downloadImage(url: String?): Bitmap? {
         var bitmap: Bitmap? = null
         var connection: HttpURLConnection? = null
