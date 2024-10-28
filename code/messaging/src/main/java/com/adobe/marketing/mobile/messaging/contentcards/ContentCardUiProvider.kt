@@ -28,6 +28,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ContentCardUiProvider is responsible for fetching and managing the content for a given surface.
+ * It uses Adobe Messaging APIs to retrieve propositions and transform them into UI templates for display.
+ *
+ * @property surfaceString The identifier of the surface for which content needs to be fetched.
+ */
 class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     companion object {
         private const val SELF_TAG: String = "ContentCardUiProvider"
@@ -36,6 +42,12 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
     private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
     private val contentFlow: StateFlow<List<AepUITemplate>> = _contentFlow
 
+    /**
+     * Retrieves a flow of AepUITemplate lists for the given surface.
+     * The flow emits updates whenever new content is fetched.
+     *
+     * @return A flow that emits lists of AepUITemplate.
+     */
     override suspend fun getContent(): Flow<List<AepUITemplate>> {
         CoroutineScope(Dispatchers.IO).launch {
             val surface = Surface(surfaceString)
@@ -61,9 +73,6 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         surfaceList: MutableList<Surface>,
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
-        // Update propositions for the provided surface
-        Messaging.updatePropositionsForSurfaces(surfaceList)
-
         // Retrieve propositions for the provided surface
         Messaging.getPropositionsForSurfaces(
             surfaceList,
@@ -122,6 +131,9 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         )
     }
 
+    /**
+     * Clears the current content and re-fetches new content for the given surface.
+     */
     override suspend fun refreshContent() {
         _contentFlow.value = emptyList()
         getContent()
@@ -132,7 +144,7 @@ class ContentCardUiProvider(val surfaceString: String) : AepUIContentProvider {
         if (isContentCard(proposition)) {
             val propositionItem = proposition.items[0]
             baseTemplateModel = propositionItem.contentCardSchemaData?.let {
-                getTemplateModelFromContentCardSchemaData(it)
+                getTemplateModel(it)
             }
         }
         return baseTemplateModel

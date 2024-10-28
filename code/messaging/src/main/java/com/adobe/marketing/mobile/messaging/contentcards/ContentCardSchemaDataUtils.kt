@@ -19,55 +19,94 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
 import com.adobe.marketing.mobile.messaging.MessagingConstants
+import com.adobe.marketing.mobile.util.DataReader
 
+/**
+ * Utility object for creating instances of AEP model classes from Map data structures.
+ * Provides functions to create [AepText], [AepImage], [AepButton], and [AepDismissButton].
+ */
 object ContentCardSchemaDataUtils {
+    /**
+     * Creates an instance of [AepText] from a map of key-value pairs.
+     *
+     * @param map The map containing the data for [AepText].
+     * @return An instance of [AepText].
+     */
     fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
-            content = map[MessagingConstants.AepUIKeys.CONTENT] as String
+            content = DataReader.optString(map, MessagingConstants.UIKeys.CONTENT, "")
         )
     }
 
+    /**
+     * Creates an instance of [AepImage] from a map of key-value pairs.
+     *
+     * @param map The map containing the data for [AepImage].
+     * @return An instance of [AepImage].
+     */
     fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
-            url = map[MessagingConstants.AepUIKeys.URL] as? String,
-            darkUrl = map[MessagingConstants.AepUIKeys.DARK_URL] as? String
+            url = DataReader.optString(map, MessagingConstants.UIKeys.URL, null),
+            darkUrl = DataReader.optString(map, MessagingConstants.UIKeys.DARK_URL, null)
         )
     }
 
+    /**
+     * Creates an instance of [AepButton] from a map of key-value pairs.
+     *
+     * @param map The map containing the data for [AepButton].
+     * @return An instance of [AepButton].
+     */
     fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
-            id = map[MessagingConstants.AepUIKeys.INTERACT_ID] as String,
-            actionUrl = map[MessagingConstants.AepUIKeys.ACTION_URL] as String,
-            text = (map[MessagingConstants.AepUIKeys.TEXT] as Map<String, Any>).let { createAepText(it) }
+            id = DataReader.optString(map, MessagingConstants.UIKeys.INTERACT_ID, null),
+            actionUrl = DataReader.optString(map, MessagingConstants.UIKeys.ACTION_URL, null),
+            text = DataReader.optTypedMap(Any::class.java, map, MessagingConstants.UIKeys.TEXT, null).let { createAepText(it) }
         )
     }
 
+    /**
+     * Creates an instance of [AepDismissButton] from a map of key-value pairs.
+     *
+     * @param map The map containing the data for [AepDismissButton].
+     * @return An instance of [AepDismissButton].
+     */
     fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
         return AepDismissButton(
-            style = map[MessagingConstants.AepUIKeys.STYLE] as? String ?: "NONE_ICON"
+            style = DataReader.optString(map, MessagingConstants.UIKeys.STYLE, MessagingConstants.UIKeys.DismissButtonStyle.NONE)
         )
     }
 }
 
-// Manual JSON parsing function
-fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
-    val contentMap =
-        contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
+/**
+ * Parses the given [ContentCardSchemaData] to create an [AepUITemplate].
+ *
+ * @param contentCardSchemaData The content card schema data containing the content map.
+ * @return The parsed [AepUITemplate] or null if parsing fails.
+ */
+fun getTemplateModel(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
     try {
-        val id = contentMap[MessagingConstants.AepUIKeys.ID] as String
-        val title =
-            ContentCardSchemaDataUtils.createAepText(contentMap[MessagingConstants.AepUIKeys.TITLE] as Map<String, Any>)
-        val body = (contentMap[MessagingConstants.AepUIKeys.BODY] as? Map<String, Any>)?.let {
+        val contentMap =
+            contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
+        val id = DataReader.getString(contentMap, MessagingConstants.UIKeys.ID)
+
+        val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.TITLE)?.let {
             ContentCardSchemaDataUtils.createAepText(it)
         }
-        val image = (contentMap[MessagingConstants.AepUIKeys.IMAGE] as? Map<String, Any>)?.let {
+        if (title == null || title.content.isEmpty()) {
+            return null
+        }
+        val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.BODY, emptyMap())?.let {
+            ContentCardSchemaDataUtils.createAepText(it)
+        }
+        val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.IMAGE, emptyMap())?.let {
             ContentCardSchemaDataUtils.createAepImage(it)
         }
-        val actionUrl = contentMap[MessagingConstants.AepUIKeys.ACTION_URL] as? String
-        val buttons = (contentMap[MessagingConstants.AepUIKeys.BUTTONS] as? List<Map<String, Any>>)?.map {
+        val actionUrl = DataReader.optString(contentMap, MessagingConstants.UIKeys.ACTION_URL, null)
+        val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.UIKeys.BUTTONS, emptyList()).map {
             ContentCardSchemaDataUtils.createAepButton(it)
         }
-        val dismissBtn = (contentMap[MessagingConstants.AepUIKeys.DISMISS_BTN] as? Map<String, Any>)?.let {
+        val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.UIKeys.DISMISS_BTN, emptyMap())?.let {
             ContentCardSchemaDataUtils.createAepDismissButton(it)
         }
         return SmallImageTemplate(
@@ -80,6 +119,6 @@ fun getTemplateModelFromContentCardSchemaData(contentCardSchemaData: ContentCard
             dismissBtn = dismissBtn
         )
     } catch (e: Exception) {
-        throw IllegalArgumentException("Error parsing content map: ${e.message}")
+        return null
     }
 }

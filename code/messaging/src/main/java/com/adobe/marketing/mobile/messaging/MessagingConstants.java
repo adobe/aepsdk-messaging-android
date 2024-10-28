@@ -407,11 +407,9 @@ public final class MessagingConstants {
             private PayloadKeys() {}
         }
     }
-    
-    public final class AepUIKeys {
+
+    public final class UIKeys {
         public static final String CONTENT = "content";
-        public static final String LIGHT_COLOUR = "lightColour";
-        public static final String DARK_COLOUR = "darkColour";
         public static final String URL = "url";
         public static final String DARK_URL = "darkUrl";
         public static final String INTERACT_ID = "interactId";
@@ -424,5 +422,11 @@ public final class MessagingConstants {
         public static final String IMAGE = "image";
         public static final String BUTTONS = "buttons";
         public static final String DISMISS_BTN = "dismissBtn";
+
+        public class DismissButtonStyle {
+            public static final String NONE = "none";
+            public static final String SIMPLE = "simple";
+            public static final String CIRCLE = "circle";
+        }
     }
 }
