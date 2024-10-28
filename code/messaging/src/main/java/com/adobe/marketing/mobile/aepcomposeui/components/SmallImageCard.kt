@@ -20,10 +20,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIAction
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 
 /**
  * Composable function that renders a small image card UI.
@@ -54,7 +54,7 @@ fun SmallImageCard(
     Card(
         modifier = Modifier
             .clickable {
-                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(null, ui.getTemplate().actionUrl)))
+                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(null, ui.getTemplate().actionUrl), ui.getTemplate().id))
             }
     ) {
         Row {
@@ -79,7 +79,7 @@ fun SmallImageCard(
                         AepButtonComposable(
                             button,
                             onClick = {
-                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
+                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl), ui.getTemplate().id))
                             },
                             overridingButtonStyle = style.buttonStyle[index]?.first,
                             defaultButtonTextStyle = style.defaultButtonTextStyle,

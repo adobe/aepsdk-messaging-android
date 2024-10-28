@@ -12,41 +12,16 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 class ContentCardEventObserver(private var callback: ContentCardCallback?) : AepUIEventObserver {
-    companion object {
-        private const val SELF_TAG = "ContentCardEventObserver"
-    }
+    private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
 
     override fun onEvent(event: UIEvent<*, *>) {
-        when (event) {
-            is UIEvent.Display -> {
-                when (val template = event.aepUi.getTemplate()) {
-                    is SmallImageTemplate -> {
-                        val eventHandler = SmallImageTemplateEventHandler(callback)
-                        eventHandler.onEvent(event, template.id)
-                    }
-                }
-            }
-            is UIEvent.Dismiss -> {
-                when (val template = event.aepUi.getTemplate()) {
-                    is SmallImageTemplate -> {
-                        val eventHandler = SmallImageTemplateEventHandler(callback)
-                        eventHandler.onEvent(event, template.id)
-                    }
-                }
-            }
-            is UIEvent.Interact -> {
-                when (event.aepUi.getTemplate()) {
-                    is SmallImageTemplate -> {
-                        val eventHandler = SmallImageTemplateEventHandler(callback)
-                        eventHandler.onInteractEvent(event)
-                    }
-                }
-            }
+        when (val template = event.aepUi.getTemplate()) {
+            is SmallImageTemplate -> { smallImageEventHandler.onEvent(event, template.id) }
         }
     }
 }
@@ -58,13 +33,17 @@ interface ContentCardCallback {
 
     /**
      * Callback to invoke when a content card is displayed.
+     *
+     * @param aepUI The AepUI instance that was displayed.
      */
-    fun onDisplay()
+    fun onDisplay(aepUI: AepUI<*, *>,)
 
     /**
      * Callback to invoke when a content card is dismissed.
+     *
+     * @param aepUI The AepUI instance that was dismissed.
      */
-    fun onDismiss()
+    fun onDismiss(aepUI: AepUI<*, *>,)
 
     /**
      * Callback to invoke when a content card is interacted with.

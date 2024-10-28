@@ -12,7 +12,7 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
-import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.services.Log
 
 /**
@@ -26,15 +26,15 @@ internal open class MessagingEventHandler(private val callback: ContentCardCallb
         private const val SELF_TAG = "MessagingEventHandler"
     }
 
-    internal fun onEvent(event: UIEvent<*, *>, propositionId: String) {
+    internal open fun onEvent(event: UIEvent<*, *>, propositionId: String) {
         var eventType: MessagingEdgeEventType? = null
         if (event is UIEvent.Display) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Displayed")
-            callback?.onDisplay()
+            callback?.onDisplay(event.aepUi)
             eventType = MessagingEdgeEventType.DISPLAY
         } else if (event is UIEvent.Dismiss) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Dismissed")
-            callback?.onDismiss()
+            callback?.onDismiss(event.aepUi)
             eventType = MessagingEdgeEventType.DISMISS
         }
 

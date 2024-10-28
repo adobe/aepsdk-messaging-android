@@ -11,7 +11,7 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.observers
 
-import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 
 /**
  * Interface for observing events related to AEP UI components.

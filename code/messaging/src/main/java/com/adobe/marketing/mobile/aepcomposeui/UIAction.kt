@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.utils
+package com.adobe.marketing.mobile.aepcomposeui
 
 /**
  * Represents an action that can be performed on a UI component.

@@ -9,20 +9,20 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.interactions
+package com.adobe.marketing.mobile.aepcomposeui
 
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.state.AepCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 
 /**
  * Represents different types of UI events that can be triggered by the user interaction on the UI templates.
  *
  * @param T represents UI template model associated like [SmallImageTemplate], which backs the composable on which the event has occurred.
  * @param S representing the state of the AEP card composable on which the event has occurred.
+ * @property aepUi The [AepUI] associated with the event.
  */
-sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
+sealed class UIEvent<T : AepUITemplate, S : AepCardUIState>(open val aepUi: AepUI<T, S>) {
+
     /**
      * Event that represents the display of a UI element.
      *
@@ -30,8 +30,8 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property aepUi The [AepUI] associated with the display event.
      */
-    data class Display<T : AepUITemplate, S : AepCardUIState>(val aepUi: AepUI<T, S>) :
-        UIEvent<T, S>
+    data class Display<T : AepUITemplate, S : AepCardUIState>(override val aepUi: AepUI<T, S>) :
+        UIEvent<T, S>(aepUi)
 
     /**
      * Event that represents a user interaction with a UI element.
@@ -40,6 +40,7 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property aepUi The [AepUI] associated with the interaction event, providing context about the UI component on which the interaction occurred.
      * @property action The [UIAction] that occurred.
+     * @property id The unique identifier of the UI component on which the interaction occurred.
      *
      * The `Interact` event captures the different types of interactions that a user can have with a UI component,
      * like clicking a button or expanding a card. Limiting the interaction types ensures consistency in event
@@ -51,9 +52,10 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * ```
      */
     data class Interact<T : AepUITemplate, S : AepCardUIState>(
-        val aepUi: AepUI<T, S>,
-        val action: UIAction
-    ) : UIEvent<T, S>
+        override val aepUi: AepUI<T, S>,
+        val action: UIAction,
+        val id: String
+    ) : UIEvent<T, S>(aepUi)
 
     /**
      * Event that represents the dismissal of a UI element.
@@ -62,6 +64,6 @@ sealed interface UIEvent<T : AepUITemplate, S : AepCardUIState> {
      * @param S representing the state of the AEP card composable on which the event has occurred.
      * @property aepUi The [AepUI] associated with the dismiss event.
      */
-    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(val aepUi: AepUI<T, S>) :
-        UIEvent<T, S>
+    data class Dismiss<T : AepUITemplate, S : AepCardUIState>(override val aepUi: AepUI<T, S>) :
+        UIEvent<T, S>(aepUi)
 }
