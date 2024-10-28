@@ -15,12 +15,14 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -32,7 +34,6 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils.shimmerEffect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -49,14 +50,14 @@ fun SmallImageCard(
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
         ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
         if (imageUrl != null) {
-            bitmap = withContext(Dispatchers.IO) {
+            imageBitmap = withContext(Dispatchers.IO) {
                 UIUtils.downloadImage(imageUrl)
             }
         }
@@ -85,7 +86,7 @@ fun SmallImageCard(
             AepRowComposable(
                 rowStyle = style.rootRowStyle
             ) {
-                bitmap?.let {
+                imageBitmap?.let {
                     AepImageComposable(
                         content = BitmapPainter(it.asImageBitmap()),
                         style = style.imageStyle
@@ -93,12 +94,14 @@ fun SmallImageCard(
                 } ?: run {
                     Box(
                         modifier = Modifier
-                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp)
-                            .shimmerEffect(
-                                shimmerColor1 = style.cardStyle.colors?.containerColor,
-                                shimmerColor2 = style.cardStyle.colors?.contentColor,
-                            )
-                    )
+                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp
+                        )
+                    }
                 }
                 AepColumnComposable(
                     columnStyle = style.textColumnStyle

@@ -35,6 +35,7 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  * @property buttonRowStyle The style for the row containing the buttons.
  * @property buttonStyle The style for the buttons.
  * @property dismissButtonStyle The style for the dismiss button.
+ * @property dismissButtonAlignment The alignment for the dismiss button.
  */
 class SmallImageUIStyle private constructor(
     val cardStyle: AepCardStyle,
@@ -49,7 +50,7 @@ class SmallImageUIStyle private constructor(
     val dismissButtonAlignment: Alignment
 ) {
     companion object {
-        private val defaultSmallImageCardStyle = AepCardStyle(
+        private val defaultCardStyle = AepCardStyle(
             modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
         )
         private val defaultRootRowStyle = AepRowStyle(
@@ -96,7 +97,7 @@ class SmallImageUIStyle private constructor(
     }
 
     class Builder {
-        private var smallImageCardStyle: AepCardStyle? = null
+        private var cardStyle: AepCardStyle? = null
         private var rootRowStyle: AepRowStyle? = null
         private var imageStyle: AepImageStyle? = null
         private var textColumnStyle: AepColumnStyle? = null
@@ -107,7 +108,7 @@ class SmallImageUIStyle private constructor(
         private var dismissButtonStyle: AepIconStyle? = null
         private var dismissButtonAlignment: Alignment? = null
 
-        fun smallImageCardStyle(style: AepCardStyle) = apply { this.smallImageCardStyle = style }
+        fun cardStyle(style: AepCardStyle) = apply { this.cardStyle = style }
         fun rootRowStyle(style: AepRowStyle) = apply { this.rootRowStyle = style }
         fun imageStyle(style: AepImageStyle) = apply { this.imageStyle = style }
         fun textColumnStyle(style: AepColumnStyle) = apply { this.textColumnStyle = style }
@@ -116,9 +117,10 @@ class SmallImageUIStyle private constructor(
         fun buttonRowStyle(style: AepRowStyle) = apply { this.buttonRowStyle = style }
         fun buttonStyle(style: Array<Pair<AepButtonStyle?, AepTextStyle?>?>) = apply { this.buttonStyle = style }
         fun dismissButtonStyle(style: AepIconStyle) = apply { this.dismissButtonStyle = style }
+        fun dismissButtonAlignment(alignment: Alignment) = apply { this.dismissButtonAlignment = alignment }
 
         fun build() = SmallImageUIStyle(
-            cardStyle = AepCardStyle.merge(defaultSmallImageCardStyle, smallImageCardStyle),
+            cardStyle = AepCardStyle.merge(defaultCardStyle, cardStyle),
             rootRowStyle = AepRowStyle.merge(defaultRootRowStyle, rootRowStyle),
             imageStyle = AepImageStyle.merge(defaultImageStyle, imageStyle),
             textColumnStyle = AepColumnStyle.merge(defaultTextColumnStyle, textColumnStyle),
@@ -132,7 +134,7 @@ class SmallImageUIStyle private constructor(
                 )
             }.toTypedArray(),
             dismissButtonStyle = AepIconStyle.merge(defaultDismissButtonStyle, dismissButtonStyle),
-            dismissButtonAlignment = dismissButtonAlignment ?: defaultDismissButtonAlignment,
+            dismissButtonAlignment = dismissButtonAlignment ?: defaultDismissButtonAlignment
         )
     }
 }
