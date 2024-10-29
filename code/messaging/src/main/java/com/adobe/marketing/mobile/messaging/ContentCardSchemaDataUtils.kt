@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.contentcards
+package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
@@ -21,10 +21,6 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
-import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
-import com.adobe.marketing.mobile.messaging.MessagingConstants
-import com.adobe.marketing.mobile.messaging.Proposition
-import com.adobe.marketing.mobile.messaging.SchemaType
 import com.adobe.marketing.mobile.util.DataReader
 
 /**

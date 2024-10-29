@@ -9,7 +9,7 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.messaging.contentcards
+package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.AdobeCallbackWithError
 import com.adobe.marketing.mobile.AdobeError
@@ -17,11 +17,8 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
-import com.adobe.marketing.mobile.messaging.MessagingConstants
-import com.adobe.marketing.mobile.messaging.Proposition
-import com.adobe.marketing.mobile.messaging.Surface
-import com.adobe.marketing.mobile.messaging.contentcards.ContentCardSchemaDataUtils.buildTemplate
-import com.adobe.marketing.mobile.messaging.contentcards.ContentCardSchemaDataUtils.getAepUI
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.getAepUI
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
