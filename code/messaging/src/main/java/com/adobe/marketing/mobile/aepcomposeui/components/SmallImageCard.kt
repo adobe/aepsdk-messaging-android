@@ -29,10 +29,10 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.UIAction
+import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -66,7 +66,7 @@ fun SmallImageCard(
     AepCardComposable(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(ui.getTemplate().id, ui.getTemplate().actionUrl)))
         }
     ) {
         Box {
@@ -125,7 +125,7 @@ fun SmallImageCard(
                             AepButtonComposable(
                                 button,
                                 onClick = {
-                                    observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                                    observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                                 },
                                 buttonStyle = style.buttonStyle[index].first,
                                 buttonTextStyle = style.buttonStyle[index].second

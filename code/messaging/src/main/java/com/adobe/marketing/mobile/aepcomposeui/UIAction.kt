@@ -9,11 +9,16 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.utils
+package com.adobe.marketing.mobile.aepcomposeui
 
-class UIAction {
-    companion object {
-        const val CLICK = "click"
-        const val EXPAND = "expand"
-    }
+/**
+ * Represents an action that can be performed on a UI component.
+ */
+sealed class UIAction {
+    /**
+     * UIAction to represent a click action that can be performed on a UI component
+     * @property id unique identifier of the UI component
+     * @property actionUrl optional URL to be opened when the UI component is clicked
+     */
+    data class Click(val id: String, val actionUrl: String?) : UIAction()
 }
