@@ -18,4 +18,5 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  */
 data class SmallImageCardUIState(
     override val dismissed: Boolean = false,
+    override val displayed: Boolean = false
 ) : AepCardUIState()

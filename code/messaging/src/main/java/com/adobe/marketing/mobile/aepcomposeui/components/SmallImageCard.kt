@@ -11,14 +11,31 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.unit.dp
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.UIAction
-import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.interactions.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIAction
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Composable function that renders a small image card UI.
@@ -33,56 +50,87 @@ fun SmallImageCard(
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
+    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
+        ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
 
-    // TODO - Add id for LaunchedEffect, test if it is working
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-    }
-
-    // TODO - Add id for DisposableEffect, test if it is working
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            observer?.onEvent(UIEvent.Dismiss(ui))
+        if (imageUrl != null) {
+            imageBitmap = withContext(Dispatchers.IO) {
+                UIUtils.downloadImage(imageUrl)
+            }
         }
     }
 
     AepCardComposable(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(ui.getTemplate().id, ui.getTemplate().actionUrl)))
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
         }
     ) {
-        AepRowComposable(
-            rowStyle = style.rootRowStyle
-        ) {
-            // TODO - Add image support
-            AepColumnComposable(
-                columnStyle = style.textColumnStyle
+        Box {
+            ui.getTemplate().dismissBtn?.let {
+                AepIconComposable(
+                    drawableId = it.drawableId,
+                    // todo check if we can remember this calculation so that it is not repeated for recompositions
+                    style = style.dismissButtonStyle.apply {
+                        modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
+                    },
+                    onClick = {
+                        observer?.onEvent(UIEvent.Dismiss(ui))
+                    }
+                )
+            }
+
+            AepRowComposable(
+                rowStyle = style.rootRowStyle
             ) {
-                ui.getTemplate().title.let {
-                    AepTextComposable(
-                        model = it,
-                        textStyle = style.titleAepTextStyle
+                imageBitmap?.let {
+                    AepImageComposable(
+                        content = BitmapPainter(it.asImageBitmap()),
+                        style = style.imageStyle
                     )
-                }
-                ui.getTemplate().body?.let {
-                    AepTextComposable(
-                        model = it,
-                        textStyle = style.bodyAepTextStyle
-                    )
-                }
-                AepRowComposable(
-                    rowStyle = style.buttonRowStyle
-                ) {
-                    ui.getTemplate().buttons?.forEachIndexed { index, button ->
-                        AepButtonComposable(
-                            button,
-                            onClick = {
-                                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
-                            },
-                            buttonStyle = style.buttonStyle[index].first,
-                            buttonTextStyle = style.buttonStyle[index].second
+                } ?: run {
+                    Box(
+                        modifier = Modifier
+                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp
                         )
+                    }
+                }
+                AepColumnComposable(
+                    columnStyle = style.textColumnStyle
+                ) {
+                    ui.getTemplate().title.let {
+                        AepTextComposable(
+                            model = it,
+                            textStyle = style.titleAepTextStyle
+                        )
+                    }
+                    ui.getTemplate().body?.let {
+                        AepTextComposable(
+                            model = it,
+                            textStyle = style.bodyAepTextStyle
+                        )
+                    }
+                    AepRowComposable(
+                        rowStyle = style.buttonRowStyle
+                    ) {
+                        ui.getTemplate().buttons?.forEachIndexed { index, button ->
+                            AepButtonComposable(
+                                button,
+                                onClick = {
+                                    observer?.onEvent(UIEvent.Interact(ui, UIAction.CLICK))
+                                },
+                                buttonStyle = style.buttonStyle[index].first,
+                                buttonTextStyle = style.buttonStyle[index].second
+                            )
+                        }
                     }
                 }
             }
