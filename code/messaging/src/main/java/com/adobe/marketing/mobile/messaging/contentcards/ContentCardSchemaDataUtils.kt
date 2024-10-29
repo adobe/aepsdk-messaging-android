@@ -19,6 +19,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
 import com.adobe.marketing.mobile.messaging.MessagingConstants
@@ -94,7 +95,7 @@ internal object ContentCardSchemaDataUtils {
         try {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
-            val id = DataReader.getString(contentMap, MessagingConstants.ContentCard.UIKeys.ID)
+            val id = ""//TODO Soni
 
             val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
                 createAepText(it)
@@ -102,28 +103,42 @@ internal object ContentCardSchemaDataUtils {
             if (title == null || title.content.isEmpty()) {
                 return null
             }
-            val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, emptyMap())?.let {
+            val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, null)?.let {
                 createAepText(it)
             }
-            val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, emptyMap())?.let {
+            val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, null)?.let {
                 createAepImage(it)
             }
             val actionUrl = DataReader.optString(contentMap, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null)
             val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BUTTONS, emptyList()).map {
                 createAepButton(it)
             }
-            val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, emptyMap())?.let {
+            val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, null)?.let {
                 createAepDismissButton(it)
             }
-            return SmallImageTemplate(
-                id = id,
-                title = title,
-                body = body,
-                image = image,
-                actionUrl = actionUrl,
-                buttons = buttons,
-                dismissBtn = dismissBtn
-            )
+
+            val metaAdobeObject =
+                contentCardSchemaData.meta?.get(MessagingConstants.ContentCard.UIKeys.ADOBE)
+            metaAdobeObject.let {
+                val templateType =
+                    (it as? Map<String, Any>)?.get(MessagingConstants.ContentCard.UIKeys.TEMPLATE)
+                when (templateType) {
+                    AepUITemplateType.SMALL_IMAGE.typeName -> {
+                        return SmallImageTemplate(
+                            id = id,
+                            title = title,
+                            body = body,
+                            image = image,
+                            actionUrl = actionUrl,
+                            buttons = buttons,
+                            dismissBtn = dismissBtn
+                        )
+                    }
+                    else -> {
+                        return null
+                    }
+                }
+            }
         } catch (e: Exception) {
             return null
         }

@@ -18,5 +18,5 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  */
 enum class AepUITemplateType(val typeName: String) {
     /** Represents a small image template type. */
-    SMALL_IMAGE("SmallImage")
+    SMALL_IMAGE("small_image")
 }

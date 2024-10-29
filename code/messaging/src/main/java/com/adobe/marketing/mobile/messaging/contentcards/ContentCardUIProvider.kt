@@ -79,9 +79,7 @@ class ContentCardUIProvider(val surfaceString: String) : AepUIContentProvider {
     override suspend fun getContent(): Flow<List<AepUITemplate>> {
         CoroutineScope(Dispatchers.IO).launch {
             val surface = Surface(surfaceString)
-            val surfaceList = mutableListOf<Surface>()
-            surfaceList.add(surface)
-            getAepUITemplateList(surfaceList) { it ->
+            getAepUITemplateList(surface) { it ->
                 it.onSuccess { templateList ->
                     _contentFlow.value = templateList
                     _aepUiFlow.value = templateList.mapNotNull { item -> getAepUI(item) }
@@ -100,9 +98,11 @@ class ContentCardUIProvider(val surfaceString: String) : AepUIContentProvider {
     }
 
     private suspend fun getAepUITemplateList(
-        surfaceList: MutableList<Surface>,
+        surface: Surface,
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
+        val surfaceList = mutableListOf<Surface>()
+        surfaceList.add(surface)
         // Retrieve propositions for the provided surface
         Messaging.getPropositionsForSurfaces(
             surfaceList,

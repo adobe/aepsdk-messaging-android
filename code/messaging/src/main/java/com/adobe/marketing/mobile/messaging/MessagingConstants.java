@@ -410,6 +410,8 @@ public final class MessagingConstants {
 
     public final class ContentCard {
         public class UIKeys {
+            public static final String ADOBE = "adobe";
+            public static final String TEMPLATE = "template";
             public static final String CONTENT = "content";
             public static final String URL = "url";
             public static final String DARK_URL = "darkUrl";
