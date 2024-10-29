@@ -15,7 +15,7 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepDismissButton
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
@@ -77,10 +77,13 @@ internal object ContentCardSchemaDataUtils {
      * @param map The map containing the data for [AepDismissButton].
      * @return An instance of [AepDismissButton].
      */
-    private fun createAepDismissButton(map: Map<String, Any>): AepDismissButton {
-        return AepDismissButton(
-            style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
-        )
+    private fun createAepDismissButton(map: Map<String, Any>): AepIcon? {
+            val style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
+            return when(style) {
+                MessagingConstants.ContentCard.UIKeys.SIMPLE -> AepIcon(R.drawable.close_filled)
+                MessagingConstants.ContentCard.UIKeys.CIRCLE -> AepIcon(R.drawable.cancel_filled)
+                else -> null
+            }
     }
 
     /**
