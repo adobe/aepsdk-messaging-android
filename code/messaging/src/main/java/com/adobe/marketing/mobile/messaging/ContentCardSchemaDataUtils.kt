@@ -78,12 +78,12 @@ internal object ContentCardSchemaDataUtils {
      * @return An instance of [AepDismissButton].
      */
     private fun createAepDismissButton(map: Map<String, Any>): AepIcon? {
-            val style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
-            return when(style) {
-                MessagingConstants.ContentCard.UIKeys.SIMPLE -> AepIcon(R.drawable.close_filled)
-                MessagingConstants.ContentCard.UIKeys.CIRCLE -> AepIcon(R.drawable.cancel_filled)
-                else -> null
-            }
+        val style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
+        return when (style) {
+            MessagingConstants.ContentCard.UIKeys.SIMPLE -> AepIcon(R.drawable.close_filled)
+            MessagingConstants.ContentCard.UIKeys.CIRCLE -> AepIcon(R.drawable.cancel_filled)
+            else -> null
+        }
     }
 
     /**
