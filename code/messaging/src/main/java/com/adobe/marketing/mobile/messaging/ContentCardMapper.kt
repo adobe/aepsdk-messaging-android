@@ -42,6 +42,7 @@ class ContentCardMapper private constructor() {
      *
      * @param contentCardSchemaData the [ContentCardSchemaData] to store
      */
+    @JvmName("storeContentCardSchemaData")
     internal fun storeContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData) {
         if (contentCardSchemaData.parent.propositionReference == null) {
             return
@@ -54,7 +55,8 @@ class ContentCardMapper private constructor() {
      *
      * @param propositionId the proposition id to remove the [ContentCardSchemaData] for
      */
-    internal fun removeContentCardSchemaDataFromMap(propositionId: String) {
+    @JvmName("removeContentCardSchemaData")
+    internal fun removeContentCardSchemaData(propositionId: String) {
         contentCardSchemaDataMap.remove(propositionId)
     }
 }
