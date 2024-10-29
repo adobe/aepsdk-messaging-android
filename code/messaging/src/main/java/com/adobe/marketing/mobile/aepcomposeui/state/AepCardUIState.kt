@@ -20,4 +20,5 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  */
 open class AepCardUIState(
     open val dismissed: Boolean = false,
+    open val displayed: Boolean = false
 )

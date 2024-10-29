@@ -26,36 +26,29 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  *
  * @param model The [AepButton] model that contains the button properties.
  * @param onClick Method that is called when this button is clicked
- * @param defaultButtonStyle The default [AepButtonStyle] to be applied to the button element.
- * @param overridingButtonStyle The [AepButtonStyle] provided by the app that overrides the default button style.
- * @param defaultButtonTextStyle The default [AepTextStyle] to be applied to the button text.
- * @param overridingButtonTextStyle The [AepTextStyle] provided by the app that overrides the default button text style.
+ * @param buttonStyle The [AepButtonStyle] to be applied to the button element.
+ * @param buttonTextStyle The [AepTextStyle] to be applied to the button text element.
  */
 @Composable
 internal fun AepButtonComposable(
     model: AepButton,
     onClick: () -> Unit,
-    defaultButtonStyle: AepButtonStyle? = null,
-    overridingButtonStyle: AepButtonStyle? = null,
-    defaultButtonTextStyle: AepTextStyle? = null,
-    overridingButtonTextStyle: AepTextStyle? = null,
+    buttonStyle: AepButtonStyle = AepButtonStyle(),
+    buttonTextStyle: AepTextStyle = AepTextStyle(),
 ) {
-    val mergedStyle = AepButtonStyle.merge(defaultButtonStyle, overridingButtonStyle)
     Button(
         onClick = onClick,
-        modifier = mergedStyle.modifier ?: Modifier,
-        enabled = mergedStyle.enabled ?: true,
-        shape = mergedStyle.shape ?: ButtonDefaults.shape,
-        colors = mergedStyle.colors ?: ButtonDefaults.buttonColors(),
-        elevation = mergedStyle.elevation,
-        border = mergedStyle.border,
-        contentPadding = mergedStyle.contentPadding ?: ButtonDefaults.ContentPadding,
+        modifier = buttonStyle.modifier ?: Modifier,
+        enabled = buttonStyle.enabled ?: true,
+        shape = buttonStyle.shape ?: ButtonDefaults.shape,
+        colors = buttonStyle.colors ?: ButtonDefaults.buttonColors(),
+        elevation = buttonStyle.elevation,
+        border = buttonStyle.border,
+        contentPadding = buttonStyle.contentPadding ?: ButtonDefaults.ContentPadding,
     ) {
-        // Use AEPText.Composable for button text
         AepTextComposable(
             model.text,
-            defaultStyle = defaultButtonTextStyle,
-            overridingStyle = overridingButtonTextStyle
+            buttonTextStyle
         )
     }
 }

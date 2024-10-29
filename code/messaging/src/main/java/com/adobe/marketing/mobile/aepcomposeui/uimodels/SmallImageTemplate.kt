@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
 /**
  * Class representing a small image template, which implements the [AepUITemplate] interface.
  *
+ * @param id The unique identifier for this template.
  * @property title The title text and display settings.
  * @property body The body text and display settings.
  * @property image The details of the image to be displayed.
@@ -28,7 +29,7 @@ data class SmallImageTemplate(
     val image: AepImage? = null,
     val actionUrl: String? = null,
     val buttons: List<AepButton>? = null,
-    val dismissBtn: AepDismissButton? = null
+    val dismissBtn: AepIcon? = null
 ) : AepUITemplate {
 
     /**

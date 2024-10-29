@@ -9,11 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.utils
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-class UIAction {
-    companion object {
-        const val CLICK = "click"
-        const val EXPAND = "expand"
-    }
-}
+/**
+ * Represents an icon element in the UI.
+ *
+ * @property drawableId The drawable resource ID for the icon.
+ */
+data class AepIcon(val drawableId: Int)

@@ -19,5 +19,5 @@ package com.adobe.marketing.mobile.aepcomposeui.style
  * @property smallImageUiStyle The style configuration for small image AEP UIs.
  */
 class AepUIStyle(
-    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle()
+    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle.Builder().build(),
 )

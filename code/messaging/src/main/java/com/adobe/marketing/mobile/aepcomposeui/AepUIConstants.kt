@@ -14,9 +14,11 @@ package com.adobe.marketing.mobile.aepcomposeui
 import androidx.compose.ui.text.font.FontWeight
 
 internal object AepUIConstants {
+    const val LOG_TAG = "AepComposeUI"
 
     internal object SmallImageCard {
         internal object DefaultStyle {
+            const val IMAGE_WIDTH = 100
             const val TITLE_TEXT_SIZE = 15
             val TITLE_FONT_WEIGHT = FontWeight.Medium
             const val BODY_TEXT_SIZE = 13
@@ -26,4 +28,7 @@ internal object AepUIConstants {
             const val SPACING = 8
         }
     }
+
+    const val TEXT_MAX_LINES = 3
+    const val DISMISS_BUTTON_SIZE = 13
 }
