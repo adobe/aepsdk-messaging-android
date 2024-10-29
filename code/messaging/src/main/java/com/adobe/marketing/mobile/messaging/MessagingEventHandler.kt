@@ -26,7 +26,7 @@ internal open class MessagingEventHandler(private val callback: ContentCardCallb
         private const val SELF_TAG = "MessagingEventHandler"
 
         internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
-            val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(propositionId)
+            val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(propositionId)
             contentCardSchemaData?.track(interaction, eventType)
         }
     }
