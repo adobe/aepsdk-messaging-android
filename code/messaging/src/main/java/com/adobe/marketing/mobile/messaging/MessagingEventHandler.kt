@@ -24,17 +24,22 @@ import com.adobe.marketing.mobile.services.Log
 internal open class MessagingEventHandler(private val callback: ContentCardCallback?) {
     companion object {
         private const val SELF_TAG = "MessagingEventHandler"
+
+        internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
+            val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaDataForPropositionId(propositionId)
+            contentCardSchemaData?.track(interaction, eventType)
+        }
     }
 
     internal open fun onEvent(event: UIEvent<*, *>, propositionId: String) {
         if (event is UIEvent.Display) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Displayed")
             callback?.onDisplay(event.aepUi)
-            MessagingEventHandlerUtils.track(propositionId, null, MessagingEdgeEventType.DISPLAY)
+            track(propositionId, null, MessagingEdgeEventType.DISPLAY)
         } else if (event is UIEvent.Dismiss) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Dismissed")
             callback?.onDismiss(event.aepUi)
-            MessagingEventHandlerUtils.track(propositionId, null, MessagingEdgeEventType.DISMISS)
+            track(propositionId, null, MessagingEdgeEventType.DISMISS)
         }
     }
 }

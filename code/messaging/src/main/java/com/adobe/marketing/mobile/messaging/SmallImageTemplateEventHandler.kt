@@ -56,7 +56,7 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
                     SELF_TAG,
                     "SmallImageUI ${event.action.id} clicked"
                 )
-                MessagingEventHandlerUtils.track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
+                track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
             }
         }
     }

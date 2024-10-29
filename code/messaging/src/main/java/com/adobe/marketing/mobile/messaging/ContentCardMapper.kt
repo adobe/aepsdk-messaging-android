@@ -25,11 +25,24 @@ class ContentCardMapper private constructor() {
     }
 
     /**
+     * Returns the [ContentCardSchemaData] for the given proposition id.
+     *
+     * @param propositionId the proposition id to retrieve the [ContentCardSchemaData] for
+     * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
+     */
+    fun getContentCardSchemaData(propositionId: String): ContentCardSchemaData? {
+        if (StringUtils.isNullOrEmpty(propositionId)) {
+            return null
+        }
+        return contentCardSchemaDataMap[propositionId]
+    }
+
+    /**
      * Stores the [ContentCardSchemaData] for the given proposition id.
      *
      * @param contentCardSchemaData the [ContentCardSchemaData] to store
      */
-    fun storeContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData) {
+    internal fun storeContentCardSchemaData(contentCardSchemaData: ContentCardSchemaData) {
         if (contentCardSchemaData.parent.propositionReference == null) {
             return
         }
@@ -41,20 +54,7 @@ class ContentCardMapper private constructor() {
      *
      * @param propositionId the proposition id to remove the [ContentCardSchemaData] for
      */
-    fun removeContentCardSchemaDataFromMap(propositionId: String) {
+    internal fun removeContentCardSchemaDataFromMap(propositionId: String) {
         contentCardSchemaDataMap.remove(propositionId)
-    }
-
-    /**
-     * Returns the [ContentCardSchemaData] for the given proposition id.
-     *
-     * @param propositionId the proposition id to retrieve the [ContentCardSchemaData] for
-     * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
-     */
-    fun getContentCardSchemaDataForPropositionId(propositionId: String): ContentCardSchemaData? {
-        if (StringUtils.isNullOrEmpty(propositionId)) {
-            return null
-        }
-        return contentCardSchemaDataMap[propositionId]
     }
 }
