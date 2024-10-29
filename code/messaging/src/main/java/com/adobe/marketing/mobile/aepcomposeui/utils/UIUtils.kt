@@ -11,36 +11,114 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.utils
 
-import android.content.Context
-import android.content.res.Configuration
-import androidx.compose.foundation.isSystemInDarkTheme
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.services.ServiceProvider
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntSize
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
+import com.adobe.marketing.mobile.services.Log
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 
 internal object UIUtils {
 
+    private const val SELF_TAG = "UIUtils"
+
     /**
-     * Converts the [Color] from the [AepColor] based on system dark or light mode.
-     * If the color string is not valid, then returns [Color.Unspecified]
+     * Downloads the image from the given URL.
      *
-     * @param AepColor The AepColor object
-     * @return The [Color] object
+     * @param url the URL of the image to download.
+     * @return the downloaded image as a [Bitmap].
      */
-    internal fun AepColor.getColor(): Color {
-        val context = ServiceProvider.getInstance().appContextService.applicationContext
-        context?.let {
-            val colorString = if (isSystemInDarkTheme(context)) darkColour else lightColour
-            return try {
-                Color(android.graphics.Color.parseColor(colorString))
-            } catch (e: IllegalArgumentException) {
-                Color.Unspecified
+    // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
+    fun downloadImage(url: String?): Bitmap? {
+        var connection: HttpURLConnection? = null
+
+        return try {
+            val imageUrl = URL(url)
+            connection = imageUrl.openConnection() as HttpURLConnection
+
+            with(connection) {
+                inputStream.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                }
             }
-        } ?: return Color.Unspecified
+        } catch (e: IOException) {
+            Log.warning(
+                AepUIConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to download push notification image from url (%s). Exception: %s",
+                url,
+                e.message
+            )
+            null
+        } finally {
+            connection?.disconnect()
+        }
     }
 
-    internal fun isSystemInDarkTheme(context: Context): Boolean {
-        val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    @Composable
+    fun Modifier.shimmerEffect(
+        shimmerColor1: Color? = null,
+        shimmerColor2: Color? = null
+    ): Modifier = composed {
+        var size by remember { mutableStateOf(IntSize.Zero) }
+
+        // Infinite shimmer animation transition
+        val transition = rememberInfiniteTransition(label = "ShimmerTransition")
+        val startOffsetX by transition.animateFloat(
+            initialValue = -2 * size.width.toFloat(),
+            targetValue = 2 * size.width.toFloat(),
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing)
+            ),
+            label = "ShimmerOffsetX"
+        )
+
+        val shimmerColorLight = shimmerColor1 ?: MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f)
+        val shimmerColorDark = shimmerColor2 ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+
+        this
+            .onGloballyPositioned { coordinates ->
+                size = coordinates.size // Capture the composable's size
+            }
+            .drawWithCache {
+                // Only re-draw the gradient when the shimmer position updates
+                val gradient = Brush.linearGradient(
+                    colors = listOf(
+                        shimmerColorLight,
+                        shimmerColorDark,
+                        shimmerColorLight
+                    ),
+                    start = Offset(startOffsetX, 0f),
+                    end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
+                )
+
+                onDrawBehind {
+                    drawRect(
+                        brush = gradient,
+                        size = Size(size.width.toFloat(), size.height.toFloat())
+                    )
+                }
+            }
     }
 }
