@@ -21,6 +21,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.util.DataReader
 
 /**
@@ -30,6 +31,7 @@ import com.adobe.marketing.mobile.util.DataReader
  * the corresponding UI templates like [SmallImageTemplate].
  */
 internal object ContentCardSchemaDataUtils {
+    const val SELF_TAG = "ContentCardSchemaDataUtils"
     /**
      * Creates an instance of [AepText] from a map of key-value pairs.
      *
@@ -91,12 +93,17 @@ internal object ContentCardSchemaDataUtils {
         try {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
-            val id = ""//TODO Soni
+            val id = contentCardSchemaData.parent.proposition.uniqueId
 
             val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
                 createAepText(it)
             }
             if (title == null || title.content.isEmpty()) {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Title is missing in the content card with id: $id. Skipping the content card."
+                )
                 return null
             }
             val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, null)?.let {
@@ -131,11 +138,21 @@ internal object ContentCardSchemaDataUtils {
                         )
                     }
                     else -> {
+                        Log.error(
+                            MessagingConstants.LOG_TAG,
+                            SELF_TAG,
+                            "Unsupported template type: $templateType. Skipping the content card."
+                        )
                         return null
                     }
                 }
             }
         } catch (e: Exception) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Failed to parse content card schema data: ${e.message}"
+            )
             return null
         }
     }
@@ -152,6 +169,11 @@ internal object ContentCardSchemaDataUtils {
                 SmallImageUI(uiTemplate, SmallImageCardUIState())
             }
             else -> {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unsupported template type: ${uiTemplate::class.java.simpleName}"
+                )
                 return null
             }
         }
