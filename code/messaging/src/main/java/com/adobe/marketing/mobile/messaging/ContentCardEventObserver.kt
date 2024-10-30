@@ -16,7 +16,12 @@ import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
-class ContentCardEventObserver(private var callback: ContentCardCallback?) : AepUIEventObserver {
+/**
+ * Implementation of [AepUIEventObserver] for handling content card events.
+ *
+ * @param callback An optional callback to invoke when a content card event occurs.
+ **/
+class ContentCardEventObserver(private var callback: ContentCardUIEventListening?) : AepUIEventObserver {
     private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
 
     override fun onEvent(event: UIEvent<*, *>) {
@@ -29,7 +34,7 @@ class ContentCardEventObserver(private var callback: ContentCardCallback?) : Aep
 /**
  * Interface to handle different callback events which can occur for a displayed content card.
  */
-interface ContentCardCallback {
+interface ContentCardUIEventListening {
 
     /**
      * Callback to invoke when a content card is displayed.

@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging
 
+import androidx.annotation.VisibleForTesting
 import com.adobe.marketing.mobile.util.StringUtils
 
 /**
@@ -58,5 +59,10 @@ class ContentCardMapper private constructor() {
     @JvmName("removeContentCardSchemaData")
     internal fun removeContentCardSchemaData(propositionId: String) {
         contentCardSchemaDataMap.remove(propositionId)
+    }
+
+    @VisibleForTesting
+    internal fun clear() {
+        contentCardSchemaDataMap.clear()
     }
 }
