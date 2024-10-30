@@ -37,6 +37,9 @@ internal fun AepTextComposable(
     model: AepText,
     textStyle: AepTextStyle = AepTextStyle()
 ) {
+    if (model.content.isBlank()) {
+        return
+    }
     Text(
         text = model.content,
         style = textStyle.textStyle ?: TextStyle(),

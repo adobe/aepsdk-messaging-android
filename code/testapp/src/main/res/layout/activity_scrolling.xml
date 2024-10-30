@@ -12,27 +12,44 @@
     governing permissions and limitations under the License.
 
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".ScrollingFeedActivity">
 
-    <TextView
-        android:id="@+id/feedTitleTextView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="Feed Messages"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+        android:gravity="center">
+        <TextView
+            android:id="@+id/feedTitleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Feed Messages"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+        <ImageButton
+            android:id="@+id/refreshButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/refresh"
+            android:contentDescription="Refresh"/>
+    </LinearLayout>
 
-    <include
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+<!--    <include
         android:id="@+id/scrollingFeedView"
         layout="@layout/feed_content_scrolling"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/app_bar_height"
-        />
+        />-->
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
