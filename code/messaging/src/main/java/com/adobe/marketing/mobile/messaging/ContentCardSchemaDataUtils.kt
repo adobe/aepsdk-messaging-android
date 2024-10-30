@@ -40,7 +40,7 @@ internal object ContentCardSchemaDataUtils {
      */
     private fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
-            content = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.CONTENT, "")
+            content = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.CONTENT, null)
         )
     }
 
@@ -92,53 +92,22 @@ internal object ContentCardSchemaDataUtils {
      * @param contentCardSchemaData The content card schema data containing the content map.
      * @return The parsed [AepUITemplate] or null if parsing fails.
      */
-    internal fun getTemplateModel(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
+    internal fun getTemplate(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
         try {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any> ?: throw IllegalArgumentException("Content map is null")
             val id = contentCardSchemaData.parent.proposition.uniqueId
 
-            val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
-                createAepText(it)
-            }
-            if (title == null || title.content.isEmpty()) {
-                Log.error(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Title is missing in the content card with id: $id. Skipping the content card."
-                )
-                return null
-            }
-            val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, null)?.let {
-                createAepText(it)
-            }
-            val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, null)?.let {
-                createAepImage(it)
-            }
-            val actionUrl = DataReader.optString(contentMap, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null)
-            val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BUTTONS, emptyList()).map {
-                createAepButton(it)
-            }
-            val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, null)?.let {
-                createAepDismissButton(it)
-            }
-
             val metaAdobeObject =
                 contentCardSchemaData.meta?.get(MessagingConstants.ContentCard.UIKeys.ADOBE)
-            metaAdobeObject.let {
+
+            metaAdobeObject.let { mapObject ->
                 val templateType =
-                    (it as? Map<String, Any>)?.get(MessagingConstants.ContentCard.UIKeys.TEMPLATE)
+                    (mapObject as? Map<String, Any>)?.get(MessagingConstants.ContentCard.UIKeys.TEMPLATE)
+
                 when (templateType) {
                     AepUITemplateType.SMALL_IMAGE.typeName -> {
-                        return SmallImageTemplate(
-                            id = id,
-                            title = title,
-                            body = body,
-                            image = image,
-                            actionUrl = actionUrl,
-                            buttons = buttons,
-                            dismissBtn = dismissBtn
-                        )
+                        return createSmallImageTemplate(contentMap, id)
                     }
                     else -> {
                         Log.error(
@@ -158,6 +127,43 @@ internal object ContentCardSchemaDataUtils {
             )
             return null
         }
+    }
+
+    private fun createSmallImageTemplate(contentMap: Map<String, Any>, id: String): AepUITemplate? {
+        val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
+            createAepText(it)
+        }
+        if (title == null || title.content.isEmpty()) {
+            Log.error(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Title is missing in the content card with id: $id. Skipping the content card."
+            )
+            return null
+        }
+        val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, null)?.let {
+            createAepText(it)
+        }
+        val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, null)?.let {
+            createAepImage(it)
+        }
+        val actionUrl = DataReader.optString(contentMap, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null)
+        val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BUTTONS, emptyList()).map {
+            createAepButton(it)
+        }
+        val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, null)?.let {
+            createAepDismissButton(it)
+        }
+
+        return SmallImageTemplate(
+            id = id,
+            title = title,
+            body = body,
+            image = image,
+            actionUrl = actionUrl,
+            buttons = buttons,
+            dismissBtn = dismissBtn
+        )
     }
 
     /**
@@ -189,14 +195,15 @@ internal object ContentCardSchemaDataUtils {
      * @return The built [AepUITemplate] or null if the proposition is not a content card or parsing fails.
      */
     internal fun buildTemplate(proposition: Proposition): AepUITemplate? {
-        var baseTemplateModel: AepUITemplate? = null
-        if (isContentCard(proposition)) {
-            if (proposition.items.size > 0) {
-                val propositionItem = proposition.items[0]
-                baseTemplateModel = propositionItem.contentCardSchemaData?.let {
-                    getTemplateModel(it)
-                }
-            }
+
+        if (!isContentCard(proposition)) return null
+
+        if (proposition.items.size <= 0) return null
+
+        val propositionItem = proposition.items[0]
+
+        val baseTemplateModel: AepUITemplate? = propositionItem.contentCardSchemaData?.let {
+            getTemplate(it)
         }
         return baseTemplateModel
     }

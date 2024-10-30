@@ -18,6 +18,6 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @property darkUrl The URL of the image for dark mode.
  */
 data class AepImage(
-    val url: String,
+    val url: String? = null,
     val darkUrl: String? = null,
 )
