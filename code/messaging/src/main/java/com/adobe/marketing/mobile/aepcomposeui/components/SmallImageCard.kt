@@ -50,16 +50,20 @@ fun SmallImageCard(
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
+    var isLoading by remember { mutableStateOf(true) }
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
         ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-        if (imageUrl != null) {
+        if (imageUrl.isNullOrBlank()) {
+            isLoading = false
+        } else {
             imageBitmap = withContext(Dispatchers.IO) {
                 UIUtils.downloadImage(imageUrl)
             }
+            isLoading = false
         }
     }
 
@@ -91,7 +95,8 @@ fun SmallImageCard(
                         content = BitmapPainter(it.asImageBitmap()),
                         style = style.imageStyle
                     )
-                } ?: run {
+                }
+                if (isLoading) {
                     Box(
                         modifier = Modifier
                             .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),

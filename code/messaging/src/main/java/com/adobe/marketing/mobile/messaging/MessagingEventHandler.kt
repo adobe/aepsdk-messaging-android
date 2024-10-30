@@ -34,6 +34,12 @@ internal open class MessagingEventHandler(private val callback: ContentCardCallb
     internal open fun onEvent(event: UIEvent<*, *>, propositionId: String) {
         if (event is UIEvent.Display) {
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Displayed")
+            // onEvent can be called multiple times on configuration changes
+            // We only need to send tracking events for initial composition
+            if (event.aepUi.getState().displayed) {
+                Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "UI already displayed, skipping display event")
+                return
+            }
             callback?.onDisplay(event.aepUi)
             track(propositionId, null, MessagingEdgeEventType.DISPLAY)
         } else if (event is UIEvent.Dismiss) {
