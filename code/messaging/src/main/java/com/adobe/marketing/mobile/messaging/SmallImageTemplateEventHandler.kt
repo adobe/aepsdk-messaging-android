@@ -38,15 +38,17 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
                 val smallImageUI = event.aepUi as SmallImageUI
                 val currentUiState = event.aepUi.getState() as SmallImageCardUIState
 
-                // For dismiss event, change the state of the UI to dismissed
+                // For dismiss event, change the dismissed state of the UI to true
+                // so that the UI can be removed from the screen
                 if (event is UIEvent.Dismiss) {
                     smallImageUI.updateState(currentUiState.copy(dismissed = true))
                 }
 
-                // Call the super class to call the callback and track the event
+                // Call the super class to call the callback and send tracking event if needed
                 super.onEvent(event, propositionId)
 
-                // For display event, change the state of the UI to displayed
+                // For display event, change the displayed state of the UI to true
+                // after the tracking event is sent for the initial composition
                 if (event is UIEvent.Display) {
                     smallImageUI.updateState(currentUiState.copy(displayed = true))
                 }
