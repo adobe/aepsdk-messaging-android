@@ -89,9 +89,8 @@ class SmallImageTemplateEventHandlerTests {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
             val event = UIEvent.Display(mockAepUI)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             verify(callback, times(1)).onDisplay(mockAepUI)
             verify(mockContentCardSchemaData, times(1)).track(null, MessagingEdgeEventType.DISPLAY)
@@ -104,9 +103,8 @@ class SmallImageTemplateEventHandlerTests {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
             val event = UIEvent.Dismiss(mockAepUI)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             verify(callback, times(1)).onDismiss(mockAepUI)
             verify(mockContentCardSchemaData, times(1)).track(null, MessagingEdgeEventType.DISMISS)
@@ -120,9 +118,8 @@ class SmallImageTemplateEventHandlerTests {
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockAepUI, action)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             verify(callback, times(1)).onInteract(mockAepUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
@@ -138,9 +135,8 @@ class SmallImageTemplateEventHandlerTests {
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockAepUI, action)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             verify(callback, times(1)).onInteract(mockAepUI, "button1", "http://example.com")
             verify(mockUriOpening, never()).openUri(anyString())
@@ -155,9 +151,8 @@ class SmallImageTemplateEventHandlerTests {
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = null)
             val event = UIEvent.Interact(mockAepUI, action)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             verify(callback, times(1)).onInteract(mockAepUI, "button1", null)
             verify(mockUriOpening, never()).openUri(anyString())
@@ -171,9 +166,8 @@ class SmallImageTemplateEventHandlerTests {
             val handler = SmallImageTemplateEventHandler(null)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
             val event = UIEvent.Interact(mockAepUI, action)
-            val propositionId = "propId"
 
-            handler.onEvent(event, propositionId)
+            handler.onEvent(event, "propositionId")
 
             // verify that the track is still called and that the url is still opened
             verify(mockUriOpening, times(1)).openUri("http://example.com")
