@@ -15,13 +15,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * Data class representing a text element in the UI.
  *
  * @property content The content of the text.
- * @property color The color of the text.
- * @property align The alignment of the text (e.g., left, right, center).
- * @property font The font styling of the text, represented by an [AepFont] object.
  */
 data class AepText(
     val content: String,
-    val color: AepColor? = null,
-    val align: String? = null,
-    val font: AepFont? = null
 )
