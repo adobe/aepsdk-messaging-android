@@ -112,19 +112,17 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                         SELF_TAG,
                         "getPropositionsForSurfaces callback contained Null Map"
                     )
-
-                    for ((_, propositions) in resultMap.entries) {
-                        for (proposition in propositions) {
-                            try {
-                                val aepUiTemplate = buildTemplate(proposition)
-                                aepUiTemplate?.let { templateModelList.add(it) }
-                            } catch (e: IllegalArgumentException) {
-                                Log.error(
-                                    MessagingConstants.LOG_TAG,
-                                    SELF_TAG,
-                                    "Failed to build template: ${e.message}"
-                                )
-                            }
+                    val propositions = resultMap[surface] ?: emptyList()
+                    for (proposition in propositions) {
+                        try {
+                            val aepUiTemplate = buildTemplate(proposition)
+                            aepUiTemplate?.let { templateModelList.add(it) }
+                        } catch (e: IllegalArgumentException) {
+                            Log.error(
+                                MessagingConstants.LOG_TAG,
+                                SELF_TAG,
+                                "Failed to build template: ${e.message}"
+                            )
                         }
                     }
                     completion(Result.success(templateModelList))
