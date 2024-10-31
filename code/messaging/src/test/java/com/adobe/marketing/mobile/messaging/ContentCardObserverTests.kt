@@ -57,7 +57,7 @@ class ContentCardObserverTests {
 
     @Test
     fun `Content card event observer receives a display event`() {
-        val callback = mock(ContentCardUIEventListening::class.java)
+        val callback = mock(ContentCardUIEventListener::class.java)
         val observer = ContentCardEventObserver(callback)
         val event = UIEvent.Display(mockAepUI)
 
@@ -68,7 +68,7 @@ class ContentCardObserverTests {
 
     @Test
     fun `Content card event observer receives a dismiss event`() {
-        val callback = mock(ContentCardUIEventListening::class.java)
+        val callback = mock(ContentCardUIEventListener::class.java)
         val observer = ContentCardEventObserver(callback)
         val event = UIEvent.Dismiss(mockAepUI)
 
@@ -79,7 +79,7 @@ class ContentCardObserverTests {
 
     @Test
     fun `Content card event observer receives a click interact event`() {
-        val callback = mock(ContentCardUIEventListening::class.java)
+        val callback = mock(ContentCardUIEventListener::class.java)
         val observer = ContentCardEventObserver(callback)
         val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
         val event = UIEvent.Interact(mockAepUI, action)

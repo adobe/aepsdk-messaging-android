@@ -24,7 +24,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal class SmallImageTemplateEventHandler(private val callback: ContentCardUIEventListening?) :
+internal class SmallImageTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
     MessagingEventHandler(callback) {
     companion object {
         private const val SELF_TAG = "SmallImageTemplateEventHandler"

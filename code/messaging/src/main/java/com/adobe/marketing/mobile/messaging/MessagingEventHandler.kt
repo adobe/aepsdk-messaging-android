@@ -21,7 +21,7 @@ import com.adobe.marketing.mobile.services.Log
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal abstract class MessagingEventHandler(private val callback: ContentCardUIEventListening?) {
+internal abstract class MessagingEventHandler(private val callback: ContentCardUIEventListener?) {
     companion object {
         private const val SELF_TAG = "MessagingEventHandler"
     }
