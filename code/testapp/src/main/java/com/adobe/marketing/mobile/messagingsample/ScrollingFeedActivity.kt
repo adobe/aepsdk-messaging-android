@@ -44,9 +44,9 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardCallback
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardMapper
+import com.adobe.marketing.mobile.messaging.ContentCardUIEventListening
 import com.adobe.marketing.mobile.messaging.ContentCardUIProvider
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
@@ -187,7 +187,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
     }
 }
 
-class ContentCardCallback: ContentCardCallback {
+class ContentCardCallback: ContentCardUIEventListening {
     override fun onDisplay(aepUI: AepUI<*, *>) {
         Log.d("ContentCardCallback", "onDisplay")
     }
