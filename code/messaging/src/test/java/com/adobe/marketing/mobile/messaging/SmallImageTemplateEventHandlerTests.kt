@@ -12,9 +12,10 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -38,7 +39,9 @@ import kotlin.test.BeforeTest
 class SmallImageTemplateEventHandlerTests {
 
     @Mock
-    private lateinit var mockAepUI: AepUI<*, *>
+    private lateinit var mockSmallImageUI: SmallImageUI
+    @Mock
+    private lateinit var mockSmallImageCardUIState: SmallImageCardUIState
     @Mock
     private lateinit var mockSmallImageTemplate: SmallImageTemplate
     @Mock
@@ -52,7 +55,8 @@ class SmallImageTemplateEventHandlerTests {
 
     @BeforeTest
     fun setup() {
-        mockAepUI = mock(AepUI::class.java)
+        mockSmallImageUI = mock(SmallImageUI::class.java)
+        mockSmallImageCardUIState = mock(SmallImageCardUIState::class.java)
         mockSmallImageTemplate = mock(SmallImageTemplate::class.java)
         mockServiceProvider = mock(ServiceProvider::class.java)
         mockUriOpening = mock(UriOpening::class.java)
@@ -63,7 +67,8 @@ class SmallImageTemplateEventHandlerTests {
         `when`(mockServiceProvider.uriService).thenReturn(mockUriOpening)
         `when`(mockSmallImageTemplate.id).thenReturn("mockId")
         `when`(mockSmallImageTemplate.getType()).thenReturn(AepUITemplateType.SMALL_IMAGE)
-        `when`(mockAepUI.getTemplate()).thenReturn(mockSmallImageTemplate)
+        `when`(mockSmallImageUI.getTemplate()).thenReturn(mockSmallImageTemplate)
+        `when`(mockSmallImageUI.getState()).thenReturn(mockSmallImageCardUIState)
 
         mockkObject(ContentCardMapper)
         every { ContentCardMapper.instance } returns mockContentCardMapper
@@ -71,7 +76,7 @@ class SmallImageTemplateEventHandlerTests {
 
     @AfterTest
     fun tearDown() {
-        reset(mockAepUI, mockSmallImageTemplate, mockServiceProvider, mockUriOpening, mockContentCardMapper, mockContentCardSchemaData)
+        reset(mockSmallImageUI, mockSmallImageTemplate, mockServiceProvider, mockUriOpening, mockContentCardMapper, mockContentCardSchemaData)
     }
 
     private fun runTest(runnable: Runnable) {
@@ -88,12 +93,29 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
-            val event = UIEvent.Display(mockAepUI)
+            val event = UIEvent.Display(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
 
-            verify(callback, times(1)).onDisplay(mockAepUI)
+            verify(mockSmallImageCardUIState, times(1)).displayed
+            verify(callback, times(1)).onDisplay(mockSmallImageUI)
             verify(mockContentCardSchemaData, times(1)).track(null, MessagingEdgeEventType.DISPLAY)
+        }
+    }
+
+    @Test
+    fun `Small Image Template event handler receives a display event when card already displayed`() {
+        runTest {
+            `when`(mockSmallImageCardUIState.displayed).thenReturn(true)
+            val callback = mock(ContentCardUIEventListening::class.java)
+            val handler = SmallImageTemplateEventHandler(callback)
+            val event = UIEvent.Display(mockSmallImageUI)
+
+            handler.onEvent(event, "propositionId")
+
+            verify(mockSmallImageCardUIState, times(1)).displayed
+            verify(callback, times(0)).onDisplay(mockSmallImageUI)
+            verify(mockContentCardSchemaData, times(0)).track(null, MessagingEdgeEventType.DISPLAY)
         }
     }
 
@@ -102,12 +124,29 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
-            val event = UIEvent.Dismiss(mockAepUI)
+            val event = UIEvent.Dismiss(mockSmallImageUI)
 
             handler.onEvent(event, "propositionId")
 
-            verify(callback, times(1)).onDismiss(mockAepUI)
+            verify(mockSmallImageCardUIState, times(1)).dismissed
+            verify(callback, times(1)).onDismiss(mockSmallImageUI)
             verify(mockContentCardSchemaData, times(1)).track(null, MessagingEdgeEventType.DISMISS)
+        }
+    }
+
+    @Test
+    fun `Small Image Template event handler receives a dismiss event when card already dismissed`() {
+        runTest {
+            `when`(mockSmallImageCardUIState.dismissed).thenReturn(true)
+            val callback = mock(ContentCardUIEventListening::class.java)
+            val handler = SmallImageTemplateEventHandler(callback)
+            val event = UIEvent.Dismiss(mockSmallImageUI)
+
+            handler.onEvent(event, "propositionId")
+
+            verify(mockSmallImageCardUIState, times(1)).dismissed
+            verify(callback, times(0)).onDismiss(mockSmallImageUI)
+            verify(mockContentCardSchemaData, times(0)).track(null, MessagingEdgeEventType.DISMISS)
         }
     }
 
@@ -117,11 +156,11 @@ class SmallImageTemplateEventHandlerTests {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
-            val event = UIEvent.Interact(mockAepUI, action)
+            val event = UIEvent.Interact(mockSmallImageUI, action)
 
             handler.onEvent(event, "propositionId")
 
-            verify(callback, times(1)).onInteract(mockAepUI, "button1", "http://example.com")
+            verify(callback, times(1)).onInteract(mockSmallImageUI, "button1", "http://example.com")
             verify(mockUriOpening, times(1)).openUri("http://example.com")
             verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
         }
@@ -134,11 +173,11 @@ class SmallImageTemplateEventHandlerTests {
             `when`(callback.onInteract(anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(true)
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
-            val event = UIEvent.Interact(mockAepUI, action)
+            val event = UIEvent.Interact(mockSmallImageUI, action)
 
             handler.onEvent(event, "propositionId")
 
-            verify(callback, times(1)).onInteract(mockAepUI, "button1", "http://example.com")
+            verify(callback, times(1)).onInteract(mockSmallImageUI, "button1", "http://example.com")
             verify(mockUriOpening, never()).openUri(anyString())
             verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
         }
@@ -150,11 +189,11 @@ class SmallImageTemplateEventHandlerTests {
             val callback = mock(ContentCardUIEventListening::class.java)
             val handler = SmallImageTemplateEventHandler(callback)
             val action = UIAction.Click(id = "button1", actionUrl = null)
-            val event = UIEvent.Interact(mockAepUI, action)
+            val event = UIEvent.Interact(mockSmallImageUI, action)
 
             handler.onEvent(event, "propositionId")
 
-            verify(callback, times(1)).onInteract(mockAepUI, "button1", null)
+            verify(callback, times(1)).onInteract(mockSmallImageUI, "button1", null)
             verify(mockUriOpening, never()).openUri(anyString())
             verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
         }
@@ -165,7 +204,7 @@ class SmallImageTemplateEventHandlerTests {
         runTest {
             val handler = SmallImageTemplateEventHandler(null)
             val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
-            val event = UIEvent.Interact(mockAepUI, action)
+            val event = UIEvent.Interact(mockSmallImageUI, action)
 
             handler.onEvent(event, "propositionId")
 

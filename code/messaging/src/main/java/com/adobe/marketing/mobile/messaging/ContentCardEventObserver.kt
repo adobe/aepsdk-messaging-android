@@ -21,7 +21,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  *
  * @param callback An optional callback to invoke when a content card event occurs.
  **/
-class ContentCardEventObserver(private var callback: ContentCardUIEventListening?) : AepUIEventObserver {
+class ContentCardEventObserver(private val callback: ContentCardUIEventListening?) : AepUIEventObserver {
     private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
 
     override fun onEvent(event: UIEvent<*, *>) {
