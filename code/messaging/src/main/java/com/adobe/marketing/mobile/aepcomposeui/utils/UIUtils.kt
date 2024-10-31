@@ -19,8 +19,6 @@ import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.NetworkRequest
 import com.adobe.marketing.mobile.services.ServiceProvider
 import java.net.HttpURLConnection
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 internal object UIUtils {
 
@@ -34,17 +32,19 @@ internal object UIUtils {
      * @return the downloaded image as a [Bitmap].
      */
     // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
-    fun downloadImage(url: String?): Bitmap? {
+    fun downloadImage(
+        url: String?,
+        completion: (Result<Bitmap>) -> Unit
+    ) {
         if (url.isNullOrBlank()) {
             Log.warning(
                 LOG_TAG,
                 SELF_TAG,
                 "Failed to download image, the URL is null or empty."
             )
-            return null
+            completion(Result.failure(Exception("Failed to download image, the URL is null or empty.")))
+            return
         }
-        var bitmap: Bitmap? = null
-        val latch = CountDownLatch(1)
         val networkRequest = NetworkRequest(
             url,
             HttpMethod.GET,
@@ -57,19 +57,30 @@ internal object UIUtils {
         ServiceProvider.getInstance()
             .networkService
             .connectAsync(networkRequest) { connection ->
+                if (connection == null) {
+                    Log.warning(
+                        LOG_TAG,
+                        SELF_TAG,
+                        "Failed to download image from url ($url), received a null connection."
+                    )
+                    completion(Result.failure(Exception("Failed to download image from url ($url), received a null connection.")))
+                    return@connectAsync
+                }
+
                 try {
-                    if (connection == null) {
-                        Log.warning(
-                            LOG_TAG,
-                            SELF_TAG,
-                            "Failed to download image from url ($url), received a null connection."
-                        )
-                        latch.countDown()
-                        return@connectAsync
-                    }
                     if ((connection.responseCode == HttpURLConnection.HTTP_OK)) {
                         connection.inputStream.use { inputStream ->
-                            bitmap = BitmapFactory.decodeStream(inputStream)
+                            val bitmap = BitmapFactory.decodeStream(inputStream)
+                            bitmap?.let {
+                                completion(Result.success(bitmap))
+                            } ?: {
+                                Log.warning(
+                                    LOG_TAG,
+                                    SELF_TAG,
+                                    "Failed to download image from url ($url), decode image from input stream failed."
+                                )
+                                completion(Result.failure(Exception("Failed to download image from url ($url), decode image from input stream failed.")))
+                            }
                         }
                     } else {
                         Log.debug(
@@ -77,6 +88,7 @@ internal object UIUtils {
                             SELF_TAG,
                             "Failed to download image from url ($url). Response code was: ${connection.responseCode}."
                         )
+                        completion(Result.failure(Exception("Failed to download image from url ($url). Response code was: ${connection.responseCode}.")))
                     }
                 } catch (e: Exception) {
                     Log.warning(
@@ -84,23 +96,10 @@ internal object UIUtils {
                         SELF_TAG,
                         "Exception while processing image download: ${e.localizedMessage}"
                     )
+                    completion(Result.failure(e))
                 } finally {
                     connection.close()
-                    latch.countDown()
                 }
             }
-        // Wait for the download to complete or timeout
-        try {
-            if (!latch.await(DOWNLOAD_TIMEOUT_SECS.toLong(), TimeUnit.SECONDS)) {
-                Log.warning(LOG_TAG, SELF_TAG, "Timed out waiting for image download to complete.")
-            }
-        } catch (e: InterruptedException) {
-            Log.warning(
-                LOG_TAG,
-                SELF_TAG,
-                "Interrupted while waiting for image download to complete: ${e.localizedMessage}"
-            )
-        }
-        return bitmap
     }
 }

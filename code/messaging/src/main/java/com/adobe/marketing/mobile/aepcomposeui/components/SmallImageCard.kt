@@ -58,8 +58,16 @@ fun SmallImageCard(
         if (imageUrl.isNullOrBlank()) {
             isLoading = false
         } else {
-            imageBitmap = UIUtils.downloadImage(imageUrl)
-            isLoading = false
+            UIUtils.downloadImage(imageUrl) {
+                it.onSuccess { bitmap ->
+                    imageBitmap = bitmap
+                    isLoading = false
+                }
+                it.onFailure {
+                    // TODO once we have a default image, we can use that here
+                    isLoading = false
+                }
+            }
         }
     }
 

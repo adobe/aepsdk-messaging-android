@@ -62,14 +62,15 @@ internal abstract class MessagingEventHandler(private val callback: ContentCardC
                     return
                 }
 
-                Log.debug(
+                Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "UI displayed for the first time, sending display tracking event"
                 )
 
-                track(propositionId, null, MessagingEdgeEventType.DISPLAY)
                 handleEvent(event, propositionId)
+
+                track(propositionId, null, MessagingEdgeEventType.DISPLAY)
                 callback?.onDisplay(event.aepUi)
             }
             is UIEvent.Dismiss -> {
@@ -89,14 +90,15 @@ internal abstract class MessagingEventHandler(private val callback: ContentCardC
                     )
                     return
                 }
-                Log.debug(
+                Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "UI dismissed for the first time, sending dismiss tracking event"
                 )
 
-                track(propositionId, null, MessagingEdgeEventType.DISMISS)
                 handleEvent(event, propositionId)
+
+                track(propositionId, null, MessagingEdgeEventType.DISMISS)
                 callback?.onDismiss(event.aepUi)
             }
 
