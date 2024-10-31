@@ -34,8 +34,6 @@ import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Composable function that renders a small image card UI.
@@ -50,15 +48,25 @@ fun SmallImageCard(
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
+    var isLoading by remember { mutableStateOf(true) }
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
         ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-        if (imageUrl != null) {
-            imageBitmap = withContext(Dispatchers.IO) {
-                UIUtils.downloadImage(imageUrl)
+        if (imageUrl.isNullOrBlank()) {
+            isLoading = false
+        } else {
+            UIUtils.downloadImage(imageUrl) {
+                it.onSuccess { bitmap ->
+                    imageBitmap = bitmap
+                    isLoading = false
+                }
+                it.onFailure {
+                    // TODO once we have a default image, we can use that here
+                    isLoading = false
+                }
             }
         }
     }
@@ -91,7 +99,8 @@ fun SmallImageCard(
                         content = BitmapPainter(it.asImageBitmap()),
                         style = style.imageStyle
                     )
-                } ?: run {
+                }
+                if (isLoading) {
                     Box(
                         modifier = Modifier
                             .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
@@ -127,7 +136,9 @@ fun SmallImageCard(
                                 onClick = {
                                     observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                                 },
-                                buttonStyle = style.buttonStyle[index].first,
+                                buttonStyle = style.buttonStyle[index].first.apply {
+                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f))
+                                },
                                 buttonTextStyle = style.buttonStyle[index].second
                             )
                         }
