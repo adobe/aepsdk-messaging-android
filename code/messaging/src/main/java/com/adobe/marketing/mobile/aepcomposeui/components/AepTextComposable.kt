@@ -24,8 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepFont
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
@@ -39,6 +37,9 @@ internal fun AepTextComposable(
     model: AepText,
     textStyle: AepTextStyle = AepTextStyle()
 ) {
+    if (model.content.isBlank()) {
+        return
+    }
     Text(
         text = model.content,
         style = textStyle.textStyle ?: TextStyle(),
@@ -71,31 +72,28 @@ internal fun AepTextComposablePreview() {
         AepTextComposable(AepText(content = "Basic Text"))
 
         // Color variations
-        AepTextComposable(AepText(content = "Red Text", color = AepColor("#FF0000")))
-        AepTextComposable(AepText(content = "Green Text", color = AepColor("#00FF00")))
-        AepTextComposable(AepText(content = "Blue Text", color = AepColor("#0000FF")))
-        AepTextComposable(AepText(content = "Invalid Color", color = AepColor("invalid"))) // Test invalid color
+        AepTextComposable(AepText(content = "Red Text"))
+        AepTextComposable(AepText(content = "Green Text"))
+        AepTextComposable(AepText(content = "Blue Text"))
+        AepTextComposable(AepText(content = "Invalid Color")) // Test invalid color
 
         // Alignment variations
-        AepTextComposable(AepText(content = "Left Aligned", align = "left"))
-        AepTextComposable(AepText(content = "Center Aligned", align = "center"))
-        AepTextComposable(AepText(content = "Right Aligned", align = "right"))
-        AepTextComposable(AepText(content = "Invalid Alignment", align = "invalid")) // Test invalid alignment
+        AepTextComposable(AepText(content = "Left Aligned"))
+        AepTextComposable(AepText(content = "Center Aligned"))
+        AepTextComposable(AepText(content = "Right Aligned"))
+        AepTextComposable(AepText(content = "Invalid Alignment")) // Test invalid alignment
 
         // Font variations
-        AepTextComposable(AepText(content = "Large Text", font = AepFont(size = 24)))
-        AepTextComposable(AepText(content = "Small Text", font = AepFont(size = 10)))
-        AepTextComposable(AepText(content = "Bold Text", font = AepFont(weight = "bold")))
-        AepTextComposable(AepText(content = "Italic Text", font = AepFont(style = listOf("italic"))))
-        AepTextComposable(AepText(content = "Bold Italic Text", font = AepFont(weight = "bold", style = listOf("italic"))))
+        AepTextComposable(AepText(content = "Large Text"))
+        AepTextComposable(AepText(content = "Small Text"))
+        AepTextComposable(AepText(content = "Bold Text"))
+        AepTextComposable(AepText(content = "Italic Text"))
+        AepTextComposable(AepText(content = "Bold Italic Text"))
 
         // Combination of properties
         AepTextComposable(
             AepText(
                 content = "Complex Styling",
-                color = AepColor("#800080"),
-                align = "center",
-                font = AepFont(size = 18, weight = "bold", style = listOf("italic"))
             )
         )
 
@@ -106,12 +104,12 @@ internal fun AepTextComposablePreview() {
         AepTextComposable(AepText(content = "Multi\nLine\nText")) // Multi-line text
 
         // Null values for optional parameters
-        AepTextComposable(AepText(content = "Null Color", color = null))
-        AepTextComposable(AepText(content = "Null Alignment", align = null))
-        AepTextComposable(AepText(content = "Null Font", font = null))
+        AepTextComposable(AepText(content = "Null Color"))
+        AepTextComposable(AepText(content = "Null Alignment"))
+        AepTextComposable(AepText(content = "Null Font"))
 
         // Extreme font sizes
-        AepTextComposable(AepText(content = "Tiny Text", font = AepFont(size = 1)))
-        AepTextComposable(AepText(content = "Huge Text", font = AepFont(size = 100)))
+        AepTextComposable(AepText(content = "Tiny Text"))
+        AepTextComposable(AepText(content = "Huge Text"))
     }
 }

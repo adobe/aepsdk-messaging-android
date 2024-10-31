@@ -12,8 +12,10 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.ServiceProvider
 
@@ -28,11 +30,25 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardU
         private const val SELF_TAG = "SmallImageTemplateEventHandler"
     }
 
-    override fun onEvent(event: UIEvent<*, *>, propositionId: String) {
-        if (event is UIEvent.Interact) {
-            onInteractEvent(event, propositionId)
-        } else {
-            super.onEvent(event, propositionId)
+    override fun handleEvent(event: UIEvent<*, *>, propositionId: String) {
+        val smallImageUI = event.aepUi as SmallImageUI
+        val currentUiState = event.aepUi.getState() as SmallImageCardUIState
+        when (event) {
+            // For dismiss event, change the dismissed state of the UI to true
+            // so that the UI can be removed from the screen
+            is UIEvent.Dismiss -> {
+                smallImageUI.updateState(currentUiState.copy(dismissed = true))
+            }
+
+            // For display event, change the displayed state of the UI to true
+            // after the initial composition
+            is UIEvent.Display -> {
+                smallImageUI.updateState(currentUiState.copy(displayed = true))
+            }
+
+            is UIEvent.Interact -> {
+                onInteractEvent(event, propositionId)
+            }
         }
     }
 

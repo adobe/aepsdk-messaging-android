@@ -21,25 +21,101 @@ import com.adobe.marketing.mobile.services.Log
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal open class MessagingEventHandler(private val callback: ContentCardUIEventListening?) {
+internal abstract class MessagingEventHandler(private val callback: ContentCardUIEventListening?) {
     companion object {
         private const val SELF_TAG = "MessagingEventHandler"
+    }
 
-        internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
-            val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(propositionId)
-            contentCardSchemaData?.track(interaction, eventType)
+    /**
+     * Method to be implemented by the subclass to perform the template specific logic on events.
+     *
+     * @param event the event to handle
+     * @param propositionId the id of the proposition
+     */
+    abstract fun handleEvent(event: UIEvent<*, *>, propositionId: String)
+
+    /**
+     * Performs the logic common for all templates for display and dismiss events.
+     * Delegates the template specific logic and interact event handling to the subclass by calling [handleEvent].
+     *
+     * @param event the event to handle
+     * @param propositionId the id of the proposition
+     */
+    internal fun onEvent(event: UIEvent<*, *>, propositionId: String) {
+
+        when (event) {
+            is UIEvent.Display -> {
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "${event.aepUi.getTemplate().getType()} with id $propositionId is displayed"
+                )
+
+                // UIEvent.Display can be called multiple times on configuration changes
+                // We only need to send tracking events for initial composition
+                if (event.aepUi.getState().displayed) {
+                    Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "UI already displayed, skipping handling display event"
+                    )
+                    return
+                }
+
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "UI displayed for the first time, sending display tracking event"
+                )
+
+                handleEvent(event, propositionId)
+
+                track(propositionId, null, MessagingEdgeEventType.DISPLAY)
+                callback?.onDisplay(event.aepUi)
+            }
+            is UIEvent.Dismiss -> {
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "${event.aepUi.getTemplate().getType()} with id $propositionId is dismissed"
+                )
+
+                // UIEvent.Dismiss can be called multiple times on multiple dismiss actions
+                // We only need to send tracking events for initial dismissal
+                if (event.aepUi.getState().dismissed) {
+                    Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "UI already dismissed, skipping handling dismiss tracking event"
+                    )
+                    return
+                }
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "UI dismissed for the first time, sending dismiss tracking event"
+                )
+
+                handleEvent(event, propositionId)
+
+                track(propositionId, null, MessagingEdgeEventType.DISMISS)
+                callback?.onDismiss(event.aepUi)
+            }
+
+            is UIEvent.Interact -> {
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "${event.aepUi.getTemplate().getType()} with id $propositionId is interacted"
+                )
+
+                handleEvent(event, propositionId)
+            }
         }
     }
 
-    internal open fun onEvent(event: UIEvent<*, *>, propositionId: String) {
-        if (event is UIEvent.Display) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Displayed")
-            callback?.onDisplay(event.aepUi)
-            track(propositionId, null, MessagingEdgeEventType.DISPLAY)
-        } else if (event is UIEvent.Dismiss) {
-            Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, "${event.aepUi.getTemplate().getType()} Dismissed")
-            callback?.onDismiss(event.aepUi)
-            track(propositionId, null, MessagingEdgeEventType.DISMISS)
-        }
+    internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
+        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(propositionId)
+        contentCardSchemaData?.track(interaction, eventType)
     }
 }

@@ -407,4 +407,28 @@ public final class MessagingConstants {
             private PayloadKeys() {}
         }
     }
+
+    public final class ContentCard {
+        public class UIKeys {
+            public static final String ADOBE = "adobe";
+            public static final String TEMPLATE = "template";
+            public static final String CONTENT = "content";
+            public static final String URL = "url";
+            public static final String DARK_URL = "darkUrl";
+            public static final String INTERACT_ID = "interactId";
+            public static final String ACTION_URL = "actionUrl";
+            public static final String TEXT = "text";
+            public static final String STYLE = "style";
+            public static final String ID = "id";
+            public static final String TITLE = "title";
+            public static final String BODY = "body";
+            public static final String IMAGE = "image";
+            public static final String BUTTONS = "buttons";
+            public static final String DISMISS_BTN = "dismissBtn";
+
+            public static final String NONE = "none";
+            public static final String SIMPLE = "simple";
+            public static final String CIRCLE = "circle";
+        }
+    }
 }
