@@ -18,6 +18,7 @@ import com.adobe.marketing.mobile.services.HttpMethod
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.NetworkRequest
 import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.util.UrlUtils
 import java.net.HttpURLConnection
 
 internal object UIUtils {
@@ -36,11 +37,11 @@ internal object UIUtils {
         url: String?,
         completion: (Result<Bitmap>) -> Unit
     ) {
-        if (url.isNullOrBlank()) {
+        if (!UrlUtils.isValidUrl(url)) {
             Log.warning(
                 LOG_TAG,
                 SELF_TAG,
-                "Failed to download image, the URL is null or empty."
+                "Failed to download image, the URL is null, empty or invalid."
             )
             completion(Result.failure(Exception("Failed to download image, the URL is null or empty.")))
             return
@@ -71,15 +72,15 @@ internal object UIUtils {
                     if ((connection.responseCode == HttpURLConnection.HTTP_OK)) {
                         connection.inputStream.use { inputStream ->
                             val bitmap = BitmapFactory.decodeStream(inputStream)
-                            bitmap?.let {
-                                completion(Result.success(bitmap))
-                            } ?: {
+                            if (bitmap == null) {
                                 Log.warning(
                                     LOG_TAG,
                                     SELF_TAG,
                                     "Failed to download image from url ($url), decode image from input stream failed."
                                 )
                                 completion(Result.failure(Exception("Failed to download image from url ($url), decode image from input stream failed.")))
+                            } else {
+                                completion(Result.success(bitmap))
                             }
                         }
                     } else {
