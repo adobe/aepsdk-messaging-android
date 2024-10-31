@@ -30,28 +30,24 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
         private const val SELF_TAG = "SmallImageTemplateEventHandler"
     }
 
-    override fun onEvent(event: UIEvent<*, *>, propositionId: String) {
-        if (event is UIEvent.Interact) {
-            onInteractEvent(event, propositionId)
-        } else {
-            if (event.aepUi is SmallImageUI) {
-                val smallImageUI = event.aepUi as SmallImageUI
-                val currentUiState = event.aepUi.getState() as SmallImageCardUIState
+    override fun handleEvent(event: UIEvent<*, *>, propositionId: String) {
+        val smallImageUI = event.aepUi as SmallImageUI
+        val currentUiState = event.aepUi.getState() as SmallImageCardUIState
+        when (event) {
+            // For dismiss event, change the dismissed state of the UI to true
+            // so that the UI can be removed from the screen
+            is UIEvent.Dismiss -> {
+                smallImageUI.updateState(currentUiState.copy(dismissed = true))
+            }
 
-                // For dismiss event, change the dismissed state of the UI to true
-                // so that the UI can be removed from the screen
-                if (event is UIEvent.Dismiss) {
-                    smallImageUI.updateState(currentUiState.copy(dismissed = true))
-                }
+            // For display event, change the displayed state of the UI to true
+            // after the tracking event is sent for the initial composition
+            is UIEvent.Display -> {
+                smallImageUI.updateState(currentUiState.copy(displayed = true))
+            }
 
-                // Call the super class to call the callback and send tracking event if needed
-                super.onEvent(event, propositionId)
-
-                // For display event, change the displayed state of the UI to true
-                // after the tracking event is sent for the initial composition
-                if (event is UIEvent.Display) {
-                    smallImageUI.updateState(currentUiState.copy(displayed = true))
-                }
+            is UIEvent.Interact -> {
+                onInteractEvent(event, propositionId)
             }
         }
     }

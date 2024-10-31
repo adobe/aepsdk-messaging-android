@@ -13,35 +13,19 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.IntSize
-import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
+import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants.LOG_TAG
+import com.adobe.marketing.mobile.services.HttpMethod
 import com.adobe.marketing.mobile.services.Log
-import java.io.IOException
+import com.adobe.marketing.mobile.services.NetworkRequest
+import com.adobe.marketing.mobile.services.ServiceProvider
 import java.net.HttpURLConnection
-import java.net.URL
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 internal object UIUtils {
 
     private const val SELF_TAG = "UIUtils"
+    private const val DOWNLOAD_TIMEOUT_SECS = 10
 
     /**
      * Downloads the image from the given URL.
@@ -51,74 +35,72 @@ internal object UIUtils {
      */
     // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
     fun downloadImage(url: String?): Bitmap? {
-        var connection: HttpURLConnection? = null
-
-        return try {
-            val imageUrl = URL(url)
-            connection = imageUrl.openConnection() as HttpURLConnection
-
-            with(connection) {
-                inputStream.use { stream ->
-                    BitmapFactory.decodeStream(stream)
-                }
-            }
-        } catch (e: IOException) {
+        if (url.isNullOrBlank()) {
             Log.warning(
-                AepUIConstants.LOG_TAG,
+                LOG_TAG,
                 SELF_TAG,
-                "Failed to download push notification image from url (%s). Exception: %s",
-                url,
-                e.message
+                "Failed to download image, the URL is null or empty."
             )
-            null
-        } finally {
-            connection?.disconnect()
+            return null
         }
-    }
-
-    @Composable
-    fun Modifier.shimmerEffect(
-        shimmerColor1: Color? = null,
-        shimmerColor2: Color? = null
-    ): Modifier = composed {
-        var size by remember { mutableStateOf(IntSize.Zero) }
-
-        // Infinite shimmer animation transition
-        val transition = rememberInfiniteTransition(label = "ShimmerTransition")
-        val startOffsetX by transition.animateFloat(
-            initialValue = -2 * size.width.toFloat(),
-            targetValue = 2 * size.width.toFloat(),
-            animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = LinearEasing)
-            ),
-            label = "ShimmerOffsetX"
+        var bitmap: Bitmap? = null
+        val latch = CountDownLatch(1)
+        val networkRequest = NetworkRequest(
+            url,
+            HttpMethod.GET,
+            null,
+            null,
+            DOWNLOAD_TIMEOUT_SECS,
+            DOWNLOAD_TIMEOUT_SECS
         )
 
-        val shimmerColorLight = shimmerColor1 ?: MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.3f)
-        val shimmerColorDark = shimmerColor2 ?: MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-
-        this
-            .onGloballyPositioned { coordinates ->
-                size = coordinates.size // Capture the composable's size
-            }
-            .drawWithCache {
-                // Only re-draw the gradient when the shimmer position updates
-                val gradient = Brush.linearGradient(
-                    colors = listOf(
-                        shimmerColorLight,
-                        shimmerColorDark,
-                        shimmerColorLight
-                    ),
-                    start = Offset(startOffsetX, 0f),
-                    end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
-                )
-
-                onDrawBehind {
-                    drawRect(
-                        brush = gradient,
-                        size = Size(size.width.toFloat(), size.height.toFloat())
+        ServiceProvider.getInstance()
+            .networkService
+            .connectAsync(networkRequest) { connection ->
+                try {
+                    if (connection == null) {
+                        Log.warning(
+                            LOG_TAG,
+                            SELF_TAG,
+                            "Failed to download image from url ($url), received a null connection."
+                        )
+                        latch.countDown()
+                        return@connectAsync
+                    }
+                    if ((connection.responseCode == HttpURLConnection.HTTP_OK)) {
+                        connection.inputStream.use { inputStream ->
+                            bitmap = BitmapFactory.decodeStream(inputStream)
+                        }
+                    } else {
+                        Log.debug(
+                            LOG_TAG,
+                            SELF_TAG,
+                            "Failed to download image from url ($url). Response code was: ${connection.responseCode}."
+                        )
+                    }
+                } catch (e: Exception) {
+                    Log.warning(
+                        LOG_TAG,
+                        SELF_TAG,
+                        "Exception while processing image download: ${e.localizedMessage}"
                     )
+                } finally {
+                    connection.close()
+                    latch.countDown()
                 }
             }
+        // Wait for the download to complete or timeout
+        try {
+            if (!latch.await(DOWNLOAD_TIMEOUT_SECS.toLong(), TimeUnit.SECONDS)) {
+                Log.warning(LOG_TAG, SELF_TAG, "Timed out waiting for image download to complete.")
+            }
+        } catch (e: InterruptedException) {
+            Log.warning(
+                LOG_TAG,
+                SELF_TAG,
+                "Interrupted while waiting for image download to complete: ${e.localizedMessage}"
+            )
+        }
+        return bitmap
     }
 }

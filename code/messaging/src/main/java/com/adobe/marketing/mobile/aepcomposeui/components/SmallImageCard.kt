@@ -34,8 +34,6 @@ import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * Composable function that renders a small image card UI.
@@ -60,9 +58,7 @@ fun SmallImageCard(
         if (imageUrl.isNullOrBlank()) {
             isLoading = false
         } else {
-            imageBitmap = withContext(Dispatchers.IO) {
-                UIUtils.downloadImage(imageUrl)
-            }
+            imageBitmap = UIUtils.downloadImage(imageUrl)
             isLoading = false
         }
     }
