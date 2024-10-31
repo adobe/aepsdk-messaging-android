@@ -52,7 +52,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a list of [AepUI] instances.
      */
-    suspend fun getAepUi(): Flow<List<AepUI<*, *>>> {
+    suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>> {
         getContent()
         return aepUiFlow
     }

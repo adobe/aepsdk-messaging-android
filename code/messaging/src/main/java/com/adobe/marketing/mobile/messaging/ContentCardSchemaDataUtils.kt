@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging
 
+import androidx.annotation.VisibleForTesting
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
@@ -38,7 +39,8 @@ internal object ContentCardSchemaDataUtils {
      * @param map The map containing the data for [AepText].
      * @return An instance of [AepText].
      */
-    private fun createAepText(map: Map<String, Any>): AepText {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepText(map: Map<String, Any>): AepText {
         return AepText(
             content = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.CONTENT, null)
         )
@@ -50,7 +52,8 @@ internal object ContentCardSchemaDataUtils {
      * @param map The map containing the data for [AepImage].
      * @return An instance of [AepImage].
      */
-    private fun createAepImage(map: Map<String, Any>): AepImage {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepImage(map: Map<String, Any>): AepImage {
         return AepImage(
             url = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.URL, null),
             darkUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.DARK_URL, null)
@@ -63,7 +66,8 @@ internal object ContentCardSchemaDataUtils {
      * @param map The map containing the data for [AepButton].
      * @return An instance of [AepButton].
      */
-    private fun createAepButton(map: Map<String, Any>): AepButton {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepButton(map: Map<String, Any>): AepButton {
         return AepButton(
             id = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
             actionUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null),
@@ -77,7 +81,8 @@ internal object ContentCardSchemaDataUtils {
      * @param map The map containing the data for [AepDismissButton].
      * @return An instance of [AepDismissButton].
      */
-    private fun createAepDismissButton(map: Map<String, Any>): AepIcon? {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun createAepDismissButton(map: Map<String, Any>): AepIcon? {
         val style = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
         return when (style) {
             MessagingConstants.ContentCard.UIKeys.SIMPLE -> AepIcon(R.drawable.close_filled)
@@ -214,7 +219,9 @@ internal object ContentCardSchemaDataUtils {
      * @param proposition The proposition to check.
      * @return `true` if the proposition is a content card, `false` otherwise.
      */
-    private fun isContentCard(proposition: Proposition): Boolean {
-        return proposition.items[0]?.schema == SchemaType.CONTENT_CARD
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun isContentCard(proposition: Proposition): Boolean {
+        return proposition.items.isNotEmpty() &&
+            proposition.items[0]?.schema == SchemaType.CONTENT_CARD
     }
 }
