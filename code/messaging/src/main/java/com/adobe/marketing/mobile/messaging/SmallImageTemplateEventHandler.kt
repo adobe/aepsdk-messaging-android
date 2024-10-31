@@ -41,7 +41,7 @@ internal class SmallImageTemplateEventHandler(private val callback: ContentCardC
             }
 
             // For display event, change the displayed state of the UI to true
-            // after the tracking event is sent for the initial composition
+            // after the initial composition
             is UIEvent.Display -> {
                 smallImageUI.updateState(currentUiState.copy(displayed = true))
             }

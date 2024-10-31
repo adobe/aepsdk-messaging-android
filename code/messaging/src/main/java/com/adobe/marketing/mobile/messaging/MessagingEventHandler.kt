@@ -26,8 +26,21 @@ internal abstract class MessagingEventHandler(private val callback: ContentCardC
         private const val SELF_TAG = "MessagingEventHandler"
     }
 
+    /**
+     * Method to be implemented by the subclass to perform the template specific logic on events.
+     *
+     * @param event the event to handle
+     * @param propositionId the id of the proposition
+     */
     abstract fun handleEvent(event: UIEvent<*, *>, propositionId: String)
 
+    /**
+     * Performs the logic common for all templates for display and dismiss events.
+     * Delegates the template specific logic and interact event handling to the subclass by calling [handleEvent].
+     *
+     * @param event the event to handle
+     * @param propositionId the id of the proposition
+     */
     internal fun onEvent(event: UIEvent<*, *>, propositionId: String) {
 
         when (event) {
@@ -38,7 +51,7 @@ internal abstract class MessagingEventHandler(private val callback: ContentCardC
                     "${event.aepUi.getTemplate().getType()} with id $propositionId is displayed"
                 )
 
-                // onEvent can be called multiple times on configuration changes
+                // UIEvent.Display can be called multiple times on configuration changes
                 // We only need to send tracking events for initial composition
                 if (event.aepUi.getState().displayed) {
                     Log.debug(
@@ -66,8 +79,8 @@ internal abstract class MessagingEventHandler(private val callback: ContentCardC
                     "${event.aepUi.getTemplate().getType()} with id $propositionId is dismissed"
                 )
 
-                // onEvent can be called multiple times on configuration changes
-                // We only need to send tracking events for initial composition
+                // UIEvent.Dismiss can be called multiple times on multiple dismiss actions
+                // We only need to send tracking events for initial dismissal
                 if (event.aepUi.getState().dismissed) {
                     Log.debug(
                         MessagingConstants.LOG_TAG,
