@@ -164,7 +164,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 
         // Create row with composables from AepUI instances
         LazyRow {
-            items(aepUiList) { aepUI ->
+            items(reorderedAepUIList) { aepUI ->
                 when (aepUI) {
                     is SmallImageUI -> {
                         val state = aepUI.getState()
@@ -212,7 +212,7 @@ class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIPr
         // Launch a coroutine to fetch the aepUIList from the ContentCardUIProvider
         // when the ViewModel is created
         viewModelScope.launch {
-            contentCardUIProvider.getAepUi().collect { aepUi ->
+            contentCardUIProvider.getContentCardUI().collect { aepUi ->
                 _aepUIList.value = aepUi
             }
         }
