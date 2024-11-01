@@ -38,6 +38,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
@@ -375,7 +376,7 @@ public class MessagingExtensionTests {
                     String moduleVersion = messagingExtension.getVersion();
                     assertEquals(
                             "getVersion should return the correct module version",
-                            MessagingTestConstants.EXTENSION_VERSION,
+                            Messaging.extensionVersion(),
                             moduleVersion);
                 });
     }

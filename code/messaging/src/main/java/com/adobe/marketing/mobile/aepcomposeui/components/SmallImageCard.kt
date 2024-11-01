@@ -118,13 +118,13 @@ fun SmallImageCard(
                     ui.getTemplate().title.let {
                         AepTextComposable(
                             model = it,
-                            textStyle = style.titleAepTextStyle
+                            textStyle = style.titleTextStyle
                         )
                     }
                     ui.getTemplate().body?.let {
                         AepTextComposable(
                             model = it,
-                            textStyle = style.bodyAepTextStyle
+                            textStyle = style.bodyTextStyle
                         )
                     }
                     AepRowComposable(

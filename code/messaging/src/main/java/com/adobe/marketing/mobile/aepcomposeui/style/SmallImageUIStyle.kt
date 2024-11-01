@@ -30,8 +30,8 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  * @param rootRowStyle The style for the root row.
  * @param imageStyle The style for the image.
  * @param textColumnStyle The style for the column containing the title, body and buttons.
- * @property titleAepTextStyle The text style for the title.
- * @property bodyAepTextStyle The text style for the body.
+ * @property titleTextStyle The text style for the title.
+ * @property bodyTextStyle The text style for the body.
  * @property buttonRowStyle The style for the row containing the buttons.
  * @property buttonStyle The style for the buttons.
  * @property dismissButtonStyle The style for the dismiss button.
@@ -42,8 +42,8 @@ class SmallImageUIStyle private constructor(
     val rootRowStyle: AepRowStyle,
     val imageStyle: AepImageStyle,
     val textColumnStyle: AepColumnStyle,
-    val titleAepTextStyle: AepTextStyle,
-    val bodyAepTextStyle: AepTextStyle,
+    val titleTextStyle: AepTextStyle,
+    val bodyTextStyle: AepTextStyle,
     val buttonRowStyle: AepRowStyle,
     val buttonStyle: Array<Pair<AepButtonStyle, AepTextStyle>>,
     val dismissButtonStyle: AepIconStyle,
@@ -124,8 +124,8 @@ class SmallImageUIStyle private constructor(
             rootRowStyle = AepRowStyle.merge(defaultRootRowStyle, rootRowStyle),
             imageStyle = AepImageStyle.merge(defaultImageStyle, imageStyle),
             textColumnStyle = AepColumnStyle.merge(defaultTextColumnStyle, textColumnStyle),
-            titleAepTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
-            bodyAepTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
+            titleTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
+            bodyTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
             buttonRowStyle = AepRowStyle.merge(defaultButtonRowStyle, buttonRowStyle),
             buttonStyle = (buttonStyle ?: arrayOfNulls(3)).map { pair ->
                 Pair(

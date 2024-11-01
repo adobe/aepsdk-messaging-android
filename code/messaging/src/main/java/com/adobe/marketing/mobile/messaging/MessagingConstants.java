@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 public final class MessagingConstants {
 
     public static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "3.2.1";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
