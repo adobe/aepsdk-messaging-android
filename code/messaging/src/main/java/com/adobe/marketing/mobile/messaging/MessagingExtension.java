@@ -19,6 +19,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -125,7 +126,7 @@ public final class MessagingExtension extends Extension {
      */
     @NonNull @Override
     protected String getVersion() {
-        return MessagingConstants.EXTENSION_VERSION;
+        return Messaging.extensionVersion();
     }
 
     @Override
