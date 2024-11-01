@@ -22,6 +22,7 @@ val toolingPreviewVersion = "1.7.4"
 val viewModelComposeVersion = "2.8.6"
 val runtimeComposeVersion = "2.8.6"
 val material3Version = "1.3.0"
+val mockkVersion = "1.13.13"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
@@ -70,6 +71,7 @@ dependencies {
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
     testImplementation(project(":messagingtestutils"))
     testImplementation("com.google.firebase:firebase-messaging:23.4.1")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE

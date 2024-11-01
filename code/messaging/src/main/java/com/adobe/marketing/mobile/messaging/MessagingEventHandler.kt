@@ -19,9 +19,9 @@ import com.adobe.marketing.mobile.services.Log
  * Base interaction handler for messaging events.
  * This class is responsible for handling the display and dismiss events for a content card proposition.
  *
- * @property callback the callback to be invoked when the event occurs
+ * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal abstract class MessagingEventHandler(private val callback: ContentCardCallback?) {
+internal abstract class MessagingEventHandler(private val callback: ContentCardUIEventListener?) {
     companion object {
         private const val SELF_TAG = "MessagingEventHandler"
     }

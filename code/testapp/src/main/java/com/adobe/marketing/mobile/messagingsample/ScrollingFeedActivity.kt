@@ -15,18 +15,13 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -44,9 +39,9 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardCallback
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardMapper
+import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.ContentCardUIProvider
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
@@ -187,7 +182,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
     }
 }
 
-class ContentCardCallback: ContentCardCallback {
+class ContentCardCallback: ContentCardUIEventListener {
     override fun onDisplay(aepUI: AepUI<*, *>) {
         Log.d("ContentCardCallback", "onDisplay")
     }
