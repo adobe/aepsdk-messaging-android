@@ -10,8 +10,7 @@ VERSION_REGEX="[0-9]+\.[0-9]+\.[0-9]+"
 
 GRADLE_PROPERTIES_FILE=$ROOT_DIR"/code/gradle.properties"
 
-CONSTANTS_FILE=$ROOT_DIR"/code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java"
-TEST_CONSTANTS_FILE=$ROOT_DIR"/code/messagingtestutils/src/main/java/com/adobe/marketing/mobile/messaging/MessagingTestConstants.java"
+CONSTANTS_FILE=$ROOT_DIR"/code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java"
 # Java files
 EXTENSION_VERSION_REGEX="^.*String EXTENSION_VERSION *= *"
 # Kotlin files
@@ -40,13 +39,9 @@ sed_platform() {
 update() {
     echo "Changing version to $VERSION"
 
-    # Replace version in Constants file
-    echo "Changing 'EXTENSION_VERSION' to '$VERSION' in '$CONSTANTS_FILE'"    
+    # Replace version in Messaging file
+    echo "Changing 'EXTENSION_VERSION' to '$VERSION' in '$CONSTANTS_FILE'"
     sed_platform -E "/$EXTENSION_VERSION_REGEX/{s/$VERSION_REGEX/$VERSION/;}" $CONSTANTS_FILE
-
-    # Replace version in Test Constants file
-    echo "Changing 'EXTENSION_VERSION' to '$VERSION' in '$TEST_CONSTANTS_FILE'"    
-    sed_platform -E "/$EXTENSION_VERSION_REGEX/{s/$VERSION_REGEX/$VERSION/;}" $TEST_CONSTANTS_FILE
 
     # Replace version in gradle.properties
     echo "Changing 'moduleVersion' to '$VERSION' in '$GRADLE_PROPERTIES_FILE'"
