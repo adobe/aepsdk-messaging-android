@@ -169,7 +169,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 
         // Create row with composables from AepUI instances
         LazyRow {
-            items(reorderedAepUIList) { aepUI ->
+            items(aepUiList) { aepUI ->
                 when (aepUI) {
                     is SmallImageUI -> {
                         val state = aepUI.getState()
