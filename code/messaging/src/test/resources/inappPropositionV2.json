@@ -2,12 +2,14 @@
     "id": "c2aa4a73-a534-44c2-baa4-a12980e4bb9e",
     "scope": "mobileapp://mockPackageName",
     "scopeDetails": {
+        "rank": 1,
         "decisionProvider": "AJO",
         "correlationID": "b5095046-7fd7-4961-871f-9d68f2ac335f",
         "characteristics": {
             "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6Ik5BIiwibWVzc2FnZUlEIjoiYjUwOTUwNDYtN2ZkNy00OTYxLTg3MWYtOWQ2OGYyZGMzMzVmIiwibWVzc2FnZVB1YmxpY2F0aW9uSUQiOiJiNzFlNDhiYS1mNzY3LTQ5NWItOWQxMS01YzA3MTg4NWNkODkiLCJtZXNzYWdlVHlwZSI6Im1hcmtldGluZyIsImNhbXBhaWduSUQiOiI5YzhlYzAzNS02YjNiLTQ3MGUtOGFlNS1lNTM5YzcxMjM4MDkiLCJjYW1wYWlnblZlcnNpb25JRCI6IjdkZGEyZGM2LTE5MjMtNGU2My1iZWFjLTU0ZGM3ODczNjFlYiIsImNhbXBhaWduQWN0aW9uSUQiOiJjN2MxNDk3ZS1lNWEzLTQ0MjMtYWUzNy1iYTc2ZTFlNDQzNDIifSwibWVzc2FnZVByb2ZpbGUiOnsibWVzc2FnZVByb2ZpbGVJRCI6IjQ0YWQ1NTA3LTZlODItNGY2MS05N2U1LTUzMmNhNmZkMDhhOCIsImNoYW5uZWwiOnsiX2lkIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWxzL3dlYiIsIl90eXBlIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWwtdHlwZXMvd2ViIn19fQ=="
         },
         "activity": {
+            "priority": 100,
             "id": "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4423-ae37-ba76e1e44342"
         }
     },
