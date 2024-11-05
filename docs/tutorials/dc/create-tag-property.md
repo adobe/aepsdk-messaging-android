@@ -123,4 +123,4 @@ In this section we will create a mobile property which contains the configuratio
 | :----------------------------------------------------------: |
 |                **View install instructions**                 |
 
-For the next part of the tutorial, we will show how to author an in-app message in **Adobe Journey Optimizer**.
+For the next part of the tutorial, we will show how to create the channel configuration in **Adobe Journey Optimizer**.

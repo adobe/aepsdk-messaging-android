@@ -4,36 +4,35 @@
 
 ### Create the in-app message campaign
 
-1. Go to the [Adobe Experience Platform](https://experience.adobe.com/#/platform), using your Adobe ID credentials to log in if prompted.
+1. In **Journey Optimizer** UI, select **Campaigns** (**1**) in the left navigation window.
 
-2. Navigate to the **Journey Optimizer** UI by selecting the nine-dot menu in the top right (**1**), and selecting `Journey Optimizer` (**2**).
-
-| ![Navigating to Journey Optimizer](assets/ajo-nav.png?raw=true) |
-| :---: |
-| **Navigating to Journey Optimizer** |
-
-3. Select **Campaigns** (**1**) in the left navigation window.
-
-4. Click the **Create campaign** button (**2**) on the upper right of the screen.
+2. Click the **Create campaign** button (**2**) on the upper right of the screen.
 
 | ![Create a new Campaign](assets/ajo-create-campaign.png?raw=true) |
 | :---: |
 | **Create a new Campaign** |
 
+### Choose type of campaign
+
+1. In the **Choose type of campaign** popup, select **Scheduled - Marketing**
+
+| ![Choose type pf campaign](assets/ajo-choose-campaign-type.png?raw=true) |
+| :---: |
+| **Choose type pf campaign** |
+
 ### Configure the audience and the message
 
-1. Check the box for `In-app message` and select the app surface you created earlier in this tutorial.
+1. Give your camapgin a name (**1**).  This will help you identify your message from the list of campaigns.
+
+2. Under the **Action** section, select `In-app message` from the drop down (**2**). 
 
 | ![Create an in-app message](assets/ajo-create-iam.png?raw=true) |
 | :---: |
 | **Create an in-app message** |
 
-> [!NOTE]
-> For this example, we will show the message to everyone, every time an SDK call of `MobileCore.trackAction("50off", nil)` is made.
+3. In the **In-app message configuration** dropdown, select the channel configuration you created earlier in this tutorial (**1*).
 
-2. Give your message a name (**1**).  This will help you identify your message from the list of campaigns.
-
-3. Hit the **Edit content** button (**2**) to begin creating the message content.
+4. Hit the **Edit content** button (**2**) to begin creating the message content.
 
 | ![In-app message details](assets/ajo-iam-draft.png?raw=true) |
 | :---: |
@@ -63,9 +62,12 @@
 
     - Track action event happens, and
 
-    - Action equals **50off**
+    - Action equals **50off**    
 
 11. Hit the **Done** button (**2**).
+
+> [!NOTE]
+> For this example, we will show the message to everyone, every time an SDK call of `MobileCore.trackAction("50off", nil)` is made.
 
 | ![Define the trigger](assets/ajo-iam-trigger-details.png?raw=true) |
 | :---: |
