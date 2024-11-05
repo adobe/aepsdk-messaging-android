@@ -96,6 +96,22 @@ public class Proposition implements Serializable {
     }
 
     /**
+     * Gets priority of the {@link Proposition} entered in the AJO UI for the corresponding campaign.
+     *
+     * @return the {@link Integer} representation of priority, from 0 (lowest) to 100 (highest).
+     */
+    @NonNull public Integer getPriority() {
+        final Map<String, Object> activity = getActivity();
+
+        // return early if we don't have an "activity" map in "scopeDetails"
+        if (MapUtils.isNullOrEmpty(activity)) {
+            return 0;
+        }
+
+        return DataReader.optInt(activity, MessagingConstants.PayloadKeys.PRIORITY, 0);
+    }
+
+    /**
      * Gets the {@code Proposition} scope details.
      *
      * @return {@code Map<String, Object>} containing the {@link Proposition} scope details.
@@ -105,14 +121,7 @@ public class Proposition implements Serializable {
     }
 
     String getActivityId() {
-        // return early if we have no "scopeDetails"
-        if (MapUtils.isNullOrEmpty(scopeDetails)) {
-            return "";
-        }
-
-        final Map<String, Object> activity =
-                DataReader.optTypedMap(
-                        Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
+        final Map<String, Object> activity = getActivity();
 
         // return early if we don't have an "activity" map in "scopeDetails"
         if (MapUtils.isNullOrEmpty(activity)) {
@@ -120,6 +129,40 @@ public class Proposition implements Serializable {
         }
 
         return DataReader.optString(activity, MessagingConstants.PayloadKeys.ID, "");
+    }
+
+    /**
+     * Gets the `activity` object in the `scopeDetails` of the {@link Proposition}
+     * @return
+     */
+    @Nullable private Map<String, Object> getActivity() {
+        // return early if we have no "scopeDetails"
+        if (MapUtils.isNullOrEmpty(scopeDetails)) {
+            return null;
+        }
+
+        return DataReader.optTypedMap(
+                Object.class, scopeDetails, MessagingConstants.PayloadKeys.ACTIVITY, null);
+    }
+
+    /**
+     * Gets the ordinal rank for this {@link Proposition} as computed by IDS.
+     *
+     * It is expected that IDS will always return a value for rank.
+     * A default value of -1 is used in the absence of rank in the IDS response
+     * and should be considered an error state.
+     *
+     * @return {@link Integer} containing the ordinal rank for this Proposition.
+     */
+    /// rank is an ordinal value computed by IDS, used for prioritization
+    ///
+    @NonNull Integer getRank() {
+        // return early if we have no "scopeDetails"
+        if (MapUtils.isNullOrEmpty(scopeDetails)) {
+            return -1;
+        }
+
+        return DataReader.optInt(scopeDetails, MessagingConstants.PayloadKeys.RANK, -1);
     }
 
     /**

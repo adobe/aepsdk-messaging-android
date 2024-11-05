@@ -144,11 +144,6 @@ class EdgePersonalizationResponseHandler {
                 if (inAppRules != null) {
                     final List<LaunchRule> rulesToReplace = new ArrayList<>();
                     for (final Map.Entry<Surface, List<LaunchRule>> entry : inAppRules.entrySet()) {
-                        // MOB-21846 - iam items are returned in reverse priority order, so we need
-                        // to flip the order of the list prior to saving them and hydrating the
-                        // rules engine. this allows the highest priority item to be shown first
-                        // when rules engine evaluates top-down.
-                        Collections.reverse(entry.getValue());
                         rulesToReplace.addAll(entry.getValue());
                     }
                     if (!MessagingUtils.isNullOrEmpty(rulesToReplace)) {
@@ -586,14 +581,6 @@ class EdgePersonalizationResponseHandler {
                             SELF_TAG,
                             "Updating in-app message definitions for surfaces %s.",
                             newSurfaces);
-
-                    // MOB-21846 - iam items are returned in reverse priority order, so we need to
-                    // flip the order of the list prior to saving them and hydrating the rules
-                    // engine. this allows the highest priority item to be shown first when rules
-                    // engine evaluates top-down
-                    for (final Map.Entry<Surface, List<LaunchRule>> entry : rulesMaps.entrySet()) {
-                        Collections.reverse(entry.getValue());
-                    }
 
                     // replace rules for each in-app surface we got back
                     inAppRulesBySurface.putAll(rulesMaps);
