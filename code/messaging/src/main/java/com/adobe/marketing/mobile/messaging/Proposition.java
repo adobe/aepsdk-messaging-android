@@ -96,7 +96,8 @@ public class Proposition implements Serializable {
     }
 
     /**
-     * Gets priority of the {@link Proposition} entered in the AJO UI for the corresponding campaign.
+     * Gets priority of the {@link Proposition} entered in the AJO UI for the corresponding
+     * campaign.
      *
      * @return the {@link Integer} representation of priority, from 0 (lowest) to 100 (highest).
      */
@@ -133,6 +134,7 @@ public class Proposition implements Serializable {
 
     /**
      * Gets the `activity` object in the `scopeDetails` of the {@link Proposition}
+     *
      * @return
      */
     @Nullable private Map<String, Object> getActivity() {
@@ -148,9 +150,8 @@ public class Proposition implements Serializable {
     /**
      * Gets the ordinal rank for this {@link Proposition} as computed by IDS.
      *
-     * It is expected that IDS will always return a value for rank.
-     * A default value of -1 is used in the absence of rank in the IDS response
-     * and should be considered an error state.
+     * <p>It is expected that IDS will always return a value for rank. A default value of -1 is used
+     * in the absence of rank in the IDS response and should be considered an error state.
      *
      * @return {@link Integer} containing the ordinal rank for this Proposition.
      */

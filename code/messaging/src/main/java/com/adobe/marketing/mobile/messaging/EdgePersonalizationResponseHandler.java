@@ -34,7 +34,6 @@ import com.adobe.marketing.mobile.util.UrlUtils;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
