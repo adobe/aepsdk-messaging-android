@@ -1,6 +1,6 @@
 # Sealed Interface - AepUI
 
-The `AepUI` interface represents a UI component that can be rendered using the AEP compose UI library. In the initial launch of the AEP compose UI library, the `SmallImageUI` implements an `AepUI`  to display a Small Image Template. The AepUI associates with a specific template and state to ensure consistency when rendering and managing UI components.
+The `AepUI` interface represents a UI component that can be rendered using the AEP compose UI library. In the initial release of the AEP compose UI library, the `SmallImageUI` implements an `AepUI`  to display a Small Image Template. The `AepUI` associates with a specific template and state to ensure consistency when rendering and managing UI components.
 ## Methods
 
 ### getTemplate 
