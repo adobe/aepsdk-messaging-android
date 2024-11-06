@@ -14,7 +14,7 @@ import com.adobe.marketing.mobile.Messaging
 
 ### getContentCardUI
 
-The `getContentCardsUI` method retrieves a flow of [AepUI](./public-classes/aepui.md) objects for the provided surface. These AepUI objects provide the user interface for templated content cards in your application.
+The `getContentCardUI` method retrieves a flow of [AepUI](./public-classes/aepui.md) objects for the provided surface. These AepUI objects provide the user interface for templated content cards in your application.
 
 > **Note** - Calling this API will not download content cards from Adobe Journey Optimizer; it will only retrieve the content cards that are already downloaded and cached by the Messaging extension. You **must** call [`updatePropositionsForSurfaces`](../api-usage.md#updatePropositionsForSurfaces) API from the AEPMessaging extension with the desired surfaces prior to calling this API. 
 
@@ -27,7 +27,16 @@ suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>>
 #### Example
 
 ```kotlin
-// create new view model or reuse existing one to hold the aepUIList
+// Download the content cards for homepage surface using Messaging extension
+val surfaces = mutableListOf<Surface>()
+val surface = Surface("homepage")
+surfaces.add(surface)
+Messaging.updatePropositionsForSurfaces(surfaces)
+
+// Initialize the ContentCardUIProvider
+val contentCardUIProvider = ContentCardUIProvider(surface)
+
+// get the content cards within a view model
 class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIProvider) : ViewModel() {
     // State to hold AepUI list
     private val _aepUIList = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
