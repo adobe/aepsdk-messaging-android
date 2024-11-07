@@ -19,66 +19,32 @@ Below is an example implementation:
 // create a custom style for the small image card in row
 val smallImageCardStyleRow = SmallImageUIStyle.Builder()
 	.cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp)))
-  .rootRowStyle(
-    AepRowStyle(
-      modifier = Modifier.fillMaxSize()
-    )
-  )
-	.imageStyle(
-  	AepImageStyle(
-    	modifier = Modifier.width(100.dp).height(100.dp)
-  	)
-	)
-	.buttonRowStyle(
-    AepRowStyle(
-      modifier = Modifier.fillMaxSize()
-    )
-  )
-	.buttonStyle(
-    arrayOf(
-      Pair(
-        AepButtonStyle(
-          modifier = Modifier.padding(8.dp)
-        ),
-        AepTextStyle(
-          textStyle = TextStyle(
-            color = Color.Green,
-            fontSize = 16.sp
-          )
-        )
-      )
-    )
-  )
-	.dismissButtonStyle(
-    AepIconStyle(
-      modifier = Modifier.padding(8.dp)
-    )
-  )
+  .rootRowStyle(AepRowStyle(modifier = Modifier.fillMaxSize()))
+	.imageStyle(AepImageStyle(modifier = Modifier.width(100.dp).height(100.dp)))
+	.buttonRowStyle(AepRowStyle(modifier = Modifier.fillMaxSize()))
+	.buttonStyle(arrayOf(Pair(AepButtonStyle(modifier = Modifier.padding(8.dp)),
+                            AepTextStyle(textStyle = TextStyle(color = Color.Green, fontSize = 16.sp)))))
+	.dismissButtonStyle(AepIconStyle(modifier = Modifier.padding(8.dp)))
   .dismissButtonAlignment(Alignment.TopEnd)
-	.textColumnStyle(
-    AepColumnStyle(
-      modifier = Modifier.fillMaxSize()
-    )
-  )
+	.textColumnStyle(AepColumnStyle(modifier = Modifier.fillMaxSize()))
 	.bodyAepTextStyle(AepTextStyle(textStyle = TextStyle(Color.Yellow)))
 	.titleAepTextStyle(AepTextStyle(textStyle = TextStyle(Color.Green)))
 	.build()
 
 // Create row with composables from AepUI instances
 LazyRow {
-  items(reorderedAepUIList) { aepUI ->
-                             when (aepUI) {
-                               is SmallImageUI -> {
-                                 val state = aepUI.getState()
-                                 if (!state.dismissed) {
-                                   SmallImageCard(
-                                     ui = aepUI,
-                                     style = smallImageCardStyleRow, // setting the custom style here
-                                     observer = ContentCardEventObserver(contentCardCallback)
-                                   )
-                                 }
-                               }
-                             }
-                            }
+  items(reorderedAepUIList) { aepUI ->                   
+    when (aepUI) {
+      is SmallImageUI -> {
+        val state = aepUI.getState()
+        if (!state.dismissed) 
+        {
+          SmallImageCard(ui = aepUI, 
+                         style = smallImageCardStyleRow, // setting the custom style here
+                         observer = ContentCardEventObserver(contentCardCallback))
+        }
+      }
+    }
+  }
 }
 ```

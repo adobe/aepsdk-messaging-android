@@ -37,19 +37,17 @@ Messaging.updatePropositionsForSurfaces(surfaces)
 val contentCardUIProvider = ContentCardUIProvider(surface)
 
 // get the content cards within a view model
-class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIProvider) : ViewModel() {
-    // State to hold AepUI list
-    private val _aepUIList = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
-    val aepUIList: StateFlow<List<AepUI<*, *>>> = _aepUIList.asStateFlow()
+class MyScreenViewModel : ViewModel {
+  private val contentCardUIProvider = MessagingContentCardProvider(...)
+  private val _aepUIList = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
+  val aepUIList: StateFlow<List<AepUI<*, *>>> = _aepUIList.asStateFlow()
 
-    init {
-        // Launch a coroutine to fetch the aepUIList from the ContentCardUIProvider
-        // when the ViewModel is created
-        viewModelScope.launch {
-            contentCardUIProvider.getContentCardUI().collect { aepUi ->
-                _aepUIList.value = aepUi
-            }
-        }
+  // fetch the list of cards when necessary 
+  viewModelScope.launch {
+    contentCardUIProvider.getContentCardUI().collect { 
+      aepUi ->
+      _aepUIList.value = aepUi
     }
+  }
 }
 ```

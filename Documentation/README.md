@@ -56,7 +56,6 @@
 
     - [AepUI](./sources/content-card-ui/public-classes/aepui.md)
     - [ContentCardUIEventListener](./sources/content-card-ui/public-classes/contentcarduieventlistener.md)
-    - [SmallImageUI](./sources/content-card-ui/public-classes/smallimageui.md)
     - [UIAction](./sources/content-card-ui/public-classes/uiaction.md)
     - [UIEvent](./sources/content-card-ui/public-classes/uievent.md)
 - UI Models
@@ -71,15 +70,12 @@
 - Content Providers
     - [AepUIContentProvider](./sources/content-card-ui/public-classes/ContentProvider/aepuicontentprovider.md)
     - [ContentCardUIProvider](./sources/content-card-ui/public-classes/ContentProvider/contentcarduiprovider.md)
-
 - Observers
     - [AepUIEventObserver](./sources/content-card-ui/public-classes/Observers/aepuieventobserver.md)
     - [ContentCardEventObserver](./sources/content-card-ui/public-classes/Observers/contentcardeventobserver.md)
-
 - State
     - [AepCardUIState](./sources/content-card-ui/public-classes/State/aepcarduistate.md)
     - [SmallImageCardUIState](./sources/content-card-ui/public-classes/State/smallimagecarduistate.md)
-
 - Styles
     - [AepButtonStyle](./sources/content-card-ui/public-classes/Styles/aepbuttonstyle.md)
     - [AepCardStyle](./sources/content-card-ui/public-classes/Styles/aepcardstyle.md)
@@ -89,7 +85,6 @@
     - [AepRowStyle](./sources/content-card-ui/public-classes/Styles/aeprowstyle.md)
     - [AepTextStyle](./sources/content-card-ui/public-classes/Styles/aeptextstyle.md)
     - [SmallImageUIStyle](./sources/content-card-ui/public-classes/Styles/smallimageuistyle.md)
-
 - Tutorials
 
     - [Fetch and Display Content Cards](./sources/content-card-ui/tutorial/displaying-content-cards.md) 

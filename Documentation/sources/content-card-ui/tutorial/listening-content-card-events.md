@@ -89,20 +89,3 @@ override fun onInteract(
   return false
 }
 ```
-
-### Removing content cards on dismiss
-
-> *__IMPORTANT__* - Removing a dismissed content card from the UI is the responsibility of the app developer.
-
-To remove a content card from the UI when the user dismisses it, implement the onDismiss method:
-
-```kotlin
-lateinit var aepUiList: State<List<AepUI<*, *>>>   
-override fun onDismiss(aepUI: AepUI<*, *>) {
-  aepUiList = viewModel.aepUIList.collectAsStateWithLifecycle()
-  val displayedTemplate = aepUI.getTemplate() as SmallImageTemplate
-  aepUiList.value.filterNot { it.getTemplate() == displayedTemplate }
-}
-```
-
-This implementation ensures that the dismissed card is removed from the `aepUiList`, which should trigger a UI update if the list is used to populate your view.
