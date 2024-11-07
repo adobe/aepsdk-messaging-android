@@ -99,9 +99,9 @@ public class Proposition implements Serializable {
      * Gets priority of the {@link Proposition} entered in the AJO UI for the corresponding
      * campaign.
      *
-     * @return the {@link Integer} representation of priority, from 0 (lowest) to 100 (highest).
+     * @return the {@code int} representation of priority, from 0 (lowest) to 100 (highest).
      */
-    @NonNull public Integer getPriority() {
+    public int getPriority() {
         final Map<String, Object> activity = getActivity();
 
         // return early if we don't have an "activity" map in "scopeDetails"
@@ -135,7 +135,7 @@ public class Proposition implements Serializable {
     /**
      * Gets the `activity` object in the `scopeDetails` of the {@link Proposition}
      *
-     * @return
+     * @return a {@link Map<String, Object>} containing the `activity`
      */
     @Nullable private Map<String, Object> getActivity() {
         // return early if we have no "scopeDetails"
@@ -153,11 +153,9 @@ public class Proposition implements Serializable {
      * <p>It is expected that IDS will always return a value for rank. A default value of -1 is used
      * in the absence of rank in the IDS response and should be considered an error state.
      *
-     * @return {@link Integer} containing the ordinal rank for this Proposition.
+     * @return {@code int} containing the ordinal rank for this Proposition.
      */
-    /// rank is an ordinal value computed by IDS, used for prioritization
-    ///
-    @NonNull Integer getRank() {
+    int getRank() {
         // return early if we have no "scopeDetails"
         if (MapUtils.isNullOrEmpty(scopeDetails)) {
             return -1;

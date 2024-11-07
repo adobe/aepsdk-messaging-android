@@ -32,8 +32,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionTests {
-    final Integer mockPriority = 100;
-    final Integer mockRank = 1;
+    final int mockPriority = 100;
+    final int mockRank = 1;
 
     Map<String, Object> characteristics =
             new HashMap<String, Object>() {
