@@ -13,7 +13,7 @@
 
 | Term | Definition |
 | ---- | ---------- |
-| App Surface | Configuration containing the **bundle identifier** (iOS) and **package name** (Android) for a mobile application. Also where push certificates and credentials are provided to Adobe enabling push messaging. <br /><br />Configured in **Adobe Data Collection**. |
+| Channel configuration | Configuration containing the **bundle identifier** (iOS) and **package name** (Android) for a mobile application.<br /><br />Configured in **Adobe Journey Optimizer**. |
 | Dataset | A database table in **AEP** that holds data injested by a **Datastream**. <br /><br />Configured in **Adobe Experience Platform**. |
 | Datastream | A server-side configuration on Adobe's **Edge Network** that controls where data goes. Datastreams ensure that incoming data is routed to the **Adobe Experience Platform** appropriately. For more information, see the [datastreams documentation](https://experienceleague.adobe.com/docs/experience-platform/edge/datastreams/overview.html?lang=en) or this [video](https://experienceleague.adobe.com/docs/platform-learn/data-collection/edge-network/configure-datastreams.html?lang=en). <br /><br />Configured in **Adobe Data Collection**. |
 | In-App Message | A self-contained user interface presented to a mobile user for the purposes of advertising or providing information. An in-app message is shown while the user is already using the mobile application, and is triggered by a client-side event or action. <br /><br />Created in **Adobe Journey Optimizer**.|

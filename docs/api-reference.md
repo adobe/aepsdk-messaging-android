@@ -18,9 +18,8 @@ Messaging.refreshInAppMessages();
 
 ## Message (Interface)
 
-The `Message` interface contains the definition of an in-app message and provides a framework to track message interactions via Experience Edge events.
-
-`InternalMessage` objects implementing this interface are created by the AEPMessaging extension, and passed as the `message` parameter in `MessagingDelegate` protocol methods.
+The `Message` interface contains the definition of an in-app message and provides a framework to track message interactions via Experience Edge events. `InternalMessage` objects implementing this interface are created by the AEPMessaging extension.
+The class that implements `PresentationDelegate` will receive a `Presentable` object, which is the Mobile Core class containing in-app message view. You will need to get the `InternalMessage` object associated with Presentable object using the `MessagingUtils.getMessageForPresentable(Presentable)`.
 
 ## Public functions
 
@@ -28,7 +27,7 @@ The `Message` interface contains the definition of an in-app message and provide
 
 Signals to the UIService that the message should be shown.
 
-If `autoTrack` is true, calling this method will result in an "decisioning.propositionDisplay" Edge Event being dispatched.
+If `autoTrack` is true, calling this method will result in an `decisioning.propositionDisplay` Edge Event being dispatched.
 
 ```java
 void show()
@@ -36,17 +35,14 @@ void show()
 
 ### dismiss
 
+> [!NOTE]
+> **This API has been changed in v3.0.0 of Adobe Journey Optimizer extension.** In earlier versions, this API accepted a parameter `suppressAutoTrack` If set to true, the `decisioning.propositionDismiss` Edge Event will not be sent regardless of the autoTrack setting.
+
 Signals to the UIService that the message should be removed from the UI.
 
-If `autoTrack` is true, calling this method will result in an "decisioning.propositionDismiss" Edge Event being dispatched.
-
 ```java
-void dismiss(final boolean suppressAutoTrack)
+void dismiss()
 ```
-
-###### Parameters
-
-* *suppressAutoTrack* - if set to `true`, the "decisioning.propositionDismiss" Edge Event will not be sent regardless of the `autoTrack` setting.
 
 ### track
 
@@ -83,6 +79,9 @@ void setAutoTrack(boolean enabled)
 
 ### evaluateJavascript
 
+> [!NOTE]
+> **This API has been removed in v3.0.0 of Adobe Journey Optimizer extension.** Migrate to use `PresentationDelegate` and use the `InAppMessageEventHandler.evaluateJavascript(String, AdobeCallback)` API instead. 
+
 Evaluates the passed in `String` content containing javascript code using the `Message's ` webview. `handleJavascriptMessage` must be called with a valid callback before calling `evaluateJavascript` as the body of the message passed from the javascript code execution will be returned in the `AdobeCallback` .
 
 ```java
@@ -94,6 +93,9 @@ void evaluateJavascript(final String content)
 * *content* - a string containing the javascript code to be executed
 
 ### handleJavascriptMessage
+
+> [!NOTE]
+> **This API has been removed in v3.0.0 of Adobe Journey Optimizer extension.** Migrate to use `PresentationDelegate` and use the `InAppMessageEventHandler.handleJavascriptMessage(String, AdobeCallback)` API instead.
 
 Adds a handler for named JavaScript messages sent from the message's `WebView`.
 
@@ -120,6 +122,9 @@ String getId()
 
 ### getParent
 
+> [!NOTE]
+> **This API has been removed in v3.0.0 of Adobe Journey Optimizer extension.** Please use the `MessagingUtils.getMessageForPresentable(Presentable)` API instead.
+
 Returns the `Object` which created this `Message`.
 
 ```java
@@ -127,6 +132,9 @@ Object getParent()
 ```
 
 ### getWebView
+
+> [!NOTE]
+> **This API has been removed in v3.0.0 of Adobe Journey Optimizer extension.** Functionality is no longer supported.
 
 Returns a reference to the message's  `WebView`  instance, if it exists.
 
@@ -138,11 +146,14 @@ WebView getWebView()
 
 Below is the table of values returned by calling the `toString` method for each case, which are used as the XDM `eventType` in outgoing experience events:
 
+> [!NOTE]
+> **This enum has been changed in v3.0.0 of Adobe Journey Optimizer extension.** Please use newly added `DISMISS`, `INTERACT`, `TRIGGER`, `DISPLAY` values in place of `IN_APP_DISMISS`, `IN_APP_INTERACT`, `IN_APP_TRIGGER`, `IN_APP_DISPLAY` from earlier versions.
+
 | Case                    | String value                      |
 | ----------------------- | --------------------------------- |
-| IN_APP_DISMISS          | `decisioning.propositionDismiss`  |
-| IN_APP_INTERACT         | `decisioning.propositionInteract` |
-| IN_APP_TRIGGER          | `decisioning.propositionTrigger`  |
-| IN_APP_DISPLAY          | `decisioning.propositionDisplay`  |
+| DISMISS          | `decisioning.propositionDismiss`  |
+| INTERACT         | `decisioning.propositionInteract` |
+| TRIGGER          | `decisioning.propositionTrigger`  |
+| DISPLAY          | `decisioning.propositionDisplay`  |
 | PUSH_APPLICATION_OPENED | `pushTracking.applicationOpened`  |
 | PUSH_CUSTOM_ACTION      | `pushTracking.customAction`       |

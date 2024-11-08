@@ -44,3 +44,5 @@ With the datastream set up, data can be directed to its destination by adding se
 | ![Add Experience Platform to Datastream](assets/datastream-service-save.png?raw=true) |
 | :---: |
 | **Add Experience Platform to Datastream** |
+
+In the next step of the tutorial, we will show how to create a mobile tag property in **Data Collection UI**.
