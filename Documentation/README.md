@@ -55,6 +55,7 @@
 - Public Classes, Enums, and Interfaces
 
     - [AepUI](./sources/content-card-ui/public-classes/aepui.md)
+    - [ContentCardMapper](./sources/content-card-ui/public-classes/contentcardmapper.md)
     - [ContentCardUIEventListener](./sources/content-card-ui/public-classes/contentcarduieventlistener.md)
     - [UIAction](./sources/content-card-ui/public-classes/uiaction.md)
     - [UIEvent](./sources/content-card-ui/public-classes/uievent.md)

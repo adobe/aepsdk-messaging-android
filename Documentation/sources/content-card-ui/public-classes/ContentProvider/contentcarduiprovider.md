@@ -34,7 +34,7 @@ suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>>
 
 ### refreshContent
 
-Clears the current content and re-fetches new content for the given surface.
+Updates the flow returned by [getContent](#getContent) with the latest cached content cards for the given surface.
 
 #### Syntax
 

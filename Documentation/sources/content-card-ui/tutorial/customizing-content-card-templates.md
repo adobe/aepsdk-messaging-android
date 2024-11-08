@@ -1,4 +1,4 @@
-# Customizing Content Card Templates
+# Customizing Content Card Templates style
 
 This tutorial explains how to customize the UI of content cards in your application.
 

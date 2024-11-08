@@ -2,6 +2,8 @@
 
 Class representing the style for a small image AEP UI.
 
+![Small Image Card Composeable Layout](../assets/small-image-card-layout.png)
+
 ## Public Properties
 
 | Property               | Type                                                         | Description                                                  |

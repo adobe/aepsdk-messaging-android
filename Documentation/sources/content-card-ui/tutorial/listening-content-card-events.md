@@ -15,9 +15,30 @@ The Messaging extension provides a way to listen to events from content cards di
 Complete the following steps to hear content card events:
 
 1. Implement the [ContentCardUIEventListener](../public-classes/contentcarduieventlistener.md) interface in your class.
-1. Pass the listener when creating the `ContentCardEventObserver` parameter of  `SmallImageCard`.
 
-Below is an example implementation of `ContentCardUIEventListener`:
+```kotlin
+class ContentCardCallback: ContentCardUIEventListener {
+  override fun onDisplay(aepUI: AepUI<*, *>) {
+    Log.d("ContentCardCallback", "onDisplay")
+  }
+
+  override fun onDismiss(aepUI: AepUI<*, *>) {
+    Log.d("ContentCardCallback", "onDismiss")
+  }
+
+  override fun onInteract(
+    aepUI: AepUI<*, *>,
+    interactionId: String?,
+    actionUrl: String?
+  ): Boolean {
+    Log.d("ContentCardCallback", "onInteract $interactionId $actionUrl")
+    // If the url is handled here, return true
+    return false
+  }
+}
+```
+
+2. Pass the listener to the [ContentCardEventObservers](../public-classes/Observers/contentcardeventobserver.md) class when retrieving the card composable.
 
 ```kotlin
 @Composable
@@ -46,26 +67,6 @@ private fun AepContentCardList(viewModel: AepContentCardViewModel) {
                               }
   }
 }    
-    
-class ContentCardCallback: ContentCardUIEventListener {
-  override fun onDisplay(aepUI: AepUI<*, *>) {
-    Log.d("ContentCardCallback", "onDisplay")
-  }
-
-  override fun onDismiss(aepUI: AepUI<*, *>) {
-    Log.d("ContentCardCallback", "onDismiss")
-  }
-
-  override fun onInteract(
-    aepUI: AepUI<*, *>,
-    interactionId: String?,
-    actionUrl: String?
-  ): Boolean {
-    Log.d("ContentCardCallback", "onInteract $interactionId $actionUrl")
-    // If the url is handled here, return true
-    return false
-  }
-}
 ```
 
 ### Handling actionable URLs

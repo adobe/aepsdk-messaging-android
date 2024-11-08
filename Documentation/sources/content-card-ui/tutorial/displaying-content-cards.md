@@ -52,51 +52,14 @@ class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIPr
 
 ## Display Content Cards
 
-To display content cards in your app, use the `AepUI` objects returned by the `getContentCardsUI` API. The `AepUI` objects provide the user interface for templated content cards in your application.
+The Content Card user interface is implemented using Jetpack Compose, which is the recommended toolkit for Android development. To display content cards in your app, pass the `AepUI` objects returned by the `getContentCardUI` API to the appropriate Content Card composable. The currently supported composables are:
+1. SmallImageCard composable for SmallImageUI
 
 ### Display Content Cards in Compose UI application
 
 Below is an example of how to display content cards in a Compose UI application:
 
 ```kotlin
-override fun onCreate(savedInstanceState: Bundle?) {
-  super.onCreate(savedInstanceState)
-
-  binding = ActivityScrollingBinding.inflate(layoutInflater)
-  setContentView(binding.root)
-
-  val surfaces = mutableListOf<Surface>()
-  val surface = Surface("homepage")
-  surfaces.add(surface)
-
-  // Initialize the ContentCardUIProvider
-  contentCardUIProvider = ContentCardUIProvider(surface)
-
-  // Initialize the ViewModel
-  contentCardViewModel =
-  ViewModelProvider(this, AepContentCardViewModelFactory(contentCardUIProvider)).get(
-    AepContentCardViewModel::class.java
-  )
-
-  contentCardCallback = ContentCardCallback()
-
-  // Set a click listener for refresh button which calls the API for fetch content cards from Edge
-  val refreshButton: ImageButton = findViewById(R.id.refreshButton)
-  refreshButton.setOnClickListener {
-    Messaging.updatePropositionsForSurfaces(surfaces)
-    contentCardViewModel.refreshContent()
-  }
-
-  binding.composeView.apply {
-    setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-    setContent {
-      AppTheme {
-        AepContentCardList(contentCardViewModel)
-      }
-    }
-  }
-}
-
 @Composable
 private fun AepContentCardList(viewModel: AepContentCardViewModel) {
   // Collect the state from ViewModel
@@ -104,36 +67,41 @@ private fun AepContentCardList(viewModel: AepContentCardViewModel) {
   
   // Create row with composables from AepUI instances
   LazyRow {
-    items(aepUiList) { aepUI ->
-                               when (aepUI) {
-                                 is SmallImageUI -> {
-                                   val state = aepUI.getState()
-                                   if (!state.dismissed) {
-                                     SmallImageCard(
-                                       ui = aepUI,
-                                       style = smallImageCardStyleRow,
-                                       observer = ContentCardEventObserver(contentCardCallback)
-                                     )
-                                   }
-                                 }
-                               }
-                              }
+    items(reorderedAepUIList) { aepUI ->                   
+      when (aepUI) {
+        is SmallImageUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) 
+          {
+            SmallImageCard(ui = aepUI, 
+                         style = smallImageCardStyleRow,
+                         observer = ContentCardEventObserver(contentCardCallback))
+          }
+        }
+      }
+    }
   }
 }    
 ```
 
 Refer to this [TestApp](../../../../code/testapp/) for a complete example of how to display, customize and listen to UI events from content cards in a Compose UI application.
 
-#### Optional
+#### Retrieve ContentCardSchemaData from the Messaging extension
 
-You may choose to order your Cards by the priority value entered in the AJO UI. To do this, sort the returned array:
+You may retrieve the `ContentCardSchemaData` for a Content Card using the template id using the [ContentCardMapper](../public-classes/contentcardmapper.md):
 
 ```kotlin
-// Reorder the AepUI list based on the ContentCardSchemaData fields if needed
-val reorderedAepUIList = aepUiList.sortedWith(compareByDescending {
-  val rank =
-  contentCardSchemaDataList[aepUiList.indexOf(it)]?.meta?.get("priority") as String?
-  ?: "0"
-  rank.toInt()
-})
+private fun AepContentCardList(viewModel: AepContentCardViewModel) {
+  // Collect the state from ViewModel
+  val aepUiList by viewModel.aepUIList.collectAsStateWithLifecycle()
+  
+  // Get the ContentCardSchemaData for the AepUI list if needed
+  val contentCardSchemaDataList = aepUiList.map {
+    when (it) {
+      is SmallImageUI ->
+      	ContentCardMapper.Companion.instance.getContentCardSchemaData(it.getTemplate().id)
+      
+      	else -> null
+    }
+  }
 ```
