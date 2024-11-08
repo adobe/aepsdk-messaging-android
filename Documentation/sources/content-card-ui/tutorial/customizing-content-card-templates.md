@@ -4,13 +4,13 @@ This tutorial explains how to customize the UI of content cards in your applicat
 
 ## Overview
 
-The Messaging extension provides a way to customize content cards using [Compose modifiers](https://developer.android.com/develop/ui/compose/modifiers?hl=en). You can customize the content card templates by defining an overriden [style](../public-classes/Styles/README.md) that is then applied to the overall template style (e.g. [SmallImageUIStyle](../public-classes/Styles/smallimageuistyle.md)).
+The Messaging extension provides a way to customize content cards by using [Compose modifiers](https://developer.android.com/develop/ui/compose/modifiers?hl=en) in conjunction with additional parameters provided when creating a [style](../public-classes/Styles/README.md) object. Refer to each individual style class to see the customizable settings available for each style.
 
-## Creating a custom style using the Compose Modifier 
+## Setting custom style parameters when creating a `SmallImageUIStyle`
 
 Perform the following steps to customize content card templates:
 
-1. Create a style object with the desired customizations within the `Modifier`
+1. Create a style object with a `Modifier` as well as any additional customizations passed in as part of the constructor parameters (e.g. if customizing an [AepButtonStyle](../public-classes/Styles/aepbuttonstyle.md) , then along with the `Modifier`, the enabled state, elevation, shape, border, color, and padding can be customized if desired.)
 2. Use the created style object when invoking the builder of the template style object (e.g. `SmallImageUIStyle`)
 
 Below is an example implementation:
