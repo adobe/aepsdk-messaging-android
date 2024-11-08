@@ -16,9 +16,9 @@
 
 1. In the **Choose type of campaign** popup, select **Scheduled - Marketing**
 
-| ![Choose type pf campaign](assets/ajo-choose-campaign-type.png?raw=true) |
+| ![Choose type of campaign](assets/ajo-choose-campaign-type.png?raw=true) |
 | :---: |
-| **Choose type pf campaign** |
+| **Choose type of campaign** |
 
 ### Configure the audience and the message
 
@@ -67,7 +67,7 @@
 11. Hit the **Done** button (**2**).
 
 > [!NOTE]
-> For this example, we will show the message to everyone, every time an SDK call of `MobileCore.trackAction("50off", nil)` is made.
+> For this example, we will show the message to everyone, every time an SDK call of `MobileCore.trackAction("50off", null)` is made.
 
 | ![Define the trigger](assets/ajo-iam-trigger-details.png?raw=true) |
 | :---: |
