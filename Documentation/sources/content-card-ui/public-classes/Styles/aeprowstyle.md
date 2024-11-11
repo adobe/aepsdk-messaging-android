@@ -1,6 +1,6 @@
 # Class - AepRowStyle
 
-Class representing the style for a row AEP UI.
+Class representing the style for a row within an AEP UI composable.
 
 ## Public Properties
 

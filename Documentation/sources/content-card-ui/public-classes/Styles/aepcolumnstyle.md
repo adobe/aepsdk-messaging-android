@@ -1,6 +1,6 @@
 # Class - AepColumnStyle
 
-Class representing the style for a column AEP UI.
+Class representing the style for a column within an AEP UI composable.
 
 ## Public Properties
 
