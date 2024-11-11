@@ -1,6 +1,6 @@
 # Open Class - AepCardUIState
 
-Class representing the state of an AEP card. This class includes the common properties `dismissed` and `displayed` which are common across different card states.
+Class representing the state of an AEP card. This class includes the properties `dismissed` and `displayed` which are common across different card states.
 ## Class Definition
 
 ```kotlin
