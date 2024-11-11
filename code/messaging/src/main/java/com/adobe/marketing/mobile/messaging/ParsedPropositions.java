@@ -16,6 +16,7 @@ import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
 import com.adobe.marketing.mobile.launch.rulesengine.json.JSONRulesParser;
 import com.adobe.marketing.mobile.services.Log;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,13 @@ public class ParsedPropositions {
             final List<Surface> requestedSurfaces,
             final ExtensionApi extensionApi) {
         for (final List<Proposition> propositionList : propositions.values()) {
+            // sort the propositions by rank before processing
+            Collections.sort(
+                    propositionList,
+                    (p1, p2) -> {
+                        return Integer.compare(p1.getRank(), p2.getRank());
+                    });
+
             for (final Proposition proposition : propositionList) {
                 if (proposition == null) {
                     continue;

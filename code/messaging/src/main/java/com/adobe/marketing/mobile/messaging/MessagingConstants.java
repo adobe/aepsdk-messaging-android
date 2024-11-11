@@ -150,6 +150,8 @@ public final class MessagingConstants {
         static final String SCHEMA = "schema";
         static final String CORRELATION_ID = "correlationID";
         static final String ACTIVITY = "activity";
+        static final String RANK = "rank";
+        static final String PRIORITY = "priority";
 
         private PayloadKeys() {}
     }

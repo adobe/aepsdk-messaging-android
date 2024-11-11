@@ -405,13 +405,14 @@ public class MessagingTestUtils {
      * Verifies the provided {@link List<LaunchRule>} are in highest priority order. The consequence
      * ID's of each in-app message have the last two characters modified to be in a range of 00-99.
      * e.g. if there are 5 in-app messages, the values of the last two characters in each
-     * consequence ID are expected to be in the order of 04, 03, 02, 01, 00.
+     * consequence ID are expected to be in the order of 00, 01, 02, ..., n
+     * where n is the number if messages
      *
      * @param inAppRules the list of in-app rules to be verified
      */
     static void verifyInAppRulesOrdering(final List<LaunchRule> inAppRules) {
         // verify the parsed rule consequence ids are in highest priority order
-        int index = inAppRules.size() - 1;
+        int index = 0;
         for (final LaunchRule inAppRule : inAppRules) {
             final String consequenceId = inAppRule.getConsequenceList().get(0).getId();
             final String consequenceIdSubstring = consequenceId.substring(consequenceId.length() - 2);
@@ -422,7 +423,7 @@ public class MessagingTestUtils {
             assertEquals(
                     expectedConsequenceId,
                     consequenceIdSubstring);
-            index--;
+            index++;
         }
     }
 
