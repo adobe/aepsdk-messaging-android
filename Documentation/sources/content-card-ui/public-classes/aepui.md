@@ -3,6 +3,16 @@
 The `AepUI` interface represents a UI component that can be rendered using the AEP compose UI library. The AEP compose UI currently supports rendering the following UI templates:
 1. `SmallImageUI` which renders `Small Image template` 
 
+## Interface Definition
+
+```kotlin
+sealed interface AepUI<T : AepUITemplate, S : AepCardUIState> {
+    fun getTemplate(): T
+    fun getState(): S
+    fun updateState(newState: S)
+}
+```
+
 ## Methods
 
 ### getTemplate 
@@ -52,6 +62,15 @@ fun updateState(newState: S)
 ## Class - SmallImageUI
 
 Implementation of the [AepUI](./aepui.md#Sealed Interface - AepUI) interface used in rendering a UI for a [SmallImageTemplate](./UIModels/smallimagetemplate.md).
+
+## Class Definition
+
+```kotlin
+class SmallImageUI(
+    private val template: SmallImageTemplate,
+    state: SmallImageCardUIState
+) : AepUI<SmallImageTemplate, SmallImageCardUIState>
+```
 
 ## Methods
 

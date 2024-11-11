@@ -2,7 +2,7 @@
 
 Class representing the style for a small image AEP UI.
 
-![Small Image Card Composeable Layout](../assets/small-image-card-layout.png)
+![Small Image Card Composeable Layout](../../../../assets/small-image-card-layout.png)
 
 ## Public Properties
 
@@ -10,7 +10,7 @@ Class representing the style for a small image AEP UI.
 | ---------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | cardStyle              | [AepCardStyle](./aepcardstyle.md)                            | The style for the card.                                      |
 | rootRowStyle           | [AepRowStyle](./aeprowstyle.md)                              | The style for the root row.                                  |
-| imageStyle             | [AepImageStyle](./aepimagestyle,md)                          | The style for the image.                                     |
+| imageStyle             | [AepImageStyle](./aepimagestyle.md)                          | The style for the image.                                     |
 | textColumnStyle        | [AepColumnStyle](./aepcolumnstyle.md)                        | The style for the column containing the title, body and buttons. |
 | titleTextStyle         | [AepTextStyle](./aeptextstyle.md)                            | The text style for the title.                                |
 | bodyTextStyle          | [AepTextStyle](./aeptextstyle.md)                            | The text style for the body.                                 |
@@ -24,8 +24,6 @@ Class representing the style for a small image AEP UI.
 The `SmallImageUIStyle` is created using a builder. Here's an example:
 
 ```kotlin
-// Displaying content cards in a Row
-// create a custom style for the small image card in row
 val smallImageCardStyleRow = SmallImageUIStyle.Builder()
             .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp)))
             .rootRowStyle(
