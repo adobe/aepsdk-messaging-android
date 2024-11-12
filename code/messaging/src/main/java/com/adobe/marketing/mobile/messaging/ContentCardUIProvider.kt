@@ -58,7 +58,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     /**
-     * Clears the current content and re-fetches new content for the given surface.
+     * Updates the flow returned by [getContent] with the latest cached content cards for the given
+     * surface.
      */
     override suspend fun refreshContent() {
         getContent()

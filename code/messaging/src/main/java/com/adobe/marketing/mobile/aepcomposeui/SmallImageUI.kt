@@ -16,7 +16,7 @@ import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
- * Class representing a small image AEP UI, implementing the [AepUI] interface.
+ * Implementation of the [AepUI] interface used in rendering a UI for a [SmallImageTemplate].
  *
  * @property template The template associated with the small image UI.
  * @property _state The current state of the small image UI.
