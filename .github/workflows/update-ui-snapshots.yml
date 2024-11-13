@@ -13,6 +13,9 @@
 name: Update UI testing screenshots
 on: workflow_dispatch
 
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx6g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+
 jobs:
   update-screenshots:
     runs-on: ubuntu-latest
@@ -37,4 +40,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: code/messaging/build/reports/tests
+        path: code/messaging/build/outputs/roborazzi
