@@ -23,7 +23,7 @@ checkstyle:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) checkstyle)
 
 unit-test:
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest)
 
 unit-test-coverage:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) createPhoneDebugUnitTestCoverageReport)
@@ -73,3 +73,7 @@ set-environment:
 # capture baseline snapshots for UI tests
 record-snapshot:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true)
+	
+# verify snapshots with baseline for UI tests
+verify-snapshot:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)
