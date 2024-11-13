@@ -10,41 +10,84 @@
 # governing permissions and limitations under the License.
 #
 
-# Remote action to execute e2e functional tests
-
 name: E2E Functional Tests
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
 on:
+  schedule:
+    - cron: '0 11 * * *'
+    - cron: '0 23 * * *'
   workflow_dispatch:
-    inputs: 
-      branch: 
+    inputs:
+      branch:
         description: 'Branch to use when running functional tests'
         required: false
-        default: 'feature/iam' # update this to main once feature/iam is merged to main
+        default: 'main'
       id:
         description: 'Identifier for the run'
         required: false
+      environment:
+        description: 'Environment and region to test (prodVA7, prodAUS5, prodNLD2, stageVA7)'
+        required: true
+        default: 'prodVA7'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
   functional-test:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: macos-13
+    strategy:
+      matrix:
+        api-level: [29]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    
-    - name: ${{ github.event.inputs.id }}
-      run: echo Run Identifier is ${{ inputs.id }}
-      
+
+    - name: Job run identifier ${{ github.event.inputs.id }}
+      run: |
+        if [ -z "${{ github.event.inputs.id }}" ]; then \
+          echo No job run identifier was set.
+        else
+          echo 'Job run identifier is:' ${{ inputs.id }}
+        fi;
+
     - name: Checkout
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
       with:
         ref: ${{ github.event.inputs.branch }}
-    
-    # Runs a single command using the runners shell
-    - name: Execute functional tests
-      run: make functional-test
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: 17
+
+    - name: ${{ github.event.inputs.id || 'scheduled' }}
+      run: echo Run Identifier is ${{ inputs.id || 'scheduled' }}
+
+    # Update messaging build config to set the ADOBE_ENVIRONMENT value to use for testing
+    - name: Update environment
+      run: make set-environment ENV=${{ github.event.inputs.environment || 'prodVA7' }}
+
+    - name: run tests
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: ${{ matrix.api-level }}
+        force-avd-creation: false
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: make functional-test
+
+    - name: Update Slack on failure
+      if: failure()
+      uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486      
+      with:        
+        status: ${{ job.status }}            
+        fields: repo,action,ref,workflow
+        text: |
+          E2E Testing for Inbound Personalization has Failed :(
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}  

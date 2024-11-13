@@ -32,7 +32,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.messaging.Proposition
-import com.adobe.marketing.mobile.messaging.MessagingUtils
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.InAppMessage
@@ -467,8 +466,8 @@ class CustomDelegate : PresentationDelegate {
 
         if(!showMessages) {
             println("message was suppressed: ${presentable.getPresentation().id}")
-            val message = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-            message?.track("message suppressed", MessagingEdgeEventType.TRIGGER)
+//            val message = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
+//            message?.track("message suppressed", MessagingEdgeEventType.TRIGGER)
         }
 
         return showMessages
@@ -483,8 +482,8 @@ class CustomDelegate : PresentationDelegate {
         currentMessagePresentable?.getPresentation()?.eventHandler?.handleJavascriptMessage("handler_name") { content ->
             if (content != null) {
                 println("magical handling of our content from js! content is: $content")
-                val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
-                message?.track(content, MessagingEdgeEventType.TRIGGER)
+//                val message: Message? = MessagingUtils.getMessageForPresentable(currentMessagePresentable)
+//                message?.track(content, MessagingEdgeEventType.TRIGGER)
             }
         }
 
