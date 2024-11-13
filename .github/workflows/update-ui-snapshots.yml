@@ -10,12 +10,12 @@
 # governing permissions and limitations under the License.
 #
 
-name: Store UI testing screenshots
+name: Update UI testing screenshots
 on:
   workflow_dispatch:
 
 jobs:
-  update-version:
+  update-screenshots:
     runs-on: ubuntu-latest
 
     steps:    

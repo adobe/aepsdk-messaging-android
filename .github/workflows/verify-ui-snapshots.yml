@@ -10,10 +10,10 @@
 # governing permissions and limitations under the License.
 #
 
-name: Store UI testing screenshots
+name: Verify UI testing screenshots
 on: [push, pull_request]
 jobs:
-  update-version:
+  verify-screenshots:
     runs-on: ubuntu-latest
 
     steps:    
