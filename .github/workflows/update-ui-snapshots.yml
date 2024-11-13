@@ -35,7 +35,7 @@ jobs:
         ./gradlew app:recordRoborazziPhoneDebug --stacktrace
 
     - name: Upload screenshots to GitHub Actions Artifacts
-    - uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3
       with:
         name: screenshots
         path: app/build/outputs/roborazzi
