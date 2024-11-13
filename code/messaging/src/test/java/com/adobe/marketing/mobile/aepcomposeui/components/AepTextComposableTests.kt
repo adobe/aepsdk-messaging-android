@@ -50,7 +50,7 @@ import org.robolectric.annotation.GraphicsMode
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [31], resourceDir = "resources")
+@Config(sdk = [31])
 class AepTextComposableTests(
     private val qualifier: String
 ) {
