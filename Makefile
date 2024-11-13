@@ -69,3 +69,11 @@ set-environment:
 	sed -i.backup 's|prodNLD2|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	sed -i.backup 's|stageVA7|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	rm ${MESSAGING_GRADLE_TEMP_FILE}
+	
+# capture baseline snapshots for UI tests
+record-snapshot:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true)
+	
+# verify snapshots with baseline for UI tests
+verify-snapshot:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)

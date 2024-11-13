@@ -1,4 +1,6 @@
+import android.databinding.tool.util.FileUtil
 import com.adobe.marketing.mobile.gradle.BuildConstants
+import com.android.utils.FileUtils
 
 /*
  * Copyright 2024 Adobe. All rights reserved.
@@ -13,6 +15,7 @@ import com.adobe.marketing.mobile.gradle.BuildConstants
  */
 plugins {
     id("aep-library")
+    id("io.github.takahirom.roborazzi")
 }
 
 val mavenCoreVersion: String by project
@@ -55,12 +58,14 @@ aepLibrary {
             named("androidTest").configure { resources.srcDir("src/test/resources") }
         }
 
+        testOptions.unitTests.isIncludeAndroidResources = true
     }
 }
 
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation(BuildConstants.Dependencies.COMPOSE_UI_TOOLING)
+    // dependencies provided by aep-library:
+    // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     // Compose UI Tooling Preview
     implementation("androidx.compose.ui:ui-tooling-preview:$toolingPreviewVersion")
     // Material 3
@@ -72,9 +77,15 @@ dependencies {
     testImplementation(project(":messagingtestutils"))
     testImplementation("com.google.firebase:firebase-messaging:23.4.1")
     testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation(BuildConstants.Dependencies.ESPRESSO_CORE)
+    testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_JUNIT4)
+    testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_MANIFEST)
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
 
     // androidTestImplementation dependencies provided by aep-library:
-    // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE
+    // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
     androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
         exclude(group = "com.adobe.marketing.mobile", module = "core")

@@ -34,7 +34,6 @@ internal fun AepButtonComposable(
     model: AepButton,
     onClick: () -> Unit,
     buttonStyle: AepButtonStyle = AepButtonStyle(),
-    buttonTextStyle: AepTextStyle = AepTextStyle(),
 ) {
     Button(
         onClick = onClick,
@@ -42,13 +41,13 @@ internal fun AepButtonComposable(
         enabled = buttonStyle.enabled ?: true,
         shape = buttonStyle.shape ?: ButtonDefaults.shape,
         colors = buttonStyle.colors ?: ButtonDefaults.buttonColors(),
-        elevation = buttonStyle.elevation,
+        elevation = buttonStyle.elevation ?: ButtonDefaults.buttonElevation(),
         border = buttonStyle.border,
         contentPadding = buttonStyle.contentPadding ?: ButtonDefaults.ContentPadding,
     ) {
         AepTextComposable(
             model.text,
-            buttonTextStyle
+            buttonStyle.buttonTextStyle ?: AepTextStyle(),
         )
     }
 }
