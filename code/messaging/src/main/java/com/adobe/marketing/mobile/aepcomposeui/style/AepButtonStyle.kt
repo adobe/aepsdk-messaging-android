@@ -59,9 +59,7 @@ class AepButtonStyle(
                 return defaultStyle
             }
             return AepButtonStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 enabled = overridingStyle.enabled ?: defaultStyle.enabled,
                 elevation = overridingStyle.elevation ?: defaultStyle.elevation,
                 shape = overridingStyle.shape ?: defaultStyle.shape,
