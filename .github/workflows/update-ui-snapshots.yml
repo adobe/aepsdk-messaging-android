@@ -31,7 +31,7 @@ jobs:
       uses: gradle/gradle-build-action@v2
 
     - name: Create screenshots
-      run: record-snapshot
+      run: make record-snapshot
 
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
