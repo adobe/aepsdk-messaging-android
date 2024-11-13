@@ -37,6 +37,7 @@ class AepButtonStyle(
     var border: BorderStroke? = null,
     var colors: ButtonColors? = null,
     var contentPadding: PaddingValues? = null,
+    var buttonTextStyle: AepTextStyle? = null
 ) {
 
     companion object {
@@ -67,7 +68,8 @@ class AepButtonStyle(
                 shape = overridingStyle.shape ?: defaultStyle.shape,
                 border = overridingStyle.border ?: defaultStyle.border,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
-                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding
+                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding,
+                buttonTextStyle = AepTextStyle.merge(defaultStyle.buttonTextStyle ?: AepTextStyle(), overridingStyle.buttonTextStyle)
             )
         }
     }

@@ -23,7 +23,7 @@ checkstyle:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) checkstyle)
 
 unit-test:
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)
 
 unit-test-coverage:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) createPhoneDebugUnitTestCoverageReport)
@@ -69,3 +69,7 @@ set-environment:
 	sed -i.backup 's|prodNLD2|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	sed -i.backup 's|stageVA7|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	rm ${MESSAGING_GRADLE_TEMP_FILE}
+	
+# capture baseline snapshots for UI tests
+record-snapshot:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true)
