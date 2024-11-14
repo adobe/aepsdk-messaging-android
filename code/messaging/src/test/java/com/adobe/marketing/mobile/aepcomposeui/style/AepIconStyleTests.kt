@@ -42,7 +42,7 @@ class AepIconStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepIconStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
@@ -50,14 +50,14 @@ class AepIconStyleTests {
         )
         val overridingStyle = AepIconStyle(
             modifier = Modifier.padding(16.dp),
-            contentDescription = null,
+            contentDescription = "overriden description",
             tint = null
         )
 
         val result = AepIconStyle.merge(defaultStyle, overridingStyle)
 
         assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(defaultStyle.contentDescription, result.contentDescription)
+        assertEquals(overridingStyle.contentDescription, result.contentDescription)
         assertEquals(defaultStyle.tint, result.tint)
     }
 

@@ -60,7 +60,7 @@ class AepButtonStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepButtonStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
             enabled = false,
@@ -72,10 +72,10 @@ class AepButtonStyleTests {
         )
         val overridingStyle = AepButtonStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
-            enabled = null,
+            enabled = true,
             elevation = null,
             shape = null,
-            border = null,
+            border = BorderStroke(3.dp, Color.Green),
             colors = null,
             contentPadding = null
         )
@@ -83,10 +83,10 @@ class AepButtonStyleTests {
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
 
         assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(defaultStyle.enabled, result.enabled)
+        assertEquals(overridingStyle.enabled, result.enabled)
         assertEquals(defaultStyle.elevation, result.elevation)
         assertEquals(defaultStyle.shape, result.shape)
-        assertEquals(defaultStyle.border, result.border)
+        assertEquals(overridingStyle.border, result.border)
         assertEquals(defaultStyle.colors, result.colors)
         assertEquals(defaultStyle.contentPadding, result.contentPadding)
     }

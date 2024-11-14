@@ -18,6 +18,7 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardElevation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
@@ -53,7 +54,7 @@ class AepCardStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepCardStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
             shape = mock(Shape::class.java),
@@ -63,7 +64,7 @@ class AepCardStyleTests {
         )
         val overridingStyle = AepCardStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
-            shape = null,
+            shape = RectangleShape,
             colors = null,
             elevation = null,
             border = null
@@ -72,7 +73,7 @@ class AepCardStyleTests {
         val result = AepCardStyle.merge(defaultStyle, overridingStyle)
 
         assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(defaultStyle.shape, result.shape)
+        assertEquals(overridingStyle.shape, result.shape)
         assertEquals(defaultStyle.colors, result.colors)
         assertEquals(defaultStyle.elevation, result.elevation)
         assertEquals(defaultStyle.border, result.border)

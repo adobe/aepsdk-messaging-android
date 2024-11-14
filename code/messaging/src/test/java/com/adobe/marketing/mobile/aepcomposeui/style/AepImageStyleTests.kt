@@ -53,7 +53,7 @@ class AepImageStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepImageStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
@@ -65,8 +65,8 @@ class AepImageStyleTests {
         val overridingStyle = AepImageStyle(
             modifier = Modifier.padding(16.dp),
             contentDescription = null,
-            alignment = null,
-            contentScale = null,
+            alignment = Alignment.BottomEnd,
+            contentScale = ContentScale.FillBounds,
             alpha = null,
             colorFilter = null
         )
@@ -75,8 +75,8 @@ class AepImageStyleTests {
 
         assertEquals(overridingStyle.modifier, result.modifier)
         assertEquals(defaultStyle.contentDescription, result.contentDescription)
-        assertEquals(defaultStyle.alignment, result.alignment)
-        assertEquals(defaultStyle.contentScale, result.contentScale)
+        assertEquals(overridingStyle.alignment, result.alignment)
+        assertEquals(overridingStyle.contentScale, result.contentScale)
         assertEquals(defaultStyle.alpha, result.alpha)
         assertEquals(defaultStyle.colorFilter, result.colorFilter)
     }

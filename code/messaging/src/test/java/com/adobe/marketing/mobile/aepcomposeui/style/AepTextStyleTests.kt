@@ -52,7 +52,7 @@ class AepTextStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepTextStyle(
             modifier = Modifier.padding(8.dp),
             textStyle = mock(TextStyle::class.java),
@@ -63,9 +63,9 @@ class AepTextStyleTests {
         )
         val overridingStyle = AepTextStyle(
             modifier = Modifier.padding(16.dp),
-            textStyle = null,
+            textStyle = TextStyle.Default,
             overflow = null,
-            softWrap = null,
+            softWrap = false,
             maxLines = null,
             minLines = null
         )
@@ -73,9 +73,9 @@ class AepTextStyleTests {
         val result = AepTextStyle.merge(defaultStyle, overridingStyle)
 
         assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(defaultStyle.textStyle, result.textStyle)
+        assertEquals(overridingStyle.textStyle, result.textStyle)
         assertEquals(defaultStyle.overflow, result.overflow)
-        assertEquals(defaultStyle.softWrap, result.softWrap)
+        assertEquals(overridingStyle.softWrap, result.softWrap)
         assertEquals(defaultStyle.maxLines, result.maxLines)
         assertEquals(defaultStyle.minLines, result.minLines)
     }

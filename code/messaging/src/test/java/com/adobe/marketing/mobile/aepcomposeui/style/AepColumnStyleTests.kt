@@ -42,7 +42,7 @@ class AepColumnStyleTests {
     }
 
     @Test
-    fun `merge with overriding style containing modifier only`() {
+    fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepColumnStyle(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.Top,
@@ -51,14 +51,14 @@ class AepColumnStyleTests {
         val overridingStyle = AepColumnStyle(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = null,
-            horizontalAlignment = null
+            horizontalAlignment = Alignment.CenterHorizontally
         )
 
         val result = AepColumnStyle.merge(defaultStyle, overridingStyle)
 
         assertEquals(overridingStyle.modifier, result.modifier)
         assertEquals(defaultStyle.verticalArrangement, result.verticalArrangement)
-        assertEquals(defaultStyle.horizontalAlignment, result.horizontalAlignment)
+        assertEquals(overridingStyle.horizontalAlignment, result.horizontalAlignment)
     }
 
     @Test
