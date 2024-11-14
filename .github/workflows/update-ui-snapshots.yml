@@ -33,6 +33,9 @@ jobs:
     - name: Create screenshots
       run: make record-snapshot
 
+    - name: Check generated snapshots
+      run: ls -la app
+
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       with:
