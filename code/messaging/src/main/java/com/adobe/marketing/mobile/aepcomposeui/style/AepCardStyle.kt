@@ -47,8 +47,8 @@ class AepCardStyle(
          *
          */
         internal fun merge(
-            defaultStyle: AepCardStyle,
-            overridingStyle: AepCardStyle?
+            defaultStyle: AepCardStyle = AepCardStyle(),
+            overridingStyle: AepCardStyle? = null
         ): AepCardStyle {
             if (overridingStyle == null) {
                 return defaultStyle
