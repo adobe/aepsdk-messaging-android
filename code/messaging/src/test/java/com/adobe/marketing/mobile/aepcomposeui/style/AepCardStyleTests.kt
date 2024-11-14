@@ -64,7 +64,7 @@ class AepCardStyleTests {
         val overridingStyle = AepCardStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
             shape = null,
-            colors =  null,
+            colors = null,
             elevation = null,
             border = null
         )
@@ -109,7 +109,7 @@ class AepCardStyleTests {
         val overridingStyle = AepCardStyle(
             modifier = null,
             shape = null,
-            colors =  null,
+            colors = null,
             elevation = null,
             border = null
         )
