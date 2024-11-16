@@ -19,7 +19,6 @@ ci/
 
 # Gradle files
 .gradle/
-build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -53,7 +52,6 @@ captures/
 .idea/
 
 code/.gradle/
-code/messaging/build/
 code/local.properties
 
 # Keystore files

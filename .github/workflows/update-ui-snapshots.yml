@@ -31,11 +31,23 @@ jobs:
       uses: gradle/gradle-build-action@v2
 
     - name: Create screenshots
-      run: |
-        ./gradlew app:recordRoborazziPhoneDebug --stacktrace
+      run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.record=true --no-build-cache
 
+    # Step to list all files in the build directory for debugging
+    - name: List all files in build directory
+      run: find code/messaging/build -type f
+
+    # Step to list contents of the reports directory
+    - name: List files in reports directory
+      run: ls -la code/messaging/build/reports || echo "Reports directory not found"
+
+    # Step to check if the roborazzi directory exists
+    - name: Check for roborazzi directory
+      run: ls -la code/messaging/build/reports/roborazzi || echo "Roborazzi directory not found"
+
+    # Upload screenshots if the roborazzi directory is found
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: app/build/outputs/roborazzi
+        path: code/messaging/build/reports/roborazzi/
