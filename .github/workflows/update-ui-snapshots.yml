@@ -33,9 +33,6 @@ jobs:
     - name: Create screenshots
       run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.record=true --no-build-cache
 
-    - name: List files for debugging
-      run: ls -R **/build/reports
-
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       with:
