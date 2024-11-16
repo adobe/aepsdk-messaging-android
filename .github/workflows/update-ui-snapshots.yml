@@ -30,6 +30,9 @@ jobs:
     - name: Gradle cache
       uses: gradle/gradle-build-action@v2
 
+    - name: Assemble Phone
+      run: make assemble-phone   
+
     - name: Create screenshots
       run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.record=true --no-build-cache
 
@@ -37,5 +40,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: |
-          **/build/reports/roborazzi/**
+        path: code/messaging/build/reports/roborazzi
