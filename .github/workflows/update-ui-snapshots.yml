@@ -34,10 +34,11 @@ jobs:
       run: ./code/gradlew -p code/messaging testPhoneDebugUnitTest -Proborazzi.test.record=true --no-build-cache
 
     - name: List files for debugging
-      run: ls -R code/messaging/build/reports
+      run: ls -R **/build/reports
 
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: code/messaging/build/reports/roborazzi/**
+        path: |
+          **/build/reports/roborazzi/**
