@@ -52,7 +52,6 @@ captures/
 .idea/
 
 code/.gradle/
-code/messaging/build/
 code/local.properties
 
 # Keystore files
