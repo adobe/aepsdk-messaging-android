@@ -29,6 +29,8 @@ jobs:
     
     - name: Gradle cache
       uses: gradle/gradle-build-action@v2
+      
+    - run: ./gradlew cleanBuildCache 
 
     - name: Create screenshots
       run: make record-snapshot
