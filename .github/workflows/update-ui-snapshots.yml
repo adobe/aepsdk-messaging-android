@@ -29,11 +29,9 @@ jobs:
     
     - name: Gradle cache
       uses: gradle/gradle-build-action@v2
-      
-    - run: make clean
 
     - name: Create screenshots
-      run: make record-snapshot
+      run: ./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) clean testPhoneDebugUnitTest -Proborazzi.test.record=true
 
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
