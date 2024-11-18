@@ -37,6 +37,7 @@ jobs:
         name: screenshots
         workflow: update-ui-screenshots.yml
         branch: main
+        path: code/messaging/build/outputs/roborazzi
         
     - name: Verify screenshots
       id: verify-test
