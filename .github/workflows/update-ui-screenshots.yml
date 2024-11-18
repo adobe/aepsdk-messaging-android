@@ -30,8 +30,8 @@ jobs:
     - name: Gradle cache
       uses: gradle/gradle-build-action@v3
 
-    - name: Record snapshots
-      id: record-snapshots
+    - name: Record screenshots
+      id: record-screenshots
       run: make record-screenshots
 
     # Upload screenshots if the roborazzi directory is found
