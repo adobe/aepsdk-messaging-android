@@ -71,9 +71,9 @@ set-environment:
 	rm ${MESSAGING_GRADLE_TEMP_FILE}
 	
 # capture baseline snapshots for UI tests
-record-snapshot:
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true)
+record-screenshots:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true  --rerun-tasks)
 	
 # verify snapshots with baseline for UI tests
-verify-snapshot:
+verify-screenshots:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)

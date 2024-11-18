@@ -87,9 +87,9 @@ class AepButtonComposableTests(
             )
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTests_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -109,9 +109,9 @@ class AepButtonComposableTests(
             }
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -130,9 +130,9 @@ class AepButtonComposableTests(
             )
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -151,9 +151,9 @@ class AepButtonComposableTests(
             )
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -174,9 +174,9 @@ class AepButtonComposableTests(
             }
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -197,9 +197,9 @@ class AepButtonComposableTests(
             }
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Composable

@@ -11,7 +11,9 @@
 #
 
 name: Verify UI testing screenshots
-on: [push, pull_request]
+on:
+  pull_request:
+
 jobs:
   verify-screenshots:
     runs-on: ubuntu-latest
@@ -27,26 +29,25 @@ jobs:
         java-version: 17
     
     - name: Gradle cache
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
 
     - name: Download screenshots from main branch
-      uses: dawidd6/action-download-artifact@v2
+      uses:  dawidd6/action-download-artifact@v3
       with:
         name: screenshots
-        path: code/messaging/build/reports/tests
-        workflow: test.yaml
+        workflow: update-ui-screenshots.yml
         branch: main
         
     - name: Verify screenshots
       id: verify-test
-      run: make verify-snapshot
+      run: make verify-screenshots
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       if: ${{ always() }}
       with:
         name: screenshot-diff
-        path: code/messaging/build/test-results/testPhoneDebugUnitTest
+        path: code/messaging/build/outputs/roborazzi
         retention-days: 30
         
     - name: Upload screenshots difference report to GitHub Actions Artifacts
@@ -54,13 +55,13 @@ jobs:
       if: ${{ always() }}
       with:
         name: screenshot-diff-reports
-        path: code/messaging/build/test-results/testPhoneDebugUnitTest
+        path: code/messaging/build/reports/roborazzi
         retention-days: 30
         
-    - name: Upload screenshots test report to GitHub Actions Artifacts
+    - name: Upload screenshots test results to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       if: ${{ always() }}
       with:
         name: screenshot-diff-test-results
-        path: code/messaging/build/test-results/testPhoneDebugUnitTest
+        path: code/messaging/build/test-results/roborazzi
         retention-days: 30

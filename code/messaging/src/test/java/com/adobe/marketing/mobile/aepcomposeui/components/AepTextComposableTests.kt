@@ -115,9 +115,9 @@ class AepTextComposableTests(
             )
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTests_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -136,9 +136,9 @@ class AepTextComposableTests(
             }
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -156,9 +156,9 @@ class AepTextComposableTests(
             )
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
@@ -178,8 +178,8 @@ class AepTextComposableTests(
             }
         }
 
-        // Capture snapshot
+        // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

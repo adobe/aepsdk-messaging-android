@@ -17,7 +17,7 @@ jobs:
   update-screenshots:
     runs-on: ubuntu-latest
 
-    steps:    
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
       
@@ -28,13 +28,15 @@ jobs:
         java-version: 17
     
     - name: Gradle cache
-      uses: gradle/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
 
-    - name: Create screenshots
-      run: make record-snapshot
+    - name: Record snapshots
+      id: record-snapshots
+      run: make record-screenshots
 
+    # Upload screenshots if the roborazzi directory is found
     - name: Upload screenshots to GitHub Actions Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: screenshots
-        path: code/messaging/build/reports/tests
+        path: code/messaging/build/outputs/roborazzi/
