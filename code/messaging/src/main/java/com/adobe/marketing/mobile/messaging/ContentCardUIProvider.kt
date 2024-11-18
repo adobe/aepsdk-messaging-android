@@ -36,11 +36,13 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
 
-    private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
-    private val contentFlow: StateFlow<List<AepUITemplate>> = _contentFlow
+    private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
+    private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow
 
-    private val aepUiFlow = _contentFlow.map { templateList ->
-        templateList.mapNotNull { item -> getAepUI(item) }
+    private val aepUiFlow = _contentFlow.map { result ->
+        result.map { templateList ->
+            templateList.mapNotNull { item -> getAepUI(item) }
+        }
     }
 
     /**
@@ -52,7 +54,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a list of [AepUI] instances.
      */
-    suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>> {
+    suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
         getContent()
         return aepUiFlow
     }
@@ -70,16 +72,17 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A flow that emits lists of AepUITemplate.
      */
-    override suspend fun getContent(): Flow<List<AepUITemplate>> {
-        getAepUITemplateList { it ->
-            it.onSuccess { templateList ->
-                _contentFlow.value = templateList
+    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
+        getAepUITemplateList { result ->
+            result.onSuccess { templateList ->
+                _contentFlow.value = Result.success(templateList)
             }
-            it.onFailure { error ->
+            result.onFailure { error ->
                 Log.error(
                     MessagingConstants.LOG_TAG, SELF_TAG,
                     "Failed to get content: ${error.message}"
                 )
+                _contentFlow.value = Result.failure(error)
             }
         }
         return contentFlow

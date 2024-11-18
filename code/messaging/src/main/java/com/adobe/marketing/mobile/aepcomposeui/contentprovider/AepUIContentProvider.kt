@@ -23,7 +23,7 @@ interface AepUIContentProvider {
      * Retrieves the content for the UI.
      * @return The content for the UI as a flow of [AepTemplate]s.
      */
-    suspend fun getContent(): Flow<List<AepUITemplate>>
+    suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
 
     /**
      * Refreshes the content for the UI.
