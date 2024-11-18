@@ -104,7 +104,7 @@ class SmallImageUIStyle private constructor(
         private var titleAepTextStyle: AepTextStyle? = null
         private var bodyAepTextStyle: AepTextStyle? = null
         private var buttonRowStyle: AepRowStyle? = null
-        private var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?>? = arrayOfNulls(3)
+        private var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?> = arrayOfNulls(3)
         private var dismissButtonStyle: AepIconStyle? = null
         private var dismissButtonAlignment: Alignment? = null
 
@@ -127,7 +127,7 @@ class SmallImageUIStyle private constructor(
             titleTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
             bodyTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
             buttonRowStyle = AepRowStyle.merge(defaultButtonRowStyle, buttonRowStyle),
-            buttonStyle = (buttonStyle ?: arrayOfNulls(3)).map { pair ->
+            buttonStyle = buttonStyle.map { pair ->
                 Pair(
                     AepButtonStyle.merge(defaultButtonStyle, pair?.first),
                     AepTextStyle.merge(defaultButtonTextStyle, pair?.second)
