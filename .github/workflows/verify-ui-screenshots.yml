@@ -42,15 +42,6 @@ jobs:
     - name: Verify screenshots
       id: verify-test
       run: make verify-screenshots
-      
-    - name: Check if comparison screenshots exist
-      run: |
-        if ls code/messaging/build/outputs/roborazzi/*_compare.png 1> /dev/null 2>&1; then
-          echo "Failed comparison screenshots found."
-        else
-          echo "All tests passed"
-          exit 1
-        fi
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
       uses: actions/upload-artifact@v4
