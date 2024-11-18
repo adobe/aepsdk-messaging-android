@@ -20,10 +20,10 @@ jobs:
 
     steps:    
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Java
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: 17
@@ -32,7 +32,7 @@ jobs:
       uses: gradle/gradle-build-action@v3
 
     - name: Download screenshots from main branch
-      uses:  dawidd6/action-download-artifact@v3
+      uses:  dawidd6/action-download-artifact@v6
       with:
         name: screenshots
         workflow: update-ui-screenshots.yml
@@ -41,25 +41,34 @@ jobs:
     - name: Verify screenshots
       id: verify-test
       run: make verify-screenshots
+      
+    - name: Check if comparison screenshots exist
+      run: |
+        if ls code/messaging/build/outputs/roborazzi/*_compare.png 1> /dev/null 2>&1; then
+          echo "Failed comparison screenshots found."
+        else
+          echo "All tests passed"
+          exit 1
+        fi
 
     - name: Upload screenshots difference to GitHub Actions Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: screenshot-diff
-        path: code/messaging/build/outputs/roborazzi
+        path: code/messaging/build/outputs/roborazzi/*_compare.png
         retention-days: 30
         
     - name: Upload screenshots difference report to GitHub Actions Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: screenshot-diff-reports
-        path: code/messaging/build/reports/roborazzi
+        path: code/messaging/build/reports/tests/testPhoneDebugUnitTest
         retention-days: 30
         
     - name: Upload screenshots test results to GitHub Actions Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: screenshot-diff-test-results
