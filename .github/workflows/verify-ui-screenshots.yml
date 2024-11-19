@@ -31,7 +31,7 @@ jobs:
     - name: Gradle cache
       uses: gradle/gradle-build-action@v3
 
-    - name: Download screenshots from main branch
+    - name: Download screenshots from GitHub artifactory
       uses:  dawidd6/action-download-artifact@v6
       with:
         name: screenshots
