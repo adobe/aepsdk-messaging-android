@@ -124,11 +124,11 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                             Log.error(
                                 MessagingConstants.LOG_TAG,
                                 SELF_TAG,
-                                "Failed to build template: ${e.message}"
+                                "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
                             )
                             completion(Result.failure(
                                 Throwable(
-                                    "Failed to build template: ${e.message}"
+                                    "Failed to build template for proposition ID :  ${proposition.uniqueId} ${e.message}"
                                 )
                             ))
                         }
@@ -140,9 +140,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     completion(
                         Result.failure(
                             Throwable(
-                                "Error occurred ${error.toString()} Failed to retrieve propositions for surface ${
-                                surfaceList.joinToString(",")
-                                } +  Adobe Error : ${error?.toString()}"
+                                "Failed to retrieve propositions for surface ${surfaceList.joinToString(",")} " +
+                                        "Adobe Error : ${error?.toString()}"
                             )
                         )
                     )
