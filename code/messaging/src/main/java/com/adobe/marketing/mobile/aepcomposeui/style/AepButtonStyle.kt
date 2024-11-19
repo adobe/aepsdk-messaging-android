@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Shape
  * @param border The border to draw around the container of this button.
  * @param colors The colors that will be used to resolve the colors for this button in different states
  * @param contentPadding the spacing values to apply internally between the container and the text
+ * @param buttonTextStyle The text style for the button.
  */
 class AepButtonStyle(
     var modifier: Modifier? = null,

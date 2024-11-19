@@ -104,7 +104,7 @@ class SmallImageUIStyle private constructor(
         private var titleAepTextStyle: AepTextStyle? = null
         private var bodyAepTextStyle: AepTextStyle? = null
         private var buttonRowStyle: AepRowStyle? = null
-        private var buttonStyle: Array<AepButtonStyle?>? = arrayOfNulls(3)
+        private var buttonStyle: Array<AepButtonStyle?> = arrayOfNulls(3)
         private var dismissButtonStyle: AepIconStyle? = null
         private var dismissButtonAlignment: Alignment? = null
 
@@ -115,7 +115,7 @@ class SmallImageUIStyle private constructor(
         fun titleAepTextStyle(style: AepTextStyle) = apply { this.titleAepTextStyle = style }
         fun bodyAepTextStyle(style: AepTextStyle) = apply { this.bodyAepTextStyle = style }
         fun buttonRowStyle(style: AepRowStyle) = apply { this.buttonRowStyle = style }
-        fun buttonStyle(style: Array<AepButtonStyle?>?) = apply { this.buttonStyle = style }
+        fun buttonStyle(style: Array<AepButtonStyle?>) = apply { this.buttonStyle = style }
         fun dismissButtonStyle(style: AepIconStyle) = apply { this.dismissButtonStyle = style }
         fun dismissButtonAlignment(alignment: Alignment) =
             apply { this.dismissButtonAlignment = alignment }
@@ -128,7 +128,7 @@ class SmallImageUIStyle private constructor(
             titleTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
             bodyTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
             buttonRowStyle = AepRowStyle.merge(defaultButtonRowStyle, buttonRowStyle),
-            buttonStyle = (buttonStyle ?: arrayOfNulls(3)).map {
+            buttonStyle = buttonStyle.map {
                 AepButtonStyle.merge(defaultButtonStyle, it)
             }.toTypedArray(),
             dismissButtonStyle = AepIconStyle.merge(defaultDismissButtonStyle, dismissButtonStyle),
