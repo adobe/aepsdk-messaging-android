@@ -14,8 +14,8 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
-import com.adobe.marketing.mobile.util.JSONUtils
-import org.json.JSONObject
+import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.contentCardMap
+import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -31,67 +31,6 @@ import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner.Silent::class)
 class ContentCardSchemaDataUtilsTest {
-
-    private val baseJson = JSONObject(
-        """
-        {
-          "id": "1c1fb7c4-f3e7-4766-a782-ec5b3c87a62e",
-          "type": "schema",
-          "detail": {
-            "id": "1c1fb7c4-f3e7-4766-a782-ec5b3c87a62e",
-            "schema": "https://ns.adobe.com/personalization/message/content-card",
-            "data": {
-              "content": {
-                "actionUrl": "",
-                "body": {
-                  "content": "Content card testing triggers track action \"smoke_test\""
-                },
-                "buttons": [
-                  {
-                    "interactId": "buttonID1",
-                    "actionUrl": "https://adobe.com/offer",
-                    "text": {
-                      "content": "Purchase Now"
-                    }
-                  },
-                  {
-                    "interactId": "buttonID2",
-                    "actionUrl": "https://adobe.com/offer",
-                    "text": {
-                      "content": "Button2 content"
-                    }
-                  }
-                ],
-                "image": {
-                  "alt": "",
-                  "url": "https://i.ibb.co/0X8R3TG/Messages-24.png"
-                },
-                "dismissBtn": {
-                  "style": "none"
-                },
-                "title": {
-                  "content": "Messaging SDK Smoke Test"
-                }
-              },
-              "contentType": "application/json",
-              "meta": {
-                "adobe": {
-                  "template": "SmallImage"
-                },
-                "surface": "mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms"
-              },
-              "publishedDate": 1724958083,
-              "expiryDate": 2019715200
-            }
-          }
-        }
-    """
-    )
-
-    private val baseJsonMap = JSONUtils.toMap(baseJson) ?: emptyMap()
-    private val contentMap = (baseJsonMap["detail"] as? Map<*, *>)?.get("data") as? Map<String, Any>
-    private val metaMap = contentMap?.get("meta") as? Map<String, Any>
-    private val contentCardMap = contentMap?.get("content") as? Map<String, Any> ?: emptyMap()
 
     @Rule
     @JvmField
