@@ -36,7 +36,7 @@ jobs:
         java-version: 17
     
     - name: Gradle cache
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Record screenshots
       id: record-screenshots
