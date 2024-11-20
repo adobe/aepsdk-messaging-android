@@ -72,15 +72,15 @@ class SmallImageUIStyleTests {
             elevation = mock(ButtonElevation::class.java), // using a mock as ButtonElevation requires a composable function
             shape = CircleShape,
             border = BorderStroke(1.dp, Color.Red),
-            contentPadding = null
-        )
-        val buttonTextStyle = AepTextStyle(
-            modifier = Modifier.size(100.dp, 100.dp),
-            textStyle = TextStyle(color = Color.Red, fontSize = 16.sp),
-            overflow = TextOverflow.Clip,
-            softWrap = true,
-            maxLines = 1,
-            minLines = 1
+            contentPadding = null,
+            buttonTextStyle = AepTextStyle(
+                modifier = Modifier.size(100.dp, 100.dp),
+                textStyle = TextStyle(color = Color.Red, fontSize = 16.sp),
+                overflow = TextOverflow.Clip,
+                softWrap = true,
+                maxLines = 1,
+                minLines = 1
+            )
         )
         val dismissButtonStyle = AepIconStyle(
             modifier = Modifier.size(100.dp, 100.dp),
@@ -108,7 +108,7 @@ class SmallImageUIStyleTests {
             .titleAepTextStyle(titleTextStyle)
             .bodyAepTextStyle(bodyTextStyle)
             .buttonRowStyle(buttonRowStyle)
-            .buttonStyle(arrayOf(Pair(buttonStyle, buttonTextStyle), Pair(buttonStyle, buttonTextStyle)))
+            .buttonStyle(arrayOf(buttonStyle, buttonStyle))
             .dismissButtonStyle(dismissButtonStyle)
             .dismissButtonAlignment(dismissButtonAlignment)
             .cardStyle(cardStyle)
@@ -148,19 +148,19 @@ class SmallImageUIStyleTests {
         // verify button style parameters
         assertEquals(2, style.buttonStyle.size)
         for (builtButtonStyle in style.buttonStyle) {
-            assertEquals(buttonStyle.shape, builtButtonStyle.first.shape)
-            assertEquals(buttonStyle.border, builtButtonStyle.first.border)
-            assertEquals(buttonStyle.colors, builtButtonStyle.first.colors)
-            assertEquals(buttonStyle.contentPadding, builtButtonStyle.first.contentPadding)
-            assertEquals(buttonStyle.elevation, builtButtonStyle.first.elevation)
-            assertEquals(buttonStyle.enabled, builtButtonStyle.first.enabled)
-            assertEquals(buttonStyle.modifier, builtButtonStyle.first.modifier)
-            assertEquals(buttonTextStyle.textStyle, builtButtonStyle.second.textStyle)
-            assertEquals(buttonTextStyle.overflow, builtButtonStyle.second.overflow)
-            assertEquals(buttonTextStyle.softWrap, builtButtonStyle.second.softWrap)
-            assertEquals(buttonTextStyle.maxLines, builtButtonStyle.second.maxLines)
-            assertEquals(buttonTextStyle.minLines, builtButtonStyle.second.minLines)
-            assertEquals(buttonTextStyle.modifier, builtButtonStyle.second.modifier)
+            assertEquals(buttonStyle.shape, builtButtonStyle.shape)
+            assertEquals(buttonStyle.border, builtButtonStyle.border)
+            assertEquals(buttonStyle.colors, builtButtonStyle.colors)
+            assertEquals(buttonStyle.contentPadding, builtButtonStyle.contentPadding)
+            assertEquals(buttonStyle.elevation, builtButtonStyle.elevation)
+            assertEquals(buttonStyle.enabled, builtButtonStyle.enabled)
+            assertEquals(buttonStyle.modifier, builtButtonStyle.modifier)
+            assertEquals(buttonStyle.buttonTextStyle?.textStyle, builtButtonStyle.buttonTextStyle?.textStyle)
+            assertEquals(buttonStyle.buttonTextStyle?.overflow, builtButtonStyle.buttonTextStyle?.overflow)
+            assertEquals(buttonStyle.buttonTextStyle?.softWrap, builtButtonStyle.buttonTextStyle?.softWrap)
+            assertEquals(buttonStyle.buttonTextStyle?.maxLines, builtButtonStyle.buttonTextStyle?.maxLines)
+            assertEquals(buttonStyle.buttonTextStyle?.minLines, builtButtonStyle.buttonTextStyle?.minLines)
+            assertEquals(buttonStyle.buttonTextStyle?.modifier, builtButtonStyle.modifier)
         }
 
         // verify dismiss button style parameters
@@ -221,7 +221,6 @@ class SmallImageUIStyleTests {
             verticalArrangement = Arrangement.Center,
         )
 
-        // button style is not provided to the builder, defaults will be used
         val style = SmallImageUIStyle.Builder()
             .imageStyle(imageStyle)
             .titleAepTextStyle(titleTextStyle)
@@ -263,23 +262,23 @@ class SmallImageUIStyleTests {
         assertEquals(defaultSmallImageUIStyle.buttonRowStyle.horizontalArrangement, style.buttonRowStyle.horizontalArrangement)
         assertEquals(buttonRowStyle.modifier, style.buttonRowStyle.modifier)
 
-        // verify button style parameters
+        // verify button style parameters, should be all default values as no button style is set on the builder
         var index = 0
         assertEquals(3, style.buttonStyle.size)
         for (builtButtonStyle in style.buttonStyle) {
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.shape, builtButtonStyle.first.shape)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.border, builtButtonStyle.first.border)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.colors, builtButtonStyle.first.colors)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.contentPadding, builtButtonStyle.first.contentPadding)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.elevation, builtButtonStyle.first.elevation)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.enabled, builtButtonStyle.first.enabled)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].first.modifier, builtButtonStyle.first.modifier)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.textStyle, builtButtonStyle.second.textStyle)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.overflow, builtButtonStyle.second.overflow)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.softWrap, builtButtonStyle.second.softWrap)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.maxLines, builtButtonStyle.second.maxLines)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.minLines, builtButtonStyle.second.minLines)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].second.modifier, builtButtonStyle.second.modifier)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].shape, builtButtonStyle.shape)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].border, builtButtonStyle.border)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].colors, builtButtonStyle.colors)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].contentPadding, builtButtonStyle.contentPadding)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].elevation, builtButtonStyle.elevation)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].enabled, builtButtonStyle.enabled)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].modifier, builtButtonStyle.modifier)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.textStyle, builtButtonStyle.buttonTextStyle?.textStyle)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.overflow, builtButtonStyle.buttonTextStyle?.overflow)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.softWrap, builtButtonStyle.buttonTextStyle?.softWrap)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.maxLines, builtButtonStyle.buttonTextStyle?.maxLines)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.minLines, builtButtonStyle.buttonTextStyle?.minLines)
+            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.modifier, builtButtonStyle.buttonTextStyle?.modifier)
             index++
         }
 
