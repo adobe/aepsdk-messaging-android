@@ -52,7 +52,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * [AepUI] instances that represent the UI templates. The flow emits updates whenever new
      * content is fetched or any changes occur.
      *
-     * @return A [Flow] that emits a list of [AepUI] instances.
+     * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
     suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
         getContent()
@@ -60,17 +60,23 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     /**
-     * Clears the current content and re-fetches new content for the given surface.
+     * Triggers a refresh of the content by re-fetching new content for the given surface.
+     *
+     * This function calls [getContent] to initiate the content fetching process,
+     * updating the internal content flow with new data.
      */
     override suspend fun refreshContent() {
         getContent()
     }
 
     /**
-     * Retrieves a flow of AepUITemplate lists for the given surface.
-     * The flow emits updates whenever new content is fetched.
+     * Initiates fetching of [AepUITemplate] instances for the given surface and returns a flow that emits updates.
      *
-     * @return A flow that emits lists of AepUITemplate.
+     * This function fetches new content by invoking [getAepUITemplateList], which retrieves
+     * propositions and builds a list of [AepUITemplate]. The result is posted to the [_contentFlow],
+     * which is returned as a [Flow].
+     *
+     * @return A [Flow] that emits a [Result] containing lists of [AepUITemplate] whenever new content is available.
      */
     override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
         getAepUITemplateList { result ->
@@ -88,6 +94,19 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         return contentFlow
     }
 
+    /**
+     * Fetches propositions for the current surface and builds a list of [AepUITemplate].
+     *
+     * This function retrieves propositions for the provided surface by calling
+     * [Messaging.getPropositionsForSurfaces]. For each proposition, it attempts to build an
+     * [AepUITemplate] using [buildTemplate]. The result is passed to the [completion] handler.
+     *
+     * If any proposition fails to be built into a template, the entire operation fails,
+     * and the [completion] handler is invoked with a failure result.
+     *
+     * @param completion A callback invoked with the [Result] containing a list of [AepUITemplate]
+     *                   on success, or an error on failure.
+     */
     private suspend fun getAepUITemplateList(
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
