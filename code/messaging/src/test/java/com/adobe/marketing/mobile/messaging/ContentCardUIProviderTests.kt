@@ -232,4 +232,32 @@ class ContentCardUIProviderTests {
     fun tearDown() {
         mockMessaging.close()
     }
+
+    @Test
+    fun `getContent handles null result map`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(null)
+        }
+        val flow = contentCardUIProvider.getContent()
+        val result = flow.first()
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `getContent handles empty result map`() = runTest {
+        mockMessaging.`when`<Unit> {
+            Messaging.getPropositionsForSurfaces(any(), any())
+        }.thenAnswer { invocation ->
+            val callback = invocation.arguments[1] as AdobeCallbackWithError<Map<Surface, List<Proposition>>>
+            callback.call(emptyMap())
+        }
+
+        val flow = contentCardUIProvider.getContent()
+        val result = flow.first()
+        assertTrue(result.isSuccess)
+    }
+
 }
