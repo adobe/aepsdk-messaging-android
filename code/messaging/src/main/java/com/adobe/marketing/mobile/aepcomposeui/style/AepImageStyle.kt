@@ -55,9 +55,7 @@ class AepImageStyle(
                 return defaultStyle
             }
             return AepImageStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 contentDescription = overridingStyle.contentDescription ?: defaultStyle.contentDescription,
                 alignment = overridingStyle.alignment ?: defaultStyle.alignment,
                 contentScale = overridingStyle.contentScale ?: defaultStyle.contentScale,

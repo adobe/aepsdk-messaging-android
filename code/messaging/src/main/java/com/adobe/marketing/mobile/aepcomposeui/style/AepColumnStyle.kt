@@ -46,9 +46,7 @@ class AepColumnStyle(
                 return defaultStyle
             }
             return AepColumnStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 verticalArrangement = overridingStyle.verticalArrangement ?: defaultStyle.verticalArrangement,
                 horizontalAlignment = overridingStyle.horizontalAlignment ?: defaultStyle.horizontalAlignment
             )
