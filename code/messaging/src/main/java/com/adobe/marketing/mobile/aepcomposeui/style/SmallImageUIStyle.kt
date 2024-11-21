@@ -86,7 +86,7 @@ class SmallImageUIStyle private constructor(
             )
         )
         private val defaultButtonStyle = AepButtonStyle(
-            buttonTextStyle = defaultButtonTextStyle
+            textStyle = defaultButtonTextStyle
         )
         private val defaultDismissButtonStyle = AepIconStyle(
             modifier = Modifier

@@ -47,7 +47,7 @@ internal fun AepButtonComposable(
     ) {
         AepTextComposable(
             model.text,
-            buttonStyle.buttonTextStyle ?: AepTextStyle(),
+            buttonStyle.textStyle ?: AepTextStyle(),
         )
     }
 }
