@@ -80,6 +80,7 @@ dependencies {
     testImplementation(BuildConstants.Dependencies.ESPRESSO_CORE)
     testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_JUNIT4)
     testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_MANIFEST)
+    // todo use from aep-library once it is available in next release
     testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
