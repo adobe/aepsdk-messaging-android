@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -59,8 +58,7 @@ class SmallImageUIStyle private constructor(
             verticalAlignment = Alignment.CenterVertically
         )
         private val defaultImageStyle = AepImageStyle(
-            modifier = Modifier.width(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp)
-                .aspectRatio(1f),
+            modifier = Modifier.width(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
             alignment = Alignment.Center
         )
         private val defaultTextColumnStyle = AepColumnStyle(
@@ -88,7 +86,7 @@ class SmallImageUIStyle private constructor(
             )
         )
         private val defaultButtonStyle = AepButtonStyle(
-            buttonTextStyle = defaultButtonTextStyle
+            textStyle = defaultButtonTextStyle
         )
         private val defaultDismissButtonStyle = AepIconStyle(
             modifier = Modifier
@@ -119,7 +117,8 @@ class SmallImageUIStyle private constructor(
         fun buttonRowStyle(style: AepRowStyle) = apply { this.buttonRowStyle = style }
         fun buttonStyle(style: Array<AepButtonStyle?>) = apply { this.buttonStyle = style }
         fun dismissButtonStyle(style: AepIconStyle) = apply { this.dismissButtonStyle = style }
-        fun dismissButtonAlignment(alignment: Alignment) = apply { this.dismissButtonAlignment = alignment }
+        fun dismissButtonAlignment(alignment: Alignment) =
+            apply { this.dismissButtonAlignment = alignment }
 
         fun build() = SmallImageUIStyle(
             cardStyle = AepCardStyle.merge(defaultCardStyle, cardStyle),
