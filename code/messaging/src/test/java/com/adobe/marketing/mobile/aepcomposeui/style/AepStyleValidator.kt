@@ -13,9 +13,15 @@ package com.adobe.marketing.mobile.aepcomposeui.style
 
 import org.junit.Assert.assertEquals
 
-class AepStyleValidator {
+internal class AepStyleValidator {
 
     companion object {
+        /**
+         * Validates that the given image style is identical to the expected image style.
+         *
+         * @param expectedStyle The expected image style.
+         * @param style The image style to be validated.
+         */
         fun validateImageStyle(expectedStyle: AepImageStyle?, style: AepImageStyle?) {
             assertEquals(expectedStyle?.alpha, style?.alpha)
             assertEquals(expectedStyle?.colorFilter, style?.colorFilter)
@@ -25,6 +31,12 @@ class AepStyleValidator {
             assertEquals(expectedStyle?.modifier, style?.modifier)
         }
 
+        /**
+         * Validates that the given text style is identical to the expected text style.
+         *
+         * @param expectedStyle The expected text style.
+         * @param style The text style to be validated.
+         */
         fun validateTextStyle(expectedStyle: AepTextStyle?, style: AepTextStyle?) {
             assertEquals(expectedStyle?.textStyle, style?.textStyle)
             assertEquals(expectedStyle?.overflow, style?.overflow)
@@ -34,12 +46,24 @@ class AepStyleValidator {
             assertEquals(expectedStyle?.modifier, style?.modifier)
         }
 
+        /**
+         * Validates that the given row style is identical to the expected row style.
+         *
+         * @param expectedStyle The expected row style.
+         * @param style The row style to be validated.
+         */
         fun validateRowStyle(expectedStyle: AepRowStyle?, style: AepRowStyle?) {
             assertEquals(expectedStyle?.verticalAlignment, style?.verticalAlignment)
             assertEquals(expectedStyle?.horizontalArrangement, style?.horizontalArrangement)
             assertEquals(expectedStyle?.modifier, style?.modifier)
         }
 
+        /**
+         * Validates that the given button style is identical to the expected button style.
+         *
+         * @param expectedStyle The expected button style.
+         * @param style The button style to be validated.
+         */
         fun validateButtonStyle(expectedStyle: AepButtonStyle?, style: AepButtonStyle?) {
             assertEquals(expectedStyle?.modifier, style?.modifier)
             assertEquals(expectedStyle?.enabled, style?.enabled)
@@ -50,12 +74,24 @@ class AepStyleValidator {
             validateTextStyle(expectedStyle?.buttonTextStyle, style?.buttonTextStyle)
         }
 
+        /**
+         * Validates that the given icon style is identical to the expected icon style.
+         *
+         * @param expectedStyle The expected icon style.
+         * @param style The icon style to be validated.
+         */
         fun validateIconStyle(expectedStyle: AepIconStyle?, style: AepIconStyle?) {
             assertEquals(expectedStyle?.tint, style?.tint)
             assertEquals(expectedStyle?.contentDescription, style?.contentDescription)
             assertEquals(expectedStyle?.modifier, style?.modifier)
         }
 
+        /**
+         * Validates that the given card style is identical to the expected card style.
+         *
+         * @param expectedStyle The expected card style.
+         * @param style The card style to be validated.
+         */
         fun validateCardStyle(expectedStyle: AepCardStyle?, style: AepCardStyle?) {
             assertEquals(expectedStyle?.border, style?.border)
             assertEquals(expectedStyle?.colors, style?.colors)
@@ -64,6 +100,12 @@ class AepStyleValidator {
             assertEquals(expectedStyle?.shape, style?.shape)
         }
 
+        /**
+         * Validates that the given column style is identical to the expected column style.
+         *
+         * @param expectedStyle The expected column style.
+         * @param style The column style to be validated.
+         */
         fun validateColumnStyle(expectedStyle: AepColumnStyle?, style: AepColumnStyle?) {
             assertEquals(expectedStyle?.modifier, style?.modifier)
             assertEquals(expectedStyle?.horizontalAlignment, style?.horizontalAlignment)
