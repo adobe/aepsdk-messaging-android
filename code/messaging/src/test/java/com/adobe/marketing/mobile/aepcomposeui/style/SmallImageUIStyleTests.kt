@@ -73,7 +73,7 @@ class SmallImageUIStyleTests {
             shape = CircleShape,
             border = BorderStroke(1.dp, Color.Red),
             contentPadding = null,
-            buttonTextStyle = AepTextStyle(
+            textStyle = AepTextStyle(
                 modifier = Modifier.size(100.dp, 100.dp),
                 textStyle = TextStyle(color = Color.Red, fontSize = 16.sp),
                 overflow = TextOverflow.Clip,
@@ -250,7 +250,7 @@ class SmallImageUIStyleTests {
             assertEquals(buttonStyles[index]?.elevation, builtButtonStyle.elevation)
             assertEquals(buttonStyles[index]?.enabled, builtButtonStyle.enabled)
             assertEquals(buttonStyles[index]?.modifier, builtButtonStyle.modifier)
-            AepStyleValidator.validateTextStyle(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle, builtButtonStyle.buttonTextStyle)
+            AepStyleValidator.validateTextStyle(defaultSmallImageUIStyle.buttonStyle[index].textStyle, builtButtonStyle.textStyle)
             index++
         }
     }

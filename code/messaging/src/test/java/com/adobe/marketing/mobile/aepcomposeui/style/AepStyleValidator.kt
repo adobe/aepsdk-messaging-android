@@ -71,7 +71,7 @@ internal class AepStyleValidator {
             assertEquals(expectedStyle?.border, style?.border)
             assertEquals(expectedStyle?.colors, style?.colors)
             assertEquals(expectedStyle?.contentPadding, style?.contentPadding)
-            validateTextStyle(expectedStyle?.buttonTextStyle, style?.buttonTextStyle)
+            validateTextStyle(expectedStyle?.textStyle, style?.textStyle)
         }
 
         /**
