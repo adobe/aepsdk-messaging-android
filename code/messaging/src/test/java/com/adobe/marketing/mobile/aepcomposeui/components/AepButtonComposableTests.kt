@@ -15,7 +15,8 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -169,7 +170,7 @@ class AepButtonComposableTests(
                 AepButtonComposable(
                     model = mockAepButton,
                     onClick = { },
-                    buttonStyle = mockCustomAepButtonStyle(false)
+                    buttonStyle = mockCustomAepButtonStyle(true)
                 )
             }
         }
@@ -205,7 +206,7 @@ class AepButtonComposableTests(
     @Composable
     private fun mockCustomAepButtonStyle(enabled: Boolean): AepButtonStyle {
         return AepButtonStyle(
-            modifier = Modifier.size(150.dp),
+            modifier = Modifier.height(50.dp).width(200.dp),
             enabled = enabled,
             elevation = ButtonDefaults.buttonElevation(
                 defaultElevation = 10.dp,
@@ -215,12 +216,12 @@ class AepButtonComposableTests(
                 disabledElevation = 10.dp
             ),
             shape = CutCornerShape(10.dp),
-            border = BorderStroke(2.dp, Color.Green),
+            border = BorderStroke(2.dp, Color(0xFF004643)),
             colors = ButtonColors(
-                containerColor = Color.Red,
-                contentColor = Color.Cyan,
-                disabledContainerColor = Color.Yellow,
-                disabledContentColor = Color.Blue,
+                containerColor = Color(0xFF0065db),
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFF33032f),
+                disabledContentColor = Color.Gray,
             ),
             contentPadding = PaddingValues(10.dp)
         )

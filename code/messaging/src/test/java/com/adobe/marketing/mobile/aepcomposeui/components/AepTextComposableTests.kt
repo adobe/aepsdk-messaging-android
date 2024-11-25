@@ -65,17 +65,17 @@ class AepTextComposableTests(
     private val mockAepTextStyle = AepTextStyle(
         modifier = Modifier.size(150.dp),
         textStyle = TextStyle(
-            color = Color.Red,
+            color = Color(0xFF8FA998),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             fontStyle = FontStyle.Italic,
             fontSynthesis = FontSynthesis.Style,
             fontFamily = FontFamily.Cursive,
             letterSpacing = 2.sp,
-            background = Color.Yellow,
+            background = Color(0xFF531253),
             textDecoration = TextDecoration.Underline,
             shadow = Shadow(
-                color = Color.Blue,
+                color = Color(0xFF33032f),
                 offset = Offset(2f, 2f),
                 blurRadius = 2f
             ),
