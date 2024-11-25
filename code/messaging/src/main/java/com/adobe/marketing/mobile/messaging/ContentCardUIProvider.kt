@@ -135,6 +135,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                         "getPropositionsForSurfaces callback contained Null Map"
                     )
                     val propositions = resultMap[surface] ?: emptyList()
+                    val errorsList: MutableList<String> = mutableListOf()
                     for (proposition in propositions) {
                         try {
                             val aepUiTemplate = buildTemplate(proposition)
@@ -145,15 +146,10 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                                 SELF_TAG,
                                 "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
                             )
-                            completion(
-                                Result.failure(
-                                    Throwable(
-                                        "Failed to build template for proposition ID :  ${proposition.uniqueId} ${e.message}"
-                                    )
-                                )
-                            )
+                            errorsList.add(proposition.uniqueId)
                         }
                     }
+                    completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
                     completion(Result.success(templateModelList))
                 }
 
