@@ -149,8 +149,10 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                             errorsList.add(proposition.uniqueId)
                         }
                     }
-                    completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
                     completion(Result.success(templateModelList))
+                    if(errorsList.isNotEmpty()) {
+                        completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
+                    }
                 }
 
                 override fun fail(error: AdobeError?) {
