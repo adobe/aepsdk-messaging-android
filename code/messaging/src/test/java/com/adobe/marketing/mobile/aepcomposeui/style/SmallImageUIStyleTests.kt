@@ -117,120 +117,48 @@ class SmallImageUIStyleTests {
             .build()
 
         // verify image style parameters
-        assertEquals(imageStyle.alpha, style.imageStyle.alpha)
-        assertEquals(imageStyle.colorFilter, style.imageStyle.colorFilter)
-        assertEquals(imageStyle.contentDescription, style.imageStyle.contentDescription)
-        assertEquals(imageStyle.alignment, style.imageStyle.alignment)
-        assertEquals(imageStyle.contentScale, style.imageStyle.contentScale)
-        assertEquals(imageStyle.modifier, style.imageStyle.modifier)
+        AepStyleValidator.validateImageStyle(imageStyle, style.imageStyle)
 
         // verify title text style parameters
-        assertEquals(titleTextStyle.textStyle, style.titleTextStyle.textStyle)
-        assertEquals(titleTextStyle.overflow, style.titleTextStyle.overflow)
-        assertEquals(titleTextStyle.softWrap, style.titleTextStyle.softWrap)
-        assertEquals(titleTextStyle.maxLines, style.titleTextStyle.maxLines)
-        assertEquals(titleTextStyle.minLines, style.titleTextStyle.minLines)
-        assertEquals(titleTextStyle.modifier, style.titleTextStyle.modifier)
+        AepStyleValidator.validateTextStyle(titleTextStyle, style.titleTextStyle)
 
         // verify body text style parameters
-        assertEquals(bodyTextStyle.textStyle, style.bodyTextStyle.textStyle)
-        assertEquals(bodyTextStyle.overflow, style.bodyTextStyle.overflow)
-        assertEquals(bodyTextStyle.softWrap, style.bodyTextStyle.softWrap)
-        assertEquals(bodyTextStyle.maxLines, style.bodyTextStyle.maxLines)
-        assertEquals(bodyTextStyle.minLines, style.bodyTextStyle.minLines)
-        assertEquals(bodyTextStyle.modifier, style.bodyTextStyle.modifier)
+        AepStyleValidator.validateTextStyle(bodyTextStyle, style.bodyTextStyle)
 
         // verify button row style parameters
-        assertEquals(buttonRowStyle.verticalAlignment, style.buttonRowStyle.verticalAlignment)
-        assertEquals(buttonRowStyle.horizontalArrangement, style.buttonRowStyle.horizontalArrangement)
-        assertEquals(buttonRowStyle.modifier, style.buttonRowStyle.modifier)
+        AepStyleValidator.validateRowStyle(buttonRowStyle, style.buttonRowStyle)
 
         // verify button style parameters
         assertEquals(2, style.buttonStyle.size)
         for (builtButtonStyle in style.buttonStyle) {
-            assertEquals(buttonStyle.shape, builtButtonStyle.shape)
-            assertEquals(buttonStyle.border, builtButtonStyle.border)
-            assertEquals(buttonStyle.colors, builtButtonStyle.colors)
-            assertEquals(buttonStyle.contentPadding, builtButtonStyle.contentPadding)
-            assertEquals(buttonStyle.elevation, builtButtonStyle.elevation)
-            assertEquals(buttonStyle.enabled, builtButtonStyle.enabled)
-            assertEquals(buttonStyle.modifier, builtButtonStyle.modifier)
-            assertEquals(buttonStyle.buttonTextStyle?.textStyle, builtButtonStyle.buttonTextStyle?.textStyle)
-            assertEquals(buttonStyle.buttonTextStyle?.overflow, builtButtonStyle.buttonTextStyle?.overflow)
-            assertEquals(buttonStyle.buttonTextStyle?.softWrap, builtButtonStyle.buttonTextStyle?.softWrap)
-            assertEquals(buttonStyle.buttonTextStyle?.maxLines, builtButtonStyle.buttonTextStyle?.maxLines)
-            assertEquals(buttonStyle.buttonTextStyle?.minLines, builtButtonStyle.buttonTextStyle?.minLines)
-            assertEquals(buttonStyle.buttonTextStyle?.modifier, builtButtonStyle.modifier)
+            AepStyleValidator.validateButtonStyle(buttonStyle, builtButtonStyle)
         }
 
         // verify dismiss button style parameters
-        assertEquals(dismissButtonStyle.tint, style.dismissButtonStyle.tint)
-        assertEquals(dismissButtonStyle.contentDescription, style.dismissButtonStyle.contentDescription)
-        assertEquals(dismissButtonStyle.modifier, style.dismissButtonStyle.modifier)
+        AepStyleValidator.validateIconStyle(dismissButtonStyle, style.dismissButtonStyle)
 
         // verify dismiss button alignment
         assertEquals(dismissButtonAlignment, style.dismissButtonAlignment)
 
         // verify card style parameters
-        assertEquals(cardStyle.border, style.cardStyle.border)
-        assertEquals(cardStyle.colors, style.cardStyle.colors)
-        assertEquals(cardStyle.elevation, style.cardStyle.elevation)
-        assertEquals(cardStyle.modifier, style.cardStyle.modifier)
-        assertEquals(cardStyle.shape, style.cardStyle.shape)
+        AepStyleValidator.validateCardStyle(cardStyle, style.cardStyle)
 
         // verify root row style parameters
-        assertEquals(rootRowStyle.verticalAlignment, style.rootRowStyle.verticalAlignment)
-        assertEquals(rootRowStyle.horizontalArrangement, style.rootRowStyle.horizontalArrangement)
-        assertEquals(rootRowStyle.modifier, style.rootRowStyle.modifier)
+        AepStyleValidator.validateRowStyle(rootRowStyle, style.rootRowStyle)
 
         // verify text column style parameters
-        assertEquals(textColumnStyle.modifier, style.textColumnStyle.modifier)
-        assertEquals(textColumnStyle.horizontalAlignment, style.textColumnStyle.horizontalAlignment)
-        assertEquals(textColumnStyle.verticalArrangement, style.textColumnStyle.verticalArrangement)
+        AepStyleValidator.validateColumnStyle(textColumnStyle, style.textColumnStyle)
     }
 
     @Test
-    fun `create SmallImageUIStyle with some custom builder styles used`() {
+    fun `create SmallImageUIStyle with custom image style used`() {
         val imageStyle = AepImageStyle(
             modifier = Modifier.size(100.dp, 100.dp),
             contentDescription = "content description"
         )
-        val titleTextStyle = AepTextStyle(
-            modifier = Modifier.size(100.dp, 100.dp),
-            textStyle = TextStyle(color = Color.Red, fontSize = 16.sp)
-        )
-        val bodyTextStyle = AepTextStyle(
-            modifier = Modifier.size(100.dp, 100.dp)
-        )
-        val buttonRowStyle = AepRowStyle(
-            verticalAlignment = Alignment.CenterVertically
-        )
-        val dismissButtonStyle = AepIconStyle(
-            tint = { Color.Blue }
-        )
-        val dismissButtonAlignment = Alignment.BottomEnd
-        val cardStyle = AepCardStyle(
-            modifier = Modifier.size(100.dp, 100.dp)
-        )
-        val rootRowStyle = AepRowStyle(
-            modifier = Modifier.size(100.dp, 100.dp),
-            verticalAlignment = Alignment.CenterVertically
-        )
-        val textColumnStyle = AepColumnStyle(
-            modifier = Modifier.size(100.dp, 100.dp),
-            verticalArrangement = Arrangement.Center,
-        )
 
         val style = SmallImageUIStyle.Builder()
             .imageStyle(imageStyle)
-            .titleAepTextStyle(titleTextStyle)
-            .bodyAepTextStyle(bodyTextStyle)
-            .buttonRowStyle(buttonRowStyle)
-            .dismissButtonStyle(dismissButtonStyle)
-            .dismissButtonAlignment(dismissButtonAlignment)
-            .cardStyle(cardStyle)
-            .rootRowStyle(rootRowStyle)
-            .textColumnStyle(textColumnStyle)
             .build()
 
         // verify image style parameters
@@ -240,6 +168,18 @@ class SmallImageUIStyleTests {
         assertEquals(defaultSmallImageUIStyle.imageStyle.alignment, style.imageStyle.alignment)
         assertEquals(defaultSmallImageUIStyle.imageStyle.contentScale, style.imageStyle.contentScale)
         assertEquals(imageStyle.modifier, style.imageStyle.modifier)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom title text style used`() {
+        val titleTextStyle = AepTextStyle(
+            modifier = Modifier.size(100.dp, 100.dp),
+            textStyle = TextStyle(color = Color.Red, fontSize = 16.sp)
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .titleAepTextStyle(titleTextStyle)
+            .build()
 
         // verify title text style parameters
         assertEquals(titleTextStyle.textStyle, style.titleTextStyle.textStyle)
@@ -248,6 +188,17 @@ class SmallImageUIStyleTests {
         assertEquals(defaultSmallImageUIStyle.titleTextStyle.maxLines, style.titleTextStyle.maxLines)
         assertEquals(defaultSmallImageUIStyle.titleTextStyle.minLines, style.titleTextStyle.minLines)
         assertEquals(titleTextStyle.modifier, style.titleTextStyle.modifier)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom body text style used`() {
+        val bodyTextStyle = AepTextStyle(
+            modifier = Modifier.size(100.dp, 100.dp)
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .bodyAepTextStyle(bodyTextStyle)
+            .build()
 
         // verify body text style parameters
         assertEquals(defaultSmallImageUIStyle.bodyTextStyle.textStyle, style.bodyTextStyle.textStyle)
@@ -256,39 +207,91 @@ class SmallImageUIStyleTests {
         assertEquals(defaultSmallImageUIStyle.bodyTextStyle.maxLines, style.bodyTextStyle.maxLines)
         assertEquals(defaultSmallImageUIStyle.bodyTextStyle.minLines, style.bodyTextStyle.minLines)
         assertEquals(bodyTextStyle.modifier, style.bodyTextStyle.modifier)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom button row style used`() {
+        val buttonRowStyle = AepRowStyle(
+            verticalAlignment = Alignment.CenterVertically
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .buttonRowStyle(buttonRowStyle)
+            .build()
 
         // verify button row style parameters
         assertEquals(buttonRowStyle.verticalAlignment, style.buttonRowStyle.verticalAlignment)
         assertEquals(defaultSmallImageUIStyle.buttonRowStyle.horizontalArrangement, style.buttonRowStyle.horizontalArrangement)
         assertEquals(buttonRowStyle.modifier, style.buttonRowStyle.modifier)
+    }
 
-        // verify button style parameters, should be all default values as no button style is set on the builder
+    @Test
+    fun `create SmallImageUIStyle with custom button style used`() {
+        val buttonStyle = AepButtonStyle(
+            modifier = Modifier.size(100.dp, 100.dp),
+            enabled = true,
+            elevation = mock(ButtonElevation::class.java), // using a mock as ButtonElevation requires a composable function
+            shape = CircleShape
+        )
+        val buttonStyles: Array<AepButtonStyle?> = arrayOf(buttonStyle, buttonStyle, buttonStyle)
+
+        val style = SmallImageUIStyle.Builder()
+            .buttonStyle(buttonStyles)
+            .build()
+
+        // verify button style parameters
         var index = 0
         assertEquals(3, style.buttonStyle.size)
         for (builtButtonStyle in style.buttonStyle) {
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].shape, builtButtonStyle.shape)
+            assertEquals(buttonStyles[index]?.shape, builtButtonStyle.shape)
             assertEquals(defaultSmallImageUIStyle.buttonStyle[index].border, builtButtonStyle.border)
             assertEquals(defaultSmallImageUIStyle.buttonStyle[index].colors, builtButtonStyle.colors)
             assertEquals(defaultSmallImageUIStyle.buttonStyle[index].contentPadding, builtButtonStyle.contentPadding)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].elevation, builtButtonStyle.elevation)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].enabled, builtButtonStyle.enabled)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].modifier, builtButtonStyle.modifier)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.textStyle, builtButtonStyle.buttonTextStyle?.textStyle)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.overflow, builtButtonStyle.buttonTextStyle?.overflow)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.softWrap, builtButtonStyle.buttonTextStyle?.softWrap)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.maxLines, builtButtonStyle.buttonTextStyle?.maxLines)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.minLines, builtButtonStyle.buttonTextStyle?.minLines)
-            assertEquals(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle?.modifier, builtButtonStyle.buttonTextStyle?.modifier)
+            assertEquals(buttonStyles[index]?.elevation, builtButtonStyle.elevation)
+            assertEquals(buttonStyles[index]?.enabled, builtButtonStyle.enabled)
+            assertEquals(buttonStyles[index]?.modifier, builtButtonStyle.modifier)
+            AepStyleValidator.validateTextStyle(defaultSmallImageUIStyle.buttonStyle[index].buttonTextStyle, builtButtonStyle.buttonTextStyle)
             index++
         }
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom dismiss button style used`() {
+        val dismissButtonStyle = AepIconStyle(
+            tint = { Color.Blue }
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .dismissButtonStyle(dismissButtonStyle)
+            .build()
 
         // verify dismiss button style parameters
         assertEquals(dismissButtonStyle.tint, style.dismissButtonStyle.tint)
         assertEquals(defaultSmallImageUIStyle.dismissButtonStyle.contentDescription, style.dismissButtonStyle.contentDescription)
         assertEquals(defaultSmallImageUIStyle.dismissButtonStyle.modifier, style.dismissButtonStyle.modifier)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom dismiss button alignment used`() {
+        val dismissButtonAlignment = Alignment.BottomEnd
+
+        val style = SmallImageUIStyle.Builder()
+            .dismissButtonAlignment(dismissButtonAlignment)
+            .build()
 
         // verify dismiss button alignment
         assertEquals(dismissButtonAlignment, style.dismissButtonAlignment)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom card style used`() {
+        val cardStyle = AepCardStyle(
+            modifier = Modifier.size(100.dp, 100.dp)
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .cardStyle(cardStyle)
+            .build()
 
         // verify card style parameters
         assertEquals(defaultSmallImageUIStyle.cardStyle.border, style.cardStyle.border)
@@ -296,11 +299,35 @@ class SmallImageUIStyleTests {
         assertEquals(defaultSmallImageUIStyle.cardStyle.elevation, style.cardStyle.elevation)
         assertEquals(cardStyle.modifier, style.cardStyle.modifier)
         assertEquals(defaultSmallImageUIStyle.cardStyle.shape, style.cardStyle.shape)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom root row style used`() {
+        val rootRowStyle = AepRowStyle(
+            modifier = Modifier.size(100.dp, 100.dp),
+            verticalAlignment = Alignment.CenterVertically
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .rootRowStyle(rootRowStyle)
+            .build()
 
         // verify root row style parameters
         assertEquals(rootRowStyle.verticalAlignment, style.rootRowStyle.verticalAlignment)
         assertEquals(defaultSmallImageUIStyle.rootRowStyle.horizontalArrangement, style.rootRowStyle.horizontalArrangement)
         assertEquals(rootRowStyle.modifier, style.rootRowStyle.modifier)
+    }
+
+    @Test
+    fun `create SmallImageUIStyle with custom text column style used`() {
+        val textColumnStyle = AepColumnStyle(
+            modifier = Modifier.size(100.dp, 100.dp),
+            verticalArrangement = Arrangement.Center,
+        )
+
+        val style = SmallImageUIStyle.Builder()
+            .textColumnStyle(textColumnStyle)
+            .build()
 
         // verify text column style parameters
         assertEquals(textColumnStyle.modifier, style.textColumnStyle.modifier)
