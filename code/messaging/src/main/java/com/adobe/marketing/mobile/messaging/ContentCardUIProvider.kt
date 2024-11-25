@@ -150,7 +150,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                         }
                     }
                     completion(Result.success(templateModelList))
-                    if(errorsList.isNotEmpty()) {
+                    if (errorsList.isNotEmpty()) {
                         completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
                     }
                 }

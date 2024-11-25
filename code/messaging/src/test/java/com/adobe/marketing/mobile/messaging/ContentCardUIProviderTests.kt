@@ -259,5 +259,4 @@ class ContentCardUIProviderTests {
         val result = flow.first()
         assertTrue(result.isSuccess)
     }
-
 }
