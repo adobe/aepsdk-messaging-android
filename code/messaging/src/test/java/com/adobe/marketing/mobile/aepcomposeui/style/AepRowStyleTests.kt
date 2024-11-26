@@ -36,9 +36,7 @@ class AepRowStyleTests {
 
         val result = AepRowStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.horizontalArrangement, result.horizontalArrangement)
-        assertEquals(overridingStyle.verticalAlignment, result.verticalAlignment)
+        AepStyleValidator.validateRowStyle(overridingStyle, result)
     }
 
     @Test

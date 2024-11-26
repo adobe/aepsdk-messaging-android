@@ -36,7 +36,8 @@ class AepButtonStyleTests {
             shape = mock(Shape::class.java),
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
-            contentPadding = mock(PaddingValues::class.java)
+            contentPadding = mock(PaddingValues::class.java),
+            textStyle = mock(AepTextStyle::class.java)
         )
         val overridingStyle = AepButtonStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
@@ -45,18 +46,13 @@ class AepButtonStyleTests {
             shape = mock(Shape::class.java),
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
-            contentPadding = mock(PaddingValues::class.java)
+            contentPadding = mock(PaddingValues::class.java),
+            textStyle = mock(AepTextStyle::class.java)
         )
 
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.enabled, result.enabled)
-        assertEquals(overridingStyle.elevation, result.elevation)
-        assertEquals(overridingStyle.shape, result.shape)
-        assertEquals(overridingStyle.border, result.border)
-        assertEquals(overridingStyle.colors, result.colors)
-        assertEquals(overridingStyle.contentPadding, result.contentPadding)
+        AepStyleValidator.validateButtonStyle(overridingStyle, result)
     }
 
     @Test
@@ -68,7 +64,8 @@ class AepButtonStyleTests {
             shape = mock(Shape::class.java),
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
-            contentPadding = mock(PaddingValues::class.java)
+            contentPadding = mock(PaddingValues::class.java),
+            textStyle = mock(AepTextStyle::class.java)
         )
         val overridingStyle = AepButtonStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
@@ -77,7 +74,8 @@ class AepButtonStyleTests {
             shape = null,
             border = BorderStroke(3.dp, Color.Green),
             colors = null,
-            contentPadding = null
+            contentPadding = null,
+            textStyle = null
         )
 
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
@@ -89,6 +87,7 @@ class AepButtonStyleTests {
         assertEquals(overridingStyle.border, result.border)
         assertEquals(defaultStyle.colors, result.colors)
         assertEquals(defaultStyle.contentPadding, result.contentPadding)
+        assertEquals(defaultStyle.textStyle, result.textStyle)
     }
 
     @Test
@@ -100,7 +99,8 @@ class AepButtonStyleTests {
             shape = mock(Shape::class.java),
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
-            contentPadding = mock(PaddingValues::class.java)
+            contentPadding = mock(PaddingValues::class.java),
+            textStyle = mock(AepTextStyle::class.java)
         )
 
         val result = AepButtonStyle.merge(defaultStyle, null)
@@ -111,6 +111,7 @@ class AepButtonStyleTests {
         assertEquals(defaultStyle.border, result.border)
         assertEquals(defaultStyle.colors, result.colors)
         assertEquals(defaultStyle.contentPadding, result.contentPadding)
+        assertEquals(defaultStyle.textStyle, result.textStyle)
     }
 
     @Test
@@ -122,7 +123,8 @@ class AepButtonStyleTests {
             shape = mock(Shape::class.java),
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
-            contentPadding = mock(PaddingValues::class.java)
+            contentPadding = mock(PaddingValues::class.java),
+            textStyle = mock(AepTextStyle::class.java)
         )
         val overridingStyle = AepButtonStyle(
             modifier = null,
@@ -131,7 +133,8 @@ class AepButtonStyleTests {
             shape = null,
             border = null,
             colors = null,
-            contentPadding = null
+            contentPadding = null,
+            textStyle = null
         )
 
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
@@ -142,5 +145,6 @@ class AepButtonStyleTests {
         assertEquals(defaultStyle.border, result.border)
         assertEquals(defaultStyle.colors, result.colors)
         assertEquals(defaultStyle.contentPadding, result.contentPadding)
+        assertEquals(defaultStyle.textStyle, result.textStyle)
     }
 }

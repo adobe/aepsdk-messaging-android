@@ -36,9 +36,7 @@ class AepIconStyleTests {
 
         val result = AepIconStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.contentDescription, result.contentDescription)
-        assertEquals(overridingStyle.tint, result.tint)
+        AepStyleValidator.validateIconStyle(overridingStyle, result)
     }
 
     @Test

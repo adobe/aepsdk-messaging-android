@@ -36,9 +36,7 @@ class AepColumnStyleTests {
 
         val result = AepColumnStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.verticalArrangement, result.verticalArrangement)
-        assertEquals(overridingStyle.horizontalAlignment, result.horizontalAlignment)
+        AepStyleValidator.validateColumnStyle(overridingStyle, result)
     }
 
     @Test
