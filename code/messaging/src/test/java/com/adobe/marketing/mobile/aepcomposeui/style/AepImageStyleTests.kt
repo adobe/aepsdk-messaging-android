@@ -44,12 +44,7 @@ class AepImageStyleTests {
 
         val result = AepImageStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.contentDescription, result.contentDescription)
-        assertEquals(overridingStyle.alignment, result.alignment)
-        assertEquals(overridingStyle.contentScale, result.contentScale)
-        assertEquals(overridingStyle.alpha, result.alpha)
-        assertEquals(overridingStyle.colorFilter, result.colorFilter)
+        AepStyleValidator.validateImageStyle(overridingStyle, result)
     }
 
     @Test

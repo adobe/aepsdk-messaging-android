@@ -35,6 +35,46 @@ class SmallImageUIStyleTests {
     val defaultSmallImageUIStyle = SmallImageUIStyle.Builder().build()
 
     @Test
+    fun `create SmallImageUIStyle with no builder styles used`() {
+        val style = SmallImageUIStyle.Builder().build()
+
+        // verify image style parameters
+        AepStyleValidator.validateImageStyle(defaultSmallImageUIStyle.imageStyle, style.imageStyle)
+
+        // verify title text style parameters
+        AepStyleValidator.validateTextStyle(defaultSmallImageUIStyle.titleTextStyle, style.titleTextStyle)
+
+        // verify body text style parameters
+        AepStyleValidator.validateTextStyle(defaultSmallImageUIStyle.bodyTextStyle, style.bodyTextStyle)
+
+        // verify button row style parameters
+        AepStyleValidator.validateRowStyle(defaultSmallImageUIStyle.buttonRowStyle, style.buttonRowStyle)
+
+        // verify button style parameters
+        assertEquals(3, style.buttonStyle.size)
+        var index = 0
+        for (builtButtonStyle in style.buttonStyle) {
+            AepStyleValidator.validateButtonStyle(defaultSmallImageUIStyle.buttonStyle[index], builtButtonStyle)
+            index++
+        }
+
+        // verify dismiss button style parameters
+        AepStyleValidator.validateIconStyle(defaultSmallImageUIStyle.dismissButtonStyle, style.dismissButtonStyle)
+
+        // verify dismiss button alignment
+        assertEquals(defaultSmallImageUIStyle.dismissButtonAlignment, style.dismissButtonAlignment)
+
+        // verify card style parameters
+        AepStyleValidator.validateCardStyle(defaultSmallImageUIStyle.cardStyle, style.cardStyle)
+
+        // verify root row style parameters
+        AepStyleValidator.validateRowStyle(defaultSmallImageUIStyle.rootRowStyle, style.rootRowStyle)
+
+        // verify text column style parameters
+        AepStyleValidator.validateColumnStyle(defaultSmallImageUIStyle.textColumnStyle, style.textColumnStyle)
+    }
+
+    @Test
     fun `create SmallImageUIStyle with all builder styles used`() {
         val imageStyle = AepImageStyle(
             modifier = Modifier.size(100.dp, 100.dp),

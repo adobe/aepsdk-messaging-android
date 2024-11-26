@@ -52,19 +52,7 @@ class AepButtonStyleTests {
 
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.enabled, result.enabled)
-        assertEquals(overridingStyle.elevation, result.elevation)
-        assertEquals(overridingStyle.shape, result.shape)
-        assertEquals(overridingStyle.border, result.border)
-        assertEquals(overridingStyle.colors, result.colors)
-        assertEquals(overridingStyle.contentPadding, result.contentPadding)
-        assertEquals(overridingStyle.textStyle?.textStyle, result.textStyle?.textStyle)
-        assertEquals(overridingStyle.textStyle?.overflow, result.textStyle?.overflow)
-        assertEquals(overridingStyle.textStyle?.softWrap, result.textStyle?.softWrap)
-        assertEquals(overridingStyle.textStyle?.maxLines, result.textStyle?.maxLines)
-        assertEquals(overridingStyle.textStyle?.minLines, result.textStyle?.minLines)
-        assertEquals(overridingStyle.textStyle?.modifier, result.textStyle?.modifier)
+        AepStyleValidator.validateButtonStyle(overridingStyle, result)
     }
 
     @Test

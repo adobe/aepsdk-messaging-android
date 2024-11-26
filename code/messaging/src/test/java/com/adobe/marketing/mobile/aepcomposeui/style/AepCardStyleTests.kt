@@ -46,11 +46,7 @@ class AepCardStyleTests {
 
         val result = AepCardStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.shape, result.shape)
-        assertEquals(overridingStyle.colors, result.colors)
-        assertEquals(overridingStyle.elevation, result.elevation)
-        assertEquals(overridingStyle.border, result.border)
+        AepStyleValidator.validateCardStyle(overridingStyle, result)
     }
 
     @Test

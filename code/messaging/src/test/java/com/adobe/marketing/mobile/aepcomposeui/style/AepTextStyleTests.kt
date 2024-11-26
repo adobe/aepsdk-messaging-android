@@ -43,12 +43,7 @@ class AepTextStyleTests {
 
         val result = AepTextStyle.merge(defaultStyle, overridingStyle)
 
-        assertEquals(overridingStyle.modifier, result.modifier)
-        assertEquals(overridingStyle.textStyle, result.textStyle)
-        assertEquals(overridingStyle.overflow, result.overflow)
-        assertEquals(overridingStyle.softWrap, result.softWrap)
-        assertEquals(overridingStyle.maxLines, result.maxLines)
-        assertEquals(overridingStyle.minLines, result.minLines)
+        AepStyleValidator.validateTextStyle(overridingStyle, result)
     }
 
     @Test
