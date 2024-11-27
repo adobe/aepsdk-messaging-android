@@ -32,6 +32,12 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import kotlin.test.Test
 
+/**
+ * Tests for ContentCardUIProvider class.
+ *
+ * @ExperimentalCoroutinesApi is used here because this test class leverages Kotlin coroutines testing feature:
+ * - runTest for structured concurrency testing
+ */
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class ContentCardUIProviderTests {
