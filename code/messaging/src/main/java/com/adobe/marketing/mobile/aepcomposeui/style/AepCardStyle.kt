@@ -54,9 +54,7 @@ class AepCardStyle(
                 return defaultStyle
             }
             return AepCardStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 shape = overridingStyle.shape ?: defaultStyle.shape,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
                 elevation = overridingStyle.elevation ?: defaultStyle.elevation,
