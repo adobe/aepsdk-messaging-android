@@ -36,11 +36,13 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         private const val SELF_TAG: String = "ContentCardUIProvider"
     }
 
-    private val _contentFlow = MutableStateFlow<List<AepUITemplate>>(emptyList())
-    private val contentFlow: StateFlow<List<AepUITemplate>> = _contentFlow
+    private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
+    private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow
 
-    private val aepUiFlow = _contentFlow.map { templateList ->
-        templateList.mapNotNull { item -> getAepUI(item) }
+    private val aepUiFlow = _contentFlow.map { result ->
+        result.map { templateList ->
+            templateList.mapNotNull { item -> getAepUI(item) }
+        }
     }
 
     /**
@@ -50,9 +52,9 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * [AepUI] instances that represent the UI templates. The flow emits updates whenever new
      * content is fetched or any changes occur.
      *
-     * @return A [Flow] that emits a list of [AepUI] instances.
+     * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
-    suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>> {
+    suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
         getContent()
         return aepUiFlow
     }
@@ -66,26 +68,43 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     /**
-     * Retrieves a flow of AepUITemplate lists for the given surface.
-     * The flow emits updates whenever new content is fetched.
+     * Initiates fetching of [AepUITemplate] instances for the given surface and returns a flow that emits updates.
      *
-     * @return A flow that emits lists of AepUITemplate.
+     * This function fetches new content by invoking [getAepUITemplateList], which retrieves
+     * propositions and builds a list of [AepUITemplate]. The result is posted to the [_contentFlow],
+     * which is returned as a [Flow].
+     *
+     * @return A [Flow] that emits a [Result] containing lists of [AepUITemplate] whenever new content is available.
      */
-    override suspend fun getContent(): Flow<List<AepUITemplate>> {
-        getAepUITemplateList { it ->
-            it.onSuccess { templateList ->
-                _contentFlow.value = templateList
+    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
+        getAepUITemplateList { result ->
+            result.onSuccess { templateList ->
+                _contentFlow.value = Result.success(templateList)
             }
-            it.onFailure { error ->
+            result.onFailure { error ->
                 Log.error(
                     MessagingConstants.LOG_TAG, SELF_TAG,
                     "Failed to get content: ${error.message}"
                 )
+                _contentFlow.value = Result.failure(error)
             }
         }
         return contentFlow
     }
 
+    /**
+     * Fetches propositions for the current surface and builds a list of [AepUITemplate].
+     *
+     * This function retrieves propositions for the provided surface by calling
+     * [Messaging.getPropositionsForSurfaces]. For each proposition, it attempts to build an
+     * [AepUITemplate] using [buildTemplate]. The result is passed to the [completion] handler.
+     *
+     * If any proposition fails to be built into a template, the entire operation fails,
+     * and the [completion] handler is invoked with a failure result.
+     *
+     * @param completion A callback invoked with the [Result] containing a list of [AepUITemplate]
+     *                   on success, or an error on failure.
+     */
     private suspend fun getAepUITemplateList(
         completion: (Result<List<AepUITemplate>>) -> Unit
     ) {
@@ -107,25 +126,31 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                         return
                     }
 
-                    val templateModelList = mutableListOf<AepUITemplate>()
                     Log.debug(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
                         "getPropositionsForSurfaces callback contained Null Map"
                     )
-                    val propositions = resultMap[surface] ?: emptyList()
-                    for (proposition in propositions) {
+
+                    val errorsList: MutableList<String> = mutableListOf()
+                    val templateModelList = resultMap[surface]?.mapNotNull { proposition ->
                         try {
-                            val aepUiTemplate = buildTemplate(proposition)
-                            aepUiTemplate?.let { templateModelList.add(it) }
+                            buildTemplate(proposition)
                         } catch (e: IllegalArgumentException) {
                             Log.error(
                                 MessagingConstants.LOG_TAG,
                                 SELF_TAG,
-                                "Failed to build template: ${e.message}"
+                                "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
                             )
+                            errorsList.add(proposition.uniqueId)
+                            null
                         }
+                    } ?: emptyList()
+
+                    if (errorsList.isNotEmpty()) {
+                        completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
                     }
+
                     completion(Result.success(templateModelList))
                 }
 
@@ -133,11 +158,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     completion(
                         Result.failure(
                             Throwable(
-                                "Failed to retrieve propositions for surface ${
-                                surfaceList.joinToString(
-                                    ","
-                                )
-                                }"
+                                "Failed to retrieve propositions for surface ${surfaceList.joinToString(",")} " +
+                                    "Adobe Error : ${error?.toString()}"
                             )
                         )
                     )

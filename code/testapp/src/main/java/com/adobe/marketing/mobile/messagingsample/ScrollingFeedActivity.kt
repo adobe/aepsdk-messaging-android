@@ -212,8 +212,13 @@ class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIPr
         // Launch a coroutine to fetch the aepUIList from the ContentCardUIProvider
         // when the ViewModel is created
         viewModelScope.launch {
-            contentCardUIProvider.getContentCardUI().collect { aepUi ->
-                _aepUIList.value = aepUi
+            contentCardUIProvider.getContentCardUI().collect { aepUiResult ->
+                aepUiResult.onSuccess { aepUi ->
+                    _aepUIList.value = aepUi
+                }
+                aepUiResult.onFailure { throwable ->
+                    Log.d("ContentCardUIProvider", "Error fetching AepUI list: ${throwable}")
+                }
             }
         }
     }
