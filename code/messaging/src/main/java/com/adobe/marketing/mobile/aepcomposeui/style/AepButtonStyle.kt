@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Shape
  * @param border The border to draw around the container of this button.
  * @param colors The colors that will be used to resolve the colors for this button in different states
  * @param contentPadding the spacing values to apply internally between the container and the text
+ * @param textStyle The text style for the button.
  */
 class AepButtonStyle(
     var modifier: Modifier? = null,
@@ -37,6 +38,7 @@ class AepButtonStyle(
     var border: BorderStroke? = null,
     var colors: ButtonColors? = null,
     var contentPadding: PaddingValues? = null,
+    var textStyle: AepTextStyle? = null
 ) {
 
     companion object {
@@ -59,15 +61,14 @@ class AepButtonStyle(
                 return defaultStyle
             }
             return AepButtonStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 enabled = overridingStyle.enabled ?: defaultStyle.enabled,
                 elevation = overridingStyle.elevation ?: defaultStyle.elevation,
                 shape = overridingStyle.shape ?: defaultStyle.shape,
                 border = overridingStyle.border ?: defaultStyle.border,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
-                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding
+                contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding,
+                textStyle = AepTextStyle.merge(defaultStyle.textStyle ?: AepTextStyle(), overridingStyle.textStyle)
             )
         }
     }
