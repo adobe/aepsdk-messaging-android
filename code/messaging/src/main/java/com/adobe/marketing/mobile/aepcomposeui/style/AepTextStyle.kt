@@ -52,14 +52,10 @@ class AepTextStyle(
             if (overridingStyle == null) {
                 return defaultStyle
             }
-            val mergedTextStyle = (defaultStyle.textStyle ?: TextStyle())
-                .merge(overridingStyle.textStyle)
 
             return AepTextStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
-                textStyle = mergedTextStyle,
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
+                textStyle = overridingStyle.textStyle ?: defaultStyle.textStyle,
                 overflow = overridingStyle.overflow ?: defaultStyle.overflow,
                 softWrap = overridingStyle.softWrap ?: defaultStyle.softWrap,
                 maxLines = overridingStyle.maxLines ?: defaultStyle.maxLines,

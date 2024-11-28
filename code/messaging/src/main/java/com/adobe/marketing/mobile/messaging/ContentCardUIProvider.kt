@@ -60,10 +60,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     /**
-     * Triggers a refresh of the content by re-fetching new content for the given surface.
-     *
-     * This function calls [getContent] to initiate the content fetching process,
-     * updating the internal content flow with new data.
+     * Updates the flow returned by [getContent] with the latest cached content cards for the given
+     * surface.
      */
     override suspend fun refreshContent() {
         getContent()
@@ -128,18 +126,16 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                         return
                     }
 
-                    val templateModelList = mutableListOf<AepUITemplate>()
                     Log.debug(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
                         "getPropositionsForSurfaces callback contained Null Map"
                     )
-                    val propositions = resultMap[surface] ?: emptyList()
+
                     val errorsList: MutableList<String> = mutableListOf()
-                    for (proposition in propositions) {
+                    val templateModelList = resultMap[surface]?.mapNotNull { proposition ->
                         try {
-                            val aepUiTemplate = buildTemplate(proposition)
-                            aepUiTemplate?.let { templateModelList.add(it) }
+                            buildTemplate(proposition)
                         } catch (e: IllegalArgumentException) {
                             Log.error(
                                 MessagingConstants.LOG_TAG,
@@ -147,12 +143,15 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                                 "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
                             )
                             errorsList.add(proposition.uniqueId)
+                            null
                         }
-                    }
-                    completion(Result.success(templateModelList))
+                    } ?: emptyList()
+
                     if (errorsList.isNotEmpty()) {
                         completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
                     }
+
+                    completion(Result.success(templateModelList))
                 }
 
                 override fun fail(error: AdobeError?) {

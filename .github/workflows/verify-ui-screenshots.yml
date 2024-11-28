@@ -1,0 +1,68 @@
+#
+# Copyright 2024 Adobe. All rights reserved.
+# This file is licensed to you under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License. You may obtain a copy
+# of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
+
+name: Verify UI testing screenshots
+on:
+  pull_request:
+
+jobs:
+  verify-screenshots:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: 17
+    
+    - name: Gradle cache
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Download screenshots from GitHub artifactory
+      uses:  dawidd6/action-download-artifact@v6
+      with:
+        name: screenshots
+        workflow: update-ui-screenshots.yml
+        branch: main
+        path: code/messaging/build/outputs/roborazzi
+        
+    - name: Verify screenshots
+      id: verify-test
+      run: make verify-screenshots
+
+    - name: Upload screenshots difference to GitHub Actions Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: screenshot-diff
+        path: code/messaging/build/outputs/roborazzi/*_compare.png
+        retention-days: 7
+        
+    - name: Upload screenshots difference report to GitHub Actions Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: screenshot-diff-reports
+        path: code/messaging/build/reports/tests/testPhoneDebugUnitTest
+        retention-days: 7
+        
+    - name: Upload screenshots test results to GitHub Actions Artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: screenshot-diff-test-results
+        path: code/messaging/build/test-results/roborazzi
+        retention-days: 7

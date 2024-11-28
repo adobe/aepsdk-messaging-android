@@ -1,0 +1,50 @@
+#
+# Copyright 2024 Adobe. All rights reserved.
+# This file is licensed to you under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License. You may obtain a copy
+# of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+# OF ANY KIND, either express or implied. See the License for the specific language
+# governing permissions and limitations under the License.
+#
+
+name: Update UI testing screenshots
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to use when running tests to update UI screenshots'
+        required: false
+        default: 'main'
+
+jobs:
+  update-screenshots:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.branch }}
+      
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: 17
+    
+    - name: Gradle cache
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Record screenshots
+      id: record-screenshots
+      run: make record-screenshots
+
+    # Upload screenshots if the roborazzi directory is found
+    - name: Upload screenshots to GitHub Actions Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: screenshots
+        path: code/messaging/build/outputs/roborazzi/

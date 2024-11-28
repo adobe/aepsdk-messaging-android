@@ -47,9 +47,7 @@ class AepRowStyle(
             }
 
             return AepRowStyle(
-                modifier = (defaultStyle.modifier ?: Modifier).then(
-                    overridingStyle.modifier ?: Modifier
-                ),
+                modifier = overridingStyle.modifier ?: defaultStyle.modifier,
                 horizontalArrangement = overridingStyle.horizontalArrangement ?: defaultStyle.horizontalArrangement,
                 verticalAlignment = overridingStyle.verticalAlignment ?: defaultStyle.verticalAlignment
             )

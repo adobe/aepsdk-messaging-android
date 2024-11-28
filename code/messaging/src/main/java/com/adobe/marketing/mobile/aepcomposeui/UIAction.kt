@@ -16,7 +16,7 @@ package com.adobe.marketing.mobile.aepcomposeui
  */
 sealed class UIAction {
     /**
-     * UIAction to represent a click action that can be performed on a UI component
+     * Represents a click action that can be performed on a UI component
      * @property id unique identifier of the UI component
      * @property actionUrl optional URL to be opened when the UI component is clicked
      */

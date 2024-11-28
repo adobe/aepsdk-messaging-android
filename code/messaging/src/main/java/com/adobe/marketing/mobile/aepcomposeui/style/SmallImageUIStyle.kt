@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,7 +44,7 @@ class SmallImageUIStyle private constructor(
     val titleTextStyle: AepTextStyle,
     val bodyTextStyle: AepTextStyle,
     val buttonRowStyle: AepRowStyle,
-    val buttonStyle: Array<Pair<AepButtonStyle, AepTextStyle>>,
+    val buttonStyle: Array<AepButtonStyle>,
     val dismissButtonStyle: AepIconStyle,
     val dismissButtonAlignment: Alignment
 ) {
@@ -59,8 +58,7 @@ class SmallImageUIStyle private constructor(
             verticalAlignment = Alignment.CenterVertically
         )
         private val defaultImageStyle = AepImageStyle(
-            modifier = Modifier.width(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp)
-                .aspectRatio(1f),
+            modifier = Modifier.width(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
             alignment = Alignment.Center
         )
         private val defaultTextColumnStyle = AepColumnStyle(
@@ -87,7 +85,9 @@ class SmallImageUIStyle private constructor(
                 fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_FONT_WEIGHT,
             )
         )
-        private val defaultButtonStyle = AepButtonStyle()
+        private val defaultButtonStyle = AepButtonStyle(
+            textStyle = defaultButtonTextStyle
+        )
         private val defaultDismissButtonStyle = AepIconStyle(
             modifier = Modifier
                 .padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
@@ -104,7 +104,7 @@ class SmallImageUIStyle private constructor(
         private var titleAepTextStyle: AepTextStyle? = null
         private var bodyAepTextStyle: AepTextStyle? = null
         private var buttonRowStyle: AepRowStyle? = null
-        private var buttonStyle: Array<Pair<AepButtonStyle?, AepTextStyle?>?>? = arrayOfNulls(3)
+        private var buttonStyle: Array<AepButtonStyle?> = arrayOfNulls(3)
         private var dismissButtonStyle: AepIconStyle? = null
         private var dismissButtonAlignment: Alignment? = null
 
@@ -115,9 +115,10 @@ class SmallImageUIStyle private constructor(
         fun titleAepTextStyle(style: AepTextStyle) = apply { this.titleAepTextStyle = style }
         fun bodyAepTextStyle(style: AepTextStyle) = apply { this.bodyAepTextStyle = style }
         fun buttonRowStyle(style: AepRowStyle) = apply { this.buttonRowStyle = style }
-        fun buttonStyle(style: Array<Pair<AepButtonStyle?, AepTextStyle?>?>) = apply { this.buttonStyle = style }
+        fun buttonStyle(style: Array<AepButtonStyle?>) = apply { this.buttonStyle = style }
         fun dismissButtonStyle(style: AepIconStyle) = apply { this.dismissButtonStyle = style }
-        fun dismissButtonAlignment(alignment: Alignment) = apply { this.dismissButtonAlignment = alignment }
+        fun dismissButtonAlignment(alignment: Alignment) =
+            apply { this.dismissButtonAlignment = alignment }
 
         fun build() = SmallImageUIStyle(
             cardStyle = AepCardStyle.merge(defaultCardStyle, cardStyle),
@@ -127,11 +128,8 @@ class SmallImageUIStyle private constructor(
             titleTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),
             bodyTextStyle = AepTextStyle.merge(defaultBodyAepTextStyle, bodyAepTextStyle),
             buttonRowStyle = AepRowStyle.merge(defaultButtonRowStyle, buttonRowStyle),
-            buttonStyle = (buttonStyle ?: arrayOfNulls(3)).map { pair ->
-                Pair(
-                    AepButtonStyle.merge(defaultButtonStyle, pair?.first),
-                    AepTextStyle.merge(defaultButtonTextStyle, pair?.second)
-                )
+            buttonStyle = buttonStyle.map {
+                AepButtonStyle.merge(defaultButtonStyle, it)
             }.toTypedArray(),
             dismissButtonStyle = AepIconStyle.merge(defaultDismissButtonStyle, dismissButtonStyle),
             dismissButtonAlignment = dismissButtonAlignment ?: defaultDismissButtonAlignment
