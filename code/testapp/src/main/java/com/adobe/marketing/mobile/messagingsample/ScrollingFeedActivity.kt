@@ -27,10 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
@@ -39,16 +37,14 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.viewmodel.AepContentCardViewModel
+import com.adobe.marketing.mobile.aepcomposeui.viewmodel.factory.AepContentCardViewModelFactory
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardMapper
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.ContentCardUIProvider
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class ScrollingFeedActivity : AppCompatActivity() {
     private lateinit var binding: ActivityScrollingBinding
@@ -73,6 +69,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         contentCardUIProvider = ContentCardUIProvider(surface)
 
         // Initialize the ViewModel
+        // Add identifier default using surface path
         contentCardViewModel =
             ViewModelProvider(this, AepContentCardViewModelFactory(contentCardUIProvider)).get(
                 AepContentCardViewModel::class.java
@@ -96,7 +93,6 @@ class ScrollingFeedActivity : AppCompatActivity() {
             }
         }
     }
-
 
     @Composable
     private fun AepContentCardList(viewModel: AepContentCardViewModel) {
@@ -167,6 +163,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
             items(reorderedAepUIList) { aepUI ->
                 when (aepUI) {
                     is SmallImageUI -> {
+                        //TODO check if the card is dismissed to return or not
                         val state = aepUI.getState()
                         if (!state.dismissed) {
                             SmallImageCard(
@@ -203,46 +200,4 @@ class ContentCardCallback: ContentCardUIEventListener {
 }
 
 // create new view model or reuse existing one to hold the aepUIList
-class AepContentCardViewModel(private val contentCardUIProvider: ContentCardUIProvider) : ViewModel() {
-    // State to hold AepUI list
-    private val _aepUIList = MutableStateFlow<List<AepUI<*, *>>>(emptyList())
-    val aepUIList: StateFlow<List<AepUI<*, *>>> = _aepUIList.asStateFlow()
 
-    init {
-        // Launch a coroutine to fetch the aepUIList from the ContentCardUIProvider
-        // when the ViewModel is created
-        viewModelScope.launch {
-            contentCardUIProvider.getContentCardUI().collect { aepUiResult ->
-                aepUiResult.onSuccess { aepUi ->
-                    _aepUIList.value = aepUi
-                }
-                aepUiResult.onFailure { throwable ->
-                    Log.d("ContentCardUIProvider", "Error fetching AepUI list: ${throwable}")
-                }
-            }
-        }
-    }
-
-    // Function to refresh the aepUIList from the ContentCardUIProvider
-    fun refreshContent() {
-        viewModelScope.launch {
-            contentCardUIProvider.refreshContent()
-        }
-    }
-}
-
-class AepContentCardViewModelFactory(
-    private val contentCardUIProvider: ContentCardUIProvider
-) : ViewModelProvider.Factory {
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(AepContentCardViewModel::class.java) -> {
-                AepContentCardViewModel(contentCardUIProvider) as T
-            }
-
-            else -> throw IllegalArgumentException("Unknown ViewModel class")
-        }
-    }
-}
