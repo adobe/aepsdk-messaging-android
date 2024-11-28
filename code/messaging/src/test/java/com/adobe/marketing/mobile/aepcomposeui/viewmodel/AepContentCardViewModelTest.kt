@@ -64,4 +64,33 @@ class AepContentCardViewModelTest {
         val result = contentCardUIProvider.getContentCardUI().first()
         assert(result.isSuccess)
     }
+
+    @Test
+    fun `test with invalid surface`() = runTest {
+        every { surface.isValid() } returns false
+        val result = contentCardUIProvider.getContentCardUI().first()
+        assert(result.getOrNull()?.isEmpty() == true)
+    }
+
+    @Test
+    fun `test with empty surface uri`() = runTest {
+        every { surface.uri } returns ""
+        every { surface.toEventData() } returns mapOf("uri" to "")
+        val result = contentCardUIProvider.getContentCardUI().first()
+        assert(result.getOrNull()?.isEmpty() == true)
+    }
+
+    @Test
+    fun `test with null event data`() = runTest {
+        every { surface.toEventData() } returns null
+        val result = contentCardUIProvider.getContentCardUI().first()
+        assert(result.getOrNull()?.isEmpty() == true)
+    }
+
+    @Test
+    fun `test with empty event data`() = runTest {
+        every { surface.toEventData() } returns emptyMap()
+        val result = contentCardUIProvider.getContentCardUI().first()
+        assert(result.getOrNull()?.isEmpty() == true)
+    }
 }
