@@ -137,7 +137,7 @@ fun SmallImageCard(
                                     observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                                 },
                                 buttonStyle = style.buttonStyle[index].apply {
-                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f))
+                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f, fill = false))
                                 }
                             )
                         }

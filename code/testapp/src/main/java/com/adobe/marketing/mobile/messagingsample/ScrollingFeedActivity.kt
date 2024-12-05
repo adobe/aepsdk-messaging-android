@@ -17,6 +17,7 @@ import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -153,10 +154,10 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // Displaying content cards in a Row
         // create a custom style for the small image card in row
         val smallImageCardStyleRow = SmallImageUIStyle.Builder()
-            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp)))
+            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
             .rootRowStyle(
                 AepRowStyle(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().padding(8.dp)
                 )
             )
             .titleAepTextStyle(AepTextStyle(textStyle = TextStyle(Color.Green)))
