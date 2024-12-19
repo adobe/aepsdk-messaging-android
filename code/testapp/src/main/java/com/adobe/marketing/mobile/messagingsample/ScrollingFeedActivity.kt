@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.components.ContentCardComposable
 import com.adobe.marketing.mobile.aepcomposeui.components.SmallImageCard
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
@@ -76,6 +77,10 @@ class ScrollingFeedActivity : AppCompatActivity() {
             )
 
         contentCardCallback = ContentCardCallback()
+        /*val comparator = compareByDescending<AepUI<*, *>> {
+            val rank = ContentCardMapper.instance.getContentCardSchemaData(it.getTemplate().id)?.meta?.get("priority") as String?
+            rank?.toInt() ?: 0
+        }*/
 
         // Set a click listener for refresh button which calls the API for fetch content cards from Edge
         val refreshButton: ImageButton = findViewById(R.id.refreshButton)
