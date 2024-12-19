@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.messaging.R
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -60,7 +59,7 @@ class AepTextComposableTests(
     private val mockAepText
         @Composable
         @ReadOnlyComposable
-        get() = AepText(stringResource(R.string.mockText))
+        get() = AepText(stringResource(android.R.string.httpErrorBadUrl))
 
     private val mockAepTextStyle = AepTextStyle(
         modifier = Modifier.size(150.dp),

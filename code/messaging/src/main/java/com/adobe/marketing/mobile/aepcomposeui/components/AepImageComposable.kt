@@ -25,22 +25,22 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
  * A composable function that displays a image element with customizable properties.
  *
  * @param content [Painter] representing image to be displayed.
- * @param style The [AepImageStyle] to be applied to the image element.
+ * @param imageStyle The [AepImageStyle] to be applied to the image element.
  * @param onClick Method that is called when this image is clicked
  */
 @Composable
 internal fun AepImageComposable(
     content: Painter,
-    style: AepImageStyle = AepImageStyle(),
+    imageStyle: AepImageStyle = AepImageStyle(),
     onClick: () -> Unit = {}
 ) {
     Image(
         painter = content,
-        contentDescription = style.contentDescription ?: "",
-        modifier = (style.modifier ?: Modifier).clickable { onClick() },
-        alignment = style.alignment ?: Alignment.Center,
-        contentScale = style.contentScale ?: ContentScale.Fit,
-        alpha = style.alpha ?: DefaultAlpha,
-        colorFilter = style.colorFilter
+        contentDescription = imageStyle.contentDescription ?: "",
+        modifier = (imageStyle.modifier ?: Modifier).clickable { onClick() },
+        alignment = imageStyle.alignment ?: Alignment.Center,
+        contentScale = imageStyle.contentScale ?: ContentScale.Fit,
+        alpha = imageStyle.alpha ?: DefaultAlpha,
+        colorFilter = imageStyle.colorFilter
     )
 }

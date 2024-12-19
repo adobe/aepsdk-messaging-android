@@ -13,7 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.adobe.marketing.mobile.services.HttpConnecting
+import com.adobe.marketing.mobile.messaging.MessagingTestUtils
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
@@ -32,9 +32,6 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.argumentCaptor
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 
 class UIUtilsTests {
@@ -126,7 +123,7 @@ class UIUtilsTests {
     @Test
     fun `Download returns failure for HTTP error response`() {
         // setup
-        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_NOT_FOUND, null, emptyMap())
+        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_NOT_FOUND, null, emptyMap())
         `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
             val callback = it.getArgument<NetworkCallback>(1)
             callback.call(simulatedResponse)
@@ -146,7 +143,7 @@ class UIUtilsTests {
     fun `Download returns failure when decoded bitmap is null`() {
         // setup
         val invalidBitmap = "invalid bitmap".byteInputStream()
-        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, invalidBitmap, emptyMap())
+        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, invalidBitmap, emptyMap())
         `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
             val callback = it.getArgument<NetworkCallback>(1)
             callback.call(simulatedResponse)
@@ -173,7 +170,7 @@ class UIUtilsTests {
         mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(any()) }
             .thenThrow(RuntimeException("Decoding error"))
 
-        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, MessagingTestUtils.bitmapToInputStream(mockBitmap), emptyMap())
         `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
             val callback = it.getArgument<NetworkCallback>(1)
             callback.call(simulatedResponse)
@@ -201,7 +198,7 @@ class UIUtilsTests {
         mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(any()) }
             .thenReturn(mockBitmap)
 
-        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, MessagingTestUtils.bitmapToInputStream(mockBitmap), emptyMap())
         `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
             val callback = it.getArgument<NetworkCallback>(1)
             callback.call(simulatedResponse)
@@ -216,26 +213,5 @@ class UIUtilsTests {
         assertTrue(resultArgumentCaptor.firstValue.isSuccess)
         assertEquals(mockBitmap, resultArgumentCaptor.firstValue.getOrNull())
         mockedStaticBitmapFactory.close()
-    }
-
-    private fun bitmapToInputStream(bitmap: Bitmap): ByteArrayInputStream {
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-        val byteArray = outputStream.toByteArray()
-        return ByteArrayInputStream(byteArray)
-    }
-
-    private fun simulateNetworkResponse(
-        responseCode: Int,
-        responseStream: InputStream?,
-        metadata: Map<String, String>
-    ): HttpConnecting {
-        val mockResponse = mock(HttpConnecting::class.java)
-        `when`(mockResponse.responseCode).thenReturn(responseCode)
-        `when`(mockResponse.inputStream).thenReturn(responseStream)
-        `when`(mockResponse.getResponsePropertyValue(org.mockito.kotlin.any())).then {
-            return@then metadata[it.getArgument(0)]
-        }
-        return mockResponse
     }
 }

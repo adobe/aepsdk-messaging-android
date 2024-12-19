@@ -125,7 +125,7 @@ class SmallImageUIStyleTests {
         val dismissButtonStyle = AepIconStyle(
             modifier = Modifier.size(100.dp, 100.dp),
             contentDescription = "content description",
-            tint = { Color.Blue }
+            tint = Color.Blue
         )
         val dismissButtonAlignment = Alignment.BottomEnd
         val cardStyle = AepCardStyle(
@@ -298,7 +298,7 @@ class SmallImageUIStyleTests {
     @Test
     fun `create SmallImageUIStyle with custom dismiss button style used`() {
         val dismissButtonStyle = AepIconStyle(
-            tint = { Color.Blue }
+            tint = Color.Blue
         )
 
         val style = SmallImageUIStyle.Builder()
