@@ -1,13 +1,13 @@
 /*
- Copyright 2024 Adobe. All rights reserved.
- This file is licensed to you under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License. You may obtain a copy
- of the License at http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software distributed under
- the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
- OF ANY KIND, either express or implied. See the License for the specific language
- governing permissions and limitations under the License.
- */
+  Copyright 2024 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
@@ -125,7 +125,7 @@ private val mockSmallImageUI
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
 class SmallImageCardComposableTests(
-private val qualifier: String
+    private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -152,7 +152,6 @@ private val qualifier: String
         mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
         mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
         `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
-
 
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val mockBitmap = BitmapFactory.decodeResource(context.resources, android.R.drawable.ic_menu_report_image)
@@ -255,7 +254,6 @@ private val qualifier: String
             .captureRoboImage(filePath = "build/outputs/roborazzi/SmallImageCardTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
-
     @Test
     fun `Test custom style is applied to enabled SmallImageCard in dark theme`() {
         // setup
@@ -303,99 +301,118 @@ private val qualifier: String
     }
 
     @Composable
-    private fun mockCustomSmallImageUIStyle(enabled: Boolean) : SmallImageUIStyle {
+    private fun mockCustomSmallImageUIStyle(enabled: Boolean): SmallImageUIStyle {
         return SmallImageUIStyle.Builder()
-            .cardStyle(AepCardStyle(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(5.dp),
-                enabled = enabled,
-                shape = RectangleShape,
-                colors = CardColors(
-                    containerColor = Color(0xFF531253),
-                    contentColor = Color(0xFFF7ECE1),
-                    disabledContainerColor = Color.DarkGray,
-                    disabledContentColor = Color.LightGray,
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp,
-                    disabledElevation = 16.dp
-                ),
-                border = BorderStroke(2.dp, Color(0xFF33032f))
-            ))
-            .rootRowStyle(AepRowStyle(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center))
-            .imageStyle(AepImageStyle(
-                modifier = Modifier
-                    .size(50.dp)
-                    .aspectRatio(1.5f),
-                contentDescription = "Test Image",
-                alignment = Alignment.Center,
-                contentScale = ContentScale.FillBounds
-            ))
+            .cardStyle(
+                AepCardStyle(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .padding(5.dp),
+                    enabled = enabled,
+                    shape = RectangleShape,
+                    colors = CardColors(
+                        containerColor = Color(0xFF531253),
+                        contentColor = Color(0xFFF7ECE1),
+                        disabledContainerColor = Color.DarkGray,
+                        disabledContentColor = Color.LightGray,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 8.dp,
+                        disabledElevation = 16.dp
+                    ),
+                    border = BorderStroke(2.dp, Color(0xFF33032f))
+                )
+            )
+            .rootRowStyle(
+                AepRowStyle(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                )
+            )
+            .imageStyle(
+                AepImageStyle(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .aspectRatio(1.5f),
+                    contentDescription = "Test Image",
+                    alignment = Alignment.Center,
+                    contentScale = ContentScale.FillBounds
+                )
+            )
             .textColumnStyle(AepColumnStyle(horizontalAlignment = Alignment.CenterHorizontally))
-            .titleAepTextStyle(AepTextStyle(
-                textStyle = TextStyle(
-                    color = Color(0xFFE7CFCD),
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Cursive)
-            ))
-            .bodyAepTextStyle(AepTextStyle(
-                textStyle = TextStyle(
-                    fontFamily = FontFamily.Cursive),
-                maxLines = 1
-            ))
-            .buttonStyle(arrayOf(
-                AepButtonStyle(
-                    enabled = enabled,
-                    shape = RectangleShape,
-                    colors = ButtonColors(
-                        containerColor = Color(0xFF456990),
-                        contentColor = Color.DarkGray,
-                        disabledContainerColor = Color.LightGray,
-                        disabledContentColor = Color.Gray,
-                    ),
-                    textStyle = AepTextStyle(
-                        textStyle = TextStyle(
-                            color = Color(0xFFF7ECE1),
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Cursive)
+            .titleAepTextStyle(
+                AepTextStyle(
+                    textStyle = TextStyle(
+                        color = Color(0xFFE7CFCD),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Cursive
                     )
-                ),
-                AepButtonStyle(
-                    enabled = enabled,
-                    shape = RectangleShape,
-                    colors = ButtonColors(
-                        containerColor = Color(0xFFa0d2db),
-                        contentColor = Color.DarkGray,
-                        disabledContainerColor = Color.LightGray,
-                        disabledContentColor = Color.Gray,
+                )
+            )
+            .bodyAepTextStyle(
+                AepTextStyle(
+                    textStyle = TextStyle(
+                        fontFamily = FontFamily.Cursive
                     ),
-                    textStyle = AepTextStyle(
-                        textStyle = TextStyle(
-                            color = Color(0xFF9297c4),
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Cursive)
-                    )
-                ),
-                AepButtonStyle(
-                    enabled = enabled,
-                    shape = RectangleShape,
-                    colors = ButtonColors(
-                        containerColor = Color(0xFFbee7e8),
-                        contentColor = Color.DarkGray,
-                        disabledContainerColor = Color.LightGray,
-                        disabledContentColor = Color.Gray,
+                    maxLines = 1
+                )
+            )
+            .buttonStyle(
+                arrayOf(
+                    AepButtonStyle(
+                        enabled = enabled,
+                        shape = RectangleShape,
+                        colors = ButtonColors(
+                            containerColor = Color(0xFF456990),
+                            contentColor = Color.DarkGray,
+                            disabledContainerColor = Color.LightGray,
+                            disabledContentColor = Color.Gray,
+                        ),
+                        textStyle = AepTextStyle(
+                            textStyle = TextStyle(
+                                color = Color(0xFFF7ECE1),
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Cursive
+                            )
+                        )
                     ),
-                    textStyle = AepTextStyle(
-                        textStyle = TextStyle(
-                            color = Color(0xFF554640),
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Cursive)
+                    AepButtonStyle(
+                        enabled = enabled,
+                        shape = RectangleShape,
+                        colors = ButtonColors(
+                            containerColor = Color(0xFFa0d2db),
+                            contentColor = Color.DarkGray,
+                            disabledContainerColor = Color.LightGray,
+                            disabledContentColor = Color.Gray,
+                        ),
+                        textStyle = AepTextStyle(
+                            textStyle = TextStyle(
+                                color = Color(0xFF9297c4),
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Cursive
+                            )
+                        )
+                    ),
+                    AepButtonStyle(
+                        enabled = enabled,
+                        shape = RectangleShape,
+                        colors = ButtonColors(
+                            containerColor = Color(0xFFbee7e8),
+                            contentColor = Color.DarkGray,
+                            disabledContainerColor = Color.LightGray,
+                            disabledContentColor = Color.Gray,
+                        ),
+                        textStyle = AepTextStyle(
+                            textStyle = TextStyle(
+                                color = Color(0xFF554640),
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Cursive
+                            )
+                        )
                     )
-                )))
+                )
+            )
             .dismissButtonStyle(
                 AepIconStyle(
                     modifier = Modifier
@@ -494,10 +511,10 @@ class SmallImageCardBehaviorTests {
                 style = SmallImageUIStyle.Builder()
                     .dismissButtonStyle(
                         AepIconStyle(
-                        modifier = Modifier
-                            .size(13.dp)
-                            .testTag("dismiss_button")
-                    )
+                            modifier = Modifier
+                                .size(13.dp)
+                                .testTag("dismiss_button")
+                        )
                     )
                     .build(),
                 observer = mockAepUIEventObserver
