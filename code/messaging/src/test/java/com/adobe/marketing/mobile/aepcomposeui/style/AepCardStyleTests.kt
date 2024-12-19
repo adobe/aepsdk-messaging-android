@@ -31,6 +31,7 @@ class AepCardStyleTests {
     fun `merge with overriding style`() {
         val defaultStyle = AepCardStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
+            enabled = true,
             shape = mock(Shape::class.java),
             colors = mock(CardColors::class.java),
             elevation = mock(CardElevation::class.java),
@@ -38,6 +39,7 @@ class AepCardStyleTests {
         )
         val overridingStyle = AepCardStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
+            enabled = false,
             shape = mock(Shape::class.java),
             colors = mock(CardColors::class.java),
             elevation = mock(CardElevation::class.java),
@@ -53,6 +55,7 @@ class AepCardStyleTests {
     fun `merge with overriding style with some parameters overriden`() {
         val defaultStyle = AepCardStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
+            enabled = true,
             shape = mock(Shape::class.java),
             colors = mock(CardColors::class.java),
             elevation = mock(CardElevation::class.java),
@@ -60,6 +63,7 @@ class AepCardStyleTests {
         )
         val overridingStyle = AepCardStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
+            enabled = false,
             shape = RectangleShape,
             colors = null,
             elevation = null,
@@ -79,6 +83,7 @@ class AepCardStyleTests {
     fun `merge with null style`() {
         val defaultStyle = AepCardStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
+            enabled = true,
             shape = mock(Shape::class.java),
             colors = mock(CardColors::class.java),
             elevation = mock(CardElevation::class.java),
@@ -98,6 +103,7 @@ class AepCardStyleTests {
     fun `merge with null properties in overriding style`() {
         val defaultStyle = AepCardStyle(
             modifier = Modifier.padding(8.dp).border(BorderStroke(1.dp, Color.Blue)),
+            enabled = true,
             shape = mock(Shape::class.java),
             colors = mock(CardColors::class.java),
             elevation = mock(CardElevation::class.java),
@@ -105,6 +111,7 @@ class AepCardStyleTests {
         )
         val overridingStyle = AepCardStyle(
             modifier = null,
+            enabled = false,
             shape = null,
             colors = null,
             elevation = null,

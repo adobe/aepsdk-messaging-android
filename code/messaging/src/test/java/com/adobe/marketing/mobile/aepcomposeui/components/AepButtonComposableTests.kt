@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.messaging.R
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -54,7 +53,7 @@ class AepButtonComposableTests(
     private val mockAepText
         @Composable
         @ReadOnlyComposable
-        get() = AepText(stringResource(id = R.string.mockText))
+        get() = AepText(stringResource(id = android.R.string.httpErrorBadUrl))
 
     private val mockAepButton
         @Composable
