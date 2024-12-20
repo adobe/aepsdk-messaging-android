@@ -13,8 +13,12 @@ package com.adobe.marketing.mobile.aepcomposeui
 
 import androidx.compose.ui.text.font.FontWeight
 
-internal object AepUIConstants {
+object AepUIConstants {
     const val LOG_TAG = "AepComposeUI"
+
+    object InteractionID {
+        const val CARD_CLICKED = "Card clicked"
+    }
 
     internal object SmallImageCard {
         internal object DefaultStyle {
