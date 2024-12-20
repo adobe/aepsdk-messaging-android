@@ -74,7 +74,7 @@ fun SmallImageCard(
     AepCardComposable(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(ui.getTemplate().id, ui.getTemplate().actionUrl)))
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(AepUIConstants.InteractionID.CARD_CLICKED, ui.getTemplate().actionUrl)))
         }
     ) {
         Box {
