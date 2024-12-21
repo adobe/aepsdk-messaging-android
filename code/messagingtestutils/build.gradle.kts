@@ -48,4 +48,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7")
     implementation("androidx.test.ext:junit:1.1.5")
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("org.mockito:mockito-core:4.5.1")
+    implementation("org.mockito:mockito-inline:4.5.1")
+    implementation("org.mockito.kotlin:mockito-kotlin:3.2.0")
 }

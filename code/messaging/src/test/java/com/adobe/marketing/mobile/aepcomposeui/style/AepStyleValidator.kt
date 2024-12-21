@@ -98,6 +98,7 @@ internal class AepStyleValidator {
             assertEquals(expectedStyle?.elevation, style?.elevation)
             assertEquals(expectedStyle?.modifier, style?.modifier)
             assertEquals(expectedStyle?.shape, style?.shape)
+            assertEquals(expectedStyle?.enabled, style?.enabled)
         }
 
         /**

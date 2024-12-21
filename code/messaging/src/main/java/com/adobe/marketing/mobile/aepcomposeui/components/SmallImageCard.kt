@@ -82,7 +82,7 @@ fun SmallImageCard(
                 AepIconComposable(
                     drawableId = it.drawableId,
                     // todo check if we can remember this calculation so that it is not repeated for recompositions
-                    style = style.dismissButtonStyle.apply {
+                    iconStyle = style.dismissButtonStyle.apply {
                         modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
                     },
                     onClick = {
@@ -97,7 +97,7 @@ fun SmallImageCard(
                 imageBitmap?.let {
                     AepImageComposable(
                         content = BitmapPainter(it.asImageBitmap()),
-                        style = style.imageStyle
+                        imageStyle = style.imageStyle
                     )
                 }
                 if (isLoading) {

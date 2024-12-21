@@ -12,7 +12,7 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorProducer
+import androidx.compose.ui.graphics.Color
 
 /**
  * Class representing the style for an AepIcon composable.
@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.ColorProducer
 class AepIconStyle(
     var modifier: Modifier? = null,
     var contentDescription: String? = null,
-    var tint: ColorProducer? = null
+    var tint: Color? = null
 ) {
     companion object {
 
