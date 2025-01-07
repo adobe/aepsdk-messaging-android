@@ -76,9 +76,11 @@ class ContentCardMapper private constructor() {
  */
 
 fun AepUI<*, *>.getMeta(): Map<String, Any>? {
-    when (this.getTemplate()) {
+    val template = this.getTemplate()
+    return when (template) {
         is SmallImageTemplate ->
-            return ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
+            ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
+
+        else -> null
     }
-    return null
 }
