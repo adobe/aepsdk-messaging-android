@@ -13,7 +13,10 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants.LOG_TAG
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardMapper
 import com.adobe.marketing.mobile.services.HttpMethod
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.NetworkRequest
@@ -21,7 +24,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.util.UrlUtils
 import java.net.HttpURLConnection
 
-internal object UIUtils {
+object UIUtils {
 
     private const val SELF_TAG = "UIUtils"
     private const val DOWNLOAD_TIMEOUT_SECS = 10
@@ -33,7 +36,7 @@ internal object UIUtils {
      * @return the downloaded image as a [Bitmap].
      */
     // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
-    fun downloadImage(
+    internal fun downloadImage(
         url: String?,
         completion: (Result<Bitmap>) -> Unit
     ) {
@@ -102,5 +105,19 @@ internal object UIUtils {
                     connection.close()
                 }
             }
+    }
+
+    /**
+     * Extension function to get the meta data for the given [AepUI].
+     *
+     * @return the meta data as a [MutableMap] or null if the [AepUI] does not have meta data.
+     */
+
+    fun AepUI<*, *>.getMeta(): Map<String, Any>? {
+        when (this.getTemplate()) {
+            is SmallImageTemplate ->
+                return ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
+        }
+        return null
     }
 }
