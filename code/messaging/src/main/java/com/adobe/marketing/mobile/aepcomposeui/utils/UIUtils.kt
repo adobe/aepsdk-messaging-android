@@ -13,10 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants.LOG_TAG
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
-import com.adobe.marketing.mobile.messaging.ContentCardMapper
 import com.adobe.marketing.mobile.services.HttpMethod
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.NetworkRequest
@@ -105,19 +102,5 @@ object UIUtils {
                     connection.close()
                 }
             }
-    }
-
-    /**
-     * Extension function to get the meta data for the given [AepUI].
-     *
-     * @return the meta data as a [MutableMap] or null if the [AepUI] does not have meta data.
-     */
-
-    fun AepUI<*, *>.getMeta(): Map<String, Any>? {
-        when (this.getTemplate()) {
-            is SmallImageTemplate ->
-                return ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
-        }
-        return null
     }
 }

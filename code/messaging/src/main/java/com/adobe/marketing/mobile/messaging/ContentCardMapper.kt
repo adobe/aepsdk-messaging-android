@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.util.StringUtils
 
 /**
@@ -65,4 +67,18 @@ class ContentCardMapper private constructor() {
     internal fun clear() {
         contentCardSchemaDataMap.clear()
     }
+}
+
+/**
+ * Extension function to get the meta data for the given [AepUI].
+ *
+ * @return the meta data as a [MutableMap] or null if the [AepUI] does not have meta data.
+ */
+
+fun AepUI<*, *>.getMeta(): Map<String, Any>? {
+    when (this.getTemplate()) {
+        is SmallImageTemplate ->
+            return ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
+    }
+    return null
 }
