@@ -21,7 +21,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.util.UrlUtils
 import java.net.HttpURLConnection
 
-object UIUtils {
+internal object UIUtils {
 
     private const val SELF_TAG = "UIUtils"
     private const val DOWNLOAD_TIMEOUT_SECS = 10
@@ -33,7 +33,7 @@ object UIUtils {
      * @return the downloaded image as a [Bitmap].
      */
     // TODO: This method is repeated in Messaging, maybe it should be moved to a common place
-    internal fun downloadImage(
+    fun downloadImage(
         url: String?,
         completion: (Result<Bitmap>) -> Unit
     ) {
