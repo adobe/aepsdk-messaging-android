@@ -79,7 +79,7 @@ fun AepUI<*, *>.getMeta(): Map<String, Any>? {
     val template = this.getTemplate()
     return when (template) {
         is SmallImageTemplate ->
-            ContentCardMapper.instance.getContentCardSchemaData((this.getTemplate() as SmallImageTemplate).id)?.meta
+            ContentCardMapper.instance.getContentCardSchemaData(template.id)?.meta
 
         else -> null
     }
