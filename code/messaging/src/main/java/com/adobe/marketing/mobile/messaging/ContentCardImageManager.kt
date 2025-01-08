@@ -13,9 +13,6 @@ package com.adobe.marketing.mobile.messaging
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import com.adobe.marketing.mobile.messaging.MessagingConstants.CONTENT_CARD_CACHE_SUBDIRECTORY
 import com.adobe.marketing.mobile.services.Log
@@ -155,20 +152,4 @@ class ContentCardImageManager() {
             return false
         }
     }
-
-    // todo - update the default image
-    /**
-     * Returns a 200*200 Gray Bitmap
-     * */
-    fun getDefaultImageBitmap(): Bitmap = Bitmap.createBitmap(
-        200,
-        200,
-        Bitmap.Config.ARGB_8888
-    )
-        .apply {
-            Canvas(this)
-                .drawColor(
-                    Color.Gray.toArgb()
-                )
-        }
 }
