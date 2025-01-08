@@ -12,9 +12,13 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.services.HttpConnecting;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
@@ -24,6 +28,7 @@ import com.adobe.marketing.mobile.services.caching.CacheService;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,6 +43,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -669,4 +675,32 @@ public class MessagingTestUtils {
         return propositionItemList;
     }
 
+    public static ByteArrayInputStream bitmapToInputStream(Bitmap bitmap) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+        byte[] byteArray = outputStream.toByteArray();
+        return new ByteArrayInputStream(byteArray);
+    }
+
+    public static HttpConnecting simulateNetworkResponse(
+            int responseCode,
+            InputStream responseStream,
+            Map<String, String> metadata
+    ) {
+        HttpConnecting mockResponse = mock(HttpConnecting.class);
+
+        // Mock responseCode
+        when(mockResponse.getResponseCode()).thenReturn(responseCode);
+
+        // Mock inputStream
+        when(mockResponse.getInputStream()).thenReturn(responseStream);
+
+        // Mock getResponsePropertyValue
+        when(mockResponse.getResponsePropertyValue(anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0, String.class);
+            return metadata.get(key);
+        });
+
+        return mockResponse;
+    }
 }

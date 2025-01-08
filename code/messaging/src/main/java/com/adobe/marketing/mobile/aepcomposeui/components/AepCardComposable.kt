@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,7 +32,9 @@ internal fun AepCardComposable(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = (cardStyle.modifier ?: Modifier).then(Modifier.clickable { onClick() }),
+        onClick = onClick,
+        modifier = cardStyle.modifier ?: Modifier,
+        enabled = cardStyle.enabled ?: true,
         shape = cardStyle.shape ?: CardDefaults.shape,
         colors = cardStyle.colors ?: CardDefaults.cardColors(),
         elevation = cardStyle.elevation ?: CardDefaults.elevatedCardElevation(),

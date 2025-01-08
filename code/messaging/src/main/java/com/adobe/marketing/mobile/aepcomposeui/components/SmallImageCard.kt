@@ -77,7 +77,7 @@ fun SmallImageCard(
     AepCardComposable(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(ui.getTemplate().id, ui.getTemplate().actionUrl)))
+            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(AepUIConstants.InteractionID.CARD_CLICKED, ui.getTemplate().actionUrl)))
         }
     ) {
         Box {
@@ -85,7 +85,7 @@ fun SmallImageCard(
                 AepIconComposable(
                     drawableId = it.drawableId,
                     // todo check if we can remember this calculation so that it is not repeated for recompositions
-                    style = style.dismissButtonStyle.apply {
+                    iconStyle = style.dismissButtonStyle.apply {
                         modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
                     },
                     onClick = {
@@ -100,7 +100,7 @@ fun SmallImageCard(
                 imageBitmap?.let {
                     AepImageComposable(
                         content = BitmapPainter(it.asImageBitmap()),
-                        style = style.imageStyle
+                        imageStyle = style.imageStyle
                     )
                 }
                 if (isLoading) {
@@ -140,7 +140,7 @@ fun SmallImageCard(
                                     observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
                                 },
                                 buttonStyle = style.buttonStyle[index].apply {
-                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f))
+                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f, fill = false))
                                 }
                             )
                         }

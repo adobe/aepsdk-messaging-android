@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -22,18 +23,19 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
  * A composable function that displays an icon element with customizable properties.
  *
  * @param drawableId The drawable resource ID to be displayed.
- * @param style The [AepIconStyle] to be applied to the icon element.
+ * @param iconStyle The [AepIconStyle] to be applied to the icon element.
  * @param onClick Method that is called when this icon is clicked
  */
 @Composable
 internal fun AepIconComposable(
     drawableId: Int,
-    style: AepIconStyle = AepIconStyle(),
+    iconStyle: AepIconStyle = AepIconStyle(),
     onClick: () -> Unit = {}
 ) {
     Icon(
         painter = painterResource(id = drawableId),
-        contentDescription = style.contentDescription ?: "",
-        modifier = (style.modifier ?: Modifier).clickable { onClick() }
+        contentDescription = iconStyle.contentDescription,
+        modifier = (iconStyle.modifier ?: Modifier).clickable { onClick() },
+        tint = iconStyle.tint ?: LocalContentColor.current
     )
 }

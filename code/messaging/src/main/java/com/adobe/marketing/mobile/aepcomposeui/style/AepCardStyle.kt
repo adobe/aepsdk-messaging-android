@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Shape
  */
 class AepCardStyle(
     var modifier: Modifier? = null,
+    var enabled: Boolean? = null,
     var shape: Shape? = null,
     var colors: CardColors? = null,
     var elevation: CardElevation? = null,
@@ -55,6 +56,7 @@ class AepCardStyle(
             }
             return AepCardStyle(
                 modifier = overridingStyle.modifier ?: defaultStyle.modifier,
+                enabled = overridingStyle.enabled ?: defaultStyle.enabled,
                 shape = overridingStyle.shape ?: defaultStyle.shape,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
                 elevation = overridingStyle.elevation ?: defaultStyle.elevation,

@@ -13,7 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorProducer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -26,12 +26,12 @@ class AepIconStyleTests {
         val defaultStyle = AepIconStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
-            tint = mock(ColorProducer::class.java)
+            tint = mock(Color::class.java)
         )
         val overridingStyle = AepIconStyle(
             modifier = Modifier.padding(16.dp),
             contentDescription = "overriding description",
-            tint = mock(ColorProducer::class.java)
+            tint = mock(Color::class.java)
         )
 
         val result = AepIconStyle.merge(defaultStyle, overridingStyle)
@@ -44,7 +44,7 @@ class AepIconStyleTests {
         val defaultStyle = AepIconStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
-            tint = mock(ColorProducer::class.java)
+            tint = mock(Color::class.java)
         )
         val overridingStyle = AepIconStyle(
             modifier = Modifier.padding(16.dp),
@@ -64,7 +64,7 @@ class AepIconStyleTests {
         val defaultStyle = AepIconStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
-            tint = mock(ColorProducer::class.java)
+            tint = mock(Color::class.java)
         )
 
         val result = AepIconStyle.merge(defaultStyle, null)
@@ -79,7 +79,7 @@ class AepIconStyleTests {
         val defaultStyle = AepIconStyle(
             modifier = Modifier.padding(8.dp),
             contentDescription = "default description",
-            tint = mock(ColorProducer::class.java)
+            tint = mock(Color::class.java)
         )
         val overridingStyle = AepIconStyle(
             modifier = null,
