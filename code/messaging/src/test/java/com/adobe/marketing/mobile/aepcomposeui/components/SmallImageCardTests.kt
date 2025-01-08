@@ -466,7 +466,7 @@ class SmallImageCardBehaviorTests {
         assertTrue(interactEvent.aepUi is SmallImageUI)
         assertTrue(interactEvent.action is UIAction.Click)
         val clickAction = interactEvent.action as UIAction.Click
-        assertEquals("mockSmallImageCardId", clickAction.id)
+        assertEquals("Card clicked", clickAction.id)
         assertEquals("mockActionUrl", clickAction.actionUrl)
     }
 
