@@ -1,3 +1,14 @@
+/*
+  Copyright 2025 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
 package com.adobe.marketing.mobile.messaging
 
 import android.graphics.Bitmap
@@ -30,7 +41,6 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import kotlin.test.Test
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
@@ -72,11 +82,13 @@ class ContentCardImageManagerTests {
 
     @Test
     fun get_image_first_time_when_not_in_cache() {
-        //Mocking Cache to bypass cache check
-        whenever(mockCacheService.get(
-            any(),
-            any()
-        )).thenReturn(null)
+        // Mocking Cache to bypass cache check
+        whenever(
+            mockCacheService.get(
+                any(),
+                any()
+            )
+        ).thenReturn(null)
 
         // setup for bitmap download simulation
         val mockBitmap: Bitmap = mock(Bitmap::class.java)
@@ -93,7 +105,8 @@ class ContentCardImageManagerTests {
             callback.call(simulatedResponse)
         }
 
-        contentCardImageManager.getContentCardImageBitmap(imageUrl, testCachePath,
+        contentCardImageManager.getContentCardImageBitmap(
+            imageUrl, testCachePath,
             {
                 it.onSuccess { bitmap ->
                     assertNotNull(bitmap)
@@ -101,7 +114,8 @@ class ContentCardImageManagerTests {
                 it.onFailure {
                     fail("Test failed as unable to fetch image from cache")
                 }
-            })
+            }
+        )
 
         mockedStaticBitmapFactory.close()
     }
@@ -118,11 +132,13 @@ class ContentCardImageManagerTests {
         mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
             .thenReturn(mockBitmap)
 
-        //Mocking Cache to return a valid cache result
-        whenever(mockCacheService.get(
-            any(),
-            any()
-        )).thenReturn(object: CacheResult {
+        // Mocking Cache to return a valid cache result
+        whenever(
+            mockCacheService.get(
+                any(),
+                any()
+            )
+        ).thenReturn(object : CacheResult {
             override fun getData(): InputStream {
                 return bitmapToInputStream(mockBitmap)
             }
@@ -134,7 +150,8 @@ class ContentCardImageManagerTests {
             }
         })
 
-        contentCardImageManager.getContentCardImageBitmap(imageUrl, testCachePath,
+        contentCardImageManager.getContentCardImageBitmap(
+            imageUrl, testCachePath,
             {
                 it.onSuccess { bitmap ->
                     assertNotNull(bitmap)
@@ -142,7 +159,8 @@ class ContentCardImageManagerTests {
                 it.onFailure {
                     fail("Test failed as unable to fetch image from cache")
                 }
-            })
+            }
+        )
 
         mockedStaticBitmapFactory.close()
     }
