@@ -1,3 +1,14 @@
+/*
+  Copyright 2025 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
 package com.adobe.marketing.mobile.messaging.imagecaching
 
 import android.graphics.Bitmap
@@ -11,17 +22,17 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
-class MockCacheService: CacheService {
+class MockCacheService : CacheService {
 
     private val entrySet = mutableMapOf<String, CacheEntry>()
 
     override fun set(name: String, key: String, value: CacheEntry): Boolean {
-        entrySet[name+key] = value
+        entrySet[name + key] = value
         return true
     }
 
     override fun get(name: String, key: String): CacheResult? {
-        return if(entrySet.containsKey(name+key)) {
+        return if (entrySet.containsKey(name + key)) {
             object : CacheResult {
                 override fun getData(): InputStream {
                     val mockBitmap: Bitmap = mock(Bitmap::class.java)
@@ -38,11 +49,10 @@ class MockCacheService: CacheService {
     }
 
     override fun remove(name: String, key: String): Boolean {
-        if(entrySet.containsKey(name+key)) {
+        if (entrySet.containsKey(name + key)) {
             entrySet.remove(name + key)
             return true
-        }
-        else {
+        } else {
             return false
         }
     }

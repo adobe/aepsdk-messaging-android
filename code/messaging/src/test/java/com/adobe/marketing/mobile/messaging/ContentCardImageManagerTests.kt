@@ -21,8 +21,6 @@ import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.caching.CacheEntry
 import com.adobe.marketing.mobile.services.caching.CacheExpiry
-import com.adobe.marketing.mobile.services.caching.CacheResult
-import com.adobe.marketing.mobile.services.caching.CacheService
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -34,7 +32,6 @@ import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.ByteArrayInputStream
