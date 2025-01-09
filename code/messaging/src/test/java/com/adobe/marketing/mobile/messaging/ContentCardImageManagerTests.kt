@@ -14,10 +14,12 @@ package com.adobe.marketing.mobile.messaging
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.adobe.marketing.mobile.messaging.MessagingTestConstants.CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
+import com.adobe.marketing.mobile.messaging.imagecaching.MockCacheService
 import com.adobe.marketing.mobile.services.HttpConnecting
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.services.caching.CacheEntry
 import com.adobe.marketing.mobile.services.caching.CacheExpiry
 import com.adobe.marketing.mobile.services.caching.CacheResult
 import com.adobe.marketing.mobile.services.caching.CacheService
@@ -47,8 +49,7 @@ import kotlin.test.fail
 @Config(sdk = [33])
 class ContentCardImageManagerTests {
 
-    @Mock
-    private lateinit var mockCacheService: CacheService
+    private var mockCacheService = MockCacheService()
 
     @Mock
     private lateinit var mockServiceProvider: ServiceProvider
@@ -65,9 +66,8 @@ class ContentCardImageManagerTests {
         MockitoAnnotations.openMocks(this)
         mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
         mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
-        whenever(mockCacheService.set(any(), any(), any())).thenReturn(true)
         `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
-
+        `when`(mockServiceProvider.cacheService).thenReturn(mockCacheService)
         testCachePath = CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
     }
 
@@ -78,14 +78,7 @@ class ContentCardImageManagerTests {
     }
 
     @Test
-    fun `Get image for the first time when it is not in cache`() {
-        // Mocking Cache to bypass cache check
-        whenever(
-            mockCacheService.get(
-                any(),
-                any()
-            )
-        ).thenReturn(null)
+    fun `Get image for the first time when it is not in cache, download and cache is successful`() {
 
         // setup for bitmap download simulation
         val mockBitmap: Bitmap = mock(Bitmap::class.java)
@@ -118,6 +111,39 @@ class ContentCardImageManagerTests {
     }
 
     @Test
+    fun `Get image for the first time when it is not in cache, download fails`() {
+
+        // setup for bitmap download simulation
+        val mockBitmap: Bitmap = mock(Bitmap::class.java)
+        `when`(mockBitmap.width).thenReturn(100)
+        `when`(mockBitmap.height).thenReturn(100)
+
+        val mockedStaticBitmapFactory = mockStatic(BitmapFactory::class.java)
+        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
+            .thenReturn(mockBitmap)
+
+        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
+            val callback = it.getArgument<NetworkCallback>(1)
+            callback.call(simulatedResponse)
+        }
+
+        ContentCardImageManager.getContentCardImageBitmap(
+            "invalidUrl", testCachePath,
+            {
+                it.onSuccess { bitmap ->
+                    fail("Test failed as download should have failed for invalid url")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
+
+        mockedStaticBitmapFactory.close()
+    }
+
+    @Test
     fun `Get image from cache`() {
 
         // setup for bitmap decoding simulation
@@ -129,23 +155,13 @@ class ContentCardImageManagerTests {
         mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
             .thenReturn(mockBitmap)
 
-        // Mocking Cache to return a valid cache result
-        whenever(
-            mockCacheService.get(
-                any(),
-                any()
+        mockCacheService.set(
+            name = testCachePath,
+            key = imageUrl,
+            value = CacheEntry(
+                bitmapToInputStream(mockBitmap), CacheExpiry.never(), emptyMap()
             )
-        ).thenReturn(object : CacheResult {
-            override fun getData(): InputStream {
-                return bitmapToInputStream(mockBitmap)
-            }
-            override fun getExpiry(): CacheExpiry {
-                return CacheExpiry.never()
-            }
-            override fun getMetadata(): Map<String, String> {
-                return emptyMap()
-            }
-        })
+        )
 
         ContentCardImageManager.getContentCardImageBitmap(
             imageUrl, testCachePath,

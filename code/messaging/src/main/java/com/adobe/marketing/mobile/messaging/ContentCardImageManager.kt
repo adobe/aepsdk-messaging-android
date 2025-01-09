@@ -55,7 +55,8 @@ class ContentCardImageManager {
          * @return `True` if the image is found in cache, `False` otherwise
          * */
         private fun isImageCached(imageUrl: String, cacheName: String): Boolean {
-            return (cacheService?.get(cacheName, imageUrl) != null)
+            val cacheValue = cacheService?.get(cacheName, imageUrl)
+            return cacheValue!= null
         }
 
         /**
