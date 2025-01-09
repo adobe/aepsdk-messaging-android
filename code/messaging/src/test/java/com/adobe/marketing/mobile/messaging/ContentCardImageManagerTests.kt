@@ -47,7 +47,8 @@ import kotlin.test.fail
 @Config(sdk = [33])
 class ContentCardImageManagerTests {
 
-    @Mock private lateinit var mockCacheService: CacheService
+    @Mock
+    private lateinit var mockCacheService: CacheService
 
     @Mock
     private lateinit var mockServiceProvider: ServiceProvider
