@@ -452,11 +452,13 @@ class SmallImageCardBehaviorTests {
         mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
         mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
 
-        whenever(mockCacheService.set(
-            org.mockito.kotlin.any(),
-            org.mockito.kotlin.any(),
-            org.mockito.kotlin.any()
-        )).thenReturn(true)
+        whenever(
+            mockCacheService.set(
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()
+            )
+        ).thenReturn(true)
 
         // Mocking Cache to bypass cache check
         whenever(
