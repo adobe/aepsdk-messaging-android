@@ -20,6 +20,7 @@ public class MessagingTestConstants {
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
+    static final String CONTENT_CARD_TEST_CACHE_SUBDIRECTORY = "contentCardTestImages";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CACHE_BASE_DIR = "messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";

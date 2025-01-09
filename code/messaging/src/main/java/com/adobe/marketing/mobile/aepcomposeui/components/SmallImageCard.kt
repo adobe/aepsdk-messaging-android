@@ -33,7 +33,7 @@ import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
+import com.adobe.marketing.mobile.messaging.ContentCardImageManager
 
 /**
  * Composable function that renders a small image card UI.
@@ -58,13 +58,14 @@ fun SmallImageCard(
         if (imageUrl.isNullOrBlank()) {
             isLoading = false
         } else {
-            UIUtils.downloadImage(imageUrl) {
+            ContentCardImageManager.getContentCardImageBitmap(imageUrl) {
                 it.onSuccess { bitmap ->
                     imageBitmap = bitmap
                     isLoading = false
                 }
                 it.onFailure {
-                    // TODO once we have a default image, we can use that here
+                    // todo - confirm default image bitmap to be used here
+                    // imageBitmap = contentCardManager.getDefaultImageBitmap()
                     isLoading = false
                 }
             }

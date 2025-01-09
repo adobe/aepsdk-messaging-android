@@ -65,6 +65,7 @@ import com.adobe.marketing.mobile.messaging.R
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
+import com.adobe.marketing.mobile.services.caching.CacheService
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.After
@@ -74,6 +75,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.Mockito.any
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.times
@@ -81,6 +83,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.whenever
 import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -433,9 +436,47 @@ class SmallImageCardBehaviorTests {
     @Mock
     private lateinit var mockAepUIEventObserver: AepUIEventObserver
 
+    @Mock
+    private lateinit var mockCacheService: CacheService
+    @Mock
+    private lateinit var mockServiceProvider: ServiceProvider
+    private lateinit var mockedStaticServiceProvider: MockedStatic<ServiceProvider>
+
+    @Mock
+    private lateinit var mockNetworkService: Networking
+
     @Before
     fun setUp() {
+
         MockitoAnnotations.openMocks(this)
+        mockedStaticServiceProvider = mockStatic(ServiceProvider::class.java)
+        mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
+
+        whenever(
+            mockCacheService.set(
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()
+            )
+        ).thenReturn(true)
+
+        // Mocking Cache to bypass cache check
+        whenever(
+            mockCacheService.get(
+                org.mockito.kotlin.any(),
+                org.mockito.kotlin.any()
+            )
+        ).thenReturn(null)
+
+        `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
+
+        MockitoAnnotations.openMocks(this)
+    }
+
+    @After
+    fun tearDown() {
+        mockedStaticServiceProvider.close()
+        Mockito.validateMockitoUsage()
     }
 
     @Test
