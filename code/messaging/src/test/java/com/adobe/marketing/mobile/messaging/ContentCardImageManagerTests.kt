@@ -13,7 +13,7 @@ package com.adobe.marketing.mobile.messaging
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.adobe.marketing.mobile.messaging.MessagingConstants.CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
+import com.adobe.marketing.mobile.messaging.MessagingTestConstants.CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
 import com.adobe.marketing.mobile.services.HttpConnecting
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
@@ -56,9 +56,7 @@ class ContentCardImageManagerTests {
     @Mock
     private lateinit var mockNetworkService: Networking
 
-    private lateinit var contentCardImageManager: ContentCardImageManager
     private lateinit var testCachePath: String
-    private lateinit var testImageBitmapName: String
     private val imageUrl = "https://fastly.picsum.photos/id/43/400/300.jpg?hmac=fAPJ5p1wbFahFpnqtg004Nny-vTEADhmMxMkwLUSfw0"
 
     @Before
@@ -69,9 +67,7 @@ class ContentCardImageManagerTests {
         whenever(mockCacheService.set(any(), any(), any())).thenReturn(true)
         `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
 
-        contentCardImageManager = ContentCardImageManager()
         testCachePath = CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
-        testImageBitmapName = "sampleBitmapContentCard"
     }
 
     @After
@@ -81,7 +77,7 @@ class ContentCardImageManagerTests {
     }
 
     @Test
-    fun get_image_first_time_when_not_in_cache() {
+    fun `Get image for the first time when it is not in cache`() {
         // Mocking Cache to bypass cache check
         whenever(
             mockCacheService.get(
@@ -105,7 +101,7 @@ class ContentCardImageManagerTests {
             callback.call(simulatedResponse)
         }
 
-        contentCardImageManager.getContentCardImageBitmap(
+        ContentCardImageManager.getContentCardImageBitmap(
             imageUrl, testCachePath,
             {
                 it.onSuccess { bitmap ->
@@ -121,7 +117,7 @@ class ContentCardImageManagerTests {
     }
 
     @Test
-    fun getContentCardImageBitmap_getCachedImage() {
+    fun `Get image from cache`() {
 
         // setup for bitmap decoding simulation
         val mockBitmap: Bitmap = mock(Bitmap::class.java)
@@ -150,7 +146,7 @@ class ContentCardImageManagerTests {
             }
         })
 
-        contentCardImageManager.getContentCardImageBitmap(
+        ContentCardImageManager.getContentCardImageBitmap(
             imageUrl, testCachePath,
             {
                 it.onSuccess { bitmap ->

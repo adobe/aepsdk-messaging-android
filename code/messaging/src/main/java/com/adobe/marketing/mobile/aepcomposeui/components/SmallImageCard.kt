@@ -58,9 +58,7 @@ fun SmallImageCard(
         if (imageUrl.isNullOrBlank()) {
             isLoading = false
         } else {
-            val contentCardImageManager = ContentCardImageManager()
-
-            contentCardImageManager.getContentCardImageBitmap(imageUrl) {
+            ContentCardImageManager.getContentCardImageBitmap(imageUrl) {
                 it.onSuccess { bitmap ->
                     imageBitmap = bitmap
                     isLoading = false
