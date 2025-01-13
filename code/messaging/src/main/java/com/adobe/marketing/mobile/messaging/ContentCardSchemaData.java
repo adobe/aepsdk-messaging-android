@@ -12,25 +12,27 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
+
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 // represents the schema data object for a content-card schema
 public class ContentCardSchemaData implements SchemaData {
     private static final String SELF_TAG = "ContentCardSchemaData";
+    PropositionItem parent;
     private Object content;
     private ContentType contentType;
     private int publishedDate;
     private int expiryDate;
     private Map<String, Object> meta;
-
-    PropositionItem parent;
 
     ContentCardSchemaData(final JSONObject schemaData) {
         try {
@@ -81,12 +83,14 @@ public class ContentCardSchemaData implements SchemaData {
         return expiryDate;
     }
 
-    @Nullable public Map<String, Object> getMeta() {
+    @Nullable
+    public Map<String, Object> getMeta() {
         return meta;
     }
 
     @Deprecated
-    @Nullable public ContentCard getContentCard() {
+    @Nullable
+    public ContentCard getContentCard() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
             return null;
         }
@@ -121,8 +125,8 @@ public class ContentCardSchemaData implements SchemaData {
      * Tracks interaction with the given proposition item.
      *
      * @param interaction {@link String} describing the interaction.
-     * @param eventType enum of type {@link MessagingEdgeEventType} specifying event type for the
-     *     interaction.
+     * @param eventType   enum of type {@link MessagingEdgeEventType} specifying event type for the
+     *                    interaction.
      */
     public void track(final String interaction, final MessagingEdgeEventType eventType) {
         if (parent == null) {
