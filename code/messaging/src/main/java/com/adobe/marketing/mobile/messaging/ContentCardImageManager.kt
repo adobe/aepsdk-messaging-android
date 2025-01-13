@@ -22,8 +22,8 @@ import com.adobe.marketing.mobile.services.caching.CacheEntry
 import com.adobe.marketing.mobile.services.caching.CacheExpiry
 import com.adobe.marketing.mobile.services.caching.CacheResult
 import com.adobe.marketing.mobile.services.caching.CacheService
+import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.nio.ByteBuffer
 
 object ContentCardImageManager {
     private val SELF_TAG: String = "ContentCardManager"
@@ -72,7 +72,22 @@ object ContentCardImageManager {
         // Convert the InputStream to a Bitmap
         if (inputStream != null) {
             try {
-                completion(Result.success(BitmapFactory.decodeStream(inputStream)))
+                val bitmap = BitmapFactory.decodeStream(inputStream, null, BitmapFactory.Options())
+                if (bitmap == null) {
+                    Log.warning(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "getImageBitmapFromCache - Unable to convert the cached file input stream into a bitmap for the url: $imageUrl."
+                    )
+                    completion(Result.failure(Exception("Unable to convert the cached file input stream into a bitmap for the url: $imageUrl")))
+                    return
+                }
+                Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "getImageBitmapFromCache - Image retrieved from cache for url: $imageUrl"
+                )
+                completion(Result.success(bitmap))
             } catch (e: Exception) {
                 Log.warning(
                     MessagingConstants.LOG_TAG,
@@ -133,11 +148,9 @@ object ContentCardImageManager {
     private fun cacheImage(imageBitmap: Bitmap, imageName: String, cacheName: String): Boolean {
         try {
             val imageInputStream: InputStream = imageBitmap.let { bitmap ->
-                val byteArray = ByteArray(bitmap.byteCount)
-                val buffer = ByteBuffer.wrap(byteArray)
-                bitmap.copyPixelsToBuffer(buffer)
-                buffer.rewind() // Reset the buffer position to the beginning
-                byteArray.inputStream() // Create InputStream from byte array
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                byteArrayOutputStream.toByteArray().inputStream()
             }
 
             val cacheEntry = CacheEntry(imageInputStream, CacheExpiry.after(CACHE_EXPIRY_TIME), null)
