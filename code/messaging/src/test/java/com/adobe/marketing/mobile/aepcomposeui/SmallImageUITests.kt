@@ -85,5 +85,4 @@ class SmallImageUITests {
 
         verify { mockContentCardSchemaData.track("Card clicked", MessagingEdgeEventType.INTERACT) }
     }
-
 }
