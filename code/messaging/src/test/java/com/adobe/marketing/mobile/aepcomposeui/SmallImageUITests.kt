@@ -11,9 +11,19 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
+import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardMapper
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaData
+import com.adobe.marketing.mobile.messaging.trackInteraction
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.runs
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -52,5 +62,27 @@ class SmallImageUITests {
         val initialState = SmallImageCardUIState()
         val ui = SmallImageUI(template, initialState)
         assertEquals(template, ui.getTemplate())
+    }
+
+    @Test
+    fun test_SmallImageUI_trackInteraction() {
+        mockkObject(ContentCardMapper)
+        val mockContentCardSchemaData = mockk<ContentCardSchemaData>()
+        every { ContentCardMapper.instance.getContentCardSchemaData(any()) } returns mockContentCardSchemaData
+        every {
+            mockContentCardSchemaData.track(
+                any(),
+                MessagingEdgeEventType.INTERACT
+            )
+        } just runs
+        val template = SmallImageTemplate(
+            "e572a8fa-eada-4d72-a643-ec4de447678c",
+            AepText("Card Title")
+        )
+        val initialState = SmallImageCardUIState()
+        val ui = SmallImageUI(template, initialState)
+        ui.trackInteraction("Card clicked")
+
+        verify { mockContentCardSchemaData.track("Card clicked", MessagingEdgeEventType.INTERACT) }
     }
 }

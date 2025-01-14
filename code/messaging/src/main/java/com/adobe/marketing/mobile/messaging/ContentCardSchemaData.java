@@ -24,13 +24,12 @@ import org.json.JSONObject;
 // represents the schema data object for a content-card schema
 public class ContentCardSchemaData implements SchemaData {
     private static final String SELF_TAG = "ContentCardSchemaData";
+    PropositionItem parent;
     private Object content;
     private ContentType contentType;
     private int publishedDate;
     private int expiryDate;
     private Map<String, Object> meta;
-
-    PropositionItem parent;
 
     ContentCardSchemaData(final JSONObject schemaData) {
         try {
