@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.3.0-beta3";
+    private static final String EXTENSION_VERSION = "3.3.0-beta4";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
