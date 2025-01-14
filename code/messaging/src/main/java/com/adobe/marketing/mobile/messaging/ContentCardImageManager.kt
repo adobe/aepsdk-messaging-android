@@ -79,6 +79,7 @@ object ContentCardImageManager {
         // Convert the InputStream to a Bitmap
         try {
             val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream.close()
             if (bitmap == null) {
                 Log.warning(
                     MessagingConstants.LOG_TAG,
