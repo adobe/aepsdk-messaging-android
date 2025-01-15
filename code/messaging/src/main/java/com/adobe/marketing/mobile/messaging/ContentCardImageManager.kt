@@ -51,7 +51,18 @@ object ContentCardImageManager {
      * @return `True` if the image is found in cache, `False` otherwise
      * */
     private fun isImageCached(imageUrl: String, cacheName: String): Boolean {
-        val cacheValue = ServiceProvider.getInstance().cacheService?.get(cacheName, imageUrl)
+        var cacheValue: CacheResult? = null
+
+        try {
+            cacheValue = ServiceProvider.getInstance().cacheService?.get(cacheName, imageUrl)
+        } catch (e: Exception) {
+            Log.warning(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "isImageCached - An unexpected error occurred while checking if the image is cached: \n ${e.localizedMessage}"
+            )
+        }
+
         return cacheValue != null
     }
 
@@ -63,21 +74,23 @@ object ContentCardImageManager {
      * @param completion is a completion callback. Result.success() method is invoked with the image bitmap fetched. In case of any failure, Result.failure() method is invoked with a throwable
      * */
     private fun getImageBitmapFromCache(imageUrl: String, cacheName: String, completion: (Result<Bitmap>) -> Unit) {
-        val cachedImageBitmap: CacheResult? = ServiceProvider.getInstance().cacheService?.get(cacheName, imageUrl)
-        val inputStream = cachedImageBitmap?.data
-
-        if (inputStream == null) {
-            Log.warning(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "getImageBitmapFromCache - Unable to read cached data as the inputStream is null"
-            )
-            completion(Result.failure(Exception("Unable to read cached bitmap data as the inputStream is null for the url: $imageUrl, cacheName: $cacheName")))
-            return
-        }
-
-        // Convert the InputStream to a Bitmap
         try {
+            val cachedImageBitmap: CacheResult? =
+                ServiceProvider.getInstance().cacheService!!.get(cacheName, imageUrl)
+            val inputStream = cachedImageBitmap!!.data
+
+            if (inputStream == null) {
+                Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "getImageBitmapFromCache - Unable to read cached data as the inputStream is null"
+                )
+                completion(Result.failure(Exception("Unable to read cached bitmap data as the inputStream is null for the url: $imageUrl, cacheName: $cacheName")))
+                return
+            }
+
+            // Convert the InputStream to a Bitmap
+
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
             if (bitmap == null) {
@@ -99,7 +112,7 @@ object ContentCardImageManager {
             Log.warning(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
-                "getImageBitmapFromCache - Unable to read cached data into a bitmap due to error: $e"
+                "getImageBitmapFromCache - An unexpected error occurred while fetching the image from cache: \n ${e.localizedMessage}"
             )
             completion(Result.failure(e))
         }
@@ -158,7 +171,16 @@ object ContentCardImageManager {
             }
 
             val cacheEntry = CacheEntry(imageInputStream, CacheExpiry.after(CACHE_EXPIRY_TIME), null)
-            ServiceProvider.getInstance().cacheService?.set(cacheName, imageName, cacheEntry)
+            val isImageCached = ServiceProvider.getInstance().cacheService?.set(cacheName, imageName, cacheEntry)
+
+            if (isImageCached == null || isImageCached == false) {
+                Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "cacheImage - Failed to cache the image from url: $imageName"
+                )
+                return false
+            }
 
             return true
         } catch (e: Exception) {

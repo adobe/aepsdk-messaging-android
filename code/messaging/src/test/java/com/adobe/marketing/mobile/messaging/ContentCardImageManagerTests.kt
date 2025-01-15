@@ -19,8 +19,6 @@ import com.adobe.marketing.mobile.services.HttpConnecting
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
-import com.adobe.marketing.mobile.services.caching.CacheEntry
-import com.adobe.marketing.mobile.services.caching.CacheExpiry
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -31,6 +29,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.ByteArrayInputStream
@@ -55,7 +54,12 @@ class ContentCardImageManagerTests {
     private lateinit var mockNetworkService: Networking
 
     private lateinit var testCachePath: String
-    private val imageUrl = "https://fastly.picsum.photos/id/43/400/300.jpg?hmac=fAPJ5p1wbFahFpnqtg004Nny-vTEADhmMxMkwLUSfw0"
+
+    @Mock
+    private lateinit var mockBitmap: Bitmap
+
+    @Mock
+    private lateinit var mockedStaticBitmapFactory: MockedStatic<BitmapFactory>
 
     @Before
     fun setup() {
@@ -64,6 +68,19 @@ class ContentCardImageManagerTests {
         mockedStaticServiceProvider.`when`<Any> { ServiceProvider.getInstance() }.thenReturn(mockServiceProvider)
         `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
         `when`(mockServiceProvider.cacheService).thenReturn(mockCacheService)
+
+        // setup for bitmap download simulation
+        mockBitmap = mock(Bitmap::class.java)
+        `when`(mockBitmap.width).thenReturn(100)
+        `when`(mockBitmap.height).thenReturn(100)
+
+        // Ensure static mocking is not duplicated
+        if (!::mockedStaticBitmapFactory.isInitialized) {
+            mockedStaticBitmapFactory = mockStatic(BitmapFactory::class.java)
+        }
+        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
+            .thenReturn(mockBitmap)
+
         testCachePath = CONTENT_CARD_TEST_CACHE_SUBDIRECTORY
     }
 
@@ -71,19 +88,13 @@ class ContentCardImageManagerTests {
     fun tearDown() {
         mockedStaticServiceProvider.close()
         Mockito.validateMockitoUsage()
+        if (::mockedStaticBitmapFactory.isInitialized) {
+            mockedStaticBitmapFactory.close()
+        }
     }
 
     @Test
     fun `Get image for the first time when it is not in cache, download and cache is successful`() {
-
-        // setup for bitmap download simulation
-        val mockBitmap: Bitmap = mock(Bitmap::class.java)
-        `when`(mockBitmap.width).thenReturn(100)
-        `when`(mockBitmap.height).thenReturn(100)
-
-        val mockedStaticBitmapFactory = mockStatic(BitmapFactory::class.java)
-        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
-            .thenReturn(mockBitmap)
 
         val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
         `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
@@ -92,7 +103,7 @@ class ContentCardImageManagerTests {
         }
 
         ContentCardImageManager.getContentCardImageBitmap(
-            imageUrl, testCachePath,
+            MockCacheService.SET_SUCCESS_URL, testCachePath,
             {
                 it.onSuccess { bitmap ->
                     assertNotNull(bitmap)
@@ -102,21 +113,10 @@ class ContentCardImageManagerTests {
                 }
             }
         )
-
-        mockedStaticBitmapFactory.close()
     }
 
     @Test
-    fun `Get image for the first time when it is not in cache, download fails`() {
-
-        // setup for bitmap download simulation
-        val mockBitmap: Bitmap = mock(Bitmap::class.java)
-        `when`(mockBitmap.width).thenReturn(100)
-        `when`(mockBitmap.height).thenReturn(100)
-
-        val mockedStaticBitmapFactory = mockStatic(BitmapFactory::class.java)
-        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
-            .thenReturn(mockBitmap)
+    fun `Get image for the first time when it is not in cache, download and cache is successful with null cache path`() {
 
         val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
         `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
@@ -125,7 +125,51 @@ class ContentCardImageManagerTests {
         }
 
         ContentCardImageManager.getContentCardImageBitmap(
-            "invalidUrl", testCachePath,
+            MockCacheService.SET_SUCCESS_URL, null,
+            {
+                it.onSuccess { bitmap ->
+                    assertNotNull(bitmap)
+                }
+                it.onFailure {
+                    fail("Test failed as unable to fetch image from cache")
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image for the first time when it is not in cache, download is successful, cache fails`() {
+
+        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
+            val callback = it.getArgument<NetworkCallback>(1)
+            callback.call(simulatedResponse)
+        }
+
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.SET_FAILURE_VALID_URL, testCachePath,
+            {
+                it.onSuccess { bitmap ->
+                    assertNotNull(bitmap)
+                }
+                it.onFailure {
+                    fail("Test failed as unable to fetch image from cache")
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image for the first time when it is not in cache, download fails`() {
+
+        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
+            val callback = it.getArgument<NetworkCallback>(1)
+            callback.call(simulatedResponse)
+        }
+
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.SET_FAILURE_INVALID_URL, testCachePath,
             {
                 it.onSuccess { bitmap ->
                     fail("Test failed as download should have failed for invalid url")
@@ -135,32 +179,19 @@ class ContentCardImageManagerTests {
                 }
             }
         )
-
-        mockedStaticBitmapFactory.close()
     }
 
     @Test
-    fun `Get image from cache`() {
+    fun `Get image for the first time when it is not in cache, download is successful, cache exception`() {
 
-        // setup for bitmap decoding simulation
-        val mockBitmap: Bitmap = mock(Bitmap::class.java)
-        `when`(mockBitmap.width).thenReturn(100)
-        `when`(mockBitmap.height).thenReturn(100)
-
-        val mockedStaticBitmapFactory = mockStatic(BitmapFactory::class.java)
-        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
-            .thenReturn(mockBitmap)
-
-        mockCacheService.set(
-            name = testCachePath,
-            key = imageUrl,
-            value = CacheEntry(
-                bitmapToInputStream(mockBitmap), CacheExpiry.never(), emptyMap()
-            )
-        )
+        val simulatedResponse = simulateNetworkResponse(HttpURLConnection.HTTP_OK, bitmapToInputStream(mockBitmap), emptyMap())
+        `when`(mockNetworkService.connectAsync(Mockito.any(), Mockito.any())).thenAnswer {
+            val callback = it.getArgument<NetworkCallback>(1)
+            callback.call(simulatedResponse)
+        }
 
         ContentCardImageManager.getContentCardImageBitmap(
-            imageUrl, testCachePath,
+            MockCacheService.SET_EXCEPTION_URL, testCachePath,
             {
                 it.onSuccess { bitmap ->
                     assertNotNull(bitmap)
@@ -170,8 +201,101 @@ class ContentCardImageManagerTests {
                 }
             }
         )
+    }
 
-        mockedStaticBitmapFactory.close()
+    @Test
+    fun `Get image from cache, success`() {
+
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_SUCCESS_URL, testCachePath,
+            {
+                it.onSuccess { bitmap ->
+                    assertNotNull(bitmap)
+                }
+                it.onFailure {
+                    fail("Test failed as unable to fetch image from cache")
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image from cache, failure`() {
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_FAILURE_URL, testCachePath,
+            {
+                it.onSuccess {
+                    fail("Test failed as exception should have been thrown")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image from cache, exception`() {
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_EXCEPTION_URL, testCachePath,
+            {
+                it.onSuccess {
+                    fail("Test failed as exception should have been thrown")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image from cache, null stream`() {
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_NULL_STREAM_URL, testCachePath,
+            {
+                it.onSuccess {
+                    fail("Test failed as exception should have been thrown")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image from cache, exception in bitmap decoding`() {
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_EXCEPTION_STREAM_URL, testCachePath,
+            {
+                it.onSuccess {
+                    fail("Test failed as exception should have been thrown")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `Get image from cache, bitmap is null`() {
+        // Mock BitmapFactory to return null
+        mockedStaticBitmapFactory.`when`<Bitmap?> { BitmapFactory.decodeStream(Mockito.any()) }
+            .thenReturn(null)
+
+        ContentCardImageManager.getContentCardImageBitmap(
+            MockCacheService.GET_SUCCESS_URL, testCachePath,
+            {
+                it.onSuccess {
+                    fail("Test failed as bitmap should be null")
+                }
+                it.onFailure { failure ->
+                    assertNotNull(failure)
+                }
+            }
+        )
     }
 
     private fun bitmapToInputStream(bitmap: Bitmap): ByteArrayInputStream {
