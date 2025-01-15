@@ -29,7 +29,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.ByteArrayInputStream
@@ -313,7 +312,7 @@ class ContentCardImageManagerTests {
         val mockResponse = mock(HttpConnecting::class.java)
         `when`(mockResponse.responseCode).thenReturn(responseCode)
         `when`(mockResponse.inputStream).thenReturn(responseStream)
-        `when`(mockResponse.getResponsePropertyValue(org.mockito.kotlin.any())).then {
+        `when`(mockResponse.getResponsePropertyValue(Mockito.any())).then {
             return@then metadata[it.getArgument(0)]
         }
         return mockResponse
