@@ -20,9 +20,9 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.uri.UriOpening
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.anyString
@@ -78,7 +78,7 @@ class SmallImageTemplateEventHandlerTests {
     @AfterTest
     fun tearDown() {
         reset(mockSmallImageUI, mockSmallImageTemplate, mockServiceProvider, mockUriOpening, mockContentCardMapper, mockContentCardSchemaData)
-        unmockkObject(ContentCardMapper)
+        clearAllMocks()
     }
 
     private fun runTest(runnable: Runnable) {
