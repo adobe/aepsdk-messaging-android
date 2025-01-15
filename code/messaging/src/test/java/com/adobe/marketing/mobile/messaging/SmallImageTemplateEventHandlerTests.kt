@@ -22,7 +22,6 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.uri.UriOpening
 import io.mockk.every
 import io.mockk.mockkObject
-import io.mockk.unmockkAll
 import io.mockk.unmockkObject
 import org.junit.Test
 import org.mockito.Mock
