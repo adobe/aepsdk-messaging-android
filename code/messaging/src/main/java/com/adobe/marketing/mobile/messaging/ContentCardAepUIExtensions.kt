@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging
 
-import com.adobe.marketing.mobile.MessagingEdgeEventType
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
@@ -27,18 +26,5 @@ fun AepUI<*, *>.getMeta(): Map<String, Any>? {
             ContentCardMapper.instance.getContentCardSchemaData(template.id)?.meta
 
         else -> null
-    }
-}
-
-/**
- * Extension function to track a custom interaction for the given [AepUI].
- *
- * @param interaction the custom interaction to track
- */
-fun AepUI<*, *>.trackInteraction(interaction: String) {
-    when (val template = this.getTemplate()) {
-        is SmallImageTemplate ->
-            ContentCardMapper.instance.getContentCardSchemaData(template.id)
-                ?.track(interaction, MessagingEdgeEventType.INTERACT)
     }
 }
