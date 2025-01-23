@@ -21,6 +21,8 @@ plugins {
 val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
+// Lowest material3 library version we can use is v1.2.0
+// since clickable Cards are marked @ExperimentalMaterial3Api in lower versions
 val material3Version = "1.2.0"
 
 aepLibrary {
