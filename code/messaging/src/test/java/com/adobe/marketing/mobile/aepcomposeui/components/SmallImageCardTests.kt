@@ -458,19 +458,18 @@ class SmallImageCardBehaviorTests {
                 org.mockito.kotlin.any(),
                 org.mockito.kotlin.any()
             )
-        ).thenReturn(true)
-
-        // Mocking Cache to bypass cache check
-        whenever(
-            mockCacheService.get(
-                org.mockito.kotlin.any(),
-                org.mockito.kotlin.any()
-            )
-        ).thenReturn(null)
+        ).thenReturn(false)
 
         `when`(mockServiceProvider.networkService).thenReturn(mockNetworkService)
 
-        MockitoAnnotations.openMocks(this)
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val mockBitmap = BitmapFactory.decodeResource(context.resources, android.R.drawable.ic_menu_report_image)
+
+        val simulatedResponse = MessagingTestUtils.simulateNetworkResponse(HttpURLConnection.HTTP_OK, MessagingTestUtils.bitmapToInputStream(mockBitmap), emptyMap())
+        `when`(mockNetworkService.connectAsync(any(), any())).thenAnswer {
+            val callback = it.getArgument<NetworkCallback>(1)
+            callback.call(simulatedResponse)
+        }
     }
 
     @After
@@ -492,6 +491,45 @@ class SmallImageCardBehaviorTests {
 
         // test
         composeTestRule.onRoot().performClick()
+
+        // verify
+        val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()
+        verify(mockAepUIEventObserver, times(2)).onEvent(uiEventArgumentCaptor.capture())
+
+        val displayEvent = uiEventArgumentCaptor.allValues[0]
+        assertTrue(displayEvent is UIEvent.Display)
+        assertTrue(displayEvent.aepUi is SmallImageUI)
+        assertEquals("mockSmallImageCardId", (displayEvent.aepUi.getTemplate() as SmallImageTemplate).id)
+
+        val interactEvent = uiEventArgumentCaptor.allValues[1]
+        assertTrue(interactEvent is UIEvent.Interact)
+        assertTrue(interactEvent.aepUi is SmallImageUI)
+        assertTrue(interactEvent.action is UIAction.Click)
+        val clickAction = interactEvent.action as UIAction.Click
+        assertEquals("Card clicked", clickAction.id)
+        assertEquals("mockActionUrl", clickAction.actionUrl)
+    }
+
+    @Test
+    fun `Test SmallImageCard image click behavior`() {
+        // setup
+        composeTestRule.setContent {
+            SmallImageCard(
+                ui = mockSmallImageUI,
+                style = SmallImageUIStyle.Builder()
+                    .imageStyle(
+                        AepImageStyle(
+                            modifier = Modifier
+                                .testTag("test_image")
+                        )
+                    )
+                    .build(),
+                observer = mockAepUIEventObserver
+            )
+        }
+
+        // test
+        composeTestRule.onNodeWithTag("test_image", true).performClick()
 
         // verify
         val uiEventArgumentCaptor = argumentCaptor<UIEvent<*, *>>()

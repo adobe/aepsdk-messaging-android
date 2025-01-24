@@ -11,7 +11,6 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -24,18 +23,16 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
  *
  * @param drawableId The drawable resource ID to be displayed.
  * @param iconStyle The [AepIconStyle] to be applied to the icon element.
- * @param onClick Method that is called when this icon is clicked
  */
 @Composable
 internal fun AepIconComposable(
     drawableId: Int,
-    iconStyle: AepIconStyle = AepIconStyle(),
-    onClick: () -> Unit = {}
+    iconStyle: AepIconStyle = AepIconStyle()
 ) {
     Icon(
         painter = painterResource(id = drawableId),
         contentDescription = iconStyle.contentDescription,
-        modifier = (iconStyle.modifier ?: Modifier).clickable { onClick() },
+        modifier = iconStyle.modifier ?: Modifier,
         tint = iconStyle.tint ?: LocalContentColor.current
     )
 }
