@@ -14,6 +14,8 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.Interaction
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -33,6 +35,8 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -222,7 +226,19 @@ class AepButtonComposableTests(
                 disabledContainerColor = Color(0xFF33032f),
                 disabledContentColor = Color.Gray,
             ),
-            contentPadding = PaddingValues(10.dp)
+            contentPadding = PaddingValues(10.dp),
+            interactionSource = NoEffectInteractionSource(),
         )
+    }
+
+    class NoEffectInteractionSource : MutableInteractionSource {
+        override val interactions: Flow<Interaction> = emptyFlow() // No interactions emitted
+        override suspend fun emit(interaction: Interaction) {
+            // Do nothing
+        }
+
+        override fun tryEmit(interaction: Interaction): Boolean {
+            return false
+        }
     }
 }
