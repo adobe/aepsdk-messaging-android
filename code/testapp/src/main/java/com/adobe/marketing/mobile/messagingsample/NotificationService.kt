@@ -25,6 +25,7 @@ import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.os.Build.VERSION_CODES.M
+import com.adobe.marketing.mobile.messaging.MessagingService
 
 class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -36,6 +37,11 @@ class NotificationService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        // region BEGIN - automatic display and tracking
+        //   MessagingService.handleRemoteMessage(this, message)
+        // endregion
+
+        // region BEGIN - manual display and tracking
         val payload = MessagingPushPayload(message)
 
         val notificationManager =
@@ -57,19 +63,23 @@ class NotificationService : FirebaseMessagingService() {
         val builder = NotificationCompat.Builder(this, channelId).apply {
             setSmallIcon(R.drawable.ic_launcher_background)
             setContentTitle(payload.title)
-            setContentTitle(payload.body)
+            setContentText(payload.body)
 
             priority = payload.notificationPriority
+
             setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
                 message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
+                payload.putDataInExtras(this)
             }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
                 message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
+                payload.putDataInExtras(this)
             }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
             setAutoCancel(true)
         }
 
         notificationManager.notify(NOTIFICATION_ID, builder.build())
+        // endregion
     }
 
     private fun getImportance(priority: Int) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

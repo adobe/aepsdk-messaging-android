@@ -163,6 +163,9 @@ class EdgePersonalizationResponseHandler {
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
     void fetchPropositions(final Event event, final List<Surface> surfaces) {
+        // get a completion handler for requesting event if one exists
+        final CompletionHandler handler = parent.completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
+
         final List<Surface> requestedSurfaces = new ArrayList<>();
         Surface appSurface = null;
         // if surfaces are provided, use them - otherwise assume the request is for base surface
@@ -179,6 +182,9 @@ class EdgePersonalizationResponseHandler {
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
                         "Unable to update messages, no valid surfaces found.");
+                if (handler != null) {
+                    handler.handle.call(false);
+                }
                 return;
             }
         } else {
@@ -188,6 +194,9 @@ class EdgePersonalizationResponseHandler {
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
                         "Unable to update messages, couldn't create a valid app surface.");
+                if (handler != null) {
+                    handler.handle.call(false);
+                }
                 return;
             }
             requestedSurfaces.add(appSurface);
@@ -257,6 +266,12 @@ class EdgePersonalizationResponseHandler {
 
         // create entries in our local containers for managing streamed responses from edge
         beginRequestForSurfaces(newEvent, requestedSurfaces);
+
+        // if we have a handler, update the edge request event id and put it back in the list
+        if (handler != null) {
+            handler.edgeRequestEventId = newEvent.getUniqueIdentifier();
+            MessagingExtension.addCompletionHandler(handler);
+        }
 
         // dispatch the event and handle the response callback
         MobileCore.dispatchEventWithResponseCallback(
@@ -530,6 +545,12 @@ class EdgePersonalizationResponseHandler {
 
         // clear pending propositions
         inProgressPropositions.clear();
+
+        // call the handler if we have one
+        final CompletionHandler handler = parent.completionHandlerForEdgeRequestEventId(eventId);
+        if (handler != null) {
+            handler.handle.call(true);
+        }
     }
 
     private void applyPropositionChangeForEventId(final String eventId) {
