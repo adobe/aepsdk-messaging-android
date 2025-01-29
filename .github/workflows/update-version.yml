@@ -10,40 +10,70 @@
 # governing permissions and limitations under the License.
 #
 
-name: Update Version
+name: Update Versions
+
 on:
   workflow_dispatch:
     inputs:
-      version: 
-        description: 'New version to use for the Messaging extension. Example: 3.0.0'
+      version:
+        description: 'New version to use for the extension (ex: 1.2.3).'
+        type: string
+        required: true
+
+      branch:
+        description: 'The target branch where the version update will be applied and the pull request will be merged into.'
+        type: string
         required: true
 
       core-dependency:
-        description: '[Optional] Update Core dependency in pom.xml. Example: 3.0.0'
+        description: | 
+          If a version is provided, update Core dependency in gradle.properties (ex: 1.2.3).
+          This is a published dependency in the pom.xml file.
+        type: string
         required: false
+        default: ''
+      
+      assurance-dependency:
+        description: | 
+          If a version is provided, update Assurance dependency in gradle.properties (ex: 1.2.3).
+          This is a testing-only dependency.
+        type: string
+        required: false
+        default: ''
 
       edge-dependency:
-        description: '[Optional] Update Edge dependency in pom.xml. Example: 3.0.0'
+        description: | 
+          If a version is provided, update Edge dependency in gradle.properties (ex: 1.2.3).
+          This is a testing-only dependency.
+        type: string
         required: false
+        default: ''
+
+      edge-identity-dependency:
+        description: | 
+          If a version is provided, update EdgeIdentity dependency in gradle.properties (ex: 1.2.3).
+          This is a testing-only dependency.
+        type: string
+        required: false
+        default: ''
+        
+      lifecycle-dependency:
+        description: | 
+          If a version is provided, update Lifecycle dependency in gradle.properties (ex: 1.2.3).
+          This is a testing-only dependency.
+        type: string
+        required: false
+        default: ''
 
 jobs:
-  update-version:
-    runs-on: ubuntu-latest
-
-    steps:    
-    - name: Checkout
-      uses: actions/checkout@v3
-    
-    - name: Update Messaging Version
-      run: (./scripts/version.sh -u -v ${{ github.event.inputs.version }} -d "Core ${{ github.event.inputs.core-dependency }}")
-
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-      with:
-        token: ${{ github.token }}
-        commit-message: Updating version to ${{ github.event.inputs.version }}.
-        branch: version-${{ github.event.inputs.version }}-update
-        delete-branch: true
-        title: Updating version to ${{ github.event.inputs.version }}
-        body: Updating version to ${{ github.event.inputs.version }}
-
+  update-versions:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: adobe/aepsdk-commons/.github/workflows/versions.yml@gha-android-3.1.1
+    with:
+      version: ${{ github.event.inputs.version }}
+      branch: ${{ github.event.inputs.branch }}
+      dependencies: Core ${{ github.event.inputs.core-dependency }}, Assurance ${{ github.event.inputs.assurance-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}, EdgeIdentity ${{ github.event.inputs.edge-identity-dependency }}, Lifecycle ${{ github.event.inputs.lifecycle-dependency }}
+      paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java
+      update: true

@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Adobe. All rights reserved.
+# Copyright 2025 Adobe. All rights reserved.
 # This file is licensed to you under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License. You may obtain a copy
 # of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,7 +10,20 @@
 # governing permissions and limitations under the License.
 #
 
-template: |
-  ## What’s Changed
+name: Build and Test
 
-  $CHANGES
+on:
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: "CI"
+    uses: adobe/aepsdk-commons/.github/workflows/android-build-and-test.yml@gha-android-3.1.1
+    with:
+      android-api-levels: '[29]'
+      run-test-unit: true
+      run-test-functional: true
+      run-build-app: true
+      enable-codecov: true
+      javadoc-build-path: code/messaging/build/docs/javadoc
+    secrets: inherit
