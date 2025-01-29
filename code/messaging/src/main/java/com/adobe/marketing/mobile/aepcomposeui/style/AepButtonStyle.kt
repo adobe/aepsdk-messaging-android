@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonElevation
@@ -38,6 +39,7 @@ class AepButtonStyle(
     var border: BorderStroke? = null,
     var colors: ButtonColors? = null,
     var contentPadding: PaddingValues? = null,
+    var interactionSource: MutableInteractionSource? = null,
     var textStyle: AepTextStyle? = null
 ) {
 
@@ -68,6 +70,7 @@ class AepButtonStyle(
                 border = overridingStyle.border ?: defaultStyle.border,
                 colors = overridingStyle.colors ?: defaultStyle.colors,
                 contentPadding = overridingStyle.contentPadding ?: defaultStyle.contentPadding,
+                interactionSource = overridingStyle.interactionSource ?: defaultStyle.interactionSource,
                 textStyle = AepTextStyle.merge(defaultStyle.textStyle ?: AepTextStyle(), overridingStyle.textStyle)
             )
         }

@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,18 +25,16 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
  *
  * @param content [Painter] representing image to be displayed.
  * @param imageStyle The [AepImageStyle] to be applied to the image element.
- * @param onClick Method that is called when this image is clicked
  */
 @Composable
 internal fun AepImageComposable(
     content: Painter,
-    imageStyle: AepImageStyle = AepImageStyle(),
-    onClick: () -> Unit = {}
+    imageStyle: AepImageStyle = AepImageStyle()
 ) {
     Image(
         painter = content,
         contentDescription = imageStyle.contentDescription ?: "",
-        modifier = (imageStyle.modifier ?: Modifier).clickable { onClick() },
+        modifier = imageStyle.modifier ?: Modifier,
         alignment = imageStyle.alignment ?: Alignment.Center,
         contentScale = imageStyle.contentScale ?: ContentScale.Fit,
         alpha = imageStyle.alpha ?: DefaultAlpha,
