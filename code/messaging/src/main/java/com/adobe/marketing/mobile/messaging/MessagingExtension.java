@@ -36,8 +36,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -600,7 +598,7 @@ public final class MessagingExtension extends Extension {
         synchronized (completionHandlersMutex) {
             final ArrayList<CompletionHandler> handlersCopy =
                     new ArrayList<>(MessagingExtension.completionHandlers);
-            for (final CompletionHandler handler : handlersCopy ) {
+            for (final CompletionHandler handler : handlersCopy) {
                 if (handler.originatingEventId.equals(id)) {
                     MessagingExtension.completionHandlers.remove(handler);
                     return handler;
@@ -614,7 +612,7 @@ public final class MessagingExtension extends Extension {
         synchronized (completionHandlersMutex) {
             final ArrayList<CompletionHandler> handlersCopy =
                     new ArrayList<>(MessagingExtension.completionHandlers);
-            for (final CompletionHandler handler : handlersCopy ) {
+            for (final CompletionHandler handler : handlersCopy) {
                 if (handler.edgeRequestEventId.equals(id)) {
                     MessagingExtension.completionHandlers.remove(handler);
                     return handler;

@@ -13,11 +13,7 @@ package com.adobe.marketing.mobile.messaging;
 
 import com.adobe.marketing.mobile.AdobeCallback;
 
-import java.util.UUID;
-
-/**
- * Class used to manage callbacks between disconnected but related events.
- */
+/** Class used to manage callbacks between disconnected but related events. */
 public class CompletionHandler {
     final String originatingEventId;
     String edgeRequestEventId;

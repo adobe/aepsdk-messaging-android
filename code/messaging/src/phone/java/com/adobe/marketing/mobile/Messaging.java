@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.adobe.marketing.mobile.messaging.CompletionHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
@@ -209,28 +208,53 @@ public final class Messaging {
         // check for a deeplink to an in-app message
         final String pushToInappIdentifier = intent.getStringExtra(PUSH_TO_INAPP_PAYLOAD_KEY);
         if (!StringUtils.isNullOrEmpty(pushToInappIdentifier)) {
-            // we found an in-app to trigger, make a call to refresh IAMs from the remote to make sure we have this message
-            getPushToInappExecutor().submit(new Runnable() {
-                @Override
-                public void run() {
-                    Log.trace(LOG_TAG, CLASS_NAME, "Found an in-app message to show based on user interaction with a push notification. Downloading updated message definitions to ensure availability of the desired in-app message.");
-                    final List<Surface> surfacesList = new ArrayList<>();
-                    surfacesList.add(new Surface());
-                    Messaging.updatePropositionsForSurfaces(surfacesList, success -> {
-                        if (!success) {
-                            Log.debug(LOG_TAG, CLASS_NAME, "Failed to download updated in-app message definitions. Attempting to show the in-app message anyway.");
-                        }
+            // we found an in-app to trigger, make a call to refresh IAMs from the remote to make
+            // sure we have this message
+            getPushToInappExecutor()
+                    .submit(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.trace(
+                                            LOG_TAG,
+                                            CLASS_NAME,
+                                            "Found an in-app message to show based on user"
+                                                    + " interaction with a push notification."
+                                                    + " Downloading updated message definitions to"
+                                                    + " ensure availability of the desired in-app"
+                                                    + " message.");
+                                    final List<Surface> surfacesList = new ArrayList<>();
+                                    surfacesList.add(new Surface());
+                                    Messaging.updatePropositionsForSurfaces(
+                                            surfacesList,
+                                            success -> {
+                                                if (!success) {
+                                                    Log.debug(
+                                                            LOG_TAG,
+                                                            CLASS_NAME,
+                                                            "Failed to download updated in-app"
+                                                                + " message definitions. Attempting"
+                                                                + " to show the in-app message"
+                                                                + " anyway.");
+                                                }
 
-                        // send the event to trigger the in-app notification
-                        final Map<String, Object> pushToInappData = new HashMap<>();
-                        pushToInappData.put(PUSH_TO_INAPP_PAYLOAD_KEY, pushToInappIdentifier);
-                        final Event pushToInappEvent = new Event.Builder(PUSH_TO_INAPP_EVENT, EventType.RULES_ENGINE, EventSource.REQUEST_CONTENT)
-                                .setEventData(pushToInappData)
-                                .build();
-                        MobileCore.dispatchEvent(pushToInappEvent);
-                    });
-                }
-            });
+                                                // send the event to trigger the in-app notification
+                                                final Map<String, Object> pushToInappData =
+                                                        new HashMap<>();
+                                                pushToInappData.put(
+                                                        PUSH_TO_INAPP_PAYLOAD_KEY,
+                                                        pushToInappIdentifier);
+                                                final Event pushToInappEvent =
+                                                        new Event.Builder(
+                                                                        PUSH_TO_INAPP_EVENT,
+                                                                        EventType.RULES_ENGINE,
+                                                                        EventSource.REQUEST_CONTENT)
+                                                                .setEventData(pushToInappData)
+                                                                .build();
+                                                MobileCore.dispatchEvent(pushToInappEvent);
+                                            });
+                                }
+                            });
         }
 
         final Map<String, Object> eventData = new HashMap<>();
@@ -432,10 +456,12 @@ public final class Messaging {
      *
      * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving
      *     propositions
-     * @param callback An optional callback to be called once the proposition response has been processed by the Messaging extension
+     * @param callback An optional callback to be called once the proposition response has been
+     *     processed by the Messaging extension
      */
-    public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces,
-                                                     @Nullable final AdobeCallback<Boolean> callback) {
+    public static void updatePropositionsForSurfaces(
+            @NonNull final List<Surface> surfaces,
+            @Nullable final AdobeCallback<Boolean> callback) {
         if (surfaces.isEmpty()) {
             Log.warning(
                     LOG_TAG,

@@ -418,7 +418,8 @@ class MessagingPushBuilder {
      * @param intent {@code Intent} to be modified
      * @param payload {@link MessagingPushPayload} containing the push notification data
      */
-    private static void addPushPayloadToIntent(final Intent intent, final MessagingPushPayload payload) {
+    private static void addPushPayloadToIntent(
+            final Intent intent, final MessagingPushPayload payload) {
         if (intent != null && payload != null) {
             payload.putDataInExtras(intent);
         }

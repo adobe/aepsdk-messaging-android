@@ -164,7 +164,8 @@ class EdgePersonalizationResponseHandler {
      */
     void fetchPropositions(final Event event, final List<Surface> surfaces) {
         // get a completion handler for requesting event if one exists
-        final CompletionHandler handler = parent.completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
+        final CompletionHandler handler =
+                parent.completionHandlerForOriginatingEventId(event.getUniqueIdentifier());
 
         final List<Surface> requestedSurfaces = new ArrayList<>();
         Surface appSurface = null;

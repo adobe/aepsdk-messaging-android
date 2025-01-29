@@ -99,21 +99,24 @@ public class MessagingPushPayload {
     /**
      * Contains push payload keys to be added to Intent.extras via {@link #putDataInExtras(Intent)}
      */
-    private static final List<String> _pushPayloadKeys = new ArrayList<String>() {{
-        add(MessagingConstants.Push.PayloadKeys.TITLE);
-        add(MessagingConstants.Push.PayloadKeys.BODY);
-        add(MessagingConstants.Push.PayloadKeys.SOUND);
-        add(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
-        add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY);
-        add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY);
-        add(MessagingConstants.Push.PayloadKeys.CHANNEL_ID);
-        add(MessagingConstants.Push.PayloadKeys.ICON);
-        add(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
-        add(MessagingConstants.Push.PayloadKeys.ACTION_TYPE);
-        add(MessagingConstants.Push.PayloadKeys.ACTION_URI);
-        add(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS);
-        add(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
-    }};
+    private static final List<String> _pushPayloadKeys =
+            new ArrayList<String>() {
+                {
+                    add(MessagingConstants.Push.PayloadKeys.TITLE);
+                    add(MessagingConstants.Push.PayloadKeys.BODY);
+                    add(MessagingConstants.Push.PayloadKeys.SOUND);
+                    add(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
+                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY);
+                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY);
+                    add(MessagingConstants.Push.PayloadKeys.CHANNEL_ID);
+                    add(MessagingConstants.Push.PayloadKeys.ICON);
+                    add(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_TYPE);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_URI);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS);
+                    add(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
+                }
+            };
 
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
@@ -313,7 +316,7 @@ public class MessagingPushPayload {
      * @param intent {@code Intent} to be modified
      */
     public void putDataInExtras(final Intent intent) {
-        for (final String key: _pushPayloadKeys) {
+        for (final String key : _pushPayloadKeys) {
             final String value = data.get(key);
             if (!StringUtils.isNullOrEmpty(value)) {
                 intent.putExtra(key, value);
