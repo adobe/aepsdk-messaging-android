@@ -33,17 +33,17 @@ on:
         required: false
         default: ''
       
-      assurance-dependency:
+      edge-dependency:
         description: | 
-          If a version is provided, update Assurance dependency in gradle.properties (ex: 1.2.3).
-          This is a testing-only dependency.
+          If a version is provided, update Edge dependency in gradle.properties (ex: 1.2.3).
+          This is a published dependency in the pom.xml file.
         type: string
         required: false
         default: ''
 
-      edge-dependency:
+      assurance-dependency:
         description: | 
-          If a version is provided, update Edge dependency in gradle.properties (ex: 1.2.3).
+          If a version is provided, update Assurance dependency in gradle.properties (ex: 1.2.3).
           This is a testing-only dependency.
         type: string
         required: false

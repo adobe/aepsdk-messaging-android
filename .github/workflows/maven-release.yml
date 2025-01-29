@@ -31,6 +31,11 @@ on:
         type: string
         required: true
 
+      edge-dependency:
+        description: 'The Edge dependency version in gradle.properties to be validated (ex: 1.2.3).'
+        type: string
+        required: true
+
 jobs:
   publish:
     permissions:
@@ -40,5 +45,5 @@ jobs:
       tag: ${{ github.event.inputs.tag }}
       create-github-release: ${{ github.event.inputs.create-github-release == 'true' }}
       version-validation-paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java
-      version-validation-dependencies: Core ${{ github.event.inputs.core-dependency }}
+      version-validation-dependencies: Core ${{ github.event.inputs.core-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}
     secrets: inherit
