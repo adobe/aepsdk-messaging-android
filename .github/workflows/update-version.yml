@@ -75,5 +75,5 @@ jobs:
       version: ${{ github.event.inputs.version }}
       branch: ${{ github.event.inputs.branch }}
       dependencies: Core ${{ github.event.inputs.core-dependency }}, Assurance ${{ github.event.inputs.assurance-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}, EdgeIdentity ${{ github.event.inputs.edge-identity-dependency }}, Lifecycle ${{ github.event.inputs.lifecycle-dependency }}
-      paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java
+      paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java, code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java
       update: true
