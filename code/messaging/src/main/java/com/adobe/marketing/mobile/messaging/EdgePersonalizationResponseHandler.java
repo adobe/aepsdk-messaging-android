@@ -162,6 +162,7 @@ class EdgePersonalizationResponseHandler {
      * @param event The fetch propositions {@link Event}
      * @param surfaces A {@code List<Surface>} of surfaces for fetching propositions, if available.
      */
+    @SuppressWarnings("NestedIfDepth")
     void fetchPropositions(final Event event, final List<Surface> surfaces) {
         // get a completion handler for requesting event if one exists
         final CompletionHandler handler =

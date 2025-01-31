@@ -462,7 +462,7 @@ public final class Messaging {
     public static void updatePropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,
             @Nullable final AdobeCallback<Boolean> callback) {
-        if (surfaces.isEmpty()) {
+        if (surfaces == null || surfaces.isEmpty()) {
             Log.warning(
                     LOG_TAG,
                     CLASS_NAME,

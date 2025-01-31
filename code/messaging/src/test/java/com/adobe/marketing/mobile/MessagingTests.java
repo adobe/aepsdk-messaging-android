@@ -242,7 +242,7 @@ public class MessagingTests {
                             mockIntent, true, mockActionId, mockCallback);
 
                     // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify event
                     Event event = eventCaptor.getValue();
@@ -296,7 +296,7 @@ public class MessagingTests {
                             mockIntent, true, mockActionId, mockCallback);
 
                     // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify event
                     Event event = eventCaptor.getValue();
@@ -341,7 +341,7 @@ public class MessagingTests {
                             mockIntent, true, mockActionId, mockCallback);
 
                     // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify event
                     Event event = eventCaptor.getValue();
@@ -416,7 +416,7 @@ public class MessagingTests {
                     Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
                     // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     MobileCore.dispatchEventWithResponseCallback(
                             eventCaptor.capture(), anyLong(), callbackCaptor.capture());
@@ -469,7 +469,7 @@ public class MessagingTests {
                     Messaging.handleNotificationResponse(mockIntent, true, mockActionId);
 
                     // verify
-                    verify(mockIntent, times(2)).getStringExtra(anyString());
+                    verify(mockIntent, times(3)).getStringExtra(anyString());
 
                     // verify event
                     Event event = eventCaptor.getAllValues().get(0);
