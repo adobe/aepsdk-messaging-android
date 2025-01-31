@@ -22,7 +22,8 @@ checkformat:
 checkstyle:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) checkstyle)
 
-ci-lint: checkformat checkstyle
+# Used by build and test CI workflow
+lint: checkformat checkstyle
 
 unit-test:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest)
