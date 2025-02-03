@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 import com.adobe.marketing.mobile.messaging.MessagingConstants;
@@ -95,6 +96,28 @@ public class MessagingPushPayload {
                 }
             };
 
+    /**
+     * Contains push payload keys to be added to Intent.extras via {@link #putDataInExtras(Intent)}
+     */
+    private static final List<String> _pushPayloadKeys =
+            new ArrayList<String>() {
+                {
+                    add(MessagingConstants.Push.PayloadKeys.TITLE);
+                    add(MessagingConstants.Push.PayloadKeys.BODY);
+                    add(MessagingConstants.Push.PayloadKeys.SOUND);
+                    add(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
+                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY);
+                    add(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY);
+                    add(MessagingConstants.Push.PayloadKeys.CHANNEL_ID);
+                    add(MessagingConstants.Push.PayloadKeys.ICON);
+                    add(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_TYPE);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_URI);
+                    add(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS);
+                    add(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
+                }
+            };
+
     private static final int ACTION_BUTTON_CAPACITY = 3;
     private String title;
     private String body;
@@ -114,6 +137,7 @@ public class MessagingPushPayload {
     private List<ActionButton> actionButtons = new ArrayList<>(ACTION_BUTTON_CAPACITY);
     private Map<String, String> data;
     private String messageId;
+    private String inappMessageId;
 
     /**
      * Constructor
@@ -248,6 +272,7 @@ public class MessagingPushPayload {
         this.icon = data.get(MessagingConstants.Push.PayloadKeys.ICON);
         this.actionUri = data.get(MessagingConstants.Push.PayloadKeys.ACTION_URI);
         this.imageUrl = data.get(MessagingConstants.Push.PayloadKeys.IMAGE_URL);
+        this.inappMessageId = data.get(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID);
 
         try {
             String count = data.get(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER);
@@ -283,6 +308,20 @@ public class MessagingPushPayload {
         this.actionButtons =
                 getActionButtonsFromString(
                         data.get(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS));
+    }
+
+    /**
+     * Adds all key-value pairs in data to the {@code extras} of the provided {@link Intent}.
+     *
+     * @param intent {@code Intent} to be modified
+     */
+    public void putDataInExtras(final Intent intent) {
+        for (final String key : _pushPayloadKeys) {
+            final String value = data.get(key);
+            if (!StringUtils.isNullOrEmpty(value)) {
+                intent.putExtra(key, value);
+            }
+        }
     }
 
     private int getNotificationPriorityFromString(final String priority) {

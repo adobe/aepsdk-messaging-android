@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -33,6 +34,7 @@ import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,6 +47,9 @@ public final class MessagingExtension extends Extension {
     final LaunchRulesEngine messagingRulesEngine;
     final ContentCardRulesEngine contentCardRulesEngine;
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
+
+    private static final Object completionHandlersMutex = new Object();
+    private static List<CompletionHandler> completionHandlers = new ArrayList<>();
 
     /**
      * Constructor.
@@ -582,6 +587,41 @@ public final class MessagingExtension extends Extension {
                 getApi(),
                 null);
     }
+
+    public static void addCompletionHandler(final CompletionHandler handler) {
+        synchronized (completionHandlersMutex) {
+            completionHandlers.add(handler);
+        }
+    }
+
+    @Nullable CompletionHandler completionHandlerForOriginatingEventId(final String id) {
+        synchronized (completionHandlersMutex) {
+            final ArrayList<CompletionHandler> handlersCopy =
+                    new ArrayList<>(MessagingExtension.completionHandlers);
+            for (final CompletionHandler handler : handlersCopy) {
+                if (handler.originatingEventId.equals(id)) {
+                    MessagingExtension.completionHandlers.remove(handler);
+                    return handler;
+                }
+            }
+            return null;
+        }
+    }
+
+    @Nullable CompletionHandler completionHandlerForEdgeRequestEventId(final String id) {
+        synchronized (completionHandlersMutex) {
+            final ArrayList<CompletionHandler> handlersCopy =
+                    new ArrayList<>(MessagingExtension.completionHandlers);
+            for (final CompletionHandler handler : handlersCopy) {
+                if (handler.edgeRequestEventId.equals(id)) {
+                    MessagingExtension.completionHandlers.remove(handler);
+                    return handler;
+                }
+            }
+            return null;
+        }
+    }
+
     // endregion
 
     // region private methods
