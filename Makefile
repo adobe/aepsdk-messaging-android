@@ -22,6 +22,9 @@ checkformat:
 checkstyle:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) checkstyle)
 
+# Used by build and test CI workflow
+lint: checkformat checkstyle
+
 unit-test:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest)
 
@@ -35,6 +38,10 @@ functional-test:
 functional-test-coverage:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) uninstallPhoneDebugAndroidTest)
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) createPhoneDebugAndroidTestCoverageReport)
+
+e2e-functional-test:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) uninstallPhoneDebugAndroidTest)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) connectedPhoneDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.adobe.marketing.mobile.messaging.E2EFunctionalTests)
 
 javadoc:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) dokkaJavadoc)
