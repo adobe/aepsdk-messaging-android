@@ -71,24 +71,35 @@ public class MessagingTests {
             final ArgumentCaptor<AdobeCallbackWithError<Event>> callbackWithErrorArgumentCaptor,
             final Runnable testRunnable) {
         try (MockedStatic<MobileCore> mobileCoreMockedStatic =
-                     Mockito.mockStatic(MobileCore.class);
-             MockedStatic<ServiceProvider> serviceProviderMockedStatic =
-                     Mockito.mockStatic(ServiceProvider.class);
-             MockedStatic<Executors> executorsMockedStatic = Mockito.mockStatic(Executors.class)) {
-            ScheduledExecutorService mockScheduledExecutorService = mock(ScheduledExecutorService.class);
+                        Mockito.mockStatic(MobileCore.class);
+                MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                        Mockito.mockStatic(ServiceProvider.class);
+                MockedStatic<Executors> executorsMockedStatic =
+                        Mockito.mockStatic(Executors.class)) {
+            ScheduledExecutorService mockScheduledExecutorService =
+                    mock(ScheduledExecutorService.class);
             ExecutorService mockExecutorService = mock(ExecutorService.class);
-            executorsMockedStatic.when(Executors::newSingleThreadScheduledExecutor).thenReturn(mockScheduledExecutorService);
-            executorsMockedStatic.when(Executors::newSingleThreadExecutor).thenReturn(mockExecutorService);
-            when(mockExecutorService.submit(any(Runnable.class))).thenAnswer(invocation -> {
-                Runnable runnable = invocation.getArgument(0);
-                runnable.run();
-                return null;
-            });
-            when(mockScheduledExecutorService.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class))).thenAnswer(invocation -> {
-                Runnable runnable = invocation.getArgument(0);
-                runnable.run();
-                return null;
-            });
+            executorsMockedStatic
+                    .when(Executors::newSingleThreadScheduledExecutor)
+                    .thenReturn(mockScheduledExecutorService);
+            executorsMockedStatic
+                    .when(Executors::newSingleThreadExecutor)
+                    .thenReturn(mockExecutorService);
+            when(mockExecutorService.submit(any(Runnable.class)))
+                    .thenAnswer(
+                            invocation -> {
+                                Runnable runnable = invocation.getArgument(0);
+                                runnable.run();
+                                return null;
+                            });
+            when(mockScheduledExecutorService.schedule(
+                            any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                    .thenAnswer(
+                            invocation -> {
+                                Runnable runnable = invocation.getArgument(0);
+                                runnable.run();
+                                return null;
+                            });
 
             mobileCoreMockedStatic
                     .when(
@@ -406,8 +417,7 @@ public class MessagingTests {
                     String mockActionId = "mockActionId";
                     String messageId = "messageId";
 
-                    when(mockIntent.getStringExtra(eq("messageId")))
-                            .thenReturn(messageId);
+                    when(mockIntent.getStringExtra(eq("messageId"))).thenReturn(messageId);
 
                     // test
                     Messaging.handleNotificationResponse(
@@ -515,37 +525,54 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    try (MockedStatic<Messaging> messagingMockedStatic = Mockito.mockStatic(Messaging.class, Mockito.CALLS_REAL_METHODS)) {
-                        messagingMockedStatic.when(() -> Messaging.updatePropositionsForSurfaces(anyList(), any(AdobeCallback.class))).thenAnswer((Answer<Void>) invocation -> {
-                            AdobeCallback<Boolean> booleanAdobeCallback = invocation.getArgument(1);
-                            booleanAdobeCallback.call(true);
-                            return null;
-                        });
+                    try (MockedStatic<Messaging> messagingMockedStatic =
+                            Mockito.mockStatic(Messaging.class, Mockito.CALLS_REAL_METHODS)) {
+                        messagingMockedStatic
+                                .when(
+                                        () ->
+                                                Messaging.updatePropositionsForSurfaces(
+                                                        anyList(), any(AdobeCallback.class)))
+                                .thenAnswer(
+                                        (Answer<Void>)
+                                                invocation -> {
+                                                    AdobeCallback<Boolean> booleanAdobeCallback =
+                                                            invocation.getArgument(1);
+                                                    booleanAdobeCallback.call(true);
+                                                    return null;
+                                                });
 
                         Messaging.handleNotificationResponse(mockIntent, true, "mockActionId");
 
                         Event messagingEvent = eventCaptor.getAllValues().get(1);
-                        assertEquals("Push notification interaction event", messagingEvent.getName());
-                        assertEquals("com.adobe.eventSource.requestContent", messagingEvent.getSource());
+                        assertEquals(
+                                "Push notification interaction event", messagingEvent.getName());
+                        assertEquals(
+                                "com.adobe.eventSource.requestContent", messagingEvent.getSource());
                         assertEquals("com.adobe.eventType.messaging", messagingEvent.getType());
-                        assertEquals("mockMessageId", messagingEvent.getEventData().get("messageId"));
+                        assertEquals(
+                                "mockMessageId", messagingEvent.getEventData().get("messageId"));
                         assertEquals("mockActionId", messagingEvent.getEventData().get("actionId"));
                         assertEquals(true, messagingEvent.getEventData().get("applicationOpened"));
                         assertEquals("mockXdmData", messagingEvent.getEventData().get("adobe_xdm"));
-                        assertEquals("pushTracking.customAction", messagingEvent.getEventData().get("eventType"));
+                        assertEquals(
+                                "pushTracking.customAction",
+                                messagingEvent.getEventData().get("eventType"));
 
                         Event pushToInappEvent = eventCaptor.getAllValues().get(0);
                         assertEquals("Push to in-app", pushToInappEvent.getName());
-                        assertEquals("com.adobe.eventSource.requestContent", pushToInappEvent.getSource());
+                        assertEquals(
+                                "com.adobe.eventSource.requestContent",
+                                pushToInappEvent.getSource());
                         assertEquals("com.adobe.eventType.rulesEngine", pushToInappEvent.getType());
-                        assertEquals("mockInappId", pushToInappEvent.getEventData().get("adb_iam_id"));
-
+                        assertEquals(
+                                "mockInappId", pushToInappEvent.getEventData().get("adb_iam_id"));
                     }
                 });
     }
 
     @Test
-    public void test_handleNotificationResponse_withPushToInappIdentifier_messageDefinitionUpdateFailed() {
+    public void
+            test_handleNotificationResponse_withPushToInappIdentifier_messageDefinitionUpdateFailed() {
         Intent mockIntent = mock(Intent.class);
         when(mockIntent.getStringExtra("messageId")).thenReturn("mockMessageId");
         when(mockIntent.getStringExtra("adobe_xdm")).thenReturn("mockXdmData");
@@ -556,42 +583,62 @@ public class MessagingTests {
                 eventCaptor,
                 null,
                 () -> {
-                    try (MockedStatic<Log> logMockedStatic = Mockito.mockStatic(Log.class, Mockito.CALLS_REAL_METHODS);
-                         MockedStatic<Messaging> messagingMockedStatic = Mockito.mockStatic(Messaging.class, Mockito.CALLS_REAL_METHODS)) {
+                    try (MockedStatic<Log> logMockedStatic =
+                                    Mockito.mockStatic(Log.class, Mockito.CALLS_REAL_METHODS);
+                            MockedStatic<Messaging> messagingMockedStatic =
+                                    Mockito.mockStatic(
+                                            Messaging.class, Mockito.CALLS_REAL_METHODS)) {
 
-                        messagingMockedStatic.when(() -> Messaging.updatePropositionsForSurfaces(anyList(), any(AdobeCallback.class))).thenAnswer((Answer<Void>) invocation -> {
-                            AdobeCallback<Boolean> booleanAdobeCallback = invocation.getArgument(1);
-                            booleanAdobeCallback.call(false);
-                            return null;
-                        });
+                        messagingMockedStatic
+                                .when(
+                                        () ->
+                                                Messaging.updatePropositionsForSurfaces(
+                                                        anyList(), any(AdobeCallback.class)))
+                                .thenAnswer(
+                                        (Answer<Void>)
+                                                invocation -> {
+                                                    AdobeCallback<Boolean> booleanAdobeCallback =
+                                                            invocation.getArgument(1);
+                                                    booleanAdobeCallback.call(false);
+                                                    return null;
+                                                });
 
                         Messaging.handleNotificationResponse(mockIntent, true, "mockActionId");
 
                         Event messagingEvent = eventCaptor.getAllValues().get(1);
-                        assertEquals("Push notification interaction event", messagingEvent.getName());
-                        assertEquals("com.adobe.eventSource.requestContent", messagingEvent.getSource());
+                        assertEquals(
+                                "Push notification interaction event", messagingEvent.getName());
+                        assertEquals(
+                                "com.adobe.eventSource.requestContent", messagingEvent.getSource());
                         assertEquals("com.adobe.eventType.messaging", messagingEvent.getType());
-                        assertEquals("mockMessageId", messagingEvent.getEventData().get("messageId"));
+                        assertEquals(
+                                "mockMessageId", messagingEvent.getEventData().get("messageId"));
                         assertEquals("mockActionId", messagingEvent.getEventData().get("actionId"));
                         assertEquals(true, messagingEvent.getEventData().get("applicationOpened"));
                         assertEquals("mockXdmData", messagingEvent.getEventData().get("adobe_xdm"));
-                        assertEquals("pushTracking.customAction", messagingEvent.getEventData().get("eventType"));
+                        assertEquals(
+                                "pushTracking.customAction",
+                                messagingEvent.getEventData().get("eventType"));
 
                         Event pushToInappEvent = eventCaptor.getAllValues().get(0);
                         assertEquals("Push to in-app", pushToInappEvent.getName());
-                        assertEquals("com.adobe.eventSource.requestContent", pushToInappEvent.getSource());
+                        assertEquals(
+                                "com.adobe.eventSource.requestContent",
+                                pushToInappEvent.getSource());
                         assertEquals("com.adobe.eventType.rulesEngine", pushToInappEvent.getType());
-                        assertEquals("mockInappId", pushToInappEvent.getEventData().get("adb_iam_id"));
+                        assertEquals(
+                                "mockInappId", pushToInappEvent.getEventData().get("adb_iam_id"));
 
                         logMockedStatic.verify(
                                 () ->
                                         Log.debug(
                                                 ArgumentMatchers.anyString(),
                                                 ArgumentMatchers.anyString(),
-                                                eq("Failed to download updated in-app"
-                                                        + " message definitions. Attempting"
-                                                        + " to show the in-app message"
-                                                        + " anyway.")));
+                                                eq(
+                                                        "Failed to download updated in-app"
+                                                                + " message definitions. Attempting"
+                                                                + " to show the in-app message"
+                                                                + " anyway.")));
                     }
                 });
     }

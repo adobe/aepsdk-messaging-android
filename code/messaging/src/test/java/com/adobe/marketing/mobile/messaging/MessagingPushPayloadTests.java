@@ -11,8 +11,14 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.content.Intent;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.HashMap;
@@ -136,6 +142,90 @@ public class MessagingPushPayloadTests {
         Assert.assertEquals("notificationapp://", payload.getActionButtons().get(0).getLink());
         Assert.assertEquals("DEEPLINK", payload.getActionButtons().get(0).getType().name());
         Assert.assertEquals(mockData, payload.getData());
+    }
+
+    @Test
+    public void putDataInExtras_withValidData() {
+        Map<String, String> mockData = new HashMap<>();
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, "mockTitle");
+        mockData.put(MessagingConstants.Push.PayloadKeys.BODY, "mockBody");
+        mockData.put(MessagingConstants.Push.PayloadKeys.SOUND, "mockSound");
+        mockData.put(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER, "1");
+        mockData.put(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY, "PRIVATE");
+        mockData.put(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, "PRIORITY_MAX");
+        mockData.put(MessagingConstants.Push.PayloadKeys.CHANNEL_ID, "mockChannelId");
+        mockData.put(MessagingConstants.Push.PayloadKeys.ICON, "mockIcon");
+        mockData.put(MessagingConstants.Push.PayloadKeys.IMAGE_URL, "mockImageUrl");
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, "DEEPLINK");
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_URI, "mockActionUri");
+        mockData.put(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, "mockActionButtons");
+        mockData.put(MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID, "mockInAppMessageId");
+        MessagingPushPayload payload = new MessagingPushPayload(mockData);
+        Intent mockIntent = mock(Intent.class);
+
+        payload.putDataInExtras(mockIntent);
+
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.TITLE, "mockTitle");
+        verify(mockIntent, times(1)).putExtra(MessagingConstants.Push.PayloadKeys.BODY, "mockBody");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.SOUND, "mockSound");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.BADGE_NUMBER, "1");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY, "PRIVATE");
+        verify(mockIntent, times(1))
+                .putExtra(
+                        MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY, "PRIORITY_MAX");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.CHANNEL_ID, "mockChannelId");
+        verify(mockIntent, times(1)).putExtra(MessagingConstants.Push.PayloadKeys.ICON, "mockIcon");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.IMAGE_URL, "mockImageUrl");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.ACTION_TYPE, "DEEPLINK");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.ACTION_URI, "mockActionUri");
+        verify(mockIntent, times(1))
+                .putExtra(MessagingConstants.Push.PayloadKeys.ACTION_BUTTONS, "mockActionButtons");
+        verify(mockIntent, times(1))
+                .putExtra(
+                        MessagingConstants.Push.PayloadKeys.INAPP_MESSAGE_ID, "mockInAppMessageId");
+    }
+
+    @Test
+    public void putDataInExtras_withEmptyData() {
+        Map<String, String> mockData = new HashMap<>();
+        MessagingPushPayload payload = new MessagingPushPayload(mockData);
+        Intent mockIntent = mock(Intent.class);
+
+        payload.putDataInExtras(mockIntent);
+
+        verify(mockIntent, never()).putExtra(anyString(), anyString());
+    }
+
+    @Test
+    public void putDataInExtras_withNullValue() {
+        Map<String, String> mockData = new HashMap<>();
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, null);
+        MessagingPushPayload payload = new MessagingPushPayload(mockData);
+        Intent mockIntent = mock(Intent.class);
+
+        payload.putDataInExtras(mockIntent);
+
+        verify(mockIntent, never()).putExtra(anyString(), anyString());
+    }
+
+    @Test
+    public void putDataInExtras_withEmptyValue() {
+        Map<String, String> mockData = new HashMap<>();
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, "");
+        MessagingPushPayload payload = new MessagingPushPayload(mockData);
+        Intent mockIntent = mock(Intent.class);
+
+        payload.putDataInExtras(mockIntent);
+
+        verify(mockIntent, never()).putExtra(anyString(), anyString());
     }
 
     // ========================================================================================
