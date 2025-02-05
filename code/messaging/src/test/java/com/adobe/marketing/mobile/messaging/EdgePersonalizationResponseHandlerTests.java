@@ -76,7 +76,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class EdgePersonalizationResponseHandlerTests {
 
     private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor =
@@ -160,6 +160,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 (mock, context) ->
                                         when(mock.getUniqueIdentifier())
                                                 .thenReturn("mockEventId"))) {
+            when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
@@ -446,6 +447,7 @@ public class EdgePersonalizationResponseHandlerTests {
                     } catch (JSONException e) {
                         fail(e.getMessage());
                     }
+
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
