@@ -30,15 +30,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import android.app.Application;
 import android.content.Context;
+import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -64,14 +67,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class EdgePersonalizationResponseHandlerTests {
 
     private final ArgumentCaptor<List<LaunchRule>> listArgumentCaptor =
@@ -83,6 +88,7 @@ public class EdgePersonalizationResponseHandlerTests {
             ArgumentCaptor.forClass(List.class);
     private final ArgumentCaptor<List<LaunchRule>> feedRulesListCaptor =
             ArgumentCaptor.forClass(List.class);
+    private CompletionHandler completionHandler;
 
     // Mocks
     @Mock ExtensionApi mockExtensionApi;
@@ -103,6 +109,7 @@ public class EdgePersonalizationResponseHandlerTests {
     @Mock SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
     @Mock PresentableMessageMapper mockPresentableMessageMapper;
     @Mock PresentableMessageMapper.InternalMessage mockInternalMessage;
+    @Mock AdobeCallback mockAdobeCallback;
 
     private File cacheDir;
     private EdgePersonalizationResponseHandler edgePersonalizationResponseHandler;
@@ -135,6 +142,7 @@ public class EdgePersonalizationResponseHandlerTests {
         reset(mockSerialWorkDispatcher);
         reset(mockPresentableMessageMapper);
         reset(mockInternalMessage);
+        reset(mockAdobeCallback);
 
         if (cacheDir.exists()) {
             cacheDir.delete();
@@ -144,7 +152,15 @@ public class EdgePersonalizationResponseHandlerTests {
     void runUsingMockedServiceProvider(final Runnable runnable) {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
                         Mockito.mockStatic(ServiceProvider.class);
-                MockedStatic<MobileCore> mobileCoreStatic = Mockito.mockStatic(MobileCore.class)) {
+                MockedStatic<MobileCore> mobileCoreStatic = Mockito.mockStatic(MobileCore.class);
+                MockedConstruction<Event> ignored =
+                        Mockito.mockConstruction(
+                                Event.class,
+                                withSettings().defaultAnswer(Answers.CALLS_REAL_METHODS),
+                                (mock, context) ->
+                                        when(mock.getUniqueIdentifier())
+                                                .thenReturn("mockEventId"))) {
+            when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
@@ -163,6 +179,10 @@ public class EdgePersonalizationResponseHandlerTests {
             when(mockDeviceInfoService.getApplicationCacheDir()).thenReturn(cacheDir);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
 
+            completionHandler = new CompletionHandler("mockParentId", mockAdobeCallback);
+            when(mockMessagingExtension.completionHandlerForOriginatingEventId(anyString()))
+                    .thenReturn(completionHandler);
+
             edgePersonalizationResponseHandler =
                     new EdgePersonalizationResponseHandler(
                             mockMessagingExtension,
@@ -174,7 +194,6 @@ public class EdgePersonalizationResponseHandlerTests {
                     "TESTING_ID", Collections.singletonList(new Surface()));
             edgePersonalizationResponseHandler.setSerialWorkDispatcher(mockSerialWorkDispatcher);
 
-            when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
             when(mockResponseEvent.getParentID()).thenReturn("mockParentResponseId");
             when(mockResponseEvent.getName()).thenReturn("fetch message response");
             when(mockResponseEvent.getType()).thenReturn(EventType.EDGE);
@@ -209,6 +228,77 @@ public class EdgePersonalizationResponseHandlerTests {
                     }
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
+
+                    // verify completion handler added for edge request event id
+                    verify(mockMessagingExtension, times(1))
+                            .completionHandlerForOriginatingEventId("mockParentId");
+
+                    // verify edge request event dispatched
+                    Event edgeRequestEvent = eventArgumentCaptor.getValue();
+                    assertEquals(EventType.EDGE, edgeRequestEvent.getType());
+                    assertEquals(EventSource.REQUEST_CONTENT, edgeRequestEvent.getSource());
+                    assertEquals(
+                            MessagingTestConstants.EventName.REFRESH_MESSAGES_EVENT,
+                            edgeRequestEvent.getName());
+                    assertEquals(expectedEventData, edgeRequestEvent.getEventData());
+
+                    // answer adobe callback with a response event
+                    adobeCallbackWithErrorArgumentCaptor.getValue().call(mockResponseEvent);
+
+                    // verify finalize proposition event dispatched
+                    verify(mockExtensionApi, times(1)).dispatch(eventArgumentCaptor.capture());
+
+                    Event finalizePersonalizationEvent = eventArgumentCaptor.getValue();
+                    assertEquals(
+                            FINALIZE_PROPOSITIONS_RESPONSE, finalizePersonalizationEvent.getName());
+                    assertEquals(EventType.MESSAGING, finalizePersonalizationEvent.getType());
+                    assertEquals(
+                            EventSource.CONTENT_COMPLETE, finalizePersonalizationEvent.getSource());
+                    Map<String, Object> eventData = finalizePersonalizationEvent.getEventData();
+                    assertEquals("mockParentResponseId", eventData.get(ENDING_EVENT_ID));
+                });
+    }
+
+    @Test
+    public void
+            test_fetchMessages_ValidApplicationPackageNamePresent_NullOriginatingEventCompletionHandler() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessagingExtension.completionHandlerForOriginatingEventId(anyString()))
+                            .thenReturn(null);
+                    edgePersonalizationResponseHandler =
+                            new EdgePersonalizationResponseHandler(
+                                    mockMessagingExtension,
+                                    mockExtensionApi,
+                                    mockMessagingRulesEngine,
+                                    mockContentCardRulesEngine,
+                                    mockMessagingCacheUtilities);
+                    edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                            "TESTING_ID", Collections.singletonList(new Surface()));
+                    edgePersonalizationResponseHandler.setSerialWorkDispatcher(
+                            mockSerialWorkDispatcher);
+
+                    Map<String, Object> expectedEventData = null;
+                    try {
+                        expectedEventData =
+                                JSONUtils.toMap(
+                                        new JSONObject(
+                                                "{\"xdm\":{\"eventType\":\"personalization.request\"},"
+                                                    + " \"request\":{\"sendCompletion\":true},"
+                                                    + " \"data\":{\"__adobe\":{\"ajo\":{\"in-app-response-format\":2}}},"
+                                                    + " \"query\":{\"personalization\":{\"surfaces\":[\"mobileapp://mockPackageName\"],"
+                                                    + " \"schemas\":[\"https://ns.adobe.com/personalization/html-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/json-content-item\","
+                                                    + " \"https://ns.adobe.com/personalization/ruleset-item\"]}}}"));
+                    } catch (JSONException e) {
+                        fail(e.getMessage());
+                    }
+                    // test
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
+
+                    // verify completion handler callback not invoked as the handler is null
+                    verifyNoInteractions(mockAdobeCallback);
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -259,6 +349,10 @@ public class EdgePersonalizationResponseHandlerTests {
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
+                    // verify completion handler added for edge request event id
+                    verify(mockMessagingExtension, times(1))
+                            .completionHandlerForOriginatingEventId("mockParentId");
+
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
@@ -294,6 +388,33 @@ public class EdgePersonalizationResponseHandlerTests {
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
 
+                    // verify completion handler called with false
+                    verify(mockAdobeCallback, times(1)).call(false);
+
+                    // verify edge request event not dispatched
+                    assertEquals(0, eventArgumentCaptor.getAllValues().size());
+
+                    // verify finalize proposition event not dispatched
+                    verify(mockExtensionApi, times(0)).dispatch(eventArgumentCaptor.capture());
+                });
+    }
+
+    @Test
+    public void
+            test_fetchMessages_InvalidApplicationPackageNamePresent_NullOriginatingEventCompletionHandler() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    when(mockMessagingExtension.completionHandlerForOriginatingEventId(anyString()))
+                            .thenReturn(null);
+                    when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("");
+
+                    // test
+                    edgePersonalizationResponseHandler.fetchPropositions(mockEvent, null);
+
+                    // verify completion handler callback not invoked as the handler is null
+                    verifyNoInteractions(mockAdobeCallback);
+
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
 
@@ -326,8 +447,13 @@ public class EdgePersonalizationResponseHandlerTests {
                     } catch (JSONException e) {
                         fail(e.getMessage());
                     }
+
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
+
+                    // verify completion handler added for edge request event id
+                    verify(mockMessagingExtension, times(1))
+                            .completionHandlerForOriginatingEventId("mockParentId");
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -384,6 +510,10 @@ public class EdgePersonalizationResponseHandlerTests {
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
+                    // verify completion handler added for edge request event id
+                    verify(mockMessagingExtension, times(1))
+                            .completionHandlerForOriginatingEventId("mockParentId");
+
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
                     assertEquals(EventType.EDGE, edgeRequestEvent.getType());
@@ -422,6 +552,9 @@ public class EdgePersonalizationResponseHandlerTests {
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
 
+                    // verify completion handler called with false
+                    verify(mockAdobeCallback, times(1)).call(false);
+
                     // verify edge request event not dispatched
                     assertEquals(0, eventArgumentCaptor.getAllValues().size());
 
@@ -453,6 +586,10 @@ public class EdgePersonalizationResponseHandlerTests {
                     }
                     // test
                     edgePersonalizationResponseHandler.fetchPropositions(mockEvent, surfacePaths);
+
+                    // verify completion handler added for edge request event id
+                    verify(mockMessagingExtension, times(1))
+                            .completionHandlerForOriginatingEventId("mockParentId");
 
                     // verify edge request event dispatched
                     Event edgeRequestEvent = eventArgumentCaptor.getValue();
@@ -1779,6 +1916,153 @@ public class EdgePersonalizationResponseHandlerTests {
                         } catch (MessageRequiredFieldMissingException e) {
                             fail();
                         }
+                    }
+                });
+    }
+
+    // ========================================================================================
+    // edgePersonalizationResponseHandler handleEventHistoryDisqualifyEvent
+    // ========================================================================================
+    @Test
+    public void test_handleEventHistoryDisqualifyEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        // setup event history write event
+                        Map<String, Object> eventData;
+                        final Map<String, String> historyMap = new HashMap<>();
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                                MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.MESSAGE_ID,
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                        historyMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+                        final Map<String, Object> eventHistoryData = new HashMap<>();
+                        eventHistoryData.put(
+                                MessagingConstants.EventDataKeys.IAM_HISTORY, historyMap);
+
+                        // setup event history disqualify event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventHistoryData);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(
+                                mockEvent);
+
+                        // verify qualified content cards matching the activity id are removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify there are now 3 qualified content cards after removing one with
+                        // activity id
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(3, qualifiedContentCardsList.size());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44301",
+                                qualifiedContentCardsList.get(0).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44302",
+                                qualifiedContentCardsList.get(1).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
+                                qualifiedContentCardsList.get(2).getActivityId());
+                    }
+                });
+    }
+
+    @Test
+    public void test_handleEventHistoryDisqualifyEvent_EventHasNoActivityId() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        // setup event history write event
+                        Map<String, Object> eventData;
+                        final Map<String, String> historyMap = new HashMap<>();
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                                MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+                        // historyMap.put(MessagingTestConstants.EventMask.Keys.MESSAGE_ID,
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                        historyMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+                        final Map<String, Object> eventHistoryData = new HashMap<>();
+                        eventHistoryData.put(
+                                MessagingConstants.EventDataKeys.IAM_HISTORY, historyMap);
+
+                        // setup event history disqualify event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventHistoryData);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(
+                                mockEvent);
+
+                        // verify qualified content cards matching the activity id are not removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify the 4 qualified content cards
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(4, qualifiedContentCardsList.size());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300",
+                                qualifiedContentCardsList.get(0).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44301",
+                                qualifiedContentCardsList.get(1).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44302",
+                                qualifiedContentCardsList.get(2).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
+                                qualifiedContentCardsList.get(3).getActivityId());
                     }
                 });
     }

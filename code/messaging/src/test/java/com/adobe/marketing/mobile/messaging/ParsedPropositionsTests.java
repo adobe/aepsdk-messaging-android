@@ -61,7 +61,7 @@ public class ParsedPropositionsTests {
     public void setup() throws JSONException, MessageRequiredFieldMissingException {
 
         mockSurface = Surface.fromUriString("mobileapp://some.not.matching.surface/path");
-        mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName/inapp2");
+        mockInAppSurface = Surface.fromUriString("mobileapp://mockPackageName");
         inappPropositionContent =
                 MessagingTestUtils.getMapFromFile("inappPropositionV2Content.json");
         mockInAppPropositionItem =
@@ -178,6 +178,366 @@ public class ParsedPropositionsTests {
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
         Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionsConstructor_respectsRank_properOrder()
+            throws JSONException, MessageRequiredFieldMissingException {
+        // setup
+        // priority 100 in-app proposition
+        final Map<String, Object> prio100 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-100.json");
+        final PropositionItem prio100Item =
+                new PropositionItem("prio100", SchemaType.RULESET, prio100);
+        final Proposition prio100Proposition =
+                new Proposition(
+                        "prio100",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 1);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio100Item);
+                            }
+                        });
+
+        // priority 60 in-app proposition
+        final Map<String, Object> prio60 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-60.json");
+        final PropositionItem prio60Item =
+                new PropositionItem("prio60", SchemaType.RULESET, prio60);
+        final Proposition prio60Proposition =
+                new Proposition(
+                        "prio60",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 2);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio60Item);
+                            }
+                        });
+
+        // priority 20 in-app proposition
+        final Map<String, Object> prio20 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-20.json");
+        final PropositionItem prio20Item =
+                new PropositionItem("prio20", SchemaType.RULESET, prio20);
+        final Proposition prio20Proposition =
+                new Proposition(
+                        "prio20",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 3);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio20Item);
+                            }
+                        });
+
+        Map<Surface, List<Proposition>> propositions =
+                new HashMap<Surface, List<Proposition>>() {
+                    {
+                        put(
+                                mockInAppSurface,
+                                new ArrayList<Proposition>() {
+                                    {
+                                        add(prio100Proposition);
+                                        add(prio60Proposition);
+                                        add(prio20Proposition);
+                                    }
+                                });
+                    }
+                };
+
+        // test
+        ParsedPropositions parsedPropositions =
+                new ParsedPropositions(
+                        propositions,
+                        new ArrayList<Surface>() {
+                            {
+                                add(mockInAppSurface);
+                            }
+                        },
+                        mockExtensionApi);
+
+        // verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(3, parsedPropositions.propositionInfoToCache.size());
+        PropositionInfo iamPropositionInfo =
+                parsedPropositions.propositionInfoToCache.get("prio100");
+        Assert.assertNotNull(iamPropositionInfo);
+        Assert.assertEquals("prio100", iamPropositionInfo.id);
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+
+        Assert.assertEquals(1, parsedPropositions.propositionsToPersist.size());
+        List<Proposition> iamPersist =
+                parsedPropositions.propositionsToPersist.get(mockInAppSurface);
+        Assert.assertNotNull(iamPersist);
+        Assert.assertEquals(3, iamPersist.size());
+        Assert.assertEquals("prio100", iamPersist.get(0).getUniqueId());
+        Assert.assertEquals("prio60", iamPersist.get(1).getUniqueId());
+        Assert.assertEquals("prio20", iamPersist.get(2).getUniqueId());
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
+        Assert.assertNotNull(iamRules);
+        Assert.assertEquals(1, iamRules.size());
+        List<LaunchRule> orderedRules = iamRules.get(mockInAppSurface);
+        Assert.assertNotNull(orderedRules);
+        Assert.assertEquals(3, orderedRules.size());
+        Assert.assertEquals("prio100", orderedRules.get(0).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio60", orderedRules.get(1).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio20", orderedRules.get(2).getConsequenceList().get(0).getId());
+    }
+
+    @Test
+    public void test_parsedPropositionsConstructor_respectsRank_reverseOrder()
+            throws JSONException, MessageRequiredFieldMissingException {
+        // setup
+        // priority 100 in-app proposition
+        final Map<String, Object> prio100 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-100.json");
+        final PropositionItem prio100Item =
+                new PropositionItem("prio100", SchemaType.RULESET, prio100);
+        final Proposition prio100Proposition =
+                new Proposition(
+                        "prio100",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 1);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio100Item);
+                            }
+                        });
+
+        // priority 60 in-app proposition
+        final Map<String, Object> prio60 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-60.json");
+        final PropositionItem prio60Item =
+                new PropositionItem("prio60", SchemaType.RULESET, prio60);
+        final Proposition prio60Proposition =
+                new Proposition(
+                        "prio60",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 2);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio60Item);
+                            }
+                        });
+
+        // priority 20 in-app proposition
+        final Map<String, Object> prio20 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-20.json");
+        final PropositionItem prio20Item =
+                new PropositionItem("prio20", SchemaType.RULESET, prio20);
+        final Proposition prio20Proposition =
+                new Proposition(
+                        "prio20",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 3);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio20Item);
+                            }
+                        });
+
+        Map<Surface, List<Proposition>> propositions =
+                new HashMap<Surface, List<Proposition>>() {
+                    {
+                        put(
+                                mockInAppSurface,
+                                new ArrayList<Proposition>() {
+                                    {
+                                        add(prio20Proposition);
+                                        add(prio60Proposition);
+                                        add(prio100Proposition);
+                                    }
+                                });
+                    }
+                };
+
+        // test
+        ParsedPropositions parsedPropositions =
+                new ParsedPropositions(
+                        propositions,
+                        new ArrayList<Surface>() {
+                            {
+                                add(mockInAppSurface);
+                            }
+                        },
+                        mockExtensionApi);
+
+        // verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(3, parsedPropositions.propositionInfoToCache.size());
+        PropositionInfo iamPropositionInfo =
+                parsedPropositions.propositionInfoToCache.get("prio100");
+        Assert.assertNotNull(iamPropositionInfo);
+        Assert.assertEquals("prio100", iamPropositionInfo.id);
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+
+        Assert.assertEquals(1, parsedPropositions.propositionsToPersist.size());
+        List<Proposition> iamPersist =
+                parsedPropositions.propositionsToPersist.get(mockInAppSurface);
+        Assert.assertNotNull(iamPersist);
+        Assert.assertEquals(3, iamPersist.size());
+        Assert.assertEquals("prio100", iamPersist.get(0).getUniqueId());
+        Assert.assertEquals("prio60", iamPersist.get(1).getUniqueId());
+        Assert.assertEquals("prio20", iamPersist.get(2).getUniqueId());
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
+        Assert.assertNotNull(iamRules);
+        Assert.assertEquals(1, iamRules.size());
+        List<LaunchRule> orderedRules = iamRules.get(mockInAppSurface);
+        Assert.assertNotNull(orderedRules);
+        Assert.assertEquals(3, orderedRules.size());
+        Assert.assertEquals("prio100", orderedRules.get(0).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio60", orderedRules.get(1).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio20", orderedRules.get(2).getConsequenceList().get(0).getId());
+    }
+
+    @Test
+    public void test_parsedPropositionsConstructor_respectsRank_randomOrder()
+            throws JSONException, MessageRequiredFieldMissingException {
+        // setup
+        // priority 100 in-app proposition
+        final Map<String, Object> prio100 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-100.json");
+        final PropositionItem prio100Item =
+                new PropositionItem("prio100", SchemaType.RULESET, prio100);
+        final Proposition prio100Proposition =
+                new Proposition(
+                        "prio100",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 1);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio100Item);
+                            }
+                        });
+
+        // priority 60 in-app proposition
+        final Map<String, Object> prio60 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-60.json");
+        final PropositionItem prio60Item =
+                new PropositionItem("prio60", SchemaType.RULESET, prio60);
+        final Proposition prio60Proposition =
+                new Proposition(
+                        "prio60",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 2);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio60Item);
+                            }
+                        });
+
+        // priority 20 in-app proposition
+        final Map<String, Object> prio20 =
+                MessagingTestUtils.getMapFromFile("inappPropositionV2-prio-20.json");
+        final PropositionItem prio20Item =
+                new PropositionItem("prio20", SchemaType.RULESET, prio20);
+        final Proposition prio20Proposition =
+                new Proposition(
+                        "prio20",
+                        mockInAppSurface.getUri(),
+                        new HashMap<String, Object>() {
+                            {
+                                put("rank", 3);
+                            }
+                        },
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(prio20Item);
+                            }
+                        });
+
+        Map<Surface, List<Proposition>> propositions =
+                new HashMap<Surface, List<Proposition>>() {
+                    {
+                        put(
+                                mockInAppSurface,
+                                new ArrayList<Proposition>() {
+                                    {
+                                        add(prio60Proposition);
+                                        add(prio100Proposition);
+                                        add(prio20Proposition);
+                                    }
+                                });
+                    }
+                };
+
+        // test
+        ParsedPropositions parsedPropositions =
+                new ParsedPropositions(
+                        propositions,
+                        new ArrayList<Surface>() {
+                            {
+                                add(mockInAppSurface);
+                            }
+                        },
+                        mockExtensionApi);
+
+        // verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(3, parsedPropositions.propositionInfoToCache.size());
+        PropositionInfo iamPropositionInfo =
+                parsedPropositions.propositionInfoToCache.get("prio100");
+        Assert.assertNotNull(iamPropositionInfo);
+        Assert.assertEquals("prio100", iamPropositionInfo.id);
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+
+        Assert.assertEquals(1, parsedPropositions.propositionsToPersist.size());
+        List<Proposition> iamPersist =
+                parsedPropositions.propositionsToPersist.get(mockInAppSurface);
+        Assert.assertNotNull(iamPersist);
+        Assert.assertEquals(3, iamPersist.size());
+        Assert.assertEquals("prio100", iamPersist.get(0).getUniqueId());
+        Assert.assertEquals("prio60", iamPersist.get(1).getUniqueId());
+        Assert.assertEquals("prio20", iamPersist.get(2).getUniqueId());
+        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Map<Surface, List<LaunchRule>> iamRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.INAPP);
+        Assert.assertNotNull(iamRules);
+        Assert.assertEquals(1, iamRules.size());
+        List<LaunchRule> orderedRules = iamRules.get(mockInAppSurface);
+        Assert.assertNotNull(orderedRules);
+        Assert.assertEquals(3, orderedRules.size());
+        Assert.assertEquals("prio100", orderedRules.get(0).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio60", orderedRules.get(1).getConsequenceList().get(0).getId());
+        Assert.assertEquals("prio20", orderedRules.get(2).getConsequenceList().get(0).getId());
     }
 
     @Test

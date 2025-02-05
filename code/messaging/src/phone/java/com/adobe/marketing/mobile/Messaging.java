@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.adobe.marketing.mobile.messaging.CompletionHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
@@ -29,9 +30,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.2.1";
+    private static final String EXTENSION_VERSION = "3.3.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -45,6 +48,8 @@ public final class Messaging {
     private static final String UPDATE_PROPOSITIONS = "Update propositions";
     private static final String GET_PROPOSITIONS = "Get propositions";
     private static final String REFRESH_MESSAGES = "Refresh in-app messages";
+    private static final String PUSH_TO_INAPP_EVENT = "Push to in-app";
+    private static final String PUSH_TO_INAPP_PAYLOAD_KEY = "adb_iam_id";
     private static final long TIMEOUT_MILLIS = 5000L;
     private static final long GET_PROPOSITIONS_TIMEOUT_MILLIS = 10000L;
     private static final String TRACK_INFO_KEY_ACTION_ID = "actionId";
@@ -200,6 +205,58 @@ public final class Messaging {
             return;
         }
 
+        // check for a deeplink to an in-app message
+        final String pushToInappIdentifier = intent.getStringExtra(PUSH_TO_INAPP_PAYLOAD_KEY);
+        if (!StringUtils.isNullOrEmpty(pushToInappIdentifier)) {
+            // we found an in-app to trigger, make a call to refresh IAMs from the remote to make
+            // sure we have this message
+            getPushToInappExecutor()
+                    .submit(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    Log.trace(
+                                            LOG_TAG,
+                                            CLASS_NAME,
+                                            "Found an in-app message to show based on user"
+                                                    + " interaction with a push notification."
+                                                    + " Downloading updated message definitions to"
+                                                    + " ensure availability of the desired in-app"
+                                                    + " message.");
+                                    final List<Surface> surfacesList = new ArrayList<>();
+                                    surfacesList.add(new Surface());
+                                    Messaging.updatePropositionsForSurfaces(
+                                            surfacesList,
+                                            success -> {
+                                                if (!success) {
+                                                    Log.debug(
+                                                            LOG_TAG,
+                                                            CLASS_NAME,
+                                                            "Failed to download updated in-app"
+                                                                + " message definitions. Attempting"
+                                                                + " to show the in-app message"
+                                                                + " anyway.");
+                                                }
+
+                                                // send the event to trigger the in-app notification
+                                                final Map<String, Object> pushToInappData =
+                                                        new HashMap<>();
+                                                pushToInappData.put(
+                                                        PUSH_TO_INAPP_PAYLOAD_KEY,
+                                                        pushToInappIdentifier);
+                                                final Event pushToInappEvent =
+                                                        new Event.Builder(
+                                                                        PUSH_TO_INAPP_EVENT,
+                                                                        EventType.RULES_ENGINE,
+                                                                        EventSource.REQUEST_CONTENT)
+                                                                .setEventData(pushToInappData)
+                                                                .build();
+                                                MobileCore.dispatchEvent(pushToInappEvent);
+                                            });
+                                }
+                            });
+        }
+
         final Map<String, Object> eventData = new HashMap<>();
         eventData.put(TRACK_INFO_KEY_MESSAGE_ID, messageId);
         eventData.put(TRACK_INFO_KEY_APPLICATION_OPENED, applicationOpened);
@@ -279,7 +336,7 @@ public final class Messaging {
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving
      *     previously fetched propositions
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface,
-     *     List< Proposition >>} containing previously fetched content card or code based content
+     *     List<Proposition>>} containing previously fetched content card or code based content
      */
     public static void getPropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,
@@ -390,12 +447,26 @@ public final class Messaging {
      *     propositions
      */
     public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces) {
+        updatePropositionsForSurfaces(surfaces, null);
+    }
+
+    /**
+     * Dispatches an event to fetch propositions for the provided surfaces from Adobe Journey
+     * Optimizer via the Experience Edge network.
+     *
+     * @param surfaces A {@code List<Surface>} containing {@link Surface}s to be used for retrieving
+     *     propositions
+     * @param callback An optional callback to be called once the proposition response has been
+     *     processed by the Messaging extension
+     */
+    public static void updatePropositionsForSurfaces(
+            @NonNull final List<Surface> surfaces,
+            @Nullable final AdobeCallback<Boolean> callback) {
         if (surfaces == null || surfaces.isEmpty()) {
             Log.warning(
                     LOG_TAG,
                     CLASS_NAME,
-                    "Cannot update propositions as the provided list of surfaces is null or"
-                            + " empty.");
+                    "Cannot update propositions as the provided list of surfaces is empty");
             return;
         }
 
@@ -426,6 +497,11 @@ public final class Messaging {
                                 EventSource.REQUEST_CONTENT)
                         .setEventData(eventData)
                         .build();
+
+        if (callback != null) {
+            MessagingExtension.addCompletionHandler(
+                    new CompletionHandler(updatePropositionsEvent.getUniqueIdentifier(), callback));
+        }
 
         MobileCore.dispatchEvent(updatePropositionsEvent);
     }
@@ -484,5 +560,17 @@ public final class Messaging {
         if (callback != null) {
             callback.call(trackingStatus);
         }
+    }
+
+    /**
+     * Responsible for holding a single thread executor for lazy initialization only if
+     * Push-to-inapp workflows are being used.
+     */
+    private static class ExecutorHolder {
+        static final ExecutorService INSTANCE = Executors.newSingleThreadExecutor();
+    }
+
+    private static ExecutorService getPushToInappExecutor() {
+        return ExecutorHolder.INSTANCE;
     }
 }

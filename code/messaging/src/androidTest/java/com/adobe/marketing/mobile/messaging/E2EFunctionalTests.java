@@ -172,8 +172,11 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(false).get(0));
         List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        assertEquals(
+                "show always rule consequence failed to be dispatched.",
+                1,
+                rulesConsequenceEvents.size());
         Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         Map<String, Object> triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -200,8 +203,11 @@ public class E2EFunctionalTests {
 
         // verify rule consequence event is dispatched
         rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        assertEquals(
+                "show always rule consequence should be dispatched again.",
+                1,
+                rulesConsequenceEvents.size());
         rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -231,8 +237,11 @@ public class E2EFunctionalTests {
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(true).get(0));
         List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(1, rulesConsequenceEvents.size());
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        assertEquals(
+                "show once rule consequence failed to be dispatched.",
+                1,
+                rulesConsequenceEvents.size());
         final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
         final Map<String, Object> triggeredConsequenceEventData =
                 (Map<String, Object>)
@@ -283,8 +292,11 @@ public class E2EFunctionalTests {
 
         // verify no rule consequence event is dispatched
         rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT);
-        assertEquals(0, rulesConsequenceEvents.size());
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        assertEquals(
+                "show once rule consequence shouldn't be dispatched again.",
+                0,
+                rulesConsequenceEvents.size());
     }
 
     private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
@@ -293,7 +305,10 @@ public class E2EFunctionalTests {
         // verify message personalization request content event
         final List<Event> edgePersonalizationRequestEvents =
                 getDispatchedEventsWith(EventType.EDGE, EventSource.REQUEST_CONTENT, 5000);
-        assertEquals(1, edgePersonalizationRequestEvents.size());
+        assertEquals(
+                "edge personalization request event not received after 5 seconds.",
+                1,
+                edgePersonalizationRequestEvents.size());
         final Event edgePersonalizationRequestEvent = edgePersonalizationRequestEvents.get(0);
         assertEquals(
                 expectedEdgePersonalizationEventData,
@@ -303,8 +318,11 @@ public class E2EFunctionalTests {
 
         // verify edge content complete event
         final List<Event> edgeContentCompleteEvents =
-                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE);
-        assertEquals(1, edgeContentCompleteEvents.size());
+                getDispatchedEventsWith(EventType.EDGE, EventSource.CONTENT_COMPLETE, 5000);
+        assertEquals(
+                "edge content complete event not received after 5 seconds.",
+                1,
+                edgeContentCompleteEvents.size());
         final Event edgeContentCompleteEvent = edgeContentCompleteEvents.get(0);
         assertEquals(edgePersonalizationRequestEventID, edgeContentCompleteEvent.getParentID());
     }

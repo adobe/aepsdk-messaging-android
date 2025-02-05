@@ -96,3 +96,9 @@ Provides the link if present which is used while handling the interaction with p
 ```java
     public String getActionUri()
 ```
+
+### Add data to intent extras
+Adds all key-value pairs in data to the extras of the provided intent.
+```java
+public void putDataInExtras(final Intent intent)
+```

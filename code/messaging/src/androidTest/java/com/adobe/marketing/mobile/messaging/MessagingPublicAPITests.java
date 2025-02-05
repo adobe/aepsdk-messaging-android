@@ -102,14 +102,6 @@ public class MessagingPublicAPITests {
     }
 
     // --------------------------------------------------------------------------------------------
-    // Tests for GetExtensionVersion API
-    // --------------------------------------------------------------------------------------------
-    @Test
-    public void testGetExtensionVersionAPI() {
-        assertEquals(MessagingConstants.EXTENSION_VERSION, Messaging.extensionVersion());
-    }
-
-    // --------------------------------------------------------------------------------------------
     // Tests for RegisterExtension API
     // --------------------------------------------------------------------------------------------
 
@@ -123,7 +115,7 @@ public class MessagingPublicAPITests {
                 MessagingTestUtils.flattenMap(
                         getSharedStateFor(MessagingTestConstants.SharedStateName.EVENT_HUB, 1000));
         assertEquals(
-                MessagingConstants.EXTENSION_VERSION,
+                Messaging.extensionVersion(),
                 sharedStateMap.get("extensions.com.adobe.messaging.version"));
     }
 
