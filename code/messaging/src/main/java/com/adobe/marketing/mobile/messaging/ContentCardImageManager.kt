@@ -77,32 +77,24 @@ object ContentCardImageManager {
         }
 
         // Convert the InputStream to a Bitmap
-        try {
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-            if (bitmap == null) {
-                Log.warning(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "getImageBitmapFromCache - Unable to convert the cached file input stream into a bitmap for the url: $imageUrl."
-                )
-                completion(Result.failure(Exception("Unable to convert the cached file input stream into a bitmap for the url: $imageUrl")))
-                return
-            }
-            Log.trace(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "getImageBitmapFromCache - Image retrieved from cache for url: $imageUrl"
-            )
-            completion(Result.success(bitmap))
-        } catch (e: Exception) {
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+        if (bitmap == null) {
             Log.warning(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
-                "getImageBitmapFromCache - Unable to read cached data into a bitmap due to error: $e"
+                "getImageBitmapFromCache - Unable to convert the cached file input stream into a bitmap for the url: $imageUrl."
             )
-            completion(Result.failure(e))
+            completion(Result.failure(Exception("Unable to convert the cached file input stream into a bitmap for the url: $imageUrl")))
+            return
         }
+
+        Log.trace(
+            MessagingConstants.LOG_TAG,
+            SELF_TAG,
+            "getImageBitmapFromCache - Image retrieved from cache for url: $imageUrl"
+        )
+        completion(Result.success(bitmap))
     }
 
     /**
@@ -148,26 +140,15 @@ object ContentCardImageManager {
      * @return `True` if image is caches successfully, `False` otherwise
      * */
     private fun cacheImage(imageBitmap: Bitmap, imageName: String, cacheName: String): Boolean {
-        try {
-            val imageInputStream: InputStream = imageBitmap.let { bitmap ->
-                val byteArrayOutputStream = ByteArrayOutputStream()
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-                byteArrayOutputStream.use { baos ->
-                    baos.toByteArray().inputStream()
-                }
+        val imageInputStream: InputStream = imageBitmap.let { bitmap ->
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+            byteArrayOutputStream.use { baos ->
+                baos.toByteArray().inputStream()
             }
-
-            val cacheEntry = CacheEntry(imageInputStream, CacheExpiry.after(CACHE_EXPIRY_TIME), null)
-            ServiceProvider.getInstance().cacheService?.set(cacheName, imageName, cacheEntry)
-
-            return true
-        } catch (e: Exception) {
-            Log.warning(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "cacheImage - An unexpected error occurred while caching the downloaded image: \n ${e.localizedMessage}"
-            )
-            return false
         }
+
+        val cacheEntry = CacheEntry(imageInputStream, CacheExpiry.after(CACHE_EXPIRY_TIME), null)
+        return ServiceProvider.getInstance().cacheService?.set(cacheName, imageName, cacheEntry) ?: false
     }
 }
