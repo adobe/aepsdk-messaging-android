@@ -19,6 +19,7 @@
   - [Handling the received push payload](./sources/enum-public-classes/messaging-push-payload.md)
   - [Manual display and tracking of push notification](./sources/push-notification/manual-handling-and-tracking.md)
   - [Automatic display and tracking of push notification](./sources/push-notification/automatic-handling-and-tracking.md)
+  - [Display an in-message when a push notification is clicked](./sources/push-notification/how-to-display-iam-on-push-click.md)
 
 ### In-app Messaging
 

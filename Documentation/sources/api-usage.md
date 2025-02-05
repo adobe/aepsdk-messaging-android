@@ -173,6 +173,59 @@ surfaces.add(surface2);
 Messaging.updatePropositionsForSurfaces(surfaces);
 ```
 
+### updatePropositionsForSurfaces
+
+Dispatches an event for the Edge network extension to fetch personalization decisions from the AJO campaigns for the provided `Surface`s array. The returned decision `Proposition`s are cached in-memory by the Messaging extension.
+
+If provided, `completion` will be called on the Messaging extension's background thread once the response has been fully processed. `true` will be passed to the `completion` method if a network response was returned and successfully processed.
+
+To retrieve previously cached decision `Proposition`s, use `getPropositionsForSurfaces` API.
+
+#### Java
+
+##### Syntax
+
+```java
+public static void updatePropositionsForSurfaces(@NonNull final List<Surface> surfaces, @Nullable final AdobeCallback<Boolean> callback)
+```
+
+##### Example
+
+#### Kotlin
+
+```kotlin
+val surface1 = Surface("myActivity#button")
+val surface2 = Surface("myActivityAttributes")
+val surfaces = listOf(surface1, surface2)
+
+Messaging.updatePropositionsForSurfaces(surfaces) { success ->
+    if (success) {
+        // handle success scenario
+    } else {
+        // handle error scenario
+    }
+}
+```
+
+#### Java
+
+```java
+final Surface surface1 = new Surface("myActivity#button");
+final Surface surface2 = new Surface("myActivityAttributes");
+
+final List<Surface> surfaces = new ArrayList<>();
+surfaces.add(surface1);
+surfaces.add(surface2);
+
+Messaging.updatePropositionsForSurfaces(surfaces, success -> {
+    if (success) {
+        // handle success scenario
+    } else {
+        // handle error scenario
+    }
+});
+```
+
 ### getPropositionsForSurfaces
 
 Retrieves the previously fetched propositions from the SDK's in-memory propositions cache for the provided surfaces. The callback is invoked with the decision propositions corresponding to the given surfaces or `AdobeError`, if it occurs. 
