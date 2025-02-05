@@ -78,7 +78,7 @@ jobs:
         force-avd-creation: false
         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
-        script: make functional-test
+        script: make e2e-functional-test
 
     - name: Update Slack on failure
       if: failure()

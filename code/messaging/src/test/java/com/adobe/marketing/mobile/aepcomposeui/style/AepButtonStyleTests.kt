@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ButtonColors
@@ -37,6 +38,7 @@ class AepButtonStyleTests {
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
             contentPadding = mock(PaddingValues::class.java),
+            interactionSource = mock(MutableInteractionSource::class.java),
             textStyle = mock(AepTextStyle::class.java)
         )
         val overridingStyle = AepButtonStyle(
@@ -47,6 +49,7 @@ class AepButtonStyleTests {
             border = mock(BorderStroke::class.java),
             colors = mock(ButtonColors::class.java),
             contentPadding = mock(PaddingValues::class.java),
+            interactionSource = mock(MutableInteractionSource::class.java),
             textStyle = mock(AepTextStyle::class.java)
         )
 
@@ -70,12 +73,7 @@ class AepButtonStyleTests {
         val overridingStyle = AepButtonStyle(
             modifier = Modifier.padding(16.dp).border(BorderStroke(2.dp, Color.Red)),
             enabled = true,
-            elevation = null,
-            shape = null,
-            border = BorderStroke(3.dp, Color.Green),
-            colors = null,
-            contentPadding = null,
-            textStyle = null
+            border = BorderStroke(3.dp, Color.Green)
         )
 
         val result = AepButtonStyle.merge(defaultStyle, overridingStyle)
@@ -134,6 +132,7 @@ class AepButtonStyleTests {
             border = null,
             colors = null,
             contentPadding = null,
+            interactionSource = null,
             textStyle = null
         )
 

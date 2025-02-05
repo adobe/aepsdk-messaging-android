@@ -21,11 +21,9 @@ plugins {
 val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
-val toolingPreviewVersion = "1.7.4"
-val viewModelComposeVersion = "2.8.6"
-val runtimeComposeVersion = "2.8.6"
-val material3Version = "1.3.0"
-val mockkVersion = "1.13.13"
+// Lowest material3 library version we can use is v1.2.0
+// since clickable Cards are marked @ExperimentalMaterial3Api in lower versions
+val material3Version = "1.2.0"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
@@ -66,9 +64,7 @@ dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
     // dependencies provided by aep-library:
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
-    // Compose UI Tooling Preview
-    implementation("androidx.compose.ui:ui-tooling-preview:$toolingPreviewVersion")
-    // Material 3
+    implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
     implementation("androidx.compose.material3:material3:$material3Version")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
@@ -76,12 +72,10 @@ dependencies {
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
     testImplementation(project(":messagingtestutils"))
     testImplementation("com.google.firebase:firebase-messaging:23.4.1")
-    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation(BuildConstants.Dependencies.MOCKK)
     testImplementation(BuildConstants.Dependencies.ESPRESSO_CORE)
     testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_JUNIT4)
     testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_MANIFEST)
-    // todo use from aep-library once it is available in next release
-    testImplementation("org.robolectric:robolectric:4.13")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
 

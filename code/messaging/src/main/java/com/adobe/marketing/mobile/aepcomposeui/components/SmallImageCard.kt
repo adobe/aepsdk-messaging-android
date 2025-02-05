@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.aepcomposeui.components
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -84,10 +85,11 @@ fun SmallImageCard(
                     drawableId = it.drawableId,
                     // todo check if we can remember this calculation so that it is not repeated for recompositions
                     iconStyle = style.dismissButtonStyle.apply {
-                        modifier = (modifier ?: Modifier).align(style.dismissButtonAlignment)
-                    },
-                    onClick = {
-                        observer?.onEvent(UIEvent.Dismiss(ui))
+                        modifier = (modifier ?: Modifier)
+                            .align(style.dismissButtonAlignment)
+                            .clickable {
+                                observer?.onEvent(UIEvent.Dismiss(ui))
+                            }
                     }
                 )
             }

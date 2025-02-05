@@ -11,9 +11,11 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
@@ -44,6 +46,7 @@ internal fun AepButtonComposable(
         elevation = buttonStyle.elevation ?: ButtonDefaults.buttonElevation(),
         border = buttonStyle.border,
         contentPadding = buttonStyle.contentPadding ?: ButtonDefaults.ContentPadding,
+        interactionSource = buttonStyle.interactionSource ?: remember { MutableInteractionSource() }
     ) {
         AepTextComposable(
             model.text,

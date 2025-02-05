@@ -11,66 +11,39 @@
 #
 
 name: Publish Release
+
 on: 
   workflow_dispatch:
     inputs:
       tag:
-        description: 'tag/version'
-        required: true        
-
-      action_tag:
-        description: 'Create tag? ("no" to skip)'
+        description: 'The tag (version) to be released (ex: 1.2.3).'
+        type: string
         required: true
-        default: 'yes'
+
+      create-github-release:
+        description: 'Create GitHub release using tag. If the provided `tag` does not exist, it will be created.'
+        type: boolean
+        required: true
+        default: true
+
+      core-dependency:
+        description: 'The Core dependency version in gradle.properties to be validated (ex: 1.2.3).'
+        type: string
+        required: true
+
+      edge-dependency:
+        description: 'The Edge dependency version in gradle.properties to be validated (ex: 1.2.3).'
+        type: string
+        required: true
+
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 17
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-
-      - name: Verify version        
-        run: |
-          set -eo pipefail
-          echo Release version: ${{ github.event.inputs.tag }}
-          (./scripts/version.sh -v ${{ github.event.inputs.tag }})
-
-      - name: Create GH Release
-        id: create_release
-        uses: release-drafter/release-drafter@v5
-        if: ${{ github.event.inputs.action_tag == 'yes' }}
-        with:
-          name: v${{ github.event.inputs.tag }}
-          tag: v${{ github.event.inputs.tag }}
-          version: v${{ github.event.inputs.tag }}
-          publish: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-    
-      - name: Import GPG key
-        env:
-          GPG_SECRET_KEYS: ${{ secrets.GPG_SECRET_KEYS }}
-          GPG_OWNERTRUST: ${{ secrets.GPG_OWNERTRUST }}
-        run: |
-          echo $GPG_SECRET_KEYS | base64 --decode | gpg --import --no-tty --batch --yes
-          echo $GPG_OWNERTRUST | base64 --decode | gpg --import-ownertrust --no-tty --batch --yes
-
-      - name: Publish to Maven Central Repository
-        run: make ci-publish
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+    permissions:
+        contents: write
+    uses: adobe/aepsdk-commons/.github/workflows/android-maven-release.yml@gha-android-3.3.0
+    with:
+      tag: ${{ github.event.inputs.tag }}
+      create-github-release: ${{ github.event.inputs.create-github-release == 'true' }}
+      version-validation-paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java, code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java
+      version-validation-dependencies: Core ${{ github.event.inputs.core-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}
+    secrets: inherit
