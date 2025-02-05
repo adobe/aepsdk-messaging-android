@@ -11,7 +11,6 @@
  */
 apply(plugin = "aep-license")
 buildscript {
-    val kotlin_version by extra("2.0.20")
     repositories {
         gradlePluginPortal()
         google()
@@ -20,8 +19,8 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath("com.github.adobe:aepsdk-commons:gp-3.0.0")
+        classpath("com.github.adobe:aepsdk-commons:gp-3.0.2")
         classpath("com.google.gms:google-services:4.4.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath("io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.31.0")
     }
 }

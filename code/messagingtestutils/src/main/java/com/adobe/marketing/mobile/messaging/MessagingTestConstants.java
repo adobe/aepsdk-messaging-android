@@ -11,14 +11,16 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import com.adobe.marketing.mobile.Messaging;
+
 /**
  * Class to maintain test constants.
  */
 public class MessagingTestConstants {
-    public static final String EXTENSION_VERSION = MessagingConstants.EXTENSION_VERSION;
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String CACHE_NAME = "com.adobe.messaging.test.cache";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
+    static final String CONTENT_CARD_TEST_CACHE_SUBDIRECTORY = "contentCardTestImages";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
     static final String CACHE_BASE_DIR = "messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";

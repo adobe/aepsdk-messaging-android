@@ -98,20 +98,6 @@ public class MessagingTests {
     }
 
     // ========================================================================================
-    // extensionVersion
-    // ========================================================================================
-
-    @Test
-    public void test_extensionVersionAPI() {
-        // test
-        String extensionVersion = Messaging.extensionVersion();
-        Assert.assertEquals(
-                "The Extension version API returns the correct value",
-                MessagingTestConstants.EXTENSION_VERSION,
-                extensionVersion);
-    }
-
-    // ========================================================================================
     // addPushTrackingDetails
     // ========================================================================================
     @Test

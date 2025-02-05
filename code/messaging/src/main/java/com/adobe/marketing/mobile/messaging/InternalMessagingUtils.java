@@ -17,6 +17,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
@@ -300,6 +301,28 @@ class InternalMessagingUtils {
         return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
     }
 
+    /**
+     * Determines if the passed in {@code Event} is an event history disqualify event.
+     *
+     * @param event An event history write {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is an event history disqualify
+     *     event.
+     */
+    static boolean isEventHistoryDisqualifyEvent(final Event event) {
+        final Map<String, Object> eventData = event.getEventData();
+        final Map<String, Object> eventHistoryMap =
+                DataReader.optTypedMap(
+                        Object.class,
+                        eventData,
+                        MessagingConstants.EventDataKeys.IAM_HISTORY,
+                        null);
+        return MessagingEdgeEventType.DISQUALIFY
+                .getPropositionEventType()
+                .equalsIgnoreCase(
+                        DataReader.optString(
+                                eventHistoryMap, MessagingConstants.EventMask.Keys.EVENT_TYPE, ""));
+    }
+
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -375,6 +398,29 @@ class InternalMessagingUtils {
                 event.getEventData(),
                 MessagingConstants.EventDataKeys.Messaging.ENDING_EVENT_ID,
                 null);
+    }
+
+    /**
+     * Retrieves the proposition activity id {@code String} from the passed in {@code Event}'s event
+     * data.
+     *
+     * @param event A Messaging Event History Write {@link Event}.
+     * @return {@code String} containing the proposition activity id
+     */
+    static String getPropositionActivityId(final Event event) {
+        if (event == null || event.getEventData() == null) {
+            return null;
+        }
+
+        final Map<String, Object> eventHistoryData =
+                DataReader.optTypedMap(
+                        Object.class,
+                        event.getEventData(),
+                        MessagingConstants.EventDataKeys.IAM_HISTORY,
+                        new HashMap<>());
+
+        return DataReader.optString(
+                eventHistoryData, MessagingConstants.EventMask.Keys.MESSAGE_ID, null);
     }
 
     // ========================================================================================

@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.2.1";
+    private static final String EXTENSION_VERSION = "3.3.0";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
@@ -336,7 +336,7 @@ public final class Messaging {
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving
      *     previously fetched propositions
      * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface,
-     *     List< Proposition >>} containing previously fetched content card or code based content
+     *     List<Proposition>>} containing previously fetched content card or code based content
      */
     public static void getPropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,

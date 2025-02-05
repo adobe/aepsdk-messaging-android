@@ -20,6 +20,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -130,7 +131,7 @@ public final class MessagingExtension extends Extension {
      */
     @NonNull @Override
     protected String getVersion() {
-        return MessagingConstants.EXTENSION_VERSION;
+        return Messaging.extensionVersion();
     }
 
     @Override
@@ -156,6 +157,10 @@ public final class MessagingExtension extends Extension {
                         this::handleRuleEngineResponseEvents);
         getApi().registerEventListener(
                         EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
+        getApi().registerEventListener(
+                        MessagingConstants.EventType.MESSAGING,
+                        MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                        this::processEvent);
 
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
@@ -400,6 +405,10 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
+            // validate the event is an event history disqualify event then process the event
+            // history data
+            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 

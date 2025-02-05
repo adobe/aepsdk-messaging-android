@@ -1,3 +1,7 @@
+import android.databinding.tool.util.FileUtil
+import com.adobe.marketing.mobile.gradle.BuildConstants
+import com.android.utils.FileUtils
+
 /*
  * Copyright 2024 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -11,21 +15,33 @@
  */
 plugins {
     id("aep-library")
+    id("io.github.takahirom.roborazzi")
 }
 
 val mavenCoreVersion: String by project
 val mavenEdgeVersion: String by project
 val mavenEdgeIdentityVersion: String by project
+// Lowest material3 library version we can use is v1.2.0
+// since clickable Cards are marked @ExperimentalMaterial3Api in lower versions
+val material3Version = "1.2.0"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
     enableSpotless = true
     enableCheckStyle = true
+    enableDokkaDoc = true
+    compose = true
 
     publishing {
         gitRepoName = "aepsdk-messaging-android"
         addCoreDependency(mavenCoreVersion)
         addEdgeDependency(mavenEdgeVersion)
+
+        addMavenDependency("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", BuildConstants.Versions.KOTLIN)
+        addMavenDependency("androidx.appcompat", "appcompat", BuildConstants.Versions.ANDROIDX_APPCOMPAT)
+        addMavenDependency("androidx.compose.runtime", "runtime", BuildConstants.Versions.COMPOSE)
+        addMavenDependency("androidx.activity", "activity-compose", BuildConstants.Versions.ANDROIDX_ACTIVITY_COMPOSE)
+        addMavenDependency("androidx.compose.material3", "material3", material3Version)
     }
 
     android {
@@ -39,20 +55,32 @@ aepLibrary {
             named("test").configure { resources.srcDir("src/test/resources") }
             named("androidTest").configure { resources.srcDir("src/test/resources") }
         }
+
+        testOptions.unitTests.isIncludeAndroidResources = true
     }
 }
 
 dependencies {
     implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    // dependencies provided by aep-library:
+    // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
+    implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
+    implementation("androidx.compose.material3:material3:$material3Version")
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:
     // MOCKITO_CORE, MOCKITO_INLINE, JSON
     testImplementation(project(":messagingtestutils"))
     testImplementation("com.google.firebase:firebase-messaging:23.4.1")
+    testImplementation(BuildConstants.Dependencies.MOCKK)
+    testImplementation(BuildConstants.Dependencies.ESPRESSO_CORE)
+    testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_JUNIT4)
+    testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_MANIFEST)
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
 
     // androidTestImplementation dependencies provided by aep-library:
-    // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE
+    // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
     androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
         exclude(group = "com.adobe.marketing.mobile", module = "core")
