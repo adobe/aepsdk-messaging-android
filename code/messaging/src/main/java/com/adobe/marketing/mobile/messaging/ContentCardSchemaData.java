@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.util.DataReader;
@@ -25,13 +24,12 @@ import org.json.JSONObject;
 // represents the schema data object for a content-card schema
 public class ContentCardSchemaData implements SchemaData {
     private static final String SELF_TAG = "ContentCardSchemaData";
+    PropositionItem parent;
     private Object content;
     private ContentType contentType;
     private int publishedDate;
     private int expiryDate;
     private Map<String, Object> meta;
-
-    PropositionItem parent;
 
     ContentCardSchemaData(final JSONObject schemaData) {
         try {
@@ -86,11 +84,6 @@ public class ContentCardSchemaData implements SchemaData {
         return meta;
     }
 
-    @VisibleForTesting
-    static ContentCardSchemaData getEmpty() {
-        return new ContentCardSchemaData(new JSONObject());
-    }
-
     @Deprecated
     @Nullable public ContentCard getContentCard() {
         if (!contentType.equals(ContentType.APPLICATION_JSON)) {
@@ -140,5 +133,15 @@ public class ContentCardSchemaData implements SchemaData {
             return;
         }
         parent.track(interaction, eventType, null);
+
+        // MOB-21651 - manually write a disqualify event to event history if the card is being
+        // dismissed. this code will be removed later when we have rule consequences to manage
+        // the event history write.
+        if (eventType == MessagingEdgeEventType.DISMISS && parent.propositionReference != null) {
+            PropositionHistory.record(
+                    parent.getProposition().getActivityId(),
+                    MessagingEdgeEventType.DISQUALIFY,
+                    null);
+        }
     }
 }

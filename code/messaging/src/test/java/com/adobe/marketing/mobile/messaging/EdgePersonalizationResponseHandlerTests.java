@@ -41,6 +41,7 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -192,7 +193,6 @@ public class EdgePersonalizationResponseHandlerTests {
                     "TESTING_ID", Collections.singletonList(new Surface()));
             edgePersonalizationResponseHandler.setSerialWorkDispatcher(mockSerialWorkDispatcher);
 
-            when(mockEvent.getUniqueIdentifier()).thenReturn("mockParentId");
             when(mockResponseEvent.getParentID()).thenReturn("mockParentResponseId");
             when(mockResponseEvent.getName()).thenReturn("fetch message response");
             when(mockResponseEvent.getType()).thenReturn(EventType.EDGE);
@@ -1914,6 +1914,153 @@ public class EdgePersonalizationResponseHandlerTests {
                         } catch (MessageRequiredFieldMissingException e) {
                             fail();
                         }
+                    }
+                });
+    }
+
+    // ========================================================================================
+    // edgePersonalizationResponseHandler handleEventHistoryDisqualifyEvent
+    // ========================================================================================
+    @Test
+    public void test_handleEventHistoryDisqualifyEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        // setup event history write event
+                        Map<String, Object> eventData;
+                        final Map<String, String> historyMap = new HashMap<>();
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                                MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.MESSAGE_ID,
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                        historyMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+                        final Map<String, Object> eventHistoryData = new HashMap<>();
+                        eventHistoryData.put(
+                                MessagingConstants.EventDataKeys.IAM_HISTORY, historyMap);
+
+                        // setup event history disqualify event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventHistoryData);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(
+                                mockEvent);
+
+                        // verify qualified content cards matching the activity id are removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify there are now 3 qualified content cards after removing one with
+                        // activity id
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(3, qualifiedContentCardsList.size());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44301",
+                                qualifiedContentCardsList.get(0).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44302",
+                                qualifiedContentCardsList.get(1).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
+                                qualifiedContentCardsList.get(2).getActivityId());
+                    }
+                });
+    }
+
+    @Test
+    public void test_handleEventHistoryDisqualifyEvent_EventHasNoActivityId() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        // setup event history write event
+                        Map<String, Object> eventData;
+                        final Map<String, String> historyMap = new HashMap<>();
+                        historyMap.put(
+                                MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                                MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+                        // historyMap.put(MessagingTestConstants.EventMask.Keys.MESSAGE_ID,
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                        historyMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
+                        final Map<String, Object> eventHistoryData = new HashMap<>();
+                        eventHistoryData.put(
+                                MessagingConstants.EventDataKeys.IAM_HISTORY, historyMap);
+
+                        // setup event history disqualify event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
+                        mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventHistoryData);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(
+                                mockEvent);
+
+                        // verify qualified content cards matching the activity id are not removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify the 4 qualified content cards
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(4, qualifiedContentCardsList.size());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300",
+                                qualifiedContentCardsList.get(0).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44301",
+                                qualifiedContentCardsList.get(1).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44302",
+                                qualifiedContentCardsList.get(2).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
+                                qualifiedContentCardsList.get(3).getActivityId());
                     }
                 });
     }

@@ -12,9 +12,13 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.services.HttpConnecting;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheEntry;
@@ -24,6 +28,7 @@ import com.adobe.marketing.mobile.services.caching.CacheService;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 
 import com.adobe.marketing.mobile.util.JSONUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,6 +43,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -435,6 +441,17 @@ public class MessagingTestUtils {
         for (int i = 0; i < config.count; i++) {
             Map<String, Object> feedProposition = getMapFromFile("feedProposition.json");
 
+            // activity id modification. we want to modify the proposition activity id
+            // to be unique for each proposition by replacing the last two characters
+            // with a value in the range of 00-99.
+            String activityId = "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44342";
+            activityId = activityId.replace(activityId.substring(activityId.length() - 2), String.format("%02d", i));
+            Map<String, Object> scopeDetails = (Map<String, Object>) feedProposition.get("scopeDetails");
+            Map<String, Object> activtyMap = (Map<String, Object>) scopeDetails.get("activity");
+            activtyMap.put("id", activityId);
+            scopeDetails.put("activity", activtyMap);
+            feedProposition.put("scopeDetails", scopeDetails);
+
             // items modification
             if (config.isMissingItems) {
                 feedProposition.remove("items");
@@ -460,6 +477,15 @@ public class MessagingTestUtils {
             payload.add(feedProposition);
         }
         return payload;
+    }
+
+    static List<Proposition> generateQualifiedContentCards(final MessageTestConfig config) {
+        List<Map<String, Object>> payload = generateFeedPayload(config);
+        List<Proposition> propositions = new ArrayList<>();
+        for (Map<String, Object> proposition : payload) {
+            propositions.add(Proposition.fromEventData(proposition));
+        }
+        return propositions;
     }
 
     static String convertPropositionsToString(List<Proposition> propositions) {
@@ -650,4 +676,32 @@ public class MessagingTestUtils {
         return propositionItemList;
     }
 
+    public static ByteArrayInputStream bitmapToInputStream(Bitmap bitmap) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+        byte[] byteArray = outputStream.toByteArray();
+        return new ByteArrayInputStream(byteArray);
+    }
+
+    public static HttpConnecting simulateNetworkResponse(
+            int responseCode,
+            InputStream responseStream,
+            Map<String, String> metadata
+    ) {
+        HttpConnecting mockResponse = mock(HttpConnecting.class);
+
+        // Mock responseCode
+        when(mockResponse.getResponseCode()).thenReturn(responseCode);
+
+        // Mock inputStream
+        when(mockResponse.getInputStream()).thenReturn(responseStream);
+
+        // Mock getResponsePropertyValue
+        when(mockResponse.getResponsePropertyValue(anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0, String.class);
+            return metadata.get(key);
+        });
+
+        return mockResponse;
+    }
 }

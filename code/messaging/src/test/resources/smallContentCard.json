@@ -1,0 +1,32 @@
+{
+    "actionUrl": "https://luma.com/sale",
+    "title": {
+      "content": "Card Title"
+    },
+    "body": {
+      "content": "body"
+    },
+    "image": {
+      "url": "https://imagetoDownload.com/cardimage",
+      "darkUrl": "https://imagetoDownload.com/darkimage"
+    },
+    "buttons": [
+      {
+        "interactId": "purchaseID",
+        "text": {
+          "content": "Purchase Now"
+        },
+        "actionUrl": "https://adobe.com/offer"
+      },
+      {
+        "interactId": "cancelID",
+        "text": {
+          "content": "Cancel"
+        },
+        "actionUrl": "app://home"
+      }
+    ],
+    "dismissBtn": {
+      "style": "circle"
+    }
+}

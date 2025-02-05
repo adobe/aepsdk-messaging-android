@@ -11,35 +11,13 @@
 #
 
 name: Publish Snapshot
-on:
+
+on: 
   workflow_dispatch:
+
 jobs:
   publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 17
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
-      - name: Import GPG key
-        env:
-          GPG_SECRET_KEYS: ${{ secrets.GPG_SECRET_KEYS }}
-          GPG_OWNERTRUST: ${{ secrets.GPG_OWNERTRUST }}
-        run: |
-          echo $GPG_SECRET_KEYS | base64 --decode | gpg --import --no-tty --batch --yes
-          echo $GPG_OWNERTRUST | base64 --decode | gpg --import-ownertrust --no-tty --batch --yes
-      - name: Publish to Maven Snapshot Repository
-        run: make ci-publish-staging
-        env:
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+    permissions:
+        contents: write
+    uses: adobe/aepsdk-commons/.github/workflows/android-maven-snapshot.yml@gha-android-3.3.0
+    secrets: inherit

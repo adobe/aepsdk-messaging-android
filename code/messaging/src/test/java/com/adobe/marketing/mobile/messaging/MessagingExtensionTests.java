@@ -39,6 +39,8 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
+import com.adobe.marketing.mobile.Messaging;
+import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
@@ -391,7 +393,7 @@ public class MessagingExtensionTests {
                     String moduleVersion = messagingExtension.getVersion();
                     assertEquals(
                             "getVersion should return the correct module version",
-                            MessagingTestConstants.EXTENSION_VERSION,
+                            Messaging.extensionVersion(),
                             moduleVersion);
                 });
     }
@@ -1991,6 +1993,73 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .handleProcessCompletedEvent(mockEvent);
+                });
+    }
+
+    // ========================================================================================
+    // processEvents EventHistoryDisqualifyEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_eventHistoryDisqualifyEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Map<String, Object> eventData = new HashMap<>();
+                    Map<String, String> eventHistoryMap = new HashMap<>();
+                    eventHistoryMap.put(
+                            MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                            MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
+                    eventHistoryMap.put(
+                            MessagingTestConstants.EventMask.Keys.MESSAGE_ID, "mockActivityId");
+                    eventHistoryMap.put(MessagingTestConstants.EventMask.Keys.TRACKING_ACTION, "");
+                    eventData.put(
+                            MessagingTestConstants.EventDataKeys.IAM_HISTORY, eventHistoryMap);
+
+                    Event mockEvent = mock(Event.class);
+                    when(mockEvent.getType())
+                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
+                    when(mockEvent.getSource())
+                            .thenReturn(MessagingTestConstants.EventSource.EVENT_HISTORY_WRITE);
+                    when(mockEvent.getEventData()).thenReturn(eventData);
+
+                    // test
+                    messagingExtension.processEvent(mockEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .handleEventHistoryDisqualifyEvent(mockEvent);
+                });
+    }
+
+    @Test
+    public void test_processEvent_eventHistoryDisplayEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    Map<String, Object> eventData = new HashMap<>();
+                    Map<String, String> eventHistoryMap = new HashMap<>();
+                    eventHistoryMap.put(
+                            MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
+                            MessagingEdgeEventType.DISPLAY.getPropositionEventType());
+                    eventHistoryMap.put(
+                            MessagingTestConstants.EventMask.Keys.MESSAGE_ID, "mockActivityId");
+                    eventHistoryMap.put(MessagingTestConstants.EventMask.Keys.TRACKING_ACTION, "");
+                    eventData.put(
+                            MessagingTestConstants.EventDataKeys.IAM_HISTORY, eventHistoryMap);
+
+                    Event mockEvent = mock(Event.class);
+                    when(mockEvent.getType())
+                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
+                    when(mockEvent.getSource())
+                            .thenReturn(MessagingTestConstants.EventSource.EVENT_HISTORY_WRITE);
+                    when(mockEvent.getEventData()).thenReturn(eventData);
+
+                    // test
+                    messagingExtension.processEvent(mockEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryDisqualifyEvent(mockEvent);
                 });
     }
 
