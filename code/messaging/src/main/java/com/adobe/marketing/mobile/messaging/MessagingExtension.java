@@ -49,8 +49,8 @@ public final class MessagingExtension extends Extension {
     final ContentCardRulesEngine contentCardRulesEngine;
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
 
-    private static final Object completionHandlersMutex = new Object();
-    private static List<CompletionHandler> completionHandlers = new ArrayList<>();
+    @VisibleForTesting static final Object completionHandlersMutex = new Object();
+    @VisibleForTesting static List<CompletionHandler> completionHandlers = new ArrayList<>();
 
     /**
      * Constructor.

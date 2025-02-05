@@ -90,4 +90,9 @@ dependencies {
         exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     androidTestImplementation(project(":messagingtestutils"))
+    // specify byte buddy version to fix compatibility issue with jdk 21
+    testImplementation ("org.mockito:mockito-inline:5.2.0"){
+        exclude(group = "net.bytebuddy", module = "byte-buddy")
+    }
+    testImplementation("net.bytebuddy:byte-buddy:1.14.17")
 }

@@ -99,7 +99,7 @@ public class MessagingPushPayload {
     /**
      * Contains push payload keys to be added to Intent.extras via {@link #putDataInExtras(Intent)}
      */
-    private static final List<String> _pushPayloadKeys =
+    private static final List<String> pushPayloadKeys =
             new ArrayList<String>() {
                 {
                     add(MessagingConstants.Push.PayloadKeys.TITLE);
@@ -316,7 +316,7 @@ public class MessagingPushPayload {
      * @param intent {@code Intent} to be modified
      */
     public void putDataInExtras(final Intent intent) {
-        for (final String key : _pushPayloadKeys) {
+        for (final String key : pushPayloadKeys) {
             final String value = data.get(key);
             if (!StringUtils.isNullOrEmpty(value)) {
                 intent.putExtra(key, value);

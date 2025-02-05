@@ -34,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.Application;
+import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
@@ -88,6 +89,7 @@ public class MessagingExtensionTests {
     @Mock LaunchRule mockLaunchRule;
     @Mock RuleConsequence mockRuleConsequence;
     @Mock SerialWorkDispatcher<Event> mockSerialWorkDispatcher;
+    @Mock AdobeCallback mockAdobeCallback;
 
     private static final String mockCJMData =
             "{\n"
@@ -106,10 +108,24 @@ public class MessagingExtensionTests {
                 + "      }";
 
     private MessagingExtension messagingExtension;
+    private CompletionHandler handler1;
+    private CompletionHandler handler2;
 
     @Before
     public void setup() {
         MockitoAnnotations.openMocks(this);
+        handler1 = new CompletionHandler("originatingId", mockAdobeCallback);
+        handler1.edgeRequestEventId = "edgeRequestId";
+        handler2 = new CompletionHandler("originatingId2", mockAdobeCallback);
+        handler2.edgeRequestEventId = "edgeRequestId2";
+
+        List<CompletionHandler> handlers = new ArrayList<>();
+        handlers.add(handler1);
+        handlers.add(handler2);
+
+        synchronized (MessagingExtension.completionHandlersMutex) {
+            MessagingExtension.completionHandlers = handlers;
+        }
     }
 
     @After
@@ -128,6 +144,7 @@ public class MessagingExtensionTests {
         reset(mockLaunchRule);
         reset(mockRuleConsequence);
         reset(mockSerialWorkDispatcher);
+        reset(mockAdobeCallback);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -1960,7 +1977,6 @@ public class MessagingExtensionTests {
     // ========================================================================================
     // processEvents edgePersonalizationRequestCompleteEvent
     // ========================================================================================
-
     @Test
     public void test_processEvent_edgePersonalizationRequestCompleteEvent() {
         runUsingMockedServiceProvider(
@@ -2044,6 +2060,55 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .handleEventHistoryDisqualifyEvent(mockEvent);
+                });
+    }
+
+    // ========================================================================================
+    // completion handler tests
+    // ========================================================================================
+    @Test
+    public void test_completionHandlerForOriginatingEventId_found() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    CompletionHandler result =
+                            messagingExtension.completionHandlerForOriginatingEventId(
+                                    "originatingId");
+                    assertNotNull(result);
+                    assertEquals("originatingId", result.originatingEventId);
+                });
+    }
+
+    @Test
+    public void test_completionHandlerForOriginatingEventId_notFound() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    CompletionHandler result =
+                            messagingExtension.completionHandlerForOriginatingEventId(
+                                    "nonExistentId");
+                    assertNull(result);
+                });
+    }
+
+    @Test
+    public void test_completionHandlerForEdgeRequestEventId_found() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    CompletionHandler result =
+                            messagingExtension.completionHandlerForEdgeRequestEventId(
+                                    "edgeRequestId");
+                    assertNotNull(result);
+                    assertEquals("edgeRequestId", result.edgeRequestEventId);
+                });
+    }
+
+    @Test
+    public void test_completionHandlerForEdgeRequestEventId_notFound() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    CompletionHandler result =
+                            messagingExtension.completionHandlerForEdgeRequestEventId(
+                                    "nonExistentId");
+                    assertNull(result);
                 });
     }
 
