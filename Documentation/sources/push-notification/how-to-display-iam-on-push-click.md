@@ -10,7 +10,7 @@ This document describes the steps that allow a designated in-app message to be s
 
 > **Note** : The above rule to show the in-app message when the app is opened from a push notification interaction can be combined with existing trigger rules based on other events using an **OR** operator.
 
-![In-app campaign trigger for Push-to-inapp](./../../../assets/iam-trigger-p2i.png)
+![In-app campaign trigger for Push-to-inapp](./../../assets/iam-trigger-p2i.png)
 
 3. Click on **Done** to save the rule and review the changes by clicking on **Review to activate**
 
@@ -21,7 +21,7 @@ This document describes the steps that allow a designated in-app message to be s
 1. In the Journey Optimizer UI, select the Campaign for the Push notification which opens the app and shows the in-app message from the previous step.
 2. Click **Edit content** to modify the push notification payload. Under **Custom data** section, click on **Add Key/Value Pair**. Enter `adb_iam_id` in the key field and the unique in-app message ID from the previous step in the value field.
 
-![Push campaign custom data for Push-to-inapp](./../../../push-custom-data-p2i.png)
+![Push campaign custom data for Push-to-inapp](./../../assets/push-custom-data-p2i.png)
 
 3. Click on **Review to activate** to save the changes.
 
@@ -90,14 +90,22 @@ public class CustomNotificationService extends FirebaseMessagingService {
 
         // code to build the notification UI
 
-        builder.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class)
-                .putExtra("messageId", message.getMessageId())
-                .putExtras(payload.toBundle()), 
+        Intent contentIntent = new Intent(this, MainActivity.class);
+        if (message.getMessageId() != null) {
+            Messaging.addPushTrackingDetails(contentIntent, message.getMessageId(), message.getData());
+        }
+        // add MessagingPushPayload data to the intent sent when the notification is clicked
+        payload.putDataInExtras(contentIntent);
+        builder.setContentIntent(PendingIntent.getActivity(this, 0, contentIntent,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
 
-        builder.setDeleteIntent(PendingIntent.getBroadcast(this, 0, new Intent(this, NotificationDeleteReceiver.class)
-                .putExtra("messageId", message.getMessageId())
-                .putExtras(payload.toBundle()), 
+        Intent deleteIntent = new Intent(this, MainActivity.class);
+        if (message.getMessageId() != null) {
+            Messaging.addPushTrackingDetails(deleteIntent, message.getMessageId(), message.getData());
+        }
+        // add MessagingPushPayload data to the intent sent when the notification is cleared from the notification panel 
+        payload.putDataInExtras(deleteIntent);
+        builder.setDeleteIntent(PendingIntent.getBroadcast(this, 0, deleteIntent,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0));
 
         // code to display the notification
