@@ -44,6 +44,6 @@ jobs:
     with:
       tag: ${{ github.event.inputs.tag }}
       create-github-release: ${{ github.event.inputs.create-github-release == 'true' }}
-      version-validation-paths: code/gradle.properties, code/messaging/src/main/java/com/adobe/marketing/mobile/messaging/MessagingConstants.java, code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java
+      version-validation-paths: code/gradle.properties, code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java
       version-validation-dependencies: Core ${{ github.event.inputs.core-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}
     secrets: inherit
