@@ -32,6 +32,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class PropositionTests {
+    final int mockPriority = 100;
+    final int mockRank = 1;
 
     Map<String, Object> characteristics =
             new HashMap<String, Object>() {
@@ -43,11 +45,13 @@ public class PropositionTests {
             new HashMap<String, Object>() {
                 {
                     put("id", "activityId");
+                    put("priority", mockPriority);
                 }
             };
     Map<String, Object> scopeDetails =
             new HashMap<String, Object>() {
                 {
+                    put("rank", mockRank);
                     put("decisionProvider", "AJO");
                     put("correlationID", "correlationID");
                     put("characteristics", characteristics);
@@ -91,6 +95,8 @@ public class PropositionTests {
         assertEquals("mobileapp://mockScope", proposition.getScope());
         assertEquals(scopeDetails, proposition.getScopeDetails());
         assertEquals(propositionItems, proposition.getItems());
+        assertEquals(mockRank, proposition.getRank());
+        assertEquals(mockPriority, proposition.getPriority());
     }
 
     @Test(expected = MessageRequiredFieldMissingException.class)

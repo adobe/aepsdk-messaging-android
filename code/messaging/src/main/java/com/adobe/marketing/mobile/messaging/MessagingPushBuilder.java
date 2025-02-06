@@ -230,7 +230,7 @@ class MessagingPushBuilder {
         NotificationCompat.BigPictureStyle bigPictureStyle =
                 new NotificationCompat.BigPictureStyle();
         bigPictureStyle.bigPicture(bitmap);
-        bigPictureStyle.bigLargeIcon(null);
+        bigPictureStyle.bigLargeIcon((Bitmap) null);
         bigPictureStyle.setBigContentTitle(payload.getTitle());
         bigPictureStyle.setSummaryText(payload.getBody());
         notificationBuilder.setStyle(bigPictureStyle);
@@ -359,6 +359,7 @@ class MessagingPushBuilder {
         intent.setClass(context.getApplicationContext(), MessagingPushTrackerActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         addActionDetailsToIntent(intent, actionUri, actionID);
+        addPushPayloadToIntent(intent, payload);
         Messaging.addPushTrackingDetails(intent, payload.getMessageId(), payload.getData());
         // adding tracking details
         PendingIntent resultIntent =
@@ -408,6 +409,19 @@ class MessagingPushBuilder {
 
         if (!StringUtils.isNullOrEmpty(actionId)) {
             intent.putExtra(MessagingPushConstants.Tracking.Keys.ACTION_ID, actionId);
+        }
+    }
+
+    /**
+     * Adds the data in {@code payload} to the extras of the provided {@link Intent}.
+     *
+     * @param intent {@code Intent} to be modified
+     * @param payload {@link MessagingPushPayload} containing the push notification data
+     */
+    private static void addPushPayloadToIntent(
+            final Intent intent, final MessagingPushPayload payload) {
+        if (intent != null && payload != null) {
+            payload.putDataInExtras(intent);
         }
     }
 

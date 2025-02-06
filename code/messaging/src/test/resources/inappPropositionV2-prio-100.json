@@ -1,0 +1,100 @@
+{
+    "version": 1,
+    "rules": [
+        {
+            "condition": {
+                "definition": {
+                    "conditions": [
+                        {
+                            "definition": {
+                                "conditions": [
+                                    {
+                                        "definition": {
+                                            "key": "~type",
+                                            "matcher": "eq",
+                                            "values": [
+                                                "com.adobe.eventType.generic.track"
+                                            ]
+                                        },
+                                        "type": "matcher"
+                                    },
+                                    {
+                                        "definition": {
+                                            "key": "~source",
+                                            "matcher": "eq",
+                                            "values": [
+                                                "com.adobe.eventSource.requestContent"
+                                            ]
+                                        },
+                                        "type": "matcher"
+                                    },
+                                    {
+                                        "definition": {
+                                            "key": "action",
+                                            "matcher": "ex"
+                                        },
+                                        "type": "matcher"
+                                    }
+                                ],
+                                "logic": "and"
+                            },
+                            "type": "group"
+                        },
+                        {
+                            "definition": {
+                                "key": "action",
+                                "matcher": "eq",
+                                "values": [
+                                    "fullscreen"
+                                ]
+                            },
+                            "type": "matcher"
+                        }
+                    ],
+                    "logic": "and"
+                },
+                "type": "group"
+            },
+            "consequences": [
+                {
+                    "id": "prio100",
+                    "type": "schema",
+                    "detail": {
+                        "id": "prio100",
+                        "schema": "https://ns.adobe.com/personalization/message/in-app",
+                        "data": {
+                            "publishedDate": 1691541497,
+                            "expiryDate": 1723163897,
+                            "meta": {
+                                "metaKey": "metaValue"
+                            },
+                            "mobileParameters": {
+                                "verticalAlign": "center",
+                                "dismissAnimation": "bottom",
+                                "verticalInset": 0,
+                                "backdropOpacity": 0.2,
+                                "cornerRadius": 15,
+                                "gestures": {},
+                                "horizontalInset": 0,
+                                "uiTakeover": true,
+                                "horizontalAlign": "center",
+                                "width": 100,
+                                "displayAnimation": "bottom",
+                                "backdropColor": "#000000",
+                                "height": 100
+                            },
+                            "webParameters": {
+                                "webParamKey": "webParamValue"
+                            },
+                            "remoteAssets": [
+                                "urlToAnImage"
+                            ],
+                            "contentType": "text/html",
+                            "content": "<html><body>Is this thing even on?</body></html>"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

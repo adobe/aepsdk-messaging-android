@@ -44,7 +44,7 @@ e2e-functional-test:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) connectedPhoneDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.adobe.marketing.mobile.messaging.E2EFunctionalTests)
 
 javadoc:
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) javadocJar)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) dokkaJavadoc)
 
 assemble-phone:
 	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) assemblePhone)
@@ -76,3 +76,11 @@ set-environment:
 	sed -i.backup 's|prodNLD2|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	sed -i.backup 's|stageVA7|$(ENV)|g' $(MESSAGING_GRADLE_FILE)
 	rm ${MESSAGING_GRADLE_TEMP_FILE}
+	
+# capture baseline snapshots for UI tests
+record-screenshots:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.record=true  --rerun-tasks)
+	
+# verify snapshots with baseline for UI tests
+verify-screenshots:
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) testPhoneDebugUnitTest -Proborazzi.test.verify=true)

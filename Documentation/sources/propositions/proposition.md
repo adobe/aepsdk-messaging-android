@@ -4,41 +4,51 @@ Represents the decision propositions received from the remote, upon a personaliz
 
 ```java
 public class Proposition implements Serializable {
-  // Unique proposition identifier
-  private final String uniqueId;
-  // Scope string
-  private final String scope;
-  // Scope details map
-  private final Map<String, Object> scopeDetails;
-  // List containing proposition decision items
-  private final List<PropositionItem> propositionItems = new ArrayList<>();
-  
-  /**
-   * Gets the {@code Proposition} identifier.
-   *
-   * @return {@link String} containing the {@link Proposition} identifier.
-   */
-  @NonNull public String getUniqueId() {
-      return uniqueId;
-  }
+    // Unique proposition identifier
+    private final String uniqueId;
+    // Scope string
+    private final String scope;
+    // Scope details map
+    private final Map<String, Object> scopeDetails;
+    // List containing proposition decision items
+    private final List<PropositionItem> propositionItems = new ArrayList<>();
+    
+    /**
+     * Gets the {@code Proposition} identifier.
+     *
+     * @return {@link String} containing the {@link Proposition} identifier.
+     */
+    @NonNull public String getUniqueId() {
+        return uniqueId;
+    }
 
-  /**
-   * Gets the {@code PropositionItem} list.
-   *
-   * @return {@code List<PropositionItem>} containing the {@link PropositionItem}s.
-   */
-  @NonNull public List<PropositionItem> getItems() {
-      return propositionItems;
-  }
+    /**
+     * Gets the {@code PropositionItem} list.
+     *
+     * @return {@code List<PropositionItem>} containing the {@link PropositionItem}s.
+     */
+    @NonNull public List<PropositionItem> getItems() {
+        return propositionItems;
+    }
 
-  /**
-   * Gets the {@code Proposition} scope.
-   *
-   * @return {@link String} containing the encoded {@link Proposition} scope.
-   */
-  @NonNull public String getScope() {
-      return scope;
-  }
+    /**
+     * Gets the {@code Proposition} scope.
+     *
+     * @return {@link String} containing the encoded {@link Proposition} scope.
+     */
+    @NonNull public String getScope() {
+        return scope;
+    }
+
+    /**
+     * Gets priority of the {@link Proposition} entered in the AJO UI for the corresponding
+     * campaign.
+     *
+     * @return the {@code int} representation of priority, from 0 (lowest) to 100 (highest).
+     */
+    public int getPriority() {
+        ...
+    }
 
   ...
 }

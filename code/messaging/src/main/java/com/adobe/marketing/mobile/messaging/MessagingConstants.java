@@ -14,7 +14,6 @@ package com.adobe.marketing.mobile.messaging;
 public final class MessagingConstants {
 
     public static final String LOG_TAG = "Messaging";
-    static final String EXTENSION_VERSION = "3.2.1";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
@@ -22,12 +21,14 @@ public final class MessagingConstants {
     static final String CACHE_BASE_DIR = "messaging";
     static final String PROPOSITIONS_CACHE_SUBDIRECTORY = "propositions";
     static final String IMAGES_CACHE_SUBDIRECTORY = "images";
+    static final String CONTENT_CARD_CACHE_SUBDIRECTORY = "contentCardImages";
     static final String HTTP_HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String HTTP_HEADER_ETAG = "Etag";
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
+    static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
 
     private MessagingConstants() {}
 
@@ -150,6 +151,8 @@ public final class MessagingConstants {
         static final String SCHEMA = "schema";
         static final String CORRELATION_ID = "correlationID";
         static final String ACTIVITY = "activity";
+        static final String RANK = "rank";
+        static final String PRIORITY = "priority";
 
         private PayloadKeys() {}
     }
@@ -403,8 +406,33 @@ public final class MessagingConstants {
             public static final String ACTION_TYPE = "adb_a_type";
             public static final String ACTION_URI = "adb_uri";
             public static final String ACTION_BUTTONS = "adb_act";
+            public static final String INAPP_MESSAGE_ID = "adb_iam_id";
 
             private PayloadKeys() {}
+        }
+    }
+
+    public final class ContentCard {
+        public class UIKeys {
+            public static final String ADOBE = "adobe";
+            public static final String TEMPLATE = "template";
+            public static final String CONTENT = "content";
+            public static final String URL = "url";
+            public static final String DARK_URL = "darkUrl";
+            public static final String INTERACT_ID = "interactId";
+            public static final String ACTION_URL = "actionUrl";
+            public static final String TEXT = "text";
+            public static final String STYLE = "style";
+            public static final String ID = "id";
+            public static final String TITLE = "title";
+            public static final String BODY = "body";
+            public static final String IMAGE = "image";
+            public static final String BUTTONS = "buttons";
+            public static final String DISMISS_BTN = "dismissBtn";
+
+            public static final String NONE = "none";
+            public static final String SIMPLE = "simple";
+            public static final String CIRCLE = "circle";
         }
     }
 }

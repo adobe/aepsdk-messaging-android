@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -19,6 +20,7 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.Extension;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.ExtensionEventListener;
+import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
@@ -33,6 +35,7 @@ import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,6 +48,9 @@ public final class MessagingExtension extends Extension {
     final LaunchRulesEngine messagingRulesEngine;
     final ContentCardRulesEngine contentCardRulesEngine;
     private SerialWorkDispatcher<Event> serialWorkDispatcher;
+
+    @VisibleForTesting static final Object completionHandlersMutex = new Object();
+    @VisibleForTesting static List<CompletionHandler> completionHandlers = new ArrayList<>();
 
     /**
      * Constructor.
@@ -125,7 +131,7 @@ public final class MessagingExtension extends Extension {
      */
     @NonNull @Override
     protected String getVersion() {
-        return MessagingConstants.EXTENSION_VERSION;
+        return Messaging.extensionVersion();
     }
 
     @Override
@@ -151,6 +157,10 @@ public final class MessagingExtension extends Extension {
                         this::handleRuleEngineResponseEvents);
         getApi().registerEventListener(
                         EventType.MESSAGING, EventSource.CONTENT_COMPLETE, this::processEvent);
+        getApi().registerEventListener(
+                        MessagingConstants.EventType.MESSAGING,
+                        MessagingConstants.EventSource.EVENT_HISTORY_WRITE,
+                        this::processEvent);
 
         // register listener for handling debug events
         getApi().registerEventListener(EventType.SYSTEM, EventSource.DEBUG, this::handleDebugEvent);
@@ -395,6 +405,10 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
+            // validate the event is an event history disqualify event then process the event
+            // history data
+            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 
@@ -582,6 +596,41 @@ public final class MessagingExtension extends Extension {
                 getApi(),
                 null);
     }
+
+    public static void addCompletionHandler(final CompletionHandler handler) {
+        synchronized (completionHandlersMutex) {
+            completionHandlers.add(handler);
+        }
+    }
+
+    @Nullable CompletionHandler completionHandlerForOriginatingEventId(final String id) {
+        synchronized (completionHandlersMutex) {
+            final ArrayList<CompletionHandler> handlersCopy =
+                    new ArrayList<>(MessagingExtension.completionHandlers);
+            for (final CompletionHandler handler : handlersCopy) {
+                if (handler.originatingEventId.equals(id)) {
+                    MessagingExtension.completionHandlers.remove(handler);
+                    return handler;
+                }
+            }
+            return null;
+        }
+    }
+
+    @Nullable CompletionHandler completionHandlerForEdgeRequestEventId(final String id) {
+        synchronized (completionHandlersMutex) {
+            final ArrayList<CompletionHandler> handlersCopy =
+                    new ArrayList<>(MessagingExtension.completionHandlers);
+            for (final CompletionHandler handler : handlersCopy) {
+                if (handler.edgeRequestEventId.equals(id)) {
+                    MessagingExtension.completionHandlers.remove(handler);
+                    return handler;
+                }
+            }
+            return null;
+        }
+    }
+
     // endregion
 
     // region private methods
