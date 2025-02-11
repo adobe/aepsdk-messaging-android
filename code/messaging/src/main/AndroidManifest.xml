@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 
     Copyright 2020 Adobe. All rights reserved.
@@ -18,5 +19,11 @@
             android:exported="false"
             android:launchMode="singleInstance"
             android:theme="@style/Messaging.Style.Transparent"/>
+        <service android:name="com.adobe.marketing.mobile.ExtensionDiscoveryService"
+            android:exported="false">
+            <meta-data
+                android:name="com.adobe.marketing.mobile.messaging.MessagingExtension"
+                android:value="Extension" />
+        </service>
 </application>
 </manifest>
