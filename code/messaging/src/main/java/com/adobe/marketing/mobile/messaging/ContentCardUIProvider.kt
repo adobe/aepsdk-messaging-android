@@ -158,8 +158,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     completion(
                         Result.failure(
                             Throwable(
-                                "Failed to retrieve propositions for surface ${surfaceList.joinToString(",")} " +
-                                    "Adobe Error : ${error?.toString()}"
+                                "Failed to retrieve propositions for surface ${surfaceList.joinToString(",") { it.uri }} " +
+                                    "Adobe Error : ${error?.errorName}"
                             )
                         )
                     )
