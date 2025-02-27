@@ -33,6 +33,7 @@ import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
+import com.adobe.marketing.mobile.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -450,6 +451,21 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
+        // if the push token hasn't changed or the registration delay has not elapsed
+        // then there is no need to sync it
+        final Map<String, Object> messagingSharedState =
+                getSharedState(MessagingConstants.EXTENSION_NAME, event);
+        final Map<String, Object> configSharedState =
+                getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
+        if (!InternalMessagingUtils.shouldSyncPushToken(
+                messagingSharedState, configSharedState, pushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Skipping the push token sync.");
+            return;
+        }
+
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -467,11 +483,11 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state
-        final HashMap<String, Object> messagingSharedState = new HashMap<>();
-        messagingSharedState.put(
-                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(messagingSharedState, event);
+        // Update the push token to the shared state and persist the current timestamp
+        final HashMap<String, Object> newMessagingState = new HashMap<>();
+        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(newMessagingState, event);
+        InternalMessagingUtils.persistPushSyncTimestamp(TimeUtils.getUnixTimeInSeconds());
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(

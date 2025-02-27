@@ -19,8 +19,10 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -558,6 +560,121 @@ class InternalMessagingUtils {
         if (MapUtils.isNullOrEmpty(ecidMap)) return null;
 
         return DataReader.optString(ecidMap, MessagingConstants.SharedState.EdgeIdentity.ID, null);
+    }
+
+    /**
+     * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
+     * network request.
+     *
+     * @param messagingSharedState A {@link Map} containing the messaging shared state
+     * @param configSharedState A {@link Map} containing the configuration shared state
+     * @param newPushToken A {@code String} containing the push token to be synced
+     * @return {@code boolean} indicating if the push token should be synced
+     */
+    static boolean shouldSyncPushToken(
+            @Nullable final Map<String, Object> messagingSharedState,
+            @Nullable final Map<String, Object> configSharedState,
+            @Nullable final String newPushToken) {
+        if (StringUtils.isNullOrEmpty(newPushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "New push token is null or empty, push token will not be synced.");
+            return false;
+        }
+
+        final String existingPushToken =
+                DataReader.optString(
+                        messagingSharedState,
+                        MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER,
+                        null);
+        if (StringUtils.isNullOrEmpty(existingPushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Existing push token not found, push token will be synced.");
+            return true;
+        }
+
+        if (!newPushToken.equals(existingPushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "New push token found, push token will be synced.");
+            return true;
+        }
+
+        return isRegistrationDelayElapsed(configSharedState);
+    }
+
+    /**
+     * Determines if the registration delay has elapsed for the push token.
+     *
+     * @param configSharedState A {@link Map} containing the configuration shared state
+     * @return {@code boolean} indicating if the registration delay has elapsed
+     */
+    private static boolean isRegistrationDelayElapsed(
+            @Nullable final Map<String, Object> configSharedState) {
+        final long lastRegistrationTime = getLastPushSyncTimestamp();
+        // customRegistrationDelay is in days, convert to milliseconds
+        final long customRegistrationDelay =
+                DataReader.optLong(
+                                configSharedState,
+                                MessagingConstants.SharedState.Configuration
+                                        .PUSH_REGISTRATION_DELAY,
+                                -1L)
+                        * MessagingConstants.MILLISECONDS_IN_A_DAY;
+        final long registrationDelay =
+                customRegistrationDelay > -1L
+                        ? customRegistrationDelay
+                        : MessagingConstants.DEFAULT_PUSH_REGISTRATION_DELAY;
+        if (System.currentTimeMillis() - lastRegistrationTime < registrationDelay) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "isRegistrationDelayElapsed",
+                    "Registration delay has not elapsed; push token will not be synced.");
+            return false;
+        }
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                "isRegistrationDelayElapsed",
+                "Registration delay has elapsed; push token will be synced.");
+        return true;
+    }
+
+    // ========================================================================================
+    // Datastore utils
+    // ========================================================================================
+    /**
+     * Persists the provided timestamp in the Messaging extension {@link NamedCollection}.
+     *
+     * @param timestamp A {@code long} containing the timestamp in seconds to be persisted.
+     */
+    static void persistPushSyncTimestamp(final long timestamp) {
+        final NamedCollection namedCollection = getNamedCollection();
+        namedCollection.setLong(MessagingConstants.DataStoreKeys.PUSH_SYNC_TIMESTAMP, timestamp);
+    }
+
+    /**
+     * Retrieves the last push sync timestamp from the Messaging extension {@link NamedCollection}.
+     *
+     * @return A {@code long} containing the last push sync timestamp in milliseconds.
+     */
+    private static long getLastPushSyncTimestamp() {
+        final NamedCollection namedCollection = getNamedCollection();
+        return namedCollection.getLong(MessagingConstants.DataStoreKeys.PUSH_SYNC_TIMESTAMP, 0)
+                * MessagingConstants.MILLISECONDS_IN_A_SECOND;
+    }
+
+    /**
+     * Retrieves the Messaging extension {@link NamedCollection} from the {@link DataStoring}
+     * service.
+     *
+     * @return The Messaging extension {@link NamedCollection}.
+     */
+    private static NamedCollection getNamedCollection() {
+        final DataStoring dataStoreService = ServiceProvider.getInstance().getDataStoreService();
+        return dataStoreService.getNamedCollection(MessagingConstants.DATA_STORE_NAME);
     }
 
     // ========================================================================================
