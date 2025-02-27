@@ -459,10 +459,7 @@ public final class MessagingExtension extends Extension {
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
         if (!InternalMessagingUtils.shouldSyncPushToken(
                 messagingSharedState, configSharedState, pushToken)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Skipping the push token sync.");
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping the push token sync.");
             return;
         }
 
