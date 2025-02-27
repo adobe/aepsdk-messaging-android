@@ -436,6 +436,8 @@ public final class MessagingExtension extends Extension {
         sendPropositionInteraction(propositionInteractionXdm);
     }
 
+    private boolean isInitialPushTokenSync = true;
+
     void handlePushToken(final Event event) {
         final String pushToken =
                 DataReader.optString(
@@ -458,7 +460,7 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> configSharedState =
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
         if (!InternalMessagingUtils.shouldSyncPushToken(
-                messagingSharedState, configSharedState, pushToken)) {
+                messagingSharedState, configSharedState, pushToken, isInitialPushTokenSync)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping the push token sync.");
             return;
         }
@@ -494,6 +496,12 @@ public final class MessagingExtension extends Extension {
                 eventData,
                 getApi(),
                 event);
+
+        // update the push token sync status to true.
+        // we only want to sync the push token once per app launch unless the registration delay
+        // is configured to allow push syncs on every setPushIdentifier call (registration delay of
+        // 0).
+        isInitialPushTokenSync = false;
     }
 
     /**

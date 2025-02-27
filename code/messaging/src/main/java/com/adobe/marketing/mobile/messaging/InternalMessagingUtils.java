@@ -569,12 +569,15 @@ class InternalMessagingUtils {
      * @param messagingSharedState A {@link Map} containing the messaging shared state
      * @param configSharedState A {@link Map} containing the configuration shared state
      * @param newPushToken A {@code String} containing the push token to be synced
+     * @param isInitialPushTokenSync A {@code boolean} indicating if this is the first push token
+     *     sync in the app lifecycle
      * @return {@code boolean} indicating if the push token should be synced
      */
     static boolean shouldSyncPushToken(
             @Nullable final Map<String, Object> messagingSharedState,
             @Nullable final Map<String, Object> configSharedState,
-            @Nullable final String newPushToken) {
+            @Nullable final String newPushToken,
+            boolean isInitialPushTokenSync) {
         if (StringUtils.isNullOrEmpty(newPushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
@@ -588,11 +591,12 @@ class InternalMessagingUtils {
                         messagingSharedState,
                         MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER,
                         null);
-        if (StringUtils.isNullOrEmpty(existingPushToken)) {
+        if (StringUtils.isNullOrEmpty(existingPushToken) || isInitialPushTokenSync) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
-                    "Existing push token not found, push token will be synced.");
+                    "Existing push token not found or this is an initial push token sync. The push"
+                            + " token will be synced.");
             return true;
         }
 

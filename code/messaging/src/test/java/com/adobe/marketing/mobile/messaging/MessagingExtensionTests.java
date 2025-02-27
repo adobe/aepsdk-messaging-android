@@ -2223,7 +2223,8 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayNotElapsed() {
+    public void
+            test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayNotElapsed_initialLaunchScenario() {
         runUsingMockedServiceProvider(
                 () -> {
                     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -2275,6 +2276,104 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
+                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+                    assertEquals(
+                            MessagingConstants.EventSource.REQUEST_CONTENT,
+                            eventCaptor.getValue().getSource());
+                    assertEquals(
+                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
+                    assertEquals(
+                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                            eventCaptor.getValue().getName());
+                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
+                    List<Map<String, Object>> pushNotificationDetails =
+                            (List<Map<String, Object>>)
+                                    ((Map<String, Object>) eventDataMap.get("data"))
+                                            .get("pushNotificationDetails");
+                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
+                });
+    }
+
+    @Test
+    public void
+            test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayNotElapsed_nonInitialLaunchScenario() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put("pushidentifier", "validToken");
+                    Event event =
+                            new Event.Builder("event", "type", "source")
+                                    .setEventData(eventData)
+                                    .build();
+
+                    Map<String, Object> messagingSharedState = new HashMap<>();
+                    messagingSharedState.put("pushidentifier", "validToken");
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.messaging"),
+                                    any(Event.class),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(
+                                    new SharedStateResult(
+                                            SharedStateStatus.SET, messagingSharedState));
+
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put("messaging.pushRegistrationDelay", 1);
+                    when(mockExtensionApi.getSharedState(
+                                    eq("com.adobe.module.configuration"),
+                                    any(Event.class),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(
+                                    new SharedStateResult(
+                                            SharedStateStatus.SET, configSharedState));
+
+                    Map<String, Object> edgeIdentitySharedState = new HashMap<>();
+                    Map<String, Object> ecidMap = new HashMap<>();
+                    Map<String, Object> identityMap = new HashMap<>();
+                    List<Map<String, Object>> ecids = new ArrayList<>();
+                    ecidMap.put("id", "mock_ecid");
+                    ecids.add(ecidMap);
+                    identityMap.put("ECID", ecids);
+                    edgeIdentitySharedState.put("identityMap", identityMap);
+                    when(mockExtensionApi.getXDMSharedState(
+                                    eq("com.adobe.edge.identity"),
+                                    any(Event.class),
+                                    eq(false),
+                                    eq(SharedStateResolution.LAST_SET)))
+                            .thenReturn(
+                                    new SharedStateResult(
+                                            SharedStateStatus.SET, edgeIdentitySharedState));
+
+                    messagingExtension.handlePushToken(event);
+
+                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+
+                    assertEquals(
+                            MessagingConstants.EventSource.REQUEST_CONTENT,
+                            eventCaptor.getValue().getSource());
+                    assertEquals(
+                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
+                    assertEquals(
+                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
+                            eventCaptor.getValue().getName());
+                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
+                    List<Map<String, Object>> pushNotificationDetails =
+                            (List<Map<String, Object>>)
+                                    ((Map<String, Object>) eventDataMap.get("data"))
+                                            .get("pushNotificationDetails");
+                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
+
+                    // clear invocations
+                    Mockito.clearInvocations(mockExtensionApi);
+
+                    // call handle push token again
+                    messagingExtension.handlePushToken(event);
+
+                    // verify that no event is dispatched as the isInitialPushTokenSync is now set
+                    // to false
                     verify(mockExtensionApi, never()).dispatch(any(Event.class));
                 });
     }

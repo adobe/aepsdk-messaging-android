@@ -1760,34 +1760,63 @@ public class InternalMessagingUtilsTests {
     // should sync push token tests
     // ========================================================================================
     @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenConditionsAreMet() {
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_initialLaunchScenario() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> messagingSharedState = new HashMap<>();
                     messagingSharedState.put("pushidentifier", "oldToken");
                     Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("syncPushToken", true);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken");
+                                    messagingSharedState, configSharedState, "newToken", true);
                     assertTrue(result);
                 });
     }
 
     @Test
-    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame() {
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_nonInitialLaunchScenario() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> messagingSharedState = new HashMap<>();
+                    messagingSharedState.put("pushidentifier", "oldToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    messagingSharedState, configSharedState, "newToken", false);
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_nonInitialLaunchScenario() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> messagingSharedState = new HashMap<>();
                     messagingSharedState.put("pushidentifier", "sameToken");
                     Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("syncPushToken", true);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "sameToken");
+                                    messagingSharedState, configSharedState, "sameToken", false);
                     assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_initialLaunchScenario() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> messagingSharedState = new HashMap<>();
+                    messagingSharedState.put("pushidentifier", "sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    messagingSharedState, configSharedState, "sameToken", true);
+                    assertTrue(result);
                 });
     }
 
@@ -1802,7 +1831,7 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "oldToken");
+                                    messagingSharedState, configSharedState, "oldToken", false);
                     assertFalse(result);
                 });
     }
@@ -1818,13 +1847,14 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "oldToken");
+                                    messagingSharedState, configSharedState, "oldToken", false);
                     assertTrue(result);
                 });
     }
 
     @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull() {
+    public void
+            test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_initialLaunchScenario() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> messagingSharedState = new HashMap<>();
@@ -1832,7 +1862,22 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken");
+                                    messagingSharedState, configSharedState, "newToken", true);
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_nonInitialLaunchScenario() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> messagingSharedState = new HashMap<>();
+                    Map<String, Object> configSharedState = new HashMap<>();
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    messagingSharedState, configSharedState, "newToken", false);
                     assertTrue(result);
                 });
     }
@@ -1848,7 +1893,7 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, null);
+                                    messagingSharedState, configSharedState, null, true);
                     assertFalse(result);
                 });
     }
