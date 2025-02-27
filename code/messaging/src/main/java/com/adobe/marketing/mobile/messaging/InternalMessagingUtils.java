@@ -577,7 +577,7 @@ class InternalMessagingUtils {
             @Nullable final Map<String, Object> messagingSharedState,
             @Nullable final Map<String, Object> configSharedState,
             @Nullable final String newPushToken,
-            boolean isInitialPushTokenSync) {
+            final boolean isInitialPushTokenSync) {
         if (StringUtils.isNullOrEmpty(newPushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
