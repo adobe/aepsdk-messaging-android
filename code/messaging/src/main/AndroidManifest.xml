@@ -25,5 +25,15 @@
                 android:name="com.adobe.marketing.mobile.messaging.MessagingExtension"
                 android:value="Extension" />
         </service>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:grantUriPermissions="true"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/paths" />
+        </provider>
 </application>
 </manifest>

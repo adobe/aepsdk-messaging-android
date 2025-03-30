@@ -17,13 +17,22 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.FileProvider;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
+import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Utility class for Building AJO push notification.
@@ -119,5 +128,129 @@ class MessagingPushUtils {
             return 0;
         }
         return context.getResources().getIdentifier(iconName, "drawable", context.getPackageName());
+    }
+
+    /**
+     * Returns the local file {@code Uri} for the cached rich media by reading the path to the file
+     * from the metadata of the {@code CacheResult} and then using the {@link FileProvider} to build
+     * the Uri.
+     *
+     * @param cachedRichMedia the {@link CacheResult} containing the cached rich media asset
+     * @return the local file {@link Uri} for the cached rich media asset
+     */
+    static Uri getCachedRichMediaFileUri(@NonNull final CacheResult cachedRichMedia) {
+        final Map<String, String> metadata = cachedRichMedia.getMetadata();
+        if (metadata == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to find metadata in cached rich media cache result.");
+            return null;
+        }
+
+        final String pathToFile = metadata.get("pathToFile");
+        if (pathToFile == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to find path to file in cached rich media cache result.");
+            return null;
+        }
+
+        final Context context =
+                ServiceProvider.getInstance().getAppContextService().getApplicationContext();
+        if (context == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to get application context. Can't create Uri for cached rich media"
+                            + " file.");
+            return null;
+        }
+
+        final File cachedFile = new File(pathToFile);
+        final String authority = context.getPackageName() + ".fileprovider";
+        return FileProvider.getUriForFile(context, authority, cachedFile);
+    }
+
+    /**
+     * Determines if the push payload contains GIF content in the adb_image field
+     *
+     * @param url the adb_image url
+     * @return true if the adb_image contains a GIF file, false otherwise
+     */
+    static boolean isGifContent(@NonNull final String url) {
+        return url.endsWith(".gif");
+    }
+
+    /**
+     * Retrieves the cached asset from the {@link CacheService} and returns it via a {@code
+     * CompletableFuture}. The asset is retrieved from the cache using the provided key which is the
+     * URL of the asset. The method will wait for the asset to be cached for the specified timeout
+     * duration.
+     *
+     * @param key the {@code String} key to retrieve the asset from the cache
+     * @param timeoutInMillis the @code int} timeout in milliseconds to wait for the asset to be
+     *     cached
+     * @return a {@link CompletableFuture} that will be completed with the {@link CacheResult} if
+     *     the asset is cached, or null if the asset is not cached within the timeout
+     */
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    static CompletableFuture<CacheResult> getCachedAsset(
+            @NonNull final String key, final int timeoutInMillis) {
+        final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
+        if (cacheService == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "getCachedAsset - Cache service is null.");
+            return null;
+        }
+
+        return CompletableFuture.supplyAsync(
+                () -> tryGetCachedAsset(cacheService, key, timeoutInMillis, 0));
+    }
+
+    /**
+     * Private helper method to recursively try to get the cached asset from the cache service.
+     *
+     * @param cacheService the {@link CacheService} instance to use for retrieving the asset
+     * @param key the {@code String} key to retrieve the asset from the cache
+     * @param timeoutInMillis the {@code int} timeout in milliseconds to wait for the asset to be
+     *     cached
+     * @param elapsedTime the {@code int} elapsed time in milliseconds since the start of the method
+     * @return the {@link CacheResult} if the asset is cached, or null if the asset is not cached
+     *     within the timeout
+     */
+    private static CacheResult tryGetCachedAsset(
+            final CacheService cacheService,
+            final String key,
+            final int timeoutInMillis,
+            final int elapsedTime) {
+        final String assetCacheLocation = InternalMessagingUtils.getAssetCacheLocation();
+        final CacheResult cachedAsset = cacheService.get(assetCacheLocation, key);
+        if (cachedAsset != null || elapsedTime >= timeoutInMillis) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "tryGetCachedAsset - Cached asset found for url: %s.",
+                    key);
+            return cachedAsset;
+        }
+
+        try {
+            Thread.sleep(MessagingConstants.HALF_A_SECOND_IN_MILLIS);
+            return tryGetCachedAsset(
+                    cacheService,
+                    key,
+                    timeoutInMillis,
+                    elapsedTime + MessagingConstants.HALF_A_SECOND_IN_MILLIS);
+        } catch (final InterruptedException e) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "tryGetCachedAsset - Interrupted while waiting for asset to be cached.");
+            return null;
+        }
     }
 }

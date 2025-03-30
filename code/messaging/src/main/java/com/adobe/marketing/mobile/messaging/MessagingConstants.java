@@ -29,6 +29,8 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
+    static final int HALF_A_SECOND_IN_MILLIS = 500;
+    static final int DOWNLOAD_ASSET_TIMEOUT = 2000;
 
     private MessagingConstants() {}
 
