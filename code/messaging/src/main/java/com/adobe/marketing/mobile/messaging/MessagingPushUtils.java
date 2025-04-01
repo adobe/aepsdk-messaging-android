@@ -217,7 +217,7 @@ class MessagingPushUtils {
     }
 
     /**
-     * Private helper method to recursively try to get the cached asset from the cache service.
+     * Private helper method to retrieve the cached asset from the cache service.
      *
      * @param key the {@code String} key to retrieve the asset from the cache
      * @param timeoutInMillis the {@code int} timeout in milliseconds to wait for the asset to be
