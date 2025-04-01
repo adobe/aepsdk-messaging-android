@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Class for building push notification.
@@ -273,17 +275,23 @@ class MessagingPushBuilder {
                                                 }
                                             });
                             assetDownloader.downloadAssetCollection();
+
+                            final ExecutorService singleThreadScheduledExecutor =
+                                    Executors.newSingleThreadScheduledExecutor();
                             final CacheResult cacheResult =
                                     MessagingPushUtils.getCachedAsset(
+                                                    singleThreadScheduledExecutor,
                                                     payload.getImageUrl(),
                                                     MessagingConstants.DOWNLOAD_ASSET_TIMEOUT)
                                             .join();
+                            singleThreadScheduledExecutor.shutdown();
+
                             if (cacheResult == null) {
                                 Log.debug(
                                         MessagingPushConstants.LOG_TAG,
                                         SELF_TAG,
-                                        "Failed to download the image. A text only notification"
-                                                + " will be displayed.");
+                                        "Failed to download the rich media. A text only"
+                                                + " notification will be displayed.");
                                 return notificationBuilder;
                             }
                             setNotificationBigPicture(notificationBuilder, cacheResult);
@@ -313,17 +321,9 @@ class MessagingPushBuilder {
             return;
         }
 
-        try {
-            final NotificationCompat.BigPictureStyle style =
-                    new NotificationCompat.BigPictureStyle();
-            style.bigPicture(Icon.createWithContentUri(uri));
-            notificationBuilder.setStyle(style);
-        } catch (final Exception exception) {
-            Log.debug(
-                    MessagingPushConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Error processing rich media from ${payload.imageUrl}: ${e.message}");
-        }
+        final NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
+        style.bigPicture(Icon.createWithContentUri(uri));
+        notificationBuilder.setStyle(style);
     }
 
     /**
@@ -337,7 +337,7 @@ class MessagingPushBuilder {
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
      */
-    static void setNotificationClickAction(
+    private static void setNotificationClickAction(
             final NotificationCompat.Builder notificationBuilder,
             final MessagingPushPayload payload,
             final Context context) {
@@ -396,7 +396,7 @@ class MessagingPushBuilder {
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
      */
-    static void addActionButtons(
+    private static void addActionButtons(
             final NotificationCompat.Builder builder,
             final MessagingPushPayload payload,
             final Context context) {
@@ -469,7 +469,7 @@ class MessagingPushBuilder {
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
      */
-    static void setNotificationDeleteAction(
+    private static void setNotificationDeleteAction(
             final NotificationCompat.Builder builder,
             final MessagingPushPayload payload,
             final Context context) {

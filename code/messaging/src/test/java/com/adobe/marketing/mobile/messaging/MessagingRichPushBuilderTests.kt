@@ -94,7 +94,7 @@ class MessagingRichPushBuilderTests {
         every { payload.imageUrl } returns gifUrl
 
         // Setup a cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
+        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
@@ -116,7 +116,51 @@ class MessagingRichPushBuilderTests {
         every { payload.imageUrl } returns gifUrl
 
         // Setup a null cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any()) } returns CompletableFuture.supplyAsync({ null })
+        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ null })
+
+        // Execute
+        val notification = MessagingPushBuilder.build(payload, context)
+
+        // Verify MessageAssetDownloader was used
+        verify(exactly = 1) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
+
+        // Verify notification was created
+        assertNotNull(notification)
+
+        // Verify big picture style was not applied
+        verify(exactly = 0) { anyConstructed<NotificationCompat.Builder>().setStyle(any(BigPictureStyle::class)) }
+    }
+
+    @Test
+    fun `verify notification still created with no image when the payload url is null`() {
+        // Setup
+        every { payload.imageUrl } returns null
+
+        // Setup a cached asset to be returned via a completable future
+        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
+
+        // Execute
+        val notification = MessagingPushBuilder.build(payload, context)
+
+        // Verify MessageAssetDownloader was not used
+        verify(exactly = 0) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
+
+        // Verify notification was created
+        assertNotNull(notification)
+
+        // Verify big picture style was not applied
+        verify(exactly = 0) { anyConstructed<NotificationCompat.Builder>().setStyle(any(BigPictureStyle::class)) }
+    }
+
+    @Test
+    fun `verify notification still created with no image when the cached asset metadata is null`() {
+        // Setup
+        val gifUrl = "https://example.com/animation.gif"
+        every { payload.imageUrl } returns gifUrl
+        every { MessagingPushUtils.getCachedRichMediaFileUri(any()) } returns null
+
+        // Setup a cached asset to be returned via a completable future
+        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
@@ -151,8 +195,8 @@ class MessagingRichPushBuilderTests {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.S])
-    fun `test gif handling is displayed as a bitmap on API 33 and below`() {
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun `test gif is displayed as a bitmap on API 33 and below`() {
         // Setup
         val gifUrl = "https://example.com/animation.gif"
         every { payload.imageUrl } returns gifUrl

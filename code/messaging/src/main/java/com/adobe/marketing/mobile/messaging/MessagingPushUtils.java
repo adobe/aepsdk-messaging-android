@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.content.FileProvider;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -33,6 +34,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * Utility class for Building AJO push notification.
@@ -139,6 +141,14 @@ class MessagingPushUtils {
      * @return the local file {@link Uri} for the cached rich media asset
      */
     static Uri getCachedRichMediaFileUri(@NonNull final CacheResult cachedRichMedia) {
+        if (cachedRichMedia == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to get cached rich media file Uri. Cache result is null.");
+            return null;
+        }
+
         final Map<String, String> metadata = cachedRichMedia.getMetadata();
         if (metadata == null) {
             Log.debug(
@@ -189,6 +199,8 @@ class MessagingPushUtils {
      * URL of the asset. The method will wait for the asset to be cached for the specified timeout
      * duration.
      *
+     * @param singleThreadScheduledExecutor the {@link Executor} to use for the cached asset
+     *     retrieval
      * @param key the {@code String} key to retrieve the asset from the cache
      * @param timeoutInMillis the @code int} timeout in milliseconds to wait for the asset to be
      *     cached
@@ -197,60 +209,48 @@ class MessagingPushUtils {
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
     static CompletableFuture<CacheResult> getCachedAsset(
-            @NonNull final String key, final int timeoutInMillis) {
-        final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
-        if (cacheService == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "getCachedAsset - Cache service is null.");
-            return null;
-        }
-
+            @NonNull final Executor singleThreadScheduledExecutor,
+            @NonNull final String key,
+            final int timeoutInMillis) {
         return CompletableFuture.supplyAsync(
-                () -> tryGetCachedAsset(cacheService, key, timeoutInMillis, 0));
+                () -> tryGetCachedAsset(key, timeoutInMillis), singleThreadScheduledExecutor);
     }
 
     /**
      * Private helper method to recursively try to get the cached asset from the cache service.
      *
-     * @param cacheService the {@link CacheService} instance to use for retrieving the asset
      * @param key the {@code String} key to retrieve the asset from the cache
      * @param timeoutInMillis the {@code int} timeout in milliseconds to wait for the asset to be
      *     cached
-     * @param elapsedTime the {@code int} elapsed time in milliseconds since the start of the method
      * @return the {@link CacheResult} if the asset is cached, or null if the asset is not cached
      *     within the timeout
      */
-    private static CacheResult tryGetCachedAsset(
-            final CacheService cacheService,
-            final String key,
-            final int timeoutInMillis,
-            final int elapsedTime) {
+    @VisibleForTesting
+    static CacheResult tryGetCachedAsset(final @NonNull String key, final int timeoutInMillis) {
         final String assetCacheLocation = InternalMessagingUtils.getAssetCacheLocation();
-        final CacheResult cachedAsset = cacheService.get(assetCacheLocation, key);
-        if (cachedAsset != null || elapsedTime >= timeoutInMillis) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "tryGetCachedAsset - Cached asset found for url: %s.",
-                    key);
-            return cachedAsset;
+        final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
+        CacheResult cachedAsset = cacheService.get(assetCacheLocation, key);
+        int elapsedTime = 0;
+
+        while (cachedAsset == null && elapsedTime <= timeoutInMillis) {
+            try {
+                Thread.sleep(MessagingConstants.HALF_SECOND_IN_MILLIS);
+            } catch (final InterruptedException e) {
+                Log.debug(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "tryGetCachedAsset - Interrupted while waiting for asset to be cached.");
+                return null;
+            }
+            elapsedTime += MessagingConstants.HALF_SECOND_IN_MILLIS;
+            cachedAsset = cacheService.get(assetCacheLocation, key);
         }
 
-        try {
-            Thread.sleep(MessagingConstants.HALF_A_SECOND_IN_MILLIS);
-            return tryGetCachedAsset(
-                    cacheService,
-                    key,
-                    timeoutInMillis,
-                    elapsedTime + MessagingConstants.HALF_A_SECOND_IN_MILLIS);
-        } catch (final InterruptedException e) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "tryGetCachedAsset - Interrupted while waiting for asset to be cached.");
-            return null;
-        }
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Asset found in cache after waiting for %d milliseconds.",
+                elapsedTime);
+        return cachedAsset;
     }
 }

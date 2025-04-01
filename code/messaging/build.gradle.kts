@@ -66,7 +66,7 @@ dependencies {
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
     implementation("androidx.compose.material3:material3:$material3Version")
-    implementation("androidx.core:core:1.1.0")
+
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:
