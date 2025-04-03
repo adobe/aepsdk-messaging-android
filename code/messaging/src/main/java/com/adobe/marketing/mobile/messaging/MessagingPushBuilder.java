@@ -19,7 +19,9 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Icon;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -28,9 +30,14 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Class for building push notification.
@@ -67,7 +74,6 @@ class MessagingPushBuilder {
         builder.setPriority(payload.getNotificationPriority());
         builder.setAutoCancel(true);
 
-        setLargeIcon(builder, payload);
         setSmallIcon(
                 builder, payload,
                 context); // Small Icon must be present, otherwise the notification will not be
@@ -79,7 +85,8 @@ class MessagingPushBuilder {
         setSound(builder, payload, context);
         setNotificationClickAction(builder, payload, context);
         setNotificationDeleteAction(builder, payload, context);
-        return builder.build();
+
+        return buildNotification(builder, payload);
     }
 
     /**
@@ -210,30 +217,113 @@ class MessagingPushBuilder {
     }
 
     /**
-     * Sets the large icon for the notification. If a large icon url is received from the payload,
-     * the image is downloaded and the notification style is set to BigPictureStyle. If large icon
-     * url is not received from the payload, default style is used for the notification.
+     * Sets the image for the notification then builds the notification. If a large icon url is
+     * received from the payload, the media is downloaded and the notification style is set to
+     * BigPictureStyle. If large icon url is not received from the payload, default style is used
+     * for the notification.
      *
      * @param notificationBuilder the notification builder
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @return the built {@link Notification} object
      */
-    private static void setLargeIcon(
+    private static Notification buildNotification(
             final NotificationCompat.Builder notificationBuilder,
             final MessagingPushPayload payload) {
         // Quick bail out if there is no image url
-        if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return;
-        Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
+        if (StringUtils.isNullOrEmpty(payload.getImageUrl())) return notificationBuilder.build();
 
-        // Bail out if the download fails
-        if (bitmap == null) return;
-        notificationBuilder.setLargeIcon(bitmap);
-        NotificationCompat.BigPictureStyle bigPictureStyle =
-                new NotificationCompat.BigPictureStyle();
-        bigPictureStyle.bigPicture(bitmap);
-        bigPictureStyle.bigLargeIcon((Bitmap) null);
-        bigPictureStyle.setBigContentTitle(payload.getTitle());
-        bigPictureStyle.setSummaryText(payload.getBody());
-        notificationBuilder.setStyle(bigPictureStyle);
+        // If the device is running on Android 34 or above and the image is a gif, download the gif
+        // and build the notification
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                && MessagingPushUtils.isGifContent(payload.getImageUrl())) {
+            return downloadGifThenBuildNotification(notificationBuilder, payload);
+        } else {
+            final Bitmap bitmap = MessagingPushUtils.download(payload.getImageUrl());
+            // Bail out if the download fails
+            if (bitmap == null) return notificationBuilder.build();
+
+            final NotificationCompat.BigPictureStyle bigPictureStyle =
+                    new NotificationCompat.BigPictureStyle();
+            bigPictureStyle.bigPicture(bitmap);
+            notificationBuilder.setStyle(bigPictureStyle);
+        }
+        return notificationBuilder.build();
+    }
+
+    /**
+     * Downloads and caches the gif content using the {@link MessageAssetDownloader} then applies
+     * the gif using a {@link androidx.core.app.NotificationCompat.BigPictureStyle}. The prepared
+     * {@code NotificationCompat.Builder} is then used to build the notification.
+     *
+     * @param notificationBuilder the {@link NotificationCompat.Builder} to be used to build the
+     *     notification
+     * @param payload {@link MessagingPushPayload} the payload received from the push notification
+     * @return the built {@link Notification} object
+     */
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @NonNull private static Notification downloadGifThenBuildNotification(
+            final NotificationCompat.Builder notificationBuilder,
+            final MessagingPushPayload payload) {
+        CompletableFuture<NotificationCompat.Builder> builderFuture =
+                CompletableFuture.supplyAsync(
+                        () -> {
+                            final MessageAssetDownloader assetDownloader =
+                                    new MessageAssetDownloader(
+                                            new ArrayList<String>() {
+                                                {
+                                                    add(payload.getImageUrl());
+                                                }
+                                            });
+                            assetDownloader.downloadAssetCollection();
+
+                            final ExecutorService singleThreadScheduledExecutor =
+                                    Executors.newSingleThreadScheduledExecutor();
+                            final CacheResult cacheResult =
+                                    MessagingPushUtils.getCachedAsset(
+                                                    singleThreadScheduledExecutor,
+                                                    payload.getImageUrl(),
+                                                    MessagingConstants.DOWNLOAD_ASSET_TIMEOUT)
+                                            .join();
+                            singleThreadScheduledExecutor.shutdown();
+
+                            if (cacheResult == null) {
+                                Log.debug(
+                                        MessagingPushConstants.LOG_TAG,
+                                        SELF_TAG,
+                                        "Failed to download the rich media. A text only"
+                                                + " notification will be displayed.");
+                                return notificationBuilder;
+                            }
+                            setNotificationBigPicture(notificationBuilder, cacheResult);
+                            return notificationBuilder;
+                        });
+
+        return builderFuture.thenApply(NotificationCompat.Builder::build).join();
+    }
+
+    /**
+     * Sets the gif media for the notification using a {@link
+     * androidx.core.app.NotificationCompat.BigPictureStyle}.
+     *
+     * @param notificationBuilder the {@link NotificationCompat.Builder} to be used to build the
+     *     notification
+     * @param cacheResult the {@link CacheResult} containing the cached gif media
+     */
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    private static void setNotificationBigPicture(
+            final NotificationCompat.Builder notificationBuilder, final CacheResult cacheResult) {
+        final Uri uri = MessagingPushUtils.getCachedRichMediaFileUri(cacheResult);
+        if (uri == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to find cached rich media, uri not built.");
+            return;
+        }
+
+        final NotificationCompat.BigPictureStyle style = new NotificationCompat.BigPictureStyle();
+        style.bigPicture(Icon.createWithContentUri(uri));
+        notificationBuilder.setStyle(style);
     }
 
     /**
@@ -242,7 +332,8 @@ class MessagingPushBuilder {
      * is used. If an action type is received from the payload, but the action type is not
      * supported, the default action type is used.
      *
-     * @param notificationBuilder the notification builder
+     * @param notificationBuilder the {@link NotificationCompat.Builder} to be used to build the
+     *     notification
      * @param payload {@link MessagingPushPayload} the payload received from the push notification
      * @param context the application {@link Context}
      */
