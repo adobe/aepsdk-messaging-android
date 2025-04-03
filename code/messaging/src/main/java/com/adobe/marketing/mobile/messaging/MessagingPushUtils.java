@@ -179,7 +179,8 @@ class MessagingPushUtils {
         }
 
         final File cachedFile = new File(pathToFile);
-        final String authority = context.getPackageName() + ".fileprovider";
+        final String authority =
+                context.getPackageName() + MessagingConstants.MESSAGING_FILE_PROVIDER_AUTHORITY;
         return FileProvider.getUriForFile(context, authority, cachedFile);
     }
 
@@ -190,7 +191,7 @@ class MessagingPushUtils {
      * @return true if the adb_image contains a GIF file, false otherwise
      */
     static boolean isGifContent(@NonNull final String url) {
-        return url.endsWith(".gif");
+        return url.endsWith(MessagingConstants.GIF_FILE_EXTENSION);
     }
 
     /**
@@ -246,11 +247,19 @@ class MessagingPushUtils {
             cachedAsset = cacheService.get(assetCacheLocation, key);
         }
 
-        Log.debug(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "Asset found in cache after waiting for %d milliseconds.",
-                elapsedTime);
+        if (cachedAsset == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Asset not found in cache after waiting for %d milliseconds.",
+                    timeoutInMillis);
+        } else {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Asset found in cache after waiting for %d milliseconds.",
+                    elapsedTime);
+        }
         return cachedAsset;
     }
 }

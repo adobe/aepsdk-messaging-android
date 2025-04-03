@@ -29,7 +29,7 @@
         <provider
             android:name="androidx.core.content.FileProvider"
             android:grantUriPermissions="true"
-            android:authorities="${applicationId}.fileprovider"
+            android:authorities="${applicationId}.messagingfileprovider"
             android:exported="false">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
