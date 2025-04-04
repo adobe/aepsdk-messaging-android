@@ -345,7 +345,7 @@ public class MessagingPushUtilsTests {
     }
 
     @Test
-    public void getCachedAssetReturnsCacheResultWhenCachedFileExists() {
+    public void downloadAndCacheAssetReturnsCacheResultWhenCachedFileExists() {
         // setup
         mockCacheService = mock(CacheService.class);
         CacheResult mockCacheResult = mock(CacheResult.class);
@@ -376,7 +376,7 @@ public class MessagingPushUtilsTests {
 
             // test
             CacheResult cachedAsset =
-                    MessagingPushUtils.getCachedAsset(mockExecutor, fileName, 2000).join();
+                    MessagingPushUtils.downloadAndCacheAsset(mockExecutor, fileName, 2000).join();
 
             // verify
             assertEquals(mockCacheResult, cachedAsset);
@@ -384,7 +384,7 @@ public class MessagingPushUtilsTests {
     }
 
     @Test
-    public void getCachedAssetReturnsNullWhenCacheResultDoesNotExist() {
+    public void downloadAndCacheAssetReturnsNullWhenCacheResultDoesNotExist() {
         // setup
         mockCacheService = mock(CacheService.class);
         CacheResult mockCacheResult = mock(CacheResult.class);
@@ -415,72 +415,10 @@ public class MessagingPushUtilsTests {
 
             // test
             CacheResult cachedAsset =
-                    MessagingPushUtils.getCachedAsset(mockExecutor, fileName, 2000).join();
+                    MessagingPushUtils.downloadAndCacheAsset(mockExecutor, fileName, 2000).join();
 
             // verify
             assertNull(cachedAsset);
-        }
-    }
-
-    @Test
-    public void tryGetCachedAssetReturnsCacheResultWhenAssetIsCached() {
-        // setup
-        String key = "test_key";
-        int elapsedTime = 0;
-        mockCacheService = mock(CacheService.class);
-        CacheResult mockCacheResult = mock(CacheResult.class);
-        mockServiceProvider = mock(ServiceProvider.class);
-
-        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
-                        Mockito.mockStatic(ServiceProvider.class);
-                MockedStatic<InternalMessagingUtils> internalMessagingUtilsMockedStatic =
-                        Mockito.mockStatic(InternalMessagingUtils.class)) {
-            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
-            when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
-
-            serviceProviderMockedStatic
-                    .when(ServiceProvider::getInstance)
-                    .thenReturn(mockServiceProvider);
-
-            internalMessagingUtilsMockedStatic
-                    .when(InternalMessagingUtils::getAssetCacheLocation)
-                    .thenReturn("assetCacheLocation");
-
-            // test
-            CacheResult result = MessagingPushUtils.tryGetCachedAsset(key, 2000);
-
-            // verify
-            assertEquals(mockCacheResult, result);
-        }
-    }
-
-    @Test
-    public void tryGetCachedAssetReturnsNullWhenAssetIsNotCachedWithinTimeout() {
-        // setup
-        String key = "test_key";
-        mockCacheService = mock(CacheService.class);
-        mockServiceProvider = mock(ServiceProvider.class);
-
-        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
-                        Mockito.mockStatic(ServiceProvider.class);
-                MockedStatic<InternalMessagingUtils> internalMessagingUtilsMockedStatic =
-                        Mockito.mockStatic(InternalMessagingUtils.class)) {
-            when(mockCacheService.get(anyString(), anyString())).thenReturn(null);
-            when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
-
-            serviceProviderMockedStatic
-                    .when(ServiceProvider::getInstance)
-                    .thenReturn(mockServiceProvider);
-
-            internalMessagingUtilsMockedStatic
-                    .when(InternalMessagingUtils::getAssetCacheLocation)
-                    .thenReturn("assetCacheLocation");
-
-            // test
-            CacheResult result = MessagingPushUtils.tryGetCachedAsset(key, 2000);
-
-            // verify
-            assertNull(result);
         }
     }
 }

@@ -32,7 +32,6 @@ import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
 import com.adobe.marketing.mobile.util.StringUtils;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -267,19 +266,10 @@ class MessagingPushBuilder {
         CompletableFuture<NotificationCompat.Builder> builderFuture =
                 CompletableFuture.supplyAsync(
                         () -> {
-                            final MessageAssetDownloader assetDownloader =
-                                    new MessageAssetDownloader(
-                                            new ArrayList<String>() {
-                                                {
-                                                    add(payload.getImageUrl());
-                                                }
-                                            });
-                            assetDownloader.downloadAssetCollection();
-
                             final ExecutorService singleThreadScheduledExecutor =
                                     Executors.newSingleThreadScheduledExecutor();
                             final CacheResult cacheResult =
-                                    MessagingPushUtils.getCachedAsset(
+                                    MessagingPushUtils.downloadAndCacheAsset(
                                                     singleThreadScheduledExecutor,
                                                     payload.getImageUrl(),
                                                     MessagingConstants.DOWNLOAD_ASSET_TIMEOUT)
