@@ -197,13 +197,14 @@ class MessagingPushUtils {
     }
 
     /**
-     * Downloads the asset from the given URL and caches it using the {@link CacheService}.
-     * The downloaded asset is then retrieved from the cache and returned in a
-     * {@code CompletableFuture} supplying a {@code CacheResult}.
+     * Downloads the asset from the given URL and caches it using the {@link CacheService}. The
+     * downloaded asset is then retrieved from the cache and returned in a {@code CompletableFuture}
+     * supplying a {@code CacheResult}.
      *
      * @param singleThreadScheduledExecutor the {@link Executor} to run the download and cache task
      * @param url a {@code String} containing the URL of the asset to download
-     * @param timeoutInMillis an (code int} timeout in milliseconds for the download and cache operation
+     * @param timeoutInMillis an (code int} timeout in milliseconds for the download and cache
+     *     operation
      * @return a {@link CompletableFuture} that will complete with the {@link CacheResult} of the
      *     cached asset
      */
