@@ -94,13 +94,10 @@ class MessagingRichPushBuilderTests {
         every { payload.imageUrl } returns gifUrl
 
         // Setup a cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
+        every { MessagingPushUtils.downloadAndCacheAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
-
-        // Verify MessageAssetDownloader was used
-        verify(exactly = 1) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
 
         // Verify notification was created
         assertNotNull(notification)
@@ -116,13 +113,10 @@ class MessagingRichPushBuilderTests {
         every { payload.imageUrl } returns gifUrl
 
         // Setup a null cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ null })
+        every { MessagingPushUtils.downloadAndCacheAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ null })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
-
-        // Verify MessageAssetDownloader was used
-        verify(exactly = 1) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
 
         // Verify notification was created
         assertNotNull(notification)
@@ -137,13 +131,10 @@ class MessagingRichPushBuilderTests {
         every { payload.imageUrl } returns null
 
         // Setup a cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
+        every { MessagingPushUtils.downloadAndCacheAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
-
-        // Verify MessageAssetDownloader was not used
-        verify(exactly = 0) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
 
         // Verify notification was created
         assertNotNull(notification)
@@ -160,13 +151,10 @@ class MessagingRichPushBuilderTests {
         every { MessagingPushUtils.getCachedRichMediaFileUri(any()) } returns null
 
         // Setup a cached asset to be returned via a completable future
-        every { MessagingPushUtils.getCachedAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
+        every { MessagingPushUtils.downloadAndCacheAsset(any(), any(), any()) } returns CompletableFuture.supplyAsync({ mockk<CacheResult>() })
 
         // Execute
         val notification = MessagingPushBuilder.build(payload, context)
-
-        // Verify MessageAssetDownloader was used
-        verify(exactly = 1) { anyConstructed<MessageAssetDownloader>().downloadAssetCollection() }
 
         // Verify notification was created
         assertNotNull(notification)

@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.content.FileProvider;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
@@ -34,7 +33,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Utility class for Building AJO push notification.
@@ -195,71 +197,46 @@ class MessagingPushUtils {
     }
 
     /**
-     * Retrieves the cached asset from the {@link CacheService} and returns it via a {@code
-     * CompletableFuture}. The asset is retrieved from the cache using the provided key which is the
-     * URL of the asset. The method will wait for the asset to be cached for the specified timeout
-     * duration.
+     * Downloads the asset from the given URL and caches it using the {@link CacheService}.
+     * The downloaded asset is then retrieved from the cache and returned in a
+     * {@code CompletableFuture} supplying a {@code CacheResult}.
      *
-     * @param singleThreadScheduledExecutor the {@link Executor} to use for the cached asset
-     *     retrieval
-     * @param key the {@code String} key to retrieve the asset from the cache
-     * @param timeoutInMillis the @code int} timeout in milliseconds to wait for the asset to be
-     *     cached
-     * @return a {@link CompletableFuture} that will be completed with the {@link CacheResult} if
-     *     the asset is cached, or null if the asset is not cached within the timeout
+     * @param singleThreadScheduledExecutor the {@link Executor} to run the download and cache task
+     * @param url a {@code String} containing the URL of the asset to download
+     * @param timeoutInMillis an (code int} timeout in milliseconds for the download and cache operation
+     * @return a {@link CompletableFuture} that will complete with the {@link CacheResult} of the
+     *     cached asset
      */
     @RequiresApi(api = Build.VERSION_CODES.N)
-    static CompletableFuture<CacheResult> getCachedAsset(
+    static CompletableFuture<CacheResult> downloadAndCacheAsset(
             @NonNull final Executor singleThreadScheduledExecutor,
-            @NonNull final String key,
+            @NonNull final String url,
             final int timeoutInMillis) {
         return CompletableFuture.supplyAsync(
-                () -> tryGetCachedAsset(key, timeoutInMillis), singleThreadScheduledExecutor);
-    }
-
-    /**
-     * Private helper method to retrieve the cached asset from the cache service.
-     *
-     * @param key the {@code String} key to retrieve the asset from the cache
-     * @param timeoutInMillis the {@code int} timeout in milliseconds to wait for the asset to be
-     *     cached
-     * @return the {@link CacheResult} if the asset is cached, or null if the asset is not cached
-     *     within the timeout
-     */
-    @VisibleForTesting
-    static CacheResult tryGetCachedAsset(final @NonNull String key, final int timeoutInMillis) {
-        final String assetCacheLocation = InternalMessagingUtils.getAssetCacheLocation();
-        final CacheService cacheService = ServiceProvider.getInstance().getCacheService();
-        CacheResult cachedAsset = cacheService.get(assetCacheLocation, key);
-        int elapsedTime = 0;
-
-        while (cachedAsset == null && elapsedTime <= timeoutInMillis) {
-            try {
-                Thread.sleep(MessagingConstants.HALF_SECOND_IN_MILLIS);
-            } catch (final InterruptedException e) {
-                Log.debug(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "tryGetCachedAsset - Interrupted while waiting for asset to be cached.");
-                return null;
-            }
-            elapsedTime += MessagingConstants.HALF_SECOND_IN_MILLIS;
-            cachedAsset = cacheService.get(assetCacheLocation, key);
-        }
-
-        if (cachedAsset == null) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Asset not found in cache after waiting for %d milliseconds.",
-                    timeoutInMillis);
-        } else {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Asset found in cache after waiting for %d milliseconds.",
-                    elapsedTime);
-        }
-        return cachedAsset;
+                () -> {
+                    final AtomicReference<CacheResult> retrievedCacheResult =
+                            new AtomicReference<>();
+                    final CountDownLatch latch = new CountDownLatch(1);
+                    final MessageAssetDownloader messageAssetDownloader =
+                            new MessageAssetDownloader();
+                    messageAssetDownloader.downloadAsset(
+                            url,
+                            cacheResult -> {
+                                retrievedCacheResult.set(cacheResult);
+                                latch.countDown();
+                            });
+                    try {
+                        latch.await(timeoutInMillis, TimeUnit.MILLISECONDS);
+                    } catch (final InterruptedException e) {
+                        Log.debug(
+                                MessagingConstants.LOG_TAG,
+                                SELF_TAG,
+                                "downloadAndCacheAsset - Interrupted while waiting for asset to be"
+                                        + " downloaded and cached.");
+                        return null;
+                    }
+                    return retrievedCacheResult.get();
+                },
+                singleThreadScheduledExecutor);
     }
 }

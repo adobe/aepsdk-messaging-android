@@ -11,6 +11,9 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.adobe.marketing.mobile.AdobeCallback;
 import com.adobe.marketing.mobile.internal.util.StringEncoder;
 import com.adobe.marketing.mobile.services.HttpConnecting;
 import com.adobe.marketing.mobile.services.HttpMethod;
@@ -52,6 +55,11 @@ class MessageAssetDownloader {
         createAssetCacheDirectory();
     }
 
+    /** Constructor. */
+    MessageAssetDownloader() {
+        this(null);
+    }
+
     /**
      * Downloads and caches all assets present in the {@link
      * MessageAssetDownloader#assetsCollection} list.
@@ -85,57 +93,86 @@ class MessageAssetDownloader {
 
         // download assets within the assets collection list
         for (final String url : assetsCollection) {
-            // 304 - Not Modified support
-            final CacheResult cachedAsset = cacheService.get(assetCacheLocation, url);
-            final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
-            final NetworkRequest networkRequest =
-                    new NetworkRequest(
-                            url,
-                            HttpMethod.GET,
-                            null,
-                            requestProperties,
-                            MessagingConstants.DEFAULT_TIMEOUT,
-                            MessagingConstants.DEFAULT_TIMEOUT);
-            ServiceProvider.getInstance()
-                    .getNetworkService()
-                    .connectAsync(
-                            networkRequest,
-                            connection -> {
-                                if (connection == null) {
-                                    Log.warning(
-                                            MessagingConstants.LOG_TAG,
-                                            SELF_TAG,
-                                            "downloadAssetCollection - connection returned from"
-                                                    + " NetworkService was null. Aborting asset"
-                                                    + " download for: %s",
-                                            url);
-                                    return;
-                                }
-                                if (connection.getResponseCode()
-                                        == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                                    Log.debug(
-                                            MessagingConstants.LOG_TAG,
-                                            SELF_TAG,
-                                            "downloadAssetCollection - Asset was cached previously:"
-                                                    + " %s",
-                                            url);
-                                    connection.close();
-                                    return;
-                                } else if (connection.getResponseCode()
-                                        != HttpURLConnection.HTTP_OK) {
-                                    Log.debug(
-                                            MessagingConstants.LOG_TAG,
-                                            SELF_TAG,
-                                            "downloadAssetCollection - Failed to download asset"
-                                                    + " from URL: %s",
-                                            url);
-                                    connection.close();
-                                    return;
-                                }
-                                cacheAssetData(connection, url);
-                                connection.close();
-                            });
+            downloadAsset(url, null);
         }
+    }
+
+    /**
+     * Downloads and caches the asset from the provided URL.
+     *
+     * @param url {@code String} containing the asset URL
+     * @param callback {@link AdobeCallback} to be called with the cached asset
+     */
+    void downloadAsset(
+            @NonNull final String url, @Nullable final AdobeCallback<CacheResult> callback) {
+        if (StringUtils.isNullOrEmpty(url)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "downloadAsset - Failed to download asset, the asset url is null or empty.");
+            if (callback != null) {
+                callback.call(null);
+            }
+            return;
+        }
+
+        // 304 - Not Modified support
+        final CacheResult cachedAsset = cacheService.get(assetCacheLocation, url);
+        final Map<String, String> requestProperties = extractHeadersFromCache(cachedAsset);
+        final NetworkRequest networkRequest =
+                new NetworkRequest(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        requestProperties,
+                        MessagingConstants.DEFAULT_TIMEOUT,
+                        MessagingConstants.DEFAULT_TIMEOUT);
+        ServiceProvider.getInstance()
+                .getNetworkService()
+                .connectAsync(
+                        networkRequest,
+                        connection -> {
+                            if (connection == null) {
+                                Log.warning(
+                                        MessagingConstants.LOG_TAG,
+                                        SELF_TAG,
+                                        "downloadAsset - connection returned from"
+                                                + " NetworkService was null. Aborting asset"
+                                                + " download for: %s",
+                                        url);
+                                if (callback != null) {
+                                    callback.call(null);
+                                }
+                                return;
+                            }
+                            if (connection.getResponseCode()
+                                    == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                                Log.debug(
+                                        MessagingConstants.LOG_TAG,
+                                        SELF_TAG,
+                                        "downloadAsset - Asset was cached previously:" + " %s",
+                                        url);
+                                connection.close();
+                                if (callback != null) {
+                                    callback.call(cachedAsset);
+                                }
+                                return;
+                            } else if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                                Log.debug(
+                                        MessagingConstants.LOG_TAG,
+                                        SELF_TAG,
+                                        "downloadAsset - Failed to download asset"
+                                                + " from URL: %s",
+                                        url);
+                                connection.close();
+                                if (callback != null) {
+                                    callback.call(null);
+                                }
+                                return;
+                            }
+                            cacheAssetData(connection, url, callback);
+                            connection.close();
+                        });
     }
 
     /**
@@ -234,8 +271,12 @@ class MessageAssetDownloader {
      *
      * @param connection {@link HttpConnecting} containing the downloaded remote asset data.
      * @param key {@code String} The asset download URL.
+     * @param callback {@link AdobeCallback} to be called with the cached asset.
      */
-    private void cacheAssetData(final HttpConnecting connection, final String key) {
+    private void cacheAssetData(
+            final HttpConnecting connection,
+            final String key,
+            final AdobeCallback<CacheResult> callback) {
         if (StringUtils.isNullOrEmpty(assetCacheLocation)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
@@ -260,6 +301,15 @@ class MessageAssetDownloader {
         final CacheEntry cacheEntry =
                 new CacheEntry(connection.getInputStream(), CacheExpiry.never(), metadata);
         cacheService.set(assetCacheLocation, key, cacheEntry);
+        if (callback != null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "cacheAssetData - Downloaded and cached asset from %s.",
+                    key);
+            final CacheResult cachedAsset = cacheService.get(assetCacheLocation, key);
+            callback.call(cachedAsset);
+        }
     }
 
     /**
