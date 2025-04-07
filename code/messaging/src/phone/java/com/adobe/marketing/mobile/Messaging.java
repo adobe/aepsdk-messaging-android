@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class Messaging {
-    private static final String EXTENSION_VERSION = "3.3.0";
+    private static final String EXTENSION_VERSION = "3.3.2";
     private static final String LOG_TAG = "Messaging";
     private static final String CLASS_NAME = "Messaging";
 
