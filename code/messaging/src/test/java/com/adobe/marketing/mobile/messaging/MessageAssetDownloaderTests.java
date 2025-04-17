@@ -11,7 +11,9 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -390,6 +392,164 @@ public class MessageAssetDownloaderTests {
                     // verify asset cached
                     verify(mockCacheService, times(0))
                             .set(eq(expectedCacheLocation), eq(assetUrl), any(CacheEntry.class));
+                });
+    }
+
+    // ====================================================================================================
+    // void downloadAsset()
+    // ====================================================================================================
+
+    @Test
+    public void testDownloadAsset_whenAssetIsDownloaded_thenAssetIsCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(
+                () -> {
+                    messageAssetsDownloader = new MessageAssetDownloader();
+                    when(mockHttpConnection.getResponseCode())
+                            .thenReturn(HttpURLConnection.HTTP_OK);
+                    when(mockHttpConnection.getInputStream())
+                            .thenReturn(
+                                    new ByteArrayInputStream(
+                                            "assetData".getBytes(StandardCharsets.UTF_8)));
+                    doAnswer(
+                                    (Answer<Void>)
+                                            invocation -> {
+                                                NetworkCallback callback =
+                                                        invocation.getArgument(1);
+                                                callback.call(mockHttpConnection);
+                                                return null;
+                                            })
+                            .when(mockNetworkService)
+                            .connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+
+                    // test
+                    messageAssetsDownloader.downloadAsset(
+                            assetUrl,
+                            cacheResult -> {
+                                // verify
+                                verify(mockCacheService, times(1))
+                                        .set(anyString(), anyString(), any(CacheEntry.class));
+                                assertEquals(mockCacheResult, cacheResult);
+                            });
+                });
+    }
+
+    @Test
+    public void testDownloadAsset_whenNullNetworkConnection_thenAssetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(
+                () -> {
+                    messageAssetsDownloader = new MessageAssetDownloader();
+
+                    doAnswer(
+                                    (Answer<Void>)
+                                            invocation -> {
+                                                NetworkCallback callback =
+                                                        invocation.getArgument(1);
+                                                callback.call(null);
+                                                return null;
+                                            })
+                            .when(mockNetworkService)
+                            .connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+
+                    // test
+                    messageAssetsDownloader.downloadAsset(
+                            assetUrl,
+                            cacheResult -> {
+                                // verify
+                                verify(mockCacheService, times(0))
+                                        .set(anyString(), anyString(), any(CacheEntry.class));
+                                assertNull(cacheResult);
+                            });
+                });
+    }
+
+    @Test
+    public void testDownloadAsset_whenNullAssetUrl_thenAssetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(
+                () -> {
+                    messageAssetsDownloader = new MessageAssetDownloader();
+
+                    // test
+                    messageAssetsDownloader.downloadAsset(
+                            null,
+                            cacheResult -> {
+                                // verify
+                                verify(mockCacheService, times(0))
+                                        .set(anyString(), anyString(), any(CacheEntry.class));
+                                assertNull(cacheResult);
+                            });
+                });
+    }
+
+    @Test
+    public void testDownloadAsset_whenAssetIsNotModified_thenAssetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(
+                () -> {
+                    messageAssetsDownloader = new MessageAssetDownloader();
+                    when(mockHttpConnection.getResponseCode())
+                            .thenReturn(HttpURLConnection.HTTP_NOT_MODIFIED);
+                    when(mockHttpConnection.getInputStream())
+                            .thenReturn(
+                                    new ByteArrayInputStream(
+                                            "assetData".getBytes(StandardCharsets.UTF_8)));
+                    doAnswer(
+                                    (Answer<Void>)
+                                            invocation -> {
+                                                NetworkCallback callback =
+                                                        invocation.getArgument(1);
+                                                callback.call(mockHttpConnection);
+                                                return null;
+                                            })
+                            .when(mockNetworkService)
+                            .connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+
+                    // test
+                    messageAssetsDownloader.downloadAsset(
+                            assetUrl,
+                            cacheResult -> {
+                                // verify
+                                verify(mockCacheService, times(0))
+                                        .set(anyString(), anyString(), any(CacheEntry.class));
+                                assertEquals(mockCacheResult, cacheResult);
+                            });
+                });
+    }
+
+    @Test
+    public void testDownloadAsset_whenAssetIsNotFound_thenAssetIsNotCached() {
+        // setup
+        setupServiceProviderMockAndRunTest(
+                () -> {
+                    messageAssetsDownloader = new MessageAssetDownloader();
+                    when(mockHttpConnection.getResponseCode())
+                            .thenReturn(HttpURLConnection.HTTP_NOT_FOUND);
+                    when(mockHttpConnection.getInputStream())
+                            .thenReturn(
+                                    new ByteArrayInputStream(
+                                            "assetData".getBytes(StandardCharsets.UTF_8)));
+                    doAnswer(
+                                    (Answer<Void>)
+                                            invocation -> {
+                                                NetworkCallback callback =
+                                                        invocation.getArgument(1);
+                                                callback.call(mockHttpConnection);
+                                                return null;
+                                            })
+                            .when(mockNetworkService)
+                            .connectAsync(any(NetworkRequest.class), any(NetworkCallback.class));
+
+                    // test
+                    messageAssetsDownloader.downloadAsset(
+                            assetUrl,
+                            cacheResult -> {
+                                // verify
+                                verify(mockCacheService, times(0))
+                                        .set(anyString(), anyString(), any(CacheEntry.class));
+                                assertNull(cacheResult);
+                            });
                 });
     }
 }

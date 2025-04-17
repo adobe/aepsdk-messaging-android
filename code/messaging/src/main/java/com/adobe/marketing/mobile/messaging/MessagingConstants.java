@@ -26,11 +26,15 @@ public final class MessagingConstants {
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String HTTP_HEADER_ETAG = "Etag";
+    static final String GIF_FILE_EXTENSION = ".gif";
+    static final String MESSAGING_FILE_PROVIDER_AUTHORITY = ".messagingfileprovider";
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
     static final long MILLISECONDS_IN_A_SECOND = 1000;
     static final String DATA_STORE_NAME = "AdobeMobile_Messaging";
+    static final int HALF_SECOND_IN_MILLIS = 500;
+    static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
 
     private MessagingConstants() {}
 

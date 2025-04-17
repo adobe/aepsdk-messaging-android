@@ -92,6 +92,15 @@
         </service>
 
         <receiver android:name=".NotificationBroadcastReceiver" />
+
+        <service
+            android:name="com.adobe.marketing.mobile.messaging.MessagingService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

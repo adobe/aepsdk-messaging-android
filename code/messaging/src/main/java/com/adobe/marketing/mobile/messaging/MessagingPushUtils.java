@@ -17,13 +17,26 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.FileProvider;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
+import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Utility class for Building AJO push notification.
@@ -119,5 +132,112 @@ class MessagingPushUtils {
             return 0;
         }
         return context.getResources().getIdentifier(iconName, "drawable", context.getPackageName());
+    }
+
+    /**
+     * Returns the local file {@code Uri} for the cached rich media by reading the path to the file
+     * from the metadata of the {@code CacheResult} and then using the {@link FileProvider} to build
+     * the Uri.
+     *
+     * @param cachedRichMedia the {@link CacheResult} containing the cached rich media asset
+     * @return the local file {@link Uri} for the cached rich media asset
+     */
+    static Uri getCachedRichMediaFileUri(@NonNull final CacheResult cachedRichMedia) {
+        if (cachedRichMedia == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to get cached rich media file Uri. Cache result is null.");
+            return null;
+        }
+
+        final Map<String, String> metadata = cachedRichMedia.getMetadata();
+        if (metadata == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to find metadata in cached rich media cache result.");
+            return null;
+        }
+
+        final String pathToFile = metadata.get("pathToFile");
+        if (pathToFile == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to find path to file in cached rich media cache result.");
+            return null;
+        }
+
+        final Context context =
+                ServiceProvider.getInstance().getAppContextService().getApplicationContext();
+        if (context == null) {
+            Log.debug(
+                    MessagingPushConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to get application context. Can't create Uri for cached rich media"
+                            + " file.");
+            return null;
+        }
+
+        final File cachedFile = new File(pathToFile);
+        final String authority =
+                context.getPackageName() + MessagingConstants.MESSAGING_FILE_PROVIDER_AUTHORITY;
+        return FileProvider.getUriForFile(context, authority, cachedFile);
+    }
+
+    /**
+     * Determines if the push payload contains GIF content in the adb_image field
+     *
+     * @param url the adb_image url
+     * @return true if the adb_image contains a GIF file, false otherwise
+     */
+    static boolean isGifContent(@NonNull final String url) {
+        return url.endsWith(MessagingConstants.GIF_FILE_EXTENSION);
+    }
+
+    /**
+     * Downloads the asset from the given URL and caches it using the {@link CacheService}. The
+     * downloaded asset is then retrieved from the cache and returned in a {@code CompletableFuture}
+     * supplying a {@code CacheResult}.
+     *
+     * @param singleThreadScheduledExecutor the {@link Executor} to run the download and cache task
+     * @param url a {@code String} containing the URL of the asset to download
+     * @param timeoutInMillis an (code int} timeout in milliseconds for the download and cache
+     *     operation
+     * @return a {@link CompletableFuture} that will complete with the {@link CacheResult} of the
+     *     cached asset
+     */
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    static CompletableFuture<CacheResult> downloadAndCacheAsset(
+            @NonNull final Executor singleThreadScheduledExecutor,
+            @NonNull final String url,
+            final int timeoutInMillis) {
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    final AtomicReference<CacheResult> retrievedCacheResult =
+                            new AtomicReference<>();
+                    final CountDownLatch latch = new CountDownLatch(1);
+                    final MessageAssetDownloader messageAssetDownloader =
+                            new MessageAssetDownloader();
+                    messageAssetDownloader.downloadAsset(
+                            url,
+                            cacheResult -> {
+                                retrievedCacheResult.set(cacheResult);
+                                latch.countDown();
+                            });
+                    try {
+                        latch.await(timeoutInMillis, TimeUnit.MILLISECONDS);
+                    } catch (final InterruptedException e) {
+                        Log.debug(
+                                MessagingConstants.LOG_TAG,
+                                SELF_TAG,
+                                "downloadAndCacheAsset - Interrupted while waiting for asset to be"
+                                        + " downloaded and cached.");
+                        return null;
+                    }
+                    return retrievedCacheResult.get();
+                },
+                singleThreadScheduledExecutor);
     }
 }
