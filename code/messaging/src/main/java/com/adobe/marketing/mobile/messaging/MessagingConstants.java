@@ -29,8 +29,6 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final long DEFAULT_PUSH_REGISTRATION_DELAY = 604800000; // 7 days in milliseconds
-    static final long MILLISECONDS_IN_A_DAY = 86400000;
     static final long MILLISECONDS_IN_A_SECOND = 1000;
     static final String DATA_STORE_NAME = "AdobeMobile_Messaging";
 
@@ -376,7 +374,7 @@ public final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
-            static final String PUSH_REGISTRATION_DELAY = "messaging.pushRegistrationDelay";
+            static final String PUSH_REGISTRATION_PAUSED = "messaging.pushRegistrationPaused";
 
             private Configuration() {}
         }
@@ -389,6 +387,16 @@ public final class MessagingConstants {
 
             private EdgeIdentity() {}
         }
+
+        final class Messaging {
+            static final String PUSH_IDENTIFIER = "pushidentifier";
+
+            private Messaging() {}
+        }
+    }
+
+    final class NamedCollectionKeys {
+        private NamedCollectionKeys() {}
 
         final class Messaging {
             static final String PUSH_IDENTIFIER = "pushidentifier";
@@ -439,11 +447,5 @@ public final class MessagingConstants {
             public static final String SIMPLE = "simple";
             public static final String CIRCLE = "circle";
         }
-    }
-
-    static class DataStoreKeys {
-        static final String PUSH_SYNC_TIMESTAMP = "pushSyncTimestamp";
-
-        private DataStoreKeys() {}
     }
 }

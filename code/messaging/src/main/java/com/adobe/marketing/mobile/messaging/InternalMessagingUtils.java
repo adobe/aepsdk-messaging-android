@@ -566,18 +566,13 @@ class InternalMessagingUtils {
      * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
      * network request.
      *
-     * @param messagingSharedState A {@link Map} containing the messaging shared state
      * @param configSharedState A {@link Map} containing the configuration shared state
      * @param newPushToken A {@code String} containing the push token to be synced
-     * @param isInitialPushTokenSync A {@code boolean} indicating if this is the first push token
-     *     sync in the app lifecycle
      * @return {@code boolean} indicating if the push token should be synced
      */
     static boolean shouldSyncPushToken(
-            @Nullable final Map<String, Object> messagingSharedState,
             @Nullable final Map<String, Object> configSharedState,
-            @Nullable final String newPushToken,
-            final boolean isInitialPushTokenSync) {
+            @Nullable final String newPushToken) {
         if (StringUtils.isNullOrEmpty(newPushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
@@ -586,90 +581,50 @@ class InternalMessagingUtils {
             return false;
         }
 
-        final String existingPushToken =
-                DataReader.optString(
-                        messagingSharedState,
-                        MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER,
-                        null);
-        if (StringUtils.isNullOrEmpty(existingPushToken) || isInitialPushTokenSync) {
+        final boolean isPushRegistrationPaused =
+                DataReader.optBoolean(
+                        configSharedState,
+                        MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                        false);
+
+        if (isPushRegistrationPaused) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
-                    "Existing push token not found or this is an initial push token sync. The push"
-                            + " token will be synced.");
-            return true;
-        }
-
-        if (!newPushToken.equals(existingPushToken)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "New push token found, push token will be synced.");
-            return true;
-        }
-
-        return isRegistrationDelayElapsed(configSharedState);
-    }
-
-    /**
-     * Determines if the registration delay has elapsed for the push token.
-     *
-     * @param configSharedState A {@link Map} containing the configuration shared state
-     * @return {@code boolean} indicating if the registration delay has elapsed
-     */
-    private static boolean isRegistrationDelayElapsed(
-            @Nullable final Map<String, Object> configSharedState) {
-        final long lastRegistrationTime = getLastPushSyncTimestamp();
-        // customRegistrationDelay is in days, convert to milliseconds
-        final long customRegistrationDelay =
-                DataReader.optLong(
-                                configSharedState,
-                                MessagingConstants.SharedState.Configuration
-                                        .PUSH_REGISTRATION_DELAY,
-                                -1L)
-                        * MessagingConstants.MILLISECONDS_IN_A_DAY;
-        final long registrationDelay =
-                customRegistrationDelay > -1L
-                        ? customRegistrationDelay
-                        : MessagingConstants.DEFAULT_PUSH_REGISTRATION_DELAY;
-        if (System.currentTimeMillis() - lastRegistrationTime < registrationDelay) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "isRegistrationDelayElapsed",
-                    "Registration delay has not elapsed; push token will not be synced.");
+                    "Push registration is paused, push token will not be synced.");
             return false;
         }
+
+        final NamedCollection messagingNamedCollection = getNamedCollection();
+        final String existingPushToken =
+                messagingNamedCollection.getString(
+                        MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);
+
+        if (existingPushToken != null && existingPushToken.equals(newPushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Existing push token matches the new push token, push token will not be"
+                            + " synced.");
+            return false;
+        }
+
         Log.debug(
                 MessagingConstants.LOG_TAG,
-                "isRegistrationDelayElapsed",
-                "Registration delay has elapsed; push token will be synced.");
+                "shouldSyncPushToken",
+                "Existing push token not found or the push token is new. The push token will be"
+                        + " synced.");
+
+        // persist the new push token to the named collection
+        messagingNamedCollection.getString(
+                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
+
         return true;
     }
 
     // ========================================================================================
     // Datastore utils
     // ========================================================================================
-    /**
-     * Persists the provided timestamp in the Messaging extension {@link NamedCollection}.
-     *
-     * @param timestamp A {@code long} containing the timestamp in seconds to be persisted.
-     */
-    static void persistPushSyncTimestamp(final long timestamp) {
-        final NamedCollection namedCollection = getNamedCollection();
-        namedCollection.setLong(MessagingConstants.DataStoreKeys.PUSH_SYNC_TIMESTAMP, timestamp);
-    }
-
-    /**
-     * Retrieves the last push sync timestamp from the Messaging extension {@link NamedCollection}.
-     *
-     * @return A {@code long} containing the last push sync timestamp in milliseconds.
-     */
-    private static long getLastPushSyncTimestamp() {
-        final NamedCollection namedCollection = getNamedCollection();
-        return namedCollection.getLong(MessagingConstants.DataStoreKeys.PUSH_SYNC_TIMESTAMP, 0)
-                * MessagingConstants.MILLISECONDS_IN_A_SECOND;
-    }
-
     /**
      * Retrieves the Messaging extension {@link NamedCollection} from the {@link DataStoring}
      * service.

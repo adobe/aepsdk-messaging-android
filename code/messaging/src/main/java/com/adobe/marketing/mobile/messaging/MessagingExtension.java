@@ -33,7 +33,6 @@ import com.adobe.marketing.mobile.util.JSONUtils;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.SerialWorkDispatcher;
 import com.adobe.marketing.mobile.util.StringUtils;
-import com.adobe.marketing.mobile.util.TimeUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -436,8 +435,6 @@ public final class MessagingExtension extends Extension {
         sendPropositionInteraction(propositionInteractionXdm);
     }
 
-    private boolean isInitialPushTokenSync = true;
-
     void handlePushToken(final Event event) {
         final String pushToken =
                 DataReader.optString(
@@ -453,14 +450,19 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // if the push token hasn't changed or the registration delay has not elapsed
-        // then there is no need to sync it
-        final Map<String, Object> messagingSharedState =
-                getSharedState(MessagingConstants.EXTENSION_NAME, event);
+        // if the push token hasn't changed or the push registration is paused
+        // then there is no need to sync it via an edge network request
         final Map<String, Object> configSharedState =
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
-        if (!InternalMessagingUtils.shouldSyncPushToken(
-                messagingSharedState, configSharedState, pushToken, isInitialPushTokenSync)) {
+        final boolean shouldSyncPushToken =
+                InternalMessagingUtils.shouldSyncPushToken(configSharedState, pushToken);
+
+        // Update the push token to the shared state
+        final Map<String, Object> newMessagingState = new HashMap<>();
+        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(newMessagingState, event);
+
+        if (!shouldSyncPushToken) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping the push token sync.");
             return;
         }
@@ -482,12 +484,6 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state and persist the current timestamp
-        final HashMap<String, Object> newMessagingState = new HashMap<>();
-        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(newMessagingState, event);
-        InternalMessagingUtils.persistPushSyncTimestamp(TimeUtils.getUnixTimeInSeconds());
-
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
                 MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
@@ -496,12 +492,6 @@ public final class MessagingExtension extends Extension {
                 eventData,
                 getApi(),
                 event);
-
-        // update the push token sync status to true.
-        // we only want to sync the push token once per app launch unless the registration delay
-        // is configured to allow push syncs on every setPushIdentifier call (registration delay of
-        // 0).
-        isInitialPushTokenSync = false;
     }
 
     /**

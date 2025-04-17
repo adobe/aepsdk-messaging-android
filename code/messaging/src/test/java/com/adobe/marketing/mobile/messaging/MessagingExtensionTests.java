@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -1350,8 +1351,8 @@ public class MessagingExtensionTests {
                         // no event dispatched: edge event with push profile data
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
 
-                        // verify no push token is stored in shared state
-                        verify(mockExtensionApi, times(0))
+                        // verify push token is stored in shared state
+                        verify(mockExtensionApi, times(1))
                                 .createSharedState(any(Map.class), any(Event.class));
                     }
                 });
@@ -2162,7 +2163,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_handlePushToken_whenPushTokenIsValid() {
+    public void test_handlePushToken_whenPushTokenIsValid_registrationNotPaused() {
         runUsingMockedServiceProvider(
                 () -> {
                     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -2172,82 +2173,11 @@ public class MessagingExtensionTests {
                             new Event.Builder("event", "type", "source")
                                     .setEventData(eventData)
                                     .build();
-
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.messaging"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, messagingSharedState));
-
-                    Map<String, Object> edgeIdentitySharedState = new HashMap<>();
-                    Map<String, Object> ecidMap = new HashMap<>();
-                    Map<String, Object> identityMap = new HashMap<>();
-                    List<Map<String, Object>> ecids = new ArrayList<>();
-                    ecidMap.put("id", "mock_ecid");
-                    ecids.add(ecidMap);
-                    identityMap.put("ECID", ecids);
-                    edgeIdentitySharedState.put("identityMap", identityMap);
-                    when(mockExtensionApi.getXDMSharedState(
-                                    eq("com.adobe.edge.identity"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, edgeIdentitySharedState));
-
-                    messagingExtension.handlePushToken(event);
-
-                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-
-                    assertEquals(
-                            MessagingConstants.EventSource.REQUEST_CONTENT,
-                            eventCaptor.getValue().getSource());
-                    assertEquals(
-                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
-                    assertEquals(
-                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
-                            eventCaptor.getValue().getName());
-                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
-                    List<Map<String, Object>> pushNotificationDetails =
-                            (List<Map<String, Object>>)
-                                    ((Map<String, Object>) eventDataMap.get("data"))
-                                            .get("pushNotificationDetails");
-                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
-                });
-    }
-
-    @Test
-    public void
-            test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayNotElapsed_initialLaunchScenario() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-                    Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("pushidentifier", "validToken");
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(eventData)
-                                    .build();
-
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "validToken");
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.messaging"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, messagingSharedState));
 
                     Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("messaging.pushRegistrationDelay", 1);
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
                     when(mockExtensionApi.getSharedState(
                                     eq("com.adobe.module.configuration"),
                                     any(Event.class),
@@ -2276,6 +2206,18 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
+                    // verify push token added to shared state
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map -> {
+                                                String pushIdentifier =
+                                                        (String) map.get("pushidentifier");
+                                                return "validToken".equals(pushIdentifier);
+                                            }),
+                                    any(Event.class));
+
+                    // event dispatched with push token
                     verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
 
                     assertEquals(
@@ -2296,11 +2238,9 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void
-            test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayNotElapsed_nonInitialLaunchScenario() {
+    public void test_handlePushToken_whenPushTokenIsValid_registrationPaused() {
         runUsingMockedServiceProvider(
                 () -> {
-                    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
                     Map<String, Object> eventData = new HashMap<>();
                     eventData.put("pushidentifier", "validToken");
                     Event event =
@@ -2308,19 +2248,10 @@ public class MessagingExtensionTests {
                                     .setEventData(eventData)
                                     .build();
 
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "validToken");
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.messaging"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, messagingSharedState));
-
                     Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("messaging.pushRegistrationDelay", 1);
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            true);
                     when(mockExtensionApi.getSharedState(
                                     eq("com.adobe.module.configuration"),
                                     any(Event.class),
@@ -2349,37 +2280,24 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
-                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+                    // verify push token added to shared state
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map -> {
+                                                String pushIdentifier =
+                                                        (String) map.get("pushidentifier");
+                                                return "validToken".equals(pushIdentifier);
+                                            }),
+                                    any(Event.class));
 
-                    assertEquals(
-                            MessagingConstants.EventSource.REQUEST_CONTENT,
-                            eventCaptor.getValue().getSource());
-                    assertEquals(
-                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
-                    assertEquals(
-                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
-                            eventCaptor.getValue().getName());
-                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
-                    List<Map<String, Object>> pushNotificationDetails =
-                            (List<Map<String, Object>>)
-                                    ((Map<String, Object>) eventDataMap.get("data"))
-                                            .get("pushNotificationDetails");
-                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
-
-                    // clear invocations
-                    Mockito.clearInvocations(mockExtensionApi);
-
-                    // call handle push token again
-                    messagingExtension.handlePushToken(event);
-
-                    // verify that no event is dispatched as the isInitialPushTokenSync is now set
-                    // to false
-                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
+                    // no event dispatched as the registration is paused
+                    verify(mockExtensionApi, times(0)).dispatch(any());
                 });
     }
 
     @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_CustomRegistrationDelayElapsed() {
+    public void test_handlePushToken_whenPushTokenIsTheSame_registrationNotPaused() {
         runUsingMockedServiceProvider(
                 () -> {
                     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -2390,19 +2308,13 @@ public class MessagingExtensionTests {
                                     .setEventData(eventData)
                                     .build();
 
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "validToken");
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.messaging"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, messagingSharedState));
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("validToken");
 
                     Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("messaging.pushRegistrationDelay", 0);
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
                     when(mockExtensionApi.getSharedState(
                                     eq("com.adobe.module.configuration"),
                                     any(Event.class),
@@ -2431,22 +2343,19 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
-                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
+                    // verify push token added to shared state
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(
+                                    argThat(
+                                            map -> {
+                                                String pushIdentifier =
+                                                        (String) map.get("pushidentifier");
+                                                return "validToken".equals(pushIdentifier);
+                                            }),
+                                    any(Event.class));
 
-                    assertEquals(
-                            MessagingConstants.EventSource.REQUEST_CONTENT,
-                            eventCaptor.getValue().getSource());
-                    assertEquals(
-                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
-                    assertEquals(
-                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
-                            eventCaptor.getValue().getName());
-                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
-                    List<Map<String, Object>> pushNotificationDetails =
-                            (List<Map<String, Object>>)
-                                    ((Map<String, Object>) eventDataMap.get("data"))
-                                            .get("pushNotificationDetails");
-                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
+                    // no event dispatched as the push token is the same
+                    verify(mockExtensionApi, times(0)).dispatch(eventCaptor.capture());
                 });
     }
 

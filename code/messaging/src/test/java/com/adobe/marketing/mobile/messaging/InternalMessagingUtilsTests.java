@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -93,10 +93,6 @@ public class InternalMessagingUtilsTests {
     void runUsingMockedServiceProvider(final Runnable runnable) {
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
                 Mockito.mockStatic(ServiceProvider.class)) {
-            when(mockNamedCollection.getLong(anyString(), anyLong()))
-                    .thenReturn(
-                            System.currentTimeMillis()
-                                    / MessagingConstants.MILLISECONDS_IN_A_SECOND);
             when(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection);
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
@@ -1760,143 +1756,186 @@ public class InternalMessagingUtilsTests {
     // should sync push token tests
     // ========================================================================================
     @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_initialLaunchScenario() {
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNull() {
         runUsingMockedServiceProvider(
                 () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
                     Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
 
                     boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken", true);
-                    assertTrue(result);
+                            InternalMessagingUtils.shouldSyncPushToken(configSharedState, null);
+                    assertFalse(result);
                 });
     }
 
     @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_nonInitialLaunchScenario() {
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsEmpty() {
         runUsingMockedServiceProvider(
                 () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
                     Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(configSharedState, "");
+                    assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_registrationNotPaused() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken", false);
+                                    configSharedState, "newToken");
                     assertTrue(result);
                 });
     }
 
     @Test
     public void
-            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_nonInitialLaunchScenario() {
+            test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenEmpty_registrationNotPaused() {
         runUsingMockedServiceProvider(
                 () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "sameToken");
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("");
                     Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "sameToken", false);
-                    assertFalse(result);
-                });
-    }
-
-    @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_initialLaunchScenario() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "sameToken");
-                    Map<String, Object> configSharedState = new HashMap<>();
-
-                    boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "sameToken", true);
-                    assertTrue(result);
-                });
-    }
-
-    @Test
-    public void test_shouldSyncPushToken_returnsFalse_whenRegistrationDelayHasNotElapsed() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("messaging.pushRegistrationDelay", 1);
-
-                    boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "oldToken", false);
-                    assertFalse(result);
-                });
-    }
-
-    @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenRegistrationDelayHasElapsed() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("messaging.pushRegistrationDelay", 0);
-
-                    boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "oldToken", false);
+                                    configSharedState, "newToken");
                     assertTrue(result);
                 });
     }
 
     @Test
     public void
-            test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_initialLaunchScenario() {
+            test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenNull_registrationNotPaused() {
         runUsingMockedServiceProvider(
                 () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn(null);
                     Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken", true);
+                                    configSharedState, "newToken");
                     assertTrue(result);
                 });
     }
 
     @Test
-    public void
-            test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_nonInitialLaunchScenario() {
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_registrationPaused() {
         runUsingMockedServiceProvider(
                 () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
                     Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            true);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, "newToken", false);
-                    assertTrue(result);
-                });
-    }
-
-    @Test
-    public void test_shouldSyncPushToken_returnsFalse_whenNewPushTokenIsNull() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> messagingSharedState = new HashMap<>();
-                    messagingSharedState.put("pushidentifier", "oldToken");
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put("syncPushToken", true);
-
-                    boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    messagingSharedState, configSharedState, null, true);
+                                    configSharedState, "newToken");
                     assertFalse(result);
                 });
     }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_registrationNotPaused() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                            false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken");
+                    assertFalse(result);
+                });
+    }
+    //
+    //    @Test
+    //    public void test_shouldSyncPushToken_returnsTrue_whenRegistrationDelayHasElapsed() {
+    //        runUsingMockedServiceProvider(
+    //                () -> {
+    //                    Map<String, Object> messagingSharedState = new HashMap<>();
+    //                    messagingSharedState.put("pushidentifier", "oldToken");
+    //                    Map<String, Object> configSharedState = new HashMap<>();
+    //                    configSharedState.put("messaging.pushRegistrationDelay", 0);
+    //
+    //                    boolean result =
+    //                            InternalMessagingUtils.shouldSyncPushToken(
+    //                                    messagingSharedState, configSharedState, "oldToken",
+    // false);
+    //                    assertTrue(result);
+    //                });
+    //    }
+    //
+    //    @Test
+    //    public void
+    //
+    // test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_initialLaunchScenario() {
+    //        runUsingMockedServiceProvider(
+    //                () -> {
+    //                    Map<String, Object> messagingSharedState = new HashMap<>();
+    //                    Map<String, Object> configSharedState = new HashMap<>();
+    //
+    //                    boolean result =
+    //                            InternalMessagingUtils.shouldSyncPushToken(
+    //                                    messagingSharedState, configSharedState, "newToken",
+    // true);
+    //                    assertTrue(result);
+    //                });
+    //    }
+    //
+    //    @Test
+    //    public void
+    //
+    // test_shouldSyncPushToken_returnsTrue_whenExistingTokenIsNull_nonInitialLaunchScenario() {
+    //        runUsingMockedServiceProvider(
+    //                () -> {
+    //                    Map<String, Object> messagingSharedState = new HashMap<>();
+    //                    Map<String, Object> configSharedState = new HashMap<>();
+    //
+    //                    boolean result =
+    //                            InternalMessagingUtils.shouldSyncPushToken(
+    //                                    messagingSharedState, configSharedState, "newToken",
+    // false);
+    //                    assertTrue(result);
+    //                });
+    //    }
+    //
+    //    @Test
+    //    public void test_shouldSyncPushToken_returnsFalse_whenNewPushTokenIsNull() {
+    //        runUsingMockedServiceProvider(
+    //                () -> {
+    //                    Map<String, Object> messagingSharedState = new HashMap<>();
+    //                    messagingSharedState.put("pushidentifier", "oldToken");
+    //                    Map<String, Object> configSharedState = new HashMap<>();
+    //                    configSharedState.put("syncPushToken", true);
+    //
+    //                    boolean result =
+    //                            InternalMessagingUtils.shouldSyncPushToken(
+    //                                    messagingSharedState, configSharedState, null, true);
+    //                    assertFalse(result);
+    //                });
+    //    }
 
     // ========================================================================================
     // Test utilities
