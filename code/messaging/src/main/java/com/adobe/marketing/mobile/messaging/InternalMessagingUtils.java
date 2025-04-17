@@ -615,8 +615,8 @@ class InternalMessagingUtils {
                 "Existing push token not found or the push token is new. The push token will be"
                         + " synced.");
 
-        // persist the new push token to the named collection
-        messagingNamedCollection.getString(
+        // persist the push token in the messaging named collection
+        messagingNamedCollection.setString(
                 MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
 
         return true;

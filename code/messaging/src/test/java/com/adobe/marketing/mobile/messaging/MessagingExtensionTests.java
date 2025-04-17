@@ -2206,6 +2206,14 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
+                    // verify push token persisted in the named collection
+                    verify(mockNamedCollection, times(1))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    eq("validToken"));
+
                     // verify push token added to shared state
                     verify(mockExtensionApi, times(1))
                             .createSharedState(
@@ -2280,6 +2288,14 @@ public class MessagingExtensionTests {
 
                     messagingExtension.handlePushToken(event);
 
+                    // verify push token not persisted in the named collection
+                    verify(mockNamedCollection, times(0))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    anyString());
+
                     // verify push token added to shared state
                     verify(mockExtensionApi, times(1))
                             .createSharedState(
@@ -2342,6 +2358,14 @@ public class MessagingExtensionTests {
                                             SharedStateStatus.SET, edgeIdentitySharedState));
 
                     messagingExtension.handlePushToken(event);
+
+                    // verify push token not persisted in the named collection
+                    verify(mockNamedCollection, times(0))
+                            .setString(
+                                    eq(
+                                            MessagingConstants.NamedCollectionKeys.Messaging
+                                                    .PUSH_IDENTIFIER),
+                                    anyString());
 
                     // verify push token added to shared state
                     verify(mockExtensionApi, times(1))
