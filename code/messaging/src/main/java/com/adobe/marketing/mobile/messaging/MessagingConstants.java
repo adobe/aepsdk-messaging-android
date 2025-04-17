@@ -33,7 +33,6 @@ public final class MessagingConstants {
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
     static final long MILLISECONDS_IN_A_SECOND = 1000;
     static final String DATA_STORE_NAME = "AdobeMobile_Messaging";
-    static final int HALF_SECOND_IN_MILLIS = 500;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
 
     private MessagingConstants() {}
