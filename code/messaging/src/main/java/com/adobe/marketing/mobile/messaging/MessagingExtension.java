@@ -474,11 +474,6 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state
-        final Map<String, Object> newMessagingState = new HashMap<>();
-        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(newMessagingState, event);
-
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -495,6 +490,11 @@ public final class MessagingExtension extends Extension {
         if (eventData == null) {
             return;
         }
+
+        // Update the push token to the shared state
+        final Map<String, Object> newMessagingState = new HashMap<>();
+        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(newMessagingState, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
