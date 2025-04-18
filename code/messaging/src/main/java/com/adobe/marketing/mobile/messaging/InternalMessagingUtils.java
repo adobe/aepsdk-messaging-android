@@ -595,11 +595,7 @@ class InternalMessagingUtils {
             return false;
         }
 
-        final NamedCollection messagingNamedCollection = getNamedCollection();
-        final String existingPushToken =
-                messagingNamedCollection.getString(
-                        MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);
-
+        final String existingPushToken = getExistingPushToken();
         if (existingPushToken != null && existingPushToken.equals(newPushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
@@ -616,6 +612,7 @@ class InternalMessagingUtils {
                         + " synced.");
 
         // persist the push token in the messaging named collection
+        final NamedCollection messagingNamedCollection = getNamedCollection();
         messagingNamedCollection.setString(
                 MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
 
@@ -634,6 +631,12 @@ class InternalMessagingUtils {
     private static NamedCollection getNamedCollection() {
         final DataStoring dataStoreService = ServiceProvider.getInstance().getDataStoreService();
         return dataStoreService.getNamedCollection(MessagingConstants.DATA_STORE_NAME);
+    }
+
+    @Nullable static String getExistingPushToken() {
+        final NamedCollection messagingNamedCollection = getNamedCollection();
+        return messagingNamedCollection.getString(
+                MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);
     }
 
     // ========================================================================================

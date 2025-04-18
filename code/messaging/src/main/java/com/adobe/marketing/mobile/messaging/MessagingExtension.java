@@ -188,6 +188,17 @@ public final class MessagingExtension extends Extension {
 
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
+
+        // retrieve the push token from the messaging named collection and add it to the messaging
+        // shared state. this must be done as its not guaranteed that the push token will be synced
+        // (and the shared state updated) on this app launch.
+        final String existingPushToken = InternalMessagingUtils.getExistingPushToken();
+        if (!StringUtils.isNullOrEmpty(existingPushToken)) {
+            final Map<String, Object> newMessagingState = new HashMap<>();
+            newMessagingState.put(
+                    MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, existingPushToken);
+            getApi().createSharedState(newMessagingState, null);
+        }
     }
 
     @Override
@@ -454,18 +465,19 @@ public final class MessagingExtension extends Extension {
         // then there is no need to sync it via an edge network request
         final Map<String, Object> configSharedState =
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
-        final boolean shouldSyncPushToken =
-                InternalMessagingUtils.shouldSyncPushToken(configSharedState, pushToken);
+
+        if (!InternalMessagingUtils.shouldSyncPushToken(configSharedState, pushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Skipping the push token sync and shared state update.");
+            return;
+        }
 
         // Update the push token to the shared state
         final Map<String, Object> newMessagingState = new HashMap<>();
         newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
         getApi().createSharedState(newMessagingState, event);
-
-        if (!shouldSyncPushToken) {
-            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Skipping the push token sync.");
-            return;
-        }
 
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(

@@ -2296,16 +2296,9 @@ public class MessagingExtensionTests {
                                                     .PUSH_IDENTIFIER),
                                     anyString());
 
-                    // verify push token added to shared state
-                    verify(mockExtensionApi, times(1))
-                            .createSharedState(
-                                    argThat(
-                                            map -> {
-                                                String pushIdentifier =
-                                                        (String) map.get("pushidentifier");
-                                                return "validToken".equals(pushIdentifier);
-                                            }),
-                                    any(Event.class));
+                    // verify push token not added to shared state
+                    verify(mockExtensionApi, times(0))
+                            .createSharedState(any(Map.class), any(Event.class));
 
                     // no event dispatched as the registration is paused
                     verify(mockExtensionApi, times(0)).dispatch(any());
@@ -2367,16 +2360,9 @@ public class MessagingExtensionTests {
                                                     .PUSH_IDENTIFIER),
                                     anyString());
 
-                    // verify push token added to shared state
-                    verify(mockExtensionApi, times(1))
-                            .createSharedState(
-                                    argThat(
-                                            map -> {
-                                                String pushIdentifier =
-                                                        (String) map.get("pushidentifier");
-                                                return "validToken".equals(pushIdentifier);
-                                            }),
-                                    any(Event.class));
+                    // verify push token not added to shared state
+                    verify(mockExtensionApi, times(0))
+                            .createSharedState(any(Map.class), any(Event.class));
 
                     // no event dispatched as the push token is the same
                     verify(mockExtensionApi, times(0)).dispatch(eventCaptor.capture());
