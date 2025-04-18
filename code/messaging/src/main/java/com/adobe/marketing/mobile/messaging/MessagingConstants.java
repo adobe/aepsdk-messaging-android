@@ -31,7 +31,6 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final long MILLISECONDS_IN_A_SECOND = 1000;
     static final String DATA_STORE_NAME = "AdobeMobile_Messaging";
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
 
