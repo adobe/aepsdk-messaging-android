@@ -191,14 +191,9 @@ public final class MessagingExtension extends Extension {
 
         // retrieve the push token from the messaging named collection and add it to the messaging
         // shared state. this must be done as its not guaranteed that the push token will be synced
-        // (and the shared state updated) on this app launch.
+        // (and the shared state updated) on an app launch.
         final String existingPushToken = InternalMessagingUtils.getExistingPushToken();
-        if (!StringUtils.isNullOrEmpty(existingPushToken)) {
-            final Map<String, Object> newMessagingState = new HashMap<>();
-            newMessagingState.put(
-                    MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, existingPushToken);
-            getApi().createSharedState(newMessagingState, null);
-        }
+        addPushTokenToSharedState(existingPushToken, null);
     }
 
     @Override
@@ -492,9 +487,7 @@ public final class MessagingExtension extends Extension {
         }
 
         // Update the push token to the shared state
-        final Map<String, Object> newMessagingState = new HashMap<>();
-        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(newMessagingState, event);
+        addPushTokenToSharedState(pushToken, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
@@ -904,6 +897,19 @@ public final class MessagingExtension extends Extension {
 
     private boolean eventIsValid(final Event event) {
         return event != null && event.getEventData() != null;
+    }
+
+    private void addPushTokenToSharedState(final String pushToken, final Event event) {
+        if (StringUtils.isNullOrEmpty(pushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Push token is null or empty. Not adding the push token to the shared state.");
+            return;
+        }
+        final Map<String, Object> newMessagingState = new HashMap<>();
+        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(newMessagingState, event);
     }
     // endregion
 
