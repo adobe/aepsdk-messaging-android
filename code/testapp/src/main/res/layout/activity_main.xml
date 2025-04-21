@@ -81,4 +81,17 @@
         android:layout_height="wrap_content"
         android:text="Second Activity " />
 
+    <Switch
+        android:id="@+id/allowPushRegistration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="Allow Push Registration" />
+
+    <Button
+        android:id="@+id/btn_setPushIdentifier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="set push identifier" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>
