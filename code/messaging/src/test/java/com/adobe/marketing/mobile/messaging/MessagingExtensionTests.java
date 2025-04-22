@@ -153,6 +153,7 @@ public class MessagingExtensionTests {
         reset(mockAdobeCallback);
         reset(mockNamedCollection);
         reset(mockDataStoring);
+        InternalMessagingUtils.resetPushTokenSyncTimestamp();
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -1146,6 +1147,7 @@ public class MessagingExtensionTests {
                         when(mockEvent.getEventData()).thenReturn(eventData);
                         when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                         when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
+                        when(mockEvent.getTimestamp()).thenReturn(System.currentTimeMillis());
                         when(mockExtensionApi.getSharedState(
                                         eq(
                                                 MessagingTestConstants.SharedState.Configuration

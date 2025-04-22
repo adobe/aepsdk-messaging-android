@@ -461,7 +461,8 @@ public final class MessagingExtension extends Extension {
         final Map<String, Object> configSharedState =
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
 
-        if (!InternalMessagingUtils.shouldSyncPushToken(configSharedState, pushToken)) {
+        if (!InternalMessagingUtils.shouldSyncPushToken(
+                configSharedState, pushToken, event.getTimestamp())) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,

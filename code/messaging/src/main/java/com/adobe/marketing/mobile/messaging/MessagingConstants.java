@@ -33,6 +33,7 @@ public final class MessagingConstants {
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
     static final String DATA_STORE_NAME = EXTENSION_NAME;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
+    static final int IGNORE_PUSH_SYNC_TIMEOUT = 1000;
 
     private MessagingConstants() {}
 

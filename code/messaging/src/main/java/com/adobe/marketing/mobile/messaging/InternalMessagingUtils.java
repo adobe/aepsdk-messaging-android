@@ -12,6 +12,7 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -42,6 +43,7 @@ class InternalMessagingUtils {
             "Push registration force sync is enabled. The push token will be synced.";
     private static final String NEW_PUSH_TOKEN_MESSAGE =
             "Push token is new or changed. The push token will be synced.";
+    private static long lastPushTokenSyncTimestamp = 0;
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
@@ -572,16 +574,28 @@ class InternalMessagingUtils {
      *
      * @param configSharedState A {@link Map} containing the configuration shared state
      * @param newPushToken A {@code String} containing the push token to be synced
+     * @param eventTimestamp A {@code long} containing the event timestamp
      * @return {@code boolean} indicating if the push token should be synced
      */
     static boolean shouldSyncPushToken(
             @Nullable final Map<String, Object> configSharedState,
-            @Nullable final String newPushToken) {
+            @Nullable final String newPushToken,
+            long eventTimestamp) {
         if (StringUtils.isNullOrEmpty(newPushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
                     "New push token is null or empty, push token will not be synced.");
+            return false;
+        }
+
+        if (eventTimestamp - lastPushTokenSyncTimestamp
+                <= MessagingConstants.IGNORE_PUSH_SYNC_TIMEOUT) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Push token sync event is within the previous push sync timeout window, push"
+                            + " token will not be synced.");
             return false;
         }
 
@@ -610,6 +624,8 @@ class InternalMessagingUtils {
         final NamedCollection messagingNamedCollection = getNamedCollection();
         messagingNamedCollection.setString(
                 MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
+
+        lastPushTokenSyncTimestamp = eventTimestamp;
 
         return true;
     }
@@ -671,5 +687,10 @@ class InternalMessagingUtils {
         }
         updatedMap.put(surface, list);
         return updatedMap;
+    }
+
+    @VisibleForTesting
+    static void resetPushTokenSyncTimestamp() {
+        lastPushTokenSyncTimestamp = 0;
     }
 }

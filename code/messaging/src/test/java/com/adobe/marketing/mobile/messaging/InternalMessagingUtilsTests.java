@@ -110,6 +110,7 @@ public class InternalMessagingUtilsTests {
     @After
     public void tearDown() {
         Mockito.reset(mockServiceProvider, mockDataStoring);
+        InternalMessagingUtils.resetPushTokenSyncTimestamp();
     }
 
     // ========================================================================================
@@ -1764,7 +1765,8 @@ public class InternalMessagingUtilsTests {
                             MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(configSharedState, null);
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, null, System.currentTimeMillis());
                     assertFalse(result);
                 });
     }
@@ -1778,7 +1780,8 @@ public class InternalMessagingUtilsTests {
                             MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(configSharedState, "");
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "", System.currentTimeMillis());
                     assertFalse(result);
                 });
     }
@@ -1793,8 +1796,40 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "newToken");
+                                    configSharedState, "newToken", System.currentTimeMillis());
                     assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_withinDefaultSyncTimeout() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", 0);
+                    assertFalse(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", 0);
+                    assertFalse(result);
                 });
     }
 
@@ -1809,7 +1844,7 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "newToken");
+                                    configSharedState, "newToken", System.currentTimeMillis());
                     assertTrue(result);
                 });
     }
@@ -1825,7 +1860,7 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "newToken");
+                                    configSharedState, "newToken", System.currentTimeMillis());
                     assertTrue(result);
                 });
     }
@@ -1841,7 +1876,7 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "sameToken");
+                                    configSharedState, "sameToken", System.currentTimeMillis());
                     assertFalse(result);
                 });
     }
@@ -1857,8 +1892,25 @@ public class InternalMessagingUtilsTests {
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "sameToken");
+                                    configSharedState, "sameToken", System.currentTimeMillis());
                     assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_withinDefaultSyncTimeout_forceSyncIsTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken", 1000);
+                    assertFalse(result);
                 });
     }
 
