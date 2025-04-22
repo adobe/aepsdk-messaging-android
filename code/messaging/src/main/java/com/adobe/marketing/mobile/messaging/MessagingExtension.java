@@ -192,8 +192,8 @@ public final class MessagingExtension extends Extension {
         // retrieve the push token from the messaging named collection and add it to the messaging
         // shared state. this must be done as its not guaranteed that the push token will be synced
         // (and the shared state updated) on an app launch.
-        final String existingPushToken = InternalMessagingUtils.getExistingPushToken();
-        addPushTokenToSharedState(existingPushToken, null);
+        final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
+        createMessagingSharedState(existingPushToken, null);
     }
 
     @Override
@@ -486,8 +486,8 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state
-        addPushTokenToSharedState(pushToken, event);
+        // Add the push token to the shared state
+        createMessagingSharedState(pushToken, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
@@ -899,7 +899,7 @@ public final class MessagingExtension extends Extension {
         return event != null && event.getEventData() != null;
     }
 
-    private void addPushTokenToSharedState(final String pushToken, final Event event) {
+    private void createMessagingSharedState(final String pushToken, final Event event) {
         if (StringUtils.isNullOrEmpty(pushToken)) {
             Log.debug(
                     MessagingConstants.LOG_TAG,

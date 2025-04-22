@@ -1761,8 +1761,7 @@ public class InternalMessagingUtilsTests {
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(configSharedState, null);
@@ -1776,8 +1775,7 @@ public class InternalMessagingUtilsTests {
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(configSharedState, "");
@@ -1786,13 +1784,12 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_registrationNotPaused() {
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_forceSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
@@ -1802,15 +1799,13 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void
-            test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenEmpty_registrationNotPaused() {
+    public void test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenEmpty_forceSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockNamedCollection.getString(anyString(), any())).thenReturn("");
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
@@ -1820,15 +1815,13 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void
-            test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenNull_registrationNotPaused() {
+    public void test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenNull_forceSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockNamedCollection.getString(anyString(), any())).thenReturn(null);
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
@@ -1838,35 +1831,34 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_registrationPaused() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            true);
-
-                    boolean result =
-                            InternalMessagingUtils.shouldSyncPushToken(
-                                    configSharedState, "newToken");
-                    assertFalse(result);
-                });
-    }
-
-    @Test
-    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_registrationNotPaused() {
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_forceSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
-                            false);
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
                                     configSharedState, "sameToken");
                     assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_forceSyncIsTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken");
+                    assertTrue(result);
                 });
     }
 

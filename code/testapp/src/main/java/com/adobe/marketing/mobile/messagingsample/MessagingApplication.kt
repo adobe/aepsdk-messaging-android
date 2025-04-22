@@ -45,7 +45,7 @@ class MessagingApplication : Application() {
             MobileCore.lifecycleStart(null)
 
             val configMap = mapOf(
-                "messaging.pushRegistrationPaused" to false
+                "messaging.pushForceSync" to false
             )
             MobileCore.updateConfiguration(configMap)
         }

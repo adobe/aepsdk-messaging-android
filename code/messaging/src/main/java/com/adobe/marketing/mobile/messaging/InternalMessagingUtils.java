@@ -38,6 +38,10 @@ import org.json.JSONObject;
 
 class InternalMessagingUtils {
     private static final String SELF_TAG = "InternalMessagingUtils";
+    private static final String FORCE_SYNC_MESSAGE =
+            "Push registration force sync is enabled. The push token will be synced.";
+    private static final String NEW_PUSH_TOKEN_MESSAGE =
+            "Push token is new or changed. The push token will be synced.";
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
@@ -581,22 +585,16 @@ class InternalMessagingUtils {
             return false;
         }
 
-        final boolean isPushRegistrationPaused =
+        // check if a the push token will be synced regardless if it has changed.
+        // if the value is not present, it will default to false
+        final boolean pushForceSync =
                 DataReader.optBoolean(
                         configSharedState,
-                        MessagingConstants.SharedState.Configuration.PUSH_REGISTRATION_PAUSED,
+                        MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC,
                         false);
 
-        if (isPushRegistrationPaused) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "Push registration is paused, push token will not be synced.");
-            return false;
-        }
-
-        final String existingPushToken = getExistingPushToken();
-        if (existingPushToken != null && existingPushToken.equals(newPushToken)) {
+        final String existingPushToken = getPushTokenFromPersistence();
+        if (existingPushToken != null && existingPushToken.equals(newPushToken) && !pushForceSync) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
@@ -605,11 +603,8 @@ class InternalMessagingUtils {
             return false;
         }
 
-        Log.debug(
-                MessagingConstants.LOG_TAG,
-                "shouldSyncPushToken",
-                "Existing push token not found or the push token is new. The push token will be"
-                        + " synced.");
+        final String syncReason = pushForceSync ? FORCE_SYNC_MESSAGE : NEW_PUSH_TOKEN_MESSAGE;
+        Log.debug(MessagingConstants.LOG_TAG, "shouldSyncPushToken", syncReason);
 
         // persist the push token in the messaging named collection
         final NamedCollection messagingNamedCollection = getNamedCollection();
@@ -633,7 +628,12 @@ class InternalMessagingUtils {
         return dataStoreService.getNamedCollection(MessagingConstants.DATA_STORE_NAME);
     }
 
-    @Nullable static String getExistingPushToken() {
+    /**
+     * Retrieves the push token from the Messaging {@link NamedCollection}.
+     *
+     * @return {@code String} containing the persisted push token
+     */
+    @Nullable static String getPushTokenFromPersistence() {
         final NamedCollection messagingNamedCollection = getNamedCollection();
         return messagingNamedCollection.getString(
                 MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);

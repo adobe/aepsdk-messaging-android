@@ -341,15 +341,15 @@ class MainActivity : ComponentActivity() {
             customMessagingDelegate.showMessages = isChecked
         }
 
-        binding.allowPushRegistration.setOnCheckedChangeListener { _, isChecked ->
+        binding.pushRegistrationForceSyncSwitch.setOnCheckedChangeListener { _, isChecked ->
             val message =
-                if (isChecked) "Push Registration enabled" else "Push Registration disabled"
+                if (isChecked) "Push Registration force sync enabled" else "Push Registration force sync disabled"
             Toast.makeText(
                 this@MainActivity, message,
                 Toast.LENGTH_SHORT
             ).show()
             val configMap = mapOf(
-                "messaging.pushRegistrationPaused" to !isChecked
+                "messaging.pushForceSync" to isChecked
             )
             MobileCore.updateConfiguration(configMap)
         }

@@ -31,7 +31,7 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final String DATA_STORE_NAME = "AdobeMobile_Messaging";
+    static final String DATA_STORE_NAME = EXTENSION_NAME;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
 
     private MessagingConstants() {}
@@ -376,7 +376,7 @@ public final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
-            static final String PUSH_REGISTRATION_PAUSED = "messaging.pushRegistrationPaused";
+            static final String PUSH_FORCE_SYNC = "messaging.pushForceSync";
 
             private Configuration() {}
         }
