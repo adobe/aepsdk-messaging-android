@@ -382,6 +382,66 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
+    public void test_createMessage_WithoutMessageSettings() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    // test
+                    try {
+                        Map<String, Object> data = new HashMap<>();
+                        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+                        data.put(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                                ContentType.TEXT_HTML.toString());
+                        PropositionItem propositionItem =
+                                new PropositionItem("123456789", SchemaType.INAPP, data);
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+
+                    // verify
+                    ArgumentCaptor<InAppMessage> inAppMessageCaptor =
+                            ArgumentCaptor.forClass(InAppMessage.class);
+                    verify(mockUIService, times(1))
+                            .create(
+                                    inAppMessageCaptor.capture(),
+                                    any(DefaultPresentationUtilityProvider.class));
+                    InAppMessageSettings settings = inAppMessageCaptor.getValue().getSettings();
+                    assertEquals(html, settings.getContent());
+                    assertEquals(100, settings.getWidth());
+                    assertEquals(Integer.MAX_VALUE, settings.getMaxWidth());
+                    assertEquals(100, settings.getHeight());
+                    assertEquals("#FFFFFF", settings.getBackdropColor());
+                    assertEquals(0.0f, settings.getBackdropOpacity(), 0.0);
+                    assertEquals(0.0f, settings.getCornerRadius(), 0.0);
+                    assertEquals(
+                            InAppMessageSettings.MessageAnimation.NONE,
+                            settings.getDismissAnimation());
+                    assertEquals(
+                            InAppMessageSettings.MessageAnimation.NONE,
+                            settings.getDisplayAnimation());
+                    assertTrue(settings.getGestureMap().isEmpty());
+                    assertEquals(
+                            InAppMessageSettings.MessageAlignment.CENTER,
+                            settings.getHorizontalAlignment());
+                    assertEquals(0, settings.getHorizontalInset());
+                    assertEquals(
+                            InAppMessageSettings.MessageAlignment.CENTER,
+                            settings.getVerticalAlignment());
+                    assertEquals(0, settings.getVerticalInset());
+                    assertTrue(settings.getShouldTakeOverUi());
+                });
+    }
+
+    @Test
     public void test_createMessage_WithMessageSettings() {
         // setup
         runUsingMockedServiceProvider(
@@ -395,8 +455,9 @@ public class PresentableMessageMapperTests {
                         gestureMap.put("swipeRight", "adbinapp://dismiss?interaction=positive");
                         gestureMap.put("swipeUp", "adbinapp://dismiss");
                         gestureMap.put("swipeDown", "adbinapp://dismiss");
-                        rawMessageSettings.put("width", 100);
-                        rawMessageSettings.put("height", 100);
+                        rawMessageSettings.put("width", 90);
+                        rawMessageSettings.put("maxWidth", 200);
+                        rawMessageSettings.put("height", 80);
                         rawMessageSettings.put("backdropColor", "808080");
                         rawMessageSettings.put("backdropOpacity", 0.5f);
                         rawMessageSettings.put("cornerRadius", 70.0f);
@@ -407,7 +468,7 @@ public class PresentableMessageMapperTests {
                         rawMessageSettings.put("horizontalInset", 5);
                         rawMessageSettings.put("verticalAlign", "top");
                         rawMessageSettings.put("verticalInset", 10);
-                        rawMessageSettings.put("uiTakeover", true);
+                        rawMessageSettings.put("uiTakeover", false);
                         Map<String, Object> data = new HashMap<>();
                         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
                         data.put(
@@ -439,8 +500,9 @@ public class PresentableMessageMapperTests {
                                     any(DefaultPresentationUtilityProvider.class));
                     InAppMessageSettings settings = inAppMessageCaptor.getValue().getSettings();
                     assertEquals(html, settings.getContent());
-                    assertEquals(100, settings.getWidth());
-                    assertEquals(100, settings.getHeight());
+                    assertEquals(90, settings.getWidth());
+                    assertEquals(200, settings.getMaxWidth());
+                    assertEquals(80, settings.getHeight());
                     assertEquals("808080", settings.getBackdropColor());
                     assertEquals(0.5f, settings.getBackdropOpacity(), 0.0);
                     assertEquals(70.0f, settings.getCornerRadius(), 0.0);
@@ -478,7 +540,7 @@ public class PresentableMessageMapperTests {
                             InAppMessageSettings.MessageAlignment.TOP,
                             settings.getVerticalAlignment());
                     assertEquals(10, settings.getVerticalInset());
-                    assertTrue(settings.getShouldTakeOverUi());
+                    assertFalse(settings.getShouldTakeOverUi());
                 });
     }
 

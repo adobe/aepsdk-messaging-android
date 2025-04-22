@@ -375,6 +375,11 @@ class PresentableMessageMapper {
                             rawSettings,
                             MessagingConstants.EventDataKeys.MobileParametersKeys.WIDTH,
                             FILL_SCREEN);
+            final int maxWidth =
+                    DataReader.optInt(
+                            rawSettings,
+                            MessagingConstants.EventDataKeys.MobileParametersKeys.MAX_WIDTH,
+                            Integer.MAX_VALUE);
             final int height =
                     DataReader.optInt(
                             rawSettings,
@@ -455,6 +460,7 @@ class PresentableMessageMapper {
                     .content(content)
                     .width(width)
                     .height(height)
+                    .maxWidth(maxWidth)
                     .verticalInset(verticalInset)
                     .horizontalInset(horizontalInset)
                     .verticalAlignment(verticalAlign)

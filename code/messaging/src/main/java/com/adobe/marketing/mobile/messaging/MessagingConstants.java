@@ -300,6 +300,7 @@ public final class MessagingConstants {
 
         final class MobileParametersKeys {
             static final String WIDTH = "width";
+            static final String MAX_WIDTH = "maxWidth";
             static final String HEIGHT = "height";
             static final String VERTICAL_ALIGN = "verticalAlign";
             static final String VERTICAL_INSET = "verticalInset";
