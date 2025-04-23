@@ -61,6 +61,8 @@ public final class MessagingExtension extends Extension {
      * <ul>
      *   <li>Listening to event with eventType {@link EventType#GENERIC_IDENTITY} and EventSource
      *       {@link EventSource#REQUEST_CONTENT}
+     *   <li>Listening to event with eventType {@link EventType#GENERIC_IDENTITY} and EventSource
+     *       {@link EventSource#REQUEST_RESET}
      *   <li>Listening to event with eventType {@link MessagingConstants.EventType#MESSAGING} and
      *       EventSource {@link EventSource#REQUEST_CONTENT}
      *   <li>Listening to event with eventType {@link MessagingConstants.EventType#EDGE} and
@@ -141,6 +143,8 @@ public final class MessagingExtension extends Extension {
                         EventType.GENERIC_IDENTITY,
                         EventSource.REQUEST_CONTENT,
                         this::processEvent);
+        getApi().registerEventListener(
+                        EventType.GENERIC_IDENTITY, EventSource.REQUEST_RESET, this::processEvent);
         getApi().registerEventListener(
                         MessagingConstants.EventType.MESSAGING,
                         EventSource.REQUEST_CONTENT,
@@ -378,6 +382,9 @@ public final class MessagingExtension extends Extension {
         } else if (InternalMessagingUtils.isGenericIdentityRequestEvent(eventToProcess)) {
             // handle the push token from generic identity request content event
             handlePushToken(eventToProcess);
+        } else if (InternalMessagingUtils.isGenericIdentityResetEvent(eventToProcess)) {
+            // handle the reset identities event
+            handleResetIdentitiesEvent();
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =
@@ -498,6 +505,14 @@ public final class MessagingExtension extends Extension {
                 eventData,
                 getApi(),
                 event);
+    }
+
+    /**
+     * Handles the reset identities event by removing any persisted push token from the Messaging
+     * {@link com.adobe.marketing.mobile.services.NamedCollection}.
+     */
+    private void handleResetIdentitiesEvent() {
+        InternalMessagingUtils.persistPushToken(null);
     }
 
     /**
@@ -897,7 +912,8 @@ public final class MessagingExtension extends Extension {
     }
 
     private boolean eventIsValid(final Event event) {
-        return event != null && event.getEventData() != null;
+        return event != null && event.getEventData() != null
+                || event.getSource().equals(EventSource.REQUEST_RESET);
     }
 
     private void createMessagingSharedState(final String pushToken, final Event event) {
