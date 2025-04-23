@@ -447,6 +447,11 @@ class PresentableMessageMapper {
                             rawSettings,
                             MessagingConstants.EventDataKeys.MobileParametersKeys.UI_TAKEOVER,
                             true);
+            final boolean fitToContent =
+                    DataReader.optBoolean(
+                            rawSettings,
+                            MessagingConstants.EventDataKeys.MobileParametersKeys.FIT_TO_CONTENT,
+                            false);
 
             // we need to convert key strings present in the gestures map to
             // InAppInAppMessageSettings.MessageGesture enum keys
@@ -471,6 +476,7 @@ class PresentableMessageMapper {
                     .backdropOpacity(backdropOpacity)
                     .cornerRadius(cornerRadius)
                     .shouldTakeOverUi(uiTakeover)
+                    .setFitToContent(fitToContent)
                     .gestureMap(gestureMap)
                     .assetMap(assetMap)
                     .build();

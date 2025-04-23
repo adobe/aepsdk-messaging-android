@@ -307,6 +307,7 @@ public final class MessagingConstants {
             static final String HORIZONTAL_ALIGN = "horizontalAlign";
             static final String HORIZONTAL_INSET = "horizontalInset";
             static final String UI_TAKEOVER = "uiTakeover";
+            static final String FIT_TO_CONTENT = "fitToContent";
             static final String DISPLAY_ANIMATION = "displayAnimation";
             static final String DISMISS_ANIMATION = "dismissAnimation";
             static final String BACKDROP_COLOR = "backdropColor";

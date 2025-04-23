@@ -544,6 +544,96 @@ public class PresentableMessageMapperTests {
                 });
     }
 
+    @Test
+    public void test_createMessage_WithFitToContentTrue() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        Map<String, Object> rawMessageSettings = new HashMap<>();
+                        rawMessageSettings.put(
+                                MessagingConstants.EventDataKeys.MobileParametersKeys
+                                        .FIT_TO_CONTENT,
+                                true);
+                        Map<String, Object> data = new HashMap<>();
+                        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+                        data.put(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                                ContentType.TEXT_HTML.toString());
+                        data.put(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS,
+                                rawMessageSettings);
+                        PropositionItem propositionItem =
+                                new PropositionItem("123456789", SchemaType.INAPP, data);
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+
+                        // verify
+                        ArgumentCaptor<InAppMessage> inAppMessageCaptor =
+                                ArgumentCaptor.forClass(InAppMessage.class);
+                        verify(mockUIService, times(1))
+                                .create(
+                                        inAppMessageCaptor.capture(),
+                                        any(DefaultPresentationUtilityProvider.class));
+                        InAppMessageSettings settings = inAppMessageCaptor.getValue().getSettings();
+                        assertTrue(settings.getFitToContent());
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+                });
+    }
+
+    @Test
+    public void test_createMessage_WithFitToContentFalse() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        Map<String, Object> rawMessageSettings = new HashMap<>();
+                        rawMessageSettings.put(
+                                MessagingConstants.EventDataKeys.MobileParametersKeys
+                                        .FIT_TO_CONTENT,
+                                false);
+                        Map<String, Object> data = new HashMap<>();
+                        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+                        data.put(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                                ContentType.TEXT_HTML.toString());
+                        data.put(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.MOBILE_PARAMETERS,
+                                rawMessageSettings);
+                        PropositionItem propositionItem =
+                                new PropositionItem("123456789", SchemaType.INAPP, data);
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+
+                        // verify
+                        ArgumentCaptor<InAppMessage> inAppMessageCaptor =
+                                ArgumentCaptor.forClass(InAppMessage.class);
+                        verify(mockUIService, times(1))
+                                .create(
+                                        inAppMessageCaptor.capture(),
+                                        any(DefaultPresentationUtilityProvider.class));
+                        InAppMessageSettings settings = inAppMessageCaptor.getValue().getSettings();
+                        assertFalse(settings.getFitToContent());
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+                });
+    }
+
     // ========================================================================================
     // Message getId
     // ========================================================================================
