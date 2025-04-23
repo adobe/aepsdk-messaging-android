@@ -60,7 +60,9 @@ dependencies {
     implementation(project(":messaging"))
     // TODO: change this back when Core 3.4.0 is released
     implementation("com.github.adobe.aepsdk-core-android:core:31d3e1a48d")
-    implementation("com.github.adobe.aepsdk-core-android:lifecycle:31d3e1a48d")
+    implementation("com.github.adobe.aepsdk-core-android:lifecycle:31d3e1a48d") {
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
+    }
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion") {
         exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
