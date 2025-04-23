@@ -584,6 +584,9 @@ class InternalMessagingUtils {
         return DataReader.optString(ecidMap, MessagingConstants.SharedState.EdgeIdentity.ID, null);
     }
 
+    // ========================================================================================
+    // Push token sync helper
+    // ========================================================================================
     /**
      * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
      * network request.
