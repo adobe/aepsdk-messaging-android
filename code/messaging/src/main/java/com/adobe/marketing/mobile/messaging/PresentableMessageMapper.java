@@ -476,7 +476,7 @@ class PresentableMessageMapper {
                     .backdropOpacity(backdropOpacity)
                     .cornerRadius(cornerRadius)
                     .shouldTakeOverUi(uiTakeover)
-                    .setFitToContent(fitToContent)
+                    .shouldFitToContent(fitToContent)
                     .gestureMap(gestureMap)
                     .assetMap(assetMap)
                     .build();
