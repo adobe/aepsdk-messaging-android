@@ -569,7 +569,7 @@ class InternalMessagingUtils {
     }
 
     // ========================================================================================
-    // Push token sync helper
+    // Push token sync helpers
     // ========================================================================================
     /**
      * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
@@ -592,17 +592,7 @@ class InternalMessagingUtils {
             return false;
         }
 
-        if (eventTimestamp - lastPushTokenSyncTimestamp
-                <= MessagingConstants.IGNORE_PUSH_SYNC_TIMEOUT) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "Push token sync event is within the previous push sync timeout window, push"
-                            + " token will not be synced.");
-            return false;
-        }
-
-        // check if a the push token will be synced regardless if it has changed.
+        // check if the push token will be synced regardless if it has changed.
         // if the value is not present, it will default to false
         final boolean pushForceSync =
                 DataReader.optBoolean(
@@ -611,12 +601,22 @@ class InternalMessagingUtils {
                         false);
 
         final String existingPushToken = getPushTokenFromPersistence();
-        if (existingPushToken != null && existingPushToken.equals(newPushToken) && !pushForceSync) {
+        final boolean pushTokensMatch =
+                !StringUtils.isNullOrEmpty(existingPushToken)
+                        && existingPushToken.equals(newPushToken);
+        if (pushTokensMatch && !pushForceSync) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
                     "Existing push token matches the new push token, push token will not be"
                             + " synced.");
+            return false;
+        } else if (pushTokensMatch && !isPushTokenSyncTimeoutExpired(eventTimestamp)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Push token sync is within the previous push sync timeout window, push token"
+                            + " will not be synced.");
             return false;
         }
 
@@ -631,6 +631,17 @@ class InternalMessagingUtils {
         lastPushTokenSyncTimestamp = eventTimestamp;
 
         return true;
+    }
+
+    /**
+     * Determines if the push token sync timeout has expired.
+     *
+     * @param eventTimestamp A {@code long} containing the event timestamp
+     * @return {@code boolean} indicating if the push token sync timeout has expired
+     */
+    private static boolean isPushTokenSyncTimeoutExpired(final long eventTimestamp) {
+        return eventTimestamp - lastPushTokenSyncTimestamp
+                > MessagingConstants.IGNORE_PUSH_SYNC_TIMEOUT_MS;
     }
 
     // ========================================================================================

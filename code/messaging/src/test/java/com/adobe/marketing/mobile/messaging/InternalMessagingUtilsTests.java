@@ -1803,7 +1803,7 @@ public class InternalMessagingUtilsTests {
 
     @Test
     public void
-            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_withinDefaultSyncTimeout() {
+            test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
@@ -1813,13 +1813,13 @@ public class InternalMessagingUtilsTests {
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
                                     configSharedState, "newToken", 0);
-                    assertFalse(result);
+                    assertTrue(result);
                 });
     }
 
     @Test
     public void
-            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncTrue() {
+            test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncTrue() {
         runUsingMockedServiceProvider(
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
@@ -1829,7 +1829,7 @@ public class InternalMessagingUtilsTests {
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
                                     configSharedState, "newToken", 0);
-                    assertFalse(result);
+                    assertTrue(result);
                 });
     }
 
