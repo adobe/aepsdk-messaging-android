@@ -463,7 +463,7 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // if the push token hasn't changed or the push registration is paused
+        // if the push token hasn't changed or the push registration force sync flag is not set
         // then there is no need to sync it via an edge network request
         final Map<String, Object> configSharedState =
                 getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
