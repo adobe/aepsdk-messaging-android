@@ -337,11 +337,8 @@ public final class MessagingExtension extends Extension {
      * @param eventToProcess an {@link Event} from an {@link ExtensionEventListener} to be processed
      */
     void processEvent(final Event eventToProcess) {
-        if (!eventIsValid(eventToProcess)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Event or EventData is null, ignoring the event.");
+        if (!eventIsValid(eventToProcess) && !isRequestResetEvent(eventToProcess)) {
+            Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid event, ignoring.");
             return;
         }
 
@@ -384,7 +381,7 @@ public final class MessagingExtension extends Extension {
             handlePushToken(eventToProcess);
         } else if (InternalMessagingUtils.isGenericIdentityResetEvent(eventToProcess)) {
             // handle the reset identities event
-            handleResetIdentitiesEvent();
+            handleResetIdentitiesEvent(eventToProcess);
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =
@@ -508,10 +505,16 @@ public final class MessagingExtension extends Extension {
     }
 
     /**
-     * Handles the reset identities event by removing any persisted push token from the Messaging
-     * {@link com.adobe.marketing.mobile.services.NamedCollection}.
+     * Handles the reset identities event by setting a null push token in the Messaging shared state
+     * and by removing the persisted push token from the Messaging {@link
+     * com.adobe.marketing.mobile.services.NamedCollection}
+     *
+     * @param resetIdentitiesEvent the reset identities {@link Event}
      */
-    private void handleResetIdentitiesEvent() {
+    private void handleResetIdentitiesEvent(final Event resetIdentitiesEvent) {
+        // remove the push token from the shared state
+        createMessagingSharedState(null, resetIdentitiesEvent);
+        // remove the push token from the named collection
         InternalMessagingUtils.persistPushToken(null);
     }
 
@@ -912,18 +915,14 @@ public final class MessagingExtension extends Extension {
     }
 
     private boolean eventIsValid(final Event event) {
-        return event != null && event.getEventData() != null
-                || event.getSource().equals(EventSource.REQUEST_RESET);
+        return event != null && event.getEventData() != null;
+    }
+
+    private boolean isRequestResetEvent(final Event event) {
+        return event != null && event.getSource().equals(EventSource.REQUEST_RESET);
     }
 
     private void createMessagingSharedState(final String pushToken, final Event event) {
-        if (StringUtils.isNullOrEmpty(pushToken)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Push token is null or empty. Not adding the push token to the shared state.");
-            return;
-        }
         final Map<String, Object> newMessagingState = new HashMap<>();
         newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
         getApi().createSharedState(newMessagingState, event);

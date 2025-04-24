@@ -27,6 +27,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -228,11 +230,16 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 6 listeners are registered
+                    // verify 7 listeners are registered
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
                                     eq(EventSource.REQUEST_CONTENT),
+                                    any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.GENERIC_IDENTITY),
+                                    eq(EventSource.REQUEST_RESET),
                                     any());
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
@@ -293,11 +300,16 @@ public class MessagingExtensionTests {
                     // test
                     messagingExtension.onRegistered();
 
-                    // verify 6 listeners are registered
+                    // verify 7 listeners are registered
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
                                     eq(EventType.GENERIC_IDENTITY),
                                     eq(EventSource.REQUEST_CONTENT),
+                                    any());
+                    verify(mockExtensionApi, times(1))
+                            .registerEventListener(
+                                    eq(EventType.GENERIC_IDENTITY),
+                                    eq(EventSource.REQUEST_RESET),
                                     any());
                     verify(mockExtensionApi, times(1))
                             .registerEventListener(
@@ -328,7 +340,8 @@ public class MessagingExtensionTests {
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
 
-                    // verify push token is not added to the shared state if it isn't present in the
+                    // verify null push token is added to the shared state if it isn't present in
+                    // the
                     // named collection
                     verify(mockNamedCollection, times(1))
                             .getString(
@@ -336,7 +349,8 @@ public class MessagingExtensionTests {
                                             MessagingConstants.NamedCollectionKeys.Messaging
                                                     .PUSH_IDENTIFIER),
                                     any());
-                    verify(mockExtensionApi, times(0)).createSharedState(any(Map.class), any());
+                    verify(mockExtensionApi, times(1))
+                            .createSharedState(argThat(map -> map.containsValue(null)), isNull());
                 });
     }
 
@@ -1095,9 +1109,7 @@ public class MessagingExtensionTests {
                                         Log.debug(
                                                 anyString(),
                                                 anyString(),
-                                                eq(
-                                                        "Event or EventData is null, ignoring the"
-                                                                + " event.")),
+                                                eq("Invalid event, ignoring.")),
                                 times(1));
                     }
                 });
@@ -1435,6 +1447,52 @@ public class MessagingExtensionTests {
                         // verify no push token is stored in shared state
                         verify(mockExtensionApi, times(0))
                                 .createSharedState(any(Map.class), any(Event.class));
+                    }
+                });
+    }
+
+    // ========================================================================================
+    // processEvents GenericIdentityRequestResetEvent
+    // ========================================================================================
+    @Test
+    public void test_processEvent_genericIdentityRequestResetEvent() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<MobileCore> mobileCoreMockedStatic =
+                            Mockito.mockStatic(MobileCore.class)) {
+                        mobileCoreMockedStatic
+                                .when(MobileCore::getApplication)
+                                .thenReturn(mockApplication);
+                        when(mockApplication.getPackageName()).thenReturn("mockPackageName");
+
+                        Event mockEvent = mock(Event.class);
+                        when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
+                        when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_RESET);
+                        when(mockExtensionApi.getSharedState(
+                                        eq(
+                                                MessagingTestConstants.SharedState.Configuration
+                                                        .EXTENSION_NAME),
+                                        eq(mockEvent),
+                                        eq(false),
+                                        eq(SharedStateResolution.LAST_SET)))
+                                .thenReturn(mockConfigData);
+
+                        // test
+                        messagingExtension.processEvent(mockEvent);
+
+                        // verify
+                        // messaging shared state cleared by adding a null push token
+                        verify(mockExtensionApi, times(1))
+                                .createSharedState(
+                                        argThat(map -> map.containsValue(null)), eq(mockEvent));
+
+                        // verify null push token added to named collection
+                        verify(mockNamedCollection, times(1))
+                                .setString(
+                                        MessagingConstants.NamedCollectionKeys.Messaging
+                                                .PUSH_IDENTIFIER,
+                                        eq(nullable(String.class)));
                     }
                 });
     }
