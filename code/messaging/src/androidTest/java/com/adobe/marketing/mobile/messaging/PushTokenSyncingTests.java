@@ -28,6 +28,8 @@ import com.adobe.marketing.mobile.Messaging;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SDKHelper;
 import com.adobe.marketing.mobile.edge.identity.Identity;
+import com.adobe.marketing.mobile.services.NamedCollection;
+import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.TestHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,6 +98,11 @@ public class PushTokenSyncingTests {
     @After
     public void tearDown() {
         SDKHelper.resetSDK();
+        NamedCollection namedCollection =
+                ServiceProvider.getInstance()
+                        .getDataStoreService()
+                        .getNamedCollection(MessagingConstants.DATA_STORE_NAME);
+        namedCollection.remove(MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER);
     }
 
     // --------------------------------------------------------------------------------------------

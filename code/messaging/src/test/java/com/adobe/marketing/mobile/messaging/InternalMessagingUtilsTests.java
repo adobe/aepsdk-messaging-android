@@ -22,7 +22,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -33,7 +35,9 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
+import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import java.io.File;
@@ -45,13 +49,24 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class InternalMessagingUtilsTests {
+    @Mock ServiceProvider mockServiceProvider;
+    @Mock DataStoring mockDataStoring;
+    @Mock NamedCollection mockNamedCollection;
+
     private final String mockJsonObj =
             "{\n"
                     + "   \"messageProfile\":{\n"
@@ -74,6 +89,29 @@ public class InternalMessagingUtilsTests {
                     + "      \"platform\": \"fcm\"\n"
                     + "   }\n"
                     + "]";
+
+    void runUsingMockedServiceProvider(final Runnable runnable) {
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                Mockito.mockStatic(ServiceProvider.class)) {
+            when(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection);
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
+            when(mockServiceProvider.getDataStoreService()).thenReturn(mockDataStoring);
+            runnable.run();
+        }
+    }
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @After
+    public void tearDown() {
+        Mockito.reset(mockServiceProvider, mockDataStoring);
+        InternalMessagingUtils.resetPushTokenSyncTimestamp();
+    }
 
     // ========================================================================================
     // toMap
@@ -1713,6 +1751,167 @@ public class InternalMessagingUtilsTests {
         assertEquals(2, result.size());
         assertEquals(1, result.get(surface).size());
         assertEquals(1, result.get(surfaceToAdd).size());
+    }
+
+    // ========================================================================================
+    // should sync push token tests
+    // ========================================================================================
+    @Test
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsNull() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, null, System.currentTimeMillis());
+                    assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsEmpty() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "", System.currentTimeMillis());
+                    assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_forceSyncIsFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", System.currentTimeMillis());
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", 0);
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsTrue_whenPushTokenIsNew_withinDefaultSyncTimeout_forceSyncTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", 0);
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenEmpty_forceSyncIsFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", System.currentTimeMillis());
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenExistingPushTokenNull_forceSyncIsFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn(null);
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "newToken", System.currentTimeMillis());
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_forceSyncIsFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken", System.currentTimeMillis());
+                    assertFalse(result);
+                });
+    }
+
+    @Test
+    public void test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_forceSyncIsTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken", System.currentTimeMillis());
+                    assertTrue(result);
+                });
+    }
+
+    @Test
+    public void
+            test_shouldSyncPushToken_returnsFalse_whenPushTokenIsSame_withinDefaultSyncTimeout_forceSyncIsTrue() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken", 1000);
+                    assertFalse(result);
+                });
     }
 
     // ========================================================================================

@@ -188,6 +188,12 @@ public final class MessagingExtension extends Extension {
 
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
+
+        // retrieve the push token from the messaging named collection and add it to the messaging
+        // shared state. this must be done as its not guaranteed that the push token will be synced
+        // (and the shared state updated) on an app launch.
+        final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
+        createMessagingSharedState(existingPushToken, null);
     }
 
     @Override
@@ -450,6 +456,20 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
+        // if the push token hasn't changed or the push registration force sync flag is not set
+        // then there is no need to sync it via an edge network request
+        final Map<String, Object> configSharedState =
+                getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
+
+        if (!InternalMessagingUtils.shouldSyncPushToken(
+                configSharedState, pushToken, event.getTimestamp())) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Skipping the push token sync and shared state update.");
+            return;
+        }
+
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -467,11 +487,8 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Update the push token to the shared state
-        final HashMap<String, Object> messagingSharedState = new HashMap<>();
-        messagingSharedState.put(
-                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        getApi().createSharedState(messagingSharedState, event);
+        // Add the push token to the shared state
+        createMessagingSharedState(pushToken, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
@@ -881,6 +898,19 @@ public final class MessagingExtension extends Extension {
 
     private boolean eventIsValid(final Event event) {
         return event != null && event.getEventData() != null;
+    }
+
+    private void createMessagingSharedState(final String pushToken, final Event event) {
+        if (StringUtils.isNullOrEmpty(pushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Push token is null or empty. Not adding the push token to the shared state.");
+            return;
+        }
+        final Map<String, Object> newMessagingState = new HashMap<>();
+        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(newMessagingState, event);
     }
     // endregion
 
