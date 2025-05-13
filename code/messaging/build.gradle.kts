@@ -1,6 +1,4 @@
-import android.databinding.tool.util.FileUtil
 import com.adobe.marketing.mobile.gradle.BuildConstants
-import com.android.utils.FileUtils
 
 /*
  * Copyright 2024 Adobe. All rights reserved.
@@ -61,8 +59,7 @@ aepLibrary {
 }
 
 dependencies {
-    // TODO: change this back when Core 3.4.0 is released
-    implementation("com.github.adobe.aepsdk-core-android:core:31d3e1a48d")
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
     // dependencies provided by aep-library:
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
@@ -86,13 +83,8 @@ dependencies {
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
-    androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-        exclude(group = "com.adobe.marketing.mobile", module = "edgeidentity")
-    }
-    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
+    androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
+    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
     androidTestImplementation(project(":messagingtestutils"))
     // specify byte buddy version to fix compatibility issue with jdk 21
     testImplementation ("org.mockito:mockito-inline:5.2.0"){
