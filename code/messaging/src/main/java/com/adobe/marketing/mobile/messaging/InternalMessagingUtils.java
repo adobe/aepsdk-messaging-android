@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
@@ -20,10 +19,8 @@ import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
-import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -39,11 +36,6 @@ import org.json.JSONObject;
 
 class InternalMessagingUtils {
     private static final String SELF_TAG = "InternalMessagingUtils";
-    private static final String FORCE_SYNC_MESSAGE =
-            "Push registration force sync is enabled. The push token will be synced.";
-    private static final String NEW_PUSH_TOKEN_MESSAGE =
-            "Push token is new or changed. The push token will be synced.";
-    private static long lastPushTokenSyncTimestamp = 0;
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
@@ -569,107 +561,6 @@ class InternalMessagingUtils {
     }
 
     // ========================================================================================
-    // Push token sync helpers
-    // ========================================================================================
-    /**
-     * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
-     * network request.
-     *
-     * @param configSharedState A {@link Map} containing the configuration shared state
-     * @param newPushToken A {@code String} containing the push token to be synced
-     * @param eventTimestamp A {@code long} containing the event timestamp
-     * @return {@code boolean} indicating if the push token should be synced
-     */
-    static boolean shouldSyncPushToken(
-            @Nullable final Map<String, Object> configSharedState,
-            @Nullable final String newPushToken,
-            final long eventTimestamp) {
-        if (StringUtils.isNullOrEmpty(newPushToken)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "New push token is null or empty, push token will not be synced.");
-            return false;
-        }
-
-        // check if the push token will be synced regardless if it has changed.
-        // if the value is not present, it will default to false
-        final boolean pushForceSync =
-                DataReader.optBoolean(
-                        configSharedState,
-                        MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC,
-                        false);
-
-        final String existingPushToken = getPushTokenFromPersistence();
-        final boolean pushTokensMatch =
-                !StringUtils.isNullOrEmpty(existingPushToken)
-                        && existingPushToken.equals(newPushToken);
-        if (pushTokensMatch && !pushForceSync) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "Existing push token matches the new push token, push token will not be"
-                            + " synced.");
-            return false;
-        } else if (pushTokensMatch && !isPushTokenSyncTimeoutExpired(eventTimestamp)) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    "shouldSyncPushToken",
-                    "Push token sync is within the previous push sync timeout window, push token"
-                            + " will not be synced.");
-            return false;
-        }
-
-        final String syncReason = pushForceSync ? FORCE_SYNC_MESSAGE : NEW_PUSH_TOKEN_MESSAGE;
-        Log.debug(MessagingConstants.LOG_TAG, "shouldSyncPushToken", syncReason);
-
-        // persist the push token in the messaging named collection
-        final NamedCollection messagingNamedCollection = getNamedCollection();
-        messagingNamedCollection.setString(
-                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
-
-        lastPushTokenSyncTimestamp = eventTimestamp;
-
-        return true;
-    }
-
-    /**
-     * Determines if the push token sync timeout has expired.
-     *
-     * @param eventTimestamp A {@code long} containing the event timestamp
-     * @return {@code boolean} indicating if the push token sync timeout has expired
-     */
-    private static boolean isPushTokenSyncTimeoutExpired(final long eventTimestamp) {
-        return eventTimestamp - lastPushTokenSyncTimestamp
-                > MessagingConstants.IGNORE_PUSH_SYNC_TIMEOUT_MS;
-    }
-
-    // ========================================================================================
-    // Datastore utils
-    // ========================================================================================
-    /**
-     * Retrieves the Messaging extension {@link NamedCollection} from the {@link DataStoring}
-     * service.
-     *
-     * @return The Messaging extension {@link NamedCollection}.
-     */
-    private static NamedCollection getNamedCollection() {
-        final DataStoring dataStoreService = ServiceProvider.getInstance().getDataStoreService();
-        return dataStoreService.getNamedCollection(MessagingConstants.DATA_STORE_NAME);
-    }
-
-    /**
-     * Retrieves the push token from the Messaging {@link NamedCollection}.
-     *
-     * @return {@code String} containing the persisted push token
-     */
-    @Nullable static String getPushTokenFromPersistence() {
-        final NamedCollection messagingNamedCollection = getNamedCollection();
-        return messagingNamedCollection.getString(
-                MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);
-    }
-
-    // ========================================================================================
     // Collection utils
     // ========================================================================================
     /**
@@ -701,10 +592,5 @@ class InternalMessagingUtils {
         }
         updatedMap.put(surface, list);
         return updatedMap;
-    }
-
-    @VisibleForTesting
-    static void resetPushTokenSyncTimestamp() {
-        lastPushTokenSyncTimestamp = 0;
     }
 }
