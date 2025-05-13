@@ -322,6 +322,10 @@ class MainActivity : ComponentActivity() {
                 MobileCore.setPushIdentifier(token)
             }
         }
+
+        binding.btnResetIdentities.setOnClickListener {
+            MobileCore.resetIdentities()
+        }
     }
 
     private suspend fun getRegToken(): String {

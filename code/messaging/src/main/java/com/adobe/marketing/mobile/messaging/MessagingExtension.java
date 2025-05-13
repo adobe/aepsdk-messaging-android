@@ -63,6 +63,8 @@ public final class MessagingExtension extends Extension {
      *       {@link EventSource#REQUEST_CONTENT}
      *   <li>Listening to event with eventType {@link EventType#GENERIC_IDENTITY} and EventSource
      *       {@link EventSource#REQUEST_RESET}
+     *   <li>Listening to event with eventType {@link EventType#EDGE_IDENTITY} and EventSource
+     *       {@link EventSource#RESET_COMPLETE}
      *   <li>Listening to event with eventType {@link MessagingConstants.EventType#MESSAGING} and
      *       EventSource {@link EventSource#REQUEST_CONTENT}
      *   <li>Listening to event with eventType {@link MessagingConstants.EventType#EDGE} and
@@ -145,6 +147,8 @@ public final class MessagingExtension extends Extension {
                         this::processEvent);
         getApi().registerEventListener(
                         EventType.GENERIC_IDENTITY, EventSource.REQUEST_RESET, this::processEvent);
+        getApi().registerEventListener(
+                        EventType.EDGE_IDENTITY, EventSource.RESET_COMPLETE, this::processEvent);
         getApi().registerEventListener(
                         MessagingConstants.EventType.MESSAGING,
                         EventSource.REQUEST_CONTENT,
@@ -337,7 +341,7 @@ public final class MessagingExtension extends Extension {
      * @param eventToProcess an {@link Event} from an {@link ExtensionEventListener} to be processed
      */
     void processEvent(final Event eventToProcess) {
-        if (!eventIsValid(eventToProcess) && !isRequestResetEvent(eventToProcess)) {
+        if (!eventIsValid(eventToProcess)) {
             Log.debug(MessagingConstants.LOG_TAG, SELF_TAG, "Invalid event, ignoring.");
             return;
         }
@@ -382,6 +386,9 @@ public final class MessagingExtension extends Extension {
         } else if (InternalMessagingUtils.isGenericIdentityResetEvent(eventToProcess)) {
             // handle the reset identities event
             handleResetIdentitiesEvent(eventToProcess);
+        } else if (InternalMessagingUtils.isEdgeIdentityResetComplete(eventToProcess)) {
+            // handle the reset complete event
+            handleResetCompleteEvent(eventToProcess);
         } else if (InternalMessagingUtils.isMessagingRequestContentEvent(eventToProcess)) {
             // need experience event dataset id for sending the push token
             final Map<String, Object> configSharedState =
@@ -474,6 +481,52 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
+        dispatchPushTokenEdgeEvent(pushToken, event);
+    }
+
+    /**
+     * Handles the reset identities event by setting a null push token in the Messaging shared state
+     * and by removing the persisted push token from the Messaging {@link
+     * com.adobe.marketing.mobile.services.NamedCollection}
+     *
+     * @param resetIdentitiesEvent the reset identities {@link Event}
+     */
+    private void handleResetIdentitiesEvent(final Event resetIdentitiesEvent) {
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Clearing the push token from persistence and the Messaging shared state.");
+        // remove the push token from the shared state
+        createMessagingSharedState(null, resetIdentitiesEvent);
+        // remove the push token from the named collection
+        InternalMessagingUtils.persistPushToken(null);
+    }
+
+    /**
+     * Handles the reset complete event by re-syncing the push token using the newly generated ECID.
+     *
+     * @param resetCompleteEvent the reset complete {@link Event}
+     */
+    private void handleResetCompleteEvent(final Event resetCompleteEvent) {
+        final String pushToken = InternalMessagingUtils.getPushTokenFromPersistence();
+        if (StringUtils.isNullOrEmpty(pushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Push token is null or empty, skipping the re-sync.");
+            return;
+        }
+
+        Log.debug(
+                MessagingConstants.LOG_TAG,
+                SELF_TAG,
+                "Re-syncing the existing push token %s.",
+                pushToken);
+
+        dispatchPushTokenEdgeEvent(pushToken, resetCompleteEvent);
+    }
+
+    private void dispatchPushTokenEdgeEvent(final String pushToken, final Event event) {
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -502,20 +555,6 @@ public final class MessagingExtension extends Extension {
                 eventData,
                 getApi(),
                 event);
-    }
-
-    /**
-     * Handles the reset identities event by setting a null push token in the Messaging shared state
-     * and by removing the persisted push token from the Messaging {@link
-     * com.adobe.marketing.mobile.services.NamedCollection}
-     *
-     * @param resetIdentitiesEvent the reset identities {@link Event}
-     */
-    private void handleResetIdentitiesEvent(final Event resetIdentitiesEvent) {
-        // remove the push token from the shared state
-        createMessagingSharedState(null, resetIdentitiesEvent);
-        // remove the push token from the named collection
-        InternalMessagingUtils.persistPushToken(null);
     }
 
     /**
@@ -915,11 +954,17 @@ public final class MessagingExtension extends Extension {
     }
 
     private boolean eventIsValid(final Event event) {
-        return event != null && event.getEventData() != null;
+        return (event != null && event.getEventData() != null)
+                || isRequestResetEvent(event)
+                || isResetCompleteEvent(event);
     }
 
     private boolean isRequestResetEvent(final Event event) {
         return event != null && event.getSource().equals(EventSource.REQUEST_RESET);
+    }
+
+    private boolean isResetCompleteEvent(final Event event) {
+        return event != null && event.getSource().equals(EventSource.RESET_COMPLETE);
     }
 
     private void createMessagingSharedState(final String pushToken, final Event event) {
