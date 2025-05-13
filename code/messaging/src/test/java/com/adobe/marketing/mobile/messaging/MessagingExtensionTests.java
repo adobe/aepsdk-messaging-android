@@ -25,11 +25,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,10 +48,8 @@ import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
-import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
-import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
@@ -81,8 +77,6 @@ public class MessagingExtensionTests {
     // Mocks
     @Mock ExtensionApi mockExtensionApi;
     @Mock ServiceProvider mockServiceProvider;
-    @Mock DataStoring mockDataStoring;
-    @Mock NamedCollection mockNamedCollection;
     @Mock CacheService mockCacheService;
     @Mock DeviceInforming mockDeviceInfoService;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
@@ -151,9 +145,6 @@ public class MessagingExtensionTests {
         reset(mockRuleConsequence);
         reset(mockSerialWorkDispatcher);
         reset(mockAdobeCallback);
-        reset(mockNamedCollection);
-        reset(mockDataStoring);
-        InternalMessagingUtils.resetPushTokenSyncTimestamp();
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -162,8 +153,6 @@ public class MessagingExtensionTests {
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
-            when(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection);
-            when(mockServiceProvider.getDataStoreService()).thenReturn(mockDataStoring);
             when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
@@ -217,74 +206,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_onRegistered_pushTokenIsStoredInNamedCollection() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    // setup
-                    when(mockNamedCollection.getString(anyString(), any()))
-                            .thenReturn("mockPushToken");
-                    messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
-
-                    // test
-                    messagingExtension.onRegistered();
-
-                    // verify 6 listeners are registered
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.GENERIC_IDENTITY),
-                                    eq(EventSource.REQUEST_CONTENT),
-                                    any());
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.EDGE),
-                                    eq(
-                                            MessagingTestConstants.EventSource
-                                                    .PERSONALIZATION_DECISIONS),
-                                    any());
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.WILDCARD), eq(EventSource.WILDCARD), any());
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.MESSAGING),
-                                    eq(EventSource.REQUEST_CONTENT),
-                                    any());
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.RULES_ENGINE),
-                                    eq(EventSource.RESPONSE_CONTENT),
-                                    any());
-                    verify(mockExtensionApi, times(1))
-                            .registerEventListener(
-                                    eq(EventType.MESSAGING),
-                                    eq(EventSource.CONTENT_COMPLETE),
-                                    any());
-
-                    // verify serial dispatcher started
-                    verify(mockSerialWorkDispatcher, times(1)).start();
-
-                    // verify push token is added to the shared state if it is present in the
-                    // named collection
-                    verify(mockNamedCollection, times(1))
-                            .getString(
-                                    eq(
-                                            MessagingConstants.NamedCollectionKeys.Messaging
-                                                    .PUSH_IDENTIFIER),
-                                    any());
-                    // verify push token is stored in shared state
-                    verify(mockExtensionApi, times(1))
-                            .createSharedState(
-                                    argThat(
-                                            map ->
-                                                    map.containsKey(
-                                                            MessagingConstants.SharedState.Messaging
-                                                                    .PUSH_IDENTIFIER)),
-                                    any());
-                });
-    }
-
-    @Test
-    public void test_onRegistered_pushTokenNotStoredInNamedCollection() {
+    public void test_onRegistered() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
@@ -327,16 +249,6 @@ public class MessagingExtensionTests {
 
                     // verify serial dispatcher started
                     verify(mockSerialWorkDispatcher, times(1)).start();
-
-                    // verify push token is not added to the shared state if it isn't present in the
-                    // named collection
-                    verify(mockNamedCollection, times(1))
-                            .getString(
-                                    eq(
-                                            MessagingConstants.NamedCollectionKeys.Messaging
-                                                    .PUSH_IDENTIFIER),
-                                    any());
-                    verify(mockExtensionApi, times(0)).createSharedState(any(Map.class), any());
                 });
     }
 
@@ -1147,7 +1059,6 @@ public class MessagingExtensionTests {
                         when(mockEvent.getEventData()).thenReturn(eventData);
                         when(mockEvent.getType()).thenReturn(EventType.GENERIC_IDENTITY);
                         when(mockEvent.getSource()).thenReturn(EventSource.REQUEST_CONTENT);
-                        when(mockEvent.getTimestamp()).thenReturn(System.currentTimeMillis());
                         when(mockExtensionApi.getSharedState(
                                         eq(
                                                 MessagingTestConstants.SharedState.Configuration
@@ -1182,16 +1093,9 @@ public class MessagingExtensionTests {
                         assertEquals(EventSource.REQUEST_CONTENT, event.getSource());
                         assertEquals(expectedEventData, event.getEventData());
 
-                        // verify push token is stored in shared state
+                        // verify if the push token is stored in shared state
                         verify(mockExtensionApi, times(1))
-                                .createSharedState(
-                                        argThat(
-                                                map ->
-                                                        map.containsKey(
-                                                                MessagingConstants.SharedState
-                                                                        .Messaging
-                                                                        .PUSH_IDENTIFIER)),
-                                        any(Event.class));
+                                .createSharedState(any(Map.class), any(Event.class));
                     }
                 });
     }
@@ -2205,233 +2109,6 @@ public class MessagingExtensionTests {
                             messagingExtension.completionHandlerForEdgeRequestEventId(
                                     "nonExistentId");
                     assertNull(result);
-                });
-    }
-
-    // ========================================================================================
-    // test handlePushToken
-    // ========================================================================================
-    @Test
-    public void test_handlePushToken_whenPushTokenIsNull() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(new HashMap<>())
-                                    .build();
-
-                    messagingExtension.handlePushToken(event);
-
-                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
-                });
-    }
-
-    @Test
-    public void test_handlePushToken_whenPushTokenIsEmpty() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("pushidentifier", "");
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(eventData)
-                                    .build();
-
-                    messagingExtension.handlePushToken(event);
-
-                    verify(mockExtensionApi, never()).dispatch(any(Event.class));
-                });
-    }
-
-    @Test
-    public void test_handlePushToken_whenPushTokenIsValid() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("pushidentifier", "validToken");
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(eventData)
-                                    .build();
-
-                    Map<String, Object> edgeIdentitySharedState = new HashMap<>();
-                    Map<String, Object> ecidMap = new HashMap<>();
-                    Map<String, Object> identityMap = new HashMap<>();
-                    List<Map<String, Object>> ecids = new ArrayList<>();
-                    ecidMap.put("id", "mock_ecid");
-                    ecids.add(ecidMap);
-                    identityMap.put("ECID", ecids);
-                    edgeIdentitySharedState.put("identityMap", identityMap);
-                    when(mockExtensionApi.getXDMSharedState(
-                                    eq("com.adobe.edge.identity"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, edgeIdentitySharedState));
-
-                    messagingExtension.handlePushToken(event);
-
-                    // verify push token is persisted in the named collection
-                    verify(mockNamedCollection, times(1))
-                            .setString(
-                                    eq(
-                                            MessagingConstants.NamedCollectionKeys.Messaging
-                                                    .PUSH_IDENTIFIER),
-                                    anyString());
-
-                    // verify push token added to shared state
-                    verify(mockExtensionApi, times(1))
-                            .createSharedState(any(Map.class), any(Event.class));
-
-                    // event dispatched as the registration is paused
-                    verify(mockExtensionApi, times(1)).dispatch(any());
-                });
-    }
-
-    @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_forceSyncIsFalse() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-                    Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("pushidentifier", "validToken");
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(eventData)
-                                    .build();
-
-                    when(mockNamedCollection.getString(anyString(), any()))
-                            .thenReturn("validToken");
-
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.module.configuration"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, configSharedState));
-
-                    Map<String, Object> edgeIdentitySharedState = new HashMap<>();
-                    Map<String, Object> ecidMap = new HashMap<>();
-                    Map<String, Object> identityMap = new HashMap<>();
-                    List<Map<String, Object>> ecids = new ArrayList<>();
-                    ecidMap.put("id", "mock_ecid");
-                    ecids.add(ecidMap);
-                    identityMap.put("ECID", ecids);
-                    edgeIdentitySharedState.put("identityMap", identityMap);
-                    when(mockExtensionApi.getXDMSharedState(
-                                    eq("com.adobe.edge.identity"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, edgeIdentitySharedState));
-
-                    messagingExtension.handlePushToken(event);
-
-                    // verify push token not persisted in the named collection
-                    verify(mockNamedCollection, times(0))
-                            .setString(
-                                    eq(
-                                            MessagingConstants.NamedCollectionKeys.Messaging
-                                                    .PUSH_IDENTIFIER),
-                                    anyString());
-
-                    // verify push token not added to shared state
-                    verify(mockExtensionApi, times(0))
-                            .createSharedState(any(Map.class), any(Event.class));
-
-                    // no event dispatched as the push token is the same
-                    verify(mockExtensionApi, times(0)).dispatch(eventCaptor.capture());
-                });
-    }
-
-    @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_forceSyncIsTrue() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-                    Map<String, Object> eventData = new HashMap<>();
-                    eventData.put("pushidentifier", "validToken");
-                    Event event =
-                            new Event.Builder("event", "type", "source")
-                                    .setEventData(eventData)
-                                    .build();
-
-                    Map<String, Object> configSharedState = new HashMap<>();
-                    configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
-                    when(mockExtensionApi.getSharedState(
-                                    eq("com.adobe.module.configuration"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, configSharedState));
-
-                    Map<String, Object> edgeIdentitySharedState = new HashMap<>();
-                    Map<String, Object> ecidMap = new HashMap<>();
-                    Map<String, Object> identityMap = new HashMap<>();
-                    List<Map<String, Object>> ecids = new ArrayList<>();
-                    ecidMap.put("id", "mock_ecid");
-                    ecids.add(ecidMap);
-                    identityMap.put("ECID", ecids);
-                    edgeIdentitySharedState.put("identityMap", identityMap);
-                    when(mockExtensionApi.getXDMSharedState(
-                                    eq("com.adobe.edge.identity"),
-                                    any(Event.class),
-                                    eq(false),
-                                    eq(SharedStateResolution.LAST_SET)))
-                            .thenReturn(
-                                    new SharedStateResult(
-                                            SharedStateStatus.SET, edgeIdentitySharedState));
-
-                    messagingExtension.handlePushToken(event);
-
-                    // verify push token persisted in the named collection
-                    verify(mockNamedCollection, times(1))
-                            .setString(
-                                    eq(
-                                            MessagingConstants.NamedCollectionKeys.Messaging
-                                                    .PUSH_IDENTIFIER),
-                                    eq("validToken"));
-
-                    // verify push token added to shared state
-                    verify(mockExtensionApi, times(1))
-                            .createSharedState(
-                                    argThat(
-                                            map -> {
-                                                String pushIdentifier =
-                                                        (String) map.get("pushidentifier");
-                                                return "validToken".equals(pushIdentifier);
-                                            }),
-                                    any(Event.class));
-
-                    // event dispatched with push token
-                    verify(mockExtensionApi, times(1)).dispatch(eventCaptor.capture());
-
-                    assertEquals(
-                            MessagingConstants.EventSource.REQUEST_CONTENT,
-                            eventCaptor.getValue().getSource());
-                    assertEquals(
-                            MessagingConstants.EventType.EDGE, eventCaptor.getValue().getType());
-                    assertEquals(
-                            MessagingConstants.EventName.PUSH_PROFILE_EDGE_EVENT,
-                            eventCaptor.getValue().getName());
-                    Map<String, Object> eventDataMap = eventCaptor.getValue().getEventData();
-                    List<Map<String, Object>> pushNotificationDetails =
-                            (List<Map<String, Object>>)
-                                    ((Map<String, Object>) eventDataMap.get("data"))
-                                            .get("pushNotificationDetails");
-                    assertEquals("validToken", pushNotificationDetails.get(0).get("token"));
                 });
     }
 
