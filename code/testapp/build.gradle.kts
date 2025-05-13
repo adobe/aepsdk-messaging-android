@@ -17,7 +17,6 @@ plugins {
     id("com.google.gms.google-services")
 }
 
-val moduleVersion: String by project
 val mavenCoreVersion: String by project
 val mavenLifecycleVersion: String by project
 val mavenAssuranceVersion: String by project
