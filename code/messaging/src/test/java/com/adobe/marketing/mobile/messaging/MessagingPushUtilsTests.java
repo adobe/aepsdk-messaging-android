@@ -13,8 +13,10 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
@@ -25,12 +27,22 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import androidx.core.content.FileProvider;
+import com.adobe.marketing.mobile.services.AppContextService;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.ServiceProvider;
+import com.adobe.marketing.mobile.services.caching.CacheResult;
+import com.adobe.marketing.mobile.services.caching.CacheService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +52,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class MessagingPushUtilsTests {
 
     @Mock HttpURLConnection mockConnection;
@@ -55,6 +67,12 @@ public class MessagingPushUtilsTests {
 
     @Mock Resources mockResources;
 
+    @Mock ServiceProvider mockServiceProvider;
+
+    @Mock CacheResult mockCacheResult;
+
+    @Mock CacheService mockCacheService;
+
     @After
     public void tearDown() {
         reset(
@@ -63,7 +81,10 @@ public class MessagingPushUtilsTests {
                 mockContext,
                 mockPackageManager,
                 mockApplicationInfo,
-                mockResources);
+                mockResources,
+                mockServiceProvider,
+                mockCacheService,
+                mockCacheResult);
     }
 
     @Test
@@ -217,5 +238,187 @@ public class MessagingPushUtilsTests {
 
         // verify
         assertEquals(0, resultIconId);
+    }
+
+    @Test
+    public void getCachedRichMediaFileUriReturnsNullWhenCacheResultIsNull() {
+        // test
+        Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(null);
+
+        // verify
+        assertNull(resultUri);
+    }
+
+    @Test
+    public void getCachedRichMediaFileUriReturnsNullWhenCacheResultMetadataIsNull() {
+        // setup
+        when(mockCacheResult.getMetadata()).thenReturn(null);
+
+        // test
+        Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(mockCacheResult);
+
+        // verify
+        assertNull(resultUri);
+    }
+
+    @Test
+    public void getCachedRichMediaFileUriReturnsNullWhenPathToFileIsNull() {
+        // setup
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("pathToFile", null);
+        when(mockCacheResult.getMetadata()).thenReturn(metadata);
+
+        // test
+        Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(mockCacheResult);
+
+        // verify
+        assertNull(resultUri);
+    }
+
+    @Test
+    public void getCachedRichMediaFileUriReturnsNullWhenContextIsNull() {
+        // setup
+        mockServiceProvider = mock(ServiceProvider.class);
+        AppContextService mockAppContextService = mock(AppContextService.class);
+
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                Mockito.mockStatic(ServiceProvider.class)) {
+            when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
+            when(mockServiceProvider.getAppContextService()).thenReturn(mockAppContextService);
+            when(mockAppContextService.getApplicationContext()).thenReturn(null);
+
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
+
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("pathToFile", "mockPathToFile");
+            when(mockCacheResult.getMetadata()).thenReturn(metadata);
+
+            // test
+            Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(mockCacheResult);
+
+            // verify
+            assertNull(resultUri);
+        }
+    }
+
+    @Test
+    public void getCachedRichMediaFileUriReturnsUriWhenFileExists() {
+        // setup
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("pathToFile", "mockPathToFile");
+        when(mockCacheResult.getMetadata()).thenReturn(metadata);
+
+        mockServiceProvider = mock(ServiceProvider.class);
+        AppContextService mockAppContextService = mock(AppContextService.class);
+        PackageManager mockPackageManager = mock(PackageManager.class);
+        Context mockContext = mock(Context.class);
+        String fileName = "test_file.jpg";
+        String packageName = "com.adobe.marketing.mobile.messaging";
+        when(mockContext.getPackageName()).thenReturn(packageName);
+        when(mockContext.getPackageManager()).thenReturn(mockPackageManager);
+        Uri expectedUri =
+                Uri.parse("content://" + packageName + ".provider/root/messaging/" + fileName);
+
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                        Mockito.mockStatic(ServiceProvider.class);
+                MockedStatic<FileProvider> fileProviderMockedStatic =
+                        Mockito.mockStatic(FileProvider.class)) {
+            when(mockServiceProvider.getAppContextService()).thenReturn(mockAppContextService);
+            when(mockAppContextService.getApplicationContext()).thenReturn(mockContext);
+
+            fileProviderMockedStatic
+                    .when(() -> FileProvider.getUriForFile(any(), anyString(), any()))
+                    .thenReturn(expectedUri);
+
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
+
+            // test
+            Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(mockCacheResult);
+
+            // verify
+            assertEquals(expectedUri, resultUri);
+        }
+    }
+
+    @Test
+    public void downloadAndCacheAssetReturnsCacheResultWhenCachedFileExists() {
+        // setup
+        mockCacheService = mock(CacheService.class);
+        CacheResult mockCacheResult = mock(CacheResult.class);
+        mockServiceProvider = mock(ServiceProvider.class);
+        Executor mockExecutor = mock(Executor.class);
+
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                        Mockito.mockStatic(ServiceProvider.class);
+                MockedStatic<CompletableFuture> completableFutureMockedStatic =
+                        Mockito.mockStatic(CompletableFuture.class)) {
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
+
+            CompletableFuture<CacheResult> mockFuture = mock(CompletableFuture.class);
+            when(mockFuture.join()).thenReturn(mockCacheResult);
+            completableFutureMockedStatic
+                    .when(
+                            () ->
+                                    CompletableFuture.supplyAsync(
+                                            any(Supplier.class), any(Executor.class)))
+                    .thenReturn(mockFuture);
+
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
+
+            String fileName = "test_image.jpg";
+
+            // test
+            CacheResult cachedAsset =
+                    MessagingPushUtils.downloadAndCacheAsset(mockExecutor, fileName, 2000).join();
+
+            // verify
+            assertEquals(mockCacheResult, cachedAsset);
+        }
+    }
+
+    @Test
+    public void downloadAndCacheAssetReturnsNullWhenCacheResultDoesNotExist() {
+        // setup
+        mockCacheService = mock(CacheService.class);
+        CacheResult mockCacheResult = mock(CacheResult.class);
+        mockServiceProvider = mock(ServiceProvider.class);
+        Executor mockExecutor = mock(Executor.class);
+
+        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
+                        Mockito.mockStatic(ServiceProvider.class);
+                MockedStatic<CompletableFuture> completableFutureMockedStatic =
+                        Mockito.mockStatic(CompletableFuture.class)) {
+            when(mockCacheService.get(anyString(), anyString())).thenReturn(mockCacheResult);
+            when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
+
+            CompletableFuture<CacheResult> mockFuture = mock(CompletableFuture.class);
+            when(mockFuture.join()).thenReturn(null);
+            completableFutureMockedStatic
+                    .when(
+                            () ->
+                                    CompletableFuture.supplyAsync(
+                                            any(Supplier.class), any(Executor.class)))
+                    .thenReturn(mockFuture);
+
+            serviceProviderMockedStatic
+                    .when(ServiceProvider::getInstance)
+                    .thenReturn(mockServiceProvider);
+
+            String fileName = "test_image.jpg";
+
+            // test
+            CacheResult cachedAsset =
+                    MessagingPushUtils.downloadAndCacheAsset(mockExecutor, fileName, 2000).join();
+
+            // verify
+            assertNull(cachedAsset);
+        }
     }
 }

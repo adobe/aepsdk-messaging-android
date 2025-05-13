@@ -26,9 +26,13 @@ public final class MessagingConstants {
     static final String HTTP_HEADER_LAST_MODIFIED = "Last-Modified";
     static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     static final String HTTP_HEADER_ETAG = "Etag";
+    static final String GIF_FILE_EXTENSION = ".gif";
+    static final String MESSAGING_FILE_PROVIDER_AUTHORITY = ".messagingfileprovider";
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
+    static final int HALF_SECOND_IN_MILLIS = 500;
+    static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
 
     private MessagingConstants() {}
 
@@ -296,12 +300,14 @@ public final class MessagingConstants {
 
         final class MobileParametersKeys {
             static final String WIDTH = "width";
+            static final String MAX_WIDTH = "maxWidth";
             static final String HEIGHT = "height";
             static final String VERTICAL_ALIGN = "verticalAlign";
             static final String VERTICAL_INSET = "verticalInset";
             static final String HORIZONTAL_ALIGN = "horizontalAlign";
             static final String HORIZONTAL_INSET = "horizontalInset";
             static final String UI_TAKEOVER = "uiTakeover";
+            static final String FIT_TO_CONTENT = "fitToContent";
             static final String DISPLAY_ANIMATION = "displayAnimation";
             static final String DISMISS_ANIMATION = "dismissAnimation";
             static final String BACKDROP_COLOR = "backdropColor";

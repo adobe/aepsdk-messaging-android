@@ -1,6 +1,4 @@
-import android.databinding.tool.util.FileUtil
 import com.adobe.marketing.mobile.gradle.BuildConstants
-import com.android.utils.FileUtils
 
 /*
  * Copyright 2024 Adobe. All rights reserved.
@@ -66,6 +64,7 @@ dependencies {
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
     implementation("androidx.compose.material3:material3:$material3Version")
+
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 
     // testImplementation dependencies provided by aep-library:
@@ -78,17 +77,14 @@ dependencies {
     testImplementation(BuildConstants.Dependencies.COMPOSE_UI_TEST_MANIFEST)
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
+    // need to use robolectric 4.14 to get android 35 support in unit tests
+    testImplementation("org.robolectric:robolectric:4.14")
 
     // androidTestImplementation dependencies provided by aep-library:
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
-    androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-        exclude(group = "com.adobe.marketing.mobile", module = "edgeidentity")
-    }
-    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
+    androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
+    androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
     androidTestImplementation(project(":messagingtestutils"))
     // specify byte buddy version to fix compatibility issue with jdk 21
     testImplementation ("org.mockito:mockito-inline:5.2.0"){
