@@ -300,12 +300,14 @@ public final class MessagingConstants {
 
         final class MobileParametersKeys {
             static final String WIDTH = "width";
+            static final String MAX_WIDTH = "maxWidth";
             static final String HEIGHT = "height";
             static final String VERTICAL_ALIGN = "verticalAlign";
             static final String VERTICAL_INSET = "verticalInset";
             static final String HORIZONTAL_ALIGN = "horizontalAlign";
             static final String HORIZONTAL_INSET = "horizontalInset";
             static final String UI_TAKEOVER = "uiTakeover";
+            static final String FIT_TO_CONTENT = "fitToContent";
             static final String DISPLAY_ANIMATION = "displayAnimation";
             static final String DISMISS_ANIMATION = "dismissAnimation";
             static final String BACKDROP_COLOR = "backdropColor";
