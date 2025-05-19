@@ -186,22 +186,6 @@ class InternalMessagingUtils {
     }
 
     /**
-     * Determines if the passed in {@code Event} is an edge identity reset complete event.
-     *
-     * @param event An Edge Identity Reset Complete {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is an edge identity reset complete
-     *     event.
-     */
-    static boolean isEdgeIdentityResetComplete(final Event event) {
-        if (event == null) {
-            return false;
-        }
-
-        return EventType.EDGE_IDENTITY.equalsIgnoreCase(event.getType())
-                && EventSource.RESET_COMPLETE.equalsIgnoreCase(event.getSource());
-    }
-
-    /**
      * Determines if the passed in {@code Event} is a messaging request content event.
      *
      * @param event A Messaging Request Content {@link Event}.
