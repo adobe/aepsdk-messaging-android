@@ -92,6 +92,12 @@
         android:id="@+id/btn_setPushIdentifier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="set push identifier" />
+        android:text="Set push identifier" />
+
+    <Button
+        android:id="@+id/btn_resetIdentities"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset identities" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

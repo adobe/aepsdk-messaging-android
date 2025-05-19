@@ -170,6 +170,22 @@ class InternalMessagingUtils {
     }
 
     /**
+     * Determines if the passed in {@code Event} is a generic identity request reset event.
+     *
+     * @param event A Generic Identity Request Reset {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a generic identity request reset
+     *     event.
+     */
+    static boolean isGenericIdentityResetEvent(final Event event) {
+        if (event == null) {
+            return false;
+        }
+
+        return EventType.GENERIC_IDENTITY.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_RESET.equalsIgnoreCase(event.getSource());
+    }
+
+    /**
      * Determines if the passed in {@code Event} is a messaging request content event.
      *
      * @param event A Messaging Request Content {@link Event}.
@@ -624,9 +640,7 @@ class InternalMessagingUtils {
         Log.debug(MessagingConstants.LOG_TAG, "shouldSyncPushToken", syncReason);
 
         // persist the push token in the messaging named collection
-        final NamedCollection messagingNamedCollection = getNamedCollection();
-        messagingNamedCollection.setString(
-                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, newPushToken);
+        persistPushToken(newPushToken);
 
         lastPushTokenSyncTimestamp = eventTimestamp;
 
@@ -647,6 +661,21 @@ class InternalMessagingUtils {
     // ========================================================================================
     // Datastore utils
     // ========================================================================================
+    /**
+     * Persists the provided push token in the Messaging extension {@link NamedCollection}.
+     *
+     * @param pushToken A {@code String} containing the push token to be persisted
+     */
+    static void persistPushToken(final String pushToken) {
+        final NamedCollection messagingNamedCollection = getNamedCollection();
+        if (pushToken == null) {
+            messagingNamedCollection.remove(
+                    MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER);
+            return;
+        }
+        messagingNamedCollection.setString(
+                MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, pushToken);
+    }
     /**
      * Retrieves the Messaging extension {@link NamedCollection} from the {@link DataStoring}
      * service.
