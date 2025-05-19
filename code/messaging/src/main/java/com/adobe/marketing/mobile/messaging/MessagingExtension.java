@@ -938,7 +938,10 @@ public final class MessagingExtension extends Extension {
 
     private void createMessagingSharedState(final String pushToken, final Event event) {
         final Map<String, Object> newMessagingState = new HashMap<>();
-        newMessagingState.put(MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        if (!StringUtils.isNullOrEmpty(pushToken)) {
+            newMessagingState.put(
+                    MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        }
         getApi().createSharedState(newMessagingState, event);
     }
     // endregion

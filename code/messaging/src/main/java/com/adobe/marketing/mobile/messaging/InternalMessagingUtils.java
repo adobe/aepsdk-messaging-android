@@ -668,6 +668,11 @@ class InternalMessagingUtils {
      */
     static void persistPushToken(final String pushToken) {
         final NamedCollection messagingNamedCollection = getNamedCollection();
+        if (pushToken == null) {
+            messagingNamedCollection.remove(
+                    MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER);
+            return;
+        }
         messagingNamedCollection.setString(
                 MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, pushToken);
     }

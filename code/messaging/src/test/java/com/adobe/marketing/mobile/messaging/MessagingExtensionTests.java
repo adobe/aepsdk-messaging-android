@@ -28,7 +28,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -350,7 +349,7 @@ public class MessagingExtensionTests {
                                                     .PUSH_IDENTIFIER),
                                     any());
                     verify(mockExtensionApi, times(1))
-                            .createSharedState(argThat(map -> map.containsValue(null)), isNull());
+                            .createSharedState(argThat(Map::isEmpty), isNull());
                 });
     }
 
@@ -1482,17 +1481,15 @@ public class MessagingExtensionTests {
                         messagingExtension.processEvent(mockEvent);
 
                         // verify
-                        // messaging shared state cleared by adding a null push token
+                        // messaging shared state cleared by adding an empty state
                         verify(mockExtensionApi, times(1))
-                                .createSharedState(
-                                        argThat(map -> map.containsValue(null)), eq(mockEvent));
+                                .createSharedState(argThat(Map::isEmpty), eq(mockEvent));
 
-                        // verify null push token added to named collection
+                        // verify push token removed from named collection
                         verify(mockNamedCollection, times(1))
-                                .setString(
+                                .remove(
                                         MessagingConstants.NamedCollectionKeys.Messaging
-                                                .PUSH_IDENTIFIER,
-                                        eq(nullable(String.class)));
+                                                .PUSH_IDENTIFIER);
                     }
                 });
     }
