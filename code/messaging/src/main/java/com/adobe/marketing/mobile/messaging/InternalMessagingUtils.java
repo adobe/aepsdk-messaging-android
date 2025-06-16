@@ -650,6 +650,7 @@ class InternalMessagingUtils {
         if (shouldSync) {
             // persist the push token in the messaging named collection
             persistPushToken(newPushToken);
+            // store the event timestamp of the last push token sync in-memory
             lastPushTokenSyncTimestamp = eventTimestamp;
         }
 
