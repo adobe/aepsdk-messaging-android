@@ -1762,7 +1762,7 @@ public class InternalMessagingUtilsTests {
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, false);
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, true);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
@@ -1777,7 +1777,7 @@ public class InternalMessagingUtilsTests {
                 () -> {
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, false);
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, true);
 
                     boolean result =
                             InternalMessagingUtils.shouldSyncPushToken(
@@ -1930,6 +1930,23 @@ public class InternalMessagingUtilsTests {
                             InternalMessagingUtils.shouldSyncPushToken(
                                     configSharedState, "sameToken", 0);
                     assertFalse(result);
+                });
+    }
+
+    @Test
+    public void
+    test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_outsideDefaultSyncTimeout_optimizePushSyncIsFalse() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
+                    Map<String, Object> configSharedState = new HashMap<>();
+                    configSharedState.put(
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, false);
+
+                    boolean result =
+                            InternalMessagingUtils.shouldSyncPushToken(
+                                    configSharedState, "sameToken", System.currentTimeMillis());
+                    assertTrue(result);
                 });
     }
 
