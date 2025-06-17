@@ -1935,7 +1935,7 @@ public class InternalMessagingUtilsTests {
 
     @Test
     public void
-    test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_outsideDefaultSyncTimeout_optimizePushSyncIsFalse() {
+            test_shouldSyncPushToken_returnsTrue_whenPushTokenIsSame_outsideDefaultSyncTimeout_optimizePushSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     when(mockNamedCollection.getString(anyString(), any())).thenReturn("sameToken");
