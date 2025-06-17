@@ -82,11 +82,11 @@
         android:text="Second Activity " />
 
     <Switch
-        android:id="@+id/pushRegistrationForceSyncSwitch"
+        android:id="@+id/pushRegistrationOptimizationSwitch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="false"
-        android:text="Force Push Registration Sync" />
+        android:text="Disable push sync optimization" />
 
     <Button
         android:id="@+id/btn_setPushIdentifier"

@@ -379,7 +379,7 @@ public final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
-            static final String PUSH_FORCE_SYNC = "messaging.pushForceSync";
+            static final String OPTIMIZE_PUSH_SYNC = "messaging.optimizePushSync";
 
             private Configuration() {}
         }

@@ -2346,7 +2346,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_forceSyncIsFalse() {
+    public void test_handlePushToken_whenPushTokenIsTheSame_optimizePushSyncIsTrue() {
         runUsingMockedServiceProvider(
                 () -> {
                     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -2362,7 +2362,7 @@ public class MessagingExtensionTests {
 
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, false);
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, true);
                     when(mockExtensionApi.getSharedState(
                                     eq("com.adobe.module.configuration"),
                                     any(Event.class),
@@ -2409,7 +2409,7 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_handlePushToken_whenPushTokenIsTheSame_forceSyncIsTrue() {
+    public void test_handlePushToken_whenPushTokenIsTheSame_optimizePushSyncIsFalse() {
         runUsingMockedServiceProvider(
                 () -> {
                     ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -2422,7 +2422,7 @@ public class MessagingExtensionTests {
 
                     Map<String, Object> configSharedState = new HashMap<>();
                     configSharedState.put(
-                            MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC, true);
+                            MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC, false);
                     when(mockExtensionApi.getSharedState(
                                     eq("com.adobe.module.configuration"),
                                     any(Event.class),

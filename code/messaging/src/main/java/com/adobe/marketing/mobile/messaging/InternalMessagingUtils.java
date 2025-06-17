@@ -39,10 +39,6 @@ import org.json.JSONObject;
 
 class InternalMessagingUtils {
     private static final String SELF_TAG = "InternalMessagingUtils";
-    private static final String FORCE_SYNC_MESSAGE =
-            "Push registration force sync is enabled. The push token will be synced.";
-    private static final String NEW_PUSH_TOKEN_MESSAGE =
-            "Push token is new or changed. The push token will be synced.";
     private static long lastPushTokenSyncTimestamp = 0;
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
@@ -608,43 +604,57 @@ class InternalMessagingUtils {
             return false;
         }
 
-        // check if the push token will be synced regardless if it has changed.
-        // if the value is not present, it will default to false
-        final boolean pushForceSync =
+        // check if the push token sync optimization will be used.
+        // if true, the push token will be synced only if it has changed.
+        // if the value is not present, it will default to true.
+        final boolean optimizePushSync =
                 DataReader.optBoolean(
                         configSharedState,
-                        MessagingConstants.SharedState.Configuration.PUSH_FORCE_SYNC,
-                        false);
+                        MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC,
+                        true);
 
         final String existingPushToken = getPushTokenFromPersistence();
         final boolean pushTokensMatch =
                 !StringUtils.isNullOrEmpty(existingPushToken)
                         && existingPushToken.equals(newPushToken);
-        if (pushTokensMatch && !pushForceSync) {
+        boolean shouldSync;
+        if (!pushTokensMatch) {
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
-                    "Existing push token matches the new push token, push token will not be"
+                    "Push token is new or changed. The push token will be synced.");
+
+            shouldSync = true;
+        } else if (!optimizePushSync && isPushTokenSyncTimeoutExpired(eventTimestamp)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Push registration sync optimization is disabled. The push token will be"
                             + " synced.");
-            return false;
-        } else if (pushTokensMatch && !isPushTokenSyncTimeoutExpired(eventTimestamp)) {
+
+            shouldSync = true;
+        } else {
+            final String blockedSyncReason =
+                    optimizePushSync
+                            ? "Push token sync optimization is enabled"
+                            : "Push registration sync optimization is disabled but the sync is"
+                                    + " within the 1 second timeout";
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     "shouldSyncPushToken",
-                    "Push token sync is within the previous push sync timeout window, push token"
-                            + " will not be synced.");
-            return false;
+                    "%s. The push token will not be synced.",
+                    blockedSyncReason);
+            shouldSync = false;
         }
 
-        final String syncReason = pushForceSync ? FORCE_SYNC_MESSAGE : NEW_PUSH_TOKEN_MESSAGE;
-        Log.debug(MessagingConstants.LOG_TAG, "shouldSyncPushToken", syncReason);
+        if (shouldSync) {
+            // persist the push token in the messaging named collection
+            persistPushToken(newPushToken);
+            // store the event timestamp of the last push token sync in-memory
+            lastPushTokenSyncTimestamp = eventTimestamp;
+        }
 
-        // persist the push token in the messaging named collection
-        persistPushToken(newPushToken);
-
-        lastPushTokenSyncTimestamp = eventTimestamp;
-
-        return true;
+        return shouldSync;
     }
 
     /**
