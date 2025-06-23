@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
@@ -745,15 +747,15 @@ class EdgePersonalizationResponseHandler {
         }
 
         int startingCount = existingPropositionsArray.size();
+        List<PropositionItem> newPropositionItems = new ArrayList<>();
 
         for (final Proposition proposition : propositions) {
             if (existingPropositionsArray.contains(proposition)) {
                 existingPropositionsArray.remove(proposition);
             } else {
                 final List<PropositionItem> propItems = proposition.getItems();
-                final PropositionItem item = propItems.isEmpty() ? null : propItems.get(0);
-                if (item != null) {
-                    item.track(MessagingEdgeEventType.TRIGGER);
+                if (!propItems.isEmpty()) {
+                    newPropositionItems.add(propItems.get(0));
                 }
             }
             existingPropositionsArray.add(proposition);
@@ -765,6 +767,12 @@ class EdgePersonalizationResponseHandler {
         }
 
         contentCardsBySurface.put(surface, existingPropositionsArray);
+
+        // Send batched trigger events for new proposition items
+        if (!newPropositionItems.isEmpty()) {
+            sendBatchedPropositionInteraction(
+                    newPropositionItems, null, MessagingEdgeEventType.TRIGGER);
+        }
 
         int newCount = existingPropositionsArray.size();
         if (startingCount != newCount) {
@@ -783,6 +791,44 @@ class EdgePersonalizationResponseHandler {
                                     surface.getUri());
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
         }
+    }
+
+    /**
+     * Sends a batched proposition interaction to the customer's experience event dataset.
+     *
+     * @param propositionItems {@link List} of {@link PropositionItem} instances to batch
+     * @param interaction custom {@code String} describing the interaction
+     * @param eventType {@link MessagingEdgeEventType} specifying event type for the interaction
+     */
+    private void sendBatchedPropositionInteraction(
+            @NonNull final List<PropositionItem> propositionItems,
+            @Nullable final String interaction,
+            @NonNull final MessagingEdgeEventType eventType) {
+
+        final PropositionInteractionBatcher propositionInteractionBatcher =
+                new PropositionInteractionBatcher(eventType, interaction, propositionItems);
+        final Map<String, Object> batchedPropositionInteractionXdm =
+                propositionInteractionBatcher.generateBatchedXdmMap();
+
+        if (batchedPropositionInteractionXdm == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Cannot send batched proposition interaction, could not generate XDM data.");
+            return;
+        }
+
+        // Record individual events in event history for each proposition item
+        for (final PropositionItem propositionItem : propositionItems) {
+            if (propositionItem.propositionReference != null
+                    && propositionItem.propositionReference.get() != null) {
+                PropositionHistory.record(
+                        propositionItem.getProposition().getActivityId(), eventType, interaction);
+            }
+        }
+
+        // Send the batched interaction event
+        parent.sendPropositionInteraction(batchedPropositionInteractionXdm);
     }
 
     private void updatePropositionInfo(
