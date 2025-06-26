@@ -175,7 +175,7 @@ class PropositionInteractionBatcher {
                 Log.debug(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
-                        "Invalid PropositionAction, unable to create proposition details.");
+                        "Invalid PropositionInteraction, unable to create proposition details.");
                 continue;
             }
             propositionDetails.add(detailMap);
