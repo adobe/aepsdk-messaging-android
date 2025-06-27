@@ -95,6 +95,12 @@
         android:text="Set push identifier" />
 
     <Button
+        android:id="@+id/btn_setPushIdentifierTwice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Push Identifier Twice" />
+
+    <Button
         android:id="@+id/btn_resetIdentities"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

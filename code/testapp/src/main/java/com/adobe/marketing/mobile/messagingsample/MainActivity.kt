@@ -323,6 +323,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        binding.btnSetPushIdentifierTwice.setOnClickListener {
+            lifecycleScope.launch {
+                // First call with a test identifier
+                val firstToken = "test_push_identifier_1"
+                Log.d("btnSetTwice", "First call with: $firstToken")
+                Toast.makeText(baseContext, "First setPushIdentifier call with: $firstToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(firstToken)
+                
+                // Second call with a different test identifier
+                val secondToken = "test_push_identifier_2"
+                Log.d("btnSetTwice", "Second call with: $secondToken")
+                Toast.makeText(baseContext, "Second setPushIdentifier call with: $secondToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(secondToken)
+            }
+        }
+
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
         }
