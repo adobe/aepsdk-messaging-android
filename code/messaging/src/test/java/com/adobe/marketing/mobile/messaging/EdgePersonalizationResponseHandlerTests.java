@@ -84,7 +84,7 @@ public class EdgePersonalizationResponseHandlerTests {
     private final ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
     private final ArgumentCaptor<AdobeCallbackWithError> adobeCallbackWithErrorArgumentCaptor =
             ArgumentCaptor.forClass(AdobeCallbackWithError.class);
-    private final ArgumentCaptor<List<LaunchRule>> inAppRulesListCaptor =
+    private final ArgumentCaptor<List<LaunchRule>> rulesListCaptor =
             ArgumentCaptor.forClass(List.class);
     private final ArgumentCaptor<List<LaunchRule>> feedRulesListCaptor =
             ArgumentCaptor.forClass(List.class);
@@ -860,14 +860,8 @@ public class EdgePersonalizationResponseHandlerTests {
                         Surface inappSurface = new Surface();
                         Surface feedSurface = new Surface("apifeed");
                         Surface mockSurface = new Surface("mockSurface");
-                        Map<Surface, List<PropositionItem>> matchedFeedRules = new HashMap<>();
-                        matchedFeedRules.put(
-                                feedSurface,
-                                MessagingTestUtils.createMessagingPropositionItemList(4));
                         when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
                                 .thenCallRealMethod();
-                        when(mockContentCardRulesEngine.evaluate(any(Event.class)))
-                                .thenReturn(matchedFeedRules);
 
                         // setup in progress in-app propositions
                         MessageTestConfig config = new MessageTestConfig();
@@ -910,14 +904,30 @@ public class EdgePersonalizationResponseHandlerTests {
                         // test
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
-                        // verify parsed rules replaced in in-app rules engine
-                        verify(mockMessagingRulesEngine, times(1))
-                                .replaceRules(inAppRulesListCaptor.capture());
-                        assertEquals(3, inAppRulesListCaptor.getValue().size());
+                        // verify parsed rules replaced in rules engine for in-app and content card event history
+                        verify(mockMessagingRulesEngine, times(2))
+                                .replaceRules(rulesListCaptor.capture());
+                        List<LaunchRule> inAppRules = new ArrayList<>();
+                        List<LaunchRule> eventHistoryRules = new ArrayList<>();
+                        for (List<LaunchRule> launchRules: rulesListCaptor.getAllValues()) {
+                            if(launchRules != null && !launchRules.isEmpty()) {
+                                String ruleType = (String) launchRules.get(0).getConsequenceList().get(0).getDetail().get(MessagingTestConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
+                                if (ruleType != null) {
+                                    if (ruleType.equals(SchemaType.INAPP.toString())) {
+                                        inAppRules.addAll(launchRules);
+                                    } else if (ruleType.equals(SchemaType.EVENT_HISTORY_OPERATION.toString())) {
+                                        eventHistoryRules.addAll(launchRules);
+                                    }
+                                }
+                            }
+                        }
+                        // verify one rule replaced in rules engine for each in-app
+                        assertEquals(3, inAppRules.size());
+                        // verify three event history rules replaced in rules engine for each content card
+                        assertEquals(12, eventHistoryRules.size());
 
                         // verify in-app rules are in priority order
-                        MessagingTestUtils.verifyInAppRulesOrdering(
-                                inAppRulesListCaptor.getValue());
+                        MessagingTestUtils.verifyInAppRulesOrdering(inAppRules);
 
                         // verify parsed rules replaced in feed rules engine
                         verify(mockContentCardRulesEngine, times(1))
@@ -1026,12 +1036,12 @@ public class EdgePersonalizationResponseHandlerTests {
                         // verify parsed rules replaced in in-app rules engine only for the first
                         // response
                         verify(mockMessagingRulesEngine, times(1))
-                                .replaceRules(inAppRulesListCaptor.capture());
-                        assertEquals(3, inAppRulesListCaptor.getValue().size());
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(3, rulesListCaptor.getValue().size());
 
                         // verify in-app rules are in priority order
                         MessagingTestUtils.verifyInAppRulesOrdering(
-                                inAppRulesListCaptor.getValue());
+                                rulesListCaptor.getValue());
 
                         // verify parsed rules replaced in feed rules engine for both responses
                         verify(mockContentCardRulesEngine, times(2))
@@ -1648,13 +1658,13 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // verify cached rules replaced in rules engine
                         verify(mockMessagingRulesEngine, times(1))
-                                .replaceRules(inAppRulesListCaptor.capture());
-                        assertEquals(5, inAppRulesListCaptor.getValue().size());
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(5, rulesListCaptor.getValue().size());
 
                         // verify in-app rules are in priority order after being loaded from the
                         // cache
                         MessagingTestUtils.verifyInAppRulesOrdering(
-                                inAppRulesListCaptor.getValue());
+                                rulesListCaptor.getValue());
                     }
                 });
     }
@@ -1762,7 +1772,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                                 {
                                                     add(
                                                             MessagingTestUtils.getMapFromFile(
-                                                                    "feedProposition.json"));
+                                                                    "contentCardProposition.json"));
                                                 }
                                             }));
                         } catch (Exception e) {

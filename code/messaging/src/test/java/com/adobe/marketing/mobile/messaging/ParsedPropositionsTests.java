@@ -78,11 +78,11 @@ public class ParsedPropositionsTests {
                         });
 
         mockFeedSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
-        mockFeedContent = MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
+        mockFeedContent = MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
         mockFeedPropositionItem = new PropositionItem("feed", SchemaType.RULESET, mockFeedContent);
         mockFeedProposition =
                 new Proposition(
-                        "feed",
+                        "contentcard",
                         mockFeedSurface.getUri(),
                         mockScopeDetails,
                         new ArrayList<PropositionItem>() {
@@ -621,14 +621,22 @@ public class ParsedPropositionsTests {
         PropositionInfo feedPropositionInfo =
                 parsedPropositions.propositionInfoToCache.get(mockFeedMessageId);
         Assert.assertNotNull(feedPropositionInfo);
-        Assert.assertEquals("feed", feedPropositionInfo.id);
+        Assert.assertEquals("contentcard", feedPropositionInfo.id);
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
         Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
-        Assert.assertEquals(1, parsedPropositions.surfaceRulesBySchemaType.size());
+        Assert.assertEquals(2, parsedPropositions.surfaceRulesBySchemaType.size());
         Map<Surface, List<LaunchRule>> feedRules =
                 parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD);
         Assert.assertNotNull(feedRules);
         Assert.assertEquals(1, feedRules.size());
+
+        Map<Surface, List<LaunchRule>> eventHistoryRules =
+                parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.EVENT_HISTORY_OPERATION);
+        Assert.assertNotNull(eventHistoryRules);
+        Assert.assertEquals(1, eventHistoryRules.size());
+        List<LaunchRule> eventHistoryRulesList = eventHistoryRules.get(mockFeedSurface);
+        Assert.assertNotNull(eventHistoryRulesList);
+        Assert.assertEquals(3, eventHistoryRulesList.size());
     }
 
     @Test

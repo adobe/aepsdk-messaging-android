@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 import com.adobe.marketing.mobile.gradle.BuildConstants
+import org.jetbrains.kotlin.gradle.utils.`is`
 
 plugins {
     id("com.android.application")
@@ -57,11 +58,21 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion")
-    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
-    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
-    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
+    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:8e5fd380cd") {
+        isTransitive = false
+    }
+    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion") {
+        isTransitive = false
+    }
+    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion") {
+        isTransitive = false
+    }
+    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
+        isTransitive = false
+    }
+    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
+        isTransitive = false
+    }
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")

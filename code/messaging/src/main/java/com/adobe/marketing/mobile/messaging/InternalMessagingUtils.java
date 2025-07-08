@@ -569,28 +569,27 @@ class InternalMessagingUtils {
      *
      * @param surface A {@link Surface} key used to update a {@link List<LaunchRule>} value in the
      *     provided {@link Map<Surface, List<LaunchRule>>}
-     * @param rulesToAdd A {@link List<LaunchRule>} list to add in the provided {@code Map<Surface,
+     * @param ruleToAdd A {@link LaunchRule} add in the provided {@code Map<Surface,
      *     List<LaunchRule>>}
      * @param mapToUpdate The {@code Map<Surface, List<LaunchRule>>} to be updated with the provided
      *     {@code Surface} and {@code List<LaunchRule>} objects
      * @return the updated {@link Map<Surface, List<LaunchRule>>} map
      */
-    public static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(
+    static Map<Surface, List<LaunchRule>> updateRuleMapForSurface(
             final Surface surface,
-            final List<LaunchRule> rulesToAdd,
+            final LaunchRule ruleToAdd,
             final Map<Surface, List<LaunchRule>> mapToUpdate) {
-        if (MessagingUtils.isNullOrEmpty(rulesToAdd)) {
+        if (ruleToAdd == null) {
             return mapToUpdate;
         }
         final Map<Surface, List<LaunchRule>> updatedMap = new HashMap<>(mapToUpdate);
-        final List<LaunchRule> list =
-                updatedMap.get(surface) != null
-                        ? updatedMap.get(surface)
-                        : MessagingUtils.createMutableList(rulesToAdd);
-        if (updatedMap.get(surface) != null) {
-            list.addAll(rulesToAdd);
+        List<LaunchRule> existingList = updatedMap.get(surface);
+        if (existingList != null) {
+            existingList.add(ruleToAdd);
+        } else {
+            existingList = MessagingUtils.createMutableList(ruleToAdd);
         }
-        updatedMap.put(surface, list);
+        updatedMap.put(surface, existingList);
         return updatedMap;
     }
 }

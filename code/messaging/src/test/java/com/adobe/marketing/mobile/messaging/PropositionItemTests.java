@@ -870,7 +870,7 @@ public class PropositionItemTests {
     @Test
     public void test_getFeedItemSchemaData() throws MessageRequiredFieldMissingException {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
+        String rulesJson = MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
         List<RuleConsequence> ruleConsequences = parseRuleConsequence(rulesJson);
 
         // test

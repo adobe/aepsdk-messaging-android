@@ -439,7 +439,7 @@ public class MessagingTestUtils {
             return payload;
         }
         for (int i = 0; i < config.count; i++) {
-            Map<String, Object> feedProposition = getMapFromFile("feedProposition.json");
+            Map<String, Object> feedProposition = getMapFromFile("contentCardProposition.json");
 
             // activity id modification. we want to modify the proposition activity id
             // to be unique for each proposition by replacing the last two characters

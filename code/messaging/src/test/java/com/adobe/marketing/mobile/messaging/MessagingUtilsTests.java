@@ -69,7 +69,7 @@ public class MessagingUtilsTests {
                 });
 
         final Map<String, Object> content =
-                MessagingTestUtils.getMapFromFile("feedPropositionContent.json");
+                MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
         PropositionItem mockPropositionItemToAdd1 =
                 new PropositionItem("mockId1", SchemaType.DEFAULT_CONTENT, content);
         mockPropositionToAdd1 =

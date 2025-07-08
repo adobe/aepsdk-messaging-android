@@ -71,10 +71,13 @@ class EdgePersonalizationResponseHandler {
     // used while processing streaming payloads for a single request
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
 
-    private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
+    private final Map<Surface, List<LaunchRule>> inAppAndEventHistoryRulesBySurface = new HashMap<>();
 
     // used to manage content card rules between multiple surfaces and multiple requests
     private final Map<Surface, List<LaunchRule>> contentCardRulesBySurface = new HashMap<>();
+
+    // used to manage content card rules between multiple surfaces and multiple requests
+    private final Map<Surface, List<LaunchRule>> contentCardEventHistoryRulesBySurface = new HashMap<>();
 
     // holds content cards that the user has qualified for
     private Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
@@ -630,36 +633,39 @@ class EdgePersonalizationResponseHandler {
             final Map<Surface, List<LaunchRule>> rulesMaps = newRules.getValue();
             switch (schemaType) {
                 case INAPP:
+                case EVENT_HISTORY_OPERATION:
                     Log.trace(
                             MessagingConstants.LOG_TAG,
                             SELF_TAG,
-                            "Updating in-app message definitions for surfaces %s.",
+                            "Updating rule definitions for surfaces %s.",
                             newSurfaces);
 
-                    // replace rules for each in-app surface we got back
-                    inAppRulesBySurface.putAll(rulesMaps);
+                    // replace rules for each surface we got back
+                    inAppAndEventHistoryRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no in-app content returned
+                    // remove any surfaces that were requested but had no content returned
                     for (final Surface surface : surfacesToRemove) {
-                        inAppRulesBySurface.remove(surface);
+                        inAppAndEventHistoryRulesBySurface.remove(surface);
                     }
 
                     // combine all our rules
-                    final Collection<List<LaunchRule>> allInAppRules = inAppRulesBySurface.values();
-                    final List<LaunchRule> collectedInAppRules = new ArrayList<>();
+                    final Collection<List<LaunchRule>> allInAppRules = inAppAndEventHistoryRulesBySurface.values();
+                    final List<LaunchRule> collectedInAppAndEventHistoryRules = new ArrayList<>();
                     for (final List<LaunchRule> inAppRules : allInAppRules) {
-                        collectedInAppRules.addAll(inAppRules);
+                        collectedInAppAndEventHistoryRules.addAll(inAppRules);
                     }
 
-                    // pre-fetch the assets for this message if there are any defined
-                    final List<RuleConsequence> collectedConsequences = new ArrayList<>();
-                    for (final LaunchRule rule : collectedInAppRules) {
-                        collectedConsequences.addAll(rule.getConsequenceList());
+                    // pre-fetch the assets for in-app message if there are any defined
+                    if (schemaType == SchemaType.INAPP) {
+                        final List<RuleConsequence> collectedConsequences = new ArrayList<>();
+                        for (final LaunchRule rule : collectedInAppAndEventHistoryRules) {
+                            collectedConsequences.addAll(rule.getConsequenceList());
+                        }
+                        cacheImageAssetsFromPayload(collectedConsequences);
                     }
-                    cacheImageAssetsFromPayload(collectedConsequences);
 
-                    // update rules in in-app engine
-                    launchRulesEngine.replaceRules(collectedInAppRules);
+                    // update rules in launch rules engine
+                    launchRulesEngine.replaceRules(collectedInAppAndEventHistoryRules);
                     break;
                 case CONTENT_CARD:
                     Log.trace(

@@ -341,6 +341,8 @@ public class MessagingTestConstants {
         static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
         static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
         static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
+        static final String SCHEMA_CONTENT_CARD = "https://ns.adobe.com/personalization/message/content-card";
+        static final String SCHEMA_EVENT_HISTORY_OPERATION = "https://ns.adobe.com/personalization/eventHistoryOperation";
 
         private SchemaValues() {
         }
