@@ -723,7 +723,8 @@ class EdgePersonalizationResponseHandler {
                     // replace rules for each surface we got back
                     eventHistoryRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no event history rule returned
+                    // remove any surfaces that were requested but
+                    // had no event history rule returned
                     for (final Surface surface : surfacesToRemove) {
                         eventHistoryRulesBySurface.remove(surface);
                     }

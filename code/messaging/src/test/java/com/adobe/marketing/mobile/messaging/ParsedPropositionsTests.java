@@ -78,8 +78,10 @@ public class ParsedPropositionsTests {
                         });
 
         mockContentCardSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
-        mockContentCardContent = MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
-        mockContentCardPropositionItem = new PropositionItem("feed", SchemaType.RULESET, mockContentCardContent);
+        mockContentCardContent =
+                MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
+        mockContentCardPropositionItem =
+                new PropositionItem("feed", SchemaType.RULESET, mockContentCardContent);
         mockContentProposition =
                 new Proposition(
                         "contentcard",
