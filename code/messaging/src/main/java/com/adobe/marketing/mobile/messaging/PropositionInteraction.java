@@ -58,11 +58,37 @@ class PropositionInteraction {
 
     // Returns proposition interaction XDM
     Map<String, Object> getPropositionInteractionXDM() {
+        final Map<String, Object> propositionDetailsData = generatePropositionDetails();
+        if (propositionDetailsData == null) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unable to create proposition interaction data, proposition details were unable"
+                            + " to be generated for this message.");
+            return null;
+        }
+
+        final Map<String, Object> propositionEventType = new HashMap<>();
+        propositionEventType.put(eventType.getPropositionEventType(), 1);
+
+        final Map<String, Object> decisioning = new HashMap<>();
+        decisioning.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_EVENT_TYPE,
+                propositionEventType);
+        decisioning.put(
+                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS,
+                Collections.singletonList(propositionDetailsData));
+
+        return PropositionInteractionXdmUtils.generateXdmMap(decisioning, interaction, eventType);
+    }
+
+    // generates a proposition detail data map for a proposition interaction
+    Map<String, Object> generatePropositionDetails() {
         if (propositionInfo == null) {
             Log.warning(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "Unable to create proposition interaction data, PropositionInfo was not found"
+                    "Unable to create proposition details data, PropositionInfo was not found"
                             + " for this message.");
             return null;
         }
@@ -70,7 +96,7 @@ class PropositionInteraction {
             Log.warning(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "Unable to create proposition interaction data, MessagingEdgeEventType was not"
+                    "Unable to create proposition details data, MessagingEdgeEventType was not"
                             + " found for this message.");
             return null;
         }
@@ -104,48 +130,6 @@ class PropositionInteraction {
                     MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ITEMS, items);
         }
 
-        final Map<String, Object> propositionEventType = new HashMap<>();
-        propositionEventType.put(eventType.getPropositionEventType(), 1);
-
-        final Map<String, Object> decisioning = new HashMap<>();
-        decisioning.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_EVENT_TYPE,
-                propositionEventType);
-        decisioning.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITIONS,
-                Collections.singletonList(propositionDetailsData));
-
-        // two use cases for including `propositionAction`:
-        // 1. if this is an interact event, include `id` and `label`
-        // 2. if this is a suppressDisplay event, include `reason`
-        if (!StringUtils.isNullOrEmpty(interaction)) {
-            final Map<String, String> propositionAction = new HashMap<>();
-            if (eventType == MessagingEdgeEventType.INTERACT) {
-                propositionAction.put(
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.ID, interaction);
-                propositionAction.put(
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.LABEL, interaction);
-            } else if (eventType == MessagingEdgeEventType.SUPPRESS_DISPLAY) {
-                propositionAction.put(
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.REASON, interaction);
-            }
-            if (!propositionAction.isEmpty()) {
-                decisioning.put(
-                        MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_ACTION,
-                        propositionAction);
-            }
-        }
-
-        final Map<String, Object> experience = new HashMap<>();
-        experience.put(
-                MessagingConstants.EventDataKeys.Messaging.Inbound.Key.DECISIONING, decisioning);
-
-        final Map<String, Object> xdm = new HashMap<>();
-        xdm.put(
-                MessagingConstants.EventDataKeys.Messaging.XDMDataKeys.EVENT_TYPE,
-                eventType.toString());
-        xdm.put(MessagingConstants.TrackingKeys.EXPERIENCE, experience);
-
-        return xdm;
+        return propositionDetailsData;
     }
 }
