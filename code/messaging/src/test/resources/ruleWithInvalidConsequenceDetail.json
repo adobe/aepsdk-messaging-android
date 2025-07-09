@@ -1,0 +1,46 @@
+{
+    "version": 1,
+    "rules": [
+        {
+            "condition": {
+                "type": "group",
+                "definition": {
+                    "logic": "and",
+                    "conditions": [
+                        {
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "ge",
+                                "values": [
+                                    1691541497
+                                ]
+                            }
+                        },
+                        {
+                            "type": "matcher",
+                            "definition": {
+                                "key": "~timestampu",
+                                "matcher": "le",
+                                "values": [
+                                    1723163897
+                                ]
+                            }
+                        }
+                    ]
+                }
+            },
+            "consequences": [
+                {
+                    "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
+                    "type": "schema",
+                    "detail": {
+                        "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
+                        "schema": "https://ns.adobe.com/personalization/inbound/iamunknown",
+                        "data": {}
+                    }
+                }
+            ]
+        }
+    ]
+}

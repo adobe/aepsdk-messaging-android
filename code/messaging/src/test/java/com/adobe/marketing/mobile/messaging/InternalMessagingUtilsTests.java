@@ -1669,7 +1669,8 @@ public class InternalMessagingUtilsTests {
 
         // test
         Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(surface, mockedLaunchRule, originalMap);
+                InternalMessagingUtils.updateRuleMapForSurface(
+                        surface, mockedLaunchRule, originalMap);
 
         // verify
         assertNotSame(originalMap, result);

@@ -36,11 +36,11 @@ public class ParsedPropositionsTests {
     private Surface mockInAppSurface;
     private final String mockInAppConsequenceId = "6ac78390-84e3-4d35-b798-8e7080e69a67";
 
-    private PropositionItem mockFeedPropositionItem;
-    private Proposition mockFeedProposition;
-    private Surface mockFeedSurface;
-    private final String mockFeedMessageId = "183639c4-cb37-458e-a8ef-4e130d767ebf";
-    private Map<String, Object> mockFeedContent;
+    private PropositionItem mockContentCardPropositionItem;
+    private Proposition mockContentProposition;
+    private Surface mockContentCardSurface;
+    private final String mockContentCardMessageId = "183639c4-cb37-458e-a8ef-4e130d767ebf";
+    private Map<String, Object> mockContentCardContent;
 
     private PropositionItem mockCodeBasedPropositionItem;
     private Proposition mockCodeBasedProposition;
@@ -77,17 +77,17 @@ public class ParsedPropositionsTests {
                             }
                         });
 
-        mockFeedSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
-        mockFeedContent = MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
-        mockFeedPropositionItem = new PropositionItem("feed", SchemaType.RULESET, mockFeedContent);
-        mockFeedProposition =
+        mockContentCardSurface = Surface.fromUriString("mobileapp://mockPackageName/feed");
+        mockContentCardContent = MessagingTestUtils.getMapFromFile("contentCardPropositionContent.json");
+        mockContentCardPropositionItem = new PropositionItem("feed", SchemaType.RULESET, mockContentCardContent);
+        mockContentProposition =
                 new Proposition(
                         "contentcard",
-                        mockFeedSurface.getUri(),
+                        mockContentCardSurface.getUri(),
                         mockScopeDetails,
                         new ArrayList<PropositionItem>() {
                             {
-                                add(mockFeedPropositionItem);
+                                add(mockContentCardPropositionItem);
                             }
                         });
 
@@ -145,10 +145,10 @@ public class ParsedPropositionsTests {
                 new HashMap<Surface, List<Proposition>>() {
                     {
                         put(
-                                mockFeedSurface,
+                                mockContentCardSurface,
                                 new ArrayList<Proposition>() {
                                     {
-                                        add(mockFeedProposition);
+                                        add(mockContentProposition);
                                     }
                                 });
                         put(
@@ -589,16 +589,16 @@ public class ParsedPropositionsTests {
     }
 
     @Test
-    public void test_parsedPropositionConstructor_WithFeedProposition() {
+    public void test_parsedPropositionConstructor_WithContentCardProposition() {
         // setup
         Map<Surface, List<Proposition>> propositions =
                 new HashMap<Surface, List<Proposition>>() {
                     {
                         put(
-                                mockFeedSurface,
+                                mockContentCardSurface,
                                 new ArrayList<Proposition>() {
                                     {
-                                        add(mockFeedProposition);
+                                        add(mockContentProposition);
                                     }
                                 });
                     }
@@ -610,7 +610,7 @@ public class ParsedPropositionsTests {
                         propositions,
                         new ArrayList<Surface>() {
                             {
-                                add(mockFeedSurface);
+                                add(mockContentCardSurface);
                             }
                         },
                         mockExtensionApi);
@@ -619,7 +619,7 @@ public class ParsedPropositionsTests {
         Assert.assertNotNull(parsedPropositions);
         Assert.assertEquals(1, parsedPropositions.propositionInfoToCache.size());
         PropositionInfo feedPropositionInfo =
-                parsedPropositions.propositionInfoToCache.get(mockFeedMessageId);
+                parsedPropositions.propositionInfoToCache.get(mockContentCardMessageId);
         Assert.assertNotNull(feedPropositionInfo);
         Assert.assertEquals("contentcard", feedPropositionInfo.id);
         Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
@@ -634,7 +634,7 @@ public class ParsedPropositionsTests {
                 parsedPropositions.surfaceRulesBySchemaType.get(SchemaType.EVENT_HISTORY_OPERATION);
         Assert.assertNotNull(eventHistoryRules);
         Assert.assertEquals(1, eventHistoryRules.size());
-        List<LaunchRule> eventHistoryRulesList = eventHistoryRules.get(mockFeedSurface);
+        List<LaunchRule> eventHistoryRulesList = eventHistoryRules.get(mockContentCardSurface);
         Assert.assertNotNull(eventHistoryRulesList);
         Assert.assertEquals(3, eventHistoryRulesList.size());
     }
@@ -858,6 +858,56 @@ public class ParsedPropositionsTests {
         // setup
         final Map<String, Object> ruleWithNoConsequenceContent =
                 MessagingTestUtils.getMapFromFile("ruleWithNoConsequenceDetail.json");
+        mockInAppPropositionItem =
+                new PropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
+        mockInAppProposition =
+                new Proposition(
+                        "inapp",
+                        mockInAppSurface.getUri(),
+                        mockScopeDetails,
+                        new ArrayList<PropositionItem>() {
+                            {
+                                add(mockInAppPropositionItem);
+                            }
+                        });
+        Map<Surface, List<Proposition>> propositions =
+                new HashMap<Surface, List<Proposition>>() {
+                    {
+                        put(
+                                mockInAppSurface,
+                                new ArrayList<Proposition>() {
+                                    {
+                                        add(mockInAppProposition);
+                                    }
+                                });
+                    }
+                };
+
+        // test
+        ParsedPropositions parsedPropositions =
+                new ParsedPropositions(
+                        propositions,
+                        new ArrayList<Surface>() {
+                            {
+                                add(mockInAppSurface);
+                            }
+                        },
+                        mockExtensionApi);
+
+        // verify
+        Assert.assertNotNull(parsedPropositions);
+        Assert.assertEquals(0, parsedPropositions.propositionInfoToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToCache.size());
+        Assert.assertEquals(0, parsedPropositions.propositionsToPersist.size());
+        Assert.assertEquals(0, parsedPropositions.surfaceRulesBySchemaType.size());
+    }
+
+    @Test
+    public void test_parsedPropositionConstructor_PropositionRuleWithInvalidConsequenceDetailsData()
+            throws MessageRequiredFieldMissingException {
+        // setup
+        final Map<String, Object> ruleWithNoConsequenceContent =
+                MessagingTestUtils.getMapFromFile("ruleWithInvalidConsequenceDetail.json");
         mockInAppPropositionItem =
                 new PropositionItem("inapp", SchemaType.RULESET, ruleWithNoConsequenceContent);
         mockInAppProposition =

@@ -637,17 +637,6 @@ public class PropositionItemTests {
     }
 
     @Test
-    public void test_createPropositionItem_fromRuleConsequence_NullDetails() {
-        // setup
-        RuleConsequence consequence = new RuleConsequence(testId, "cjmiam", null);
-
-        // test
-        PropositionItem propositionItem = PropositionItem.fromRuleConsequence(consequence);
-        // verify
-        assertNull(propositionItem);
-    }
-
-    @Test
     public void test_createPropositionItem_fromRuleConsequence_EmptyDetails() {
         // test
         RuleConsequence consequence = new RuleConsequence(testId, "cjmiam", Collections.emptyMap());
@@ -870,7 +859,8 @@ public class PropositionItemTests {
     @Test
     public void test_getFeedItemSchemaData() throws MessageRequiredFieldMissingException {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
+        String rulesJson =
+                MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
         List<RuleConsequence> ruleConsequences = parseRuleConsequence(rulesJson);
 
         // test

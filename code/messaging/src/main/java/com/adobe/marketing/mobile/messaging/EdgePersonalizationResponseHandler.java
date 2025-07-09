@@ -71,13 +71,14 @@ class EdgePersonalizationResponseHandler {
     // used while processing streaming payloads for a single request
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
 
-    private final Map<Surface, List<LaunchRule>> inAppAndEventHistoryRulesBySurface = new HashMap<>();
+    // used to manage in app rules between multiple surfaces and multiple requests
+    private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
 
     // used to manage content card rules between multiple surfaces and multiple requests
     private final Map<Surface, List<LaunchRule>> contentCardRulesBySurface = new HashMap<>();
 
     // used to manage content card rules between multiple surfaces and multiple requests
-    private final Map<Surface, List<LaunchRule>> contentCardEventHistoryRulesBySurface = new HashMap<>();
+    private final Map<Surface, List<LaunchRule>> eventHistoryRulesBySurface = new HashMap<>();
 
     // holds content cards that the user has qualified for
     private Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
@@ -623,6 +624,14 @@ class EdgePersonalizationResponseHandler {
     private void updateRulesEngines(
             final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
             final List<Surface> requestedSurfaces) {
+        final List<LaunchRule> collectedInAppAndEventHistoryRules = new ArrayList<>();
+        if (surfaceRulesBySchemaType == null || surfaceRulesBySchemaType.isEmpty()) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "No rules to update in the rules engine - skipping.");
+            return;
+        }
         for (final Map.Entry<SchemaType, Map<Surface, List<LaunchRule>>> newRules :
                 surfaceRulesBySchemaType.entrySet()) {
             final Set<Surface> newSurfaces = newRules.getValue().keySet();
@@ -633,39 +642,34 @@ class EdgePersonalizationResponseHandler {
             final Map<Surface, List<LaunchRule>> rulesMaps = newRules.getValue();
             switch (schemaType) {
                 case INAPP:
-                case EVENT_HISTORY_OPERATION:
                     Log.trace(
                             MessagingConstants.LOG_TAG,
                             SELF_TAG,
-                            "Updating rule definitions for surfaces %s.",
+                            "Updating in-app definitions for surfaces %s.",
                             newSurfaces);
 
-                    // replace rules for each surface we got back
-                    inAppAndEventHistoryRulesBySurface.putAll(rulesMaps);
+                    // replace rules for each in-app surface we got back
+                    inAppRulesBySurface.putAll(rulesMaps);
 
-                    // remove any surfaces that were requested but had no content returned
+                    // remove any surfaces that were requested but had no in-app content returned
                     for (final Surface surface : surfacesToRemove) {
-                        inAppAndEventHistoryRulesBySurface.remove(surface);
+                        inAppRulesBySurface.remove(surface);
                     }
 
                     // combine all our rules
-                    final Collection<List<LaunchRule>> allInAppRules = inAppAndEventHistoryRulesBySurface.values();
-                    final List<LaunchRule> collectedInAppAndEventHistoryRules = new ArrayList<>();
+                    final Collection<List<LaunchRule>> allInAppRules = inAppRulesBySurface.values();
+                    final List<LaunchRule> collectedInAppRules = new ArrayList<>();
                     for (final List<LaunchRule> inAppRules : allInAppRules) {
-                        collectedInAppAndEventHistoryRules.addAll(inAppRules);
+                        collectedInAppRules.addAll(inAppRules);
                     }
 
                     // pre-fetch the assets for in-app message if there are any defined
-                    if (schemaType == SchemaType.INAPP) {
-                        final List<RuleConsequence> collectedConsequences = new ArrayList<>();
-                        for (final LaunchRule rule : collectedInAppAndEventHistoryRules) {
-                            collectedConsequences.addAll(rule.getConsequenceList());
-                        }
-                        cacheImageAssetsFromPayload(collectedConsequences);
+                    final List<RuleConsequence> collectedInAppConsequences = new ArrayList<>();
+                    for (final LaunchRule rule : collectedInAppRules) {
+                        collectedInAppConsequences.addAll(rule.getConsequenceList());
                     }
-
-                    // update rules in launch rules engine
-                    launchRulesEngine.replaceRules(collectedInAppAndEventHistoryRules);
+                    cacheImageAssetsFromPayload(collectedInAppConsequences);
+                    collectedInAppAndEventHistoryRules.addAll(collectedInAppRules);
                     break;
                 case CONTENT_CARD:
                     Log.trace(
@@ -706,6 +710,30 @@ class EdgePersonalizationResponseHandler {
                     updateQualifiedContentCardsForEvent(event);
 
                     break;
+                case EVENT_HISTORY_OPERATION:
+                    // Event history consequences need to be processed by the rules engine
+                    // which allows for operations like insert into event history database
+                    // So it is loaded into the launch rules engine shared with in-app rules
+                    Log.trace(
+                            MessagingConstants.LOG_TAG,
+                            SELF_TAG,
+                            "Updating content card event history rule definitions for surfaces %s.",
+                            newSurfaces);
+
+                    // replace rules for each surface we got back
+                    eventHistoryRulesBySurface.putAll(rulesMaps);
+
+                    // remove any surfaces that were requested but had no event history rule returned
+                    for (final Surface surface : surfacesToRemove) {
+                        eventHistoryRulesBySurface.remove(surface);
+                    }
+
+                    // combine all our event history rules
+                    final Collection<List<LaunchRule>> allEventHistoryRules =
+                            eventHistoryRulesBySurface.values();
+                    for (final List<LaunchRule> eventHistoryRules : allEventHistoryRules) {
+                        collectedInAppAndEventHistoryRules.addAll(eventHistoryRules);
+                    }
                 default:
                     // no-op
                     Log.trace(
@@ -716,6 +744,8 @@ class EdgePersonalizationResponseHandler {
                     break;
             }
         }
+        // update rules in launch rules engine
+        launchRulesEngine.replaceRules(collectedInAppAndEventHistoryRules);
     }
 
     /**

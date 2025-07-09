@@ -110,7 +110,8 @@ public class ParsedPropositions {
                                 case DEFAULT_CONTENT:
                                     final PropositionInfo propositionInfo =
                                             PropositionInfo.createFromProposition(proposition);
-                                    propositionInfoToCache.put(consequence.getId(), propositionInfo);
+                                    propositionInfoToCache.put(
+                                            consequence.getId(), propositionInfo);
                                     propositionsToPersist =
                                             MessagingUtils.updatePropositionMapForSurface(
                                                     surface, proposition, propositionsToPersist);
@@ -125,7 +126,10 @@ public class ParsedPropositions {
                                     mergeRules(parsedRule, surface, SchemaType.CONTENT_CARD);
                                     break;
                                 case EVENT_HISTORY_OPERATION:
-                                    mergeRules(parsedRule, surface, SchemaType.EVENT_HISTORY_OPERATION);
+                                    mergeRules(
+                                            parsedRule,
+                                            surface,
+                                            SchemaType.EVENT_HISTORY_OPERATION);
                                 default:
                                     break;
                             }
