@@ -130,6 +130,7 @@ public class ParsedPropositions {
                                             parsedRule,
                                             surface,
                                             SchemaType.EVENT_HISTORY_OPERATION);
+                                    break;
                                 default:
                                     break;
                             }

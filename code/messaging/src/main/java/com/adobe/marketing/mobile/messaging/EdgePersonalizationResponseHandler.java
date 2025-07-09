@@ -735,6 +735,7 @@ class EdgePersonalizationResponseHandler {
                     for (final List<LaunchRule> eventHistoryRules : allEventHistoryRules) {
                         collectedInAppAndEventHistoryRules.addAll(eventHistoryRules);
                     }
+                    break;
                 default:
                     // no-op
                     Log.trace(
