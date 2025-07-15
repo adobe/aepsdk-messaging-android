@@ -89,6 +89,7 @@ public final class MessagingConstants {
         static final String MOBILE_PARAMETERS = "mobileParameters";
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
+        static final String OPERATION = "operation";
 
         private ConsequenceDetailDataKeys() {}
     }
@@ -351,6 +352,12 @@ public final class MessagingConstants {
         static final String EVENT_HISTORY_WRITE = "com.adobe.eventSource.eventHistoryWrite";
 
         private EventSource() {}
+    }
+
+    final class EventHistoryOperationEventTypes {
+        static final String QUALIFY = "qualify";
+        static final String UNQUALIFY = "unqualify";
+        static final String DISQUALIFY = "disqualify";
     }
 
     final class EventMask {

@@ -361,34 +361,47 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Process the event history disqualify event by removing the content card activity from the
+     * Process the event history rule consequence by removing the content card activity from the
      * in-memory cache using the proposition activity id.
      *
-     * @param event A {@link Event} containing the event history write event.
+     * @param propositionItem A {@link PropositionItem} of type {@link
+     *     EventHistoryOperationSchemaData} which contains the activity id of the content card to be
+     *     removed.
      */
-    void handleEventHistoryDisqualifyEvent(final Event event) {
-        final String activityId = InternalMessagingUtils.getPropositionActivityId(event);
-        if (StringUtils.isNullOrEmpty(activityId)) {
-            // shouldn't ever get here, but if we do, we don't have anything to process so we should
-            // bail
+    void handleEventHistoryRuleConsequence(final PropositionItem propositionItem) {
+        final String activityId = InternalMessagingUtils.getPropositionActivityId(propositionItem);
+        final String eventType = InternalMessagingUtils.getEventHistoryEventType(propositionItem);
+        if (StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(eventType)) {
+            // if the activity id or event type is empty, we do nothing
             return;
         }
 
-        // remove the content card from the in-memory cache using the activity id
-        for (final Map.Entry<Surface, List<Proposition>> contentCardEntry :
-                contentCardsBySurface.entrySet()) {
-            final Surface surface = contentCardEntry.getKey();
-            final List<Proposition> propositions = contentCardEntry.getValue();
-            final List<Proposition> updatedPropositions = new ArrayList<>(propositions);
-            for (final Proposition proposition : propositions) {
-                if (activityId.equals(proposition.getActivityId())) {
-                    updatedPropositions.remove(proposition);
-                    // remove the content card schema data from the ContentCardMapper as well
-                    ContentCardMapper.getInstance()
-                            .removeContentCardSchemaData(proposition.getUniqueId());
+        if (eventType.equals(MessagingConstants.EventHistoryOperationEventTypes.UNQUALIFY)
+                || eventType.equals(
+                        MessagingConstants.EventHistoryOperationEventTypes.DISQUALIFY)) {
+            // remove the content card from the in-memory cache using the activity id
+            for (final Map.Entry<Surface, List<Proposition>> contentCardEntry :
+                    contentCardsBySurface.entrySet()) {
+                final Surface surface = contentCardEntry.getKey();
+                final List<Proposition> propositions = contentCardEntry.getValue();
+                final List<Proposition> updatedPropositions = new ArrayList<>(propositions);
+                for (final Proposition proposition : propositions) {
+                    if (activityId.equals(proposition.getActivityId())) {
+                        Log.debug(
+                                MessagingConstants.LOG_TAG,
+                                SELF_TAG,
+                                "Removing content card proposition with activity id %s for"
+                                        + " surface %s from in-memory cache.",
+                                activityId,
+                                surface.getUri());
+                        updatedPropositions.remove(proposition);
+                        // remove the content card schema data from the ContentCardMapper as well
+                        ContentCardMapper.getInstance()
+                                .removeContentCardSchemaData(proposition.getUniqueId());
+                    }
                 }
+                contentCardsBySurface.put(surface, updatedPropositions);
             }
-            contentCardsBySurface.put(surface, updatedPropositions);
         }
     }
 

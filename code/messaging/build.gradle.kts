@@ -59,7 +59,8 @@ aepLibrary {
 }
 
 dependencies {
-    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:8e5fd380cd")
+    // todo change once core is released
+    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9")
     // dependencies provided by aep-library:
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")

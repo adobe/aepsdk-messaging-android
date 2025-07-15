@@ -17,7 +17,6 @@ import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
-import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
@@ -301,28 +300,6 @@ class InternalMessagingUtils {
         return consequenceType.equals(MessagingConstants.ConsequenceDetailKeys.SCHEMA);
     }
 
-    /**
-     * Determines if the passed in {@code Event} is an event history disqualify event.
-     *
-     * @param event An event history write {@link Event}.
-     * @return {@code boolean} indicating if the passed in event is an event history disqualify
-     *     event.
-     */
-    static boolean isEventHistoryDisqualifyEvent(final Event event) {
-        final Map<String, Object> eventData = event.getEventData();
-        final Map<String, Object> eventHistoryMap =
-                DataReader.optTypedMap(
-                        Object.class,
-                        eventData,
-                        MessagingConstants.EventDataKeys.IAM_HISTORY,
-                        null);
-        return MessagingEdgeEventType.DISQUALIFY
-                .getPropositionEventType()
-                .equalsIgnoreCase(
-                        DataReader.optString(
-                                eventHistoryMap, MessagingConstants.EventMask.Keys.EVENT_TYPE, ""));
-    }
-
     // ========================================================================================
     // Surfaces retrieval and validation
     // ========================================================================================
@@ -401,26 +378,73 @@ class InternalMessagingUtils {
     }
 
     /**
-     * Retrieves the proposition activity id {@code String} from the passed in {@code Event}'s event
-     * data.
+     * Retrieves the proposition activity id {@code String} from the passed in {@code
+     * PropositionItem}
      *
-     * @param event A Messaging Event History Write {@link Event}.
-     * @return {@code String} containing the proposition activity id
+     * @param propositionItem A {@link PropositionItem} of type {@link
+     *     EventHistoryOperationSchemaData} containing the proposition activity id
+     * @return {@code String} the proposition activity id
      */
-    static String getPropositionActivityId(final Event event) {
-        if (event == null || event.getEventData() == null) {
+    static String getPropositionActivityId(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
             return null;
         }
 
-        final Map<String, Object> eventHistoryData =
-                DataReader.optTypedMap(
-                        Object.class,
-                        event.getEventData(),
-                        MessagingConstants.EventDataKeys.IAM_HISTORY,
-                        new HashMap<>());
+        final EventHistoryOperationSchemaData eventHistoryOperationSchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
 
-        return DataReader.optString(
-                eventHistoryData, MessagingConstants.EventMask.Keys.MESSAGE_ID, null);
+        if (eventHistoryOperationSchemaData == null) {
+            return null;
+        }
+
+        try {
+            final Map<String, Object> contentMap =
+                    (Map<String, Object>) eventHistoryOperationSchemaData.getContent();
+            return DataReader.optString(
+                    contentMap, MessagingConstants.EventMask.Mask.MESSAGE_ID, null);
+        } catch (final ClassCastException exception) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Event history schema data content is not a map: %s",
+                    exception.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves the event history event type {@code String} from the passed in {@code
+     * PropositionItem}.
+     *
+     * @param propositionItem A {@link PropositionItem} of type {@link
+     *     EventHistoryOperationSchemaData} containing the event history operation type
+     * @return {@code String} the event history operation type
+     */
+    static String getEventHistoryEventType(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
+            return null;
+        }
+
+        final EventHistoryOperationSchemaData eventHistoryOperationSchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+
+        if (eventHistoryOperationSchemaData == null) {
+            return null;
+        }
+
+        try {
+            final Map<String, Object> contentMap =
+                    (Map<String, Object>) eventHistoryOperationSchemaData.getContent();
+            return DataReader.optString(
+                    contentMap, MessagingConstants.EventMask.Mask.EVENT_TYPE, null);
+        } catch (final ClassCastException exception) {
+            Log.warning(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Event history schema data content is not a map: %s",
+                    exception.getLocalizedMessage());
+            return null;
+        }
     }
 
     // ========================================================================================

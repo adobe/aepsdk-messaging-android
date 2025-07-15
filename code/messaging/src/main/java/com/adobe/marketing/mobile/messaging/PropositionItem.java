@@ -305,6 +305,21 @@ public class PropositionItem implements Serializable {
     }
 
     /**
+     * Returns this {@link PropositionItem}'s content as a {@code EventHistoryOperationSchemaData}
+     * object.
+     *
+     * @return {@link EventHistoryOperationSchemaData} object containing the {@link
+     *     PropositionItem}'s content.
+     */
+    @Nullable EventHistoryOperationSchemaData getEventHistoryOperationSchemaData() {
+        if (!schema.equals(SchemaType.EVENT_HISTORY_OPERATION)) {
+            return null;
+        }
+        return (EventHistoryOperationSchemaData)
+                createSchemaData(SchemaType.EVENT_HISTORY_OPERATION);
+    }
+
+    /**
      * Creates a schema data object from this {@code PropositionItem}'s content.
      *
      * @param schemaType {@link SchemaType} to be used when creating the {@link SchemaData} object.
@@ -332,6 +347,8 @@ public class PropositionItem implements Serializable {
                 return new FeedItemSchemaData(ruleJson);
             case CONTENT_CARD:
                 return new ContentCardSchemaData(ruleJson);
+            case EVENT_HISTORY_OPERATION:
+                return new EventHistoryOperationSchemaData(ruleJson);
             default:
                 break;
         }

@@ -313,6 +313,10 @@ public final class MessagingExtension extends Extension {
             case INAPP:
                 edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
                 break;
+            case EVENT_HISTORY_OPERATION:
+                edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
+                        propositionItem);
+                break;
             default:
         }
     }
@@ -405,10 +409,6 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
-        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
-            // validate the event is an event history disqualify event then process the event
-            // history data
-            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 

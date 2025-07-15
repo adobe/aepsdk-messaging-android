@@ -8,7 +8,7 @@
             "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6Ik5BIiwibWVzc2FnZUlEIjoiYjUwOTUwNDYtN2ZkNy00OTYxLTg3MWYtOWQ2OGYyZGMzMzVmIiwibWVzc2FnZVB1YmxpY2F0aW9uSUQiOiJiNzFlNDhiYS1mNzY3LTQ5NWItOWQxMS01YzA3MTg4NWNkODkiLCJtZXNzYWdlVHlwZSI6Im1hcmtldGluZyIsImNhbXBhaWduSUQiOiI5YzhlYzAzNS02YjNiLTQ3MGUtOGFlNS1lNTM5YzcxMjM4MDkiLCJjYW1wYWlnblZlcnNpb25JRCI6IjdkZGEyZGM2LTE5MjMtNGU2My1iZWFjLTU0ZGM3ODczNjFlYiIsImNhbXBhaWduQWN0aW9uSUQiOiJjN2MxNDk3ZS1lNWEzLTQ0MjMtYWUzNy1iYTc2ZTFlNDQzNDIifSwibWVzc2FnZVByb2ZpbGUiOnsibWVzc2FnZVByb2ZpbGVJRCI6IjQ0YWQ1NTA3LTZlODItNGY2MS05N2U1LTUzMmNhNmZkMDhhOCIsImNoYW5uZWwiOnsiX2lkIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWxzL3dlYiIsIl90eXBlIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWwtdHlwZXMvd2ViIn19fQ=="
         },
         "activity": {
-            "id": "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4423-ae37-ba76e1e44342"
+            "id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
         }
     },
     "items": [
@@ -142,7 +142,7 @@
                                         "meta": {
                                             "feedName": "testFeed",
                                             "campaignName": "testCampaign",
-                                            "surface": "mobileapp://mockPackageName"
+                                            "surface": "mobileapp://mockPackageName/apifeed"
                                         },
                                         "content": {
                                             "title": "Guacamole!",

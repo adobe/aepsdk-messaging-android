@@ -58,7 +58,8 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:8e5fd380cd") {
+    // todo change once core is released
+    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9") {
         isTransitive = false
     }
     implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion") {
