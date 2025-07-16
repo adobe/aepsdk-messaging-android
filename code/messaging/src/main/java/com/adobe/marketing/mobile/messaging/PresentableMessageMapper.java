@@ -24,6 +24,7 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -215,6 +216,12 @@ class PresentableMessageMapper {
             }
 
             customData = inAppSchemaData.getMeta();
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    MapUtils.isNullOrEmpty(customData)
+                            ? "No in-app message custom data found in the proposition payload."
+                            : "Found in-app message custom data in the proposition payload.");
 
             try {
                 final String html = (String) inAppSchemaData.getContent();
