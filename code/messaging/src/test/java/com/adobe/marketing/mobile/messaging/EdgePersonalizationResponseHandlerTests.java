@@ -2413,7 +2413,12 @@ public class EdgePersonalizationResponseHandlerTests {
                         final Map<String, Object> eventHistoryRuleConsequenceDetail =
                                 new HashMap<>();
                         eventHistoryRuleConsequenceDetail.put(
-                                MessagingConstants.ConsequenceDetailKeys.DATA, new HashMap<>());
+                                MessagingConstants.ConsequenceDetailKeys.DATA,
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("key", "value");
+                                    }
+                                });
                         eventHistoryRuleConsequenceDetail.put(
                                 MessagingConstants.ConsequenceDetailKeys.ID, "mockConsequenceId");
                         eventHistoryRuleConsequenceDetail.put(

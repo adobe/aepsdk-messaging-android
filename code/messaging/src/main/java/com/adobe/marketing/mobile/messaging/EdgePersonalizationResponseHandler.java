@@ -369,6 +369,9 @@ class EdgePersonalizationResponseHandler {
      *     removed.
      */
     void handleEventHistoryRuleConsequence(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
+            return;
+        }
         final EventHistoryOperationSchemaData eventHistorySchemaData =
                 propositionItem.getEventHistoryOperationSchemaData();
         if (eventHistorySchemaData == null) {
