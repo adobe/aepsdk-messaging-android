@@ -369,10 +369,26 @@ class EdgePersonalizationResponseHandler {
      *     removed.
      */
     void handleEventHistoryRuleConsequence(final PropositionItem propositionItem) {
-        final String activityId = InternalMessagingUtils.getPropositionActivityId(propositionItem);
-        final String eventType = InternalMessagingUtils.getEventHistoryEventType(propositionItem);
+        final EventHistoryOperationSchemaData eventHistorySchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+        if (eventHistorySchemaData == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Ignoring event history rule consequence with id %s, not in expected format.",
+                    propositionItem.getItemId());
+            return;
+        }
+        final String activityId = eventHistorySchemaData.getActivityId();
+        final String eventType = eventHistorySchemaData.getEventType();
         if (StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(eventType)) {
             // if the activity id or event type is empty, we do nothing
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Ignoring event history rule consequence with id %s, activity id or event type"
+                            + " is empty.",
+                    propositionItem.getItemId());
             return;
         }
 

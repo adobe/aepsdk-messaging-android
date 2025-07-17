@@ -11,15 +11,17 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.JSONUtils;
+import java.util.Map;
 import org.json.JSONObject;
 
 // represents the schema data object for a event history operation schema
 class EventHistoryOperationSchemaData implements SchemaData {
     private static final String SELF_TAG = "ContentCardSchemaData";
-    PropositionItem parent;
-    private Object content;
+    private Map<String, Object> content;
     private String operation;
 
     EventHistoryOperationSchemaData(final JSONObject schemaData) {
@@ -44,7 +46,15 @@ class EventHistoryOperationSchemaData implements SchemaData {
         return content;
     }
 
-    public String getOperation() {
+    String getOperation() {
         return operation;
+    }
+
+    @Nullable String getEventType() {
+        return DataReader.optString(content, MessagingConstants.EventMask.Mask.EVENT_TYPE, null);
+    }
+
+    @Nullable String getActivityId() {
+        return DataReader.optString(content, MessagingConstants.EventMask.Mask.ACTIVITY_ID, null);
     }
 }

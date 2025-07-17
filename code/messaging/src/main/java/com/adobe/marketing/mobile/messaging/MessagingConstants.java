@@ -363,7 +363,7 @@ public final class MessagingConstants {
     final class EventMask {
         final class Keys {
             static final String EVENT_TYPE = "eventType";
-            static final String MESSAGE_ID = "id";
+            static final String ACTIVITY_ID = "id";
             static final String TRACKING_ACTION = "action";
 
             private Keys() {}
@@ -371,7 +371,7 @@ public final class MessagingConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.id";
+            static final String ACTIVITY_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {}
