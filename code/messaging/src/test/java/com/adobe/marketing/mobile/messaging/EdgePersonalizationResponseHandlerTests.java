@@ -898,7 +898,6 @@ public class EdgePersonalizationResponseHandlerTests {
                         // setup processing completed event
                         eventData = new HashMap<>();
                         eventData.put(ENDING_EVENT_ID, "TESTING_ID");
-                        mockEvent = mock(Event.class);
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         // test
@@ -995,12 +994,12 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         Map<String, Object> eventData = new HashMap<>();
                         eventData.put("payload", payload);
-                        eventData.put("requestEventId", "TESTING_ID");
+                        eventData.put("requestEventId", "TESTING_ID_1");
                         Event mockEvent = mock(Event.class);
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         edgePersonalizationResponseHandler.setMessagesRequestEventId(
-                                "TESTING_ID",
+                                "TESTING_ID_1",
                                 new ArrayList<Surface>() {
                                     {
                                         add(inappSurface);
@@ -1014,8 +1013,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // setup processing completed event
                         eventData = new HashMap<>();
-                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
-                        mockEvent = mock(Event.class);
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_1");
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         // cache propositions initially
@@ -1023,14 +1021,13 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // test : subsequent response does not contain previously cached in-app
                         // propositions
-                        Map<String, Object> secondEventData = new HashMap<>();
-                        secondEventData.put("payload", contentCardPayload);
-                        secondEventData.put("requestEventId", "TESTING_ID");
-                        Event secondMockEvent = mock(Event.class);
-                        when(secondMockEvent.getEventData()).thenReturn(secondEventData);
+                        eventData = new HashMap<>();
+                        eventData.put("payload", contentCardPayload);
+                        eventData.put("requestEventId", "TESTING_ID_2");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
 
                         edgePersonalizationResponseHandler.setMessagesRequestEventId(
-                                "TESTING_ID",
+                                "TESTING_ID_2",
                                 new ArrayList<Surface>() {
                                     {
                                         add(inappSurface);
@@ -1039,9 +1036,13 @@ public class EdgePersonalizationResponseHandlerTests {
                                 });
 
                         edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
-                                secondMockEvent);
+                                mockEvent);
 
                         // setup processing completed event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_2");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
                         // verify parsed rules replaced in rules engine only for the first in-app
@@ -1139,12 +1140,12 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         Map<String, Object> eventData = new HashMap<>();
                         eventData.put("payload", payload);
-                        eventData.put("requestEventId", "TESTING_ID");
+                        eventData.put("requestEventId", "TESTING_ID_1");
                         Event mockEvent = mock(Event.class);
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         edgePersonalizationResponseHandler.setMessagesRequestEventId(
-                                "TESTING_ID",
+                                "TESTING_ID_1",
                                 new ArrayList<Surface>() {
                                     {
                                         add(inappSurface);
@@ -1160,8 +1161,7 @@ public class EdgePersonalizationResponseHandlerTests {
 
                         // setup processing completed event
                         eventData = new HashMap<>();
-                        eventData.put(ENDING_EVENT_ID, "TESTING_ID");
-                        mockEvent = mock(Event.class);
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_1");
                         when(mockEvent.getEventData()).thenReturn(eventData);
 
                         // cache propositions initially
@@ -1170,14 +1170,13 @@ public class EdgePersonalizationResponseHandlerTests {
                         // test : subsequent response does not contain two previously returned
                         // content card propositions
                         inAppPayload.add(contentCardPayload.get(0));
-                        Map<String, Object> secondEventData = new HashMap<>();
-                        secondEventData.put("payload", inAppPayload);
-                        secondEventData.put("requestEventId", "TESTING_ID");
-                        Event secondMockEvent = mock(Event.class);
-                        when(secondMockEvent.getEventData()).thenReturn(secondEventData);
+                        eventData = new HashMap<>();
+                        eventData.put("payload", inAppPayload);
+                        eventData.put("requestEventId", "TESTING_ID_2");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
 
                         edgePersonalizationResponseHandler.setMessagesRequestEventId(
-                                "TESTING_ID",
+                                "TESTING_ID_2",
                                 new ArrayList<Surface>() {
                                     {
                                         add(inappSurface);
@@ -1188,9 +1187,13 @@ public class EdgePersonalizationResponseHandlerTests {
                                 });
 
                         edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
-                                secondMockEvent);
+                                mockEvent);
 
                         // setup processing completed event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_2");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
                         edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
 
                         // verify parsed rules replaced in rules engine for in-app and first
@@ -1230,6 +1233,140 @@ public class EdgePersonalizationResponseHandlerTests {
                                 .replaceRules(contentCardRulesListCaptor.capture());
                         assertEquals(3, contentCardRulesListCaptor.getAllValues().get(0).size());
                         assertEquals(1, contentCardRulesListCaptor.getAllValues().get(1).size());
+
+                        // verify received propositions event not dispatched
+                        verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
+                    }
+                });
+    }
+
+    @Test
+    public void test_handleProcessCompletedEvent_SeparateIAMAndContentCardRequests() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        when(JSONRulesParser.parse(anyString(), any(ExtensionApi.class)))
+                                .thenCallRealMethod();
+
+                        Surface inappSurface = new Surface();
+                        Surface contentCardSurface = new Surface("apifeed");
+
+                        // setup in progress in-app propositions
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 3;
+                        List<Map<String, Object>> payload =
+                                MessagingTestUtils.generateInAppPayload(config);
+
+                        Map<String, Object> eventData = new HashMap<>();
+                        eventData.put("payload", payload);
+                        eventData.put("requestEventId", "TESTING_ID_IAM");
+                        Event mockEvent = mock(Event.class);
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "TESTING_ID_IAM",
+                                new ArrayList<Surface>() {
+                                    {
+                                        add(inappSurface);
+                                    }
+                                });
+
+                        // set up in progress propositions
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                mockEvent);
+
+                        // setup processing completed event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_IAM");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
+                        // cache propositions initially
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+
+                        // test : subsequent response does not contain previously cached in-app
+                        // propositions
+                        // setup in progress feed propositions and add them to the payload
+                        config.count = 4;
+                        List<Map<String, Object>> contentCardPayload =
+                                MessagingTestUtils.generateContentCardPayload(config);
+                        payload.addAll(contentCardPayload);
+
+                        eventData = new HashMap<>();
+                        eventData.put("payload", contentCardPayload);
+                        eventData.put("requestEventId", "TESTING_ID_CONTENT_CARD");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
+                        edgePersonalizationResponseHandler.setMessagesRequestEventId(
+                                "TESTING_ID_CONTENT_CARD",
+                                new ArrayList<Surface>() {
+                                    {
+                                        add(contentCardSurface);
+                                    }
+                                });
+
+                        edgePersonalizationResponseHandler.handleEdgePersonalizationNotification(
+                                mockEvent);
+
+                        // setup processing completed event
+                        eventData = new HashMap<>();
+                        eventData.put(ENDING_EVENT_ID, "TESTING_ID_CONTENT_CARD");
+                        when(mockEvent.getEventData()).thenReturn(eventData);
+
+                        edgePersonalizationResponseHandler.handleProcessCompletedEvent(mockEvent);
+
+                        // verify parsed rules replaced in rules engine only for the first in-app
+                        // response but event history rules replaced for both responses
+                        verify(mockMessagingRulesEngine, times(2))
+                                .replaceRules(rulesListCaptor.capture());
+                        assertEquals(3, rulesListCaptor.getAllValues().get(0).size());
+                        assertEquals(15, rulesListCaptor.getAllValues().get(1).size());
+
+                        // verify parsed rules replaced in feed rules engine for both responses
+                        verify(mockContentCardRulesEngine, times(1))
+                                .replaceRules(contentCardRulesListCaptor.capture());
+                        assertEquals(4, contentCardRulesListCaptor.getAllValues().get(0).size());
+                        List<LaunchRule> eventHistoryRules = new ArrayList<>();
+                        List<LaunchRule> inAppRules = new ArrayList<>();
+                        for (LaunchRule launchRule : rulesListCaptor.getAllValues().get(1)) {
+                            for (RuleConsequence ruleConsequence :
+                                    launchRule.getConsequenceList()) {
+                                String ruleType =
+                                        (String)
+                                                ruleConsequence
+                                                        .getDetail()
+                                                        .get(
+                                                                MessagingTestConstants.EventDataKeys
+                                                                        .RulesEngine
+                                                                        .MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
+                                if (ruleType != null) {
+                                    if (ruleType.equals(SchemaType.INAPP.toString())) {
+                                        inAppRules.add(launchRule);
+                                    } else if (ruleType.equals(
+                                            SchemaType.EVENT_HISTORY_OPERATION.toString())) {
+                                        eventHistoryRules.add(launchRule);
+                                    }
+                                }
+                            }
+                        }
+                        assertEquals(3, inAppRules.size());
+                        assertEquals(12, eventHistoryRules.size());
+
+                        // verify in-app propositions are cached for first response
+                        ArgumentCaptor<Map<Surface, List<Proposition>>> cachedPropositionsCaptor =
+                                ArgumentCaptor.forClass(Map.class);
+                        ArgumentCaptor<List<Surface>> surfacesToRemoveCaptor =
+                                ArgumentCaptor.forClass(List.class);
+                        verify(mockMessagingCacheUtilities, times(2))
+                                .cachePropositions(
+                                        cachedPropositionsCaptor.capture(),
+                                        surfacesToRemoveCaptor.capture());
+                        Map<Surface, List<Proposition>> firstResponseCachedPropositions =
+                                cachedPropositionsCaptor.getAllValues().get(0);
+                        assertEquals(1, firstResponseCachedPropositions.size());
+                        assertEquals(3, firstResponseCachedPropositions.get(inappSurface).size());
+                        assertEquals(0, surfacesToRemoveCaptor.getAllValues().get(0).size());
 
                         // verify received propositions event not dispatched
                         verify(mockExtensionApi, times(0)).dispatch(any(Event.class));
