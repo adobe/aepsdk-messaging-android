@@ -911,7 +911,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -980,6 +981,8 @@ public class MessagingPublicAPITests {
                         latch.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1015,7 +1018,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1084,6 +1088,8 @@ public class MessagingPublicAPITests {
                         latch1.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch1.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1121,6 +1127,8 @@ public class MessagingPublicAPITests {
                         latch2.countDown();
                     }
                 });
+
+        // verify content card is not longer returned
         assertTrue(latch2.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
     }
@@ -1152,7 +1160,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1221,6 +1230,8 @@ public class MessagingPublicAPITests {
                         latch1.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch1.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1258,6 +1269,8 @@ public class MessagingPublicAPITests {
                         latch2.countDown();
                     }
                 });
+
+        // verify content card is not longer returned
         assertTrue(latch2.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
 
@@ -1291,6 +1304,8 @@ public class MessagingPublicAPITests {
                         latch3.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch3.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardListNew = qualifiedCardPropositions.get(surface1);
@@ -1327,7 +1342,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1396,6 +1412,8 @@ public class MessagingPublicAPITests {
                         latch1.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch1.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1425,6 +1443,8 @@ public class MessagingPublicAPITests {
                         latch2.countDown();
                     }
                 });
+
+        // verify content card is not longer returned
         assertTrue(latch2.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
 
@@ -1458,6 +1478,8 @@ public class MessagingPublicAPITests {
                         latch3.countDown();
                     }
                 });
+
+        // verify qualified content card is no longer returned
         assertTrue(latch3.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
     }
@@ -1489,7 +1511,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithoutTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithoutTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1527,6 +1550,8 @@ public class MessagingPublicAPITests {
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
                 surfacesList.get(1));
+
+        // verify content card trigger edge event
         final Map<String, Object> edgeTriggerEventData =
                 edgePersonalizationRequestEvents.get(1).getEventData();
         final Map<String, Object> xdmTriggerDataMap =
@@ -1559,6 +1584,8 @@ public class MessagingPublicAPITests {
                         latch.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1594,7 +1621,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithoutTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithoutTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1632,6 +1660,8 @@ public class MessagingPublicAPITests {
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
                 surfacesList.get(1));
+
+        // verify content card trigger edge event
         final Map<String, Object> edgeTriggerEventData =
                 edgePersonalizationRequestEvents.get(1).getEventData();
         final Map<String, Object> xdmTriggerDataMap =
@@ -1664,6 +1694,8 @@ public class MessagingPublicAPITests {
                         latch.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1701,11 +1733,12 @@ public class MessagingPublicAPITests {
                         latch2.countDown();
                     }
                 });
+
+        // verify content card is not longer returned
         assertTrue(latch2.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
     }
 
-    // TODO: Clarify behavior for this case
     @Test
     public void testContentCardWithoutTriggers_Requalification() throws InterruptedException {
         // setup
@@ -1733,7 +1766,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithoutTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithoutTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1771,6 +1805,8 @@ public class MessagingPublicAPITests {
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
                 surfacesList.get(1));
+
+        // verify content card trigger edge event
         final Map<String, Object> edgeTriggerEventData =
                 edgePersonalizationRequestEvents.get(1).getEventData();
         final Map<String, Object> xdmTriggerDataMap =
@@ -1803,6 +1839,8 @@ public class MessagingPublicAPITests {
                         latch.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -1864,6 +1902,8 @@ public class MessagingPublicAPITests {
                         latch3.countDown();
                     }
                 });
+
+        // verify qualified content card is returned again
         assertTrue(latch3.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardListNew = qualifiedCardPropositions.get(surface1);
@@ -1900,8 +1940,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithoutTriggersNetworkResponse.json");
-
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithoutTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -1939,6 +1979,8 @@ public class MessagingPublicAPITests {
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
                 surfacesList.get(1));
+
+        // verify content card trigger edge event
         final Map<String, Object> edgeTriggerEventData =
                 edgePersonalizationRequestEvents.get(1).getEventData();
         final Map<String, Object> xdmTriggerDataMap =
@@ -1971,6 +2013,8 @@ public class MessagingPublicAPITests {
                         latch.countDown();
                     }
                 });
+
+        // verify qualified content card is returned
         assertTrue(latch.await(1, TimeUnit.SECONDS));
         assertEquals(1, qualifiedCardPropositions.size());
         List<Proposition> contentCardList = qualifiedCardPropositions.get(surface1);
@@ -2000,6 +2044,8 @@ public class MessagingPublicAPITests {
                         latch2.countDown();
                     }
                 });
+
+        // verify content card is not longer returned
         assertTrue(latch2.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
 
@@ -2024,6 +2070,8 @@ public class MessagingPublicAPITests {
                         latch3.countDown();
                     }
                 });
+
+        // verify qualified content card is not returned again
         assertTrue(latch3.await(1, TimeUnit.SECONDS));
         assertEquals(0, qualifiedCardPropositions.size());
     }
@@ -2034,7 +2082,7 @@ public class MessagingPublicAPITests {
         // setup mock server response for in-app propositions
         setMockNetworkResponseForPersonalizationRequests("inappNetworkResponse.json");
 
-        // test retrieving in-app propositions from server
+        // Retrieve in-app propositions from server
         Messaging.refreshInAppMessages();
         TestHelper.sleep(5000);
         List<Event> dispatchedEvents =
@@ -2067,7 +2115,8 @@ public class MessagingPublicAPITests {
                 });
 
         // setup mock server response for content card propositions
-        setMockNetworkResponseForPersonalizationRequests("contentCardWithoutTriggersNetworkResponse.json");
+        setMockNetworkResponseForPersonalizationRequests(
+                "contentCardWithTriggersNetworkResponse.json");
 
         // test retrieving propositions from server
         Messaging.updatePropositionsForSurfaces(surfacePaths);
@@ -2086,7 +2135,7 @@ public class MessagingPublicAPITests {
         List<Event> edgePersonalizationRequestEvents =
                 getDispatchedEventsWith(
                         MessagingTestConstants.EventType.EDGE, EventSource.REQUEST_CONTENT);
-        assertEquals(2, edgePersonalizationRequestEvents.size());
+        assertEquals(1, edgePersonalizationRequestEvents.size());
         final Map<String, Object> edgeEventData =
                 edgePersonalizationRequestEvents.get(0).getEventData();
         final Map<String, Object> xdmDataMap =
@@ -2105,20 +2154,19 @@ public class MessagingPublicAPITests {
         assertEquals(
                 "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed2",
                 surfacesList.get(1));
-        final Map<String, Object> edgeContentCardTriggerEventData =
-                edgePersonalizationRequestEvents.get(1).getEventData();
-        Map<String, Object> xdmTriggerDataMap =
-                DataReader.optTypedMap(Object.class, edgeContentCardTriggerEventData, "xdm", null);
-        assertEquals(MessagingEdgeEventType.TRIGGER.toString(), xdmTriggerDataMap.get("eventType"));
-        Map<String, Object> experienceDataMap =
-                DataReader.optTypedMap(Object.class, xdmTriggerDataMap, "_experience", null);
-        Map<String, Object> decisioningDataMap =
-                DataReader.optTypedMap(Object.class, experienceDataMap, "decisioning", null);
-        List<Map<String, Object>> propositionsDataMap =
-                DataReader.optTypedListOfMap(
-                        Object.class, decisioningDataMap, "propositions", null);
-        assertNotNull(propositionsDataMap);
-        assertEquals(surface1.getUri(), propositionsDataMap.get(0).get("scope"));
+
+        // dispatch content card qualification event
+        MobileCore.dispatchEvent(
+                new Event.Builder(
+                                "Places entry event", EventType.PLACES, EventSource.REQUEST_CONTENT)
+                        .setEventData(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("regionEventType", "entered");
+                                    }
+                                })
+                        .build());
+        TestHelper.sleep(500);
 
         // retrieve qualified content cards
         CountDownLatch latch = new CountDownLatch(1);
@@ -2159,20 +2207,19 @@ public class MessagingPublicAPITests {
         assertEquals(1, edgePersonalizationRequestEvents.size());
         final Map<String, Object> edgeIAMTriggerEventData =
                 edgePersonalizationRequestEvents.get(0).getEventData();
-        xdmTriggerDataMap =
+        final Map<String, Object> xdmTriggerDataMap =
                 DataReader.optTypedMap(Object.class, edgeIAMTriggerEventData, "xdm", null);
         assertEquals(MessagingEdgeEventType.TRIGGER.toString(), xdmTriggerDataMap.get("eventType"));
-        experienceDataMap =
+        final Map<String, Object> experienceDataMap =
                 DataReader.optTypedMap(Object.class, xdmTriggerDataMap, "_experience", null);
-        decisioningDataMap =
+        final Map<String, Object> decisioningDataMap =
                 DataReader.optTypedMap(Object.class, experienceDataMap, "decisioning", null);
-        propositionsDataMap =
+        final List<Map<String, Object>> propositionsDataMap =
                 DataReader.optTypedListOfMap(
                         Object.class, decisioningDataMap, "propositions", null);
         assertNotNull(propositionsDataMap);
         assertEquals(new Surface().getUri(), propositionsDataMap.get(0).get("scope"));
     }
-
 
     // --------------------------------------------------------------------------------------------
     // Helpers
@@ -2220,8 +2267,7 @@ public class MessagingPublicAPITests {
         return intent;
     }
 
-    private void setMockNetworkResponseForPersonalizationRequests(
-            final String responseFileName) {
+    private void setMockNetworkResponseForPersonalizationRequests(final String responseFileName) {
         String edgeRequestUrl = "https://edge.adobedc.net/ee/v1/interact";
         TestHelper.setNetworkResponseFor(
                 edgeRequestUrl,
@@ -2241,7 +2287,7 @@ public class MessagingPublicAPITests {
                                 String replacedResponse =
                                         "\u0000"
                                                 + response.replace("mockRequestId", requestId)
-                                                .replaceAll("[\\r\\n\\t]+", "");
+                                                        .replaceAll("[\\r\\n\\t]+", "");
                                 return new ByteArrayInputStream(replacedResponse.getBytes());
                             } else {
                                 return new ByteArrayInputStream("".getBytes());
