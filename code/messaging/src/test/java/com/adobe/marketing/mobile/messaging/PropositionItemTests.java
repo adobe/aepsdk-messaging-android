@@ -1026,6 +1026,67 @@ public class PropositionItemTests {
         assertNull(htmlContent);
     }
 
+    // getEventHistoryOperationSchemaData tests
+    @Test
+    public void test_getEventHistoryOperationSchemaData()
+            throws MessageRequiredFieldMissingException {
+        // setup
+        String rulesJson =
+                MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
+        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
+        List<RuleConsequence> ruleConsequences = rules.get(1).getConsequenceList();
+
+        // test
+        PropositionItem propositionItem =
+                PropositionItem.fromRuleConsequence(ruleConsequences.get(0));
+
+        // verify
+        assertNotNull(propositionItem);
+        EventHistoryOperationSchemaData schemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+        assertNotNull(schemaData);
+        Map<String, Object> inAppPropositionItemData =
+                (Map<String, Object>) ruleConsequences.get(0).getDetail().get("data");
+        assertEquals("insert", schemaData.getOperation());
+        Map<String, Object> content =
+                (Map<String, Object>)
+                        inAppPropositionItemData.get(
+                                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT);
+        assertEquals(content, schemaData.getContent());
+        assertEquals(
+                content.get(MessagingTestConstants.EventMask.Mask.EVENT_TYPE),
+                schemaData.getEventType());
+        assertEquals(
+                content.get(MessagingTestConstants.EventMask.Mask.ACTIVITY_ID),
+                schemaData.getActivityId());
+    }
+
+    @Test
+    public void test_getEventHistoryOperationSchemaData_emptyItemData()
+            throws MessageRequiredFieldMissingException {
+        // test
+        PropositionItem propositionItem =
+                new PropositionItem(
+                        testId, SchemaType.EVENT_HISTORY_OPERATION, Collections.emptyMap());
+        EventHistoryOperationSchemaData eventHistoryOperationSchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+        // verify
+        assertNull(eventHistoryOperationSchemaData);
+    }
+
+    @Test
+    public void test_getEventHistoryOperationSchemaData_invalidSchemaType()
+            throws MessageRequiredFieldMissingException {
+        // test
+        PropositionItem propositionItem =
+                new PropositionItem(testId, SchemaType.JSON_CONTENT, jsonContentMap);
+        EventHistoryOperationSchemaData eventHistoryOperationSchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+
+        // verify
+        assertNull(eventHistoryOperationSchemaData);
+    }
+
     private List<RuleConsequence> parseRuleConsequence(String rulesJson) {
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         return rules.get(0).getConsequenceList();

@@ -998,7 +998,7 @@ public class MessagingExtensionTests {
                             MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
                             MessagingConstants.EventHistoryOperationEventTypes.DISQUALIFY);
                     contentMap.put(
-                            MessagingTestConstants.EventMask.Mask.MESSAGE_ID,
+                            MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
                             "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
                     final Map<String, Object> eventHistoryData = new HashMap<>();
                     eventHistoryData.put(

@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.Messaging;
-
 /**
  * Class to maintain test constants.
  */
@@ -88,7 +86,7 @@ public class MessagingTestConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.id";
+            static final String ACTIVITY_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {

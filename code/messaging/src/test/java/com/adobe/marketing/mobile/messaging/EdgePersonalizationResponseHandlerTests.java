@@ -2229,7 +2229,7 @@ public class EdgePersonalizationResponseHandlerTests {
     // edgePersonalizationResponseHandler handleEventHistoryDisqualifyEvent
     // ========================================================================================
     @Test
-    public void test_handleEventHistoryRuleConsequence() {
+    public void test_handleEventHistoryRuleConsequence_Disqualify() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
@@ -2258,7 +2258,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
                                 MessagingConstants.EventHistoryOperationEventTypes.DISQUALIFY);
                         contentMap.put(
-                                MessagingTestConstants.EventMask.Mask.MESSAGE_ID,
+                                MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
                                 "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
                         final Map<String, Object> eventHistoryData = new HashMap<>();
                         eventHistoryData.put(
@@ -2303,6 +2303,140 @@ public class EdgePersonalizationResponseHandlerTests {
                         assertEquals(
                                 "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
                                 qualifiedContentCardsList.get(2).getActivityId());
+                    }
+                });
+    }
+
+    @Test
+    public void test_handleEventHistoryRuleConsequence_Unqualify() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        // setup PropositionItem of type EventHistoryOperationSchemaData
+                        final Map<String, String> contentMap = new HashMap<>();
+                        contentMap.put(
+                                MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
+                                MessagingConstants.EventHistoryOperationEventTypes.UNQUALIFY);
+                        contentMap.put(
+                                MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                        final Map<String, Object> eventHistoryData = new HashMap<>();
+                        eventHistoryData.put(
+                                MessagingConstants.ConsequenceDetailDataKeys.CONTENT, contentMap);
+                        eventHistoryData.put(
+                                MessagingConstants.ConsequenceDetailDataKeys.OPERATION,
+                                "insertIfNotExists");
+                        final Map<String, Object> eventHistoryRuleConsequenceDetail =
+                                new HashMap<>();
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.DATA, eventHistoryData);
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.ID, "mockConsequenceId");
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.SCHEMA,
+                                SchemaType.EVENT_HISTORY_OPERATION.toString());
+                        final PropositionItem propositionItem =
+                                PropositionItem.fromRuleConsequenceDetail(
+                                        eventHistoryRuleConsequenceDetail);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
+                                propositionItem);
+
+                        // verify qualified content cards matching the activity id are removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify there are now 3 qualified content cards after removing one with
+                        // activity id
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(3, qualifiedContentCardsList.size());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44301",
+                                qualifiedContentCardsList.get(0).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44302",
+                                qualifiedContentCardsList.get(1).getActivityId());
+                        assertEquals(
+                                "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44303",
+                                qualifiedContentCardsList.get(2).getActivityId());
+                    }
+                });
+    }
+
+    @Test
+    public void test_handleEventHistoryRuleConsequence_HasNoEventHistoryOperationConsequence() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    try (MockedStatic<JSONRulesParser> ignored =
+                            Mockito.mockStatic(JSONRulesParser.class)) {
+                        // setup valid surface
+                        Surface feedSurface = new Surface("apifeed");
+
+                        // setup in-memory qualified content cards
+                        MessageTestConfig config = new MessageTestConfig();
+                        config.count = 4;
+                        List<Proposition> propositions =
+                                MessagingTestUtils.generateQualifiedContentCards(config);
+                        Map<Surface, List<Proposition>> qualifiedContentCards =
+                                new HashMap<Surface, List<Proposition>>() {
+                                    {
+                                        put(feedSurface, propositions);
+                                    }
+                                };
+                        edgePersonalizationResponseHandler.setQualifiedContentCardsBySurface(
+                                qualifiedContentCards);
+
+                        final Map<String, Object> eventHistoryRuleConsequenceDetail =
+                                new HashMap<>();
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.DATA, new HashMap<>());
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.ID, "mockConsequenceId");
+                        eventHistoryRuleConsequenceDetail.put(
+                                MessagingConstants.ConsequenceDetailKeys.SCHEMA, SchemaType.INAPP);
+                        final PropositionItem propositionItem =
+                                PropositionItem.fromRuleConsequenceDetail(
+                                        eventHistoryRuleConsequenceDetail);
+
+                        // test
+                        edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
+                                propositionItem);
+
+                        // verify qualified content cards matching the activity id are removed
+                        Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
+                                edgePersonalizationResponseHandler
+                                        .getQualifiedContentCardsBySurface();
+                        assertEquals(1, qualifiedContentCardsBySurface.size());
+                        // verify there are now 3 qualified content cards after removing one with
+                        // activity id
+                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
+                        final List<Proposition> qualifiedContentCardsList =
+                                qualifiedContentCardsBySurface.get(feedSurface);
+                        assertEquals(propositions, qualifiedContentCardsList);
                     }
                 });
     }
@@ -2401,7 +2535,7 @@ public class EdgePersonalizationResponseHandlerTests {
                         // setup PropositionItem of type EventHistoryOperationSchemaData
                         final Map<String, String> contentMap = new HashMap<>();
                         contentMap.put(
-                                MessagingTestConstants.EventMask.Mask.MESSAGE_ID,
+                                MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
                                 "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
                         final Map<String, Object> eventHistoryData = new HashMap<>();
                         eventHistoryData.put(
@@ -2471,7 +2605,7 @@ public class EdgePersonalizationResponseHandlerTests {
                                 MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
                                 MessagingConstants.EventHistoryOperationEventTypes.QUALIFY);
                         contentMap.put(
-                                MessagingTestConstants.EventMask.Mask.MESSAGE_ID,
+                                MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
                                 "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
                         final Map<String, Object> eventHistoryData = new HashMap<>();
                         eventHistoryData.put(
