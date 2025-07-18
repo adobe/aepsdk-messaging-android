@@ -85,10 +85,10 @@ dependencies {
     // ANDROIDX_TEST_EXT_JUNIT, ESPRESSO_CORE, COMPOSE_UI_TEST_JUNIT4, COMPOSE_UI_TEST_MANIFEST
     androidTestImplementation("com.fasterxml.jackson.core:jackson-databind:2.12.7.1")
     androidTestImplementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     androidTestImplementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     androidTestImplementation(project(":messagingtestutils"))
     // specify byte buddy version to fix compatibility issue with jdk 21

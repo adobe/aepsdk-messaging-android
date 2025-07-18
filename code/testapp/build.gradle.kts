@@ -59,20 +59,18 @@ android {
 dependencies {
     implementation(project(":messaging"))
     // todo change once core is released
-    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9") {
-        isTransitive = false
-    }
+    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9")
     implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
     implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
-        isTransitive = false
+        exclude(group = "com.adobe.marketing.mobile", module = "core")
     }
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
