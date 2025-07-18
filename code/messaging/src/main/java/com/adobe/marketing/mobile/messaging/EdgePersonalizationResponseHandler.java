@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
@@ -654,11 +655,11 @@ class EdgePersonalizationResponseHandler {
     }
 
     private void updateRulesEngines(
-            final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
-            final List<Surface> requestedSurfaces) {
+            @NonNull final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
+            @NonNull final List<Surface> requestedSurfaces) {
 
         // if there are no rules for any schema type, we can skip updating the rules engines
-        if (surfaceRulesBySchemaType.isEmpty()) {
+        if (surfaceRulesBySchemaType.isEmpty() || requestedSurfaces.isEmpty()) {
             return;
         }
 
@@ -698,11 +699,8 @@ class EdgePersonalizationResponseHandler {
         if (surfaceRulesBySchemaType.get(SchemaType.INAPP) != null
                 || surfaceRulesBySchemaType.get(SchemaType.EVENT_HISTORY_OPERATION) != null) {
 
-            final List<LaunchRule> collectedInAppRules = collectRulesFrom(inAppRulesBySurface);
-            final List<LaunchRule> collectedInAppAndEventHistoryRules =
-                    new ArrayList<>(collectedInAppRules);
-
             // pre-fetch the assets for in-app message if any in-app rules were returned
+            final List<LaunchRule> collectedInAppRules = collectRulesFrom(inAppRulesBySurface);
             if (surfaceRulesBySchemaType.get(SchemaType.INAPP) != null) {
                 final List<RuleConsequence> collectedInAppConsequences = new ArrayList<>();
                 for (final LaunchRule rule : collectedInAppRules) {
@@ -711,6 +709,9 @@ class EdgePersonalizationResponseHandler {
                 cacheImageAssetsFromPayload(collectedInAppConsequences);
             }
 
+            // collect rules for in-app message and event history
+            final List<LaunchRule> collectedInAppAndEventHistoryRules =
+                    new ArrayList<>(collectedInAppRules);
             collectedInAppAndEventHistoryRules.addAll(collectRulesFrom(eventHistoryRulesBySurface));
 
             // update rules in launch rules engine
