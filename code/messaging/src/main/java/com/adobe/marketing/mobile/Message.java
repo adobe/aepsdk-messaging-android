@@ -54,8 +54,8 @@ public interface Message {
      * Gets the {@link Message}'s custom metadata which is the metadata present in the {@code
      * InAppSchemaData} created from the {@code Message} payload.
      *
-     * @return @code Map<String, Object>} containing the custom metadata present in the {@code Message}
-     *     payload.
+     * @return @code Map<String, Object>} containing the custom metadata present in the {@code
+     *     Message} payload.
      */
     default Map<String, Object> getMetadata() {
         return Collections.emptyMap();

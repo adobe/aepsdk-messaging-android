@@ -26,7 +26,6 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
