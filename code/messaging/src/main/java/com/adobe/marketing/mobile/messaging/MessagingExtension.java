@@ -192,12 +192,6 @@ public final class MessagingExtension extends Extension {
 
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
-
-        // retrieve the push token from the messaging named collection and add it to the messaging
-        // shared state. this must be done as its not guaranteed that the push token will be synced
-        // (and the shared state updated) on an app launch.
-        final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
-        createMessagingSharedState(existingPushToken, null);
     }
 
     @Override
@@ -460,48 +454,6 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // if the push token hasn't changed or the push registration sync optimization flag is true
-        // then there is no need to sync it via an edge network request
-        final Map<String, Object> configSharedState =
-                getSharedState(MessagingConstants.SharedState.Configuration.EXTENSION_NAME, event);
-
-        if (!InternalMessagingUtils.shouldSyncPushToken(
-                configSharedState, pushToken, event.getTimestamp())) {
-            Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Skipping the push token sync and shared state update.");
-            return;
-        }
-
-        dispatchPushTokenSyncEdgeEvent(pushToken, event);
-    }
-
-    /**
-     * Handles the reset identities event by setting a null push token in the Messaging shared state
-     * and by removing the persisted push token from the Messaging {@link
-     * com.adobe.marketing.mobile.services.NamedCollection}
-     *
-     * @param resetIdentitiesEvent the reset identities {@link Event}
-     */
-    private void handleResetIdentitiesEvent(final Event resetIdentitiesEvent) {
-        Log.debug(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "Clearing the push token from persistence and the Messaging shared state.");
-        // remove the push token from the shared state
-        createMessagingSharedState(null, resetIdentitiesEvent);
-        // remove the push token from the named collection
-        InternalMessagingUtils.persistPushToken(null);
-    }
-
-    /**
-     * Dispatches an edge event to sync the push token with the Edge network.
-     *
-     * @param pushToken {@link String} containing the push token
-     * @param event {@link Event} containing the event that triggered this method
-     */
-    private void dispatchPushTokenSyncEdgeEvent(final String pushToken, final Event event) {
         final Map<String, Object> edgeIdentitySharedState =
                 getXDMSharedState(
                         MessagingConstants.SharedState.EdgeIdentity.EXTENSION_NAME, event);
@@ -519,8 +471,11 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Add the push token to the shared state
-        createMessagingSharedState(pushToken, event);
+        // Update the push token to the shared state
+        final HashMap<String, Object> messagingSharedState = new HashMap<>();
+        messagingSharedState.put(
+                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(messagingSharedState, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
@@ -936,14 +891,6 @@ public final class MessagingExtension extends Extension {
         return event != null && event.getSource().equals(EventSource.REQUEST_RESET);
     }
 
-    private void createMessagingSharedState(final String pushToken, final Event event) {
-        final Map<String, Object> newMessagingState = new HashMap<>();
-        if (!StringUtils.isNullOrEmpty(pushToken)) {
-            newMessagingState.put(
-                    MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
-        }
-        getApi().createSharedState(newMessagingState, event);
-    }
     // endregion
 
     @VisibleForTesting

@@ -31,9 +31,8 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final String DATA_STORE_NAME = EXTENSION_NAME;
+    static final int HALF_SECOND_IN_MILLIS = 500;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
-    static final int IGNORE_PUSH_SYNC_TIMEOUT_MS = 1000;
 
     private MessagingConstants() {}
 
@@ -379,7 +378,6 @@ public final class MessagingConstants {
 
             // Messaging
             static final String EXPERIENCE_EVENT_DATASET_ID = "messaging.eventDataset";
-            static final String OPTIMIZE_PUSH_SYNC = "messaging.optimizePushSync";
 
             private Configuration() {}
         }
@@ -392,16 +390,6 @@ public final class MessagingConstants {
 
             private EdgeIdentity() {}
         }
-
-        final class Messaging {
-            static final String PUSH_IDENTIFIER = "pushidentifier";
-
-            private Messaging() {}
-        }
-    }
-
-    final class NamedCollectionKeys {
-        private NamedCollectionKeys() {}
 
         final class Messaging {
             static final String PUSH_IDENTIFIER = "pushidentifier";
