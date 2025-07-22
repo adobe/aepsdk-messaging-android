@@ -116,7 +116,6 @@ public class PresentableMessageMapperTests {
     }
 
     PropositionItem createPropositionItem() throws MessageRequiredFieldMissingException {
-        // Create complex metadata with different data types
         Map<String, Object> meta = new HashMap<>();
         meta.put("key", "value");
         Map<String, Object> data = new HashMap<>();
@@ -977,10 +976,10 @@ public class PresentableMessageMapperTests {
     }
 
     // ========================================================================================
-    // Message getCustomData tests
+    // Message getMetadata tests
     // ========================================================================================
     @Test
-    public void test_messageGetCustomData_WithMetaData() {
+    public void test_messageGetMetadata_withMeta() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -998,16 +997,16 @@ public class PresentableMessageMapperTests {
                     }
 
                     // test
-                    Map<String, Object> customData = internalMessage.getCustomData();
+                    Map<String, Object> metadata = internalMessage.getMetadata();
 
                     // verify
-                    assertNotNull(customData);
-                    assertEquals("value", customData.get("key"));
+                    assertNotNull(metadata);
+                    assertEquals("value", metadata.get("key"));
                 });
     }
 
     @Test
-    public void test_messageGetCustomData_WithEmptyMetaData() {
+    public void test_messageGetMetadata_withEmptyMeta() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -1027,16 +1026,16 @@ public class PresentableMessageMapperTests {
                     }
 
                     // test
-                    Map<String, Object> customData = internalMessage.getCustomData();
+                    Map<String, Object> metadata = internalMessage.getMetadata();
 
                     // verify
-                    assertNotNull(customData);
-                    assertTrue(customData.isEmpty());
+                    assertNotNull(metadata);
+                    assertTrue(metadata.isEmpty());
                 });
     }
 
     @Test
-    public void test_messageGetCustomData_WithNullMetaData() {
+    public void test_messageGetMetadata_withNullMeta() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -1056,15 +1055,16 @@ public class PresentableMessageMapperTests {
                     }
 
                     // test
-                    Map<String, Object> customData = internalMessage.getCustomData();
+                    Map<String, Object> metadata = internalMessage.getMetadata();
 
-                    // verify
-                    assertNull(customData);
+                    // verify, metadata is always non-null
+                    assertNotNull(metadata);
+                    assertTrue(metadata.isEmpty());
                 });
     }
 
     @Test
-    public void test_messageGetCustomData_WithComplexMetaData() {
+    public void test_messageGetMetadata_withComplexMeta() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -1084,24 +1084,24 @@ public class PresentableMessageMapperTests {
                     }
 
                     // test
-                    Map<String, Object> customData = internalMessage.getCustomData();
+                    Map<String, Object> metadata = internalMessage.getMetadata();
 
                     // verify
-                    assertNotNull(customData);
-                    assertEquals("stringValue", customData.get("stringKey"));
-                    assertEquals(42, customData.get("intKey"));
-                    assertEquals(true, customData.get("boolKey"));
+                    assertNotNull(metadata);
+                    assertEquals("stringValue", metadata.get("stringKey"));
+                    assertEquals(42, metadata.get("intKey"));
+                    assertEquals(true, metadata.get("boolKey"));
 
                     // Verify nested object
                     @SuppressWarnings("unchecked")
                     Map<String, Object> nestedObject =
-                            (Map<String, Object>) customData.get("objectKey");
+                            (Map<String, Object>) metadata.get("objectKey");
                     assertNotNull(nestedObject);
                     assertEquals("nestedValue", nestedObject.get("nestedKey"));
 
                     // Verify array
                     @SuppressWarnings("unchecked")
-                    List<Object> arrayValue = (List<Object>) customData.get("arrayKey");
+                    List<Object> arrayValue = (List<Object>) metadata.get("arrayKey");
                     assertNotNull(arrayValue);
                     assertEquals(3, arrayValue.size());
                     assertEquals("item1", arrayValue.get(0));
@@ -1111,7 +1111,7 @@ public class PresentableMessageMapperTests {
     }
 
     @Test
-    public void test_messageGetCustomData_DefaultInterfaceImplementation() {
+    public void test_messageGetMetadata_DefaultInterfaceImplementation() {
         // test
         Message message =
                 new Message() {
@@ -1134,11 +1134,11 @@ public class PresentableMessageMapperTests {
                 };
 
         // test
-        Map<String, Object> customData = message.getCustomData();
+        Map<String, Object> metadata = message.getMetadata();
 
         // verify
-        assertNotNull(customData);
-        assertTrue(customData.isEmpty());
+        assertNotNull(metadata);
+        assertTrue(metadata.isEmpty());
     }
 
     // ========================================================================================

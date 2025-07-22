@@ -26,6 +26,7 @@ import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
 import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -129,7 +130,7 @@ class PresentableMessageMapper {
         private final String id;
         private final MessagingExtension messagingExtension;
         private final Presentable<InAppMessage> aepMessage;
-        private final Map<String, Object> customData;
+        private final Map<String, Object> metadata;
 
         private boolean autoTrack = true;
         // package private
@@ -215,13 +216,13 @@ class PresentableMessageMapper {
                                 + " empty.");
             }
 
-            customData = inAppSchemaData.getMeta();
+            metadata = inAppSchemaData.getMeta();
             Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    MapUtils.isNullOrEmpty(customData)
-                            ? "No in-app message custom data found in the proposition payload."
-                            : "Found in-app message custom data in the proposition payload.");
+                    MapUtils.isNullOrEmpty(metadata)
+                            ? "No in-app message custom metadata found in the proposition payload."
+                            : "Found in-app message custom metadata in the proposition payload.");
 
             try {
                 final String html = (String) inAppSchemaData.getContent();
@@ -254,8 +255,8 @@ class PresentableMessageMapper {
         }
 
         @Override
-        public Map<String, Object> getCustomData() {
-            return customData;
+        public Map<String, Object> getMetadata() {
+            return metadata != null ? metadata : Collections.emptyMap();
         }
 
         /**
