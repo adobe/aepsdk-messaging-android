@@ -128,6 +128,7 @@ class PresentableMessageMapper {
         private final String id;
         private final MessagingExtension messagingExtension;
         private final Presentable<InAppMessage> aepMessage;
+        private final Map<String, Object> customData;
 
         private boolean autoTrack = true;
         // package private
@@ -213,6 +214,8 @@ class PresentableMessageMapper {
                                 + " empty.");
             }
 
+            customData = inAppSchemaData.getMeta();
+
             try {
                 final String html = (String) inAppSchemaData.getContent();
                 if (StringUtils.isNullOrEmpty(html)) {
@@ -241,6 +244,11 @@ class PresentableMessageMapper {
                 throw new MessageRequiredFieldMissingException(
                         "Required field: in-app message content is not of type String.");
             }
+        }
+
+        @Override
+        public Map<String, Object> getCustomData() {
+            return customData;
         }
 
         /**
