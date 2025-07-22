@@ -24,7 +24,9 @@ import com.adobe.marketing.mobile.services.ui.UIService;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
+import com.adobe.marketing.mobile.util.MapUtils;
 import com.adobe.marketing.mobile.util.StringUtils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -128,6 +130,7 @@ class PresentableMessageMapper {
         private final String id;
         private final MessagingExtension messagingExtension;
         private final Presentable<InAppMessage> aepMessage;
+        private final Map<String, Object> metadata;
 
         private boolean autoTrack = true;
         // package private
@@ -213,6 +216,14 @@ class PresentableMessageMapper {
                                 + " empty.");
             }
 
+            metadata = inAppSchemaData.getMeta();
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    MapUtils.isNullOrEmpty(metadata)
+                            ? "No in-app message custom metadata found in the proposition payload."
+                            : "Found in-app message custom metadata in the proposition payload.");
+
             try {
                 final String html = (String) inAppSchemaData.getContent();
                 if (StringUtils.isNullOrEmpty(html)) {
@@ -241,6 +252,11 @@ class PresentableMessageMapper {
                 throw new MessageRequiredFieldMissingException(
                         "Required field: in-app message content is not of type String.");
             }
+        }
+
+        @Override
+        public Map<String, Object> getMetadata() {
+            return metadata != null ? metadata : Collections.emptyMap();
         }
 
         /**

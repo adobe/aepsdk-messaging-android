@@ -11,6 +11,9 @@
 
 package com.adobe.marketing.mobile;
 
+import java.util.Collections;
+import java.util.Map;
+
 public interface Message {
     /**
      * Dispatch tracking information via a Messaging request content event.
@@ -45,5 +48,16 @@ public interface Message {
      */
     default boolean getAutoTrack() {
         return true;
+    }
+
+    /**
+     * Gets the {@link Message}'s custom metadata which is the metadata present in the {@code
+     * InAppSchemaData} created from the {@code Message} payload.
+     *
+     * @return @code Map<String, Object>} containing the custom metadata present in the {@code
+     *     Message} payload.
+     */
+    default Map<String, Object> getMetadata() {
+        return Collections.emptyMap();
     }
 }
