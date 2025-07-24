@@ -40,10 +40,11 @@ jobs:
   publish:
     permissions:
         contents: write
-    uses: adobe/aepsdk-commons/.github/workflows/android-maven-release.yml@gha-android-3.3.1
+    uses: adobe/aepsdk-commons/.github/workflows/android-maven-release.yml@gha-android-3.4.2
     with:
       tag: ${{ github.event.inputs.tag }}
       create-github-release: ${{ github.event.inputs.create-github-release == 'true' }}
       version-validation-paths: code/gradle.properties, code/messaging/src/phone/java/com/adobe/marketing/mobile/Messaging.java
       version-validation-dependencies: Core ${{ github.event.inputs.core-dependency }}, Edge ${{ github.event.inputs.edge-dependency }}
+      staging-dir: code/messaging/build/staging
     secrets: inherit

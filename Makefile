@@ -59,13 +59,13 @@ assemble-app:
 	(./code/gradlew -p code/$(TEST-APP-FOLDER-NAME) assemble)
 
 ci-publish-maven-local-jitpack: assemble-phone-release
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publishReleasePublicationToMavenLocal -Pjitpack  -x signReleasePublication)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publishReleasePublicationToMavenLocal -Pjitpack)
 
-ci-publish-staging: assemble-phone-release
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publishReleasePublicationToSonatypeRepository)
+ci-publish-staging: clean
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publish)
 
 ci-publish: assemble-phone-release
-	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publishReleasePublicationToSonatypeRepository -Prelease)
+	(./code/gradlew -p code/$(EXTENSION-LIBRARY-FOLDER-NAME) publish -Prelease)
 
 # usage - 
 # make set-environment ENV=[environment]

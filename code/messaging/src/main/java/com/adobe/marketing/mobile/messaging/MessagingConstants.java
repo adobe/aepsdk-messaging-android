@@ -55,6 +55,8 @@ public final class MessagingConstants {
                 "https://ns.adobe.com/personalization/message/native-alert";
         static final String SCHEMA_DEFAULT_CONTENT =
                 "https://ns.adobe.com/personalization/default-content-item";
+        static final String SCHEMA_EVENT_HISTORY_OPERATION =
+                "https://ns.adobe.com/personalization/eventHistoryOperation";
 
         private SchemaValues() {}
     }
@@ -87,6 +89,9 @@ public final class MessagingConstants {
         static final String MOBILE_PARAMETERS = "mobileParameters";
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
+        static final String OPERATION = "operation";
+        static final String EVENT_TYPE = "iam.eventType";
+        static final String ACTIVITY_ID = "iam.id";
 
         private ConsequenceDetailDataKeys() {}
     }
@@ -351,10 +356,16 @@ public final class MessagingConstants {
         private EventSource() {}
     }
 
+    final class EventHistoryOperationEventTypes {
+        static final String QUALIFY = "qualify";
+        static final String UNQUALIFY = "unqualify";
+        static final String DISQUALIFY = "disqualify";
+    }
+
     final class EventMask {
         final class Keys {
             static final String EVENT_TYPE = "eventType";
-            static final String MESSAGE_ID = "id";
+            static final String ACTIVITY_ID = "id";
             static final String TRACKING_ACTION = "action";
 
             private Keys() {}
@@ -362,7 +373,7 @@ public final class MessagingConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.id";
+            static final String ACTIVITY_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {}

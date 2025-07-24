@@ -433,54 +433,54 @@ public class MessagingTestUtils {
         }
     }
 
-    static List<Map<String, Object>> generateFeedPayload(final MessageTestConfig config) {
+    static List<Map<String, Object>> generateContentCardPayload(final MessageTestConfig config) {
         List<Map<String, Object>> payload = new ArrayList<>();
         if (config.hasEmptyPayload) {
             return payload;
         }
         for (int i = 0; i < config.count; i++) {
-            Map<String, Object> feedProposition = getMapFromFile("feedProposition.json");
+            Map<String, Object> contentCardProposition = getMapFromFile("contentCardProposition.json");
 
             // activity id modification. we want to modify the proposition activity id
             // to be unique for each proposition by replacing the last two characters
             // with a value in the range of 00-99.
             String activityId = "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44342";
             activityId = activityId.replace(activityId.substring(activityId.length() - 2), String.format("%02d", i));
-            Map<String, Object> scopeDetails = (Map<String, Object>) feedProposition.get("scopeDetails");
+            Map<String, Object> scopeDetails = (Map<String, Object>) contentCardProposition.get("scopeDetails");
             Map<String, Object> activtyMap = (Map<String, Object>) scopeDetails.get("activity");
             activtyMap.put("id", activityId);
             scopeDetails.put("activity", activtyMap);
-            feedProposition.put("scopeDetails", scopeDetails);
+            contentCardProposition.put("scopeDetails", scopeDetails);
 
             // items modification
             if (config.isMissingItems) {
-                feedProposition.remove("items");
+                contentCardProposition.remove("items");
             }
 
             // scope details modification
             if (config.isMissingScopeDetails) {
-                feedProposition.remove("scopeDetails");
+                contentCardProposition.remove("scopeDetails");
             }
 
             // scope modification
             if (config.noValidAppSurfaceInPayload) {
-                feedProposition.remove("scope");
+                contentCardProposition.remove("scope");
             } else if (config.nonMatchingAppSurfaceInPayload) {
-                feedProposition.put("scope", "mobileapp://invalidId");
+                contentCardProposition.put("scope", "mobileapp://invalidId");
             }
 
             // id modification
             if (config.isMissingMessageId) {
-                feedProposition.remove("id");
+                contentCardProposition.remove("id");
             }
 
-            payload.add(feedProposition);
+            payload.add(contentCardProposition);
         }
         return payload;
     }
 
     static List<Proposition> generateQualifiedContentCards(final MessageTestConfig config) {
-        List<Map<String, Object>> payload = generateFeedPayload(config);
+        List<Map<String, Object>> payload = generateContentCardPayload(config);
         List<Proposition> propositions = new ArrayList<>();
         for (Map<String, Object> proposition : payload) {
             propositions.add(Proposition.fromEventData(proposition));
