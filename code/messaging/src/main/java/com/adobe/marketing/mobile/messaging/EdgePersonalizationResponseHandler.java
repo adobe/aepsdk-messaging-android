@@ -657,12 +657,6 @@ class EdgePersonalizationResponseHandler {
     private void updateRulesEngines(
             @NonNull final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
             @NonNull final List<Surface> requestedSurfaces) {
-
-        // if there are no rules for any schema type, we can skip updating the rules engines
-        if (surfaceRulesBySchemaType.isEmpty() || requestedSurfaces.isEmpty()) {
-            return;
-        }
-
         // process rules from response
         processRulesForSchemaType(
                 surfaceRulesBySchemaType, requestedSurfaces, SchemaType.INAPP, inAppRulesBySurface);

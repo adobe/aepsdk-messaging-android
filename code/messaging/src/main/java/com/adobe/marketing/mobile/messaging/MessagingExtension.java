@@ -300,6 +300,14 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleRuleEngineResponseEvents(final Event event) {
+        if (!InternalMessagingUtils.isSchemaConsequence(event)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "handleRuleEngineResponseEvents - Ignoring rule response event,"
+                            + " consequence is not of type 'schema'");
+            return;
+        }
         final PropositionItem propositionItem = PropositionItem.fromSchemaConsequenceEvent(event);
         if (propositionItem == null) {
             Log.debug(

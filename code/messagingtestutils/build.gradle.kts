@@ -43,8 +43,7 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    // todo change once core is released
-    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9")
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.7")
     implementation("androidx.test.ext:junit:1.1.5")

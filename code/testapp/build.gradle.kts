@@ -58,20 +58,11 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    // todo change once core is released
-    implementation("com.github.spoorthipujariadobe.aepsdk-core-android-1:core:5fc9bba5c9")
-    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
-    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
-    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
-    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion") {
-        exclude(group = "com.adobe.marketing.mobile", module = "core")
-    }
+    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
+    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion")
+    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
+    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
+    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
