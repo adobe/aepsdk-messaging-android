@@ -81,6 +81,30 @@ public class SchemaTypeTests {
     }
 
     @Test
+    public void getValue_setsValueCorrectly_forContentCard() {
+        // setup
+        int expectedValue = 8;
+
+        // test
+        SchemaType schemaType = SchemaType.CONTENT_CARD;
+
+        // verify
+        assertEquals(expectedValue, schemaType.getValue());
+    }
+
+    @Test
+    public void getValue_setsValueCorrectly_forEventHistoryOperation() {
+        // setup
+        int expectedValue = 9;
+
+        // test
+        SchemaType schemaType = SchemaType.EVENT_HISTORY_OPERATION;
+
+        // verify
+        assertEquals(expectedValue, schemaType.getValue());
+    }
+
+    @Test
     public void getValue_setsValueCorrectly_forNativeAlert() {
         // setup
         int expectedValue = 6;
@@ -177,6 +201,30 @@ public class SchemaTypeTests {
     }
 
     @Test
+    public void toString_returnsCorrectString_forContentCard() {
+        // setup
+        SchemaType schemaType = SchemaType.CONTENT_CARD;
+
+        // test
+        String result = schemaType.toString();
+
+        // verify
+        assertEquals(MessagingTestConstants.SchemaValues.SCHEMA_CONTENT_CARD, result);
+    }
+
+    @Test
+    public void toString_returnsCorrectString_forEventHistoryOperation() {
+        // setup
+        SchemaType schemaType = SchemaType.EVENT_HISTORY_OPERATION;
+
+        // test
+        String result = schemaType.toString();
+
+        // verify
+        assertEquals(MessagingTestConstants.SchemaValues.SCHEMA_EVENT_HISTORY_OPERATION, result);
+    }
+
+    @Test
     public void toString_returnsCorrectString_forNativeAlert() {
         // setup
         SchemaType schemaType = SchemaType.NATIVE_ALERT;
@@ -270,6 +318,30 @@ public class SchemaTypeTests {
 
         // verify
         assertEquals(SchemaType.FEED, schemaType);
+    }
+
+    @Test
+    public void fromString_returnsCorrectEnum_forContentCard() {
+        // setup
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_CONTENT_CARD;
+
+        // test
+        SchemaType schemaType = SchemaType.fromString(typeString);
+
+        // verify
+        assertEquals(SchemaType.CONTENT_CARD, schemaType);
+    }
+
+    @Test
+    public void fromString_returnsCorrectEnum_forEventHistoryOperation() {
+        // setup
+        String typeString = MessagingTestConstants.SchemaValues.SCHEMA_EVENT_HISTORY_OPERATION;
+
+        // test
+        SchemaType schemaType = SchemaType.fromString(typeString);
+
+        // verify
+        assertEquals(SchemaType.EVENT_HISTORY_OPERATION, schemaType);
     }
 
     @Test

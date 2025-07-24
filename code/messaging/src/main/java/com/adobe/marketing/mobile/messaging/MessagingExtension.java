@@ -300,6 +300,14 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleRuleEngineResponseEvents(final Event event) {
+        if (!InternalMessagingUtils.isSchemaConsequence(event)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "handleRuleEngineResponseEvents - Ignoring rule response event,"
+                            + " consequence is not of type 'schema'");
+            return;
+        }
         final PropositionItem propositionItem = PropositionItem.fromSchemaConsequenceEvent(event);
         if (propositionItem == null) {
             Log.debug(
@@ -312,6 +320,10 @@ public final class MessagingExtension extends Extension {
         switch (propositionItem.getSchema()) {
             case INAPP:
                 edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
+                break;
+            case EVENT_HISTORY_OPERATION:
+                edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
+                        propositionItem);
                 break;
             default:
         }
@@ -405,10 +417,6 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
-        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
-            // validate the event is an event history disqualify event then process the event
-            // history data
-            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 

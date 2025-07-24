@@ -11,7 +11,15 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
+
+import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.Event;
+import com.adobe.marketing.mobile.EventHistoryRequest;
+import com.adobe.marketing.mobile.EventHistoryResult;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
@@ -89,33 +97,111 @@ public class ContentCardRulesEngineTests {
     }
 
     @Test
-    public void test_evaluate_WithFeedConsequence() {
+    public void test_evaluate_WithContentCardConsequence_ForFirstTimeQualifyingEvent() {
         // setup
-        String rulesJson = MessagingTestUtils.loadStringFromFile("feedPropositionContent.json");
+        // mock the getHistoricalEvents call to return 0 events
+        doAnswer(
+                        invocation -> {
+                            AdobeCallbackWithError<EventHistoryResult[]> callback =
+                                    invocation.getArgument(2);
+                            callback.call(
+                                    new EventHistoryResult[] {
+                                        new EventHistoryResult(0, null, null)
+                                    });
+                            return null;
+                        })
+                .when(mockExtensionApi)
+                .getHistoricalEvents(
+                        any(EventHistoryRequest[].class),
+                        anyBoolean(),
+                        any(AdobeCallbackWithError.class));
+
+        String rulesJson =
+                MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         contentCardRulesEngine.replaceRules(rules);
+        Event qualifyingEvent =
+                new Event.Builder("qualifyingEvent", EventType.PLACES, EventSource.REQUEST_CONTENT)
+                        .setEventData(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("regionEventType", "entered");
+                                    }
+                                })
+                        .build();
 
         // test
         Map<Surface, List<PropositionItem>> propositionItemsBySurface =
-                contentCardRulesEngine.evaluate(defaultEvent);
+                contentCardRulesEngine.evaluate(qualifyingEvent);
 
-        // verify
+        // verify that the content card consequence is returned
         Assert.assertNotNull(propositionItemsBySurface);
-        Assert.assertEquals(1, propositionItemsBySurface.size());
+        assertEquals(1, propositionItemsBySurface.size());
         List<PropositionItem> inboundMessageList =
                 propositionItemsBySurface.get(Surface.fromUriString("mobileapp://mockPackageName"));
         Assert.assertNotNull(inboundMessageList);
-        Assert.assertEquals(1, inboundMessageList.size());
-        Assert.assertEquals(SchemaType.CONTENT_CARD, inboundMessageList.get(0).getSchema());
+        assertEquals(1, inboundMessageList.size());
+        assertEquals(SchemaType.CONTENT_CARD, inboundMessageList.get(0).getSchema());
     }
 
     @Test
-    public void test_evaluate_WithMultipleFeedItemConsequences() {
+    public void test_evaluate_WithContentCardConsequence_ForAlreadyQualifiedCard() {
+        // setup
+        // mock the getHistoricalEvents call
+        doAnswer(
+                        invocation -> {
+                            EventHistoryRequest[] requestsArray = invocation.getArgument(0);
+                            EventHistoryResult[] resultsArray =
+                                    new EventHistoryResult[requestsArray.length];
+                            AdobeCallbackWithError<EventHistoryResult[]> callback =
+                                    invocation.getArgument(2);
+                            for (int i = 0; i < requestsArray.length; i++) {
+                                // hash for disqualify event is 2655746408L
+                                // hash for unqualify event is 2655746409L
+                                if (requestsArray[i].getMaskAsDecimalHash() == 2655746408L
+                                        || requestsArray[i].getMaskAsDecimalHash() == 2479650165L) {
+                                    resultsArray[i] = new EventHistoryResult(0, null, null);
+                                } else {
+                                    // return found for qualify and trigger event
+                                    resultsArray[i] = new EventHistoryResult(1, 123L, 456L);
+                                }
+                            }
+                            callback.call(resultsArray);
+                            return null;
+                        })
+                .when(mockExtensionApi)
+                .getHistoricalEvents(
+                        any(EventHistoryRequest[].class),
+                        anyBoolean(),
+                        any(AdobeCallbackWithError.class));
+
+        String rulesJson =
+                MessagingTestUtils.loadStringFromFile("contentCardPropositionContent.json");
+        Assert.assertNotNull(rulesJson);
+        List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
+        contentCardRulesEngine.replaceRules(rules);
+
+        // test
+        Map<Surface, List<PropositionItem>> propositionItemsBySurface =
+                contentCardRulesEngine.evaluate(defaultEvent);
+
+        // verify that the content card consequence is returned
+        Assert.assertNotNull(propositionItemsBySurface);
+        assertEquals(1, propositionItemsBySurface.size());
+        List<PropositionItem> inboundMessageList =
+                propositionItemsBySurface.get(Surface.fromUriString("mobileapp://mockPackageName"));
+        Assert.assertNotNull(inboundMessageList);
+        assertEquals(1, inboundMessageList.size());
+        assertEquals(SchemaType.CONTENT_CARD, inboundMessageList.get(0).getSchema());
+    }
+
+    @Test
+    public void test_evaluate_WithMultipleContentCardConsequences() {
         // setup
         String rulesJson =
                 MessagingTestUtils.loadStringFromFile(
-                        "feedPropositionContentFeedItemConsequences.json");
+                        "contentCardPropositionMultipleCardConsequences.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         contentCardRulesEngine.replaceRules(rules);
@@ -126,19 +212,20 @@ public class ContentCardRulesEngineTests {
 
         // verify
         Assert.assertNotNull(propositionItemsBySurface);
-        Assert.assertEquals(1, propositionItemsBySurface.size());
+        assertEquals(1, propositionItemsBySurface.size());
         List<PropositionItem> inboundMessageList =
                 propositionItemsBySurface.get(
                         Surface.fromUriString("mobileapp://com.feeds.testing/feeds/apifeed"));
         Assert.assertNotNull(inboundMessageList);
-        Assert.assertEquals(2, inboundMessageList.size());
+        assertEquals(2, inboundMessageList.size());
     }
 
     @Test
     public void test_evaluate_WithMissingDataInConsequencesDetail() {
         // setup
         String rulesJson =
-                MessagingTestUtils.loadStringFromFile("feedPropositionContentMissingData.json");
+                MessagingTestUtils.loadStringFromFile(
+                        "contentCardPropositionContentMissingData.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         contentCardRulesEngine.replaceRules(rules);
@@ -156,7 +243,7 @@ public class ContentCardRulesEngineTests {
         // setup
         String rulesJson =
                 MessagingTestUtils.loadStringFromFile(
-                        "feedPropositionContentMissingSurfaceMetadata.json");
+                        "contentCardPropositionContentMissingSurfaceMetadata.json");
         Assert.assertNotNull(rulesJson);
         List<LaunchRule> rules = JSONRulesParser.parse(rulesJson, mockExtensionApi);
         contentCardRulesEngine.replaceRules(rules);
