@@ -20,7 +20,7 @@ import org.json.JSONObject;
 
 // represents the schema data object for a event history operation schema
 class EventHistoryOperationSchemaData implements SchemaData {
-    private static final String SELF_TAG = "ContentCardSchemaData";
+    private static final String SELF_TAG = "EventHistoryOperationSchemaData";
     private Map<String, Object> content;
     private String operation;
 
@@ -51,10 +51,12 @@ class EventHistoryOperationSchemaData implements SchemaData {
     }
 
     @Nullable String getEventType() {
-        return DataReader.optString(content, MessagingConstants.EventMask.Mask.EVENT_TYPE, null);
+        return DataReader.optString(
+                content, MessagingConstants.ConsequenceDetailDataKeys.EVENT_TYPE, null);
     }
 
     @Nullable String getActivityId() {
-        return DataReader.optString(content, MessagingConstants.EventMask.Mask.ACTIVITY_ID, null);
+        return DataReader.optString(
+                content, MessagingConstants.ConsequenceDetailDataKeys.ACTIVITY_ID, null);
     }
 }

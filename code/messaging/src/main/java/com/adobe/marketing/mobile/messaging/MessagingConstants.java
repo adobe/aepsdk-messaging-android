@@ -90,6 +90,8 @@ public final class MessagingConstants {
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
         static final String OPERATION = "operation";
+        static final String EVENT_TYPE = "iam.eventType";
+        static final String ACTIVITY_ID = "iam.id";
 
         private ConsequenceDetailDataKeys() {}
     }

@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -34,15 +34,19 @@ public class EventHistoryOperationSchemaDataTests {
     public void constructor_setsAllFieldsCorrectly_whenValidJsonObjectProvided()
             throws JSONException {
         JSONObject schemaData = new JSONObject();
-        schemaData.put(MessagingConstants.ConsequenceDetailDataKeys.OPERATION, "insert");
+        schemaData.put(MessagingTestConstants.ConsequenceDetailDataKeys.OPERATION, "insert");
         JSONObject contentObject = new JSONObject();
-        contentObject.put(MessagingConstants.EventMask.Mask.EVENT_TYPE, "customEvent");
-        contentObject.put(MessagingConstants.EventMask.Mask.ACTIVITY_ID, "activity123");
-        schemaData.put(MessagingConstants.ConsequenceDetailDataKeys.CONTENT, contentObject);
+        contentObject.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.EVENT_TYPE, "customEvent");
+        contentObject.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.ACTIVITY_ID, "activity123");
+        schemaData.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, contentObject);
 
         Map<String, Object> expectedContent = new HashMap<>();
-        expectedContent.put(MessagingConstants.EventMask.Mask.EVENT_TYPE, "customEvent");
-        expectedContent.put(MessagingConstants.EventMask.Mask.ACTIVITY_ID, "activity123");
+        expectedContent.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.EVENT_TYPE, "customEvent");
+        expectedContent.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.ACTIVITY_ID, "activity123");
 
         try (MockedStatic<JSONUtils> jsonUtilsMockedStatic = Mockito.mockStatic(JSONUtils.class);
                 MockedStatic<DataReader> dataReaderMockedStatic =
@@ -56,7 +60,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             expectedContent,
-                                            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .EVENT_TYPE,
                                             null))
                     .thenReturn("customEvent");
             dataReaderMockedStatic
@@ -64,7 +69,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             expectedContent,
-                                            MessagingConstants.EventMask.Mask.ACTIVITY_ID,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .ACTIVITY_ID,
                                             null))
                     .thenReturn("activity123");
 
@@ -151,7 +157,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             null,
-                                            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .EVENT_TYPE,
                                             null))
                     .thenReturn(null);
 
@@ -172,7 +179,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             null,
-                                            MessagingConstants.EventMask.Mask.ACTIVITY_ID,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .ACTIVITY_ID,
                                             null))
                     .thenReturn(null);
 
@@ -200,7 +208,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             content,
-                                            MessagingConstants.EventMask.Mask.EVENT_TYPE,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .EVENT_TYPE,
                                             null))
                     .thenReturn(null);
 
@@ -231,7 +240,8 @@ public class EventHistoryOperationSchemaDataTests {
                             () ->
                                     DataReader.optString(
                                             content,
-                                            MessagingConstants.EventMask.Mask.ACTIVITY_ID,
+                                            MessagingTestConstants.ConsequenceDetailDataKeys
+                                                    .ACTIVITY_ID,
                                             null))
                     .thenReturn(null);
 

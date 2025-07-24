@@ -659,16 +659,16 @@ class EdgePersonalizationResponseHandler {
             @NonNull final List<Surface> requestedSurfaces) {
         // process rules from response
         processRulesForSchemaType(
-                surfaceRulesBySchemaType, requestedSurfaces, SchemaType.INAPP, inAppRulesBySurface);
+                SchemaType.INAPP, surfaceRulesBySchemaType, requestedSurfaces, inAppRulesBySurface);
         processRulesForSchemaType(
+                SchemaType.CONTENT_CARD,
                 surfaceRulesBySchemaType,
                 requestedSurfaces,
-                SchemaType.CONTENT_CARD,
                 contentCardRulesBySurface);
         processRulesForSchemaType(
+                SchemaType.EVENT_HISTORY_OPERATION,
                 surfaceRulesBySchemaType,
                 requestedSurfaces,
-                SchemaType.EVENT_HISTORY_OPERATION,
                 eventHistoryRulesBySurface);
 
         // collect and update content card rules engine
@@ -714,9 +714,9 @@ class EdgePersonalizationResponseHandler {
     }
 
     private void processRulesForSchemaType(
+            final SchemaType schemaType,
             final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
             final List<Surface> requestedSurfaces,
-            final SchemaType schemaType,
             final Map<Surface, List<LaunchRule>> rulesBySurface) {
         final Map<Surface, List<LaunchRule>> newRules = surfaceRulesBySchemaType.get(schemaType);
         if (newRules != null) {
@@ -725,7 +725,7 @@ class EdgePersonalizationResponseHandler {
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
                     "Updating definitions for surfaces %s with schema type %s.",
-                    newSurfaces,
+                    newSurfaces.toString(),
                     schemaType.toString());
 
             // replace rules for each surface we got back
@@ -735,12 +735,24 @@ class EdgePersonalizationResponseHandler {
             final List<Surface> surfacesToRemove = new ArrayList<>(requestedSurfaces);
             surfacesToRemove.removeAll(newSurfaces);
             for (final Surface surface : surfacesToRemove) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Removing definitions for surface %s with schema type %s.",
+                        surface.getUri(),
+                        schemaType.toString());
                 rulesBySurface.remove(surface);
             }
         } else {
             // no rules of this schema type in the response, clear any existing rules for the
             // requested surfaces
             for (final Surface surface : requestedSurfaces) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Removing definitions for surface %s with schema type %s.",
+                        surface.getUri(),
+                        schemaType.toString());
                 rulesBySurface.remove(surface);
             }
         }
