@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile;
 
+import androidx.annotation.NonNull;
 import java.util.Collections;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public interface Message {
      * @return @code Map<String, Object>} containing the custom metadata present in the {@code
      *     Message} payload.
      */
-    default Map<String, Object> getMetadata() {
+    @NonNull default Map<String, Object> getMetadata() {
         return Collections.emptyMap();
     }
 }

@@ -11,6 +11,7 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.Message;
@@ -255,7 +256,7 @@ class PresentableMessageMapper {
         }
 
         @Override
-        public Map<String, Object> getMetadata() {
+        @NonNull public Map<String, Object> getMetadata() {
             return metadata != null ? metadata : Collections.emptyMap();
         }
 
