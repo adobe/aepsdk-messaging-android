@@ -2431,14 +2431,11 @@ public class EdgePersonalizationResponseHandlerTests {
                         edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
                                 propositionItem);
 
-                        // verify qualified content cards matching the activity id are removed
+                        // verify qualified content cards matching the activity id are not removed
                         Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                                 edgePersonalizationResponseHandler
                                         .getQualifiedContentCardsBySurface();
                         assertEquals(1, qualifiedContentCardsBySurface.size());
-                        // verify there are now 3 qualified content cards after removing one with
-                        // activity id
-                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
                         final List<Proposition> qualifiedContentCardsList =
                                 qualifiedContentCardsBySurface.get(feedSurface);
                         assertEquals(propositions, qualifiedContentCardsList);
@@ -2498,14 +2495,11 @@ public class EdgePersonalizationResponseHandlerTests {
                         edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
                                 propositionItem);
 
-                        // verify qualified content cards matching the activity id are removed
+                        // verify qualified content cards matching the activity id are not removed
                         Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                                 edgePersonalizationResponseHandler
                                         .getQualifiedContentCardsBySurface();
                         assertEquals(1, qualifiedContentCardsBySurface.size());
-                        // verify there are now 3 qualified content cards after removing one with
-                        // activity id
-                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
                         final List<Proposition> qualifiedContentCardsList =
                                 qualifiedContentCardsBySurface.get(feedSurface);
                         assertEquals(propositions, qualifiedContentCardsList);
@@ -2565,14 +2559,11 @@ public class EdgePersonalizationResponseHandlerTests {
                         edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
                                 propositionItem);
 
-                        // verify qualified content cards matching the activity id are removed
+                        // verify qualified content cards matching the activity id are not removed
                         Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                                 edgePersonalizationResponseHandler
                                         .getQualifiedContentCardsBySurface();
                         assertEquals(1, qualifiedContentCardsBySurface.size());
-                        // verify there are now 3 qualified content cards after removing one with
-                        // activity id
-                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
                         final List<Proposition> qualifiedContentCardsList =
                                 qualifiedContentCardsBySurface.get(feedSurface);
                         assertEquals(propositions, qualifiedContentCardsList);
@@ -2635,14 +2626,11 @@ public class EdgePersonalizationResponseHandlerTests {
                         edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
                                 propositionItem);
 
-                        // verify qualified content cards matching the activity id are removed
+                        // verify qualified content cards matching the activity id are not removed
                         Map<Surface, List<Proposition>> qualifiedContentCardsBySurface =
                                 edgePersonalizationResponseHandler
                                         .getQualifiedContentCardsBySurface();
                         assertEquals(1, qualifiedContentCardsBySurface.size());
-                        // verify there are now 3 qualified content cards after removing one with
-                        // activity id
-                        // "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300"
                         final List<Proposition> qualifiedContentCardsList =
                                 qualifiedContentCardsBySurface.get(feedSurface);
                         assertEquals(propositions, qualifiedContentCardsList);
