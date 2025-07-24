@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 import com.adobe.marketing.mobile.gradle.BuildConstants
-import org.jetbrains.kotlin.gradle.utils.`is`
 
 plugins {
     id("com.android.application")
