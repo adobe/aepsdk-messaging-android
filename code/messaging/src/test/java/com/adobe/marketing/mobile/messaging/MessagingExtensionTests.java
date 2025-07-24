@@ -719,12 +719,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullEventData_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullEventData_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -742,12 +744,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullTriggeredConsequence_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullTriggeredConsequence_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -776,12 +780,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -835,12 +841,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullDetailsPresentInConsequence_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullDetailsPresentInConsequence_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -876,6 +884,8 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
@@ -931,7 +941,7 @@ public class MessagingExtensionTests {
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_schemaTypeIsNotInApp_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_schemaTypeIsNotInAppOrEventHistory_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -985,6 +995,8 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
@@ -1045,6 +1057,8 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .handleEventHistoryRuleConsequence(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .createInAppMessage(any(PropositionItem.class));
                 });
     }
 
