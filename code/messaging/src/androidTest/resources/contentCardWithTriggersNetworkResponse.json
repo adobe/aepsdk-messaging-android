@@ -1,0 +1,464 @@
+{
+    "requestId": "mockRequestId",
+    "handle": [
+        {
+            "payload": [
+                {
+                    "id": "c2aa4a73-a534-44c2-baa4-a12980e5bb9d",
+                    "scope": "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1",
+                    "scopeDetails": {
+                        "decisionProvider": "AJO",
+                        "correlationID": "b5095046-7fd7-4961-871f-9d68f2dc335f",
+                        "characteristics": {
+                            "eventToken": "eyJtZXNzYWdlRXhlY3V0aW9uIjp7Im1lc3NhZ2VFeGVjdXRpb25JRCI6Ik5BIiwibWVzc2FnZUlEIjoiYjUwOTUwNDYtN2ZkNy00OTYxLTg3MWYtOWQ2OGYyZGMzMzVmIiwibWVzc2FnZVB1YmxpY2F0aW9uSUQiOiJiNzFlNDhiYS1mNzY3LTQ5NWItOWQxMS01YzA3MTg4NWNkODkiLCJtZXNzYWdlVHlwZSI6Im1hcmtldGluZyIsImNhbXBhaWduSUQiOiI5YzhlYzAzNS02YjNiLTQ3MGUtOGFlNS1lNTM5YzcxMjM4MDkiLCJjYW1wYWlnblZlcnNpb25JRCI6IjdkZGEyZGM2LTE5MjMtNGU2My1iZWFjLTU0ZGM3ODczNjFlYiIsImNhbXBhaWduQWN0aW9uSUQiOiJjN2MxNDk3ZS1lNWEzLTQ0MjMtYWUzNy1iYTc2ZTFlNDQzNDIifSwibWVzc2FnZVByb2ZpbGUiOnsibWVzc2FnZVByb2ZpbGVJRCI6IjQ0YWQ1NTA3LTZlODItNGY2MS05N2U1LTUzMmNhNmZkMDhhOCIsImNoYW5uZWwiOnsiX2lkIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWxzL3dlYiIsIl90eXBlIjoiaHR0cHM6Ly9ucy5hZG9iZS5jb20veGRtL2NoYW5uZWwtdHlwZXMvd2ViIn19fQ=="
+                        },
+                        "activity": {
+                            "id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                        }
+                    },
+                    "items": [
+                        {
+                            "id": "9d6eff2c-39a7-4aa1-9657-d642e26c5176",
+                            "schema": "https://ns.adobe.com/personalization/ruleset-item",
+                            "data": {
+                                "version": 1,
+                                "rules": [
+                                    {
+                                        "condition": {
+                                            "type": "group",
+                                            "definition": {
+                                                "logic": "and",
+                                                "conditions": [
+                                                    {
+                                                        "type": "historical",
+                                                        "definition": {
+                                                            "value": 0,
+                                                            "matcher": "eq",
+                                                            "events": [
+                                                                {
+                                                                    "iam.eventType": "disqualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "matcher",
+                                                        "definition": {
+                                                            "key": "~timestampu",
+                                                            "matcher": "lt",
+                                                            "values": [
+                                                                2019715200
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "group",
+                                                        "definition": {
+                                                            "logic": "or",
+                                                            "conditions": [
+                                                                {
+                                                                    "type": "group",
+                                                                    "definition": {
+                                                                        "logic": "and",
+                                                                        "conditions": [
+                                                                            {
+                                                                                "definition": {
+                                                                                    "key": "~type",
+                                                                                    "matcher": "eq",
+                                                                                    "values": [
+                                                                                        "com.adobe.eventType.places"
+                                                                                    ]
+                                                                                },
+                                                                                "type": "matcher"
+                                                                            },
+                                                                            {
+                                                                                "definition": {
+                                                                                    "key": "~source",
+                                                                                    "matcher": "eq",
+                                                                                    "values": [
+                                                                                        "com.adobe.eventSource.requestContent"
+                                                                                    ]
+                                                                                },
+                                                                                "type": "matcher"
+                                                                            },
+                                                                            {
+                                                                                "definition": {
+                                                                                    "key": "regionEventType",
+                                                                                    "matcher": "eq",
+                                                                                    "values": [
+                                                                                        "entered"
+                                                                                    ]
+                                                                                },
+                                                                                "type": "matcher"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "type": "historical",
+                                                                    "definition": {
+                                                                        "searchType": "mostRecent",
+                                                                        "value": 1,
+                                                                        "matcher": "ge",
+                                                                        "events": [
+                                                                            {
+                                                                                "iam.eventType": "unqualify",
+                                                                                "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                            },
+                                                                            {
+                                                                                "iam.eventType": "trigger",
+                                                                                "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "type": "historical",
+                                                                    "definition": {
+                                                                        "searchType": "mostRecent",
+                                                                        "value": 1,
+                                                                        "matcher": "eq",
+                                                                        "events": [
+                                                                            {
+                                                                                "iam.eventType": "unqualify",
+                                                                                "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                            },
+                                                                            {
+                                                                                "iam.eventType": "qualify",
+                                                                                "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "consequences": [
+                                            {
+                                                "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
+                                                "type": "schema",
+                                                "detail": {
+                                                    "id": "183639c4-cb37-458e-a8ef-4e130d767ebf",
+                                                    "schema": "https://ns.adobe.com/personalization/message/content-card",
+                                                    "data": {
+                                                        "expiryDate": 1723163897,
+                                                        "meta": {
+                                                            "feedName": "testFeed",
+                                                            "campaignName": "testCampaign",
+                                                            "surface": "mobileapp://com.adobe.marketing.mobile.messaging.test/promos/feed1"
+                                                        },
+                                                        "content": {
+                                                            "title": "Guacamole!",
+                                                            "body": "I'm the queen of Nacho Picchu and I'm really glad to meet you. To spice up this big tortilla chip, I command you to find a big dip.",
+                                                            "imageUrl": "https://d14dq8eoa1si34.cloudfront.net/2a6ef2f0-1167-11eb-88c6-b512a5ef09a7/urn:aaid:aem:d4b77a01-610a-4c3f-9be6-5ebe1bd13da3/oak:1.0::ci:fa54b394b6f987d974d8619833083519/8933c829-3ab2-38e8-a1ee-00d4f562fff8",
+                                                            "actionUrl": "https://luma.com/guacamolethemusical",
+                                                            "actionTitle": "guacamole!"
+                                                        },
+                                                        "contentType": "application/json",
+                                                        "publishedDate": 1691541497
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "condition": {
+                                            "type": "group",
+                                            "definition": {
+                                                "logic": "and",
+                                                "conditions": [
+                                                    {
+                                                        "type": "historical",
+                                                        "definition": {
+                                                            "value": 0,
+                                                            "matcher": "eq",
+                                                            "events": [
+                                                                {
+                                                                    "iam.eventType": "disqualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "matcher",
+                                                        "definition": {
+                                                            "key": "~timestampu",
+                                                            "matcher": "lt",
+                                                            "values": [
+                                                                2019715200
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "group",
+                                                        "definition": {
+                                                            "logic": "and",
+                                                            "conditions": [
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~type",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventType.places"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~source",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventSource.requestContent"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "regionEventType",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "entered"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "historical",
+                                                        "definition": {
+                                                            "searchType": "mostRecent",
+                                                            "value": 1,
+                                                            "matcher": "ne",
+                                                            "events": [
+                                                                {
+                                                                    "iam.eventType": "unqualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                },
+                                                                {
+                                                                    "iam.eventType": "qualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "consequences": [
+                                            {
+                                                "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                "type": "schema",
+                                                "detail": {
+                                                    "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                    "schema": "https://ns.adobe.com/personalization/eventHistoryOperation",
+                                                    "data": {
+                                                        "operation": "insert",
+                                                        "content": {
+                                                            "iam.eventType": "qualify",
+                                                            "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "condition": {
+                                            "type": "group",
+                                            "definition": {
+                                                "logic": "and",
+                                                "conditions": [
+                                                    {
+                                                        "type": "historical",
+                                                        "definition": {
+                                                            "value": 0,
+                                                            "matcher": "eq",
+                                                            "events": [
+                                                                {
+                                                                    "iam.eventType": "disqualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "group",
+                                                        "definition": {
+                                                            "logic": "and",
+                                                            "conditions": [
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~type",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventType.places"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~source",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventSource.requestContent"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "regionEventType",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "exited"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "historical",
+                                                        "definition": {
+                                                            "searchType": "mostRecent",
+                                                            "value": 0,
+                                                            "matcher": "ne",
+                                                            "events": [
+                                                                {
+                                                                    "iam.eventType": "unqualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                },
+                                                                {
+                                                                    "iam.eventType": "qualify",
+                                                                    "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "consequences": [
+                                            {
+                                                "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                "type": "schema",
+                                                "detail": {
+                                                    "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                    "schema": "https://ns.adobe.com/personalization/eventHistoryOperation",
+                                                    "data": {
+                                                        "operation": "insert",
+                                                        "content": {
+                                                            "iam.eventType": "unqualify",
+                                                            "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "condition": {
+                                            "type": "group",
+                                            "definition": {
+                                                "logic": "and",
+                                                "conditions": [
+                                                    {
+                                                        "type": "group",
+                                                        "definition": {
+                                                            "logic": "and",
+                                                            "conditions": [
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~type",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventType.edge"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "~source",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "com.adobe.eventSource.requestContent"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "xdm.eventType",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "decisioning.propositionDismiss"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                },
+                                                                {
+                                                                    "definition": {
+                                                                        "key": "xdm._experience.decisioning.propositions.0.scopeDetails.activity.id",
+                                                                        "matcher": "eq",
+                                                                        "values": [
+                                                                            "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                                        ]
+                                                                    },
+                                                                    "type": "matcher"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "type": "matcher",
+                                                        "definition": {
+                                                            "key": "~timestampu",
+                                                            "matcher": "lt",
+                                                            "values": [
+                                                                2019715200
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "consequences": [
+                                            {
+                                                "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                "type": "schema",
+                                                "detail": {
+                                                    "id": "48181acd-22b3-edae-bc8a-447868a7df7c",
+                                                    "schema": "https://ns.adobe.com/personalization/eventHistoryOperation",
+                                                    "data": {
+                                                        "operation": "insertIfNotExists",
+                                                        "content": {
+                                                            "iam.eventType": "disqualify",
+                                                            "iam.id": "a43122c4-bf19-499f-b507-087a028d1769#fa035681-15ce-488e-859e-200bb2ca90ac"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            "type": "personalization:decisions"
+        }
+    ]
+}

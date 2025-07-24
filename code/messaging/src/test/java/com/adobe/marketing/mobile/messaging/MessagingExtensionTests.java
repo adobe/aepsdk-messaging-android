@@ -40,7 +40,6 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.Messaging;
-import com.adobe.marketing.mobile.MessagingEdgeEventType;
 import com.adobe.marketing.mobile.MobileCore;
 import com.adobe.marketing.mobile.SharedStateResolution;
 import com.adobe.marketing.mobile.SharedStateResult;
@@ -720,12 +719,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullEventData_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullEventData_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -743,12 +744,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullTriggeredConsequence_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullTriggeredConsequence_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -777,12 +780,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_invalidType_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -836,12 +841,14 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_nullDetailsPresentInConsequence_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_nullDetailsPresentInConsequence_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -877,6 +884,8 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                 });
     }
 
@@ -932,7 +941,7 @@ public class MessagingExtensionTests {
 
     @Test
     public void
-            test_handleRuleEngineResponseEvents_when_schemaTypeIsNotInApp_then_createInAppMessageNotCalled() {
+            test_handleRuleEngineResponseEvents_when_schemaTypeIsNotInAppOrEventHistory_then_createInAppMessageOrHandleEventHistoryRulesConsequenceNotCalled() {
         // setup
         runUsingMockedServiceProvider(
                 () -> {
@@ -984,6 +993,70 @@ public class MessagingExtensionTests {
                     messagingExtension.handleRuleEngineResponseEvents(testEvent);
 
                     // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .createInAppMessage(any(PropositionItem.class));
+                    verify(mockEdgePersonalizationResponseHandler, times(0))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
+                });
+    }
+
+    @Test
+    public void test_rulesEngineResponseEvents_eventHistoryOperation() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    final Map<String, String> contentMap = new HashMap<>();
+                    contentMap.put(
+                            MessagingTestConstants.EventMask.Mask.EVENT_TYPE,
+                            MessagingConstants.EventHistoryOperationEventTypes.DISQUALIFY);
+                    contentMap.put(
+                            MessagingTestConstants.EventMask.Mask.ACTIVITY_ID,
+                            "9c8ec035-6b3b-470e-8ae5-e539c7123809#c7c1497e-e5a3-4499-ae37-ba76e1e44300");
+                    final Map<String, Object> eventHistoryData = new HashMap<>();
+                    eventHistoryData.put(
+                            MessagingConstants.ConsequenceDetailDataKeys.CONTENT, contentMap);
+                    eventHistoryData.put(
+                            MessagingConstants.ConsequenceDetailDataKeys.OPERATION,
+                            "insertIfNotExists");
+                    final Map<String, Object> eventHistoryRuleConsequenceDetail = new HashMap<>();
+                    eventHistoryRuleConsequenceDetail.put(
+                            MessagingConstants.ConsequenceDetailKeys.DATA, eventHistoryData);
+                    eventHistoryRuleConsequenceDetail.put(
+                            MessagingConstants.ConsequenceDetailKeys.ID, "mockConsequenceId");
+                    eventHistoryRuleConsequenceDetail.put(
+                            MessagingConstants.ConsequenceDetailKeys.SCHEMA,
+                            SchemaType.EVENT_HISTORY_OPERATION.toString());
+                    final Map<String, Object> eventHistoryRuleConsequence = new HashMap<>();
+                    eventHistoryRuleConsequence.put(
+                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_ID,
+                            "mockConsequenceId");
+                    eventHistoryRuleConsequence.put(
+                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_TYPE,
+                            MessagingConstants.EventDataKeys.RulesEngine
+                                    .MESSAGE_CONSEQUENCE_DETAIL_KEY_SCHEMA);
+                    eventHistoryRuleConsequence.put(
+                            MessagingConstants.EventDataKeys.RulesEngine.MESSAGE_CONSEQUENCE_DETAIL,
+                            eventHistoryRuleConsequenceDetail);
+
+                    Map<String, Object> eventData = new HashMap<>();
+                    eventData.put(
+                            MessagingTestConstants.EventDataKeys.RulesEngine.CONSEQUENCE_TRIGGERED,
+                            eventHistoryRuleConsequence);
+
+                    Event testEvent =
+                            new Event.Builder(
+                                            "Test event",
+                                            EventType.RULES_ENGINE,
+                                            EventSource.RESPONSE_CONTENT)
+                                    .setEventData(eventData)
+                                    .build();
+
+                    // test
+                    messagingExtension.handleRuleEngineResponseEvents(testEvent);
+
+                    // verify
+                    verify(mockEdgePersonalizationResponseHandler, times(1))
+                            .handleEventHistoryRuleConsequence(any(PropositionItem.class));
                     verify(mockEdgePersonalizationResponseHandler, times(0))
                             .createInAppMessage(any(PropositionItem.class));
                 });
@@ -1993,73 +2066,6 @@ public class MessagingExtensionTests {
                     // verify
                     verify(mockEdgePersonalizationResponseHandler, times(1))
                             .handleProcessCompletedEvent(mockEvent);
-                });
-    }
-
-    // ========================================================================================
-    // processEvents EventHistoryDisqualifyEvent
-    // ========================================================================================
-    @Test
-    public void test_processEvent_eventHistoryDisqualifyEvent() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    // setup
-                    Map<String, Object> eventData = new HashMap<>();
-                    Map<String, String> eventHistoryMap = new HashMap<>();
-                    eventHistoryMap.put(
-                            MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
-                            MessagingEdgeEventType.DISQUALIFY.getPropositionEventType());
-                    eventHistoryMap.put(
-                            MessagingTestConstants.EventMask.Keys.MESSAGE_ID, "mockActivityId");
-                    eventHistoryMap.put(MessagingTestConstants.EventMask.Keys.TRACKING_ACTION, "");
-                    eventData.put(
-                            MessagingTestConstants.EventDataKeys.IAM_HISTORY, eventHistoryMap);
-
-                    Event mockEvent = mock(Event.class);
-                    when(mockEvent.getType())
-                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
-                    when(mockEvent.getSource())
-                            .thenReturn(MessagingTestConstants.EventSource.EVENT_HISTORY_WRITE);
-                    when(mockEvent.getEventData()).thenReturn(eventData);
-
-                    // test
-                    messagingExtension.processEvent(mockEvent);
-
-                    // verify
-                    verify(mockEdgePersonalizationResponseHandler, times(1))
-                            .handleEventHistoryDisqualifyEvent(mockEvent);
-                });
-    }
-
-    @Test
-    public void test_processEvent_eventHistoryDisplayEvent() {
-        runUsingMockedServiceProvider(
-                () -> {
-                    // setup
-                    Map<String, Object> eventData = new HashMap<>();
-                    Map<String, String> eventHistoryMap = new HashMap<>();
-                    eventHistoryMap.put(
-                            MessagingTestConstants.EventMask.Keys.EVENT_TYPE,
-                            MessagingEdgeEventType.DISPLAY.getPropositionEventType());
-                    eventHistoryMap.put(
-                            MessagingTestConstants.EventMask.Keys.MESSAGE_ID, "mockActivityId");
-                    eventHistoryMap.put(MessagingTestConstants.EventMask.Keys.TRACKING_ACTION, "");
-                    eventData.put(
-                            MessagingTestConstants.EventDataKeys.IAM_HISTORY, eventHistoryMap);
-
-                    Event mockEvent = mock(Event.class);
-                    when(mockEvent.getType())
-                            .thenReturn(MessagingTestConstants.EventType.MESSAGING);
-                    when(mockEvent.getSource())
-                            .thenReturn(MessagingTestConstants.EventSource.EVENT_HISTORY_WRITE);
-                    when(mockEvent.getEventData()).thenReturn(eventData);
-
-                    // test
-                    messagingExtension.processEvent(mockEvent);
-
-                    // verify
-                    verify(mockEdgePersonalizationResponseHandler, times(0))
-                            .handleEventHistoryDisqualifyEvent(mockEvent);
                 });
     }
 

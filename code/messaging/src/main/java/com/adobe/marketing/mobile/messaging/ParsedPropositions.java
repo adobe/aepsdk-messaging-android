@@ -93,38 +93,47 @@ public class ParsedPropositions {
                         if (MessagingUtils.isNullOrEmpty(parsedRules)) {
                             break;
                         }
-                        final List<RuleConsequence> consequences =
-                                parsedRules.get(0).getConsequenceList();
-                        if (MessagingUtils.isNullOrEmpty(consequences)) {
-                            break;
-                        }
-                        final RuleConsequence consequence = consequences.get(0);
-                        final PropositionItem schemaConsequence =
-                                PropositionItem.fromRuleConsequence(consequence);
-                        if (schemaConsequence == null) {
-                            break;
-                        }
-                        switch (schemaConsequence.getSchema()) {
-                            case INAPP:
-                            case DEFAULT_CONTENT:
-                                final PropositionInfo propositionInfo =
-                                        PropositionInfo.createFromProposition(proposition);
-                                propositionInfoToCache.put(consequence.getId(), propositionInfo);
-                                propositionsToPersist =
-                                        MessagingUtils.updatePropositionMapForSurface(
-                                                surface, proposition, propositionsToPersist);
-                                mergeRules(parsedRules, surface, SchemaType.INAPP);
+                        for (final LaunchRule parsedRule : parsedRules) {
+                            final List<RuleConsequence> consequences =
+                                    parsedRule.getConsequenceList();
+                            if (MessagingUtils.isNullOrEmpty(consequences)) {
                                 break;
-                            case CONTENT_CARD:
-                            case FEED:
-                                final PropositionInfo contentCardPropositionInfo =
-                                        PropositionInfo.createFromProposition(proposition);
-                                propositionInfoToCache.put(
-                                        consequence.getId(), contentCardPropositionInfo);
-                                mergeRules(parsedRules, surface, SchemaType.CONTENT_CARD);
+                            }
+                            final RuleConsequence consequence = consequences.get(0);
+                            final PropositionItem schemaConsequence =
+                                    PropositionItem.fromRuleConsequence(consequence);
+                            if (schemaConsequence == null) {
                                 break;
-                            default:
-                                break;
+                            }
+                            switch (schemaConsequence.getSchema()) {
+                                case INAPP:
+                                case DEFAULT_CONTENT:
+                                    final PropositionInfo propositionInfo =
+                                            PropositionInfo.createFromProposition(proposition);
+                                    propositionInfoToCache.put(
+                                            consequence.getId(), propositionInfo);
+                                    propositionsToPersist =
+                                            MessagingUtils.updatePropositionMapForSurface(
+                                                    surface, proposition, propositionsToPersist);
+                                    mergeRules(parsedRule, surface, SchemaType.INAPP);
+                                    break;
+                                case CONTENT_CARD:
+                                case FEED:
+                                    final PropositionInfo contentCardPropositionInfo =
+                                            PropositionInfo.createFromProposition(proposition);
+                                    propositionInfoToCache.put(
+                                            consequence.getId(), contentCardPropositionInfo);
+                                    mergeRules(parsedRule, surface, SchemaType.CONTENT_CARD);
+                                    break;
+                                case EVENT_HISTORY_OPERATION:
+                                    mergeRules(
+                                            parsedRule,
+                                            surface,
+                                            SchemaType.EVENT_HISTORY_OPERATION);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                         break;
                     case JSON_CONTENT:
@@ -142,7 +151,7 @@ public class ParsedPropositions {
     }
 
     private void mergeRules(
-            final List<LaunchRule> rules, final Surface surface, final SchemaType schemaType) {
+            final LaunchRule rule, final Surface surface, final SchemaType schemaType) {
         // get rules we may already have for this inboundType
         Map<Surface, List<LaunchRule>> tempRulesByInboundType =
                 surfaceRulesBySchemaType.get(schemaType) != null
@@ -152,7 +161,7 @@ public class ParsedPropositions {
         // combine rules with existing
         tempRulesByInboundType =
                 InternalMessagingUtils.updateRuleMapForSurface(
-                        surface, rules, tempRulesByInboundType);
+                        surface, rule, tempRulesByInboundType);
 
         // apply up to surfaceRulesByInboundType
         surfaceRulesBySchemaType.put(schemaType, tempRulesByInboundType);

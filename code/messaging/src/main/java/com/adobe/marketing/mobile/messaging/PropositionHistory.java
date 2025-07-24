@@ -50,7 +50,7 @@ final class PropositionHistory {
         final Map<String, String> historyMap = new HashMap<>();
         historyMap.put(
                 MessagingConstants.EventMask.Keys.EVENT_TYPE, eventType.getPropositionEventType());
-        historyMap.put(MessagingConstants.EventMask.Keys.MESSAGE_ID, activityId);
+        historyMap.put(MessagingConstants.EventMask.Keys.ACTIVITY_ID, activityId);
         historyMap.put(
                 MessagingConstants.EventMask.Keys.TRACKING_ACTION,
                 (StringUtils.isNullOrEmpty(interaction) ? "" : interaction));
@@ -62,7 +62,7 @@ final class PropositionHistory {
         // create the mask for storing event history
         final String[] mask = {
             MessagingConstants.EventMask.Mask.EVENT_TYPE,
-            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.ACTIVITY_ID,
             MessagingConstants.EventMask.Mask.TRACKING_ACTION
         };
 
