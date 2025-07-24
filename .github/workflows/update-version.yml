@@ -70,7 +70,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: adobe/aepsdk-commons/.github/workflows/versions.yml@gha-android-3.3.1
+    uses: adobe/aepsdk-commons/.github/workflows/versions.yml@gha-android-3.4.2
     with:
       version: ${{ github.event.inputs.version }}
       branch: ${{ github.event.inputs.branch }}
