@@ -28,4 +28,4 @@ jobs:
     secrets: inherit
     with:
       ref: ${{ inputs.ref }}
-      staging-dir: code/messaging/build/staging
+      staging-dir: code/messaging/build/staging-deploy
