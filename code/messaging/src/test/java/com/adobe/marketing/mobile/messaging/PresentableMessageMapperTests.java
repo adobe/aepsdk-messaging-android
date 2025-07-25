@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messaging;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -35,7 +36,9 @@ import com.adobe.marketing.mobile.services.ui.message.InAppMessageEventHandler;
 import com.adobe.marketing.mobile.services.ui.message.InAppMessageSettings;
 import com.adobe.marketing.mobile.services.uri.UriOpening;
 import com.adobe.marketing.mobile.util.DefaultPresentationUtilityProvider;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -113,11 +116,66 @@ public class PresentableMessageMapperTests {
     }
 
     PropositionItem createPropositionItem() throws MessageRequiredFieldMissingException {
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("key", "value");
         Map<String, Object> data = new HashMap<>();
         data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
         data.put(
                 MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
                 ContentType.TEXT_HTML.toString());
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.METADATA, meta);
+        return new PropositionItem("123456789", SchemaType.INAPP, data);
+    }
+
+    PropositionItem createPropositionItemWithEmptyMeta()
+            throws MessageRequiredFieldMissingException {
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+        data.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                ContentType.TEXT_HTML.toString());
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.METADATA, new HashMap<>());
+        return new PropositionItem("123456789", SchemaType.INAPP, data);
+    }
+
+    PropositionItem createPropositionItemWithNullMeta()
+            throws MessageRequiredFieldMissingException {
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+        data.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                ContentType.TEXT_HTML.toString());
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.METADATA, null);
+        return new PropositionItem("123456789", SchemaType.INAPP, data);
+    }
+
+    PropositionItem createPropositionItemWithComplexMeta()
+            throws MessageRequiredFieldMissingException {
+        Map<String, Object> data = new HashMap<>();
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT, html);
+        data.put(
+                MessagingTestConstants.ConsequenceDetailDataKeys.CONTENT_TYPE,
+                ContentType.TEXT_HTML.toString());
+
+        // Create complex metadata with different data types
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("stringKey", "stringValue");
+        meta.put("intKey", 42);
+        meta.put("boolKey", true);
+
+        // Nested object
+        Map<String, Object> nestedObject = new HashMap<>();
+        nestedObject.put("nestedKey", "nestedValue");
+        meta.put("objectKey", nestedObject);
+
+        // Array
+        List<String> arrayValue = new ArrayList<>();
+        arrayValue.add("item1");
+        arrayValue.add("item2");
+        arrayValue.add("item3");
+        meta.put("arrayKey", arrayValue);
+
+        data.put(MessagingTestConstants.ConsequenceDetailDataKeys.METADATA, meta);
         return new PropositionItem("123456789", SchemaType.INAPP, data);
     }
 
@@ -915,6 +973,172 @@ public class PresentableMessageMapperTests {
                     // verify no tracking event
                     verify(mockMessagingExtension, times(0)).sendPropositionInteraction(any());
                 });
+    }
+
+    // ========================================================================================
+    // Message getMetadata tests
+    // ========================================================================================
+    @Test
+    public void test_messageGetMetadata_withMeta() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        createPropositionItem(),
+                                                        new HashMap<>(),
+                                                        null);
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+
+                    // test
+                    Map<String, Object> metadata = internalMessage.getMetadata();
+
+                    // verify
+                    assertNotNull(metadata);
+                    assertEquals("value", metadata.get("key"));
+                });
+    }
+
+    @Test
+    public void test_messageGetMetadata_withEmptyMeta() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        // Create a proposition item with empty metadata
+                        PropositionItem propositionItem = createPropositionItemWithEmptyMeta();
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+
+                    // test
+                    Map<String, Object> metadata = internalMessage.getMetadata();
+
+                    // verify
+                    assertNotNull(metadata);
+                    assertTrue(metadata.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_messageGetMetadata_withNullMeta() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        // Create a proposition item with null metadata
+                        PropositionItem propositionItem = createPropositionItemWithNullMeta();
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+
+                    // test
+                    Map<String, Object> metadata = internalMessage.getMetadata();
+
+                    // verify, metadata is always non-null
+                    assertNotNull(metadata);
+                    assertTrue(metadata.isEmpty());
+                });
+    }
+
+    @Test
+    public void test_messageGetMetadata_withComplexMeta() {
+        // setup
+        runUsingMockedServiceProvider(
+                () -> {
+                    try {
+                        // Create a proposition item with complex metadata
+                        PropositionItem propositionItem = createPropositionItemWithComplexMeta();
+                        internalMessage =
+                                (PresentableMessageMapper.InternalMessage)
+                                        PresentableMessageMapper.getInstance()
+                                                .createMessage(
+                                                        mockMessagingExtension,
+                                                        propositionItem,
+                                                        new HashMap<>(),
+                                                        null);
+                    } catch (Exception exception) {
+                        fail(exception.getMessage());
+                    }
+
+                    // test
+                    Map<String, Object> metadata = internalMessage.getMetadata();
+
+                    // verify
+                    assertNotNull(metadata);
+                    assertEquals("stringValue", metadata.get("stringKey"));
+                    assertEquals(42, metadata.get("intKey"));
+                    assertEquals(true, metadata.get("boolKey"));
+
+                    // Verify nested object
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> nestedObject =
+                            (Map<String, Object>) metadata.get("objectKey");
+                    assertNotNull(nestedObject);
+                    assertEquals("nestedValue", nestedObject.get("nestedKey"));
+
+                    // Verify array
+                    @SuppressWarnings("unchecked")
+                    List<Object> arrayValue = (List<Object>) metadata.get("arrayKey");
+                    assertNotNull(arrayValue);
+                    assertEquals(3, arrayValue.size());
+                    assertEquals("item1", arrayValue.get(0));
+                    assertEquals("item2", arrayValue.get(1));
+                    assertEquals("item3", arrayValue.get(2));
+                });
+    }
+
+    @Test
+    public void test_messageGetMetadata_DefaultInterfaceImplementation() {
+        // test
+        Message message =
+                new Message() {
+                    @Override
+                    public void track(String interaction, MessagingEdgeEventType eventType) {}
+
+                    @Override
+                    public void show() {}
+
+                    @Override
+                    public void dismiss() {}
+
+                    @Override
+                    public String getId() {
+                        return "testId";
+                    }
+
+                    @Override
+                    public void setAutoTrack(boolean enabled) {}
+                };
+
+        // test
+        Map<String, Object> metadata = message.getMetadata();
+
+        // verify
+        assertNotNull(metadata);
+        assertTrue(metadata.isEmpty());
     }
 
     // ========================================================================================
