@@ -13,7 +13,9 @@ package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
@@ -21,6 +23,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.util.DataReader
@@ -71,7 +74,8 @@ internal object ContentCardSchemaDataUtils {
         return AepButton(
             id = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
             actionUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null),
-            text = DataReader.optTypedMap(Any::class.java, map, MessagingConstants.ContentCard.UIKeys.TEXT, null).let { createAepText(it) }
+            interactId = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
+            text = createAepText(DataReader.optTypedMap(Any::class.java, map, MessagingConstants.ContentCard.UIKeys.TEXT, null))
         )
     }
 
@@ -112,7 +116,14 @@ internal object ContentCardSchemaDataUtils {
 
                 when (templateType) {
                     AepUITemplateType.SMALL_IMAGE.typeName -> {
-                        return createSmallImageTemplate(contentMap, id)
+                        return createAepUITemplate(AepUITemplateType.SMALL_IMAGE, contentMap, id)
+                    }
+                    AepUITemplateType.LARGE_IMAGE.typeName -> {
+                        return createAepUITemplate(
+                            templateType = AepUITemplateType.LARGE_IMAGE,
+                            contentMap = contentMap,
+                            id = id
+                        )
                     }
                     else -> {
                         Log.error(
@@ -134,41 +145,70 @@ internal object ContentCardSchemaDataUtils {
         }
     }
 
-    private fun createSmallImageTemplate(contentMap: Map<String, Any>, id: String): AepUITemplate? {
-        val title = DataReader.getTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.TITLE)?.let {
-            createAepText(it)
-        }
-        if (title == null || title.content.isEmpty()) {
-            Log.error(
-                MessagingConstants.LOG_TAG,
-                SELF_TAG,
-                "Title is missing in the content card with id: $id. Skipping the content card."
-            )
-            return null
-        }
-        val body = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BODY, null)?.let {
-            createAepText(it)
-        }
+    private fun createAepUITemplate(templateType: AepUITemplateType, contentMap: Map<String, Any>, id: String): AepUITemplate? {
         val image = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.IMAGE, null)?.let {
             createAepImage(it)
         }
         val actionUrl = DataReader.optString(contentMap, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null)
-        val buttons = DataReader.optTypedListOfMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.BUTTONS, emptyList()).map {
-            createAepButton(it)
-        }
         val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, null)?.let {
             createAepDismissButton(it)
         }
+        if (templateType ==AepUITemplateType.SMALL_IMAGE || templateType == AepUITemplateType.LARGE_IMAGE) {
+            val title = DataReader.getTypedMap(
+                Any::class.java,
+                contentMap,
+                MessagingConstants.ContentCard.UIKeys.TITLE
+            )?.let {
+                createAepText(it)
+            }
+            if (title == null || title.content.isEmpty()) {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Title is missing in the content card with id: $id. Skipping the content card."
+                )
+                return null
+            }
+            val body = DataReader.optTypedMap(
+                Any::class.java,
+                contentMap,
+                MessagingConstants.ContentCard.UIKeys.BODY,
+                null
+            )?.let {
+                createAepText(it)
+            }
+            val buttons = DataReader.optTypedListOfMap(
+                Any::class.java,
+                contentMap,
+                MessagingConstants.ContentCard.UIKeys.BUTTONS,
+                emptyList()
+            ).map {
+                createAepButton(it)
+            }
 
-        return SmallImageTemplate(
-            id = id,
-            title = title,
-            body = body,
-            image = image,
-            actionUrl = actionUrl,
-            buttons = buttons,
-            dismissBtn = dismissBtn
-        )
+            if (templateType == AepUITemplateType.SMALL_IMAGE) {
+                return SmallImageTemplate(
+                    id = id,
+                    title = title,
+                    body = body,
+                    image = image,
+                    actionUrl = actionUrl,
+                    buttons = buttons,
+                    dismissBtn = dismissBtn
+                )
+            } else {
+                return LargeImageTemplate(
+                    id = id,
+                    title = title,
+                    body = body,
+                    image = image,
+                    actionUrl = actionUrl,
+                    buttons = buttons,
+                    dismissBtn = dismissBtn
+                )
+            }
+        }
+        return null
     }
 
     /**
@@ -181,6 +221,9 @@ internal object ContentCardSchemaDataUtils {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
                 SmallImageUI(uiTemplate, SmallImageCardUIState())
+            }
+            is LargeImageTemplate -> {
+                LargeImageUI(uiTemplate, LargeImageCardUIState())
             }
             else -> {
                 Log.error(

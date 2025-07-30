@@ -34,11 +34,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.components.LargeImageCard
 import com.adobe.marketing.mobile.aepcomposeui.components.SmallImageCard
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardMapper
@@ -173,6 +176,16 @@ class ScrollingFeedActivity : AppCompatActivity() {
                             SmallImageCard(
                                 ui = aepUI,
                                 style = smallImageCardStyleRow,
+                                observer = ContentCardEventObserver(contentCardCallback)
+                            )
+                        }
+                    }
+                    is LargeImageUI -> {
+                        val state = aepUI.getState()
+                        if (!state.dismissed) {
+                            LargeImageCard(
+                                ui = aepUI,
+                                style = LargeImageUIStyle.Builder().build(),
                                 observer = ContentCardEventObserver(contentCardCallback)
                             )
                         }

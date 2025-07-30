@@ -16,7 +16,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 
 /**
  * Represents a UI component that can be rendered using AEP UI templates.
- * This interface can be implemented by various UI components like [SmallImageUI], LargeImageUi, etc.
+ * This interface can be implemented by various UI components like [SmallImageUI], [LargeImageUI], etc.
  * It associates a specific template and state to ensure consistency when rendering and managing UI components.
  *
  * @param T The type of the template associated with the UI component.

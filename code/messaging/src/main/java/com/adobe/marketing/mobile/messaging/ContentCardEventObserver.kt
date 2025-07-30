@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
@@ -23,10 +24,12 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  **/
 class ContentCardEventObserver(private val callback: ContentCardUIEventListener?) : AepUIEventObserver {
     private val smallImageEventHandler by lazy { SmallImageTemplateEventHandler(callback) }
+    private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
 
     override fun onEvent(event: UIEvent<*, *>) {
         when (val template = event.aepUi.getTemplate()) {
             is SmallImageTemplate -> { smallImageEventHandler.onEvent(event, template.id) }
+            is LargeImageTemplate -> { largeImageEventHandler.onEvent(event, template.id) }
         }
     }
 }

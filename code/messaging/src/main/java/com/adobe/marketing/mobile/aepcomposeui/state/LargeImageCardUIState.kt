@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -9,18 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Data class representing a button element in the UI.
+ * Class representing the UI state of a Large Image template card.
  *
- * @property id The unique ID for the button.
- * @property actionUrl The URL to be opened when the button is clicked.
- * @property text The text to be displayed on the button, represented by an [AepText] object.
+ * @property dismissed Indicates whether the card has been dismissed.
+ * @property displayed Indicates whether the card is currently displayed.
  */
-data class AepButton(
-    val id: String,
-    val actionUrl: String,
-    val interactId: String? = null,
-    val text: AepText,
-)
+data class LargeImageCardUIState(
+    override val dismissed: Boolean = false,
+    override val displayed: Boolean = false
+) : AepCardUIState()
