@@ -16,7 +16,6 @@ import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
-import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.ServiceProvider
 

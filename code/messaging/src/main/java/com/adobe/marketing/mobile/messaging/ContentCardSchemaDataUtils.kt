@@ -153,7 +153,7 @@ internal object ContentCardSchemaDataUtils {
         val dismissBtn = DataReader.optTypedMap(Any::class.java, contentMap, MessagingConstants.ContentCard.UIKeys.DISMISS_BTN, null)?.let {
             createAepDismissButton(it)
         }
-        if (templateType ==AepUITemplateType.SMALL_IMAGE || templateType == AepUITemplateType.LARGE_IMAGE) {
+        if (templateType == AepUITemplateType.SMALL_IMAGE || templateType == AepUITemplateType.LARGE_IMAGE) {
             val title = DataReader.getTypedMap(
                 Any::class.java,
                 contentMap,

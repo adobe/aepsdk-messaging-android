@@ -92,7 +92,7 @@ fun SmallImageCard(
                 if (isLoading) {
                     Box(
                         modifier = Modifier
-                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
+                            .size(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
