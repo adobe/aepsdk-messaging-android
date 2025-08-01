@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <cache-path name="cache" path="." />
+    <cache-path name="adobe cache" path="/aepsdkcache" />
 </resources>
