@@ -317,7 +317,6 @@ public class MessagingPushUtilsTests {
         AppContextService mockAppContextService = mock(AppContextService.class);
         PackageManager mockPackageManager = mock(PackageManager.class);
         Context mockContext = mock(Context.class);
-        String fileName = "test_file.jpg";
         String packageName = "com.adobe.marketing.mobile.messaging";
         when(mockContext.getPackageName()).thenReturn(packageName);
         when(mockContext.getPackageManager()).thenReturn(mockPackageManager);
