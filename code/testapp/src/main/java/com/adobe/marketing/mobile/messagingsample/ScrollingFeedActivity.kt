@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -40,15 +41,19 @@ import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.components.ImageOnlyCard
 import com.adobe.marketing.mobile.aepcomposeui.components.LargeImageCard
 import com.adobe.marketing.mobile.aepcomposeui.components.SmallImageCard
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
@@ -157,52 +162,21 @@ class ScrollingFeedActivity : AppCompatActivity() {
             )
             .build()
 
-        // Create column with composables from AepUI instances
-        LazyColumn {
-            items(reorderedAepUIList) { aepUI ->
-                when (aepUI) {
-                    is SmallImageUI -> {
-                        val state = aepUI.getState()
-                        if (!state.dismissed) {
-                            SmallImageCard(
-                                ui = aepUI,
-                                style = smallImageCardStyleColumn,
-                                observer = ContentCardEventObserver(null)
-                            )
-                        }
-                    }
-                    is LargeImageUI -> {
-                        val state = aepUI.getState()
-                        if (!state.dismissed) {
-                            LargeImageCard(
-                                ui = aepUI,
-                                style = largeImageCardStyleColumn,
-                                observer = ContentCardEventObserver(contentCardCallback)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        val imageOnlyCardStyleColumn = ImageOnlyUIStyle.Builder()
+            .cardStyle(
+                AepCardStyle(
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                ))
+            .imageStyle(
+                AepImageStyle(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.FillWidth
+                )
+            )
+            .build()
 
-        // Displaying content cards in a Row
-        // create a custom style for the small image card in row
-//        val smallImageCardStyleRow = SmallImageUIStyle.Builder()
-//            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
-//            .rootRowStyle(
-//                AepRowStyle(
-//                    modifier = Modifier.fillMaxSize().padding(8.dp)
-//                )
-//            )
-//            .bodyAepTextStyle(AepTextStyle(maxLines = 3))
-//            .build()
-//
-//        val largeImageCardStyleRow = LargeImageUIStyle.Builder()
-//            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
-//            .build()
-//
-//        // Create row with composables from AepUI instances
-//        LazyRow {
+        // Create column with composables from AepUI instances
+//        LazyColumn {
 //            items(reorderedAepUIList) { aepUI ->
 //                when (aepUI) {
 //                    is SmallImageUI -> {
@@ -210,8 +184,8 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                        if (!state.dismissed) {
 //                            SmallImageCard(
 //                                ui = aepUI,
-//                                style = smallImageCardStyleRow,
-//                                observer = ContentCardEventObserver(contentCardCallback)
+//                                style = smallImageCardStyleColumn,
+//                                observer = ContentCardEventObserver(null)
 //                            )
 //                        }
 //                    }
@@ -220,7 +194,17 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                        if (!state.dismissed) {
 //                            LargeImageCard(
 //                                ui = aepUI,
-//                                style = largeImageCardStyleRow,
+//                                style = largeImageCardStyleColumn,
+//                                observer = ContentCardEventObserver(contentCardCallback)
+//                            )
+//                        }
+//                    }
+//                    is ImageOnlyUI -> {
+//                        val state = aepUI.getState()
+//                        if (!state.dismissed) {
+//                            ImageOnlyCard(
+//                                ui = aepUI,
+//                                style = imageOnlyCardStyleColumn,
 //                                observer = ContentCardEventObserver(contentCardCallback)
 //                            )
 //                        }
@@ -228,6 +212,65 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                }
 //            }
 //        }
+
+        // Displaying content cards in a Row
+        // create a custom style for the small image card in row
+        val smallImageCardStyleRow = SmallImageUIStyle.Builder()
+            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
+            .rootRowStyle(
+                AepRowStyle(
+                    modifier = Modifier.fillMaxSize().padding(8.dp)
+                )
+            )
+            .bodyAepTextStyle(AepTextStyle(maxLines = 3))
+            .build()
+
+        val largeImageCardStyleRow = LargeImageUIStyle.Builder()
+            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
+            .build()
+
+        val imageOnlyCardStyleRow = ImageOnlyUIStyle.Builder()
+            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
+            .imageStyle(AepImageStyle(modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillWidth))
+            .build()
+
+        // Create row with composables from AepUI instances
+        LazyRow {
+            items(reorderedAepUIList) { aepUI ->
+                when (aepUI) {
+                    is SmallImageUI -> {
+                        val state = aepUI.getState()
+                        if (!state.dismissed) {
+                            SmallImageCard(
+                                ui = aepUI,
+                                style = smallImageCardStyleRow,
+                                observer = ContentCardEventObserver(contentCardCallback)
+                            )
+                        }
+                    }
+                    is LargeImageUI -> {
+                        val state = aepUI.getState()
+                        if (!state.dismissed) {
+                            LargeImageCard(
+                                ui = aepUI,
+                                style = largeImageCardStyleRow,
+                                observer = ContentCardEventObserver(contentCardCallback)
+                            )
+                        }
+                    }
+                    is ImageOnlyUI -> {
+                        val state = aepUI.getState()
+                        if (!state.dismissed) {
+                            ImageOnlyCard(
+                                ui = aepUI,
+                                style = imageOnlyCardStyleRow,
+                                observer = ContentCardEventObserver(contentCardCallback)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

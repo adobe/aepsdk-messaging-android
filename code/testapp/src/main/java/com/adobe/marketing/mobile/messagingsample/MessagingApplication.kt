@@ -23,7 +23,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/e2e20a36b6cf/launch-78df58a45342-development"
-    private val ASSURANCE_SESSION_ID = "demoapp://?adb_validation_sessionid=b9abcf36-0c31-4aa5-9d83-0cfd2c964c77"
+    private val ASSURANCE_SESSION_ID = "demoapp://?adb_validation_sessionid=c9c5f3c3-cd3d-43ef-851e-a90249142424&env=qa"
     private val STAGING_APP_ID = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
     private val STAGING = true
 
@@ -44,7 +44,7 @@ class MessagingApplication : Application() {
             }
             MobileCore.lifecycleStart(null)
         }
-        // Assurance.startSession(ASSURANCE_SESSION_ID)
+        Assurance.startSession(ASSURANCE_SESSION_ID)
 
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             // Log and toast

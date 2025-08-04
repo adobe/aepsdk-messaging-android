@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -9,18 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.uimodels
+package com.adobe.marketing.mobile.aepcomposeui.state
 
 /**
- * Enum class representing different types of UI templates in AEP.
+ * Class representing the UI state of a Small Image template card.
  *
- * @property typeName The name of the template type.
+ * @property dismissed Indicates whether the card has been dismissed.
+ * @property displayed Indicates whether the card is currently displayed.
  */
-enum class AepUITemplateType(val typeName: String) {
-    /** Represents a small image template type. */
-    SMALL_IMAGE("SmallImage"),
-    /** Represents a large image template type. */
-    LARGE_IMAGE("LargeImage"),
-    /** Represents an image template type. */
-    IMAGE_ONLY("ImageOnly")
-}
+data class ImageOnlyCardUIState(
+    override val dismissed: Boolean = false,
+    override val displayed: Boolean = false
+) : AepCardUIState()

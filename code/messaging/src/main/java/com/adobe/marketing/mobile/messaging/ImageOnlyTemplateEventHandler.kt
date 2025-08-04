@@ -12,38 +12,38 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.MessagingEdgeEventType
-import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
-import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.ServiceProvider
 
 /**
- * Large Image Template Event Handler for content card events.
+ * Image Only Template Event Handler for content card events.
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal class LargeImageTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
+internal class ImageOnlyTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
     MessagingEventHandler(callback) {
     companion object {
-        private const val SELF_TAG = "LargeImageTemplateEventHandler"
+        private const val SELF_TAG = "ImageOnlyTemplateEventHandler"
     }
 
     override fun handleEvent(event: UIEvent<*, *>, propositionId: String) {
-        val largeImageUI = event.aepUi as LargeImageUI
-        val currentUiState = event.aepUi.getState() as LargeImageCardUIState
+        val imageOnlyUI = event.aepUi as ImageOnlyUI
+        val currentUiState = event.aepUi.getState() as ImageOnlyCardUIState
         when (event) {
             // For dismiss event, change the dismissed state of the UI to true
             // so that the UI can be removed from the screen
             is UIEvent.Dismiss -> {
-                largeImageUI.updateState(currentUiState.copy(dismissed = true))
+                imageOnlyUI.updateState(currentUiState.copy(dismissed = true))
             }
 
             // For display event, change the displayed state of the UI to true
             // after the initial composition
             is UIEvent.Display -> {
-                largeImageUI.updateState(currentUiState.copy(displayed = true))
+                imageOnlyUI.updateState(currentUiState.copy(displayed = true))
             }
 
             is UIEvent.Interact -> {
@@ -62,7 +62,7 @@ internal class LargeImageTemplateEventHandler(private val callback: ContentCardU
                     Log.trace(
                         MessagingConstants.LOG_TAG,
                         SELF_TAG,
-                        "LargeImageUI opening URL: ${event.action.actionUrl}"
+                        "ImageOnlyUI opening URL: ${event.action.actionUrl}"
                     )
                     ServiceProvider.getInstance().uriService.openUri(event.action.actionUrl)
                 }
@@ -70,7 +70,7 @@ internal class LargeImageTemplateEventHandler(private val callback: ContentCardU
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "LargeImageUI ${event.action.id} clicked"
+                    "ImageOnlyUI ${event.action.id} clicked"
                 )
                 track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
             }

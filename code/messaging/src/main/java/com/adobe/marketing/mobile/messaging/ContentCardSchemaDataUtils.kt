@@ -13,8 +13,10 @@ package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
@@ -23,6 +25,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.Log
@@ -32,7 +35,7 @@ import com.adobe.marketing.mobile.util.DataReader
  * Utility object for creating instances of AEP model classes from Map data structures.
  * This utility handles parsing and transforming content card data into the relevant AEP UI models,
  * such as [AepText], [AepImage], [AepButton], and [AepDismissButton], as well as creating
- * the corresponding UI templates like [SmallImageTemplate].
+ * the corresponding UI templates like [SmallImageTemplate], [LargeImageTemplate], [ImageOnlyTemplate].
  */
 internal object ContentCardSchemaDataUtils {
     const val SELF_TAG = "ContentCardSchemaDataUtils"
@@ -125,6 +128,13 @@ internal object ContentCardSchemaDataUtils {
                             id = id
                         )
                     }
+                    AepUITemplateType.IMAGE_ONLY.typeName -> {
+                        return createAepUITemplate(
+                            templateType = AepUITemplateType.IMAGE_ONLY,
+                            contentMap = contentMap,
+                            id = id
+                        )
+                    }
                     else -> {
                         Log.error(
                             MessagingConstants.LOG_TAG,
@@ -207,6 +217,13 @@ internal object ContentCardSchemaDataUtils {
                     dismissBtn = dismissBtn
                 )
             }
+        } else if (templateType == AepUITemplateType.IMAGE_ONLY) {
+            return ImageOnlyTemplate(
+                id = id,
+                image = image,
+                actionUrl = actionUrl,
+                dismissBtn = dismissBtn
+            )
         }
         return null
     }
@@ -224,6 +241,9 @@ internal object ContentCardSchemaDataUtils {
             }
             is LargeImageTemplate -> {
                 LargeImageUI(uiTemplate, LargeImageCardUIState())
+            }
+            is ImageOnlyTemplate -> {
+                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
             }
             else -> {
                 Log.error(
