@@ -15,6 +15,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -72,44 +73,56 @@ fun ImageOnlyCard(
             }
         }
     }
-    Box {
+    if (isLoading) {
         AepCardComposable(
-            cardStyle = style.cardStyle,
-            onClick = {
-                observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(AepUIConstants.InteractionID.CARD_CLICKED, ui.getTemplate().actionUrl)))
-            }
+            cardStyle = style.cardStyle
         ) {
-            imageBitmap?.let {
-                AepImageComposable(
-                    content = BitmapPainter(it.asImageBitmap()),
-                    imageStyle = style.imageStyle
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    strokeWidth = 4.dp
                 )
             }
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .size(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
-                    contentAlignment = Alignment.Center
+        }
+    } else {
+        imageBitmap?.let { it ->
+            Box {
+                AepCardComposable(
+                    cardStyle = style.cardStyle,
+                    onClick = {
+                        observer?.onEvent(
+                            UIEvent.Interact(
+                                ui,
+                                UIAction.Click(
+                                    AepUIConstants.InteractionID.CARD_CLICKED,
+                                    ui.getTemplate().actionUrl
+                                )
+                            )
+                        )
+                    }
                 ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(48.dp),
-                        strokeWidth = 4.dp
+                    AepImageComposable(
+                        content = BitmapPainter(it.asImageBitmap()),
+                        imageStyle = style.imageStyle
+                    )
+                }
+                ui.getTemplate().dismissBtn?.let {
+                    AepIconComposable(
+                        drawableId = it.drawableId,
+                        // todo check if we can remember this calculation so that it is not repeated for recompositions
+                        iconStyle = style.dismissButtonStyle.apply {
+                            modifier = (modifier ?: Modifier)
+                                .align(style.dismissButtonAlignment)
+                                .clickable {
+                                    observer?.onEvent(UIEvent.Dismiss(ui))
+                                }
+                        }
                     )
                 }
             }
-        }
-        ui.getTemplate().dismissBtn?.let {
-            AepIconComposable(
-                drawableId = it.drawableId,
-                // todo check if we can remember this calculation so that it is not repeated for recompositions
-                iconStyle = style.dismissButtonStyle.apply {
-                    modifier = (modifier ?: Modifier)
-                        .align(style.dismissButtonAlignment)
-                        .clickable {
-                            observer?.onEvent(UIEvent.Dismiss(ui))
-                        }
-                }
-            )
         }
     }
 }

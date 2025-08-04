@@ -77,7 +77,6 @@ internal object ContentCardSchemaDataUtils {
         return AepButton(
             id = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
             actionUrl = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.ACTION_URL, null),
-            interactId = DataReader.optString(map, MessagingConstants.ContentCard.UIKeys.INTERACT_ID, null),
             text = createAepText(DataReader.optTypedMap(Any::class.java, map, MessagingConstants.ContentCard.UIKeys.TEXT, null))
         )
     }
