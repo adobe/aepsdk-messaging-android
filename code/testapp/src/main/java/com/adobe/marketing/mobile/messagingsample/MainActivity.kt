@@ -44,6 +44,7 @@ import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     private val customMessagingDelegate = CustomDelegate()
@@ -326,16 +327,24 @@ class MainActivity : ComponentActivity() {
         binding.btnSetPushIdentifierTwice.setOnClickListener {
             lifecycleScope.launch {
                 // First call with a test identifier
-                val firstToken = "test_push_identifier_1"
-                Log.d("btnSetTwice", "First call with: $firstToken")
-                Toast.makeText(baseContext, "First setPushIdentifier call with: $firstToken", Toast.LENGTH_SHORT).show()
-                MobileCore.setPushIdentifier(firstToken)
+                val testToken = "test_push_identifier_" + Random.nextInt()
+                Log.d("btnSetTwice", "First call with: $testToken")
+                Toast.makeText(baseContext, "First setPushIdentifier call with: $testToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(testToken)
                 
-                // Second call with a different test identifier
-                val secondToken = "test_push_identifier_2"
-                Log.d("btnSetTwice", "Second call with: $secondToken")
-                Toast.makeText(baseContext, "Second setPushIdentifier call with: $secondToken", Toast.LENGTH_SHORT).show()
-                MobileCore.setPushIdentifier(secondToken)
+                // Second call with the same identifier
+                Log.d("btnSetTwice", "Second call with: $testToken")
+                Toast.makeText(baseContext, "Second setPushIdentifier call with: $testToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(testToken)
+            }
+        }
+
+        binding.btnSetNewPushIdentifier.setOnClickListener {
+            lifecycleScope.launch {
+                val testToken = "test_push_identifier_" + Random.nextInt()
+                Log.d("btnSetNewPushIdentifier", "Calling setPushIdentifier with: $testToken")
+                Toast.makeText(baseContext, "Calling setPushIdentifier with: $testToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(testToken)
             }
         }
 

@@ -39,43 +39,43 @@ class NotificationService : FirebaseMessagingService() {
         // endregion
 
         // region BEGIN - manual display and tracking
-        val payload = MessagingPushPayload(message)
-
-        val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-            val channelName = "some channel name"
-            channelId = if (payload.channelId != null) payload.channelId else channelId
-            val channel = NotificationChannel(
-                    channelId,
-                    channelName,
-                    getImportance(payload.notificationPriority)
-            ).apply {
-                description = "Settings for push notification"
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val builder = NotificationCompat.Builder(this, channelId).apply {
-            setSmallIcon(R.drawable.ic_launcher_background)
-            setContentTitle(payload.title)
-            setContentText(payload.body)
-
-            priority = payload.notificationPriority
-
-            setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
-                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
-                payload.putDataInExtras(this)
-            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
-            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
-                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
-                payload.putDataInExtras(this)
-            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
-            setAutoCancel(true)
-        }
-
-        notificationManager.notify(NOTIFICATION_ID, builder.build())
+//        val payload = MessagingPushPayload(message)
+//
+//        val notificationManager =
+//                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//
+//            val channelName = "some channel name"
+//            channelId = if (payload.channelId != null) payload.channelId else channelId
+//            val channel = NotificationChannel(
+//                    channelId,
+//                    channelName,
+//                    getImportance(payload.notificationPriority)
+//            ).apply {
+//                description = "Settings for push notification"
+//            }
+//            notificationManager.createNotificationChannel(channel)
+//        }
+//
+//        val builder = NotificationCompat.Builder(this, channelId).apply {
+//            setSmallIcon(R.drawable.ic_launcher_background)
+//            setContentTitle(payload.title)
+//            setContentText(payload.body)
+//
+//            priority = payload.notificationPriority
+//
+//            setContentIntent(PendingIntent.getActivity(this@NotificationService, 0, Intent(this@NotificationService, MainActivity::class.java).apply {
+//                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
+//                payload.putDataInExtras(this)
+//            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
+//            setDeleteIntent(PendingIntent.getBroadcast(this@NotificationService, 0, Intent(this@NotificationService.applicationContext, NotificationDeleteReceiver::class.java).apply {
+//                message.messageId?.let { Messaging.addPushTrackingDetails(this, it, message.data) }
+//                payload.putDataInExtras(this)
+//            }, if(Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0))
+//            setAutoCancel(true)
+//        }
+//
+//        notificationManager.notify(NOTIFICATION_ID, builder.build())
         // endregion
     }
 
