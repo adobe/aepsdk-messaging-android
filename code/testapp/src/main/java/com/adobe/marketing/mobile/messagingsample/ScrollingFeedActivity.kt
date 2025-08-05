@@ -151,7 +151,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 
         val largeImageCardStyleColumn = LargeImageUIStyle.Builder()
             .imageStyle(AepImageStyle(modifier = Modifier.fillMaxWidth(),
-                contentScale = ContentScale.Fit))
+                contentScale = ContentScale.FillWidth))
             .textColumnStyle(AepColumnStyle(modifier =  Modifier.padding(8.dp)))
             .buttonRowStyle(
                 AepRowStyle(

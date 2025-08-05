@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -110,17 +111,19 @@ fun ImageOnlyCard(
                     )
                 }
                 ui.getTemplate().dismissBtn?.let {
-                    AepIconComposable(
-                        drawableId = it.drawableId,
-                        // todo check if we can remember this calculation so that it is not repeated for recompositions
-                        iconStyle = style.dismissButtonStyle.apply {
-                            modifier = (modifier ?: Modifier)
-                                .align(style.dismissButtonAlignment)
-                                .clickable {
-                                    observer?.onEvent(UIEvent.Dismiss(ui))
-                                }
-                        }
-                    )
+                    Box(
+                        modifier = Modifier
+                            .align(style.dismissButtonAlignment)
+                            .padding(AepUIConstants.DefaultStyle.SPACING.dp)
+                            .clickable {
+                                observer?.onEvent(UIEvent.Dismiss(ui))
+                            }
+                    ) {
+                        AepIconComposable(
+                            drawableId = it.drawableId,
+                            iconStyle = style.dismissButtonStyle
+                        )
+                    }
                 }
             }
         }
