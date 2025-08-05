@@ -184,7 +184,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                        if (!state.dismissed) {
 //                            SmallImageCard(
 //                                ui = aepUI,
-//                                style = smallImageCardStyleColumn,
+//                                style = SmallImageUIStyle.Builder().build(),
 //                                observer = ContentCardEventObserver(null)
 //                            )
 //                        }
@@ -194,7 +194,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                        if (!state.dismissed) {
 //                            LargeImageCard(
 //                                ui = aepUI,
-//                                style = largeImageCardStyleColumn,
+//                                style = LargeImageUIStyle.Builder().build(),
 //                                observer = ContentCardEventObserver(contentCardCallback)
 //                            )
 //                        }
@@ -204,7 +204,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                        if (!state.dismissed) {
 //                            ImageOnlyCard(
 //                                ui = aepUI,
-//                                style = imageOnlyCardStyleColumn,
+//                                style = ImageOnlyUIStyle.Builder().build(),
 //                                observer = ContentCardEventObserver(contentCardCallback)
 //                            )
 //                        }
@@ -243,7 +243,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         if (!state.dismissed) {
                             SmallImageCard(
                                 ui = aepUI,
-                                style = smallImageCardStyleRow,
+                                style = SmallImageUIStyle.Builder().build(),
                                 observer = ContentCardEventObserver(contentCardCallback)
                             )
                         }
@@ -253,7 +253,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         if (!state.dismissed) {
                             LargeImageCard(
                                 ui = aepUI,
-                                style = largeImageCardStyleRow,
+                                style = LargeImageUIStyle.Builder().build(),
                                 observer = ContentCardEventObserver(contentCardCallback)
                             )
                         }
@@ -263,7 +263,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         if (!state.dismissed) {
                             ImageOnlyCard(
                                 ui = aepUI,
-                                style = imageOnlyCardStyleRow,
+                                style = ImageOnlyUIStyle.Builder().build(),
                                 observer = ContentCardEventObserver(contentCardCallback)
                             )
                         }
