@@ -21,7 +21,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  */
 data class ImageOnlyTemplate(
     val id: String,
-    val image: AepImage? = null,
+    val image: AepImage,
     val actionUrl: String? = null,
     val dismissBtn: AepIcon? = null
 ) : AepUITemplate {

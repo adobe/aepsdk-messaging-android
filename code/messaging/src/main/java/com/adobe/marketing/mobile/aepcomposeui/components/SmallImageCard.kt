@@ -96,7 +96,7 @@ fun SmallImageCard(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
+                            modifier = Modifier.size(AepUIConstants.DefaultStyle.IMAGE_PROGRESS_SPINNER_SIZE.dp),
                             strokeWidth = 4.dp
                         )
                     }

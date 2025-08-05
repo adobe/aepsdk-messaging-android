@@ -15,7 +15,6 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -79,11 +78,10 @@ fun ImageOnlyCard(
             cardStyle = style.cardStyle
         ) {
             Box(
-                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(AepUIConstants.DefaultStyle.IMAGE_PROGRESS_SPINNER_SIZE.dp),
                     strokeWidth = 4.dp
                 )
             }

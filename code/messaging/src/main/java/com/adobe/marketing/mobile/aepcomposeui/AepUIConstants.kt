@@ -22,6 +22,7 @@ object AepUIConstants {
 
     internal object DefaultStyle {
         const val IMAGE_WIDTH = 100
+        const val IMAGE_PROGRESS_SPINNER_SIZE = 48
         const val TITLE_TEXT_SIZE = 15
         val TITLE_FONT_WEIGHT = FontWeight.Medium
         const val BODY_TEXT_SIZE = 13

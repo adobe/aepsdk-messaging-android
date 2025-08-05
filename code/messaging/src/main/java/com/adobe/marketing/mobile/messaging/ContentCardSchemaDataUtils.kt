@@ -216,7 +216,9 @@ internal object ContentCardSchemaDataUtils {
                     dismissBtn = dismissBtn
                 )
             }
-        } else if (templateType == AepUITemplateType.IMAGE_ONLY) {
+        } else if (templateType == AepUITemplateType.IMAGE_ONLY &&
+            image != null && !image.url.isNullOrBlank()
+        ) {
             return ImageOnlyTemplate(
                 id = id,
                 image = image,
