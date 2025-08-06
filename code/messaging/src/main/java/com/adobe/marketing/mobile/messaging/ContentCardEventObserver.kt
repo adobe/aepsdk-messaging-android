@@ -14,6 +14,9 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
@@ -28,11 +31,12 @@ class ContentCardEventObserver(private val callback: ContentCardUIEventListener?
     private val largeImageEventHandler by lazy { LargeImageTemplateEventHandler(callback) }
     private val imageOnlyEventHandler by lazy { ImageOnlyTemplateEventHandler(callback) }
 
+    @Suppress("UNCHECKED_CAST")
     override fun onEvent(event: UIEvent<*, *>) {
         when (val template = event.aepUi.getTemplate()) {
-            is SmallImageTemplate -> { smallImageEventHandler.onEvent(event, template.id) }
-            is LargeImageTemplate -> { largeImageEventHandler.onEvent(event, template.id) }
-            is ImageOnlyTemplate -> { imageOnlyEventHandler.onEvent(event, template.id) }
+            is SmallImageTemplate -> { smallImageEventHandler.onEvent(event as UIEvent<SmallImageTemplate, SmallImageCardUIState>, template.id) }
+            is LargeImageTemplate -> { largeImageEventHandler.onEvent(event as UIEvent<LargeImageTemplate, LargeImageCardUIState>, template.id) }
+            is ImageOnlyTemplate -> { imageOnlyEventHandler.onEvent(event as UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>, template.id) }
         }
     }
 }

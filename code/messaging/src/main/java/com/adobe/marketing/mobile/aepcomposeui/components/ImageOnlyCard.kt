@@ -52,8 +52,8 @@ fun ImageOnlyCard(
 ) {
     var isLoading by remember { mutableStateOf(true) }
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
-        ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
+    val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image.darkUrl != null)
+        ui.getTemplate().image.darkUrl else ui.getTemplate().image.url
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))

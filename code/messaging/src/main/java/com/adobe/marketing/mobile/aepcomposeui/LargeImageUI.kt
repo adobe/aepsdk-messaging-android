@@ -11,46 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
-import androidx.compose.runtime.mutableStateOf
 import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 
 /**
  * Implementation of the [AepUI] interface used in rendering a UI for a [LargeImageTemplate].
  *
- * @property template The template associated with the large image UI.
- * @property _state The current state of the large image UI.
+ * @param template The template associated with the large image UI.
+ * @param state The current state of the large image UI.
  */
 class LargeImageUI(
     private val template: LargeImageTemplate,
     state: LargeImageCardUIState
-) : AepUI<LargeImageTemplate, LargeImageCardUIState> {
-    private val _state = mutableStateOf(state)
-
-    /**
-     * Updates the current state of the large image UI.
-     *
-     * @param newState The new state to be set.
-     */
-    override fun updateState(newState: LargeImageCardUIState) {
-        _state.value = newState
-    }
-
-    /**
-     * Retrieves the template associated with the large image UI.
-     *
-     * @return The large image template.
-     */
-    override fun getTemplate(): LargeImageTemplate {
-        return template
-    }
-
-    /**
-     * Retrieves the current state of the large image UI.
-     *
-     * @return The current UI state.
-     */
-    override fun getState(): LargeImageCardUIState {
-        return _state.value
-    }
-}
+) : BaseAepUI<LargeImageTemplate, LargeImageCardUIState>(template, state)

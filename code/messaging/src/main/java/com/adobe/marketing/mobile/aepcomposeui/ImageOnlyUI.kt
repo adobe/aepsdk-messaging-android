@@ -11,46 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
-import androidx.compose.runtime.mutableStateOf
 import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 
 /**
  * Implementation of the [AepUI] interface used in rendering a UI for a [ImageOnlyTemplate].
  *
- * @property template The template associated with the image only UI.
- * @property _state The current state of the image only UI.
+ * @param template The template associated with the image only UI.
+ * @param state The current state of the image only UI.
  */
 class ImageOnlyUI(
     private val template: ImageOnlyTemplate,
     state: ImageOnlyCardUIState
-) : AepUI<ImageOnlyTemplate, ImageOnlyCardUIState> {
-    private val _state = mutableStateOf(state)
-
-    /**
-     * Updates the current state of the image only UI.
-     *
-     * @param newState The new state to be set.
-     */
-    override fun updateState(newState: ImageOnlyCardUIState) {
-        _state.value = newState
-    }
-
-    /**
-     * Retrieves the template associated with the image only UI.
-     *
-     * @return The image only template.
-     */
-    override fun getTemplate(): ImageOnlyTemplate {
-        return template
-    }
-
-    /**
-     * Retrieves the current state of the image only UI.
-     *
-     * @return The current UI state.
-     */
-    override fun getState(): ImageOnlyCardUIState {
-        return _state.value
-    }
-}
+) : BaseAepUI<ImageOnlyTemplate, ImageOnlyCardUIState>(template, state)
