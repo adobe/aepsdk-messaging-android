@@ -64,7 +64,8 @@ class ContentCardObserverTests {
 
         observer.onEvent(event)
         val expectedEvent = UIEvent.Display(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")    }
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
+    }
 
     @Test
     fun `Content card event observer receives a dismiss event`() {
