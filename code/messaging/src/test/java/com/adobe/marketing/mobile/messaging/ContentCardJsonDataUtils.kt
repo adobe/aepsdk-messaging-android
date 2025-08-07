@@ -63,7 +63,7 @@ object ContentCardJsonDataUtils {
     )
 
     internal val baseJsonMap = JSONUtils.toMap(BASE_JSON) ?: emptyMap()
-    internal val contentMap = (baseJsonMap["detail"] as? Map<*, *>)?.get("data") as? Map<String, Any>
-    internal val metaMap = contentMap?.get("meta") as? Map<String, Any>
-    internal val contentCardMap = contentMap?.get("content") as? Map<String, Any> ?: emptyMap()
+    internal val contentMap = (baseJsonMap["detail"] as Map<*, *>)["data"] as Map<String, Any>
+    internal val metaMap = contentMap["meta"] as Map<String, Any>
+    internal val contentCardMap = contentMap["content"] as Map<String, Any>
 }
