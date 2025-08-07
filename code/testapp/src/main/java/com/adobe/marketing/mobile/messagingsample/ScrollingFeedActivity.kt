@@ -181,7 +181,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
 //                            SmallImageCard(
 //                                ui = aepUI,
 //                                style = SmallImageUIStyle.Builder().build(),
-//                                observer = ContentCardEventObserver(null)
+//                                observer = ContentCardEventObserver(contentCardCallback)
 //                            )
 //                        }
 //                    }

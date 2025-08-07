@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.aepcomposeui.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,13 +19,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
-import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
 
 /**
@@ -42,45 +39,43 @@ fun ImageOnlyCard(
     style: ImageOnlyUIStyle,
     observer: AepUIEventObserver?,
 ) {
-    var isImageDownloadFailed by remember { mutableStateOf(false) }
+    var isImageDownloadPendingOrSuccess by remember { mutableStateOf(true) }
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
     }
 
-    // If the image download has failed, we do not render the card.
-    if (isImageDownloadFailed) return
-
-    AepCardComposable(
-        cardStyle = AepCardStyle(
-            shape = RoundedCornerShape(0.dp)
-        ),
-        onClick = {
-            observer?.onEvent(
-                UIEvent.Interact(
-                    ui,
-                    UIAction.Click(
-                        AepUIConstants.InteractionID.CARD_CLICKED,
-                        ui.getTemplate().actionUrl
+    // Only render the card if the image download is pending or successful.
+    if (isImageDownloadPendingOrSuccess) {
+        AepCardComposable(
+            cardStyle = style.cardStyle,
+            onClick = {
+                observer?.onEvent(
+                    UIEvent.Interact(
+                        ui,
+                        UIAction.Click(
+                            AepUIConstants.InteractionID.CARD_CLICKED,
+                            ui.getTemplate().actionUrl
+                        )
                     )
                 )
-            )
-        }
-    ) {
-        Box {
-            AepAsyncImage(
-                image = ui.getTemplate().image,
-                imageStyle = style.imageStyle,
-                onError = {
-                    isImageDownloadFailed = true
-                }
-            )
-            AepDismissButton(
-                modifier = Modifier.align(style.dismissButtonAlignment),
-                dismissIcon = ui.getTemplate().dismissBtn,
-                style = style.dismissButtonStyle,
-                onClick = { observer?.onEvent(UIEvent.Dismiss(ui)) },
-            )
+            }
+        ) {
+            Box {
+                AepAsyncImage(
+                    image = ui.getTemplate().image,
+                    imageStyle = style.imageStyle,
+                    onError = {
+                        isImageDownloadPendingOrSuccess = false
+                    }
+                )
+                AepDismissButton(
+                    modifier = Modifier.align(style.dismissButtonAlignment),
+                    dismissIcon = ui.getTemplate().dismissBtn,
+                    style = style.dismissButtonStyle,
+                    onClick = { observer?.onEvent(UIEvent.Dismiss(ui)) },
+                )
+            }
         }
     }
 }
