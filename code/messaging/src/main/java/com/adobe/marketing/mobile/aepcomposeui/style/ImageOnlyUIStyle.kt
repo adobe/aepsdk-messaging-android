@@ -35,15 +35,11 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  * @property dismissButtonAlignment The alignment for the dismiss button.
  */
 class ImageOnlyUIStyle private constructor(
-    val cardStyle: AepCardStyle,
     val imageStyle: AepImageStyle,
     val dismissButtonStyle: AepIconStyle,
     val dismissButtonAlignment: Alignment
 ) {
     companion object {
-        private val defaultCardStyle = AepCardStyle(
-            modifier = Modifier.padding(AepUIConstants.DefaultStyle.SPACING.dp)
-        )
         private val defaultImageStyle = AepImageStyle(
             modifier = Modifier.width(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
             contentScale = ContentScale.Fit,
@@ -58,19 +54,16 @@ class ImageOnlyUIStyle private constructor(
     }
 
     class Builder {
-        private var cardStyle: AepCardStyle? = null
         private var imageStyle: AepImageStyle? = null
         private var dismissButtonStyle: AepIconStyle? = null
         private var dismissButtonAlignment: Alignment? = null
 
-        fun cardStyle(style: AepCardStyle) = apply { this.cardStyle = style }
         fun imageStyle(style: AepImageStyle) = apply { this.imageStyle = style }
         fun dismissButtonStyle(style: AepIconStyle) = apply { this.dismissButtonStyle = style }
         fun dismissButtonAlignment(alignment: Alignment) =
             apply { this.dismissButtonAlignment = alignment }
 
         fun build() = ImageOnlyUIStyle(
-            cardStyle = AepCardStyle.merge(defaultCardStyle, cardStyle),
             imageStyle = AepImageStyle.merge(defaultImageStyle, imageStyle),
             dismissButtonStyle = AepIconStyle.merge(defaultDismissButtonStyle, dismissButtonStyle),
             dismissButtonAlignment = dismissButtonAlignment ?: defaultDismissButtonAlignment

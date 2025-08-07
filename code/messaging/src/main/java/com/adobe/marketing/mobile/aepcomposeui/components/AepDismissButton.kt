@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -11,29 +11,34 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 
 /**
- * A composable function that displays an icon element with customizable properties.
+ * A composable function to render a dismiss button with an icon.
  *
- * @param model  The [AepIcon] model that contains the icon properties.
- * @param iconStyle The [AepIconStyle] to be applied to the icon element.
+ * @param modifier Modifier to be applied to the dismiss button.
+ * @param dismissIcon The icon to be displayed on the dismiss button.
+ * @param style The style to be applied to the icon.
+ * @param onClick Callback function to be invoked when the button is clicked.
  */
 @Composable
-internal fun AepIconComposable(
-    model: AepIcon,
-    iconStyle: AepIconStyle = AepIconStyle()
+internal fun AepDismissButton(
+    modifier: Modifier,
+    dismissIcon: AepIcon?,
+    style: AepIconStyle = AepIconStyle(),
+    onClick: () -> Unit = {},
 ) {
-    Icon(
-        painter = painterResource(id = model.drawableId),
-        contentDescription = iconStyle.contentDescription,
-        modifier = iconStyle.modifier ?: Modifier,
-        tint = iconStyle.tint ?: LocalContentColor.current
-    )
+    dismissIcon?.let {
+        AepIconComposable(
+            model = dismissIcon,
+            iconStyle = style.apply {
+                this.modifier = (this.modifier ?: Modifier).then(modifier)
+                    .clickable { onClick() }
+            }
+        )
+    }
 }

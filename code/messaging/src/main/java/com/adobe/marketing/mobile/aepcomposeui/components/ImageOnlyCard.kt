@@ -11,31 +11,23 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import android.graphics.Bitmap
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
+import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardImageManager
 
 /**
  * Composable function that renders a small image card UI.
@@ -50,80 +42,45 @@ fun ImageOnlyCard(
     style: ImageOnlyUIStyle,
     observer: AepUIEventObserver?,
 ) {
-    var isLoading by remember { mutableStateOf(true) }
-    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image.darkUrl != null)
-        ui.getTemplate().image.darkUrl else ui.getTemplate().image.url
+    var isImageDownloadFailed by remember { mutableStateOf(false) }
 
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-        if (imageUrl.isNullOrBlank()) {
-            isLoading = false
-        } else {
-            ContentCardImageManager.getContentCardImageBitmap(imageUrl) {
-                it.onSuccess { bitmap ->
-                    imageBitmap = bitmap
-                    isLoading = false
-                }
-                it.onFailure {
-                    // todo - confirm default image bitmap to be used here
-                    // imageBitmap = contentCardManager.getDefaultImageBitmap()
-                    isLoading = false
-                }
-            }
-        }
     }
-    if (isLoading) {
-        AepCardComposable(
-            cardStyle = style.cardStyle
-        ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(AepUIConstants.DefaultStyle.IMAGE_PROGRESS_SPINNER_SIZE.dp),
-                    strokeWidth = 4.dp
-                )
-            }
-        }
-    } else {
-        imageBitmap?.let { it ->
-            Box {
-                AepCardComposable(
-                    cardStyle = style.cardStyle,
-                    onClick = {
-                        observer?.onEvent(
-                            UIEvent.Interact(
-                                ui,
-                                UIAction.Click(
-                                    AepUIConstants.InteractionID.CARD_CLICKED,
-                                    ui.getTemplate().actionUrl
-                                )
-                            )
-                        )
-                    }
-                ) {
-                    AepImageComposable(
-                        content = BitmapPainter(it.asImageBitmap()),
-                        imageStyle = style.imageStyle
+
+    // If the image download has failed, we do not render the card.
+    if (isImageDownloadFailed) return
+
+    AepCardComposable(
+        cardStyle = AepCardStyle(
+            shape = RoundedCornerShape(0.dp)
+        ),
+        onClick = {
+            observer?.onEvent(
+                UIEvent.Interact(
+                    ui,
+                    UIAction.Click(
+                        AepUIConstants.InteractionID.CARD_CLICKED,
+                        ui.getTemplate().actionUrl
                     )
+                )
+            )
+        }
+    ) {
+        Box {
+            AepAsyncImage(
+                image = ui.getTemplate().image,
+                imageStyle = style.imageStyle,
+                onError = {
+                    isImageDownloadFailed = true
                 }
-                ui.getTemplate().dismissBtn?.let {
-                    Box(
-                        modifier = Modifier
-                            .align(style.dismissButtonAlignment)
-                            .padding(AepUIConstants.DefaultStyle.SPACING.dp)
-                            .clickable {
-                                observer?.onEvent(UIEvent.Dismiss(ui))
-                            }
-                    ) {
-                        AepIconComposable(
-                            drawableId = it.drawableId,
-                            iconStyle = style.dismissButtonStyle
-                        )
-                    }
-                }
-            }
+            )
+            AepDismissButton(
+                modifier = Modifier.align(style.dismissButtonAlignment),
+                dismissIcon = ui.getTemplate().dismissBtn,
+                style = style.dismissButtonStyle,
+                onClick = { observer?.onEvent(UIEvent.Dismiss(ui)) },
+            )
         }
     }
 }

@@ -163,10 +163,6 @@ class ScrollingFeedActivity : AppCompatActivity() {
             .build()
 
         val imageOnlyCardStyleColumn = ImageOnlyUIStyle.Builder()
-            .cardStyle(
-                AepCardStyle(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                ))
             .imageStyle(
                 AepImageStyle(
                     modifier = Modifier.fillMaxWidth(),
@@ -230,8 +226,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
             .build()
 
         val imageOnlyCardStyleRow = ImageOnlyUIStyle.Builder()
-            .cardStyle(AepCardStyle(modifier = Modifier.width(400.dp).height(200.dp).padding(8.dp)))
-            .imageStyle(AepImageStyle(modifier = Modifier.fillMaxSize(), contentScale = ContentScale.FillWidth))
+            .imageStyle(AepImageStyle(modifier = Modifier.width(400.dp).height(200.dp), contentScale = ContentScale.FillWidth))
             .build()
 
         // Create row with composables from AepUI instances

@@ -32,6 +32,5 @@ object AepUIConstants {
         const val SPACING = 8
     }
 
-    const val TEXT_MAX_LINES = 3
     const val DISMISS_BUTTON_SIZE = 13
 }
