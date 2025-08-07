@@ -30,6 +30,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
@@ -39,6 +40,10 @@ import com.adobe.marketing.mobile.services.ui.Presentable
 import com.adobe.marketing.mobile.services.ui.PresentationDelegate
 import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
