@@ -20,19 +20,17 @@ object AepUIConstants {
         const val CARD_CLICKED = "Card clicked"
     }
 
-    internal object SmallImageCard {
-        internal object DefaultStyle {
-            const val IMAGE_WIDTH = 100
-            const val TITLE_TEXT_SIZE = 15
-            val TITLE_FONT_WEIGHT = FontWeight.Medium
-            const val BODY_TEXT_SIZE = 13
-            val BODY_FONT_WEIGHT = FontWeight.Normal
-            const val BUTTON_TEXT_SIZE = 13
-            val BUTTON_FONT_WEIGHT = FontWeight.Normal
-            const val SPACING = 8
-        }
+    internal object DefaultStyle {
+        const val IMAGE_WIDTH = 100
+        const val IMAGE_PROGRESS_SPINNER_SIZE = 48
+        const val TITLE_TEXT_SIZE = 15
+        val TITLE_FONT_WEIGHT = FontWeight.Medium
+        const val BODY_TEXT_SIZE = 13
+        val BODY_FONT_WEIGHT = FontWeight.Normal
+        const val BUTTON_TEXT_SIZE = 13
+        val BUTTON_FONT_WEIGHT = FontWeight.Normal
+        const val SPACING = 8
     }
 
-    const val TEXT_MAX_LINES = 3
     const val DISMISS_BUTTON_SIZE = 13
 }

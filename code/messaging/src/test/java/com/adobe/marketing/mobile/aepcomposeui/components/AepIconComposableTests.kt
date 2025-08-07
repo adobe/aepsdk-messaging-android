@@ -22,6 +22,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.messaging.R
 import com.example.compose.TestTheme
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -66,7 +67,7 @@ class AepIconComposableTests(
         composeTestRule.setContent {
             CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
                 AepIconComposable(
-                    drawableId = iconContent,
+                    model = AepIcon(iconContent),
                 )
             }
         }
@@ -87,7 +88,7 @@ class AepIconComposableTests(
         ) {
             TestTheme(useDarkTheme = true) {
                 AepIconComposable(
-                    drawableId = iconContent,
+                    model = AepIcon(iconContent),
                 )
             }
         }
@@ -108,7 +109,7 @@ class AepIconComposableTests(
         ) {
             TestTheme(useDarkTheme = true) {
                 AepIconComposable(
-                    drawableId = iconContent,
+                    model = AepIcon(iconContent),
                     iconStyle = mockAepIconStyle
                 )
             }
@@ -129,7 +130,7 @@ class AepIconComposableTests(
             CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
                 TestTheme(useDarkTheme = true) {
                     AepIconComposable(
-                        drawableId = iconContent,
+                        model = AepIcon(iconContent),
                         iconStyle = mockAepIconStyle
                     )
                 }

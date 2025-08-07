@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,19 +12,21 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
-import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 
 /**
- * Small Image Template Event Handler for content card events.
+ * Image Only Template Event Handler for content card events.
  *
  * @property callback An optional callback to invoke when a content card event occurs.
  */
-internal class SmallImageTemplateEventHandler(private val callback: ContentCardUIEventListener?) :
-    MessagingEventHandler<SmallImageTemplate, SmallImageCardUIState>(
+internal class ImageOnlyTemplateEventHandler(
+    private val callback: ContentCardUIEventListener?
+) :
+    MessagingEventHandler<ImageOnlyTemplate, ImageOnlyCardUIState>(
         callback
     ) {
-    override fun getNewState(event: UIEvent<SmallImageTemplate, SmallImageCardUIState>): SmallImageCardUIState {
+    override fun getNewState(event: UIEvent<ImageOnlyTemplate, ImageOnlyCardUIState>): ImageOnlyCardUIState {
         val currentState = event.aepUi.getState()
         return when (event) {
             is UIEvent.Dismiss -> currentState.copy(dismissed = true)

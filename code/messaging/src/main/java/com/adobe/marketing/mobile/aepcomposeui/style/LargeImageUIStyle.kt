@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,7 +29,7 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  * Class representing the style for a small image AEP UI.
  *
  * @param cardStyle The style for the card.
- * @param rootRowStyle The style for the root row.
+ * @param rootColumnStyle The style for the root row.
  * @param imageStyle The style for the image.
  * @param textColumnStyle The style for the column containing the title, body and buttons.
  * @property titleTextStyle The text style for the title.
@@ -38,9 +39,9 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
  * @property dismissButtonStyle The style for the dismiss button.
  * @property dismissButtonAlignment The alignment for the dismiss button.
  */
-class SmallImageUIStyle private constructor(
+class LargeImageUIStyle private constructor(
     val cardStyle: AepCardStyle,
-    val rootRowStyle: AepRowStyle,
+    val rootColumnStyle: AepColumnStyle,
     val imageStyle: AepImageStyle,
     val textColumnStyle: AepColumnStyle,
     val titleTextStyle: AepTextStyle,
@@ -54,24 +55,23 @@ class SmallImageUIStyle private constructor(
         private val defaultCardStyle = AepCardStyle(
             modifier = Modifier.padding(AepUIConstants.DefaultStyle.SPACING.dp)
         )
-        private val defaultRootRowStyle = AepRowStyle(
-            horizontalArrangement = Arrangement.spacedBy(
-                AepUIConstants.DefaultStyle.SPACING.dp,
-                Alignment.CenterHorizontally
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        )
-        private val defaultImageStyle = AepImageStyle(
-            modifier = Modifier.width(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
-            contentScale = ContentScale.Fit,
-            alignment = Alignment.Center
-        )
-        private val defaultTextColumnStyle = AepColumnStyle(
+        private val defaultRootColumnStyle = AepColumnStyle(
             verticalArrangement = Arrangement.spacedBy(
                 AepUIConstants.DefaultStyle.SPACING.dp,
                 Alignment.CenterVertically
             ),
-            horizontalAlignment = Alignment.Start,
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        private val defaultImageStyle = AepImageStyle(
+            contentScale = ContentScale.Fit
+        )
+        private val defaultTextColumnStyle = AepColumnStyle(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(
+                AepUIConstants.DefaultStyle.SPACING.dp,
+                Alignment.CenterVertically
+            ),
+            horizontalAlignment = Alignment.Start
         )
         private val defaultTitleAepTextStyle = AepTextStyle(
             textStyle = TextStyle(
@@ -112,7 +112,7 @@ class SmallImageUIStyle private constructor(
 
     class Builder {
         private var cardStyle: AepCardStyle? = null
-        private var rootRowStyle: AepRowStyle? = null
+        private var rootColumnStyle: AepColumnStyle? = null
         private var imageStyle: AepImageStyle? = null
         private var textColumnStyle: AepColumnStyle? = null
         private var titleAepTextStyle: AepTextStyle? = null
@@ -123,7 +123,7 @@ class SmallImageUIStyle private constructor(
         private var dismissButtonAlignment: Alignment? = null
 
         fun cardStyle(style: AepCardStyle) = apply { this.cardStyle = style }
-        fun rootRowStyle(style: AepRowStyle) = apply { this.rootRowStyle = style }
+        fun rootColumnStyle(style: AepColumnStyle) = apply { this.rootColumnStyle = style }
         fun imageStyle(style: AepImageStyle) = apply { this.imageStyle = style }
         fun textColumnStyle(style: AepColumnStyle) = apply { this.textColumnStyle = style }
         fun titleAepTextStyle(style: AepTextStyle) = apply { this.titleAepTextStyle = style }
@@ -134,9 +134,9 @@ class SmallImageUIStyle private constructor(
         fun dismissButtonAlignment(alignment: Alignment) =
             apply { this.dismissButtonAlignment = alignment }
 
-        fun build() = SmallImageUIStyle(
+        fun build() = LargeImageUIStyle(
             cardStyle = AepCardStyle.merge(defaultCardStyle, cardStyle),
-            rootRowStyle = AepRowStyle.merge(defaultRootRowStyle, rootRowStyle),
+            rootColumnStyle = AepColumnStyle.merge(defaultRootColumnStyle, rootColumnStyle),
             imageStyle = AepImageStyle.merge(defaultImageStyle, imageStyle),
             textColumnStyle = AepColumnStyle.merge(defaultTextColumnStyle, textColumnStyle),
             titleTextStyle = AepTextStyle.merge(defaultTitleAepTextStyle, titleAepTextStyle),

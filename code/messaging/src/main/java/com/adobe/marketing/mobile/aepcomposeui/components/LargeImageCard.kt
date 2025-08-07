@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -16,23 +16,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
-import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
-import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 
 /**
- * Composable function that renders a small image card UI.
+ * Composable function that renders a large image card UI.
  *
- * @param ui The small image AEP UI to be rendered.
- * @param style The style to be applied to the small image UI.
+ * @param ui The large image AEP UI to be rendered.
+ * @param style The style to be applied to the large image UI.
  * @param observer An optional observer that listens to UI events.
  */
 @Composable
-fun SmallImageCard(
-    ui: SmallImageUI,
-    style: SmallImageUIStyle,
+fun LargeImageCard(
+    ui: LargeImageUI,
+    style: LargeImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
     LaunchedEffect(ui.getTemplate().id) {
@@ -54,14 +54,13 @@ fun SmallImageCard(
         }
     ) {
         Box {
-            AepRowComposable(
-                rowStyle = style.rootRowStyle
+            AepColumnComposable(
+                columnStyle = style.rootColumnStyle
             ) {
                 AepAsyncImage(
                     image = ui.getTemplate().image,
                     imageStyle = style.imageStyle
                 )
-
                 AepColumnComposable(
                     columnStyle = style.textColumnStyle
                 ) {

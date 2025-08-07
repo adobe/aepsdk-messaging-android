@@ -22,7 +22,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
@@ -44,9 +43,9 @@ internal fun AepTextComposable(
         text = model.content,
         style = textStyle.textStyle ?: TextStyle(),
         modifier = textStyle.modifier ?: Modifier,
-        overflow = textStyle.overflow ?: TextOverflow.Ellipsis,
+        overflow = textStyle.overflow ?: TextOverflow.Clip,
         softWrap = textStyle.softWrap ?: true,
-        maxLines = textStyle.maxLines ?: AepUIConstants.TEXT_MAX_LINES,
+        maxLines = textStyle.maxLines ?: Int.MAX_VALUE,
         minLines = textStyle.minLines ?: 1
     )
 }

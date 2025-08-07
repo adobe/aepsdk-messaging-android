@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -11,16 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
-import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 
 /**
- * Implementation of the [AepUI] interface used in rendering a UI for a [SmallImageTemplate].
+ * Implementation of the [AepUI] interface used in rendering a UI for a [ImageOnlyTemplate].
  *
- * @param template The template associated with the small image UI.
- * @param state The current state of the small image UI.
+ * @param template The template associated with the image only UI.
+ * @param state The current state of the image only UI.
  */
-class SmallImageUI(
-    private val template: SmallImageTemplate,
-    state: SmallImageCardUIState
-) : BaseAepUI<SmallImageTemplate, SmallImageCardUIState>(template, state)
+class ImageOnlyUI(
+    private val template: ImageOnlyTemplate,
+    state: ImageOnlyCardUIState
+) : BaseAepUI<ImageOnlyTemplate, ImageOnlyCardUIState>(template, state)

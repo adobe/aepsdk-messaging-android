@@ -14,6 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import org.junit.Test
@@ -62,8 +63,8 @@ class ContentCardObserverTests {
         val event = UIEvent.Display(mockAepUI)
 
         observer.onEvent(event)
-
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(event, "mockId")
+        val expectedEvent = UIEvent.Display(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
     }
 
     @Test
@@ -74,7 +75,8 @@ class ContentCardObserverTests {
 
         observer.onEvent(event)
 
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(event, "mockId")
+        val expectedEvent = UIEvent.Dismiss(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>)
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
     }
 
     @Test
@@ -86,6 +88,7 @@ class ContentCardObserverTests {
 
         observer.onEvent(event)
 
-        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(event, "mockId")
+        val expectedEvent = UIEvent.Interact(mockAepUI as AepUI<SmallImageTemplate, SmallImageCardUIState>, UIAction.Click(id = "button1", actionUrl = "http://example.com"))
+        verify(mockSmallImageTemplateEventHandler.constructed()[0], times(1)).onEvent(expectedEvent, "mockId")
     }
 }
