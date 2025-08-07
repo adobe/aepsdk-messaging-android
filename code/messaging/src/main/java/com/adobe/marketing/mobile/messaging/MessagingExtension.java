@@ -192,6 +192,12 @@ public final class MessagingExtension extends Extension {
 
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
+
+        // retrieve the push token from the messaging named collection and add it to the messaging
+        // shared state. this must be done as its not guaranteed that the push token will be synced
+        // (and the shared state updated) on an app launch.
+        final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
+        createMessagingSharedState(existingPushToken, null);
     }
 
     @Override

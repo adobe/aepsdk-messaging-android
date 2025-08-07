@@ -12,14 +12,17 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -690,5 +693,10 @@ class InternalMessagingUtils {
         }
         updatedMap.put(surface, existingList);
         return updatedMap;
+    }
+
+    @VisibleForTesting
+    static void resetPushTokenSyncTimestamp() {
+        lastPushTokenSyncTimestamp = 0;
     }
 }

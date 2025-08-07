@@ -16,6 +16,7 @@ public final class MessagingConstants {
     public static final String LOG_TAG = "Messaging";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String DATA_STORE_NAME = EXTENSION_NAME;
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
     static final String CONTENT_CARD_RULES_ENGINE_NAME = EXTENSION_NAME + "ContentCard.rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
@@ -31,8 +32,8 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final int HALF_SECOND_IN_MILLIS = 500;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
+    static final int IGNORE_PUSH_SYNC_TIMEOUT_MS = 1000;
 
     private MessagingConstants() {}
 
@@ -402,6 +403,16 @@ public final class MessagingConstants {
 
             private EdgeIdentity() {}
         }
+
+        final class Messaging {
+            static final String PUSH_IDENTIFIER = "pushidentifier";
+
+            private Messaging() {}
+        }
+    }
+
+    final class NamedCollectionKeys {
+        private NamedCollectionKeys() {}
 
         final class Messaging {
             static final String PUSH_IDENTIFIER = "pushidentifier";

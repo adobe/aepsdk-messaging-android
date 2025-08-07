@@ -25,10 +25,12 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,8 +50,10 @@ import com.adobe.marketing.mobile.SharedStateStatus;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRulesEngine;
 import com.adobe.marketing.mobile.launch.rulesengine.RuleConsequence;
+import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheService;
 import com.adobe.marketing.mobile.util.JSONUtils;
@@ -77,6 +81,8 @@ public class MessagingExtensionTests {
     // Mocks
     @Mock ExtensionApi mockExtensionApi;
     @Mock ServiceProvider mockServiceProvider;
+    @Mock DataStoring mockDataStoring;
+    @Mock NamedCollection mockNamedCollection;
     @Mock CacheService mockCacheService;
     @Mock DeviceInforming mockDeviceInfoService;
     @Mock LaunchRulesEngine mockMessagingRulesEngine;
@@ -145,6 +151,8 @@ public class MessagingExtensionTests {
         reset(mockRuleConsequence);
         reset(mockSerialWorkDispatcher);
         reset(mockAdobeCallback);
+        reset(mockNamedCollection);
+        reset(mockDataStoring);
     }
 
     void runUsingMockedServiceProvider(final Runnable runnable) {
@@ -153,6 +161,8 @@ public class MessagingExtensionTests {
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
                     .thenReturn(mockServiceProvider);
+            when(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection);
+            when(mockServiceProvider.getDataStoreService()).thenReturn(mockDataStoring);
             when(mockServiceProvider.getCacheService()).thenReturn(mockCacheService);
             when(mockServiceProvider.getDeviceInfoService()).thenReturn(mockDeviceInfoService);
             when(mockDeviceInfoService.getApplicationPackageName()).thenReturn("mockPackageName");
@@ -206,10 +216,12 @@ public class MessagingExtensionTests {
     }
 
     @Test
-    public void test_onRegistered() {
+    public void test_onRegistered_pushTokenIsStoredInNamedCollection() {
         runUsingMockedServiceProvider(
                 () -> {
                     // setup
+                    when(mockNamedCollection.getString(anyString(), any()))
+                            .thenReturn("mockPushToken");
                     messagingExtension.setSerialWorkDispatcher(mockSerialWorkDispatcher);
 
                     // test
