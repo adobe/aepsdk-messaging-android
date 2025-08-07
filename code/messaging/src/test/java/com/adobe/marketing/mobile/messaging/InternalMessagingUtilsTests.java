@@ -22,9 +22,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -35,9 +33,7 @@ import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
-import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
-import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.JSONUtils;
 import java.io.File;
@@ -49,24 +45,13 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.Silent.class)
 public class InternalMessagingUtilsTests {
-    @Mock ServiceProvider mockServiceProvider;
-    @Mock DataStoring mockDataStoring;
-    @Mock NamedCollection mockNamedCollection;
-
     private final String mockJsonObj =
             "{\n"
                     + "   \"messageProfile\":{\n"
@@ -89,29 +74,6 @@ public class InternalMessagingUtilsTests {
                     + "      \"platform\": \"fcm\"\n"
                     + "   }\n"
                     + "]";
-
-    void runUsingMockedServiceProvider(final Runnable runnable) {
-        try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
-                Mockito.mockStatic(ServiceProvider.class)) {
-            when(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection);
-            serviceProviderMockedStatic
-                    .when(ServiceProvider::getInstance)
-                    .thenReturn(mockServiceProvider);
-            when(mockServiceProvider.getDataStoreService()).thenReturn(mockDataStoring);
-            runnable.run();
-        }
-    }
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    @After
-    public void tearDown() {
-        Mockito.reset(mockServiceProvider, mockDataStoring);
-        InternalMessagingUtils.resetPushTokenSyncTimestamp();
-    }
 
     // ========================================================================================
     // toMap
@@ -1672,34 +1634,23 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void updateRuleMapForSurface_returnsOriginalMap_whenRulesToAddIsEmpty() {
-        // setup
-        Surface surface = mock(Surface.class);
-        Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
-
-        // test
-        Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(
-                        surface, new ArrayList<>(), originalMap);
-
-        // verify
-        assertSame(originalMap, result);
-    }
-
-    @Test
     public void updateRuleMapForSurface_addsNewSurfaceAndRules_whenOriginalMapIsEmpty() {
         // setup
         Surface surface = Surface.fromUriString("mobileapp://surface/path");
-        List<LaunchRule> rulesToAdd = Collections.singletonList(mock(LaunchRule.class));
+        LaunchRule ruleToAdd = mock(LaunchRule.class);
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
 
         // test
         Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(surface, rulesToAdd, originalMap);
+                InternalMessagingUtils.updateRuleMapForSurface(surface, ruleToAdd, originalMap);
 
         // verify
         assertNotSame(originalMap, result);
-        assertEquals(rulesToAdd, result.get(surface));
+
+        List<LaunchRule> rulesList = result.get(surface);
+        assertNotNull(rulesList);
+        assertEquals(1, rulesList.size());
+        assertEquals(ruleToAdd, rulesList.get(0));
     }
 
     @Test
@@ -1713,18 +1664,13 @@ public class InternalMessagingUtilsTests {
                         add(mockedLaunchRule);
                     }
                 };
-        List<LaunchRule> rulesToAdd =
-                new ArrayList<LaunchRule>() {
-                    {
-                        add(mockedLaunchRule);
-                    }
-                };
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
         originalMap.put(surface, originalRules);
 
         // test
         Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(surface, rulesToAdd, originalMap);
+                InternalMessagingUtils.updateRuleMapForSurface(
+                        surface, mockedLaunchRule, originalMap);
 
         // verify
         assertNotSame(originalMap, result);
@@ -1736,7 +1682,7 @@ public class InternalMessagingUtilsTests {
         // setup
         Surface surface = Surface.fromUriString("mobileapp://surface/path");
         List<LaunchRule> originalRules = Collections.singletonList(mock(LaunchRule.class));
-        List<LaunchRule> rulesToAdd = Collections.singletonList(mock(LaunchRule.class));
+        LaunchRule ruleToAdd = mock(LaunchRule.class);
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
         originalMap.put(surface, originalRules);
         Surface surfaceToAdd = Surface.fromUriString("mobileapp://surface/path2");
@@ -1744,7 +1690,7 @@ public class InternalMessagingUtilsTests {
         // test
         Map<Surface, List<LaunchRule>> result =
                 InternalMessagingUtils.updateRuleMapForSurface(
-                        surfaceToAdd, rulesToAdd, originalMap);
+                        surfaceToAdd, ruleToAdd, originalMap);
 
         // verify
         assertNotSame(originalMap, result);

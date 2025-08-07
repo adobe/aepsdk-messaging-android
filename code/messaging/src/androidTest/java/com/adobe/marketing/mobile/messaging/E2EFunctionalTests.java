@@ -264,14 +264,14 @@ public class E2EFunctionalTests {
         final Map<String, String> mockHistoryMap = new HashMap<>();
         mockHistoryMap.put(MessagingConstants.EventMask.Keys.EVENT_TYPE, "display");
         mockHistoryMap.put(
-                MessagingConstants.EventMask.Keys.MESSAGE_ID, Environment.getShowOnceMessageId());
+                MessagingConstants.EventMask.Keys.ACTIVITY_ID, Environment.getShowOnceMessageId());
         mockHistoryMap.put(MessagingConstants.EventMask.Keys.TRACKING_ACTION, "");
         final Map<String, Object> eventHistoryData = new HashMap<>();
         eventHistoryData.put(MessagingConstants.EventDataKeys.IAM_HISTORY, mockHistoryMap);
 
         final String[] mask = {
             MessagingConstants.EventMask.Mask.EVENT_TYPE,
-            MessagingConstants.EventMask.Mask.MESSAGE_ID,
+            MessagingConstants.EventMask.Mask.ACTIVITY_ID,
             MessagingConstants.EventMask.Mask.TRACKING_ACTION
         };
         final Event event =

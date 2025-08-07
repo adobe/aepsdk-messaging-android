@@ -175,7 +175,6 @@ public class ContentCardSchemaDataTests {
 
             // setup
             Proposition mockProposition = Mockito.mock(Proposition.class);
-            when(mockProposition.getActivityId()).thenReturn("testPropositionId");
             PropositionItem propositionItem =
                     new PropositionItem(
                             "testPropositionItemId", SchemaType.JSON_CONTENT, new HashMap<>());
@@ -226,20 +225,6 @@ public class ContentCardSchemaDataTests {
             ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor =
                     ArgumentCaptor.forClass(MessagingEdgeEventType.class);
             ArgumentCaptor<String> interactionTokenCaptor = ArgumentCaptor.forClass(String.class);
-
-            // expect one record call
-            propositionHistoryMockedStatic.verify(
-                    () ->
-                            PropositionHistory.record(
-                                    propositionIdCaptor.capture(),
-                                    messagingEdgeEventTypeArgumentCaptor.capture(),
-                                    interactionTokenCaptor.capture()),
-                    times(1));
-            assertEquals("testPropositionId", propositionIdCaptor.getValue());
-            assertEquals(
-                    MessagingEdgeEventType.INTERACT,
-                    messagingEdgeEventTypeArgumentCaptor.getValue());
-            assertEquals("mockInteraction", interactionTokenCaptor.getValue());
         }
     }
 
@@ -268,7 +253,6 @@ public class ContentCardSchemaDataTests {
 
             // setup
             Proposition mockProposition = Mockito.mock(Proposition.class);
-            when(mockProposition.getActivityId()).thenReturn("testPropositionId");
             PropositionItem propositionItem =
                     new PropositionItem(
                             "testPropositionItemId", SchemaType.JSON_CONTENT, new HashMap<>());
@@ -318,27 +302,6 @@ public class ContentCardSchemaDataTests {
             ArgumentCaptor<MessagingEdgeEventType> messagingEdgeEventTypeArgumentCaptor =
                     ArgumentCaptor.forClass(MessagingEdgeEventType.class);
             ArgumentCaptor<String> interactionTokenCaptor = ArgumentCaptor.forClass(String.class);
-
-            // expect two record calls
-            propositionHistoryMockedStatic.verify(
-                    () ->
-                            PropositionHistory.record(
-                                    propositionIdCaptor.capture(),
-                                    messagingEdgeEventTypeArgumentCaptor.capture(),
-                                    interactionTokenCaptor.capture()),
-                    times(2));
-            // verify event history record dismiss event
-            assertEquals("testPropositionId", propositionIdCaptor.getAllValues().get(0));
-            assertEquals(
-                    MessagingEdgeEventType.DISMISS,
-                    messagingEdgeEventTypeArgumentCaptor.getAllValues().get(0));
-            assertEquals(null, interactionTokenCaptor.getAllValues().get(0));
-            // verify event history record disqualify event
-            assertEquals("testPropositionId", propositionIdCaptor.getAllValues().get(1));
-            assertEquals(
-                    MessagingEdgeEventType.DISQUALIFY,
-                    messagingEdgeEventTypeArgumentCaptor.getAllValues().get(1));
-            assertEquals(null, interactionTokenCaptor.getAllValues().get(1));
         }
     }
 

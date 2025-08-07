@@ -49,5 +49,16 @@ class MessagingApplication : Application() {
             MobileCore.updateConfiguration(configMap)
         }
         // Assurance.startSession(ASSURANCE_SESSION_ID)
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            // Log and toast
+            if (task.isSuccessful) {
+                // Get new FCM registration token
+                val token = task.result
+                print("MessagingApplication Firebase token :: $token")
+                // Syncing the push token with experience platform
+                MobileCore.setPushIdentifier(token)
+            }
+        }
     }
 }

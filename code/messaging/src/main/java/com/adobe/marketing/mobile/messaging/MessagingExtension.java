@@ -192,12 +192,6 @@ public final class MessagingExtension extends Extension {
 
         edgePersonalizationResponseHandler.setSerialWorkDispatcher(serialWorkDispatcher);
         serialWorkDispatcher.start();
-
-        // retrieve the push token from the messaging named collection and add it to the messaging
-        // shared state. this must be done as its not guaranteed that the push token will be synced
-        // (and the shared state updated) on an app launch.
-        final String existingPushToken = InternalMessagingUtils.getPushTokenFromPersistence();
-        createMessagingSharedState(existingPushToken, null);
     }
 
     @Override
@@ -310,6 +304,14 @@ public final class MessagingExtension extends Extension {
      * @param event incoming {@link Event} object to be processed
      */
     void handleRuleEngineResponseEvents(final Event event) {
+        if (!InternalMessagingUtils.isSchemaConsequence(event)) {
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "handleRuleEngineResponseEvents - Ignoring rule response event,"
+                            + " consequence is not of type 'schema'");
+            return;
+        }
         final PropositionItem propositionItem = PropositionItem.fromSchemaConsequenceEvent(event);
         if (propositionItem == null) {
             Log.debug(
@@ -322,6 +324,10 @@ public final class MessagingExtension extends Extension {
         switch (propositionItem.getSchema()) {
             case INAPP:
                 edgePersonalizationResponseHandler.createInAppMessage(propositionItem);
+                break;
+            case EVENT_HISTORY_OPERATION:
+                edgePersonalizationResponseHandler.handleEventHistoryRuleConsequence(
+                        propositionItem);
                 break;
             default:
         }
@@ -415,10 +421,6 @@ public final class MessagingExtension extends Extension {
             // validate the personalization request complete event then process the personalization
             // request data
             edgePersonalizationResponseHandler.handleProcessCompletedEvent(eventToProcess);
-        } else if (InternalMessagingUtils.isEventHistoryDisqualifyEvent(eventToProcess)) {
-            // validate the event is an event history disqualify event then process the event
-            // history data
-            edgePersonalizationResponseHandler.handleEventHistoryDisqualifyEvent(eventToProcess);
         }
     }
 
@@ -519,8 +521,11 @@ public final class MessagingExtension extends Extension {
             return;
         }
 
-        // Add the push token to the shared state
-        createMessagingSharedState(pushToken, event);
+        // Update the push token to the shared state
+        final HashMap<String, Object> messagingSharedState = new HashMap<>();
+        messagingSharedState.put(
+                MessagingConstants.SharedState.Messaging.PUSH_IDENTIFIER, pushToken);
+        getApi().createSharedState(messagingSharedState, event);
 
         // Send an edge event with profile data as event data
         InternalMessagingUtils.sendEvent(
@@ -944,6 +949,7 @@ public final class MessagingExtension extends Extension {
         }
         getApi().createSharedState(newMessagingState, event);
     }
+
     // endregion
 
     @VisibleForTesting

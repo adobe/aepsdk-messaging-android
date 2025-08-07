@@ -98,6 +98,11 @@ public class Surface implements Serializable {
         }
     }
 
+    @Override
+    public String toString() {
+        return uri;
+    }
+
     static Surface fromUriString(final String uri) {
         final Surface surface = new Surface(true, uri);
         return !surface.isValid() ? null : surface;

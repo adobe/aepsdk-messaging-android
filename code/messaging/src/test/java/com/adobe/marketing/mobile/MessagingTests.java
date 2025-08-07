@@ -745,7 +745,7 @@ public class MessagingTests {
                     // verify callback response
                     final List<Map<String, Object>> propositionsList = new ArrayList<>();
                     final Map<String, Object> feedPropositionData =
-                            MessagingTestUtils.getMapFromFile("feedProposition.json");
+                            MessagingTestUtils.getMapFromFile("contentCardProposition.json");
                     final Map<String, Object> codeBasedPropositionData =
                             MessagingTestUtils.getMapFromFile("codeBasedPropositionHtml.json");
                     propositionsList.add(feedPropositionData);
