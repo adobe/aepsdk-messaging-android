@@ -92,24 +92,37 @@
         android:id="@+id/btn_setPushIdentifier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set push identifier" />
-
-    <Button
-        android:id="@+id/btn_setPushIdentifierTwice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Set Push Identifier Twice" />
+        android:text="Set real push identifier" />
 
     <Button
         android:id="@+id/btn_setNewPushIdentifier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set New Push Identifier" />
+        android:text="Set Random Push Identifier" />
+
+    <Button
+        android:id="@+id/btn_setPushIdentifierTwice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Same Push Identifier Twice" />
+
+    <Button
+        android:id="@+id/btn_setDifferntPushIdentifierTwice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Different Push Identifiers Twice" />
+
 
     <Button
         android:id="@+id/btn_resetIdentities"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Reset identities" />
+
+    <Button
+        android:id="@+id/btn_displayToken"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Display Token" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -339,6 +339,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        binding.btnSetDifferntPushIdentifierTwice.setOnClickListener {
+            lifecycleScope.launch {
+                // First call with a test identifier
+                val testToken = "first_push_identifier" + Random.nextInt()
+                Log.d("btnSetTwice", "First call with: $testToken")
+                Toast.makeText(baseContext, "First setPushIdentifier call with: $testToken", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(testToken)
+
+                // Second call with the same identifier
+                val testToken2 = "second_push_identifier_" + Random.nextInt()
+                Log.d("btnSetTwice", "Second call with: $testToken2")
+                Toast.makeText(baseContext, "Second setPushIdentifier call with: $testToken2", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(testToken2)
+            }
+        }
+
         binding.btnSetNewPushIdentifier.setOnClickListener {
             lifecycleScope.launch {
                 val testToken = "test_push_identifier_" + Random.nextInt()
@@ -350,6 +366,11 @@ class MainActivity : ComponentActivity() {
 
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
+        }
+
+        binding.btnDisplayToken.setOnClickListener {
+            val token = ServiceProvider.getInstance().dataStoreService.getNamedCollection("com.adobe.messaging").getString("pushidentifier", "Not Available")
+            Toast.makeText(baseContext, token, Toast.LENGTH_LONG).show()
         }
     }
 

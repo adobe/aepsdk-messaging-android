@@ -13,41 +13,35 @@ package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
 import com.adobe.marketing.mobile.Assurance
-import com.adobe.marketing.mobile.Edge
-import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.LoggingMode
-import com.adobe.marketing.mobile.Lifecycle
-import com.adobe.marketing.mobile.edge.identity.Identity
 
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
     private val ASSURANCE_SESSION_ID = ""
     private val STAGING_APP_ID = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
-    private val STAGING = false
+    private val STAGING = true
+
+    // Use these IDs for Push Sync Optimization Bug Bash
+    private val STAGING_APP_ID_WITH_PUSH_OPTIMIZATION_ENABLED = "staging/1b50a869c4a2/c8445c476ccf/launch-735af9a49790-staging"
+    private val STAGING_APP_ID_WITH_PUSH_OPTIMIZATION_DISABLED = "staging/1b50a869c4a2/c8445c476ccf/launch-1e5d4da4ab99-development"
+    private val STAGING_APP_ID_WITHOUT_PUSH_OPTIMIZATION_KEY = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
 
     override fun onCreate() {
         super.onCreate()
 
-        MobileCore.setApplication(this)
         MobileCore.setLogLevel(LoggingMode.VERBOSE)
-        val extensions = listOf(Messaging.EXTENSION, Identity.EXTENSION, Lifecycle.EXTENSION, Edge.EXTENSION, Assurance.EXTENSION)
-        MobileCore.registerExtensions(extensions) {
-            // Necessary property id which has the edge configuration id needed by aep sdk
+        MobileCore.initialize(this, STAGING_APP_ID_WITHOUT_PUSH_OPTIMIZATION_KEY) {
             if (STAGING) {
-                MobileCore.configureWithAppID(STAGING_APP_ID)
                 MobileCore.updateConfiguration(
                     hashMapOf("edge.environment" to "int") as Map<String, Any>)
-            } else {
-                MobileCore.configureWithAppID(ENVIRONMENT_FILE_ID)
             }
-            MobileCore.lifecycleStart(null)
-
-            val configMap = mapOf(
-                "messaging.optimizePushSync" to true
-            )
-            MobileCore.updateConfiguration(configMap)
         }
-        // Assurance.startSession(ASSURANCE_SESSION_ID)
+
+        if (ASSURANCE_SESSION_ID.isEmpty()) {
+            Assurance.startSession()
+        } else {
+            Assurance.startSession(ASSURANCE_SESSION_ID)
+        }
     }
 }
