@@ -11,8 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging;
 
-import com.adobe.marketing.mobile.Messaging;
-
 /**
  * Class to maintain test constants.
  */
@@ -88,7 +86,7 @@ public class MessagingTestConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.id";
+            static final String ACTIVITY_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {
@@ -281,6 +279,7 @@ public class MessagingTestConstants {
                     static final String SCHEMAS = "schemas";
                     static final String CHARACTERISTICS = "characteristics";
                     static final String TOKENS = "tokens";
+                    static final String REASON = "reason";
 
                     private Key() {
                     }
@@ -341,6 +340,8 @@ public class MessagingTestConstants {
         static final String SCHEMA_FEED_ITEM = "https://ns.adobe.com/personalization/message/feed-item";
         static final String SCHEMA_NATIVE_ALERT = "https://ns.adobe.com/personalization/message/native-alert";
         static final String SCHEMA_DEFAULT_CONTENT = "https://ns.adobe.com/personalization/default-content-item";
+        static final String SCHEMA_CONTENT_CARD = "https://ns.adobe.com/personalization/message/content-card";
+        static final String SCHEMA_EVENT_HISTORY_OPERATION = "https://ns.adobe.com/personalization/eventHistoryOperation";
 
         private SchemaValues() {
         }
@@ -374,6 +375,10 @@ public class MessagingTestConstants {
         static final String MOBILE_PARAMETERS = "mobileParameters";
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
+        static final String OPERATION = "operation";
+        static final String EVENT_TYPE = "iam.eventType";
+        static final String ACTIVITY_ID = "iam.id";
+
 
         private ConsequenceDetailDataKeys() {
         }

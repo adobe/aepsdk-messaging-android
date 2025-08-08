@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.messaging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeCallbackWithError;
 import com.adobe.marketing.mobile.AdobeError;
@@ -71,10 +73,14 @@ class EdgePersonalizationResponseHandler {
     // used while processing streaming payloads for a single request
     private Map<Surface, List<Proposition>> inProgressPropositions = new HashMap<>();
 
+    // used to manage in app rules between multiple surfaces and multiple requests
     private final Map<Surface, List<LaunchRule>> inAppRulesBySurface = new HashMap<>();
 
     // used to manage content card rules between multiple surfaces and multiple requests
     private final Map<Surface, List<LaunchRule>> contentCardRulesBySurface = new HashMap<>();
+
+    // used to manage content card rules between multiple surfaces and multiple requests
+    private final Map<Surface, List<LaunchRule>> eventHistoryRulesBySurface = new HashMap<>();
 
     // holds content cards that the user has qualified for
     private Map<Surface, List<Proposition>> contentCardsBySurface = new HashMap<>();
@@ -357,34 +363,66 @@ class EdgePersonalizationResponseHandler {
     }
 
     /**
-     * Process the event history disqualify event by removing the content card activity from the
+     * Process the event history rule consequence by removing the content card activity from the
      * in-memory cache using the proposition activity id.
      *
-     * @param event A {@link Event} containing the event history write event.
+     * @param propositionItem A {@link PropositionItem} of type {@link
+     *     EventHistoryOperationSchemaData} which contains the activity id of the content card to be
+     *     removed.
      */
-    void handleEventHistoryDisqualifyEvent(final Event event) {
-        final String activityId = InternalMessagingUtils.getPropositionActivityId(event);
-        if (StringUtils.isNullOrEmpty(activityId)) {
-            // shouldn't ever get here, but if we do, we don't have anything to process so we should
-            // bail
+    void handleEventHistoryRuleConsequence(final PropositionItem propositionItem) {
+        if (propositionItem == null) {
+            return;
+        }
+        final EventHistoryOperationSchemaData eventHistorySchemaData =
+                propositionItem.getEventHistoryOperationSchemaData();
+        if (eventHistorySchemaData == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Ignoring event history rule consequence with id %s, not in expected format.",
+                    propositionItem.getItemId());
+            return;
+        }
+        final String activityId = eventHistorySchemaData.getActivityId();
+        final String eventType = eventHistorySchemaData.getEventType();
+        if (StringUtils.isNullOrEmpty(activityId) || StringUtils.isNullOrEmpty(eventType)) {
+            // if the activity id or event type is empty, we do nothing
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Ignoring event history rule consequence with id %s, activity id or event type"
+                            + " is empty.",
+                    propositionItem.getItemId());
             return;
         }
 
-        // remove the content card from the in-memory cache using the activity id
-        for (final Map.Entry<Surface, List<Proposition>> contentCardEntry :
-                contentCardsBySurface.entrySet()) {
-            final Surface surface = contentCardEntry.getKey();
-            final List<Proposition> propositions = contentCardEntry.getValue();
-            final List<Proposition> updatedPropositions = new ArrayList<>(propositions);
-            for (final Proposition proposition : propositions) {
-                if (activityId.equals(proposition.getActivityId())) {
-                    updatedPropositions.remove(proposition);
-                    // remove the content card schema data from the ContentCardMapper as well
-                    ContentCardMapper.getInstance()
-                            .removeContentCardSchemaData(proposition.getUniqueId());
+        if (eventType.equals(MessagingConstants.EventHistoryOperationEventTypes.UNQUALIFY)
+                || eventType.equals(
+                        MessagingConstants.EventHistoryOperationEventTypes.DISQUALIFY)) {
+            // remove the content card from the in-memory cache using the activity id
+            for (final Map.Entry<Surface, List<Proposition>> contentCardEntry :
+                    contentCardsBySurface.entrySet()) {
+                final Surface surface = contentCardEntry.getKey();
+                final List<Proposition> propositions = contentCardEntry.getValue();
+                final List<Proposition> updatedPropositions = new ArrayList<>(propositions);
+                for (final Proposition proposition : propositions) {
+                    if (activityId.equals(proposition.getActivityId())) {
+                        Log.debug(
+                                MessagingConstants.LOG_TAG,
+                                SELF_TAG,
+                                "Removing content card proposition with activity id %s for"
+                                        + " surface %s from in-memory cache.",
+                                activityId,
+                                surface.getUri());
+                        updatedPropositions.remove(proposition);
+                        // remove the content card schema data from the ContentCardMapper as well
+                        ContentCardMapper.getInstance()
+                                .removeContentCardSchemaData(proposition.getUniqueId());
+                    }
                 }
+                contentCardsBySurface.put(surface, updatedPropositions);
             }
-            contentCardsBySurface.put(surface, updatedPropositions);
         }
     }
 
@@ -618,98 +656,116 @@ class EdgePersonalizationResponseHandler {
     }
 
     private void updateRulesEngines(
+            @NonNull final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
+            @NonNull final List<Surface> requestedSurfaces) {
+        // process rules from response
+        processRulesForSchemaType(
+                SchemaType.INAPP, surfaceRulesBySchemaType, requestedSurfaces, inAppRulesBySurface);
+        processRulesForSchemaType(
+                SchemaType.CONTENT_CARD,
+                surfaceRulesBySchemaType,
+                requestedSurfaces,
+                contentCardRulesBySurface);
+        processRulesForSchemaType(
+                SchemaType.EVENT_HISTORY_OPERATION,
+                surfaceRulesBySchemaType,
+                requestedSurfaces,
+                eventHistoryRulesBySurface);
+
+        // collect and update content card rules engine
+        if (surfaceRulesBySchemaType.get(SchemaType.CONTENT_CARD) != null) {
+            final List<LaunchRule> collectedContentCardRules =
+                    collectRulesFrom(contentCardRulesBySurface);
+            contentCardRulesEngine.replaceRules(collectedContentCardRules);
+
+            // process a generic event to see if there are any content cards with:
+            // 1. no client-side qualification requirements, or
+            // 2. prior qualification by this device
+            final Event event =
+                    new Event.Builder(
+                                    "Seed content cards",
+                                    EventType.MESSAGING,
+                                    EventSource.REQUEST_CONTENT)
+                            .build();
+            updateQualifiedContentCardsForEvent(event);
+        }
+
+        // collect and update launch rules engine for in-app and event history
+        if (surfaceRulesBySchemaType.get(SchemaType.INAPP) != null
+                || surfaceRulesBySchemaType.get(SchemaType.EVENT_HISTORY_OPERATION) != null) {
+
+            // pre-fetch the assets for in-app message if any in-app rules were returned
+            final List<LaunchRule> collectedInAppRules = collectRulesFrom(inAppRulesBySurface);
+            if (surfaceRulesBySchemaType.get(SchemaType.INAPP) != null) {
+                final List<RuleConsequence> collectedInAppConsequences = new ArrayList<>();
+                for (final LaunchRule rule : collectedInAppRules) {
+                    collectedInAppConsequences.addAll(rule.getConsequenceList());
+                }
+                cacheImageAssetsFromPayload(collectedInAppConsequences);
+            }
+
+            // collect rules for in-app message and event history
+            final List<LaunchRule> collectedInAppAndEventHistoryRules =
+                    new ArrayList<>(collectedInAppRules);
+            collectedInAppAndEventHistoryRules.addAll(collectRulesFrom(eventHistoryRulesBySurface));
+
+            // update rules in launch rules engine
+            launchRulesEngine.replaceRules(collectedInAppAndEventHistoryRules);
+        }
+    }
+
+    private void processRulesForSchemaType(
+            final SchemaType schemaType,
             final Map<SchemaType, Map<Surface, List<LaunchRule>>> surfaceRulesBySchemaType,
-            final List<Surface> requestedSurfaces) {
-        for (final Map.Entry<SchemaType, Map<Surface, List<LaunchRule>>> newRules :
-                surfaceRulesBySchemaType.entrySet()) {
-            final Set<Surface> newSurfaces = newRules.getValue().keySet();
+            final List<Surface> requestedSurfaces,
+            final Map<Surface, List<LaunchRule>> rulesBySurface) {
+        final Map<Surface, List<LaunchRule>> newRules = surfaceRulesBySchemaType.get(schemaType);
+        if (newRules != null) {
+            final Set<Surface> newSurfaces = newRules.keySet();
+            Log.trace(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Updating definitions for surfaces %s with schema type %s.",
+                    newSurfaces.toString(),
+                    schemaType.toString());
+
+            // replace rules for each surface we got back
+            rulesBySurface.putAll(newRules);
+
+            // remove any surfaces that were requested but had no content returned
             final List<Surface> surfacesToRemove = new ArrayList<>(requestedSurfaces);
             surfacesToRemove.removeAll(newSurfaces);
-
-            final SchemaType schemaType = newRules.getKey();
-            final Map<Surface, List<LaunchRule>> rulesMaps = newRules.getValue();
-            switch (schemaType) {
-                case INAPP:
-                    Log.trace(
-                            MessagingConstants.LOG_TAG,
-                            SELF_TAG,
-                            "Updating in-app message definitions for surfaces %s.",
-                            newSurfaces);
-
-                    // replace rules for each in-app surface we got back
-                    inAppRulesBySurface.putAll(rulesMaps);
-
-                    // remove any surfaces that were requested but had no in-app content returned
-                    for (final Surface surface : surfacesToRemove) {
-                        inAppRulesBySurface.remove(surface);
-                    }
-
-                    // combine all our rules
-                    final Collection<List<LaunchRule>> allInAppRules = inAppRulesBySurface.values();
-                    final List<LaunchRule> collectedInAppRules = new ArrayList<>();
-                    for (final List<LaunchRule> inAppRules : allInAppRules) {
-                        collectedInAppRules.addAll(inAppRules);
-                    }
-
-                    // pre-fetch the assets for this message if there are any defined
-                    final List<RuleConsequence> collectedConsequences = new ArrayList<>();
-                    for (final LaunchRule rule : collectedInAppRules) {
-                        collectedConsequences.addAll(rule.getConsequenceList());
-                    }
-                    cacheImageAssetsFromPayload(collectedConsequences);
-
-                    // update rules in in-app engine
-                    launchRulesEngine.replaceRules(collectedInAppRules);
-                    break;
-                case CONTENT_CARD:
-                    Log.trace(
-                            MessagingConstants.LOG_TAG,
-                            SELF_TAG,
-                            "Updating content card definitions for surfaces %s",
-                            newSurfaces);
-
-                    // replace rules for each content card surface we got back
-                    contentCardRulesBySurface.putAll(rulesMaps);
-
-                    // remove any surfaces that were requested but had no content card content
-                    // returned
-                    for (final Surface surface : surfacesToRemove) {
-                        contentCardRulesBySurface.remove(surface);
-                    }
-
-                    // combine all our rules
-                    final Collection<List<LaunchRule>> allContentCardRules =
-                            contentCardRulesBySurface.values();
-                    final List<LaunchRule> collectedContentCardRules = new ArrayList<>();
-                    for (final List<LaunchRule> contentCardRules : allContentCardRules) {
-                        collectedContentCardRules.addAll(contentCardRules);
-                    }
-
-                    // update rules in content card rules engine
-                    contentCardRulesEngine.replaceRules(collectedContentCardRules);
-
-                    // process a generic event to see if there are any content cards with:
-                    // 1. no client-side qualification requirements, or
-                    // 2. prior qualification by this device
-                    final Event event =
-                            new Event.Builder(
-                                            "Seed content cards",
-                                            EventType.MESSAGING,
-                                            EventSource.REQUEST_CONTENT)
-                                    .build();
-                    updateQualifiedContentCardsForEvent(event);
-
-                    break;
-                default:
-                    // no-op
-                    Log.trace(
-                            MessagingConstants.LOG_TAG,
-                            SELF_TAG,
-                            "No action will be taken updating messaging rules - the InboundType"
-                                    + " provided is not supported.");
-                    break;
+            for (final Surface surface : surfacesToRemove) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Removing definitions for surface %s with schema type %s.",
+                        surface.getUri(),
+                        schemaType.toString());
+                rulesBySurface.remove(surface);
+            }
+        } else {
+            // no rules of this schema type in the response, clear any existing rules for the
+            // requested surfaces
+            for (final Surface surface : requestedSurfaces) {
+                Log.trace(
+                        MessagingConstants.LOG_TAG,
+                        SELF_TAG,
+                        "Removing definitions for surface %s with schema type %s.",
+                        surface.getUri(),
+                        schemaType.toString());
+                rulesBySurface.remove(surface);
             }
         }
+    }
+
+    private List<LaunchRule> collectRulesFrom(final Map<Surface, List<LaunchRule>> rulesBySurface) {
+        final Collection<List<LaunchRule>> allRules = rulesBySurface.values();
+        final List<LaunchRule> collectedRules = new ArrayList<>();
+        for (final List<LaunchRule> rules : allRules) {
+            collectedRules.addAll(rules);
+        }
+        return collectedRules;
     }
 
     /**
@@ -745,15 +801,15 @@ class EdgePersonalizationResponseHandler {
         }
 
         int startingCount = existingPropositionsArray.size();
+        List<PropositionItem> newPropositionItems = new ArrayList<>();
 
         for (final Proposition proposition : propositions) {
             if (existingPropositionsArray.contains(proposition)) {
                 existingPropositionsArray.remove(proposition);
             } else {
                 final List<PropositionItem> propItems = proposition.getItems();
-                final PropositionItem item = propItems.isEmpty() ? null : propItems.get(0);
-                if (item != null) {
-                    item.track(MessagingEdgeEventType.TRIGGER);
+                if (!propItems.isEmpty()) {
+                    newPropositionItems.add(propItems.get(0));
                 }
             }
             existingPropositionsArray.add(proposition);
@@ -765,6 +821,12 @@ class EdgePersonalizationResponseHandler {
         }
 
         contentCardsBySurface.put(surface, existingPropositionsArray);
+
+        // Send batched trigger events for new proposition items
+        if (!newPropositionItems.isEmpty()) {
+            sendBatchedPropositionInteraction(
+                    newPropositionItems, null, MessagingEdgeEventType.TRIGGER);
+        }
 
         int newCount = existingPropositionsArray.size();
         if (startingCount != newCount) {
@@ -783,6 +845,44 @@ class EdgePersonalizationResponseHandler {
                                     surface.getUri());
             Log.trace(MessagingConstants.LOG_TAG, SELF_TAG, message);
         }
+    }
+
+    /**
+     * Sends a batched proposition interaction to the customer's experience event dataset.
+     *
+     * @param propositionItems {@link List} of {@link PropositionItem} instances to batch
+     * @param interaction custom {@code String} describing the interaction
+     * @param eventType {@link MessagingEdgeEventType} specifying event type for the interaction
+     */
+    private void sendBatchedPropositionInteraction(
+            @NonNull final List<PropositionItem> propositionItems,
+            @Nullable final String interaction,
+            @NonNull final MessagingEdgeEventType eventType) {
+
+        final PropositionInteractionBatcher propositionInteractionBatcher =
+                new PropositionInteractionBatcher(eventType, interaction, propositionItems);
+        final Map<String, Object> batchedPropositionInteractionXdm =
+                propositionInteractionBatcher.generateBatchedXdmMap();
+
+        if (batchedPropositionInteractionXdm == null) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Cannot send batched proposition interaction, could not generate XDM data.");
+            return;
+        }
+
+        // Record individual events in event history for each proposition item
+        for (final PropositionItem propositionItem : propositionItems) {
+            if (propositionItem.propositionReference != null
+                    && propositionItem.propositionReference.get() != null) {
+                PropositionHistory.record(
+                        propositionItem.getProposition().getActivityId(), eventType, interaction);
+            }
+        }
+
+        // Send the batched interaction event
+        parent.sendPropositionInteraction(batchedPropositionInteractionXdm);
     }
 
     private void updatePropositionInfo(

@@ -112,7 +112,6 @@
         android:layout_height="wrap_content"
         android:text="Set Different Push Identifiers Twice" />
 
-
     <Button
         android:id="@+id/btn_resetIdentities"
         android:layout_width="wrap_content"

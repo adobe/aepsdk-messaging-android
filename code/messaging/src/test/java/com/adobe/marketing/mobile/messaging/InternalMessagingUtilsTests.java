@@ -1672,34 +1672,23 @@ public class InternalMessagingUtilsTests {
     }
 
     @Test
-    public void updateRuleMapForSurface_returnsOriginalMap_whenRulesToAddIsEmpty() {
-        // setup
-        Surface surface = mock(Surface.class);
-        Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
-
-        // test
-        Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(
-                        surface, new ArrayList<>(), originalMap);
-
-        // verify
-        assertSame(originalMap, result);
-    }
-
-    @Test
     public void updateRuleMapForSurface_addsNewSurfaceAndRules_whenOriginalMapIsEmpty() {
         // setup
         Surface surface = Surface.fromUriString("mobileapp://surface/path");
-        List<LaunchRule> rulesToAdd = Collections.singletonList(mock(LaunchRule.class));
+        LaunchRule ruleToAdd = mock(LaunchRule.class);
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
 
         // test
         Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(surface, rulesToAdd, originalMap);
+                InternalMessagingUtils.updateRuleMapForSurface(surface, ruleToAdd, originalMap);
 
         // verify
         assertNotSame(originalMap, result);
-        assertEquals(rulesToAdd, result.get(surface));
+
+        List<LaunchRule> rulesList = result.get(surface);
+        assertNotNull(rulesList);
+        assertEquals(1, rulesList.size());
+        assertEquals(ruleToAdd, rulesList.get(0));
     }
 
     @Test
@@ -1713,18 +1702,13 @@ public class InternalMessagingUtilsTests {
                         add(mockedLaunchRule);
                     }
                 };
-        List<LaunchRule> rulesToAdd =
-                new ArrayList<LaunchRule>() {
-                    {
-                        add(mockedLaunchRule);
-                    }
-                };
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
         originalMap.put(surface, originalRules);
 
         // test
         Map<Surface, List<LaunchRule>> result =
-                InternalMessagingUtils.updateRuleMapForSurface(surface, rulesToAdd, originalMap);
+                InternalMessagingUtils.updateRuleMapForSurface(
+                        surface, mockedLaunchRule, originalMap);
 
         // verify
         assertNotSame(originalMap, result);
@@ -1736,7 +1720,7 @@ public class InternalMessagingUtilsTests {
         // setup
         Surface surface = Surface.fromUriString("mobileapp://surface/path");
         List<LaunchRule> originalRules = Collections.singletonList(mock(LaunchRule.class));
-        List<LaunchRule> rulesToAdd = Collections.singletonList(mock(LaunchRule.class));
+        LaunchRule ruleToAdd = mock(LaunchRule.class);
         Map<Surface, List<LaunchRule>> originalMap = new HashMap<>();
         originalMap.put(surface, originalRules);
         Surface surfaceToAdd = Surface.fromUriString("mobileapp://surface/path2");
@@ -1744,7 +1728,7 @@ public class InternalMessagingUtilsTests {
         // test
         Map<Surface, List<LaunchRule>> result =
                 InternalMessagingUtils.updateRuleMapForSurface(
-                        surfaceToAdd, rulesToAdd, originalMap);
+                        surfaceToAdd, ruleToAdd, originalMap);
 
         // verify
         assertNotSame(originalMap, result);

@@ -21,21 +21,24 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.MessagingPushPayload
+import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.os.Build.VERSION_CODES.M
 import com.adobe.marketing.mobile.messaging.MessagingService
 
 class NotificationService : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        print("MessagingApplication Firebase token :: $token")
+        MobileCore.setPushIdentifier(token)
+    }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
         // region BEGIN - automatic display and tracking
-        if (MessagingService.handleRemoteMessage(this, message)) {
-            // The message was handled by the SDK, no need to display it manually
-            return
-        }
+        //   MessagingService.handleRemoteMessage(this, message)
         // endregion
 
         // region BEGIN - manual display and tracking

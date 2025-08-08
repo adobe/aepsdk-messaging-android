@@ -73,6 +73,8 @@ public class MessagingPushUtilsTests {
 
     @Mock CacheService mockCacheService;
 
+    @Mock Uri mockUri;
+
     @After
     public void tearDown() {
         reset(
@@ -84,7 +86,8 @@ public class MessagingPushUtilsTests {
                 mockResources,
                 mockServiceProvider,
                 mockCacheService,
-                mockCacheResult);
+                mockCacheResult,
+                mockUri);
     }
 
     @Test
@@ -314,12 +317,9 @@ public class MessagingPushUtilsTests {
         AppContextService mockAppContextService = mock(AppContextService.class);
         PackageManager mockPackageManager = mock(PackageManager.class);
         Context mockContext = mock(Context.class);
-        String fileName = "test_file.jpg";
         String packageName = "com.adobe.marketing.mobile.messaging";
         when(mockContext.getPackageName()).thenReturn(packageName);
         when(mockContext.getPackageManager()).thenReturn(mockPackageManager);
-        Uri expectedUri =
-                Uri.parse("content://" + packageName + ".provider/root/messaging/" + fileName);
 
         try (MockedStatic<ServiceProvider> serviceProviderMockedStatic =
                         Mockito.mockStatic(ServiceProvider.class);
@@ -330,7 +330,7 @@ public class MessagingPushUtilsTests {
 
             fileProviderMockedStatic
                     .when(() -> FileProvider.getUriForFile(any(), anyString(), any()))
-                    .thenReturn(expectedUri);
+                    .thenReturn(mockUri);
 
             serviceProviderMockedStatic
                     .when(ServiceProvider::getInstance)
@@ -340,7 +340,7 @@ public class MessagingPushUtilsTests {
             Uri resultUri = MessagingPushUtils.getCachedRichMediaFileUri(mockCacheResult);
 
             // verify
-            assertEquals(expectedUri, resultUri);
+            assertEquals(mockUri, resultUri);
         }
     }
 

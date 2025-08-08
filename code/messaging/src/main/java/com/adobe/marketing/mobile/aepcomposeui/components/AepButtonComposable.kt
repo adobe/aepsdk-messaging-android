@@ -29,7 +29,6 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  * @param model The [AepButton] model that contains the button properties.
  * @param onClick Method that is called when this button is clicked
  * @param buttonStyle The [AepButtonStyle] to be applied to the button element.
- * @param buttonTextStyle The [AepTextStyle] to be applied to the button text element.
  */
 @Composable
 internal fun AepButtonComposable(

@@ -119,7 +119,7 @@ public class MessagingCacheUtilitiesTests {
         scopeDetails.put("characteristics", characteristics);
         scopeDetails.put("activity", activity);
 
-        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("contentCardPropositionItem.json");
         PropositionItem propositionItem =
                 PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
         propositionItems.add(propositionItem);

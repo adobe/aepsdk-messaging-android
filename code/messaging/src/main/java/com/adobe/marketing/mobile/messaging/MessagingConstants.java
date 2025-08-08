@@ -16,6 +16,7 @@ public final class MessagingConstants {
     public static final String LOG_TAG = "Messaging";
     static final String FRIENDLY_EXTENSION_NAME = "Messaging";
     static final String EXTENSION_NAME = "com.adobe.messaging";
+    static final String DATA_STORE_NAME = EXTENSION_NAME;
     static final String RULES_ENGINE_NAME = EXTENSION_NAME + ".rulesengine";
     static final String CONTENT_CARD_RULES_ENGINE_NAME = EXTENSION_NAME + "ContentCard.rulesengine";
     static final String CACHE_BASE_DIR = "messaging";
@@ -31,7 +32,6 @@ public final class MessagingConstants {
     static final int DEFAULT_TIMEOUT = 5;
     static final long RESPONSE_CALLBACK_TIMEOUT = 10000; // 10 seconds
     static final long CACHE_EXPIRY_TIME = 604800000; // 7 days in milliseconds
-    static final String DATA_STORE_NAME = EXTENSION_NAME;
     static final int DOWNLOAD_ASSET_TIMEOUT = 5000;
     static final int IGNORE_PUSH_SYNC_TIMEOUT_MS = 1000;
 
@@ -56,6 +56,8 @@ public final class MessagingConstants {
                 "https://ns.adobe.com/personalization/message/native-alert";
         static final String SCHEMA_DEFAULT_CONTENT =
                 "https://ns.adobe.com/personalization/default-content-item";
+        static final String SCHEMA_EVENT_HISTORY_OPERATION =
+                "https://ns.adobe.com/personalization/eventHistoryOperation";
 
         private SchemaValues() {}
     }
@@ -88,6 +90,9 @@ public final class MessagingConstants {
         static final String MOBILE_PARAMETERS = "mobileParameters";
         static final String WEB_PARAMETERS = "webParameters";
         static final String REMOTE_ASSETS = "remoteAssets";
+        static final String OPERATION = "operation";
+        static final String EVENT_TYPE = "iam.eventType";
+        static final String ACTIVITY_ID = "iam.id";
 
         private ConsequenceDetailDataKeys() {}
     }
@@ -352,10 +357,16 @@ public final class MessagingConstants {
         private EventSource() {}
     }
 
+    final class EventHistoryOperationEventTypes {
+        static final String QUALIFY = "qualify";
+        static final String UNQUALIFY = "unqualify";
+        static final String DISQUALIFY = "disqualify";
+    }
+
     final class EventMask {
         final class Keys {
             static final String EVENT_TYPE = "eventType";
-            static final String MESSAGE_ID = "id";
+            static final String ACTIVITY_ID = "id";
             static final String TRACKING_ACTION = "action";
 
             private Keys() {}
@@ -363,7 +374,7 @@ public final class MessagingConstants {
 
         final class Mask {
             static final String EVENT_TYPE = "iam.eventType";
-            static final String MESSAGE_ID = "iam.id";
+            static final String ACTIVITY_ID = "iam.id";
             static final String TRACKING_ACTION = "iam.action";
 
             private Mask() {}

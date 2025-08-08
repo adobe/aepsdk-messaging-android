@@ -17,20 +17,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 
 /**
  * A composable function that displays an icon element with customizable properties.
  *
- * @param drawableId The drawable resource ID to be displayed.
+ * @param model  The [AepIcon] model that contains the icon properties.
  * @param iconStyle The [AepIconStyle] to be applied to the icon element.
  */
 @Composable
 internal fun AepIconComposable(
-    drawableId: Int,
+    model: AepIcon,
     iconStyle: AepIconStyle = AepIconStyle()
 ) {
     Icon(
-        painter = painterResource(id = drawableId),
+        painter = painterResource(id = model.drawableId),
         contentDescription = iconStyle.contentDescription,
         modifier = iconStyle.modifier ?: Modifier,
         tint = iconStyle.tint ?: LocalContentColor.current

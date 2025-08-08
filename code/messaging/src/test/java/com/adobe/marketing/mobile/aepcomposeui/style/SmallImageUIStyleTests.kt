@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonElevation
@@ -252,6 +253,7 @@ class SmallImageUIStyleTests {
     @Test
     fun `create SmallImageUIStyle with custom button row style used`() {
         val buttonRowStyle = AepRowStyle(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         )
 

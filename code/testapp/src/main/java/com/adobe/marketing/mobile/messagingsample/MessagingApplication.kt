@@ -20,7 +20,7 @@ class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
     private val ASSURANCE_SESSION_ID = ""
     private val STAGING_APP_ID = "staging/1b50a869c4a2/bcd1a623883f/launch-e44d085fc760-development"
-    private val STAGING = true
+    private val STAGING = false
 
     // Use these IDs for Push Sync Optimization Bug Bash
     private val STAGING_APP_ID_WITH_PUSH_OPTIMIZATION_ENABLED = "staging/1b50a869c4a2/c8445c476ccf/launch-735af9a49790-staging"

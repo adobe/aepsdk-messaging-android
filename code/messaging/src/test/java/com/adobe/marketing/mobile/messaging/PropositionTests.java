@@ -68,8 +68,8 @@ public class PropositionTests {
 
     @Before
     public void setup() throws JSONException {
-        propositionItemMap = MessagingTestUtils.getMapFromFile("feedPropositionItem.json");
-        propositionItemMap2 = MessagingTestUtils.getMapFromFile("feedPropositionItem2.json");
+        propositionItemMap = MessagingTestUtils.getMapFromFile("contentCardPropositionItem.json");
+        propositionItemMap2 = MessagingTestUtils.getMapFromFile("contentCardPropositionItem2.json");
         PropositionItem propositionItem =
                 PropositionItem.fromRuleConsequenceDetail(propositionItemMap);
         PropositionItem propositionItem2 =
