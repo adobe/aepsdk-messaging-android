@@ -57,11 +57,11 @@ android {
 
 dependencies {
     implementation(project(":messaging"))
-    implementation("com.adobe.marketing.mobile:core:$mavenCoreVersion")
-    implementation("com.adobe.marketing.mobile:lifecycle:$mavenLifecycleVersion")
-    implementation("com.adobe.marketing.mobile:assurance:$mavenAssuranceVersion")
-    implementation("com.adobe.marketing.mobile:edge:$mavenEdgeVersion")
-    implementation("com.adobe.marketing.mobile:edgeidentity:$mavenEdgeIdentityVersion")
+    implementation("com.adobe.marketing.mobile:core:3.5.0")
+    implementation("com.adobe.marketing.mobile:lifecycle:3.0.2")
+    implementation("com.adobe.marketing.mobile:assurance:3.0.7")
+    implementation("com.adobe.marketing.mobile:edge:3.0.2")
+    implementation("com.adobe.marketing.mobile:edgeidentity:3.0.1")
 
     implementation("com.google.firebase:firebase-messaging:23.4.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
