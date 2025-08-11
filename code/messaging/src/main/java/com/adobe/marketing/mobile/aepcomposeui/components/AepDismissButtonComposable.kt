@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
  * @param onClick Callback function to be invoked when the button is clicked.
  */
 @Composable
-internal fun AepDismissButton(
+internal fun AepDismissButtonComposable(
     modifier: Modifier,
     dismissIcon: AepIcon?,
     style: AepIconStyle = AepIconStyle(),

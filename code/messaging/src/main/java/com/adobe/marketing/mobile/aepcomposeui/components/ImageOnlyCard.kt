@@ -62,14 +62,14 @@ fun ImageOnlyCard(
             }
         ) {
             Box {
-                AepAsyncImage(
+                AepAsyncImageComposable(
                     image = ui.getTemplate().image,
                     imageStyle = style.imageStyle,
                     onError = {
                         isImageDownloadPendingOrSuccess = false
                     }
                 )
-                AepDismissButton(
+                AepDismissButtonComposable(
                     modifier = Modifier.align(style.dismissButtonAlignment),
                     dismissIcon = ui.getTemplate().dismissBtn,
                     style = style.dismissButtonStyle,

@@ -11,6 +11,9 @@
 
 package com.adobe.marketing.mobile.messaging
 
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
@@ -64,13 +67,25 @@ class ContentCardSchemaDataUtilsTest {
     fun `test createAepImage with valid urls`() {
         val result = ContentCardSchemaDataUtils.createAepImage(contentCardMap, "cardId")
         assertEquals("https://i.ibb.co/0X8R3TG/Messages-24.png", result?.url)
-        assertNull(result?.darkUrl)
+        assertEquals("https://i.ibb.co/0X8R3TG/Messages-dark-24.png", result?.darkUrl)
+    }
+
+    @Test
+    fun `test createAepImage with darkUrl`() {
+        val imageMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] as? Map<String, Any>)?.toMutableMap()
+        imageMap?.set(MessagingConstants.ContentCard.UIKeys.DARK_URL, "dark.jpg")
+        contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] = imageMap!!
+        val result = ContentCardSchemaDataUtils.createAepImage(contentCardMap, "cardId")
+        assertNotNull(result)
+        assertEquals("https://i.ibb.co/0X8R3TG/Messages-24.png", result?.url)
+        assertEquals("dark.jpg", result?.darkUrl)
     }
 
     @Test
     fun `test createAepImage with missing urls`() {
         val imageMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] as? Map<String, Any>)?.toMutableMap()
         imageMap?.remove(MessagingConstants.ContentCard.UIKeys.URL)
+        imageMap?.remove(MessagingConstants.ContentCard.UIKeys.DARK_URL)
         contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] = imageMap!!
         val result = ContentCardSchemaDataUtils.createAepImage(contentCardMap, "cardId")
         assertNotNull(result)
@@ -145,6 +160,15 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test createAepDismissButton with none style`() {
+        val dismissMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.DISMISS_BTN] as? Map<String, Any>)?.toMutableMap()
+        dismissMap?.put(MessagingConstants.ContentCard.UIKeys.STYLE, MessagingConstants.ContentCard.UIKeys.NONE)
+        contentCardMap[MessagingConstants.ContentCard.UIKeys.DISMISS_BTN] = dismissMap!!
+        val result = ContentCardSchemaDataUtils.createAepDismissButton(contentCardMap, "cardId")
+        assertNull(result)
+    }
+
+    @Test
     fun `test createAepDismissButton with unsupported style`() {
         val dismissMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.DISMISS_BTN] as? Map<String, Any>)?.toMutableMap()
         dismissMap?.put(MessagingConstants.ContentCard.UIKeys.STYLE, "unsupported_style")
@@ -194,6 +218,23 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test getTemplate with empty title`() {
+        val titleMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.TITLE] as? Map<String, Any>)?.toMutableMap()
+        titleMap?.set(MessagingConstants.ContentCard.UIKeys.CONTENT, "")
+        contentCardMap[MessagingConstants.ContentCard.UIKeys.TITLE] = titleMap!!
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(metaMap)
+        Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
+        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        contentCardSchemaData.parent = propositionItem
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
     fun `test getTemplate with large image template type`() {
         val meta = metaMap.toMutableMap()
         val adobeMeta = (meta[MessagingConstants.ContentCard.UIKeys.ADOBE] as? Map<String, Any>)?.toMutableMap()
@@ -209,6 +250,25 @@ class ContentCardSchemaDataUtilsTest {
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertTrue(result is LargeImageTemplate)
+    }
+
+    @Test
+    fun `test getTemplate with large image template type and missing title`() {
+        contentCardMap.remove(MessagingConstants.ContentCard.UIKeys.TITLE)
+        val meta = metaMap.toMutableMap()
+        val adobeMeta = (meta[MessagingConstants.ContentCard.UIKeys.ADOBE] as? Map<String, Any>)?.toMutableMap()
+        adobeMeta?.set(MessagingConstants.ContentCard.UIKeys.TEMPLATE, "LargeImage")
+        meta[MessagingConstants.ContentCard.UIKeys.ADOBE] = adobeMeta!!
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
+        Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
+        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        contentCardSchemaData.parent = propositionItem
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
     }
 
     @Test
@@ -249,6 +309,28 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test getTemplate with image only template type and blank image url`() {
+        val imageMap = (contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] as? Map<String, Any>)?.toMutableMap()
+        imageMap?.set(MessagingConstants.ContentCard.UIKeys.URL, "")
+        contentCardMap[MessagingConstants.ContentCard.UIKeys.IMAGE] = imageMap!!
+
+        val meta = metaMap.toMutableMap()
+        val adobeMeta = (meta[MessagingConstants.ContentCard.UIKeys.ADOBE] as? Map<String, Any>)?.toMutableMap()
+        adobeMeta?.set(MessagingConstants.ContentCard.UIKeys.TEMPLATE, "ImageOnly")
+        meta[MessagingConstants.ContentCard.UIKeys.ADOBE] = adobeMeta!!
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
+        Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
+        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        contentCardSchemaData.parent = propositionItem
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
     fun `test getTemplate with unsupported template type`() {
         val meta = metaMap.toMutableMap()
         val adobeMeta = (meta[MessagingConstants.ContentCard.UIKeys.ADOBE] as? Map<String, Any>)?.toMutableMap()
@@ -267,10 +349,67 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test getTemplate with content not a map`() {
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn("not a map")
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getTemplate with null meta`() {
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(null)
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getTemplate with missing adobe meta`() {
+        val meta = metaMap.toMutableMap()
+        meta.remove(MessagingConstants.ContentCard.UIKeys.ADOBE)
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test getTemplate with missing template type`() {
+        val meta = metaMap.toMutableMap()
+        val adobeMeta = (meta[MessagingConstants.ContentCard.UIKeys.ADOBE] as? Map<String, Any>)?.toMutableMap()
+        adobeMeta?.remove(MessagingConstants.ContentCard.UIKeys.TEMPLATE)
+        meta[MessagingConstants.ContentCard.UIKeys.ADOBE] = adobeMeta!!
+        val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
+        Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
+        Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
+        val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
+        assertNull(result)
+    }
+
+    @Test
     fun `test getAepUI with SmallImageTemplate`() {
         val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
         val result = ContentCardSchemaDataUtils.getAepUI(template)
         assertNotNull(result)
+    }
+
+    @Test
+    fun `test getAepUI with LargeImageTemplate`() {
+        val template = LargeImageTemplate("testId", AepText("..."), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template)
+        assertNotNull(result)
+        assertTrue(result is LargeImageUI)
+    }
+
+    @Test
+    fun `test getAepUI with ImageOnlyTemplate`() {
+        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
+        val result = ContentCardSchemaDataUtils.getAepUI(template)
+        assertNotNull(result)
+        assertTrue(result is ImageOnlyUI)
     }
 
     @Test
@@ -307,6 +446,28 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test buildTemplate with non content card proposition`() {
+        val proposition = mock(Proposition::class.java)
+        val propositionItem = mock(PropositionItem::class.java)
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.HTML_CONTENT)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+        val result = ContentCardSchemaDataUtils.buildTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
+    fun `test buildTemplate with null contentCardSchemaData`() {
+        val propositionItem = mock(PropositionItem::class.java)
+        Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
+        Mockito.`when`(propositionItem.contentCardSchemaData).thenReturn(null)
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
+
+        val result = ContentCardSchemaDataUtils.buildTemplate(proposition)
+        assertNull(result)
+    }
+
+    @Test
     fun `test isContentCard with valid schema`() {
         val propositionItem = mock(PropositionItem::class.java)
         Mockito.`when`(propositionItem.schema).thenReturn(SchemaType.CONTENT_CARD)
@@ -327,6 +488,14 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
+    fun `test isContentCard with empty items`() {
+        val proposition = mock(Proposition::class.java)
+        Mockito.`when`(proposition.items).thenReturn(emptyList())
+        val result = ContentCardSchemaDataUtils.isContentCard(proposition)
+        assertFalse(result)
+    }
+
+    @Test
     fun `test getActionUrl with valid actionUrl`() {
         contentCardMap[MessagingConstants.ContentCard.UIKeys.ACTION_URL] = "https://adobe.com"
         val result = ContentCardSchemaDataUtils.getActionUrl(contentCardMap, "cardId")
@@ -338,5 +507,12 @@ class ContentCardSchemaDataUtilsTest {
         contentCardMap.remove(MessagingConstants.ContentCard.UIKeys.ACTION_URL)
         val result = ContentCardSchemaDataUtils.getActionUrl(contentCardMap, "cardId")
         assertNull(result)
+    }
+
+    @Test
+    fun `test getActionUrl with blank actionUrl`() {
+        contentCardMap[MessagingConstants.ContentCard.UIKeys.ACTION_URL] = ""
+        val result = ContentCardSchemaDataUtils.getActionUrl(contentCardMap, "cardId")
+        assertEquals("", result)
     }
 }
