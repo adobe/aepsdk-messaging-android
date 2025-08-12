@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -16,14 +16,14 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -31,6 +31,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.style.AepButtonStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.example.compose.TestTheme
@@ -48,24 +49,34 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepButtonComposableTests(
+class AepButtonRowTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val mockAepText
+    private val mockAepButton1
         @Composable
-        @ReadOnlyComposable
-        get() = AepText(stringResource(id = android.R.string.httpErrorBadUrl))
-
-    private val mockAepButton
-        @Composable
-        @ReadOnlyComposable
         get() = AepButton(
-            id = "mockId",
-            actionUrl = "mockActionUrl",
-            text = mockAepText,
+            id = "mockId1",
+            actionUrl = "mockActionUrl1",
+            text = AepText(stringResource(id = android.R.string.ok)),
+        )
+
+    private val mockAepButton2
+        @Composable
+        get() = AepButton(
+            id = "mockId2",
+            actionUrl = "mockActionUrl2",
+            text = AepText(stringResource(id = android.R.string.cancel)),
+        )
+
+    private val mockAepButton3
+        @Composable
+        get() = AepButton(
+            id = "mockId3",
+            actionUrl = "mockActionUrl3",
+            text = AepText(stringResource(id = android.R.string.unknownName)),
         )
 
     companion object {
@@ -77,37 +88,41 @@ class AepButtonComposableTests(
     }
 
     @Test
-    fun `Test AepButtonComposable with default style`() {
+    fun `Test AepButtonRow with three buttons and default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
         setComposeContent(
-            composeTestRule, qualifier
+            composeTestRule,
+            qualifier
         ) {
-            AepButtonComposable(
-                model = mockAepButton,
+            AepButtonRow(
+                buttons = listOf(mockAepButton1, mockAepButton2, mockAepButton3),
+                buttonsStyle = arrayOf(AepButtonStyle(), AepButtonStyle(), AepButtonStyle()),
                 onClick = { }
             )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonRowTestsDefault_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepButtonComposable with default style in dark theme`() {
+    fun `Test AepButtonRow with three buttons and default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
         setComposeContent(
-            composeTestRule, qualifier
+            composeTestRule,
+            qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepButtonComposable(
-                    model = mockAepButton,
+                AepButtonRow(
+                    buttons = listOf(mockAepButton1, mockAepButton2, mockAepButton3),
+                    buttonsStyle = arrayOf(AepButtonStyle(), AepButtonStyle(), AepButtonStyle()),
                     onClick = { }
                 )
             }
@@ -115,102 +130,72 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonRowTestsDefaultDark_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to enabled AepButtonComposable`() {
+    fun `Test AepButtonRow with three buttons and custom style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
         setComposeContent(
-            composeTestRule, qualifier
+            composeTestRule,
+            qualifier
         ) {
-            AepButtonComposable(
-                model = mockAepButton,
-                onClick = {},
-                buttonStyle = mockCustomAepButtonStyle(true)
+            AepButtonRow(
+                buttons = listOf(mockAepButton1, mockAepButton2, mockAepButton3),
+                buttonsStyle = arrayOf(mockCustomAepButtonStyle(), mockCustomAepButtonStyle(), mockCustomAepButtonStyle()),
+                rowStyle = AepRowStyle(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ),
+                onClick = { }
             )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonRowTestsCustom_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to disabled AepButtonComposable`() {
+    fun `Test AepButtonRow with three buttons and custom style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
         setComposeContent(
-            composeTestRule, qualifier
-        ) {
-            AepButtonComposable(
-                model = mockAepButton,
-                onClick = { },
-                buttonStyle = mockCustomAepButtonStyle(false)
-            )
-        }
-
-        // Capture screenshot
-        composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
-    }
-
-    @Test
-    fun `Test custom style is applied to enabled AepButtonComposable in dark theme`() {
-        // setup
-        RuntimeEnvironment.setQualifiers(qualifier)
-
-        // test
-        setComposeContent(
-            composeTestRule, qualifier
+            composeTestRule,
+            qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepButtonComposable(
-                    model = mockAepButton,
-                    onClick = { },
-                    buttonStyle = mockCustomAepButtonStyle(true)
+                AepButtonRow(
+                    buttons = listOf(mockAepButton1, mockAepButton2, mockAepButton3),
+                    buttonsStyle = arrayOf(
+                        mockCustomAepButtonStyle(),
+                        mockCustomAepButtonStyle(),
+                        mockCustomAepButtonStyle()
+                    ),
+                    rowStyle = AepRowStyle(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ),
+                    onClick = { }
                 )
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
-    }
-
-    @Test
-    fun `Test custom style is applied to disabled AepButtonComposable in dark theme`() {
-        // setup
-        RuntimeEnvironment.setQualifiers(qualifier)
-
-        // test
-        setComposeContent(
-            composeTestRule, qualifier
-        ) {
-            TestTheme(useDarkTheme = false) {
-                AepButtonComposable(
-                    model = mockAepButton,
-                    onClick = { },
-                    buttonStyle = mockCustomAepButtonStyle(false)
-                )
-            }
-        }
-
-        // Capture screenshot
-        composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonRowTestsCustomDark_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Composable
-    private fun mockCustomAepButtonStyle(enabled: Boolean): AepButtonStyle {
+    private fun mockCustomAepButtonStyle(): AepButtonStyle {
         return AepButtonStyle(
-            modifier = Modifier.height(50.dp).width(200.dp),
-            enabled = enabled,
             elevation = ButtonDefaults.buttonElevation(
                 defaultElevation = 10.dp,
                 pressedElevation = 10.dp,
@@ -232,13 +217,8 @@ class AepButtonComposableTests(
     }
 
     class NoEffectInteractionSource : MutableInteractionSource {
-        override val interactions: Flow<Interaction> = emptyFlow() // No interactions emitted
-        override suspend fun emit(interaction: Interaction) {
-            // Do nothing
-        }
-
-        override fun tryEmit(interaction: Interaction): Boolean {
-            return false
-        }
+        override val interactions: Flow<Interaction> = emptyFlow()
+        override suspend fun emit(interaction: Interaction) {}
+        override fun tryEmit(interaction: Interaction): Boolean = false
     }
 }

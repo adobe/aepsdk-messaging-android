@@ -37,7 +37,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepIconComposableTests(
+class AepIconTests(
     private val qualifier: String
 ) {
     @get: Rule
@@ -59,14 +59,14 @@ class AepIconComposableTests(
     }
 
     @Test
-    fun `Test AepIconComposable with default style`() {
+    fun `Test AepIcon with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
         composeTestRule.setContent {
             CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
-                AepIconComposable(
+                AepIcon(
                     model = AepIcon(iconContent),
                 )
             }
@@ -74,11 +74,11 @@ class AepIconComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepIconComposable with default style in dark theme`() {
+    fun `Test AepIcon with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -87,7 +87,7 @@ class AepIconComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepIconComposable(
+                AepIcon(
                     model = AepIcon(iconContent),
                 )
             }
@@ -95,11 +95,11 @@ class AepIconComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepIconComposable`() {
+    fun `Test custom style is applied to AepIcon`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -108,7 +108,7 @@ class AepIconComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepIconComposable(
+                AepIcon(
                     model = AepIcon(iconContent),
                     iconStyle = mockAepIconStyle
                 )
@@ -117,11 +117,11 @@ class AepIconComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepIconComposable in dark mode`() {
+    fun `Test custom style is applied to AepIcon in dark mode`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -129,7 +129,7 @@ class AepIconComposableTests(
         composeTestRule.setContent {
             CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
                 TestTheme(useDarkTheme = true) {
-                    AepIconComposable(
+                    AepIcon(
                         model = AepIcon(iconContent),
                         iconStyle = mockAepIconStyle
                     )
@@ -139,6 +139,6 @@ class AepIconComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

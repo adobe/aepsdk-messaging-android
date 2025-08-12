@@ -15,9 +15,9 @@ import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -40,15 +40,15 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepRowComposableTests(
+class AepColumnTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val MockAepTextComposable
+    private val mockAepText
         @Composable
-        get() = AepTextComposable(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
+        get() = AepText(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
 
     companion object {
         @JvmStatic
@@ -59,7 +59,7 @@ class AepRowComposableTests(
     }
 
     @Test
-    fun `Test AepRowComposable with default style`() {
+    fun `Test AepColumn with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -67,18 +67,18 @@ class AepRowComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepRowComposable {
-                MockAepTextComposable
+            AepColumn {
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to AepRowComposable`() {
+    fun `Test custom style applied to AepColumn`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -86,23 +86,23 @@ class AepRowComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepRowComposable(
-                rowStyle = AepRowStyle(
+            AepColumn(
+                columnStyle = AepColumnStyle(
                     modifier = Modifier
-                        .height(100.dp)
-                        .fillMaxWidth()
+                        .fillMaxHeight()
+                        .width(500.dp)
                         .background(Color(0xFF0065db))
                         .padding(10.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.Bottom
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.End
                 )
             ) {
-                MockAepTextComposable
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

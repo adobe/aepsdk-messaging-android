@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
  * @param content The content of the row.
  */
 @Composable
-internal fun AepRowComposable(
+internal fun AepRow(
     rowStyle: AepRowStyle = AepRowStyle(),
     content: @Composable RowScope.() -> Unit
 ) {

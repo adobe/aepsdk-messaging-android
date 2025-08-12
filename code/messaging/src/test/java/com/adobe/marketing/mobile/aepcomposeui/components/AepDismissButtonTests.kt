@@ -40,7 +40,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepDismissButtonComposableTests(
+class AepDismissButtonTests(
     private val qualifier: String
 ) {
     @get: Rule
@@ -59,7 +59,7 @@ class AepDismissButtonComposableTests(
     }
 
     @Test
-    fun `Test AepDismissButtonComposable with default style`() {
+    fun `Test AepDismissButton with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -68,7 +68,7 @@ class AepDismissButtonComposableTests(
             composeTestRule,
             qualifier
         ) {
-            AepDismissButtonComposable(
+            AepDismissButton(
                 modifier = Modifier,
                 dismissIcon = mockAepIcon,
                 onClick = {}
@@ -77,11 +77,11 @@ class AepDismissButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonComposableTests_Default_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonTests_Default_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepDismissButtonComposable with default style in dark theme`() {
+    fun `Test AepDismissButton with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -91,7 +91,7 @@ class AepDismissButtonComposableTests(
             qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepDismissButtonComposable(
+                AepDismissButton(
                     modifier = Modifier,
                     dismissIcon = mockAepIcon,
                     onClick = {}
@@ -101,11 +101,11 @@ class AepDismissButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonComposableTests_DefaultDark_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonTests_DefaultDark_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepDismissButtonComposable with custom style`() {
+    fun `Test AepDismissButton with custom style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
         val customStyle = AepIconStyle(
@@ -118,7 +118,7 @@ class AepDismissButtonComposableTests(
             composeTestRule,
             qualifier
         ) {
-            AepDismissButtonComposable(
+            AepDismissButton(
                 modifier = Modifier,
                 dismissIcon = mockAepIcon,
                 style = customStyle,
@@ -128,11 +128,11 @@ class AepDismissButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonComposableTests_Custom_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonTests_Custom_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepDismissButtonComposable with custom style in dark theme`() {
+    fun `Test AepDismissButton with custom style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
         val customStyle = AepIconStyle(
@@ -146,7 +146,7 @@ class AepDismissButtonComposableTests(
             qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepDismissButtonComposable(
+                AepDismissButton(
                     modifier = Modifier,
                     dismissIcon = mockAepIcon,
                     style = customStyle,
@@ -157,17 +157,17 @@ class AepDismissButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonComposableTests_CustomDark_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepDismissButtonTests_CustomDark_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepDismissButtonComposable onClick is called`() {
+    fun `Test AepDismissButton onClick is called`() {
         // setup
         var clicked by mutableStateOf(false)
 
         // test
         composeTestRule.setContent {
-            AepDismissButtonComposable(
+            AepDismissButton(
                 modifier = Modifier.testTag("test"),
                 dismissIcon = mockAepIcon,
                 onClick = { clicked = true }
