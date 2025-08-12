@@ -10,3 +10,5 @@ Messaging provides the following styles that can be used to customize the UI ele
 - [AepRowStyle](./aeprowstyle.md)
 - [AepTextStyle](./aeptextstyle.md)
 - [SmallImageUIStyle](./smallimageuistyle.md)
+- [LargeImageUIStyle](./largeimageuistyle.md)
+- [ImageOnlyUIStyle](./imageonlyuistyle.md)

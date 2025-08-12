@@ -51,20 +51,38 @@ private fun AepContentCardList(viewModel: AepContentCardViewModel) {
   // Create row with composables from AepUI instances
   LazyRow {
     items(aepUiList) { aepUI ->
-                               when (aepUI) {
-                                 is SmallImageUI -> {
-                                   val state = aepUI.getState()
-                                   if (!state.dismissed) {
-                                     SmallImageCard(
-                                       ui = aepUI,
-                                       style = smallImageCardStyleRow,
-                                       // provide the ContentCardUIEventListener as a parameter to the 				  																	 // ContentCardEventObserver
-                                       observer = ContentCardEventObserver(contentCardCallback)
-                                     )
-                                   }
-                                 }
-                               }
-                              }
+      when (aepUI) {
+        is SmallImageUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) {
+            SmallImageCard(
+                ui = aepUI,
+                style = SmallImageUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
+          }
+        }
+        is LargeImageUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) {
+            LargeImageCard(
+                ui = aepUI,
+                style = LargeImageUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
+          }
+        }
+        is ImageOnlyUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) {
+            ImageOnlyCard(
+                ui = aepUI,
+                style = ImageOnlyUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
+          }
+        }
+      }
   }
 }    
 ```
