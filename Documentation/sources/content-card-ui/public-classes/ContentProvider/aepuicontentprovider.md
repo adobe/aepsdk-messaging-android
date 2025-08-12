@@ -8,7 +8,7 @@ Classes implementing this interface will define a strategy to provide content fo
 
 ```kotlin
 interface AepUIContentProvider {
-    suspend fun getContent(): Flow<List<AepUITemplate>>
+    suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
     suspend fun refreshContent()
 }
 ```
@@ -21,12 +21,12 @@ Retrieves the content for the UI.
 
 #### Returns
 
-The content for the UI as a flow of [AepUITemplate](../UIModels/aepuitemplate.md)s.
+The content for the UI as Flow of Result containing [AepUITemplate](../UIModels/aepuitemplate.md)s.
 
 #### Syntax
 
 ```kotlin
-suspend fun getContent(): Flow<List<AepUITemplate>>
+suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
 ```
 
 ### refreshContent
