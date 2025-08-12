@@ -2,6 +2,8 @@
 
 Class representing the style for an image-only AEP UI.
 
+![Image Only Card Composeable Layout](../../../../assets/image-only-card-layout.png)
+
 ## Public Properties
 
 | Property               | Type                                                         | Description                                                  |
