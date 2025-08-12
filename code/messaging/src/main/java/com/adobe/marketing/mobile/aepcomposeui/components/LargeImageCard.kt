@@ -57,7 +57,7 @@ fun LargeImageCard(
             AepColumnComposable(
                 columnStyle = style.rootColumnStyle
             ) {
-                AepAsyncImage(
+                AepAsyncImageComposable(
                     image = ui.getTemplate().image,
                     imageStyle = style.imageStyle
                 )
@@ -76,7 +76,7 @@ fun LargeImageCard(
                             textStyle = style.bodyTextStyle
                         )
                     }
-                    AepButtonRow(
+                    AepButtonRowComposable(
                         buttons = ui.getTemplate().buttons,
                         buttonsStyle = style.buttonStyle,
                         rowStyle = style.buttonRowStyle,
@@ -91,7 +91,7 @@ fun LargeImageCard(
                     )
                 }
             }
-            AepDismissButton(
+            AepDismissButtonComposable(
                 modifier = Modifier.align(style.dismissButtonAlignment),
                 dismissIcon = ui.getTemplate().dismissBtn,
                 style = style.dismissButtonStyle,

@@ -40,7 +40,8 @@ object ContentCardJsonDataUtils {
                 ],
                 "image": {
                   "alt": "",
-                  "url": "https://i.ibb.co/0X8R3TG/Messages-24.png"
+                  "url": "https://i.ibb.co/0X8R3TG/Messages-24.png",
+                  "darkUrl": "https://i.ibb.co/0X8R3TG/Messages-dark-24.png"
                 },
                 "dismissBtn": {
                   "style": "none"

@@ -1,13 +1,14 @@
-# Open Class - AepCardUIState
+# Data Class - LargeImageCardUIState
 
-Class representing the state of an AEP card. This class includes the properties `dismissed` and `displayed` which are common across different card states.
+Class representing the UI state of a Large Image template card.
+
 ## Class Definition
 
 ```kotlin
-open class AepCardUIState(
-    open val dismissed: Boolean,
-    open val displayed: Boolean
-)
+data class LargeImageCardUIState(
+    override val dismissed: Boolean = false,
+    override val displayed: Boolean = false
+) : AepCardUIState()
 ```
 
 ## Public Properties

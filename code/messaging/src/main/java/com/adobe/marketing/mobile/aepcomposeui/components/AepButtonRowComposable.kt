@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
  * @param onClick Callback function to be invoked when a button is clicked.
  */
 @Composable
-internal fun AepButtonRow(
+internal fun AepButtonRowComposable(
     buttons: List<AepButton>?,
     buttonsStyle: Array<AepButtonStyle>,
     rowStyle: AepRowStyle = AepRowStyle(),

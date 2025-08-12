@@ -71,11 +71,32 @@ private fun AepContentCardList(viewModel: AepContentCardViewModel) {
       when (aepUI) {
         is SmallImageUI -> {
           val state = aepUI.getState()
-          if (!state.dismissed) 
-          {
-            SmallImageCard(ui = aepUI, 
-                         style = smallImageCardStyleRow,
-                         observer = ContentCardEventObserver(contentCardCallback))
+          if (!state.dismissed) {
+            SmallImageCard(
+                ui = aepUI,
+                style = SmallImageUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
+          }
+        }
+        is LargeImageUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) {
+            LargeImageCard(
+                ui = aepUI,
+                style = LargeImageUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
+          }
+        }
+        is ImageOnlyUI -> {
+          val state = aepUI.getState()
+          if (!state.dismissed) {
+            ImageOnlyCard(
+                ui = aepUI,
+                style = ImageOnlyUIStyle.Builder().build(),
+                observer = ContentCardEventObserver(contentCardCallback)
+            )
           }
         }
       }
