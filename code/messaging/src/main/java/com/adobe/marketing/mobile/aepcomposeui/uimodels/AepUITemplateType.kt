@@ -21,6 +21,6 @@ enum class AepUITemplateType(val typeName: String) {
     SMALL_IMAGE("SmallImage"),
     /** Represents a large image template type. */
     LARGE_IMAGE("LargeImage"),
-    /** Represents an image template type. */
+    /** Represents an image only template type. */
     IMAGE_ONLY("ImageOnly")
 }

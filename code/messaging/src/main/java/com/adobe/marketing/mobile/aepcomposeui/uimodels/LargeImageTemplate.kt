@@ -19,8 +19,8 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @property body The body text and display settings.
  * @property image The details of the image to be displayed.
  * @property actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
- * @property buttons The details for the small image template buttons.
- * @property dismissBtn The details for the small image template dismiss button.
+ * @property buttons The details for the large image template buttons.
+ * @property dismissBtn The details for the large image template dismiss button.
  */
 data class LargeImageTemplate(
     val id: String,
