@@ -27,10 +27,10 @@ import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
 
 /**
- * Composable function that renders a small image card UI.
+ * Composable function that renders a image only card UI.
  *
- * @param ui The small image AEP UI to be rendered.
- * @param style The style to be applied to the small image UI.
+ * @param ui The image only AEP UI to be rendered.
+ * @param style The style to be applied to the image only UI.
  * @param observer An optional observer that listens to UI events.
  */
 @Composable

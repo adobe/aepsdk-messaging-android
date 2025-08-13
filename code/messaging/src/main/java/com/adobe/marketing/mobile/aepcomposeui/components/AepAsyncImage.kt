@@ -35,7 +35,7 @@ import com.adobe.marketing.mobile.messaging.ContentCardImageManager
 /**
  * A composable function that downloads and caches an image from the URL specified in [AepImage] and
  * displays it. A progress indicator is shown while the image is being loaded.
- * If the image fails to load, no view is render and the `onError` callback is invoked with the error details.
+ * If the image fails to load, no view is rendered and the `onError` callback is invoked with the error details.
  *
  * @param image The [AepImage] to be displayed.
  * @param imageStyle The [AepImageStyle] to be applied to the image.

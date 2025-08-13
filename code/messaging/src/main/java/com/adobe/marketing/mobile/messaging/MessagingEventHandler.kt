@@ -21,7 +21,7 @@ import com.adobe.marketing.mobile.services.ServiceProvider
 
 /**
  * Base interaction handler for messaging events.
- * This class is responsible for handling the display and dismiss events for a content card proposition.
+ * This class is responsible for handling the display, dismiss and interact events for a content card proposition.
  *
  * @param T The type of the template associated with the UI component.
  * @param S The type of the state associated with the UI component.

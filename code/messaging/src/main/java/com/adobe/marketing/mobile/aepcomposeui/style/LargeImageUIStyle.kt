@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 
 /**
- * Class representing the style for a small image AEP UI.
+ * Class representing the style for a large image AEP UI.
  *
  * @param cardStyle The style for the card.
  * @param rootColumnStyle The style for the root row.

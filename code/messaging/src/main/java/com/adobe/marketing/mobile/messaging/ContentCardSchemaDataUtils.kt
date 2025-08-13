@@ -391,6 +391,13 @@ internal object ContentCardSchemaDataUtils {
         }
     }
 
+    /**
+     * Retrieves the action URL from the content map of a content card.
+     *
+     * @param contentMap The map containing the content card data.
+     * @param cardId The unique identifier for the content card.
+     * @return The action URL as a [String] or null if it is not present or empty.
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getActionUrl(contentMap: Map<String, Any>, cardId: String): String? {
         val actionUrl =
