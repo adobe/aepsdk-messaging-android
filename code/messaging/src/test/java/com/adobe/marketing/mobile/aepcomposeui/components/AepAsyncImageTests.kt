@@ -17,8 +17,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertCountEquals
@@ -53,7 +51,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepAsyncImageComposableTests(
+class AepAsyncImageTests(
     private val qualifier: String
 ) {
     @get: Rule
@@ -93,7 +91,7 @@ class AepAsyncImageComposableTests(
     }
 
     @Test
-    fun `Test AepAsyncImageComposable shows progress indicator while loading`() {
+    fun `Test AepAsyncImage shows progress indicator while loading`() {
         // setup
         mockkObject(ContentCardImageManager)
         every {
@@ -102,16 +100,16 @@ class AepAsyncImageComposableTests(
 
         // test
         composeTestRule.setContent {
-            AepAsyncImageComposable(image = mockAepImage)
+            AepAsyncImage(image = mockAepImage)
         }
 
         // verify and capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage("build/outputs/roborazzi/AepAsyncImageComposable_Loading_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage("build/outputs/roborazzi/AepAsyncImage_Loading_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepAsyncImageComposable shows image on success`() {
+    fun `Test AepAsyncImage shows image on success`() {
         // setup
         mockkObject(ContentCardImageManager)
         every {
@@ -123,7 +121,7 @@ class AepAsyncImageComposableTests(
 
         // test
         composeTestRule.setContent {
-            AepAsyncImageComposable(
+            AepAsyncImage(
                 image = mockAepImage,
                 onSuccess = { downloadedBitmap = it }
             )
@@ -133,11 +131,11 @@ class AepAsyncImageComposableTests(
         assertNotNull(downloadedBitmap)
         assertEquals(mockLightBitmap, downloadedBitmap)
         composeTestRule.onRoot()
-            .captureRoboImage("build/outputs/roborazzi/AepAsyncImageComposable_Success_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage("build/outputs/roborazzi/AepAsyncImage_Success_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepAsyncImageComposable shows dark theme image on success`() {
+    fun `Test AepAsyncImage shows dark theme image on success`() {
         // setup
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         val cfg = ctx.resources.configuration
@@ -155,7 +153,7 @@ class AepAsyncImageComposableTests(
         // test
         composeTestRule.setContent {
             TestTheme(useDarkTheme = true) {
-                AepAsyncImageComposable(
+                AepAsyncImage(
                     image = mockAepImage,
                     onSuccess = { downloadedBitmap = it }
                 )
@@ -166,11 +164,11 @@ class AepAsyncImageComposableTests(
         assertNotNull(downloadedBitmap)
         assertEquals(mockDarkBitmap, downloadedBitmap)
         composeTestRule.onRoot()
-            .captureRoboImage("build/outputs/roborazzi/AepAsyncImageComposable_SuccessDark_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage("build/outputs/roborazzi/AepAsyncImage_SuccessDark_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepAsyncImageComposable handles image load failure`() {
+    fun `Test AepAsyncImage handles image load failure`() {
         // setup
         mockkObject(ContentCardImageManager)
         val exception = RuntimeException("Image loading failed")
@@ -183,7 +181,7 @@ class AepAsyncImageComposableTests(
 
         // test
         composeTestRule.setContent {
-            AepAsyncImageComposable(
+            AepAsyncImage(
                 image = mockAepImage,
                 imageStyle = AepImageStyle(
                     modifier = Modifier.testTag("AepImageComposable")
@@ -201,7 +199,7 @@ class AepAsyncImageComposableTests(
     }
 
     @Test
-    fun `Test AepAsyncImageComposable handles null image url`() {
+    fun `Test AepAsyncImage handles null image url`() {
         // setup
         mockkObject(ContentCardImageManager)
         every {
@@ -210,7 +208,7 @@ class AepAsyncImageComposableTests(
 
         // test
         composeTestRule.setContent {
-            AepAsyncImageComposable(image = AepImage(null))
+            AepAsyncImage(image = AepImage(null))
         }
 
         // verify
@@ -223,7 +221,7 @@ class AepAsyncImageComposableTests(
     }
 
     @Test
-    fun `Test AepAsyncImageComposable handles null image`() {
+    fun `Test AepAsyncImage handles null image`() {
         // setup
         mockkObject(ContentCardImageManager)
         every {
@@ -232,7 +230,7 @@ class AepAsyncImageComposableTests(
 
         // test
         composeTestRule.setContent {
-            AepAsyncImageComposable(
+            AepAsyncImage(
                 image = null,
                 imageStyle = AepImageStyle(
                     modifier = Modifier.testTag("AepImageComposable")

@@ -27,7 +27,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
  * @param imageStyle The [AepImageStyle] to be applied to the image element.
  */
 @Composable
-internal fun AepImageComposable(
+internal fun AepImage(
     content: Painter,
     imageStyle: AepImageStyle = AepImageStyle()
 ) {

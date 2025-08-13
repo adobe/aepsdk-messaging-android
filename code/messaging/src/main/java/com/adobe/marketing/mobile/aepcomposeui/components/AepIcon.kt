@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
  * @param iconStyle The [AepIconStyle] to be applied to the icon element.
  */
 @Composable
-internal fun AepIconComposable(
+internal fun AepIcon(
     model: AepIcon,
     iconStyle: AepIconStyle = AepIconStyle()
 ) {

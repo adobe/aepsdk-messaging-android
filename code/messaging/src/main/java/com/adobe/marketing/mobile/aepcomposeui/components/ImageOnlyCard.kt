@@ -47,7 +47,7 @@ fun ImageOnlyCard(
 
     // Only render the card if the image download is pending or successful.
     if (isImageDownloadPendingOrSuccess) {
-        AepCardComposable(
+        AepCard(
             cardStyle = style.cardStyle,
             onClick = {
                 observer?.onEvent(
@@ -62,14 +62,14 @@ fun ImageOnlyCard(
             }
         ) {
             Box {
-                AepAsyncImageComposable(
+                AepAsyncImage(
                     image = ui.getTemplate().image,
                     imageStyle = style.imageStyle,
                     onError = {
                         isImageDownloadPendingOrSuccess = false
                     }
                 )
-                AepDismissButtonComposable(
+                AepDismissButton(
                     modifier = Modifier.align(style.dismissButtonAlignment),
                     dismissIcon = ui.getTemplate().dismissBtn,
                     style = style.dismissButtonStyle,

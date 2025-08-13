@@ -31,7 +31,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  * @param buttonStyle The [AepButtonStyle] to be applied to the button element.
  */
 @Composable
-internal fun AepButtonComposable(
+internal fun AepButton(
     model: AepButton,
     onClick: () -> Unit,
     buttonStyle: AepButtonStyle = AepButtonStyle(),
@@ -47,7 +47,7 @@ internal fun AepButtonComposable(
         contentPadding = buttonStyle.contentPadding ?: ButtonDefaults.ContentPadding,
         interactionSource = buttonStyle.interactionSource ?: remember { MutableInteractionSource() }
     ) {
-        AepTextComposable(
+        AepText(
             model.text,
             buttonStyle.textStyle ?: AepTextStyle(),
         )
@@ -55,7 +55,7 @@ internal fun AepButtonComposable(
 }
 
 /**
- * Preview for [AepTextComposable].
+ * Preview for [AepText].
  * This function creates a sample button using predefined schema data for demonstration
  * purposes. It showcases how the button will appear with various styling options.
  */
@@ -63,7 +63,7 @@ internal fun AepButtonComposable(
 @Composable
 internal fun AepButtonComposablePreview() {
     // Render the AepButtonComposable with the properties from AepButton
-    AepButtonComposable(
+    AepButton(
         AepButton(
             id = "button1",
             text = AepText(

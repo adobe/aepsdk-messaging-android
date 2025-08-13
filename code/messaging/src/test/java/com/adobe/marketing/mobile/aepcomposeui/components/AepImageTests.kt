@@ -13,21 +13,20 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 
 import android.os.Build
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
+import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -40,15 +39,14 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepColumnComposableTests(
+class AepImageTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
-
-    private val MockAepTextComposable
+    private val imageContent: Painter
         @Composable
-        get() = AepTextComposable(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
+        get() = painterResource(id = android.R.drawable.ic_menu_report_image)
 
     companion object {
         @JvmStatic
@@ -59,7 +57,7 @@ class AepColumnComposableTests(
     }
 
     @Test
-    fun `Test AepColumnComposable with default style`() {
+    fun `Test AepImage with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -67,18 +65,18 @@ class AepColumnComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepColumnComposable {
-                MockAepTextComposable
-            }
+            AepImage(
+                content = imageContent,
+            )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to AepColumnComposable`() {
+    fun `Test AepImage with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -86,23 +84,40 @@ class AepColumnComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepColumnComposable(
-                columnStyle = AepColumnStyle(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(500.dp)
-                        .background(Color(0xFF0065db))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.End
-                )
-            ) {
-                MockAepTextComposable
-            }
+            AepImage(
+                content = imageContent,
+            )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+    }
+
+    @Test
+    fun `Test custom style applied to AepImage`() {
+        // setup
+        RuntimeEnvironment.setQualifiers(qualifier)
+
+        // test
+        setComposeContent(
+            composeTestRule, qualifier
+        ) {
+            AepImage(
+                content = imageContent,
+                imageStyle = AepImageStyle(
+                    modifier = Modifier.size(500.dp).aspectRatio(1.5f),
+                    contentDescription = "Test Image",
+                    alignment = Alignment.BottomEnd,
+                    contentScale = ContentScale.Fit,
+                    alpha = 0.85f,
+                    colorFilter = ColorFilter.tint(Color(0xFF0065db))
+                )
+            )
+        }
+
+        // Capture screenshot
+        composeTestRule.onRoot()
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

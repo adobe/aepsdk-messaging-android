@@ -2,6 +2,8 @@
 
 Class representing the style for a large image AEP UI.
 
+![Large Image Card Composeable Layout](../../../../assets/large-image-card-layout.png)
+
 ## Public Properties
 
 | Property               | Type                                                         | Description                                                  |

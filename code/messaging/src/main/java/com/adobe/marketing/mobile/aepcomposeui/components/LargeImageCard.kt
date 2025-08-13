@@ -39,7 +39,7 @@ fun LargeImageCard(
         observer?.onEvent(UIEvent.Display(ui))
     }
 
-    AepCardComposable(
+    AepCard(
         cardStyle = style.cardStyle,
         onClick = {
             observer?.onEvent(
@@ -54,29 +54,29 @@ fun LargeImageCard(
         }
     ) {
         Box {
-            AepColumnComposable(
+            AepColumn(
                 columnStyle = style.rootColumnStyle
             ) {
-                AepAsyncImageComposable(
+                AepAsyncImage(
                     image = ui.getTemplate().image,
                     imageStyle = style.imageStyle
                 )
-                AepColumnComposable(
+                AepColumn(
                     columnStyle = style.textColumnStyle
                 ) {
                     ui.getTemplate().title.let {
-                        AepTextComposable(
+                        AepText(
                             model = it,
                             textStyle = style.titleTextStyle
                         )
                     }
                     ui.getTemplate().body?.let {
-                        AepTextComposable(
+                        AepText(
                             model = it,
                             textStyle = style.bodyTextStyle
                         )
                     }
-                    AepButtonRowComposable(
+                    AepButtonRow(
                         buttons = ui.getTemplate().buttons,
                         buttonsStyle = style.buttonStyle,
                         rowStyle = style.buttonRowStyle,
@@ -91,7 +91,7 @@ fun LargeImageCard(
                     )
                 }
             }
-            AepDismissButtonComposable(
+            AepDismissButton(
                 modifier = Modifier.align(style.dismissButtonAlignment),
                 dismissIcon = ui.getTemplate().dismissBtn,
                 style = style.dismissButtonStyle,

@@ -43,7 +43,7 @@ import com.adobe.marketing.mobile.messaging.ContentCardImageManager
  * @param onError Callback invoked when there is an error loading the image.
  */
 @Composable
-internal fun AepAsyncImageComposable(
+internal fun AepAsyncImage(
     image: AepImage?,
     imageStyle: AepImageStyle = AepImageStyle(),
     onSuccess: (Bitmap) -> Unit = {},
@@ -86,7 +86,7 @@ internal fun AepAsyncImageComposable(
         }
     } else {
         imageBitmap?.let {
-            AepImageComposable(
+            AepImage(
                 content = BitmapPainter(it.asImageBitmap()),
                 imageStyle = imageStyle
             )
