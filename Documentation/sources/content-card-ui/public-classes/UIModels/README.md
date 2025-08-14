@@ -9,3 +9,5 @@ Messaging provides the following UI Models that act as building blocks for creat
 - [AepUITemplate](./aepuitemplate.md)
 - [AepUITemplateType](./aepuitemplatetype.md)
 - [SmallImageTemplate](./smallimagetemplate.md)
+- [LargeImageTemplate](./largeimagetemplate.md)
+- [ImageOnlyTemplate](./imageonlytemplate.md)

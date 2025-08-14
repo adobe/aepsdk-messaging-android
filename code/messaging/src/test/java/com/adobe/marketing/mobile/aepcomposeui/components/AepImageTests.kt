@@ -13,17 +13,20 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 
 import android.os.Build
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.style.AepIconStyle
-import com.adobe.marketing.mobile.messaging.R
-import com.example.compose.TestTheme
+import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.Test
@@ -36,18 +39,14 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepIconComposableTests(
+class AepImageTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
-    private val iconContent = R.drawable.cancel_filled
-
-    private val mockAepIconStyle = AepIconStyle(
-        modifier = Modifier.size(50.dp),
-        contentDescription = "Cancel",
-        tint = Color(0xFF531253)
-    )
+    private val imageContent: Painter
+        @Composable
+        get() = painterResource(id = android.R.drawable.ic_menu_report_image)
 
     companion object {
         @JvmStatic
@@ -58,26 +57,7 @@ class AepIconComposableTests(
     }
 
     @Test
-    fun `Test AepIconComposable with default style`() {
-        // setup
-        RuntimeEnvironment.setQualifiers(qualifier)
-
-        // test
-        composeTestRule.setContent {
-            CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
-                AepIconComposable(
-                    drawableId = iconContent,
-                )
-            }
-        }
-
-        // Capture screenshot
-        composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
-    }
-
-    @Test
-    fun `Test AepIconComposable with default style in dark theme`() {
+    fun `Test AepImage with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -85,20 +65,18 @@ class AepIconComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            TestTheme(useDarkTheme = true) {
-                AepIconComposable(
-                    drawableId = iconContent,
-                )
-            }
+            AepImage(
+                content = imageContent,
+            )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepIconComposable`() {
+    fun `Test AepImage with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -106,38 +84,40 @@ class AepIconComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            TestTheme(useDarkTheme = true) {
-                AepIconComposable(
-                    drawableId = iconContent,
-                    iconStyle = mockAepIconStyle
-                )
-            }
+            AepImage(
+                content = imageContent,
+            )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepIconComposable in dark mode`() {
+    fun `Test custom style applied to AepImage`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
         // test
-        composeTestRule.setContent {
-            CompositionLocalProvider(LocalContentColor provides Color.LightGray) {
-                TestTheme(useDarkTheme = true) {
-                    AepIconComposable(
-                        drawableId = iconContent,
-                        iconStyle = mockAepIconStyle
-                    )
-                }
-            }
+        setComposeContent(
+            composeTestRule, qualifier
+        ) {
+            AepImage(
+                content = imageContent,
+                imageStyle = AepImageStyle(
+                    modifier = Modifier.size(500.dp).aspectRatio(1.5f),
+                    contentDescription = "Test Image",
+                    alignment = Alignment.BottomEnd,
+                    contentScale = ContentScale.Fit,
+                    alpha = 0.85f,
+                    colorFilter = ColorFilter.tint(Color(0xFF0065db))
+                )
+            )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepIconComposableTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepImageTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

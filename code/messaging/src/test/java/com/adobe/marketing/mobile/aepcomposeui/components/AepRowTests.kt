@@ -40,15 +40,15 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepRowComposableTests(
+class AepRowTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val MockAepTextComposable
+    private val mockAepText
         @Composable
-        get() = AepTextComposable(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
+        get() = AepText(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
 
     companion object {
         @JvmStatic
@@ -59,7 +59,7 @@ class AepRowComposableTests(
     }
 
     @Test
-    fun `Test AepRowComposable with default style`() {
+    fun `Test AepRow with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -67,18 +67,18 @@ class AepRowComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepRowComposable {
-                MockAepTextComposable
+            AepRow {
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to AepRowComposable`() {
+    fun `Test custom style applied to AepRow`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -86,7 +86,7 @@ class AepRowComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepRowComposable(
+            AepRow(
                 rowStyle = AepRowStyle(
                     modifier = Modifier
                         .height(100.dp)
@@ -97,12 +97,12 @@ class AepRowComposableTests(
                     verticalAlignment = Alignment.Bottom
                 )
             ) {
-                MockAepTextComposable
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepRowTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

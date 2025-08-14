@@ -6,21 +6,21 @@ Messaging extension implementation of [AepUIContentProvider](./aepuicontentprovi
 
 ### getContent
 
-Retrieves a flow of AepUITemplate lists for the given surface. The flow emits updates whenever new content is fetched.
+Retrieves a Flow of Result containing AepUITemplate lists for the given surface. The flow emits updates whenever new content is fetched.
 
 #### Returns
 
-A flow that emits lists of  [AepUITemplate](../UIModels/aepuitemplate.md)s.
+A Flow of Result containing lists of  [AepUITemplate](../UIModels/aepuitemplate.md)s.
 
 #### Syntax
 
 ```kotlin
-override suspend fun getContent(): Flow<List<AepUITemplate>>
+override suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
 ```
 
 ### getContentCardUI
 
-Retrieves a flow of AepUI instances for the given surface. This function initiates the content fetch using [getContent](./contentcarduiprovider.md#getcontent) and then returns a flow of AepUI instances that represent the UI templates. The flow emits updates whenever new content is fetched or any changes occur.
+Retrieves Flow of Result containing AepUI instances for the given surface. This function initiates the content fetch using [getContent](./contentcarduiprovider.md#getcontent) and then returns a Result of Flow of AepUI instances that represent the UI templates. The flow emits updates whenever new content is fetched or any changes occur.
 
 #### Returns
 
@@ -29,7 +29,7 @@ A [Flow](https://developer.android.com/kotlin/flow) that emits a list of AepUI i
 #### Syntax
 
 ```kotlin
-suspend fun getContentCardUI(): Flow<List<AepUI<*, *>>>
+suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>>
 ```
 
 ### refreshContent

@@ -40,15 +40,15 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepColumnComposableTests(
+class AepColumnTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val MockAepTextComposable
+    private val mockAepText
         @Composable
-        get() = AepTextComposable(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
+        get() = AepText(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
 
     companion object {
         @JvmStatic
@@ -59,7 +59,7 @@ class AepColumnComposableTests(
     }
 
     @Test
-    fun `Test AepColumnComposable with default style`() {
+    fun `Test AepColumn with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -67,18 +67,18 @@ class AepColumnComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepColumnComposable {
-                MockAepTextComposable
+            AepColumn {
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to AepColumnComposable`() {
+    fun `Test custom style applied to AepColumn`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -86,7 +86,7 @@ class AepColumnComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepColumnComposable(
+            AepColumn(
                 columnStyle = AepColumnStyle(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -97,12 +97,12 @@ class AepColumnComposableTests(
                     horizontalAlignment = Alignment.End
                 )
             ) {
-                MockAepTextComposable
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepColumnTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

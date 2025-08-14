@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
  * @param content The content of the column.
  */
 @Composable
-internal fun AepColumnComposable(
+internal fun AepColumn(
     columnStyle: AepColumnStyle = AepColumnStyle(),
     content: @Composable (ColumnScope.() -> Unit)
 ) {

@@ -21,5 +21,5 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
 data class AepButton(
     val id: String,
     val actionUrl: String,
-    val text: AepText,
+    val text: AepText
 )

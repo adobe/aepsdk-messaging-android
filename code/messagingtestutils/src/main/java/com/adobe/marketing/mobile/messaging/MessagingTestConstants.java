@@ -279,6 +279,7 @@ public class MessagingTestConstants {
                     static final String SCHEMAS = "schemas";
                     static final String CHARACTERISTICS = "characteristics";
                     static final String TOKENS = "tokens";
+                    static final String REASON = "reason";
 
                     private Key() {
                     }

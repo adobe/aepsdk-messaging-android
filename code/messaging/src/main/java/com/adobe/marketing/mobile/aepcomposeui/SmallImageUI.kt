@@ -11,46 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui
 
-import androidx.compose.runtime.mutableStateOf
 import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
  * Implementation of the [AepUI] interface used in rendering a UI for a [SmallImageTemplate].
  *
- * @property template The template associated with the small image UI.
- * @property _state The current state of the small image UI.
+ * @param template The template associated with the small image UI.
+ * @param state The current state of the small image UI.
  */
 class SmallImageUI(
     private val template: SmallImageTemplate,
     state: SmallImageCardUIState
-) : AepUI<SmallImageTemplate, SmallImageCardUIState> {
-    private val _state = mutableStateOf(state)
-
-    /**
-     * Updates the current state of the small image UI.
-     *
-     * @param newState The new state to be set.
-     */
-    override fun updateState(newState: SmallImageCardUIState) {
-        _state.value = newState
-    }
-
-    /**
-     * Retrieves the template associated with the small image UI.
-     *
-     * @return The small image template.
-     */
-    override fun getTemplate(): SmallImageTemplate {
-        return template
-    }
-
-    /**
-     * Retrieves the current state of the small image UI.
-     *
-     * @return The current UI state.
-     */
-    override fun getState(): SmallImageCardUIState {
-        return _state.value
-    }
-}
+) : BaseAepUI<SmallImageTemplate, SmallImageCardUIState>(template, state)

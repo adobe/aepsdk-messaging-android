@@ -12,14 +12,17 @@
 package com.adobe.marketing.mobile.messaging;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.adobe.marketing.mobile.AdobeError;
 import com.adobe.marketing.mobile.Event;
 import com.adobe.marketing.mobile.EventSource;
 import com.adobe.marketing.mobile.EventType;
 import com.adobe.marketing.mobile.ExtensionApi;
 import com.adobe.marketing.mobile.launch.rulesengine.LaunchRule;
+import com.adobe.marketing.mobile.services.DataStoring;
 import com.adobe.marketing.mobile.services.DeviceInforming;
 import com.adobe.marketing.mobile.services.Log;
+import com.adobe.marketing.mobile.services.NamedCollection;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.util.DataReader;
 import com.adobe.marketing.mobile.util.MapUtils;
@@ -35,6 +38,7 @@ import org.json.JSONObject;
 
 class InternalMessagingUtils {
     private static final String SELF_TAG = "InternalMessagingUtils";
+    private static long lastPushTokenSyncTimestamp = 0;
 
     static List<Proposition> getPropositionsFromPayloads(final List<Map<String, Object>> payloads) {
         final List<Proposition> propositions = new ArrayList<>();
@@ -158,6 +162,22 @@ class InternalMessagingUtils {
 
         return EventType.GENERIC_IDENTITY.equalsIgnoreCase(event.getType())
                 && EventSource.REQUEST_CONTENT.equalsIgnoreCase(event.getSource());
+    }
+
+    /**
+     * Determines if the passed in {@code Event} is a generic identity request reset event.
+     *
+     * @param event A Generic Identity Request Reset {@link Event}.
+     * @return {@code boolean} indicating if the passed in event is a generic identity request reset
+     *     event.
+     */
+    static boolean isGenericIdentityResetEvent(final Event event) {
+        if (event == null) {
+            return false;
+        }
+
+        return EventType.GENERIC_IDENTITY.equalsIgnoreCase(event.getType())
+                && EventSource.REQUEST_RESET.equalsIgnoreCase(event.getSource());
     }
 
     /**
@@ -515,6 +535,134 @@ class InternalMessagingUtils {
     }
 
     // ========================================================================================
+    // Push token sync helpers
+    // ========================================================================================
+    /**
+     * Determines if the provided push token should be synced to Adobe Journey Optimizer via an Edge
+     * network request.
+     *
+     * @param configSharedState A {@link Map} containing the configuration shared state
+     * @param newPushToken A {@code String} containing the push token to be synced
+     * @param eventTimestamp A {@code long} containing the event timestamp
+     * @return {@code boolean} indicating if the push token should be synced
+     */
+    static boolean shouldSyncPushToken(
+            @Nullable final Map<String, Object> configSharedState,
+            @Nullable final String newPushToken,
+            final long eventTimestamp) {
+        if (StringUtils.isNullOrEmpty(newPushToken)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "New push token is null or empty, push token will not be synced.");
+            return false;
+        }
+
+        // check if the push token sync optimization will be used.
+        // if true, the push token will be synced only if it has changed.
+        // if the value is not present, it will default to true.
+        final boolean optimizePushSync =
+                DataReader.optBoolean(
+                        configSharedState,
+                        MessagingConstants.SharedState.Configuration.OPTIMIZE_PUSH_SYNC,
+                        true);
+
+        final String existingPushToken = getPushTokenFromPersistence();
+        final boolean pushTokensMatch =
+                !StringUtils.isNullOrEmpty(existingPushToken)
+                        && existingPushToken.equals(newPushToken);
+        boolean shouldSync;
+        if (!pushTokensMatch) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Push token is new or changed. The push token will be synced.");
+
+            shouldSync = true;
+        } else if (!optimizePushSync && isPushTokenSyncTimeoutExpired(eventTimestamp)) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "Push registration sync optimization is disabled. The push token will be"
+                            + " synced.");
+
+            shouldSync = true;
+        } else {
+            final String blockedSyncReason =
+                    optimizePushSync
+                            ? "Push token sync optimization is enabled"
+                            : "Push registration sync optimization is disabled but the sync is"
+                                    + " within the 1 second timeout";
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    "shouldSyncPushToken",
+                    "%s. The push token will not be synced.",
+                    blockedSyncReason);
+            shouldSync = false;
+        }
+
+        if (shouldSync) {
+            // persist the push token in the messaging named collection
+            persistPushToken(newPushToken);
+            // store the event timestamp of the last push token sync in-memory
+            lastPushTokenSyncTimestamp = eventTimestamp;
+        }
+
+        return shouldSync;
+    }
+
+    /**
+     * Determines if the push token sync timeout has expired.
+     *
+     * @param eventTimestamp A {@code long} containing the event timestamp
+     * @return {@code boolean} indicating if the push token sync timeout has expired
+     */
+    private static boolean isPushTokenSyncTimeoutExpired(final long eventTimestamp) {
+        return eventTimestamp - lastPushTokenSyncTimestamp
+                > MessagingConstants.IGNORE_PUSH_SYNC_TIMEOUT_MS;
+    }
+
+    // ========================================================================================
+    // Datastore utils
+    // ========================================================================================
+    /**
+     * Persists the provided push token in the Messaging extension {@link NamedCollection}.
+     *
+     * @param pushToken A {@code String} containing the push token to be persisted
+     */
+    static void persistPushToken(final String pushToken) {
+        final NamedCollection messagingNamedCollection = getNamedCollection();
+        if (pushToken == null) {
+            messagingNamedCollection.remove(
+                    MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER);
+            return;
+        }
+        messagingNamedCollection.setString(
+                MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, pushToken);
+    }
+    /**
+     * Retrieves the Messaging extension {@link NamedCollection} from the {@link DataStoring}
+     * service.
+     *
+     * @return The Messaging extension {@link NamedCollection}.
+     */
+    private static NamedCollection getNamedCollection() {
+        final DataStoring dataStoreService = ServiceProvider.getInstance().getDataStoreService();
+        return dataStoreService.getNamedCollection(MessagingConstants.DATA_STORE_NAME);
+    }
+
+    /**
+     * Retrieves the push token from the Messaging {@link NamedCollection}.
+     *
+     * @return {@code String} containing the persisted push token
+     */
+    @Nullable static String getPushTokenFromPersistence() {
+        final NamedCollection messagingNamedCollection = getNamedCollection();
+        return messagingNamedCollection.getString(
+                MessagingConstants.NamedCollectionKeys.Messaging.PUSH_IDENTIFIER, null);
+    }
+
+    // ========================================================================================
     // Collection utils
     // ========================================================================================
     /**
@@ -545,5 +693,10 @@ class InternalMessagingUtils {
         }
         updatedMap.put(surface, existingList);
         return updatedMap;
+    }
+
+    @VisibleForTesting
+    static void resetPushTokenSyncTimestamp() {
+        lastPushTokenSyncTimestamp = 0;
     }
 }

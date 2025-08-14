@@ -30,6 +30,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.adobe.marketing.mobile.*
 import com.adobe.marketing.mobile.messaging.Proposition
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
@@ -39,6 +40,10 @@ import com.adobe.marketing.mobile.services.ui.Presentable
 import com.adobe.marketing.mobile.services.ui.PresentationDelegate
 import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
@@ -306,6 +311,28 @@ class MainActivity : ComponentActivity() {
         binding.btnRefreshInAppMessages.setOnClickListener {
             Messaging.refreshInAppMessages()
         }
+
+        binding.btnSetPushIdentifier.setOnClickListener {
+            lifecycleScope.launch {
+                // Get new FCM registration token
+                val token = getRegToken()
+                // Log and toast
+                Log.d("btnSetPushIdentifier", token)
+                Toast.makeText(baseContext, "calling setPushIdentifier with $token", Toast.LENGTH_SHORT).show()
+                MobileCore.setPushIdentifier(token)
+            }
+        }
+
+        binding.btnResetIdentities.setOnClickListener {
+            MobileCore.resetIdentities()
+        }
+    }
+
+    private suspend fun getRegToken(): String {
+        val token = Firebase.messaging.token.await()
+        Log.d("getRegToken", "got token: $token")
+
+        return token
     }
 
     private fun setupSwitchListeners() {
@@ -316,6 +343,19 @@ class MainActivity : ComponentActivity() {
                     Toast.LENGTH_SHORT
             ).show()
             customMessagingDelegate.showMessages = isChecked
+        }
+
+        binding.pushRegistrationOptimizationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val message =
+                if (isChecked) "Push sync optimization disabled" else "Push sync optimization enabled"
+            Toast.makeText(
+                this@MainActivity, message,
+                Toast.LENGTH_SHORT
+            ).show()
+            val configMap = mapOf(
+                "messaging.optimizePushSync" to !isChecked
+            )
+            MobileCore.updateConfiguration(configMap)
         }
     }
 

@@ -5,8 +5,8 @@ Class representing the state of an AEP card. This class includes the properties 
 
 ```kotlin
 open class AepCardUIState(
-    open val dismissed: Boolean = false,
-    open val displayed: Boolean = false
+    open val dismissed: Boolean,
+    open val displayed: Boolean
 )
 ```
 
