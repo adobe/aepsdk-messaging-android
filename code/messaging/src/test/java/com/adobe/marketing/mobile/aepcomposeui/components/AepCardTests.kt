@@ -42,15 +42,15 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepCardComposableTests(
+class AepCardTests(
     private val qualifier: String
 ) {
     @get: Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val MockAepTextComposable
+    private val mockAepText
         @Composable
-        get() = AepTextComposable(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
+        get() = AepText(AepText(stringResource(id = android.R.string.httpErrorBadUrl)))
 
     companion object {
         @JvmStatic
@@ -61,7 +61,7 @@ class AepCardComposableTests(
     }
 
     @Test
-    fun `Test AepCardComposable with default style`() {
+    fun `Test AepCard with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -69,18 +69,18 @@ class AepCardComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepCardComposable {
-                MockAepTextComposable
+            AepCard {
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepCardComposable with default style in dark theme`() {
+    fun `Test AepCard with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -89,19 +89,19 @@ class AepCardComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepCardComposable {
-                    MockAepTextComposable
+                AepCard {
+                    mockAepText
                 }
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to enabled AepCardComposable`() {
+    fun `Test custom style applied to enabled AepCard`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -109,20 +109,20 @@ class AepCardComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepCardComposable(
+            AepCard(
                 cardStyle = mockCustomAepCardStyle(enabled = true)
             ) {
-                MockAepTextComposable
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to disabled AepCardComposable`() {
+    fun `Test custom style applied to disabled AepCard`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -130,20 +130,20 @@ class AepCardComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepCardComposable(
+            AepCard(
                 cardStyle = mockCustomAepCardStyle(enabled = false)
             ) {
-                MockAepTextComposable
+                mockAepText
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to enabled AepCardComposable in dark theme`() {
+    fun `Test custom style applied to enabled AepCard in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -152,21 +152,21 @@ class AepCardComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepCardComposable(
+                AepCard(
                     cardStyle = mockCustomAepCardStyle(enabled = true)
                 ) {
-                    MockAepTextComposable
+                    mockAepText
                 }
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style applied to disabled AepCardComposable in dark theme`() {
+    fun `Test custom style applied to disabled AepCard in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -175,17 +175,17 @@ class AepCardComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepCardComposable(
+                AepCard(
                     cardStyle = mockCustomAepCardStyle(enabled = false)
                 ) {
-                    MockAepTextComposable
+                    mockAepText
                 }
             }
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardComposableTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepCardTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Composable

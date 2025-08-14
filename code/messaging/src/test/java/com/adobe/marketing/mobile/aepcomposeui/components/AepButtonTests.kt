@@ -48,7 +48,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [33])
-class AepButtonComposableTests(
+class AepButtonTests(
     private val qualifier: String
 ) {
     @get: Rule
@@ -77,7 +77,7 @@ class AepButtonComposableTests(
     }
 
     @Test
-    fun `Test AepButtonComposable with default style`() {
+    fun `Test AepButton with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -85,7 +85,7 @@ class AepButtonComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepButtonComposable(
+            AepButton(
                 model = mockAepButton,
                 onClick = { }
             )
@@ -93,11 +93,11 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepButtonComposable with default style in dark theme`() {
+    fun `Test AepButton with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -106,7 +106,7 @@ class AepButtonComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepButtonComposable(
+                AepButton(
                     model = mockAepButton,
                     onClick = { }
                 )
@@ -115,11 +115,11 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to enabled AepButtonComposable`() {
+    fun `Test custom style is applied to enabled AepButton`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -127,7 +127,7 @@ class AepButtonComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepButtonComposable(
+            AepButton(
                 model = mockAepButton,
                 onClick = {},
                 buttonStyle = mockCustomAepButtonStyle(true)
@@ -136,11 +136,11 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTestsCustomStyleEnabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to disabled AepButtonComposable`() {
+    fun `Test custom style is applied to disabled AepButton`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -148,7 +148,7 @@ class AepButtonComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepButtonComposable(
+            AepButton(
                 model = mockAepButton,
                 onClick = { },
                 buttonStyle = mockCustomAepButtonStyle(false)
@@ -157,11 +157,11 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTestsCustomStyleDisabled_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to enabled AepButtonComposable in dark theme`() {
+    fun `Test custom style is applied to enabled AepButton in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -170,7 +170,7 @@ class AepButtonComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepButtonComposable(
+                AepButton(
                     model = mockAepButton,
                     onClick = { },
                     buttonStyle = mockCustomAepButtonStyle(true)
@@ -180,11 +180,11 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTestsCustomStyleEnabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to disabled AepButtonComposable in dark theme`() {
+    fun `Test custom style is applied to disabled AepButton in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -193,7 +193,7 @@ class AepButtonComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = false) {
-                AepButtonComposable(
+                AepButton(
                     model = mockAepButton,
                     onClick = { },
                     buttonStyle = mockCustomAepButtonStyle(false)
@@ -203,7 +203,7 @@ class AepButtonComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonComposableTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepButtonTestsCustomStyleDisabledDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Composable

@@ -22,7 +22,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
@@ -33,7 +32,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
  * @param textStyle The [AepTextStyle] to be applied to the text element.
  */
 @Composable
-internal fun AepTextComposable(
+internal fun AepText(
     model: AepText,
     textStyle: AepTextStyle = AepTextStyle()
 ) {
@@ -44,15 +43,15 @@ internal fun AepTextComposable(
         text = model.content,
         style = textStyle.textStyle ?: TextStyle(),
         modifier = textStyle.modifier ?: Modifier,
-        overflow = textStyle.overflow ?: TextOverflow.Ellipsis,
+        overflow = textStyle.overflow ?: TextOverflow.Clip,
         softWrap = textStyle.softWrap ?: true,
-        maxLines = textStyle.maxLines ?: AepUIConstants.TEXT_MAX_LINES,
+        maxLines = textStyle.maxLines ?: Int.MAX_VALUE,
         minLines = textStyle.minLines ?: 1
     )
 }
 
 /**
- * Preview for testing the [AepTextComposable] with various inputs.
+ * Preview for testing the [AepText] with various inputs.
  * This function showcases different variations of text properties, including colors,
  * alignments, fonts, and edge cases.
  */
@@ -69,47 +68,47 @@ internal fun AepTextComposablePreview() {
             .padding(16.dp)
     ) {
         // Basic usage
-        AepTextComposable(AepText(content = "Basic Text"))
+        AepText(AepText(content = "Basic Text"))
 
         // Color variations
-        AepTextComposable(AepText(content = "Red Text"))
-        AepTextComposable(AepText(content = "Green Text"))
-        AepTextComposable(AepText(content = "Blue Text"))
-        AepTextComposable(AepText(content = "Invalid Color")) // Test invalid color
+        AepText(AepText(content = "Red Text"))
+        AepText(AepText(content = "Green Text"))
+        AepText(AepText(content = "Blue Text"))
+        AepText(AepText(content = "Invalid Color")) // Test invalid color
 
         // Alignment variations
-        AepTextComposable(AepText(content = "Left Aligned"))
-        AepTextComposable(AepText(content = "Center Aligned"))
-        AepTextComposable(AepText(content = "Right Aligned"))
-        AepTextComposable(AepText(content = "Invalid Alignment")) // Test invalid alignment
+        AepText(AepText(content = "Left Aligned"))
+        AepText(AepText(content = "Center Aligned"))
+        AepText(AepText(content = "Right Aligned"))
+        AepText(AepText(content = "Invalid Alignment")) // Test invalid alignment
 
         // Font variations
-        AepTextComposable(AepText(content = "Large Text"))
-        AepTextComposable(AepText(content = "Small Text"))
-        AepTextComposable(AepText(content = "Bold Text"))
-        AepTextComposable(AepText(content = "Italic Text"))
-        AepTextComposable(AepText(content = "Bold Italic Text"))
+        AepText(AepText(content = "Large Text"))
+        AepText(AepText(content = "Small Text"))
+        AepText(AepText(content = "Bold Text"))
+        AepText(AepText(content = "Italic Text"))
+        AepText(AepText(content = "Bold Italic Text"))
 
         // Combination of properties
-        AepTextComposable(
+        AepText(
             AepText(
                 content = "Complex Styling",
             )
         )
 
         // Edge cases
-        AepTextComposable(AepText(content = "Empty String")) // Providing valid content instead of empty
-        AepTextComposable(AepText(content = "Very Long Text ".repeat(20))) // Very long text
-        AepTextComposable(AepText(content = "Special Characters: !@#$%^&*()_+{}[]|\\:;\"'<>,.?/"))
-        AepTextComposable(AepText(content = "Multi\nLine\nText")) // Multi-line text
+        AepText(AepText(content = "Empty String")) // Providing valid content instead of empty
+        AepText(AepText(content = "Very Long Text ".repeat(20))) // Very long text
+        AepText(AepText(content = "Special Characters: !@#$%^&*()_+{}[]|\\:;\"'<>,.?/"))
+        AepText(AepText(content = "Multi\nLine\nText")) // Multi-line text
 
         // Null values for optional parameters
-        AepTextComposable(AepText(content = "Null Color"))
-        AepTextComposable(AepText(content = "Null Alignment"))
-        AepTextComposable(AepText(content = "Null Font"))
+        AepText(AepText(content = "Null Color"))
+        AepText(AepText(content = "Null Alignment"))
+        AepText(AepText(content = "Null Font"))
 
         // Extreme font sizes
-        AepTextComposable(AepText(content = "Tiny Text"))
-        AepTextComposable(AepText(content = "Huge Text"))
+        AepText(AepText(content = "Tiny Text"))
+        AepText(AepText(content = "Huge Text"))
     }
 }

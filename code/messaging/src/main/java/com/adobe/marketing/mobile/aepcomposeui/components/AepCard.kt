@@ -26,7 +26,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
  * @param content The content of the card.
  */
 @Composable
-internal fun AepCardComposable(
+internal fun AepCard(
     cardStyle: AepCardStyle = AepCardStyle(),
     onClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit

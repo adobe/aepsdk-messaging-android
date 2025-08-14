@@ -20,6 +20,6 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  * @property displayed Indicates whether the card is currently displayed.
  */
 open class AepCardUIState(
-    open val dismissed: Boolean = false,
-    open val displayed: Boolean = false
+    open val dismissed: Boolean,
+    open val displayed: Boolean
 )

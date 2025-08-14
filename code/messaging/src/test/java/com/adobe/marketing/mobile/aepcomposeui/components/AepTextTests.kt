@@ -50,7 +50,7 @@ import org.robolectric.annotation.GraphicsMode
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [31])
-class AepTextComposableTests(
+class AepTextTests(
     private val qualifier: String
 ) {
     @get: Rule
@@ -101,7 +101,7 @@ class AepTextComposableTests(
     }
 
     @Test
-    fun `Test AepTextComposable with default style`() {
+    fun `Test AepText with default style`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -109,18 +109,18 @@ class AepTextComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepTextComposable(
+            AepText(
                 model = mockAepText,
             )
         }
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTests_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextTests_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test AepTextComposable with default style in dark theme`() {
+    fun `Test AepText with default style in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -129,7 +129,7 @@ class AepTextComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepTextComposable(
+                AepText(
                     model = mockAepText,
                 )
             }
@@ -137,11 +137,11 @@ class AepTextComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextTestsDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepTextComposable`() {
+    fun `Test custom style is applied to AepText`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -149,7 +149,7 @@ class AepTextComposableTests(
         setComposeContent(
             composeTestRule, qualifier
         ) {
-            AepTextComposable(
+            AepText(
                 model = mockAepText,
                 textStyle = mockAepTextStyle
             )
@@ -157,11 +157,11 @@ class AepTextComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextTestsCustomStyle_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
-    fun `Test custom style is applied to AepTextComposable in dark theme`() {
+    fun `Test custom style is applied to AepText in dark theme`() {
         // setup
         RuntimeEnvironment.setQualifiers(qualifier)
 
@@ -170,7 +170,7 @@ class AepTextComposableTests(
             composeTestRule, qualifier
         ) {
             TestTheme(useDarkTheme = true) {
-                AepTextComposable(
+                AepText(
                     model = mockAepText,
                     textStyle = mockAepTextStyle
                 )
@@ -179,6 +179,6 @@ class AepTextComposableTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextComposableTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepTextTestsCustomStyleDarkTheme_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 }

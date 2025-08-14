@@ -11,30 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
-import android.graphics.Bitmap
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.UIAction
 import com.adobe.marketing.mobile.aepcomposeui.UIEvent
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardImageManager
 
 /**
  * Composable function that renders a small image card UI.
@@ -49,104 +35,69 @@ fun SmallImageCard(
     style: SmallImageUIStyle,
     observer: AepUIEventObserver?,
 ) {
-    var isLoading by remember { mutableStateOf(true) }
-    var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val imageUrl = if (isSystemInDarkTheme() && ui.getTemplate().image?.darkUrl != null)
-        ui.getTemplate().image?.darkUrl else ui.getTemplate().image?.url
-
     LaunchedEffect(ui.getTemplate().id) {
         observer?.onEvent(UIEvent.Display(ui))
-        if (imageUrl.isNullOrBlank()) {
-            isLoading = false
-        } else {
-            ContentCardImageManager.getContentCardImageBitmap(imageUrl) {
-                it.onSuccess { bitmap ->
-                    imageBitmap = bitmap
-                    isLoading = false
-                }
-                it.onFailure {
-                    // todo - confirm default image bitmap to be used here
-                    // imageBitmap = contentCardManager.getDefaultImageBitmap()
-                    isLoading = false
-                }
-            }
-        }
     }
 
-    AepCardComposable(
+    AepCard(
         cardStyle = style.cardStyle,
         onClick = {
-            observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(AepUIConstants.InteractionID.CARD_CLICKED, ui.getTemplate().actionUrl)))
+            observer?.onEvent(
+                UIEvent.Interact(
+                    ui,
+                    UIAction.Click(
+                        AepUIConstants.InteractionID.CARD_CLICKED,
+                        ui.getTemplate().actionUrl
+                    )
+                )
+            )
         }
     ) {
         Box {
-            ui.getTemplate().dismissBtn?.let {
-                AepIconComposable(
-                    drawableId = it.drawableId,
-                    // todo check if we can remember this calculation so that it is not repeated for recompositions
-                    iconStyle = style.dismissButtonStyle.apply {
-                        modifier = (modifier ?: Modifier)
-                            .align(style.dismissButtonAlignment)
-                            .clickable {
-                                observer?.onEvent(UIEvent.Dismiss(ui))
-                            }
-                    }
-                )
-            }
-
-            AepRowComposable(
+            AepRow(
                 rowStyle = style.rootRowStyle
             ) {
-                imageBitmap?.let {
-                    AepImageComposable(
-                        content = BitmapPainter(it.asImageBitmap()),
-                        imageStyle = style.imageStyle
-                    )
-                }
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .size(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp),
-                            strokeWidth = 4.dp
-                        )
-                    }
-                }
-                AepColumnComposable(
+                AepAsyncImage(
+                    image = ui.getTemplate().image,
+                    imageStyle = style.imageStyle
+                )
+
+                AepColumn(
                     columnStyle = style.textColumnStyle
                 ) {
                     ui.getTemplate().title.let {
-                        AepTextComposable(
+                        AepText(
                             model = it,
                             textStyle = style.titleTextStyle
                         )
                     }
                     ui.getTemplate().body?.let {
-                        AepTextComposable(
+                        AepText(
                             model = it,
                             textStyle = style.bodyTextStyle
                         )
                     }
-                    AepRowComposable(
-                        rowStyle = style.buttonRowStyle
-                    ) {
-                        ui.getTemplate().buttons?.forEachIndexed { index, button ->
-                            AepButtonComposable(
-                                button,
-                                onClick = {
-                                    observer?.onEvent(UIEvent.Interact(ui, UIAction.Click(button.id, button.actionUrl)))
-                                },
-                                buttonStyle = style.buttonStyle[index].apply {
-                                    modifier = (modifier ?: Modifier).then(Modifier.weight(1f, fill = false))
-                                }
+                    AepButtonRow(
+                        buttons = ui.getTemplate().buttons,
+                        buttonsStyle = style.buttonStyle,
+                        rowStyle = style.buttonRowStyle,
+                        onClick = { button ->
+                            observer?.onEvent(
+                                UIEvent.Interact(
+                                    ui,
+                                    UIAction.Click(button.id, button.actionUrl)
+                                )
                             )
                         }
-                    }
+                    )
                 }
             }
+            AepDismissButton(
+                modifier = Modifier.align(style.dismissButtonAlignment),
+                dismissIcon = ui.getTemplate().dismissBtn,
+                style = style.dismissButtonStyle,
+                onClick = { observer?.onEvent(UIEvent.Dismiss(ui)) },
+            )
         }
     }
 }

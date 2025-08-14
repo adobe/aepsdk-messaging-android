@@ -12,11 +12,13 @@
 package com.adobe.marketing.mobile.aepcomposeui.style
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,39 +52,51 @@ class SmallImageUIStyle private constructor(
 ) {
     companion object {
         private val defaultCardStyle = AepCardStyle(
-            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+            modifier = Modifier.padding(AepUIConstants.DefaultStyle.SPACING.dp)
         )
         private val defaultRootRowStyle = AepRowStyle(
-            modifier = Modifier.padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp),
-            horizontalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp),
+            horizontalArrangement = Arrangement.spacedBy(
+                AepUIConstants.DefaultStyle.SPACING.dp,
+                Alignment.CenterHorizontally
+            ),
             verticalAlignment = Alignment.CenterVertically
         )
         private val defaultImageStyle = AepImageStyle(
-            modifier = Modifier.width(AepUIConstants.SmallImageCard.DefaultStyle.IMAGE_WIDTH.dp),
+            modifier = Modifier.width(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
+            contentScale = ContentScale.Fit,
             alignment = Alignment.Center
         )
         private val defaultTextColumnStyle = AepColumnStyle(
-            verticalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+            verticalArrangement = Arrangement.spacedBy(
+                AepUIConstants.DefaultStyle.SPACING.dp,
+                Alignment.CenterVertically
+            ),
+            horizontalAlignment = Alignment.Start,
         )
         private val defaultTitleAepTextStyle = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.TITLE_FONT_WEIGHT
+                fontSize = AepUIConstants.DefaultStyle.TITLE_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.TITLE_FONT_WEIGHT
             )
         )
         private val defaultBodyAepTextStyle = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BODY_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BODY_FONT_WEIGHT,
+                fontSize = AepUIConstants.DefaultStyle.BODY_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.BODY_FONT_WEIGHT,
             )
         )
         private val defaultButtonRowStyle = AepRowStyle(
-            horizontalArrangement = Arrangement.spacedBy(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+            modifier = Modifier.width(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(
+                AepUIConstants.DefaultStyle.SPACING.dp,
+                Alignment.CenterHorizontally
+            ),
+            verticalAlignment = Alignment.CenterVertically
         )
         private val defaultButtonTextStyle = AepTextStyle(
             textStyle = TextStyle(
-                fontSize = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_TEXT_SIZE.sp,
-                fontWeight = AepUIConstants.SmallImageCard.DefaultStyle.BUTTON_FONT_WEIGHT,
+                fontSize = AepUIConstants.DefaultStyle.BUTTON_TEXT_SIZE.sp,
+                fontWeight = AepUIConstants.DefaultStyle.BUTTON_FONT_WEIGHT,
             )
         )
         private val defaultButtonStyle = AepButtonStyle(
@@ -90,7 +104,7 @@ class SmallImageUIStyle private constructor(
         )
         private val defaultDismissButtonStyle = AepIconStyle(
             modifier = Modifier
-                .padding(AepUIConstants.SmallImageCard.DefaultStyle.SPACING.dp)
+                .padding(AepUIConstants.DefaultStyle.SPACING.dp)
                 .size(AepUIConstants.DISMISS_BUTTON_SIZE.dp)
         )
         private val defaultDismissButtonAlignment = Alignment.TopEnd
