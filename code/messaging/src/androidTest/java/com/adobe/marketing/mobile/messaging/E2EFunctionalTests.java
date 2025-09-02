@@ -287,7 +287,8 @@ public class E2EFunctionalTests {
         // trigger the show once in-app message again
         MobileCore.trackAction("once", null);
 
-        // verify no rule consequence event is dispatched (with shorter timeout since we expect 0 events)
+        // verify no rule consequence event is dispatched (with shorter timeout since we expect 0
+        // events)
         rulesConsequenceEvents =
                 getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 3000);
         assertEquals(
@@ -297,26 +298,31 @@ public class E2EFunctionalTests {
     }
 
     /**
-     * Waits for rule consequence events with retry logic and exponential backoff.
-     * This helps handle timing issues in E2E tests where network latency and processing delays
-     * can cause events to arrive later than expected.
+     * Waits for rule consequence events with retry logic and exponential backoff. This helps handle
+     * timing issues in E2E tests where network latency and processing delays can cause events to
+     * arrive later than expected.
      *
      * @param maxRetries Maximum number of retry attempts
      * @param maxTimeoutMs Maximum total timeout in milliseconds
      * @return List of rule consequence events
      * @throws InterruptedException if interrupted while waiting
      */
-    private List<Event> waitForRuleConsequenceEventsWithRetry(int maxRetries, int maxTimeoutMs) 
+    private List<Event> waitForRuleConsequenceEventsWithRetry(int maxRetries, int maxTimeoutMs)
             throws InterruptedException {
         List<Event> events = new ArrayList<>();
         int baseTimeout = 2000; // Start with 2 seconds
         int totalWaitTime = 0;
-        
+
         for (int attempt = 0; attempt < maxRetries && totalWaitTime < maxTimeoutMs; attempt++) {
-            int currentTimeout = Math.min(baseTimeout * (attempt + 1), maxTimeoutMs - totalWaitTime);
-            
+            int currentTimeout =
+                    Math.min(baseTimeout * (attempt + 1), maxTimeoutMs - totalWaitTime);
+
             try {
-                events = getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, currentTimeout);
+                events =
+                        getDispatchedEventsWith(
+                                EventType.RULES_ENGINE,
+                                EventSource.RESPONSE_CONTENT,
+                                currentTimeout);
                 if (!events.isEmpty()) {
                     return events;
                 }
@@ -326,16 +332,16 @@ public class E2EFunctionalTests {
                     throw e; // Re-throw on final attempt
                 }
             }
-            
+
             totalWaitTime += currentTimeout;
-            
+
             // Add a small delay between retries to allow for processing
             if (attempt < maxRetries - 1 && totalWaitTime < maxTimeoutMs) {
                 Thread.sleep(500);
                 totalWaitTime += 500;
             }
         }
-        
+
         return events;
     }
 
