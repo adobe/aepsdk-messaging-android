@@ -466,16 +466,15 @@ class MessagingPushBuilder {
         Messaging.addPushTrackingDetails(deleteIntent, payload.getMessageId(), payload.getData());
 
         // Create a PendingIntent for the broadcast
-        PendingIntent pendingDeleteIntent = PendingIntent.getBroadcast(
-                context,
-                new Random().nextInt(),
-                deleteIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        PendingIntent pendingDeleteIntent =
+                PendingIntent.getBroadcast(
+                        context,
+                        new Random().nextInt(),
+                        deleteIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         builder.setDeleteIntent(pendingDeleteIntent);
     }
-
 
     /**
      * Adds action details to the intent.
