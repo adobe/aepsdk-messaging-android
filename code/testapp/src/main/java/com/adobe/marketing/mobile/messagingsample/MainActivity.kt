@@ -40,7 +40,6 @@ import com.adobe.marketing.mobile.services.ui.PresentationDelegate
 import com.adobe.marketing.mobile.services.ui.PresentationListener
 import com.adobe.marketing.mobile.util.StringUtils
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -324,27 +323,6 @@ class MainActivity : ComponentActivity() {
 
         binding.btnResetIdentities.setOnClickListener {
             MobileCore.resetIdentities()
-        }
-
-        binding.btnGetPushToken.setOnClickListener {
-            FirebaseMessaging.getInstance().token
-                .addOnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        binding.txtPushToken.text = "Failed to get token"
-                    } else {
-                        binding.txtPushToken.text = task.result
-                    }
-                }
-        }
-
-        binding.txtPushToken.setOnClickListener {
-            val token = binding.txtPushToken.text.toString()
-            if (!StringUtils.isNullOrEmpty(token)) {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("FCM Token", token)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "Token copied to clipboard", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 

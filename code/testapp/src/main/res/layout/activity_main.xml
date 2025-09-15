@@ -100,15 +100,4 @@
         android:layout_height="wrap_content"
         android:text="Reset identities" />
 
-    <Button
-        android:id="@+id/btn_getPushToken"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Get Push Token" />
-
-    <TextView
-        android:id="@+id/txt_pushToken"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
 </androidx.appcompat.widget.LinearLayoutCompat>
