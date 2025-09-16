@@ -17,6 +17,7 @@ import com.adobe.marketing.mobile.Messaging
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.never
 
 class NotificationDeleteReceiverTest {
 
@@ -32,6 +33,21 @@ class NotificationDeleteReceiverTest {
             messagingMock.verify {
                 Messaging.handleNotificationResponse(intent, false, "Dismiss")
             }
+        }
+    }
+
+    @Test
+    fun `onReceive with null intent should not call Messaging handleNotificationResponse`() {
+        val context = mock(Context::class.java)
+        val receiver = NotificationDeleteReceiver()
+        val intent = mock(Intent::class.java)
+
+        mockStatic(Messaging::class.java).use { messagingMock ->
+            receiver.onReceive(context, null)
+            messagingMock.verify(
+                { Messaging.handleNotificationResponse(intent, false, "Dismiss") },
+                never()
+            )
         }
     }
 }
