@@ -16,6 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.adobe.marketing.mobile.messaging.CompletionHandler;
 import com.adobe.marketing.mobile.messaging.MessagingExtension;
+import com.adobe.marketing.mobile.messaging.MessagingNotificationEvent;
+import com.adobe.marketing.mobile.messaging.MessagingNotificationEventsManager;
 import com.adobe.marketing.mobile.messaging.MessagingUtils;
 import com.adobe.marketing.mobile.messaging.Proposition;
 import com.adobe.marketing.mobile.messaging.PushTrackingStatus;
@@ -69,8 +71,6 @@ public final class Messaging {
     private static final String SCOPE = "scope";
 
     public static final Class<? extends Extension> EXTENSION = MessagingExtension.class;
-    private static boolean isPropositionsResponseListenerRegistered = false;
-    private static AdobeCallback<Map<Surface, List<Proposition>>> propositionsResponseHandler;
 
     private Messaging() {}
 
@@ -100,11 +100,6 @@ public final class Messaging {
             @NonNull final Intent intent,
             @NonNull final String messageId,
             final @NonNull Map<String, String> data) {
-        if (intent == null) {
-            Log.warning(
-                    LOG_TAG, CLASS_NAME, "Failed to add push tracking details as intent is null.");
-            return false;
-        }
         if (StringUtils.isNullOrEmpty(messageId)) {
             Log.warning(
                     LOG_TAG,
@@ -170,14 +165,8 @@ public final class Messaging {
             final boolean applicationOpened,
             @Nullable final String customActionId,
             @Nullable final AdobeCallback<PushTrackingStatus> callback) {
-        if (intent == null) {
-            Log.warning(
-                    LOG_TAG,
-                    CLASS_NAME,
-                    "Failed to track notification interactions, intent provided is null");
-            callTrackingCallback(PushTrackingStatus.INVALID_INTENT, callback);
-            return;
-        }
+        MessagingNotificationEventsManager.INSTANCE.sendNotificationCallback(
+                intent, customActionId);
         String messageId = intent.getStringExtra(TRACK_INFO_KEY_MESSAGE_ID);
         if (StringUtils.isNullOrEmpty(messageId)) {
             // Check if the message Id is in the intent with the key
@@ -335,21 +324,14 @@ public final class Messaging {
      *
      * @param surfaces A {@link List<Surface>} containing {@link Surface}s to be used for retrieving
      *     previously fetched propositions
-     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface,
+     * @param callback A {@link AdobeCallback} which will be invoked with a {@link Map<Surface
      *     List<Proposition>>} containing previously fetched content card or code based content
      */
     public static void getPropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,
             @NonNull final AdobeCallback<Map<Surface, List<Proposition>>> callback) {
-        if (callback == null) {
-            Log.warning(
-                    LOG_TAG,
-                    CLASS_NAME,
-                    "Cannot get propositions as the provided callback is null.");
-            return;
-        }
 
-        if (surfaces == null || surfaces.isEmpty()) {
+        if (surfaces.isEmpty()) {
             Log.warning(
                     LOG_TAG,
                     CLASS_NAME,
@@ -462,7 +444,7 @@ public final class Messaging {
     public static void updatePropositionsForSurfaces(
             @NonNull final List<Surface> surfaces,
             @Nullable final AdobeCallback<Boolean> callback) {
-        if (surfaces == null || surfaces.isEmpty()) {
+        if (surfaces.isEmpty()) {
             Log.warning(
                     LOG_TAG,
                     CLASS_NAME,
@@ -504,6 +486,26 @@ public final class Messaging {
         }
 
         MobileCore.dispatchEvent(updatePropositionsEvent);
+    }
+
+    /**
+     * Registers a listener to receive notification related events.
+     *
+     * @param listener the callback to add
+     */
+    public static void registerNotificationEventListener(
+            @NonNull AdobeCallbackWithError<MessagingNotificationEvent> listener) {
+        MessagingNotificationEventsManager.INSTANCE.addCallback(listener);
+    }
+
+    /**
+     * Unregisters a listener from receiving notification events.
+     *
+     * @param listener the callback to remove
+     */
+    public static void unregisterNotificationEventListener(
+            @NonNull AdobeCallbackWithError<MessagingNotificationEvent> listener) {
+        MessagingNotificationEventsManager.INSTANCE.removeCallback(listener);
     }
 
     /**

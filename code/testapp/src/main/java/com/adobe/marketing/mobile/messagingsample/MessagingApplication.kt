@@ -12,6 +12,9 @@
 package com.adobe.marketing.mobile.messagingsample
 
 import android.app.Application
+import android.util.Log
+import com.adobe.marketing.mobile.AdobeCallbackWithError
+import com.adobe.marketing.mobile.AdobeError
 import com.adobe.marketing.mobile.Assurance
 import com.adobe.marketing.mobile.Edge
 import com.adobe.marketing.mobile.Messaging
@@ -19,6 +22,7 @@ import com.adobe.marketing.mobile.MobileCore
 import com.adobe.marketing.mobile.LoggingMode
 import com.adobe.marketing.mobile.Lifecycle
 import com.adobe.marketing.mobile.edge.identity.Identity
+import com.adobe.marketing.mobile.messaging.MessagingNotificationEvent
 
 class MessagingApplication : Application() {
     private val ENVIRONMENT_FILE_ID = "3149c49c3910/4f6b2fbf2986/launch-7d78a5fd1de3-development"
@@ -47,6 +51,21 @@ class MessagingApplication : Application() {
                 "messaging.optimizePushSync" to true
             )
             MobileCore.updateConfiguration(configMap)
+
+            Messaging.registerNotificationEventListener(
+                object :AdobeCallbackWithError<MessagingNotificationEvent> {
+                    override fun fail(error: AdobeError?) {}
+
+                    override fun call(event: MessagingNotificationEvent?) {
+                        Log.d(
+                            "MessagingApplication",
+                            "Custom Action Id :: ${event?.type}, Data :: ${event?.data}"
+                        )
+                    }
+
+                }
+            )
+
         }
         // Assurance.startSession(ASSURANCE_SESSION_ID)
     }
