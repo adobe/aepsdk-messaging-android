@@ -125,8 +125,9 @@ public class MessagingPushPayloadTests {
     public void getNotificationVisibilityFromString_shouldReturnExpectedValues() throws Exception {
         MessagingPushPayload payload = new MessagingPushPayload(new HashMap<>());
 
-        java.lang.reflect.Method method = MessagingPushPayload.class
-                .getDeclaredMethod("getNotificationVisibilityFromString", String.class);
+        java.lang.reflect.Method method =
+                MessagingPushPayload.class.getDeclaredMethod(
+                        "getNotificationVisibilityFromString", String.class);
         method.setAccessible(true);
 
         // Valid values
@@ -139,7 +140,6 @@ public class MessagingPushPayloadTests {
         Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, ""));
         Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, "INVALID"));
     }
-
 
     // ========================================================================================
     // public methods
@@ -261,7 +261,8 @@ public class MessagingPushPayloadTests {
 
     @Test
     public void putDataInExtras_withNullData_shouldNotThrowOrCallPutExtra() {
-        MessagingPushPayload payload = Mockito.mock(MessagingPushPayload.class, Mockito.CALLS_REAL_METHODS);
+        MessagingPushPayload payload =
+                Mockito.mock(MessagingPushPayload.class, Mockito.CALLS_REAL_METHODS);
         Intent mockIntent = mock(Intent.class);
 
         // Set data to null
