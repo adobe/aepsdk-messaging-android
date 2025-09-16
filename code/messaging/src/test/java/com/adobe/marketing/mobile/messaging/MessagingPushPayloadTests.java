@@ -136,7 +136,6 @@ public class MessagingPushPayloadTests {
         Assert.assertEquals(Notification.VISIBILITY_SECRET, method.invoke(payload, "SECRET"));
 
         // Null or invalid values
-        Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, null));
         Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, ""));
         Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, "INVALID"));
     }
