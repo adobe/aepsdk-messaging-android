@@ -18,6 +18,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.app.Notification;
 import android.content.Intent;
 import com.adobe.marketing.mobile.MessagingPushPayload;
 import com.google.firebase.messaging.RemoteMessage;
@@ -119,6 +120,26 @@ public class MessagingPushPayloadTests {
         // verify only 2 buttons created
         Assert.assertEquals(2, payload.getActionButtons().size());
     }
+
+    @Test
+    public void getNotificationVisibilityFromString_shouldReturnExpectedValues() throws Exception {
+        MessagingPushPayload payload = new MessagingPushPayload(new HashMap<>());
+
+        java.lang.reflect.Method method = MessagingPushPayload.class
+                .getDeclaredMethod("getNotificationVisibilityFromString", String.class);
+        method.setAccessible(true);
+
+        // Valid values
+        Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, "PRIVATE"));
+        Assert.assertEquals(Notification.VISIBILITY_PUBLIC, method.invoke(payload, "PUBLIC"));
+        Assert.assertEquals(Notification.VISIBILITY_SECRET, method.invoke(payload, "SECRET"));
+
+        // Null or invalid values
+        Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, null));
+        Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, ""));
+        Assert.assertEquals(Notification.VISIBILITY_PRIVATE, method.invoke(payload, "INVALID"));
+    }
+
 
     // ========================================================================================
     // public methods
@@ -222,6 +243,29 @@ public class MessagingPushPayloadTests {
         mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, "");
         MessagingPushPayload payload = new MessagingPushPayload(mockData);
         Intent mockIntent = mock(Intent.class);
+
+        payload.putDataInExtras(mockIntent);
+
+        verify(mockIntent, never()).putExtra(anyString(), anyString());
+    }
+
+    @Test
+    public void putDataInExtras_withNullIntent_shouldNotThrowOrCallPutExtra() {
+        Map<String, String> mockData = new HashMap<>();
+        mockData.put(MessagingConstants.Push.PayloadKeys.TITLE, "mockTitle");
+        MessagingPushPayload payload = new MessagingPushPayload(mockData);
+
+        // Should not throw or call putExtra
+        payload.putDataInExtras(null);
+    }
+
+    @Test
+    public void putDataInExtras_withNullData_shouldNotThrowOrCallPutExtra() {
+        MessagingPushPayload payload = Mockito.mock(MessagingPushPayload.class, Mockito.CALLS_REAL_METHODS);
+        Intent mockIntent = mock(Intent.class);
+
+        // Set data to null
+        Mockito.doReturn(null).when(payload).getData();
 
         payload.putDataInExtras(mockIntent);
 
