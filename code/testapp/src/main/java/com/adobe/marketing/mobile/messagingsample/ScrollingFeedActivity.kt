@@ -83,7 +83,7 @@ class ScrollingFeedActivity : AppCompatActivity() {
         // surface for content card -
         // mobileapp://com.adobe.marketing.mobile.messagingsample/card/ms
         val surfaces = mutableListOf<Surface>()
-        val surface = Surface("largeAndImageOnlyCards")
+        val surface = Surface("card/ms")
         surfaces.add(surface)
 
         // Initialize the ContentCardUIProvider

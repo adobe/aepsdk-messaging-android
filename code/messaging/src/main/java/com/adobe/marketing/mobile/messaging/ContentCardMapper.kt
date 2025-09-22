@@ -12,7 +12,6 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
-import com.adobe.marketing.mobile.util.StringUtils
 
 /**
  * Class to store a mapping between valid [ContentCardSchemaData] and unique proposition id's.
@@ -32,7 +31,7 @@ class ContentCardMapper private constructor() {
      * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
      */
     fun getContentCardSchemaData(propositionId: String): ContentCardSchemaData? {
-        if (StringUtils.isNullOrEmpty(propositionId)) {
+        if (propositionId.isEmpty()) {
             return null
         }
         return contentCardSchemaDataMap[propositionId]

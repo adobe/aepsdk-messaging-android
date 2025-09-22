@@ -12,6 +12,8 @@
 package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 
 /**
@@ -21,10 +23,11 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
  */
 
 fun AepUI<*, *>.getMeta(): Map<String, Any>? {
-    return when (val template = this.getTemplate()) {
-        is SmallImageTemplate ->
-            ContentCardMapper.instance.getContentCardSchemaData(template.id)?.meta
-
-        else -> null
+    val id = when (val template = this.getTemplate()) {
+        is SmallImageTemplate -> template.id
+        is LargeImageTemplate -> template.id
+        is ImageOnlyTemplate -> template.id
+        else -> return null
     }
+    return ContentCardMapper.instance.getContentCardSchemaData(id)?.getMeta()
 }
