@@ -63,15 +63,8 @@ class AepContainerViewModel(
                 isLoaded
             ) { currentUIList, containerResult, loaded ->
                 containerResult.getOrNull()?.let { containerTemplate ->
-                    when (containerTemplate) {
-                        is InboxContainerUITemplate -> {
-                            InboxContainerUI(
-                                template = containerTemplate,
-                                aepUIList = currentUIList,
-                                state = InboxContainerUIState(loaded = loaded)
-                            )
-                        }
-                    }
+                    // create different types of container UI here based on template type
+                    null
                 }
             }.collect { containerUI ->
                 _containerUI.value = containerUI
