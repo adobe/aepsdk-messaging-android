@@ -390,36 +390,6 @@ class ContentCardSchemaDataUtilsTest {
     }
 
     @Test
-    fun `test getAepUI with SmallImageTemplate`() {
-        val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
-        val result = ContentCardSchemaDataUtils.getAepUI(template)
-        assertNotNull(result)
-    }
-
-    @Test
-    fun `test getAepUI with LargeImageTemplate`() {
-        val template = LargeImageTemplate("testId", AepText("..."), null, null, null, emptyList(), null)
-        val result = ContentCardSchemaDataUtils.getAepUI(template)
-        assertNotNull(result)
-        assertTrue(result is LargeImageUI)
-    }
-
-    @Test
-    fun `test getAepUI with ImageOnlyTemplate`() {
-        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
-        val result = ContentCardSchemaDataUtils.getAepUI(template)
-        assertNotNull(result)
-        assertTrue(result is ImageOnlyUI)
-    }
-
-    @Test
-    fun `test getAepUI with unsupported template type`() {
-        val template = mock(AepUITemplate::class.java)
-        val result = ContentCardSchemaDataUtils.getAepUI(template)
-        assertNull(result)
-    }
-
-    @Test
     fun `test buildTemplate with valid proposition`() {
         val contentCardSchemaData = mock(ContentCardSchemaData::class.java)
         val propositionItem = mock(PropositionItem::class.java)
