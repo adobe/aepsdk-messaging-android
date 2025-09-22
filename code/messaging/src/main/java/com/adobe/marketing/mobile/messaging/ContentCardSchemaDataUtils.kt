@@ -12,13 +12,6 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
-import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
-import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
-import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
-import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
-import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
