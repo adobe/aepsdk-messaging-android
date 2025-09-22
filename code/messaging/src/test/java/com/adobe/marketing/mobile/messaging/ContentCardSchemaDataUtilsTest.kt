@@ -11,11 +11,6 @@
 
 package com.adobe.marketing.mobile.messaging
 
-import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
-import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate

@@ -21,7 +21,6 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
-import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
