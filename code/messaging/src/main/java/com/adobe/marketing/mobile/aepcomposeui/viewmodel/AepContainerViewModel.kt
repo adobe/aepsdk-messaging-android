@@ -16,11 +16,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.InboxContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
-import com.adobe.marketing.mobile.aepcomposeui.state.InboxContainerUIState
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxContainerUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

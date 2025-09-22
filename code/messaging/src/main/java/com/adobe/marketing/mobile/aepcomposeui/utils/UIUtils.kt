@@ -13,7 +13,20 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants.LOG_TAG
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils
+import com.adobe.marketing.mobile.messaging.MessagingConstants
 import com.adobe.marketing.mobile.services.HttpMethod
 import com.adobe.marketing.mobile.services.Log
 import com.adobe.marketing.mobile.services.NetworkRequest
@@ -25,6 +38,34 @@ internal object UIUtils {
 
     private const val SELF_TAG = "UIUtils"
     private const val DOWNLOAD_TIMEOUT_SECS = 10
+
+    /**
+     * Provides an [AepUI] instance from the given [AepUITemplate].
+     *
+     * @param uiTemplate The template to convert into a UI component.
+     * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
+     */
+    fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
+        return when (uiTemplate) {
+            is SmallImageTemplate -> {
+                SmallImageUI(uiTemplate, SmallImageCardUIState())
+            }
+            is LargeImageTemplate -> {
+                LargeImageUI(uiTemplate, LargeImageCardUIState())
+            }
+            is ImageOnlyTemplate -> {
+                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+            }
+            else -> {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    ContentCardSchemaDataUtils.SELF_TAG,
+                    "Unsupported template type: ${uiTemplate::class.java.simpleName}"
+                )
+                return null
+            }
+        }
+    }
 
     /**
      * Downloads the image from the given URL.

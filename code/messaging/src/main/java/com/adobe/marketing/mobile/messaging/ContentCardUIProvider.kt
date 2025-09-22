@@ -17,8 +17,8 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
-import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.getAepUI
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +41,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
 
     private val aepUiFlow = _contentFlow.map { result ->
         result.map { templateList ->
-            templateList.mapNotNull { item -> getAepUI(item) }
+            templateList.mapNotNull { item -> UIUtils.getAepUI(item) }
         }
     }
 

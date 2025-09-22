@@ -41,34 +41,6 @@ internal object ContentCardSchemaDataUtils {
     const val SELF_TAG = "ContentCardSchemaDataUtils"
 
     /**
-     * Provides an [AepUI] instance from the given [AepUITemplate].
-     *
-     * @param uiTemplate The template to convert into a UI component.
-     * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
-     */
-    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
-        return when (uiTemplate) {
-            is SmallImageTemplate -> {
-                SmallImageUI(uiTemplate, SmallImageCardUIState())
-            }
-            is LargeImageTemplate -> {
-                LargeImageUI(uiTemplate, LargeImageCardUIState())
-            }
-            is ImageOnlyTemplate -> {
-                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
-            }
-            else -> {
-                Log.error(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "Unsupported template type: ${uiTemplate::class.java.simpleName}"
-                )
-                return null
-            }
-        }
-    }
-
-    /**
      * Builds an [AepUITemplate] from a given [Proposition].
      *
      * @param proposition The proposition containing the content card data.
