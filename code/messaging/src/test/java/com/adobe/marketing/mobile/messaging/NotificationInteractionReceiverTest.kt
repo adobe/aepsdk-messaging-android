@@ -19,13 +19,13 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.never
 
-class NotificationDeleteReceiverTest {
+class NotificationInteractionReceiverTest {
 
     @Test
     fun `onReceive should call Messaging handleNotificationResponse with dismiss action`() {
         val context = mock(Context::class.java)
         val intent = mock(Intent::class.java)
-        val receiver = NotificationDeleteReceiver()
+        val receiver = NotificationInteractionReceiver()
 
         // Mock static method
         mockStatic(Messaging::class.java).use { messagingMock ->
@@ -39,7 +39,7 @@ class NotificationDeleteReceiverTest {
     @Test
     fun `onReceive with null intent should not call Messaging handleNotificationResponse`() {
         val context = mock(Context::class.java)
-        val receiver = NotificationDeleteReceiver()
+        val receiver = NotificationInteractionReceiver()
         val intent = mock(Intent::class.java)
 
         mockStatic(Messaging::class.java).use { messagingMock ->
