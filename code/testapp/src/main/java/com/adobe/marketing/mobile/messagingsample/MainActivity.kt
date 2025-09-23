@@ -21,6 +21,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -32,6 +33,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.adobe.marketing.mobile.*
+import com.adobe.marketing.mobile.messaging.NotificationInteractionReceiver
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityMainBinding
 import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.services.ui.InAppMessage
@@ -412,6 +414,23 @@ class MainActivity : ComponentActivity() {
                     NotificationBroadcastReceiver.XDM_DATA
             )
         }
+        builder.setDeleteIntent(
+            PendingIntent.getBroadcast(
+                applicationContext,
+                0,
+                Intent(
+                    applicationContext,
+                    NotificationInteractionReceiver::class.java
+                ).apply {
+                        Messaging.addPushTrackingDetails(
+                            this,
+                            "MessageId",
+                            NotificationBroadcastReceiver.XDM_DATA
+                        )
+                },
+                if (Build.VERSION.SDK_INT >= M) PendingIntent.FLAG_IMMUTABLE else 0
+            )
+        )
         val pendingIntent: PendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), actionReceiver, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         } else {
