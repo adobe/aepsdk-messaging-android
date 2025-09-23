@@ -123,9 +123,10 @@ public class MessagingPushPayload {
     private String sound;
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
-    private int notificationImportance = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            ? NotificationManager.IMPORTANCE_DEFAULT
-            : 0;
+    private int notificationImportance =
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    ? NotificationManager.IMPORTANCE_DEFAULT
+                    : 0;
 
     private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
 
