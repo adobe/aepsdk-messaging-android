@@ -25,7 +25,7 @@ import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.os.Build.VERSION_CODES.M
-import com.adobe.marketing.mobile.messaging.NotificationDeleteReceiver
+import com.adobe.marketing.mobile.messaging.NotificationInteractionReceiver
 
 class NotificationService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -90,7 +90,7 @@ class NotificationService : FirebaseMessagingService() {
                     0,
                     Intent(
                         this@NotificationService.applicationContext,
-                        NotificationDeleteReceiver::class.java
+                        NotificationInteractionReceiver::class.java
                     ).apply {
                         message.messageId?.let {
                             Messaging.addPushTrackingDetails(

@@ -29,7 +29,7 @@
                 android:value="Extension" />
         </service>
 
-        <receiver android:name=".NotificationDeleteReceiver" />
+        <receiver android:name=".NotificationInteractionReceiver" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

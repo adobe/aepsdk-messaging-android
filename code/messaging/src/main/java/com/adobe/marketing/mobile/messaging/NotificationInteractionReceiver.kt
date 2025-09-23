@@ -15,15 +15,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.adobe.marketing.mobile.Messaging
+import com.adobe.marketing.mobile.messaging.MessagingPushConstants.Tracking.Keys.ACTION_DISMISS
 
-class NotificationDeleteReceiver : BroadcastReceiver() {
-    private val dismissAction: String = "Dismiss"
+class NotificationInteractionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent != null) {
             Messaging.handleNotificationResponse(
                 intent,
                 false,
-                dismissAction
+                ACTION_DISMISS
             )
         }
     }
