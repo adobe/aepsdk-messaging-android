@@ -75,6 +75,7 @@ public class MessagingPushPayload {
                 }
             };
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     static final Map<String, Integer> notificationVisibilityMap =
             new HashMap<String, Integer>() {
                 {
@@ -123,9 +124,7 @@ public class MessagingPushPayload {
     private String sound;
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
-    private int notificationImportance = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            ? NotificationManager.IMPORTANCE_DEFAULT
-            : 0;
+    private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
 
     private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
 
