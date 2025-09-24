@@ -77,9 +77,7 @@ class MessagingPushBuilder {
                 builder, payload,
                 context); // Small Icon must be present, otherwise the notification will not be
         // displayed.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setVisibility(builder, payload);
-        }
+        setVisibility(builder, payload);
         addActionButtons(builder, payload, context); // Add action buttons if any
         setSound(builder, payload, context);
         setNotificationClickAction(builder, payload, context);
@@ -353,7 +351,6 @@ class MessagingPushBuilder {
         notificationBuilder.setContentIntent(pendingIntent);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private static void setVisibility(
             final NotificationCompat.Builder notificationBuilder,
             final MessagingPushPayload payload) {
@@ -463,16 +460,20 @@ class MessagingPushBuilder {
             final NotificationCompat.Builder builder,
             final MessagingPushPayload payload,
             final Context context) {
-        final Intent deleteIntent = new Intent(MessagingPushConstants.NotificationAction.DISMISSED);
-        deleteIntent.setClass(context, MessagingPushTrackerActivity.class);
+        // Create an intent for the broadcast receiver
+        Intent deleteIntent = new Intent(context, NotificationInteractionReceiver.class);
+        deleteIntent.setAction(MessagingPushConstants.NotificationAction.DISMISSED);
         Messaging.addPushTrackingDetails(deleteIntent, payload.getMessageId(), payload.getData());
-        final PendingIntent intent =
-                PendingIntent.getActivity(
+
+        // Create a PendingIntent for the broadcast
+        PendingIntent pendingDeleteIntent =
+                PendingIntent.getBroadcast(
                         context,
                         new Random().nextInt(),
                         deleteIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        builder.setDeleteIntent(intent);
+
+        builder.setDeleteIntent(pendingDeleteIntent);
     }
 
     /**
