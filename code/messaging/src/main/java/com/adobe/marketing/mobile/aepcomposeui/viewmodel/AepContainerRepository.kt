@@ -21,8 +21,7 @@ import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 
 sealed interface AepContainerUiState {
@@ -41,34 +40,32 @@ class AepContainerRepository(
     suspend fun refreshContainer() {
         _containerUiState.update { AepContainerUiState.Loading }
 
-        aepUIProvider.getContent().flatMapLatest { contentResult ->
-            aepContainerUIProvider.getContainerUI().flatMapLatest { containerResult ->
-                flowOf(
-                    containerResult.getOrNull()?.let { containerTemplate ->
-                        when (containerTemplate) {
-                            is InboxContainerUITemplate -> {
-                                val uiList = if (contentResult.isSuccess) {
-                                    contentResult.getOrNull()?.mapNotNull { item ->
-                                        UIUtils.getAepUI(item)
-                                    } ?: emptyList()
-                                } else {
-                                    emptyList()
-                                }
-                                AepContainerUiState.Success(
-                                    InboxContainerUI(
-                                        containerTemplate,
-                                        InboxContainerUIState(
-                                            aepUIList = uiList
-                                        )
+        aepUIProvider.getContent().collectLatest { contentResult ->
+            aepContainerUIProvider.getContainerUI().collectLatest { containerResult ->
+                val state = containerResult.getOrNull()?.let { containerTemplate ->
+                    when (containerTemplate) {
+                        is InboxContainerUITemplate -> {
+                            val uiList = if (contentResult.isSuccess) {
+                                contentResult.getOrNull()?.mapNotNull { item ->
+                                    UIUtils.getAepUI(item)
+                                } ?: emptyList()
+                            } else {
+                                emptyList()
+                            }
+                            AepContainerUiState.Success(
+                                InboxContainerUI(
+                                    containerTemplate,
+                                    InboxContainerUIState(
+                                        aepUIList = uiList
                                     )
                                 )
-                            }
+                            )
                         }
-                    } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
-                )
+                    }
+                } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
+
+                _containerUiState.update { state }
             }
-        }.collect { state ->
-            _containerUiState.update { state }
         }
     }
 }
