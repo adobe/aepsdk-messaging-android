@@ -14,8 +14,6 @@ package com.adobe.marketing.mobile.aepcomposeui.viewmodel
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxContainerUITemplate
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,17 +38,16 @@ class AepContainerRepository(
 
         aepUIProvider.getContent().collectLatest { contentResult ->
             aepContainerUIProvider.getContainerUI().collectLatest { containerResult ->
-                val state = containerResult.getOrNull()?.let { containerTemplate ->
-                    when (containerTemplate) {
-                        is InboxContainerUITemplate -> {
-                            val uiList = if (contentResult.isSuccess) {
-                                contentResult.getOrNull()?.mapNotNull { item ->
-                                    UIUtils.getAepUI(item)
-                                } ?: emptyList()
-                            } else {
-                                emptyList()
-                            }
-                            null
+//                val state = containerResult.getOrNull()?.let { containerTemplate ->
+//                    when (containerTemplate) {
+//                        is InboxContainerUITemplate -> {
+//                            val uiList = if (contentResult.isSuccess) {
+//                                contentResult.getOrNull()?.mapNotNull { item ->
+//                                    UIUtils.getAepUI(item)
+//                                } ?: emptyList()
+//                            } else {
+//                                emptyList()
+//                            }
 //                            AepContainerUiState.Success(
 //                                InboxContainerUI(
 //                                    containerTemplate,
@@ -59,11 +56,11 @@ class AepContainerRepository(
 //                                    )
 //                                )
 //                            )
-                        }
-                    }
-                } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
-
-                _containerUiState.update { state }
+//                        }
+//                    }
+//                } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
+//
+//                _containerUiState.update { state }
             }
         }
     }
