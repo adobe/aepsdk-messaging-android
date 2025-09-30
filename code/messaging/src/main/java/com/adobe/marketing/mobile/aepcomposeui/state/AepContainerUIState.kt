@@ -11,6 +11,8 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.state
 
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+
 /**
  * Class representing the state of an AEP container.
  *
@@ -20,5 +22,5 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  * @property loaded Indicates whether the container's content has been loaded.
  */
 open class AepContainerUIState(
-    open val loaded: Boolean
+    open val aepUIList: List<AepUI<*, *>>
 )

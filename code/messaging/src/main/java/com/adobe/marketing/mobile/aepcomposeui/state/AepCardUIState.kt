@@ -21,5 +21,6 @@ package com.adobe.marketing.mobile.aepcomposeui.state
  */
 open class AepCardUIState(
     open val dismissed: Boolean,
-    open val displayed: Boolean
+    open val displayed: Boolean,
+    open val read: Boolean
 )

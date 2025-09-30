@@ -12,11 +12,13 @@
 package com.adobe.marketing.mobile.aepcomposeui.observers
 
 import com.adobe.marketing.mobile.aepcomposeui.ContainerEvent
+import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 
 /**
  * Interface for observing events related to AEP container UI and Aep UIs inside the container.
  */
-interface AepContainerUIEventObserver : AepUIEventObserver {
+interface AepContainerUIEventObserver : ContentCardUIEventListener {
+    abstract val aepUIEventObserver: AepUIEventObserver
     /**
      * Called when an event related to a container UI occurs.
      *

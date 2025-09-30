@@ -31,13 +31,6 @@ sealed interface AepContainerUI<T : AepContainerUITemplate, S : AepContainerUISt
     fun getAepContainerTemplate(): T
 
     /**
-     * Retrieves the list of [AepUI] elements contained within this container.
-     *
-     * @return A list of [AepUI] elements.
-     */
-    fun getAepUIList(): List<AepUI<*, *>>
-
-    /**
      * Retrieves the current state of the container UI.
      * The state defines the dynamic behaviors or status of the container.
      *
