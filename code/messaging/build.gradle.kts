@@ -22,8 +22,8 @@ val mavenEdgeIdentityVersion: String by project
 // Lowest material3 library version we can use is v1.2.0
 // since clickable Cards are marked @ExperimentalMaterial3Api in lower versions
 val material3Version = "1.2.0"
-val viewModelComposeVersion = "2.5.1"
-val runtimeComposeVersion = "2.6.1"
+val viewModelComposeVersion = "2.6.0"
+val runtimeComposeVersion = "2.6.0"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
