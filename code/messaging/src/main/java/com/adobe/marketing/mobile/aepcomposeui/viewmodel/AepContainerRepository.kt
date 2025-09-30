@@ -12,10 +12,8 @@
 package com.adobe.marketing.mobile.aepcomposeui.viewmodel
 
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
-import com.adobe.marketing.mobile.aepcomposeui.InboxContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
-import com.adobe.marketing.mobile.aepcomposeui.state.InboxContainerUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxContainerUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,14 +50,15 @@ class AepContainerRepository(
                             } else {
                                 emptyList()
                             }
-                            AepContainerUiState.Success(
-                                InboxContainerUI(
-                                    containerTemplate,
-                                    InboxContainerUIState(
-                                        aepUIList = uiList
-                                    )
-                                )
-                            )
+                            null
+//                            AepContainerUiState.Success(
+//                                InboxContainerUI(
+//                                    containerTemplate,
+//                                    InboxContainerUIState(
+//                                        aepUIList = uiList
+//                                    )
+//                                )
+//                            )
                         }
                     }
                 } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
