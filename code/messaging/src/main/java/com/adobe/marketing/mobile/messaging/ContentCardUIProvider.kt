@@ -100,7 +100,13 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * @return A [Flow] that emits a [Result] containing lists of [AepUITemplate] whenever new content is available.
      */
     @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
-    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> = contentFlow
+    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
+        val propositionsResult = getPropositionsForSurface()
+        getAepUITemplateListFlow(propositionsResult).collect { templateResult ->
+            _contentFlow.update { templateResult }
+        }
+        return contentFlow
+    }
 
     /**
      * Retrieves a reactive flow of AepUI instances for the given surface.
@@ -138,29 +144,19 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      */
     private fun getAepUITemplateListFlow(propositionsResult: Result<Map<Surface, List<Proposition>>>): Flow<Result<List<AepUITemplate>>> = flow {
         if (propositionsResult.isSuccess) {
-            val propositions = propositionsResult.getOrNull()?.get(surface)
-            if (propositions.isNullOrEmpty()) {
-                emit(
-                    Result.failure(
-                        propositionsResult.exceptionOrNull()
-                            ?: Throwable("No propositions found for surfaces ${surface.uri}")
+            val templateModelList = propositionsResult.getOrNull()?.get(surface)?.mapNotNull { proposition ->
+                try {
+                    buildTemplate(proposition)
+                } catch (e: IllegalArgumentException) {
+                    Log.error(
+                        LOG_TAG,
+                        SELF_TAG,
+                        "Failed to build template for proposition ID : ${proposition.uniqueId} ${e.message}"
                     )
-                )
-            } else {
-                val templateModelList = propositions.mapNotNull { proposition ->
-                    try {
-                        buildTemplate(proposition)
-                    } catch (e: IllegalArgumentException) {
-                        Log.error(
-                            LOG_TAG,
-                            SELF_TAG,
-                            "Failed to build template for proposition ID : ${proposition.uniqueId} ${e.message}"
-                        )
-                        null
-                    }
+                    null
                 }
-                emit(Result.success(templateModelList))
-            }
+            } ?: emptyList()
+            emit(Result.success(templateModelList))
         } else {
             emit(
                 Result.failure(
