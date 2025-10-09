@@ -14,54 +14,107 @@ package com.adobe.marketing.mobile.aepcomposeui.viewmodel
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepContainerUITemplate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
 
-sealed interface AepContainerUiState {
-    object Loading : AepContainerUiState
-    data class Success(val containerUI: AepContainerUI<*, *>) : AepContainerUiState
-    data class Error(val error: Throwable) : AepContainerUiState
+sealed interface AepContainerState {
+    object Loading : AepContainerState
+    data class Success(val containerUI: AepContainerUI<*, *>) : AepContainerState
+    data class Error(val error: Throwable) : AepContainerState
 }
 
+/**
+ * Repository class responsible for managing the state of the container UI and its associated content cards.
+ * It interacts with both the [AepUIContentProvider] and the [AepContainerUIContentProvider] to fetch and refresh data.
+ */
 class AepContainerRepository(
     private val aepUIProvider: AepUIContentProvider,
     private val aepContainerUIProvider: AepContainerUIContentProvider
 ) {
-    private val _containerUiState = MutableStateFlow<AepContainerUiState>(AepContainerUiState.Loading)
-    val containerUiState: StateFlow<AepContainerUiState> = _containerUiState.asStateFlow()
 
-    suspend fun refreshContainer() {
-        _containerUiState.update { AepContainerUiState.Loading }
+    private val _aepContainerUiState = MutableStateFlow<AepContainerState>(AepContainerState.Loading)
+    val aepContainerState: StateFlow<AepContainerState> = _aepContainerUiState.asStateFlow()
 
-        aepUIProvider.getContent().collectLatest { contentResult ->
-            aepContainerUIProvider.getContainerUI().collectLatest { containerResult ->
-//                val state = containerResult.getOrNull()?.let { containerTemplate ->
-//                    when (containerTemplate) {
-//                        is InboxContainerUITemplate -> {
-//                            val uiList = if (contentResult.isSuccess) {
-//                                contentResult.getOrNull()?.mapNotNull { item ->
-//                                    UIUtils.getAepUI(item)
-//                                } ?: emptyList()
-//                            } else {
-//                                emptyList()
-//                            }
-//                            AepContainerUiState.Success(
-//                                InboxContainerUI(
-//                                    containerTemplate,
-//                                    InboxContainerUIState(
-//                                        aepUIList = uiList
-//                                    )
+    /**
+     * Loads the container UI along with its associated content cards and updates the state accordingly.
+     * The state can be one of the following:
+     * - [AepContainerState.Loading]: Indicates that the loading process is in progress.
+     * - [AepContainerState.Success]: Indicates that the container UI and content cards were loaded successfully
+     * and contains the loaded [AepContainerUI].
+     * - [AepContainerState.Error]: Indicates that an error occurred during the loading process
+     * and contains the associated [Throwable].
+     *
+     * This function collects data from both the [AepUIContentProvider] and the [AepContainerUIContentProvider].
+     * It combines the results to create a comprehensive state representation for the container UI.
+     */
+    suspend fun loadContainerUI() {
+        _aepContainerUiState.value = AepContainerState.Loading
+        
+        // Combine both flows to react to changes from either provider
+        combine(
+            aepUIProvider.getContentCardUIFlow(),
+            aepContainerUIProvider.getContainerUIFlow()
+        ) { contentCardResult, containerResult ->
+            createContainerState(contentCardResult, containerResult)
+        }.collect { state ->
+            _aepContainerUiState.value = state
+        }
+    }
+    
+    /**
+     * Manually refreshes the container UI by triggering a refresh on the content providers.
+     * This will cause the combined flow to emit new values automatically.
+     */
+    suspend fun refreshContainerUI() {
+        _aepContainerUiState.value = AepContainerState.Loading
+        aepUIProvider.refreshContent()
+        aepContainerUIProvider.refreshContainerUI()
+    }
+    
+    private fun createContainerState(
+        contentCardResult: Result<List<AepUI<*, *>>>,
+        containerResult: Result<AepContainerUITemplate>
+    ): AepContainerState {
+        // todo uncomment once required models are implemented
+        return AepContainerState.Loading
+//        val containerUI = containerResult.getOrNull()
+//        if (containerUI != null) {
+//            return when (containerUI) {
+//                is InboxContainerUITemplate -> {
+//                    AepContainerState.Success(
+//                        InboxContainerUI(
+//                            containerUI,
+//                            InboxContainerUIState(
+//                                aepUIList = contentCardResult.getOrDefault(emptyList())
+//                            )
+//                        )
+//                    )
+//                }
+//
+//                is CarouselContainerUITemplate -> {
+//                    if (contentCardResult.isFailure) {
+//                        AepContainerState.Error(contentCardResult.exceptionOrNull()!!)
+//                    } else {
+//                        AepContainerState.Success(
+//                            CarouselContainerUI(
+//                                containerUI,
+//                                CarouselContainerUIState(
+//                                    contentCardResult.getOrDefault(emptyList())
 //                                )
 //                            )
-//                        }
+//                        )
 //                    }
-//                } ?: AepContainerUiState.Error(containerResult.exceptionOrNull() ?: Exception("Failed to load container UI, empty container template"))
-//
-//                _containerUiState.update { state }
-            }
-        }
+//                }
+//            }
+//        } else {
+//            return AepContainerState.Error(
+//                containerResult.exceptionOrNull()
+//                    ?: Throwable("Unknown error loading container UI")
+//            )
+//        }
     }
 }

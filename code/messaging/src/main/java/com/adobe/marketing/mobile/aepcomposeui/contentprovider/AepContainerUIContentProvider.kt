@@ -23,11 +23,11 @@ interface AepContainerUIContentProvider {
      * Retrieves the container UI for rendering.
      * @return The container UI as a flow of result [AepContainerUITemplate].
      */
-    suspend fun getContainerUI(): Flow<Result<AepContainerUITemplate?>>
+    fun getContainerUIFlow(): Flow<Result<AepContainerUITemplate>>
 
     /**
      * Refreshes the container UI.
-     * Implementations should update the data into the flow returned by [getContainerUI].
+     * Implementations should update the data into the flow returned by [getContainerUIFlow].
      */
     suspend fun refreshContainerUI()
 }
