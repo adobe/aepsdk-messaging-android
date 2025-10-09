@@ -12,9 +12,9 @@
 package com.adobe.marketing.mobile.aepcomposeui.viewmodel
 
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepContainerUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
-import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepContainerUITemplate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,7 +53,7 @@ class AepContainerRepository(
      */
     suspend fun loadContainerUI() {
         _aepContainerUiState.value = AepContainerState.Loading
-        
+
         // Combine both flows to react to changes from either provider
         combine(
             aepUIProvider.getContentCardUIFlow(),
@@ -64,7 +64,7 @@ class AepContainerRepository(
             _aepContainerUiState.value = state
         }
     }
-    
+
     /**
      * Manually refreshes the container UI by triggering a refresh on the content providers.
      * This will cause the combined flow to emit new values automatically.
@@ -74,7 +74,7 @@ class AepContainerRepository(
         aepUIProvider.refreshContent()
         aepContainerUIProvider.refreshContainerUI()
     }
-    
+
     private fun createContainerState(
         contentCardResult: Result<List<AepUI<*, *>>>,
         containerResult: Result<AepContainerUITemplate>
