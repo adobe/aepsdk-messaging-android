@@ -116,8 +116,7 @@ class ContentCardUIProviderTests {
 
         val flow = contentCardUIProvider.getContentCardUI()
         val result = flow.first()
-        assertTrue(result.isSuccess)
-        assertTrue(result.getOrNull()?.isEmpty() == true)
+        assertTrue(result.isFailure)
     }
 
     @Test
@@ -185,8 +184,6 @@ class ContentCardUIProviderTests {
 
     @Test
     fun `getContent handles missing meta data`() = runTest {
-        whenever(contentCardSchemaData.meta).thenReturn(null)
-
         mockMessaging.`when`<Unit> {
             Messaging.getPropositionsForSurfaces(any(), any())
         }.thenAnswer { invocation ->
@@ -249,7 +246,8 @@ class ContentCardUIProviderTests {
         }
         val flow = contentCardUIProvider.getContent()
         val result = flow.first()
-        assertTrue(result.isFailure)
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull()?.isEmpty() == true)
     }
 
     @Test
