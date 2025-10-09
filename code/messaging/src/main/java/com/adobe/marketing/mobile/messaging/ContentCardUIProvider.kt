@@ -17,7 +17,6 @@ import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
-import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.SELF_TAG
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
 import com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
@@ -51,7 +49,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         if (templateResult.isSuccess) {
             Result.success(
                 templateResult.getOrDefault(emptyList())
-                    .mapNotNull { item -> UIUtils.getAepUI(item) }
+                    .mapNotNull { item -> ContentCardSchemaDataUtils.getAepUI(item) }
             )
         } else {
             Result.failure(
@@ -100,9 +98,8 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
     override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
         val propositionsResult = getPropositionsForSurface()
-        getAepUITemplateListFlow(propositionsResult).collect { templateResult ->
-            _contentFlow.update { templateResult }
-        }
+        val templateResult = getAepUITemplateList(propositionsResult)
+        _contentFlow.update { templateResult }
         return contentFlow
     }
 
@@ -124,23 +121,23 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
         }
 
     /**
-     * Emits a [Flow] that contains a [Result] of converting the provided Result<Map<Surface, List<Proposition>>
-     * into a list of [AepUITemplate] for the specified surface.
+     * Converts the provided Result<Map<Surface, List<Proposition>> into a result of list of [AepUITemplate]
+     * for the specified surface.
      *
      * If the input result is successful and the proposition can be built into a template,
-     * a [Result.success] containing the list of templates is emitted.
+     * a [Result.success] containing the list of templates is returned.
      *
      * If any proposition fails to be built into a template, an error is logged and the proposition
      * is skipped in the resulting list.
      *
      * If no propositions are found for the surface, or if the input result is a failure,
-     * a [Result.Failure] is emitted.
+     * a [Result.Failure] is returned.
      *
      * @param propositionsResult The result containing a map of the requested surface and its propositions.
-     * @return A [Flow] that emits a [Result] containing a list of [AepUITemplate] or an error if fetching or building fails.
+     * @return A [Result] containing a list of [AepUITemplate] or an error if fetching or building fails.
      */
-    private fun getAepUITemplateListFlow(propositionsResult: Result<Map<Surface, List<Proposition>>>): Flow<Result<List<AepUITemplate>>> = flow {
-        if (propositionsResult.isSuccess) {
+    private fun getAepUITemplateList(propositionsResult: Result<Map<Surface, List<Proposition>>>): Result<List<AepUITemplate>> {
+        return if (propositionsResult.isSuccess) {
             val templateModelList = propositionsResult.getOrNull()?.get(surface)?.mapNotNull { proposition ->
                 try {
                     buildTemplate(proposition)
@@ -153,13 +150,11 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
                     null
                 }
             } ?: emptyList()
-            emit(Result.success(templateModelList))
+            Result.success(templateModelList)
         } else {
-            emit(
-                Result.failure(
-                    propositionsResult.exceptionOrNull()
-                        ?: Throwable("Failed to retrieve propositions for surface ${surface.uri}: Unknown Error")
-                )
+            Result.failure(
+                propositionsResult.exceptionOrNull()
+                    ?: Throwable("Failed to retrieve propositions for surface ${surface.uri}: Unknown Error")
             )
         }
     }

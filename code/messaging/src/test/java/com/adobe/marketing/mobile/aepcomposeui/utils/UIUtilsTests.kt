@@ -13,22 +13,12 @@ package com.adobe.marketing.mobile.aepcomposeui.utils
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
-import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.MessagingTestUtils
 import com.adobe.marketing.mobile.services.NetworkCallback
 import com.adobe.marketing.mobile.services.Networking
 import com.adobe.marketing.mobile.services.ServiceProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -72,36 +62,6 @@ class UIUtilsTests {
     @After
     fun tearDown() {
         mockedStaticServiceProvider.close()
-    }
-
-    @Test
-    fun `test getAepUI with SmallImageTemplate`() {
-        val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
-        val result = UIUtils.getAepUI(template)
-        assertNotNull(result)
-    }
-
-    @Test
-    fun `test getAepUI with LargeImageTemplate`() {
-        val template = LargeImageTemplate("testId", AepText("..."), null, null, null, emptyList(), null)
-        val result = UIUtils.getAepUI(template)
-        assertNotNull(result)
-        assertTrue(result is LargeImageUI)
-    }
-
-    @Test
-    fun `test getAepUI with ImageOnlyTemplate`() {
-        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
-        val result = UIUtils.getAepUI(template)
-        assertNotNull(result)
-        assertTrue(result is ImageOnlyUI)
-    }
-
-    @Test
-    fun `test getAepUI with unsupported template type`() {
-        val template = mock(AepUITemplate::class.java)
-        val result = UIUtils.getAepUI(template)
-        assertNull(result)
     }
 
     @Test

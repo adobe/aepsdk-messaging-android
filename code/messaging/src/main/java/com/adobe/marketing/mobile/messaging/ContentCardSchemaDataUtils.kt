@@ -12,6 +12,13 @@
 package com.adobe.marketing.mobile.messaging
 
 import androidx.annotation.VisibleForTesting
+import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
+import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
+import com.adobe.marketing.mobile.aepcomposeui.state.ImageOnlyCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.LargeImageCardUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.SmallImageCardUIState
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepButton
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepIcon
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
@@ -32,6 +39,34 @@ import com.adobe.marketing.mobile.util.DataReader
  */
 internal object ContentCardSchemaDataUtils {
     const val SELF_TAG = "ContentCardSchemaDataUtils"
+
+    /**
+     * Provides an [AepUI] instance from the given [AepUITemplate].
+     *
+     * @param uiTemplate The template to convert into a UI component.
+     * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
+     */
+    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
+        return when (uiTemplate) {
+            is SmallImageTemplate -> {
+                SmallImageUI(uiTemplate, SmallImageCardUIState())
+            }
+            is LargeImageTemplate -> {
+                LargeImageUI(uiTemplate, LargeImageCardUIState())
+            }
+            is ImageOnlyTemplate -> {
+                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+            }
+            else -> {
+                Log.error(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Unsupported template type: ${uiTemplate::class.java.simpleName}"
+                )
+                return null
+            }
+        }
+    }
 
     /**
      * Builds an [AepUITemplate] from a given [Proposition].
