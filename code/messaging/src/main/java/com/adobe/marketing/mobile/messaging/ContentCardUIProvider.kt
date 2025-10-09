@@ -18,12 +18,19 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUI
 import com.adobe.marketing.mobile.aepcomposeui.contentprovider.AepUIContentProvider
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
 import com.adobe.marketing.mobile.aepcomposeui.utils.UIUtils
+import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.SELF_TAG
 import com.adobe.marketing.mobile.messaging.ContentCardSchemaDataUtils.buildTemplate
+import com.adobe.marketing.mobile.messaging.MessagingConstants.LOG_TAG
 import com.adobe.marketing.mobile.services.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 /**
  * ContentCardUiProvider is responsible for fetching and managing the content for a given surface.
@@ -37,11 +44,19 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     }
 
     private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
-    private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow
+    private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow.asStateFlow()
 
-    private val aepUiFlow = _contentFlow.map { result ->
-        result.map { templateList ->
-            templateList.mapNotNull { item -> UIUtils.getAepUI(item) }
+    private val aepUiFlow: Flow<Result<List<AepUI<*, *>>>> = contentFlow.map { templateResult ->
+        if (templateResult.isSuccess) {
+            Result.success(
+                templateResult.getOrDefault(emptyList())
+                    .mapNotNull { item -> UIUtils.getAepUI(item) }
+            )
+        } else {
+            Result.failure(
+                templateResult.exceptionOrNull()
+                    ?: Throwable("Failed to process propositions for surface ${surface.uri}: Unknown Error")
+            )
         }
     }
 
@@ -54,17 +69,25 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
+    @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
     suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
-        getContent()
+        refreshContent()
         return aepUiFlow
     }
 
     /**
-     * Updates the flow returned by [getContent] with the latest cached content cards for the given
-     * surface.
+     * Refreshes the content cards by fetching new propositions from the surface and updating
+     * the flow returned by [getContentCardUIFlow]. This will cause all collectors of the flow
+     * to receive the updated content.
+     *
+     * Note: [getContentCardUIFlow] automatically loads initial content when first collected,
+     * so this method is only needed for manual refresh operations.
      */
     override suspend fun refreshContent() {
-        getContent()
+        val propositionsResult = getPropositionsForSurface()
+        getAepUITemplateListFlow(propositionsResult).collect { templateResult ->
+            _contentFlow.update { templateResult }
+        }
     }
 
     /**
@@ -76,95 +99,112 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a [Result] containing lists of [AepUITemplate] whenever new content is available.
      */
-    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> {
-        getAepUITemplateList { result ->
-            result.onSuccess { templateList ->
-                _contentFlow.value = Result.success(templateList)
-            }
-            result.onFailure { error ->
-                Log.error(
-                    MessagingConstants.LOG_TAG, SELF_TAG,
-                    "Failed to get content: ${error.message}"
-                )
-                _contentFlow.value = Result.failure(error)
-            }
+    @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
+    override suspend fun getContent(): Flow<Result<List<AepUITemplate>>> = contentFlow
+
+    /**
+     * Retrieves a reactive flow of AepUI instances for the given surface.
+     *
+     * This function returns a [Flow] that emits a Result of [AepUI] instances.
+     * The flow automatically loads initial content when first collected, then continues
+     * to emit updates whenever [refreshContent] is called.
+     *
+     * All collectors will automatically receive the loaded content and any future updates.
+     *
+     * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
+     */
+    override fun getContentCardUIFlow(): Flow<Result<List<AepUI<*, *>>>> = flow {
+        refreshContent()
+        aepUiFlow.collect { result ->
+            emit(result)
         }
-        return contentFlow
     }
 
     /**
-     * Fetches propositions for the current surface and builds a list of [AepUITemplate].
+     * Emits a [Flow] that contains a [Result] of converting the provided Result<Map<Surface, List<Proposition>>
+     * into a list of [AepUITemplate] for the specified surface.
      *
-     * This function retrieves propositions for the provided surface by calling
-     * [Messaging.getPropositionsForSurfaces]. For each proposition, it attempts to build an
-     * [AepUITemplate] using [buildTemplate]. The result is passed to the [completion] handler.
+     * If the input result is successful and the proposition can be built into a template,
+     * a [Result.success] containing the list of templates is emitted.
      *
-     * If any proposition fails to be built into a template, the entire operation fails,
-     * and the [completion] handler is invoked with a failure result.
+     * If any proposition fails to be built into a template, an error is logged and the proposition
+     * is skipped in the resulting list.
      *
-     * @param completion A callback invoked with the [Result] containing a list of [AepUITemplate]
-     *                   on success, or an error on failure.
+     * If no propositions are found for the surface, or if the input result is a failure,
+     * a [Result.Failure] is emitted.
+     *
+     * @param propositionsResult The result containing a map of the requested surface and its propositions.
+     * @return A [Flow] that emits a [Result] containing a list of [AepUITemplate] or an error if fetching or building fails.
      */
-    private suspend fun getAepUITemplateList(
-        completion: (Result<List<AepUITemplate>>) -> Unit
-    ) {
-        val surfaceList = mutableListOf<Surface>(surface)
-        // Retrieve propositions for the provided surface
-        Messaging.getPropositionsForSurfaces(
-            surfaceList,
-            object :
-                AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
+    private fun getAepUITemplateListFlow(propositionsResult: Result<Map<Surface, List<Proposition>>>): Flow<Result<List<AepUITemplate>>> = flow {
+        if (propositionsResult.isSuccess) {
+            val propositions = propositionsResult.getOrNull()?.get(surface)
+            if (propositions.isNullOrEmpty()) {
+                emit(
+                    Result.failure(
+                        propositionsResult.exceptionOrNull()
+                            ?: Throwable("No propositions found for surfaces ${surface.uri}")
+                    )
+                )
+            } else {
+                val templateModelList = propositions.mapNotNull { proposition ->
+                    try {
+                        buildTemplate(proposition)
+                    } catch (e: IllegalArgumentException) {
+                        Log.error(
+                            LOG_TAG,
+                            SELF_TAG,
+                            "Failed to build template for proposition ID : ${proposition.uniqueId} ${e.message}"
+                        )
+                        null
+                    }
+                }
+                emit(Result.success(templateModelList))
+            }
+        } else {
+            emit(
+                Result.failure(
+                    propositionsResult.exceptionOrNull()
+                        ?: Throwable("Failed to retrieve propositions for surface ${surface.uri}: Unknown Error")
+                )
+            )
+        }
+    }
+
+    /**
+     * Fetches propositions for the current surface by converting the [Messaging.getPropositionsForSurfaces]
+     * API into a suspend function.
+     */
+    private suspend fun getPropositionsForSurface(): Result<Map<Surface, List<Proposition>>> =
+        suspendCancellableCoroutine { continuation ->
+            val callback = object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
                 override fun call(resultMap: Map<Surface, List<Proposition>>?) {
                     if (resultMap == null) {
-                        completion(
+                        continuation.resume(
                             Result.failure(
-                                Throwable(
-                                    "resultMap null for surfaces ${surfaceList.joinToString(",")}"
-                                )
+                                Throwable("No propositions found for surfaces ${surface.uri}")
                             )
                         )
-                        return
+                    } else {
+                        continuation.resume(Result.success(resultMap))
                     }
-
-                    Log.debug(
-                        MessagingConstants.LOG_TAG,
-                        SELF_TAG,
-                        "getPropositionsForSurfaces callback contained Null Map"
-                    )
-
-                    val errorsList: MutableList<String> = mutableListOf()
-                    val templateModelList = resultMap[surface]?.mapNotNull { proposition ->
-                        try {
-                            buildTemplate(proposition)
-                        } catch (e: IllegalArgumentException) {
-                            Log.error(
-                                MessagingConstants.LOG_TAG,
-                                SELF_TAG,
-                                "Failed to build template: proposition ID : ${proposition.uniqueId} ${e.message}"
-                            )
-                            errorsList.add(proposition.uniqueId)
-                            null
-                        }
-                    } ?: emptyList()
-
-                    if (errorsList.isNotEmpty()) {
-                        completion(Result.failure(Throwable("Failed to build template for propositions ${errorsList.joinToString(",")}")))
-                    }
-
-                    completion(Result.success(templateModelList))
                 }
 
                 override fun fail(error: AdobeError?) {
-                    completion(
+                    continuation.resume(
                         Result.failure(
                             Throwable(
-                                "Failed to retrieve propositions for surface ${surfaceList.joinToString(",") { it.uri }} " +
+                                "Failed to retrieve propositions for surface ${surface.uri} " +
                                     "Adobe Error : ${error?.errorName}"
                             )
                         )
                     )
                 }
             }
-        )
-    }
+
+            Messaging.getPropositionsForSurfaces(listOf(surface), callback)
+            continuation.invokeOnCancellation {
+                Log.debug(LOG_TAG, SELF_TAG, "getPropositionsForSurface connection cancelled")
+            }
+        }
 }
