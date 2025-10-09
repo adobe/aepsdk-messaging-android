@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -71,7 +72,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      */
     @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
     suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
-        refreshContent()
+        getContent()
         return aepUiFlow
     }
 
@@ -84,10 +85,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      * so this method is only needed for manual refresh operations.
      */
     override suspend fun refreshContent() {
-        val propositionsResult = getPropositionsForSurface()
-        getAepUITemplateListFlow(propositionsResult).collect { templateResult ->
-            _contentFlow.update { templateResult }
-        }
+        getContent()
     }
 
     /**
@@ -119,12 +117,11 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
-    override fun getContentCardUIFlow(): Flow<Result<List<AepUI<*, *>>>> = flow {
-        refreshContent()
-        aepUiFlow.collect { result ->
-            emit(result)
+    override fun getContentCardUIFlow(): Flow<Result<List<AepUI<*, *>>>> =
+        aepUiFlow.onStart {
+            // Ensure initial content is loaded when flow is first collected
+            getContent()
         }
-    }
 
     /**
      * Emits a [Flow] that contains a [Result] of converting the provided Result<Map<Surface, List<Proposition>>
