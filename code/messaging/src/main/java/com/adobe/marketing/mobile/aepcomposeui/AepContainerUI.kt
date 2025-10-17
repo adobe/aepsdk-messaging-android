@@ -28,7 +28,7 @@ sealed interface AepContainerUI<T : AepContainerUITemplate, S : AepContainerUISt
      *
      * @return The template of type [T] associated with the container UI.
      */
-    fun getAepContainerTemplate(): T
+    fun getTemplate(): T
 
     /**
      * Retrieves the current state of the container UI.
@@ -36,7 +36,7 @@ sealed interface AepContainerUI<T : AepContainerUITemplate, S : AepContainerUISt
      *
      * @return The current state of type [S] associated with the container UI.
      */
-    fun getAepContainerState(): S
+    fun getState(): S
 
     /**
      * Updates the state of the container UI with a new state.
@@ -44,5 +44,5 @@ sealed interface AepContainerUI<T : AepContainerUITemplate, S : AepContainerUISt
      *
      * @param newState The new state of type [S] to update the container UI.
      */
-    fun updateAepContainerState(newState: S)
+    fun updateState(newState: S)
 }
