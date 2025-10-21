@@ -136,8 +136,10 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
         val templateType = event.aepUi.getTemplate().getType()
         when (event.action) {
             is UIAction.Click -> {
+                val ui = event.aepUi
+                ui.updateState(getNewState(event))
                 val urlHandled =
-                    callback?.onInteract(event.aepUi, event.action.id, event.action.actionUrl)
+                    callback?.onInteract(ui, event.action.id, event.action.actionUrl)
 
                 // Open the URL if available and not handled by the listener
                 if (urlHandled != true && !event.action.actionUrl.isNullOrEmpty()) {

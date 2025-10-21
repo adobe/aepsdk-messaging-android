@@ -20,7 +20,7 @@ object AepUIConstants {
         const val CARD_CLICKED = "Card clicked"
     }
 
-    internal object DefaultStyle {
+    internal object DefaultAepUIStyle {
         const val IMAGE_WIDTH = 100
         const val IMAGE_PROGRESS_SPINNER_SIZE = 48
         const val TITLE_TEXT_SIZE = 15
@@ -30,7 +30,10 @@ object AepUIConstants {
         const val BUTTON_TEXT_SIZE = 13
         val BUTTON_FONT_WEIGHT = FontWeight.Normal
         const val SPACING = 8
+        const val DISMISS_BUTTON_SIZE = 13
     }
 
-    const val DISMISS_BUTTON_SIZE = 13
+    internal object DefaultAepContainerStyle {
+        const val CIRCULAR_PROGRESS_WIDTH = 30
+    }
 }

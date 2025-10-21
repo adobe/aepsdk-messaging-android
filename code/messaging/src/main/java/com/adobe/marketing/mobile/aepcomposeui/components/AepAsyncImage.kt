@@ -44,13 +44,13 @@ import com.adobe.marketing.mobile.messaging.ContentCardImageManager
  */
 @Composable
 internal fun AepAsyncImage(
-    image: AepImage?,
+    image: AepImage,
     imageStyle: AepImageStyle = AepImageStyle(),
     onSuccess: (Bitmap) -> Unit = {},
     onError: (Throwable) -> Unit = {}
 ) {
-    val imageUrl = if (isSystemInDarkTheme() && image?.darkUrl != null)
-        image.darkUrl else image?.url
+    val imageUrl = if (isSystemInDarkTheme() && image.darkUrl != null)
+        image.darkUrl else image.url
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -76,11 +76,11 @@ internal fun AepAsyncImage(
     if (isLoading) {
         Box(
             modifier = imageStyle.modifier ?: Modifier
-                .size(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
+                .size(AepUIConstants.DefaultAepUIStyle.IMAGE_WIDTH.dp),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
-                modifier = Modifier.size(AepUIConstants.DefaultStyle.IMAGE_PROGRESS_SPINNER_SIZE.dp),
+                modifier = Modifier.size(AepUIConstants.DefaultAepUIStyle.IMAGE_PROGRESS_SPINNER_SIZE.dp),
                 strokeWidth = 4.dp
             )
         }

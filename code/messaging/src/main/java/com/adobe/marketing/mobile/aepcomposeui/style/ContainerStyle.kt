@@ -9,19 +9,13 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.state
+package com.adobe.marketing.mobile.aepcomposeui.style
 
 /**
- * Class representing the state of an AEP card.
+ * Enumerates the style configuration for all supported types of AEP container UI components.
  *
- * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property displayed Indicates whether the card is currently displayed.
- * @property read Indicates whether the card has been read.
+ * @param inboxContainerUIStyle The [InboxContainerUIStyle] with configuration for Inbox Container UI.
  */
-open class AepCardUIState(
-    open val dismissed: Boolean,
-    open val displayed: Boolean,
-    open val read: Boolean
+class ContainerStyle(
+    val inboxContainerUIStyle: InboxContainerUIStyle = InboxContainerUIStyle.Builder().build(),
 )

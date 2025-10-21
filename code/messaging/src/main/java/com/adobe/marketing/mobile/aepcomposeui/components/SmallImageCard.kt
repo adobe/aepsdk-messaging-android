@@ -57,10 +57,12 @@ fun SmallImageCard(
             AepRow(
                 rowStyle = style.rootRowStyle
             ) {
-                AepAsyncImage(
-                    image = ui.getTemplate().image,
-                    imageStyle = style.imageStyle
-                )
+                ui.getTemplate().image?.let {
+                    AepAsyncImage(
+                        image = it,
+                        imageStyle = style.imageStyle
+                    )
+                }
 
                 AepColumn(
                     columnStyle = style.textColumnStyle

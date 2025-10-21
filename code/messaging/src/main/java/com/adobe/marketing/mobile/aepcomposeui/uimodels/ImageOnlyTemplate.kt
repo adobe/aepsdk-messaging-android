@@ -15,15 +15,17 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * Class representing an image only template, which implements the [AepUITemplate] interface.
  *
  * @param id The unique identifier for this template.
- * @property image The details of the image to be displayed.
- * @property actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
- * @property dismissBtn The details for the image only template dismiss button.
+ * @param image The details of the image to be displayed.
+ * @param actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
+ * @param dismissBtn The details for the image only template dismiss button.
+ * @param isRead Indicates whether this template has been read.
  */
 data class ImageOnlyTemplate(
     val id: String,
     val image: AepImage,
     val actionUrl: String? = null,
-    val dismissBtn: AepIcon? = null
+    val dismissBtn: AepIcon? = null,
+    val isRead: Boolean = false
 ) : AepUITemplate {
 
     /**

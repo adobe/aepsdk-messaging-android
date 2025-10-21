@@ -219,31 +219,4 @@ class AepAsyncImageTests(
             .onAllNodes(hasTestTag("AepImageComposable"))
             .assertCountEquals(0)
     }
-
-    @Test
-    fun `Test AepAsyncImage handles null image`() {
-        // setup
-        mockkObject(ContentCardImageManager)
-        every {
-            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
-        } just Runs
-
-        // test
-        composeTestRule.setContent {
-            AepAsyncImage(
-                image = null,
-                imageStyle = AepImageStyle(
-                    modifier = Modifier.testTag("AepImageComposable")
-                )
-            )
-        }
-
-        // verify
-        verify(exactly = 0) {
-            ContentCardImageManager.getContentCardImageBitmap(any(), any(), any())
-        }
-        composeTestRule
-            .onAllNodes(hasTestTag("AepImageComposable"))
-            .assertCountEquals(0)
-    }
 }

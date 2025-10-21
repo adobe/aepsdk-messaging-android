@@ -11,13 +11,19 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.style
 
+import com.adobe.marketing.mobile.aepcomposeui.components.ImageOnlyCard
+import com.adobe.marketing.mobile.aepcomposeui.components.LargeImageCard
+import com.adobe.marketing.mobile.aepcomposeui.components.SmallImageCard
+
 /**
  * Enumerates the style configuration for all supported types of AEP UI components.
  *
- * This class provides the style configurations for different AEP UIs, such as small image components.
- *
- * @property smallImageUiStyle The style configuration for small image AEP UIs.
+ * @param smallImageUIStyle The [SmallImageUIStyle] with configuration for [SmallImageCard].
+ * @param smallImageUIStyle The [LargeImageUIStyle] with configuration for [LargeImageCard].
+ * @param imageOnlyUIStyle Thr [ImageOnlyUIStyle] with configuration for [ImageOnlyCard].
  */
 class AepUIStyle(
-    val smallImageUiStyle: SmallImageUIStyle = SmallImageUIStyle.Builder().build(),
+    val smallImageUIStyle: SmallImageUIStyle = SmallImageUIStyle.Builder().build(),
+    val largeImageUIStyle: LargeImageUIStyle = LargeImageUIStyle.Builder().build(),
+    val imageOnlyUIStyle: ImageOnlyUIStyle = ImageOnlyUIStyle.Builder().build()
 )

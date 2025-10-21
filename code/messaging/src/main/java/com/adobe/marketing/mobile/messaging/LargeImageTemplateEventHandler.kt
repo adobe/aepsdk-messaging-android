@@ -29,7 +29,7 @@ internal class LargeImageTemplateEventHandler(private val callback: ContentCardU
         return when (event) {
             is UIEvent.Dismiss -> currentState.copy(dismissed = true)
             is UIEvent.Display -> currentState.copy(displayed = true)
-            else -> currentState
+            is UIEvent.Interact -> currentState.copy(read = true)
         }
     }
 }

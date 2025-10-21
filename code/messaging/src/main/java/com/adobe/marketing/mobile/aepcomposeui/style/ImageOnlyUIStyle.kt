@@ -24,8 +24,8 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 /**
  * Class representing the style for a image only AEP UI.
  *
- * @param cardStyle The style for the card.
- * @param imageStyle The style for the image.
+ * @property cardStyle The style for the card.
+ * @property imageStyle The style for the image.
  * @property dismissButtonStyle The style for the dismiss button.
  * @property dismissButtonAlignment The alignment for the dismiss button.
  */
@@ -37,18 +37,18 @@ class ImageOnlyUIStyle private constructor(
 ) {
     companion object {
         private val defaultCardStyle = AepCardStyle(
-            modifier = Modifier.padding(AepUIConstants.DefaultStyle.SPACING.dp),
+            modifier = Modifier.padding(AepUIConstants.DefaultAepUIStyle.SPACING.dp),
             shape = RoundedCornerShape(0.dp)
         )
         private val defaultImageStyle = AepImageStyle(
-            modifier = Modifier.width(AepUIConstants.DefaultStyle.IMAGE_WIDTH.dp),
+            modifier = Modifier.width(AepUIConstants.DefaultAepUIStyle.IMAGE_WIDTH.dp),
             contentScale = ContentScale.Fit,
             alignment = Alignment.Center
         )
         private val defaultDismissButtonStyle = AepIconStyle(
             modifier = Modifier
-                .padding(AepUIConstants.DefaultStyle.SPACING.dp)
-                .size(AepUIConstants.DISMISS_BUTTON_SIZE.dp)
+                .padding(AepUIConstants.DefaultAepUIStyle.SPACING.dp)
+                .size(AepUIConstants.DefaultAepUIStyle.DISMISS_BUTTON_SIZE.dp)
         )
         private val defaultDismissButtonAlignment = Alignment.TopEnd
     }

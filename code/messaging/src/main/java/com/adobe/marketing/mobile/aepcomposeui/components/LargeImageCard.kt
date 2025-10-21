@@ -57,10 +57,12 @@ fun LargeImageCard(
             AepColumn(
                 columnStyle = style.rootColumnStyle
             ) {
-                AepAsyncImage(
-                    image = ui.getTemplate().image,
-                    imageStyle = style.imageStyle
-                )
+                ui.getTemplate().image?.let {
+                    AepAsyncImage(
+                        image = it,
+                        imageStyle = style.imageStyle
+                    )
+                }
                 AepColumn(
                     columnStyle = style.textColumnStyle
                 ) {

@@ -49,18 +49,33 @@ internal object ContentCardSchemaDataUtils {
     internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
-                SmallImageUI(uiTemplate, SmallImageCardUIState())
+                SmallImageUI(
+                    uiTemplate,
+                    SmallImageCardUIState(
+                        read = uiTemplate.isRead
+                    )
+                )
             }
             is LargeImageTemplate -> {
-                LargeImageUI(uiTemplate, LargeImageCardUIState())
+                LargeImageUI(
+                    uiTemplate,
+                    LargeImageCardUIState(
+                        read = uiTemplate.isRead
+                    )
+                )
             }
             is ImageOnlyTemplate -> {
-                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+                ImageOnlyUI(
+                    uiTemplate,
+                    ImageOnlyCardUIState(
+                        read = uiTemplate.isRead
+                    )
+                )
             }
             else -> {
                 Log.error(
                     MessagingConstants.LOG_TAG,
-                    SELF_TAG,
+                    ContentCardSchemaDataUtils.SELF_TAG,
                     "Unsupported template type: ${uiTemplate::class.java.simpleName}"
                 )
                 return null
@@ -75,15 +90,13 @@ internal object ContentCardSchemaDataUtils {
      * @return The built [AepUITemplate] or null if the proposition is not a content card or parsing fails.
      */
     internal fun buildTemplate(proposition: Proposition): AepUITemplate? {
-
         if (!isContentCard(proposition)) return null
 
-        if (proposition.items.size <= 0) return null
-
         val propositionItem = proposition.items[0]
+        val isRead = DataReader.optBoolean(propositionItem.itemData, "read", false)
 
         val baseTemplateModel: AepUITemplate? = propositionItem.contentCardSchemaData?.let {
-            getTemplate(it)
+            getTemplate(it, isRead)
         }
         return baseTemplateModel
     }
@@ -95,7 +108,7 @@ internal object ContentCardSchemaDataUtils {
      * @return The parsed [AepUITemplate] or null if parsing fails.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getTemplate(contentCardSchemaData: ContentCardSchemaData): AepUITemplate? {
+    internal fun getTemplate(contentCardSchemaData: ContentCardSchemaData, isRead: Boolean = false): AepUITemplate? {
         try {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any>
@@ -111,15 +124,15 @@ internal object ContentCardSchemaDataUtils {
 
                 when (templateType) {
                     AepUITemplateType.SMALL_IMAGE.typeName -> {
-                        return createSmallImageTemplate(contentMap, id)
+                        return createSmallImageTemplate(contentMap, id, isRead)
                     }
 
                     AepUITemplateType.LARGE_IMAGE.typeName -> {
-                        return createLargeImageTemplate(contentMap, id)
+                        return createLargeImageTemplate(contentMap, id, isRead)
                     }
 
                     AepUITemplateType.IMAGE_ONLY.typeName -> {
-                        return createImageOnlyTemplate(contentMap, id)
+                        return createImageOnlyTemplate(contentMap, id, isRead)
                     }
 
                     else -> {
@@ -144,7 +157,8 @@ internal object ContentCardSchemaDataUtils {
 
     private fun createSmallImageTemplate(
         contentMap: Map<String, Any>,
-        cardId: String
+        cardId: String,
+        isRead: Boolean
     ): SmallImageTemplate? {
         val title = createAepText(contentMap, MessagingConstants.ContentCard.UIKeys.TITLE, cardId)
         if (title == null || title.content.isEmpty()) {
@@ -162,13 +176,15 @@ internal object ContentCardSchemaDataUtils {
             image = createAepImage(contentMap, cardId),
             actionUrl = getActionUrl(contentMap, cardId),
             buttons = createAepButtonsList(contentMap, cardId),
-            dismissBtn = createAepDismissButton(contentMap, cardId)
+            dismissBtn = createAepDismissButton(contentMap, cardId),
+            isRead = isRead
         )
     }
 
     private fun createLargeImageTemplate(
         contentMap: Map<String, Any>,
-        cardId: String
+        cardId: String,
+        isRead: Boolean
     ): LargeImageTemplate? {
         val title = createAepText(contentMap, MessagingConstants.ContentCard.UIKeys.TITLE, cardId)
         if (title == null || title.content.isEmpty()) {
@@ -186,13 +202,15 @@ internal object ContentCardSchemaDataUtils {
             image = createAepImage(contentMap, cardId),
             actionUrl = getActionUrl(contentMap, cardId),
             buttons = createAepButtonsList(contentMap, cardId),
-            dismissBtn = createAepDismissButton(contentMap, cardId)
+            dismissBtn = createAepDismissButton(contentMap, cardId),
+            isRead = isRead
         )
     }
 
     private fun createImageOnlyTemplate(
         contentMap: Map<String, Any>,
-        cardId: String
+        cardId: String,
+        isRead: Boolean
     ): ImageOnlyTemplate? {
         val image = createAepImage(contentMap, cardId)
         if (image == null || image.url.isNullOrBlank()) {
@@ -207,7 +225,8 @@ internal object ContentCardSchemaDataUtils {
             id = cardId,
             image = image,
             actionUrl = getActionUrl(contentMap, cardId),
-            dismissBtn = createAepDismissButton(contentMap, cardId)
+            dismissBtn = createAepDismissButton(contentMap, cardId),
+            isRead = isRead
         )
     }
 

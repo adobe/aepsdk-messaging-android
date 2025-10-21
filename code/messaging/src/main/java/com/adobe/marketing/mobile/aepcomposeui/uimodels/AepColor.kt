@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -13,6 +13,12 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Data class representing colors for both light and dark themes in AEP UI components.
+ *
+ * @param lightColor The color to use in light theme mode.
+ * @param darkColor The color to use in dark theme mode.
+ */
 data class AepColor(
     val lightColor: Color,
     val darkColor: Color,
