@@ -21,9 +21,16 @@ import kotlinx.coroutines.flow.Flow
 interface AepUIContentProvider {
     /**
      * Retrieves the content for the UI.
-     * @return The content for the UI as a flow of [AepTemplate]s.
+     * @return The content for the UI as a flow of result of [AepUITemplate] list.
      */
+    @Deprecated("Use getUIContent instead", ReplaceWith("getUIContent"))
     suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
+
+    /**
+     * Retrieves the content for the UI.
+     * @return The content for the UI as a flow of result of [AepUITemplate] list.
+     */
+    fun getUIContent(): Flow<Result<List<AepUITemplate>>>
 
     /**
      * Refreshes the content for the UI.

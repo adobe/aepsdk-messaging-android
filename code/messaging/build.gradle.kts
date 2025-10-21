@@ -22,6 +22,8 @@ val mavenEdgeIdentityVersion: String by project
 // Lowest material3 library version we can use is v1.2.0
 // since clickable Cards are marked @ExperimentalMaterial3Api in lower versions
 val material3Version = "1.2.0"
+val viewModelComposeVersion = "2.6.0"
+val runtimeComposeVersion = "2.6.0"
 
 aepLibrary {
     namespace = "com.adobe.marketing.mobile.messaging"
@@ -40,6 +42,8 @@ aepLibrary {
         addMavenDependency("androidx.compose.runtime", "runtime", BuildConstants.Versions.COMPOSE)
         addMavenDependency("androidx.activity", "activity-compose", BuildConstants.Versions.ANDROIDX_ACTIVITY_COMPOSE)
         addMavenDependency("androidx.compose.material3", "material3", material3Version)
+        addMavenDependency("androidx.lifecycle", "lifecycle-viewmodel-compose", viewModelComposeVersion)
+        addMavenDependency("androidx.lifecycle", "lifecycle-runtime-compose", runtimeComposeVersion)
     }
 
     android {
@@ -64,6 +68,8 @@ dependencies {
     // COMPOSE_RUNTIME, COMPOSE_MATERIAL, ANDROIDX_ACTIVITY_COMPOSE, COMPOSE_UI_TOOLING
     implementation("androidx.compose.ui:ui-tooling-preview:${BuildConstants.Versions.COMPOSE}")
     implementation("androidx.compose.material3:material3:$material3Version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$viewModelComposeVersion")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:$runtimeComposeVersion")
 
     compileOnly("com.google.firebase:firebase-messaging:23.4.1")
 

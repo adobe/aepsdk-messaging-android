@@ -9,18 +9,11 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.state
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-/**
- * Class representing the state of an AEP card.
- *
- * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property displayed Indicates whether the card is currently displayed.
- */
-open class AepCardUIState(
-    open val dismissed: Boolean,
-    open val displayed: Boolean,
-    open val read: Boolean
+import androidx.compose.ui.graphics.Color
+
+data class AepColor(
+    val lightColor: Color,
+    val darkColor: Color,
 )

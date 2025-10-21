@@ -1,5 +1,5 @@
 /*
-  Copyright 2024 Adobe. All rights reserved.
+  Copyright 2025 Adobe. All rights reserved.
   This file is licensed to you under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License. You may obtain a copy
   of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -9,18 +9,15 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.state
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Class representing the state of an AEP card.
+ * Enum representing the different types of container UIs in AEP.
  *
- * This class includes the common properties `dismissed`, `selected`, and `read` which are common across different card states.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property displayed Indicates whether the card is currently displayed.
+ * @property typeName The name of the container UI type.
  */
-open class AepCardUIState(
-    open val dismissed: Boolean,
-    open val displayed: Boolean,
-    open val read: Boolean
-)
+enum class AepContainerUIType(val typeName: String) {
+    INBOX("inbox"),
+    CAROUSEL("carousel"),
+    CUSTOM("custom")
+}

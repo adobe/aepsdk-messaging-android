@@ -9,16 +9,23 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.state
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
+
+import androidx.compose.ui.Alignment
 
 /**
- * Class representing the UI state of a Large Image template card.
- *
- * @property dismissed Indicates whether the card has been dismissed.
- * @property displayed Indicates whether the card is currently displayed.
+ * Abstract class representing a container UI template in AEP.
  */
-data class LargeImageCardUIState(
-    override val dismissed: Boolean = false,
-    override val displayed: Boolean = false,
-    override val read: Boolean = false
-) : AepCardUIState(dismissed, displayed, read)
+sealed class AepContainerUITemplate(
+    open val heading: AepText,
+    open val layout: String,
+    open val capacity: Int,
+    open val emptyMessage: AepText? = null,
+    open val emptyImage: AepImage? = null,
+    open val isUnreadEnabled: Boolean = false,
+    open val unreadBgColor: AepColor? = null,
+    open val unreadIcon: AepImage? = null,
+    open val unreadIconAlignment: Alignment? = null
+) {
+    abstract fun getType(): AepContainerUIType
+}
