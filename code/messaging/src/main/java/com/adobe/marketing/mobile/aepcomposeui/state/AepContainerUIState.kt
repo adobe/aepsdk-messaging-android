@@ -14,13 +14,35 @@ package com.adobe.marketing.mobile.aepcomposeui.state
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
 
 /**
- * Class representing the state of an AEP container.
+ * Sealed interface representing the state of an AEP container UI.
  *
- * This class includes the common property `loaded` which indicates whether the container's content has been loaded.
- * It can also be include additional properties in the future for functionality like filtering, sorting, etc.
+ * This interface provides a common structure for different states (Loading, Success, Error)
+ * that can be extended by specific container types to include additional state information.
  *
- * @property loaded Indicates whether the container's content has been loaded.
+ * Container-specific states should extend these base states to add their own properties
+ * while maintaining the common state structure.
  */
-open class AepContainerUIState(
-    open val aepUIList: List<AepUI<*, *>>
-)
+sealed interface AepContainerUIState {
+
+    /**
+     * Represents the loading state of the container UI.
+     * Can be extended by specific container types to include loading-specific information.
+     */
+    interface Loading : AepContainerUIState
+
+    /**
+     * Represents the successful state of the container UI.
+     * Can be extended by specific container types to include their own success data.
+     */
+    interface Success : AepContainerUIState {
+        val items: List<AepUI<*, *>>
+    }
+
+    /**
+     * Represents the error state of the container UI.
+     * Can be extended by specific container types to include error-specific information.
+     */
+    interface Error : AepContainerUIState {
+        val error: Throwable
+    }
+}

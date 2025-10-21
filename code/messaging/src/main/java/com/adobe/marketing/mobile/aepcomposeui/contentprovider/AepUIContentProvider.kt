@@ -23,7 +23,7 @@ interface AepUIContentProvider {
      * Retrieves the content for the UI.
      * @return The content for the UI as a flow of result of [AepUITemplate] list.
      */
-    @Deprecated("Use getContentCardUIFlow instead", ReplaceWith("getContentCardUIFlow"))
+    @Deprecated("Use getUIContent instead", ReplaceWith("getUIContent"))
     suspend fun getContent(): Flow<Result<List<AepUITemplate>>>
 
     /**
