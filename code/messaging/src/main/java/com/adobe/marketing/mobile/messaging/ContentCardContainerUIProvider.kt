@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
 /**
@@ -49,61 +50,50 @@ class ContentCardContainerUIProvider(val surface: Surface) : AepContainerUIConte
 
     // Transformed flow that starts with container and switches to content cards with flatMapLatest
     private fun toAepContainerUI(): Flow<Result<AepContainerUI<*, *>>> =
-        containerUIFlow.filterNotNull().flatMapLatest { containerResult: Result<AepContainerUITemplate> ->
-            flow {
-                val containerUI = containerResult.getOrNull()
-                if (containerUI != null) {
-                    // Immediately emit loading state
-                    when (containerUI) {
-                        is InboxContainerUITemplate -> {
-                            emit(
-                                Result.success(
-                                    InboxContainerUI(containerUI, InboxContainerUIState.Loading)
-                                )
-                            )
-                        }
-                    }
-
-                    // Then collect content cards and emit updates
-                    contentCardUIProvider.getUIContent().collect { contentCardResult ->
+        containerUIFlow.filterNotNull().flatMapLatest { containerResult ->
+            val containerUI = containerResult.getOrNull()
+            when (containerUI) {
+                is InboxContainerUITemplate -> {
+                    contentCardUIProvider.getUIContent().map { contentCardResult ->
                         // Convert AepUITemplate list to AepUI list
                         val aepUIList = contentCardResult.getOrNull()?.mapNotNull { template ->
                             ContentCardSchemaDataUtils.getAepUI(template)
                         }
 
-                        when (containerUI) {
-                            is InboxContainerUITemplate -> {
-                                if (aepUIList != null) {
-                                    emit(
-                                        Result.success(
-                                            InboxContainerUI(
-                                                containerUI,
-                                                InboxContainerUIState.Success(aepUIList)
-                                            )
-                                        )
+                        if (aepUIList != null) {
+                            Result.success(
+                                InboxContainerUI(
+                                    containerUI,
+                                    InboxContainerUIState.Success(aepUIList)
+                                )
+                            )
+                        } else {
+                            Result.success(
+                                InboxContainerUI(
+                                    containerUI,
+                                    InboxContainerUIState.Error(
+                                        contentCardResult.exceptionOrNull()
+                                            ?: Throwable("Unknown error loading container content cards")
                                     )
-                                } else {
-                                    emit(
-                                        Result.success(
-                                            InboxContainerUI(
-                                                containerUI,
-                                                InboxContainerUIState.Error(
-                                                    contentCardResult.exceptionOrNull()
-                                                        ?: Throwable("Unknown error loading container content cards")
-                                                )
-                                            )
-                                        )
-                                    )
-                                }
-                            }
+                                )
+                            )
                         }
-                    }
-                } else {
-                    emit(
-                        Result.failure(
-                            containerResult.exceptionOrNull() ?: Throwable("Container not loaded yet")
+                    }.onStart {
+                        emit(
+                            Result.success(
+                                InboxContainerUI(containerUI, InboxContainerUIState.Loading)
+                            )
                         )
-                    )
+                    }
+                }
+                null -> {
+                    flow<Result<AepContainerUI<*, *>>> {
+                        emit(
+                            Result.failure(
+                                containerResult.exceptionOrNull() ?: Throwable("Container not loaded yet")
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -131,7 +121,7 @@ class ContentCardContainerUIProvider(val surface: Surface) : AepContainerUIConte
                     refreshContainer()
                 }
             }
-            // Only emit actual results, filter out null (loading) states
+            // Only emit actual results, filter out null states
             .filterNotNull()
 
     /**
@@ -144,7 +134,6 @@ class ContentCardContainerUIProvider(val surface: Surface) : AepContainerUIConte
      */
     override suspend fun refreshContainer() {
         _containerUIFlow.value = fetchContainer()
-        contentCardUIProvider.refreshContent()
     }
 
     /**
