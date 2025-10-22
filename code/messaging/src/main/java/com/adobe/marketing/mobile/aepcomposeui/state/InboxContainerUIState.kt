@@ -22,7 +22,7 @@ sealed interface InboxContainerUIState : AepContainerUIState {
     /**
      * Loading state for the inbox container.
      */
-    object Loading : AepContainerUIState.Loading, InboxContainerUIState
+    object Loading : InboxContainerUIState
 
     /**
      * Success state for the inbox container.

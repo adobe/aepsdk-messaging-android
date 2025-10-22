@@ -25,12 +25,6 @@ import com.adobe.marketing.mobile.aepcomposeui.AepUI
 sealed interface AepContainerUIState {
 
     /**
-     * Represents the loading state of the container UI.
-     * Can be extended by specific container types to include loading-specific information.
-     */
-    interface Loading : AepContainerUIState
-
-    /**
      * Represents the successful state of the container UI.
      * Can be extended by specific container types to include their own success data.
      */
