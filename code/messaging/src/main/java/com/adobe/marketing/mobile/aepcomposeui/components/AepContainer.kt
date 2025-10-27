@@ -14,33 +14,32 @@ package com.adobe.marketing.mobile.aepcomposeui.components
 import androidx.compose.runtime.Composable
 import com.adobe.marketing.mobile.aepcomposeui.AepContainerUI
 import com.adobe.marketing.mobile.aepcomposeui.InboxContainerUI
+import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ContainerStyle
-import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
-import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 
 /**
  * AEP Container Composable that renders the appropriate container based on the type of [AepContainerUI] provided.
  *
  * @param containerUi The AEP container UI model to be rendered.
  * @param containerStyle The style to be applied to the container.
- * @param cardsStyle The style to be applied to the cards within the container.
+ * @param itemsStyle The style to be applied to the cards within the container.
  * @param cardUIEventListener An optional event listener for content card UI events.
  */
 @Composable
 fun AepContainer(
     containerUi: AepContainerUI<*, *>,
     containerStyle: ContainerStyle = ContainerStyle(),
-    cardsStyle: AepUIStyle = AepUIStyle(),
-    cardUIEventListener: ContentCardUIEventListener? = null
+    itemsStyle: AepUIStyle = AepUIStyle(),
+    observer: AepUIEventObserver? = null
 ) {
     when (containerUi) {
         is InboxContainerUI -> {
             InboxContainer(
                 ui = containerUi,
                 inboxContainerStyle = containerStyle.inboxContainerUIStyle,
-                itemsStyle = cardsStyle,
-                observer = ContentCardEventObserver(cardUIEventListener)
+                itemsStyle = itemsStyle,
+                observer = observer
             )
         }
     }

@@ -44,13 +44,14 @@ import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepLazyColumnStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.ContainerStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.ContainerStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.InboxContainerUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.messaging.ContentCardContainerUIProvider
+import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
@@ -148,12 +149,12 @@ class ScrollingFeedActivity : AppCompatActivity() {
                             containerStyle = ContainerStyle(
                                 inboxContainerUIStyle = inboxContainerStyle
                             ),
-                            cardsStyle = AepUIStyle(
+                            itemsStyle = AepUIStyle(
                                 smallImageUIStyle = smallImageCardStyleColumn,
                                 largeImageUIStyle = largeImageCardStyleColumn,
                                 imageOnlyUIStyle = imageOnlyCardStyleColumn,
                             ),
-                            cardUIEventListener = ContentCardCallback()
+                            observer = ContentCardEventObserver(ContentCardCallback())
                         )
                     }
                 }
