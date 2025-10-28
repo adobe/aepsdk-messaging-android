@@ -20,5 +20,5 @@ package com.adobe.marketing.mobile.aepcomposeui.state
 data class LargeImageCardUIState(
     override val dismissed: Boolean = false,
     override val displayed: Boolean = false,
-    override val read: Boolean = false
+    override val read: Boolean? = null
 ) : AepCardUIState(dismissed, displayed, read)

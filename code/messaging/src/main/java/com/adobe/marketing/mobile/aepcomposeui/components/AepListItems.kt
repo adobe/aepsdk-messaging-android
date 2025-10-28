@@ -47,11 +47,12 @@ fun LazyListScope.renderListItems(
         val state = aepUI.getState()
         if (!state.dismissed) {
             Box(modifier = Modifier.padding(0.dp)) {
+                val read = aepUI.getState().read
                 when (aepUI) {
                     is SmallImageUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (state.read) itemsStyle.smallImageUIStyle else unreadItemsStyle.smallImageUIStyle
+                            if (read == false) unreadItemsStyle.smallImageUIStyle else itemsStyle.smallImageUIStyle
                         SmallImageCard(
                             ui = aepUI,
                             style = style,
@@ -62,7 +63,7 @@ fun LazyListScope.renderListItems(
                     is LargeImageUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (state.read) itemsStyle.largeImageUIStyle else unreadItemsStyle.largeImageUIStyle
+                            if (read == false) unreadItemsStyle.largeImageUIStyle else itemsStyle.largeImageUIStyle
                         LargeImageCard(
                             ui = aepUI,
                             style = style,
@@ -73,7 +74,7 @@ fun LazyListScope.renderListItems(
                     is ImageOnlyUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (state.read) itemsStyle.imageOnlyUIStyle else unreadItemsStyle.imageOnlyUIStyle
+                            if (read == false) unreadItemsStyle.imageOnlyUIStyle else itemsStyle.imageOnlyUIStyle
                         ImageOnlyCard(
                             ui = aepUI,
                             style = style,
@@ -82,7 +83,7 @@ fun LazyListScope.renderListItems(
                     }
                 }
                 // Display unread icon one is provided and if the item is unread
-                if (!aepUI.getState().read && unreadIcon != null) {
+                if (read != null && !read && unreadIcon != null) {
                     Box(modifier = Modifier.align(unreadIcon.third)) {
                         AepAsyncImage(
                             image = unreadIcon.first,
