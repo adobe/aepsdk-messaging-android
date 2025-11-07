@@ -13,18 +13,23 @@
 
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <application>
         <activity
             android:name="com.adobe.marketing.mobile.messaging.MessagingPushTrackerActivity"
             android:exported="false"
             android:launchMode="singleInstance"
-            android:theme="@style/Messaging.Style.Transparent"/>
-        <service android:name="com.adobe.marketing.mobile.ExtensionDiscoveryService"
+            android:theme="@style/Messaging.Style.Transparent" />
+
+        <service
+            android:name="com.adobe.marketing.mobile.ExtensionDiscoveryService"
             android:exported="false">
             <meta-data
                 android:name="com.adobe.marketing.mobile.messaging.MessagingExtension"
                 android:value="Extension" />
         </service>
+
+        <receiver android:name=".NotificationInteractionReceiver" />
 
         <provider
             android:name="com.adobe.marketing.mobile.messaging.MessagingFileProvider"
@@ -35,5 +40,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/paths" />
         </provider>
-</application>
+    </application>
+
 </manifest>

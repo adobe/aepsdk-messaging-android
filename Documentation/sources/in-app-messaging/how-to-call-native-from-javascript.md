@@ -79,7 +79,7 @@ Continuing from the previous example, the developer is going to post the `myInap
                 try {
                     // the name of the message handler is the same name that must be registered in native code.
                     // in this case the message name is "myInappCallback"
-                    webkit.messageHandlers.myInappCallback.postMessage(action);
+                    myInappCallback.run(action);
                 } catch(err) {
                     console.log('The native context does not exist yet'); }
                 }

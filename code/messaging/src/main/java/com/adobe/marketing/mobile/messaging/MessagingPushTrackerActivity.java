@@ -27,7 +27,6 @@ import com.adobe.marketing.mobile.util.StringUtils;
 public class MessagingPushTrackerActivity extends Activity {
 
     private static final String SELF_TAG = "MessagingPushTrackerActivity";
-    private static final String DISMISS_ACTION = "Dismiss";
 
     @Override
     protected void onCreate(final @Nullable Bundle savedInstanceState) {
@@ -59,9 +58,6 @@ public class MessagingPushTrackerActivity extends Activity {
                 break;
             case MessagingPushConstants.NotificationAction.BUTTON_CLICKED:
                 handlePushButtonClicked(intent);
-                break;
-            case MessagingPushConstants.NotificationAction.DISMISSED:
-                handlePushDismiss(intent);
                 break;
             default:
                 break;
@@ -105,15 +101,6 @@ public class MessagingPushTrackerActivity extends Activity {
         }
 
         executePushAction(intent);
-    }
-
-    /**
-     * Handles the push notification dismiss action
-     *
-     * @param intent the intent received from the push notification
-     */
-    private void handlePushDismiss(final Intent intent) {
-        Messaging.handleNotificationResponse(intent, false, DISMISS_ACTION);
     }
 
     /**
