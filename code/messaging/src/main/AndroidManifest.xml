@@ -27,7 +27,7 @@
         </service>
 
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name="com.adobe.marketing.mobile.messaging.MessagingFileProvider"
             android:grantUriPermissions="true"
             android:authorities="${applicationId}.messagingfileprovider"
             android:exported="false">
