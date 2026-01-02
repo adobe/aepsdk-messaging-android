@@ -22,5 +22,7 @@ buildscript {
         classpath("com.github.adobe:aepsdk-commons:gp-3.4.1")
         classpath("com.google.gms:google-services:4.4.1")
         classpath("io.github.takahirom.roborazzi:roborazzi-gradle-plugin:1.31.0")
+        classpath("org.jetbrains.kotlinx:binary-compatibility-validator:0.13.2") // Or the latest version
+
     }
 }
