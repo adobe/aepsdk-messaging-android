@@ -957,7 +957,7 @@ public final class MessagingExtension extends Extension {
                 propositionEventType.put(MessagingConstants.TrackingKeys.INTERACT, 1);
             } else {
                 // Application opened
-                propositionEventType.put(MessagingConstants.TrackingKeys.OPEN, 1);
+                propositionEventType.put(MessagingConstants.TrackingKeys.INTERACT, 1);
             }
 
             decisioning.put(
