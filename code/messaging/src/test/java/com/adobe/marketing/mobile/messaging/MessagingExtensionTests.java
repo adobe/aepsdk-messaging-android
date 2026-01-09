@@ -1963,6 +1963,215 @@ public class MessagingExtensionTests {
     }
 
     // ========================================================================================
+    // processEvents MessagingRequestContentEvent - propositionEventType tests
+    // ========================================================================================
+
+    @Test
+    public void
+            test_processEvent_messageTrackingEvent_addsPropositionEventTypeInteract_whenApplicationOpened_withExdRequestId() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    mockConfigSharedState();
+                    final String xdmWithExdRequestId =
+                            "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
+                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
+                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                    final Event event =
+                            samplePushTrackingEvent(
+                                    "pushTracking.applicationOpened",
+                                    "messageId",
+                                    null,
+                                    true,
+                                    xdmWithExdRequestId);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    // test
+                    messagingExtension.processEvent(event);
+
+                    // verify
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    // verify push tracking edge event
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+
+                    // verify propositionEventType.interact is added
+                    Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertEquals(
+                            "1",
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.interact"));
+                });
+    }
+
+    @Test
+    public void
+            test_processEvent_messageTrackingEvent_addsPropositionEventTypeInteract_whenButtonClicked_withExdRequestId() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    mockConfigSharedState();
+                    final String xdmWithExdRequestId =
+                            "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
+                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
+                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                    final Event event =
+                            samplePushTrackingEvent(
+                                    "pushTracking.customAction",
+                                    "messageId",
+                                    "buttonActionId",
+                                    true,
+                                    xdmWithExdRequestId);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    // test
+                    messagingExtension.processEvent(event);
+
+                    // verify
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    // verify push tracking edge event
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+
+                    // verify propositionEventType.interact is added
+                    Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertEquals(
+                            "1",
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.interact"));
+                });
+    }
+
+    @Test
+    public void
+            test_processEvent_messageTrackingEvent_addsPropositionEventTypeDismiss_whenDismissed_withExdRequestId() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    mockConfigSharedState();
+                    final String xdmWithExdRequestId =
+                            "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
+                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
+                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                    final Event event =
+                            samplePushTrackingEvent(
+                                    "pushTracking.customAction",
+                                    "messageId",
+                                    "Dismiss",
+                                    false,
+                                    xdmWithExdRequestId);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    // test
+                    messagingExtension.processEvent(event);
+
+                    // verify
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    // verify push tracking edge event
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+
+                    // verify propositionEventType.dismiss is added
+                    Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertEquals(
+                            "1",
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.dismiss"));
+                });
+    }
+
+    @Test
+    public void
+            test_processEvent_messageTrackingEvent_doesNotAddPropositionEventType_whenExdRequestIdMissing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    mockConfigSharedState();
+                    // XDM with decisioning but without exdRequestID
+                    final String xdmWithoutExdRequestId =
+                            "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
+                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
+                                    + "\"decisioning\": {\"propositions\": []}}}}";
+                    final Event event =
+                            samplePushTrackingEvent(
+                                    "pushTracking.applicationOpened",
+                                    "messageId",
+                                    null,
+                                    true,
+                                    xdmWithoutExdRequestId);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    // test
+                    messagingExtension.processEvent(event);
+
+                    // verify
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    // verify push tracking edge event
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+
+                    // verify propositionEventType is NOT added
+                    Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertNull(
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.interact"));
+                    assertNull(
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.dismiss"));
+                });
+    }
+
+    @Test
+    public void
+            test_processEvent_messageTrackingEvent_doesNotAddPropositionEventType_whenDecisioningMissing() {
+        runUsingMockedServiceProvider(
+                () -> {
+                    // setup
+                    mockConfigSharedState();
+                    // XDM without decisioning
+                    final String xdmWithoutDecisioning =
+                            "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
+                                    + " \"messageExecution\": {\"messageID\": \"567\"}}}}}";
+                    final Event event =
+                            samplePushTrackingEvent(
+                                    "pushTracking.applicationOpened",
+                                    "messageId",
+                                    null,
+                                    true,
+                                    xdmWithoutDecisioning);
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+
+                    // test
+                    messagingExtension.processEvent(event);
+
+                    // verify
+                    verify(mockExtensionApi, times(2)).dispatch(eventCaptor.capture());
+
+                    // verify push tracking edge event
+                    final Event pushTrackingEdgeEvent = eventCaptor.getAllValues().get(1);
+                    assertEquals("Push tracking edge event", pushTrackingEdgeEvent.getName());
+
+                    // verify propositionEventType is NOT added
+                    Map<String, String> edgeTrackingData =
+                            MessagingTestUtils.flattenMap(pushTrackingEdgeEvent.getEventData());
+                    assertNull(
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.interact"));
+                    assertNull(
+                            edgeTrackingData.get(
+                                    "xdm._experience.decisioning.propositionEventType.dismiss"));
+                });
+    }
+
+    // ========================================================================================
     // processEvents refreshMessagesEvent
     // ========================================================================================
 
