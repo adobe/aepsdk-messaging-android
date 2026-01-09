@@ -621,6 +621,9 @@ public final class MessagingExtension extends Extension {
         // Adding xdm data to xdmMap
         addXDMData(eventData, xdmMap);
 
+        // Add propositionEventType if exdRequestID exists in decisioning data
+        addPropositionEventType(xdmMap, isApplicationOpened, actionId);
+
         final Map<String, Object> xdmData = new HashMap<>();
         xdmData.put(MessagingConstants.TrackingKeys.XDM, xdmMap);
         xdmData.put(MessagingConstants.TrackingKeys.META, metaMap);
@@ -899,6 +902,72 @@ public final class MessagingExtension extends Extension {
                     SELF_TAG,
                     "Failed to send Adobe data with the tracking data, Adobe data is malformed :"
                             + " %s",
+                    e.getMessage());
+        }
+    }
+
+    /**
+     * Adds propositionEventType to the decisioning map if exdRequestID exists.
+     *
+     * @param xdmMap the XDM map to update
+     * @param isApplicationOpened boolean indicating if the application was opened
+     * @param actionId the action ID if a custom action was triggered
+     */
+    @SuppressWarnings("unchecked")
+    private void addPropositionEventType(
+            final Map<String, Object> xdmMap,
+            final boolean isApplicationOpened,
+            final String actionId) {
+        try {
+            // Check if _experience exists
+            if (!xdmMap.containsKey(MessagingConstants.TrackingKeys.EXPERIENCE)) {
+                return;
+            }
+            final Object experienceObj = xdmMap.get(MessagingConstants.TrackingKeys.EXPERIENCE);
+            if (!(experienceObj instanceof Map)) {
+                return;
+            }
+            final Map<String, Object> experience = (Map<String, Object>) experienceObj;
+
+            // Check if decisioning exists
+            if (!experience.containsKey(
+                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key.DECISIONING)) {
+                return;
+            }
+            final Object decisioningObj =
+                    experience.get(
+                            MessagingConstants.EventDataKeys.Messaging.Inbound.Key.DECISIONING);
+            if (!(decisioningObj instanceof Map)) {
+                return;
+            }
+            final Map<String, Object> decisioning = (Map<String, Object>) decisioningObj;
+
+            // Check if exdRequestID exists
+            if (!decisioning.containsKey(MessagingConstants.TrackingKeys.EXD_REQUEST_ID)) {
+                return;
+            }
+
+            // Add propositionEventType based on the action type
+            final Map<String, Object> propositionEventType = new HashMap<>();
+            if (!isApplicationOpened) {
+                // Dismiss action
+                propositionEventType.put(MessagingConstants.TrackingKeys.DISMISS, 1);
+            } else if (actionId != null) {
+                // Button click action
+                propositionEventType.put(MessagingConstants.TrackingKeys.INTERACT, 1);
+            } else {
+                // Application opened
+                propositionEventType.put(MessagingConstants.TrackingKeys.INTERACT, 1);
+            }
+
+            decisioning.put(
+                    MessagingConstants.EventDataKeys.Messaging.Inbound.Key.PROPOSITION_EVENT_TYPE,
+                    propositionEventType);
+        } catch (final ClassCastException e) {
+            Log.debug(
+                    MessagingConstants.LOG_TAG,
+                    SELF_TAG,
+                    "Failed to add propositionEventType, error: %s",
                     e.getMessage());
         }
     }
