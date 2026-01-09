@@ -1975,8 +1975,8 @@ public class MessagingExtensionTests {
                     mockConfigSharedState();
                     final String xdmWithExdRequestId =
                             "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
-                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
-                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                                + " \"messageExecution\": {\"messageID\": \"567\"}},"
+                                + " \"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
                     final Event event =
                             samplePushTrackingEvent(
                                     "pushTracking.applicationOpened",
@@ -2015,8 +2015,8 @@ public class MessagingExtensionTests {
                     mockConfigSharedState();
                     final String xdmWithExdRequestId =
                             "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
-                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
-                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                                + " \"messageExecution\": {\"messageID\": \"567\"}},"
+                                + " \"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
                     final Event event =
                             samplePushTrackingEvent(
                                     "pushTracking.customAction",
@@ -2055,8 +2055,8 @@ public class MessagingExtensionTests {
                     mockConfigSharedState();
                     final String xdmWithExdRequestId =
                             "{\"cjm\": {\"_experience\": {\"customerJourneyManagement\": {"
-                                    + " \"messageExecution\": {\"messageID\": \"567\"}}, "
-                                    + "\"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
+                                + " \"messageExecution\": {\"messageID\": \"567\"}},"
+                                + " \"decisioning\": {\"exdRequestID\": \"mockExdRequestId\"}}}}";
                     final Event event =
                             samplePushTrackingEvent(
                                     "pushTracking.customAction",
