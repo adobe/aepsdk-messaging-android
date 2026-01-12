@@ -56,7 +56,7 @@ class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
                         template,
-                        ContentCardSchemaDataUtils.getReadStatus(template.id)
+                        false // todo: replace with actual read/unread in subsequent PR
                     )
                 }
             }
