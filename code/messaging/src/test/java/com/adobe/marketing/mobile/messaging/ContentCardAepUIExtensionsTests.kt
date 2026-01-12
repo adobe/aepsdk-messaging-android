@@ -98,7 +98,9 @@ class ContentCardAepUIExtensionsTests {
     @Test
     fun `getMeta with unsupported template returns null`() {
         // setup
+        every { mockUnsupportedTemplate.id } returns "test-id"
         every { mockAepUI.getTemplate() } returns mockUnsupportedTemplate
+        every { mockContentCardMapper.getContentCardSchemaData("test-id") } returns null
 
         // test
         val result = mockAepUI.getMeta()
