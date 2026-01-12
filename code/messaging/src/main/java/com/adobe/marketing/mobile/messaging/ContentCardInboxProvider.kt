@@ -55,8 +55,7 @@ class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
             val aepUIList = propositions.second.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
-                        template,
-                        false // todo: replace with actual read/unread in subsequent PR
+                        template
                     )
                 }
             }
