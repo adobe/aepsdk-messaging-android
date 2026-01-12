@@ -18,9 +18,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,28 +40,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.adobe.marketing.mobile.Messaging
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
-import com.adobe.marketing.mobile.aepcomposeui.components.AepContainer
+import com.adobe.marketing.mobile.aepcomposeui.components.AepInbox
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.aepcomposeui.style.AepColumnStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepImageStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepLazyColumnStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepTextStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.ContainerStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.InboxContainerUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.InboxUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardContainerUIProvider
+import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
+import com.adobe.marketing.mobile.messaging.ContentCardInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.Surface
 import com.adobe.marketing.mobile.messagingsample.databinding.ActivityScrollingBinding
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.jvm.java
 
 class ScrollingFeedActivity : AppCompatActivity() {
     private lateinit var binding: ActivityScrollingBinding
@@ -77,8 +78,6 @@ class ScrollingFeedActivity : AppCompatActivity() {
         val surfaces = mutableListOf<Surface>()
         val surface = Surface("card/ms")
         surfaces.add(surface)
-
-        Messaging.updatePropositionsForSurfaces(surfaces)
 
         val viewModel: ExistingViewModel = ViewModelProvider(this)[ExistingViewModel::class.java]
         contentCardCallback = ContentCardCallback()
@@ -121,42 +120,70 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         )
                         .build()
 
-                    val containerUi = viewModel.containerUIFlow.collectAsStateWithLifecycle().value
-
-                    containerUi?.let { ui ->
-                        val headingStyle = AepTextStyle(
-                            modifier = Modifier.fillMaxWidth().padding(10.dp),
-                            textStyle = TextStyle(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp,
-                                textAlign = TextAlign.Center
+                    val rowCardStyle = AepCardStyle(
+                        modifier = Modifier.width(400.dp).padding(8.dp),
+                    )
+                    val smallImageCardStyleRow = SmallImageUIStyle.Builder()
+                        .cardStyle(rowCardStyle)
+                        .rootRowStyle(
+                            AepRowStyle(
+                                modifier = Modifier.fillMaxSize().padding(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    8.dp,
+                                    Alignment.CenterHorizontally
+                                ),
+                                verticalAlignment = Alignment.CenterVertically
                             )
                         )
+                        .build()
 
-                        val inboxContainerStyle = InboxContainerUIStyle.Builder()
-                            .headingStyle(headingStyle)
-                            .lazyColumnStyle(
-                                AepLazyColumnStyle(
-                                    modifier = Modifier.background(Color.Gray),
-                                    contentPadding = PaddingValues(10.dp)
-                                )
+                    val largeImageCardStyleRow = LargeImageUIStyle.Builder()
+                        .cardStyle(rowCardStyle)
+                        .rootColumnStyle(
+                            AepColumnStyle(
+                                modifier = Modifier.fillMaxSize().padding(8.dp)
                             )
-                            .build()
-
-                        AepContainer(
-                            containerUi = ui,
-                            containerStyle = ContainerStyle(
-                                inboxContainerUIStyle = inboxContainerStyle
-                            ),
-                            itemsStyle = AepUIStyle(
-                                smallImageUIStyle = smallImageCardStyleColumn,
-                                largeImageUIStyle = largeImageCardStyleColumn,
-                                imageOnlyUIStyle = imageOnlyCardStyleColumn,
-                            ),
-                            observer = ContentCardEventObserver(ContentCardCallback())
                         )
-                    }
+                        .build()
+
+                    val imageOnlyCardStyleRow = ImageOnlyUIStyle.Builder()
+                        .cardStyle(rowCardStyle)
+                        .imageStyle(AepImageStyle(modifier = Modifier.fillMaxSize()))
+                        .build()
+
+                    val inboxUi = viewModel.inboxUIStateFlow.collectAsStateWithLifecycle().value
+                    val cardUIStyle = AepUIStyle(
+                        smallImageUIStyle = smallImageCardStyleRow,
+                        largeImageUIStyle = largeImageCardStyleRow,
+                        imageOnlyUIStyle = imageOnlyCardStyleRow,
+                    )
+
+                    val headingStyle = AepTextStyle(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                        textStyle = TextStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+
+                    val inboxContainerStyle = InboxUIStyle.Builder()
+                        .headingStyle(headingStyle)
+                        .lazyColumnStyle(
+                            AepLazyColumnStyle(
+                                modifier = Modifier.background(Color.DarkGray),
+                                contentPadding = PaddingValues(10.dp)
+                            )
+                        )
+                        .build()
+
+                    AepInbox(
+                        uiState = inboxUi,
+                        inboxStyle = inboxContainerStyle,
+                        itemsStyle = cardUIStyle,
+                        observer = ContentCardEventObserver(ContentCardCallback())
+                    )
                 }
             }
         }
@@ -184,21 +211,18 @@ class ContentCardCallback: ContentCardUIEventListener {
 }
 // create new view model or reuse existing one to hold the aepUIList
 class ExistingViewModel: ViewModel() {
-    private val containerUIProvider = ContentCardContainerUIProvider(Surface("card/ms"))
+    private val containerUIProvider = ContentCardInboxProvider(Surface("card/ms"))
 
-    val containerUIFlow = containerUIProvider.getContentCardContainerUI()
-        .mapNotNull { result ->
-            result.getOrNull()
-        }
+    val inboxUIStateFlow = containerUIProvider.getInboxUI()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = InboxUIState.Loading
         )
 
     fun refresh() {
         viewModelScope.launch {
-            containerUIProvider.refreshContainer()
+            containerUIProvider.refresh()
         }
     }
 }

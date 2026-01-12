@@ -11,23 +11,22 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.contentprovider
 
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepContainerUITemplate
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Responsible for retrieving and refreshing data as required by the container UI
- * Classes implementing this interface will define a strategy to provide content for rendering the container UI.
+ * Responsible for retrieving and refreshing data as required by the inbox UI
+ * Classes implementing this interface will define a strategy to provide content for rendering the inbox UI.
  */
-interface AepContainerUIContentProvider {
+interface AepInboxContentProvider {
     /**
-     * Retrieves the container UI for rendering.
-     * @return The container UI as a flow of result [AepContainerUITemplate].
+     * Retrieves the Inbox content and updates the state as a flow.
+     * @return The content for the Inbox as a flow of [InboxUIState].
      */
-    fun getContainerUIContent(): Flow<Result<AepContainerUITemplate>>
+    fun getInboxUI(): Flow<InboxUIState>
 
     /**
-     * Refreshes the container UI.
-     * Implementations should update the data into the flow returned by [getContainerUIContent].
+     * Refreshes the Inbox content and updates the data into the flow returned by [getInboxUI].
      */
-    suspend fun refreshContainer()
+    suspend fun refresh()
 }

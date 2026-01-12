@@ -12,33 +12,35 @@
 package com.adobe.marketing.mobile.aepcomposeui.state
 
 import com.adobe.marketing.mobile.aepcomposeui.AepUI
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.InboxTemplate
 
 /**
- * Sealed interface representing different states for Inbox Container UI.
- * Extends the base AepContainerUIState to provide inbox-specific state management.
+ * Sealed interface representing different states for Inbox UI.
  */
-sealed interface InboxContainerUIState : AepContainerUIState {
+sealed interface InboxUIState {
 
     /**
-     * Loading state for the inbox container.
+     * Loading state for the inbox.
      */
-    object Loading : InboxContainerUIState
+    object Loading : InboxUIState
 
     /**
-     * Success state for the inbox container.
+     * Success state for the inbox.
      *
+     * @param template The properties to be used for rendering the inbox
      * @param items List of AEP UI elements to display in the inbox
      */
     data class Success(
-        override val items: List<AepUI<*, *>> = emptyList()
-    ) : AepContainerUIState.Success, InboxContainerUIState
+        val template: InboxTemplate,
+        val items: List<AepUI<*, *>> = emptyList()
+    ) : InboxUIState
 
     /**
-     * Error state for the inbox container.
+     * Error state for the inbox.
      *
      * @param error The throwable that caused the error
      */
     data class Error(
-        override val error: Throwable
-    ) : AepContainerUIState.Error, InboxContainerUIState
+        val error: Throwable
+    ) : InboxUIState
 }

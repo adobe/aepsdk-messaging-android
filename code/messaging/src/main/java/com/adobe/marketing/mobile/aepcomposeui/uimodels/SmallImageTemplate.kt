@@ -24,7 +24,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @param isRead Indicates whether this template has been read.
  */
 data class SmallImageTemplate(
-    val id: String,
+    override val id: String,
     val title: AepText,
     val body: AepText? = null,
     val image: AepImage? = null,

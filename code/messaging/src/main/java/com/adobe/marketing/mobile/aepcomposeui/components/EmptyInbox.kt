@@ -28,10 +28,10 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
- * Composable that renders an empty container if the empty message or image is provided.
+ * Composable that renders an empty inbox if the empty message or image is provided.
  */
 @Composable
-fun EmptyInboxContainer(
+fun EmptyInbox(
     emptyMessage: AepText? = null,
     emptyMessageStyle: AepTextStyle = AepTextStyle(),
     emptyImage: AepImage? = null,

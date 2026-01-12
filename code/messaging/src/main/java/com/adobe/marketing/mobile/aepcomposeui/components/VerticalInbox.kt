@@ -11,115 +11,109 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.components
 
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.adobe.marketing.mobile.aepcomposeui.InboxContainerUI
+import androidx.compose.ui.unit.dp
 import com.adobe.marketing.mobile.aepcomposeui.observers.AepUIEventObserver
-import com.adobe.marketing.mobile.aepcomposeui.state.InboxContainerUIState
+import com.adobe.marketing.mobile.aepcomposeui.state.InboxUIState
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.ImageOnlyUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.style.InboxContainerUIStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.InboxUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
-import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
- * Composable that renders the inbox container UI.
+ * Composable that renders a vertical scrolling inbox UI.
  *
- * @param ui The [InboxContainerUI] to be rendered.
- * @param inboxContainerStyle The [InboxContainerUIStyle] to be applied to the inbox container.
- * @param itemsStyle The [AepUIStyle] to be applied to the items within the inbox container.
+ * @param ui The [InboxUIState] to be rendered.
+ * @param inboxStyle The [InboxUIStyle] to be applied to the inbox.
+ * @param itemsStyle The [AepUIStyle] to be applied to the items within the inbox.
  * @param observer An optional [AepUIEventObserver] to handle UI events.
  */
 @Composable
-internal fun InboxContainer(
-    ui: InboxContainerUI,
-    inboxContainerStyle: InboxContainerUIStyle,
+internal fun VerticalInbox(
+    ui: InboxUIState.Success,
+    inboxStyle: InboxUIStyle,
     itemsStyle: AepUIStyle,
     observer: AepUIEventObserver?
 ) {
-    val inboxContainerSettings = ui.getTemplate()
-    val inboxContainerState = ui.getState()
-    when (inboxContainerState) {
-        is InboxContainerUIState.Loading -> {
-            inboxContainerStyle.loadingIndicator()
-        }
+    // Limit the number of items to the specified capacity
+    val uiList = ui.items.take(ui.template.capacity)
 
-        is InboxContainerUIState.Error -> {
-            EmptyInboxContainer(
-                // todo: Replace these with server provided error message and style if we add it to the container settings UI
-                AepText("Error fetching messages"),
-                inboxContainerStyle.emptyMessageStyle
+    // Determine unread card background color based on theme, server settings, and style overrides
+    val isDarkTheme = isSystemInDarkTheme()
+    val unreadCardColor = remember(
+        isDarkTheme,
+        inboxStyle.unreadBgColor,
+        ui.template.unreadBgColor
+    ) {
+        if (isDarkTheme) {
+            inboxStyle.unreadBgColor?.darkColor
+                ?: ui.template.unreadBgColor?.darkColor
+        } else {
+            inboxStyle.unreadBgColor?.lightColor
+                ?: ui.template.unreadBgColor?.lightColor
+        }
+    }
+
+    Column {
+        // Wrap AepText in an invisible Surface to provide Material Theme context
+        Surface(
+            color = Color.Transparent
+        ) {
+            AepText(
+                model = ui.template.heading,
+                textStyle = inboxStyle.headingStyle
             )
         }
 
-        is InboxContainerUIState.Success -> {
-            // Limit the number of items to the specified capacity
-            val uiList = inboxContainerState.items.take(inboxContainerSettings.capacity)
+        // Create unread style variant if unread color is specified
+        val unreadCardsStyle = createUnreadCardsStyle(itemsStyle, unreadCardColor)
 
-            // Determine unread card background color based on theme, server settings, and style overrides
-            val isDarkTheme = isSystemInDarkTheme()
-            val unreadCardColor = remember(
-                isDarkTheme,
-                inboxContainerStyle.unreadBgColor,
-                inboxContainerSettings.unreadBgColor
+        if (uiList.isEmpty()) {
+            EmptyInbox(
+                ui.template.emptyMessage,
+                inboxStyle.emptyMessageStyle,
+                ui.template.emptyImage,
+                inboxStyle.emptyImageStyle
+            )
+        } else {
+            val lazyColumnStyle = inboxStyle.lazyColumnStyle
+            LazyColumn(
+                modifier = lazyColumnStyle.modifier ?: Modifier,
+                contentPadding = lazyColumnStyle.contentPadding ?: PaddingValues(0.dp),
+                reverseLayout = lazyColumnStyle.reverseLayout ?: false,
+                verticalArrangement = lazyColumnStyle.verticalArrangement
+                    ?: getDefaultVerticalArrangement(lazyColumnStyle.reverseLayout ?: false),
+                horizontalAlignment = lazyColumnStyle.horizontalAlignment ?: Alignment.Start,
+                flingBehavior = lazyColumnStyle.flingBehavior ?: ScrollableDefaults.flingBehavior(),
+                userScrollEnabled = lazyColumnStyle.userScrollEnabled ?: true
             ) {
-                if (isDarkTheme) {
-                    inboxContainerStyle.unreadBgColor?.darkColor
-                        ?: inboxContainerSettings.unreadBgColor?.darkColor
-                } else {
-                    inboxContainerStyle.unreadBgColor?.lightColor
-                        ?: inboxContainerSettings.unreadBgColor?.lightColor
-                }
-            }
-
-            Column {
-                // Wrap AepText in an invisible Surface to provide Material Theme context
-                Surface(
-                    color = Color.Transparent
-                ) {
-                    AepText(
-                        model = inboxContainerSettings.heading,
-                        textStyle = inboxContainerStyle.headingStyle
+                renderListItems(
+                    items = uiList,
+                    itemsStyle = itemsStyle,
+                    unreadItemsStyle = unreadCardsStyle,
+                    unreadIcon = if (ui.template.unreadIcon != null) Triple(
+                        ui.template.unreadIcon,
+                        inboxStyle.unreadIconStyle,
+                        inboxStyle.unreadIconAlignment
+                            ?: ui.template.unreadIconAlignment ?: Alignment.TopStart
                     )
-                }
-
-                // Create unread style variant if unread color is specified
-                val unreadCardsStyle = createUnreadCardsStyle(itemsStyle, unreadCardColor)
-
-                if (uiList.isEmpty()) {
-                    EmptyInboxContainer(
-                        inboxContainerSettings.emptyMessage,
-                        inboxContainerStyle.emptyMessageStyle,
-                        inboxContainerSettings.emptyImage,
-                        inboxContainerStyle.emptyImageStyle
-                    )
-                } else {
-                    AepLazyColumn(
-                        lazyColumnStyle = inboxContainerStyle.lazyColumnStyle
-                    ) {
-                        renderListItems(
-                            items = uiList,
-                            itemsStyle = itemsStyle,
-                            unreadItemsStyle = unreadCardsStyle,
-                            unreadIcon = if (inboxContainerSettings.unreadIcon != null) Triple(
-                                inboxContainerSettings.unreadIcon,
-                                inboxContainerStyle.unreadIconStyle,
-                                inboxContainerStyle.unreadIconAlignment
-                                    ?: inboxContainerSettings.unreadIconAlignment ?: Alignment.TopStart
-                            )
-                            else null,
-                            observer = observer
-                        )
-                    }
-                }
+                    else null,
+                    observer = observer
+                )
             }
         }
     }
@@ -210,3 +204,6 @@ private fun createUnreadImageOnlyStyle(originalStyle: ImageOnlyUIStyle, unreadCa
         .dismissButtonAlignment(originalStyle.dismissButtonAlignment)
         .build()
 }
+
+private fun getDefaultVerticalArrangement(reverseLayout: Boolean): Arrangement.Vertical =
+    if (reverseLayout) Arrangement.Bottom else Arrangement.Top

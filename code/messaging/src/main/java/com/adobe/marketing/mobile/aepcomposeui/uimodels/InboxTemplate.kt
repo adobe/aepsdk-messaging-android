@@ -11,13 +11,16 @@
 
 package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
-/**
- * Enum representing the different types of container UIs in AEP.
- *
- * @property typeName The name of the container UI type.
- */
-enum class AepContainerUIType(val typeName: String) {
-    INBOX("inbox"),
-    CAROUSEL("carousel"),
-    CUSTOM("custom")
-}
+import androidx.compose.ui.Alignment
+
+data class InboxTemplate(
+    val heading: AepText,
+    val layout: AepInboxLayout,
+    val capacity: Int,
+    val emptyMessage: AepText? = null,
+    val emptyImage: AepImage? = null,
+    val isUnreadEnabled: Boolean = false,
+    val unreadBgColor: AepColor? = null,
+    val unreadIcon: AepImage? = null,
+    val unreadIconAlignment: Alignment? = null
+)

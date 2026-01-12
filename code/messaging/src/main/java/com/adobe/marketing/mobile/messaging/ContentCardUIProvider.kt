@@ -24,8 +24,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -44,7 +45,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
     private val _contentFlow = MutableStateFlow<Result<List<AepUITemplate>>>(Result.success(emptyList()))
     private val contentFlow: StateFlow<Result<List<AepUITemplate>>> = _contentFlow.asStateFlow()
 
-    private fun toAepUIList(templateFlow: Flow<Result<List<AepUITemplate>>>): Flow<Result<List<AepUI<*, *>>>> = templateFlow.mapNotNull { templateResult ->
+    private fun toAepUIList(): Flow<Result<List<AepUI<*, *>>>> = contentFlow.mapNotNull { templateResult ->
         if (templateResult.isSuccess) {
             Result.success(
                 templateResult.getOrDefault(emptyList())
@@ -69,7 +70,7 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      */
     suspend fun getContentCardUI(): Flow<Result<List<AepUI<*, *>>>> {
         _contentFlow.update { fetchContent() }
-        return toAepUIList(contentFlow)
+        return toAepUIList()
     }
 
     /**
@@ -110,10 +111,10 @@ class ContentCardUIProvider(val surface: Surface) : AepUIContentProvider {
      *
      * @return A [Flow] that emits a [Result] containing a list of [AepUI] instances.
      */
-    override fun getUIContent(): Flow<Result<List<AepUITemplate>>> =
-        contentFlow.onStart {
-            _contentFlow.update { fetchContent() }
-        }
+    override fun getUIContent(): Flow<Result<List<AepUITemplate>>> = flow {
+        refreshContent()
+        emitAll(contentFlow)
+    }
 
     /**
      * Fetches propositions for the specified surface and converts them into a list of [AepUITemplate].

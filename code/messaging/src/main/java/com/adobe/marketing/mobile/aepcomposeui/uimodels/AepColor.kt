@@ -20,6 +20,6 @@ import androidx.compose.ui.graphics.Color
  * @param darkColor The color to use in dark theme mode.
  */
 data class AepColor(
-    val lightColor: Color,
-    val darkColor: Color,
+    val lightColor: Color?,
+    val darkColor: Color?,
 )

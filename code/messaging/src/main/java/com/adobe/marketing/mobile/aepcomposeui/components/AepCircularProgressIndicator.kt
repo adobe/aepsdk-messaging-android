@@ -29,7 +29,7 @@ fun AepCircularProgressIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(AepUIConstants.DefaultAepContainerStyle.CIRCULAR_PROGRESS_WIDTH.dp),
+            .padding(AepUIConstants.DefaultAepInboxStyle.CIRCULAR_PROGRESS_WIDTH.dp),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator()

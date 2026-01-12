@@ -9,13 +9,21 @@
   governing permissions and limitations under the License.
 */
 
-package com.adobe.marketing.mobile.aepcomposeui.style
+package com.adobe.marketing.mobile.aepcomposeui.uimodels
 
 /**
- * Enumerates the style configuration for all supported types of AEP container UI components.
+ * Enum class representing different layouts of inbox in AEP.
  *
- * @param inboxContainerUIStyle The [InboxContainerUIStyle] with configuration for Inbox Container UI.
+ * @property typeName The name of the layout type.
  */
-class ContainerStyle(
-    val inboxContainerUIStyle: InboxContainerUIStyle = InboxContainerUIStyle.Builder().build(),
-)
+enum class AepInboxLayout(val typeName: String) {
+    /** Represents a vertical layout. */
+    VERTICAL("vertical"),
+    /** Represents a horizontal layout. */
+    HORIZONTAL("horizontal");
+
+    companion object {
+        fun from(typeName: String?): AepInboxLayout? =
+            values().firstOrNull { it.typeName == typeName }
+    }
+}

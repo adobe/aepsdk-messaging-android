@@ -21,12 +21,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adobe.marketing.mobile.aepcomposeui.AepUIConstants
 import com.adobe.marketing.mobile.aepcomposeui.components.AepCircularProgressIndicator
+import com.adobe.marketing.mobile.aepcomposeui.components.EmptyInbox
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
+import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 
 /**
- * Class representing the style for the Inbox Container.
+ * Class representing the style for the Inbox.
  *
- * @property loadingIndicator The composable function representing the loading indicator.
+ * @property loadingView The composable function representing the loading indicator.
  * @property headingStyle The style for the heading text.
  * @property lazyColumnStyle The style for the lazy column displaying messages.
  * @property emptyMessageStyle The style for the empty message text.
@@ -35,15 +37,16 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepColor
  * @property unreadIconAlignment The alignment for the unread icon.
  * @property unreadBgColor The background color for unread messages.
  */
-class InboxContainerUIStyle private constructor(
-    val loadingIndicator: @Composable () -> Unit,
+class InboxUIStyle private constructor(
     val headingStyle: AepTextStyle,
     val lazyColumnStyle: AepLazyColumnStyle,
-    val emptyMessageStyle: AepTextStyle,
-    val emptyImageStyle: AepImageStyle,
     val unreadIconStyle: AepImageStyle,
     val unreadIconAlignment: Alignment?,
-    val unreadBgColor: AepColor?
+    val unreadBgColor: AepColor?,
+    val emptyMessageStyle: AepTextStyle,
+    val emptyImageStyle: AepImageStyle,
+    val loadingView: @Composable () -> Unit,
+    val errorView: @Composable () -> Unit
 ) {
     companion object {
         private val defaultHeadingStyle = AepTextStyle(
@@ -60,8 +63,13 @@ class InboxContainerUIStyle private constructor(
                 .padding(AepUIConstants.DefaultAepUIStyle.SPACING.dp + 5.dp)
                 .size(20.dp)
         )
-        private val defaultLoadingIndicator: @Composable () -> Unit = {
+        private val defaultLoadingView: @Composable () -> Unit = {
             AepCircularProgressIndicator()
+        }
+        private val defaultErrorView: @Composable () -> Unit = {
+            EmptyInbox(
+                AepText(AepUIConstants.DefaultAepInboxStyle.DEFAULT_INBOX_ERROR_MESSAGE)
+            )
         }
     }
 
@@ -73,7 +81,8 @@ class InboxContainerUIStyle private constructor(
         private var unreadIconStyle: AepImageStyle? = null
         private var unreadIconAlignment: Alignment? = null
         private var unreadBgColor: AepColor? = null
-        private var loadingIndicator: (@Composable () -> Unit)? = null
+        private var loadingView: (@Composable () -> Unit)? = null
+        private var errorView: (@Composable () -> Unit)? = null
 
         fun headingStyle(headingStyle: AepTextStyle) = apply { this.headingStyle = headingStyle }
 
@@ -93,10 +102,13 @@ class InboxContainerUIStyle private constructor(
 
         fun unreadBgColor(unreadBgColor: AepColor) = apply { this.unreadBgColor = unreadBgColor }
 
-        fun loadingIndicator(loadingIndicator: @Composable () -> Unit) =
-            apply { this.loadingIndicator = loadingIndicator }
+        fun loadingView(loadingView: @Composable () -> Unit) =
+            apply { this.loadingView = loadingView }
 
-        fun build() = InboxContainerUIStyle(
+        fun errorView(errorView: @Composable () -> Unit) =
+            apply { this.errorView = errorView }
+
+        fun build() = InboxUIStyle(
             headingStyle = AepTextStyle.merge(defaultHeadingStyle, headingStyle),
             lazyColumnStyle = AepLazyColumnStyle.merge(defaultListStyle, lazyColumnStyle),
             emptyMessageStyle = AepTextStyle.merge(defaultEmptyMessageStyle, emptyMessageStyle),
@@ -104,7 +116,8 @@ class InboxContainerUIStyle private constructor(
             unreadIconStyle = AepImageStyle.merge(defaultUnreadIconStyle, unreadIconStyle),
             unreadIconAlignment = unreadIconAlignment,
             unreadBgColor = unreadBgColor,
-            loadingIndicator = loadingIndicator ?: defaultLoadingIndicator
+            loadingView = loadingView ?: defaultLoadingView,
+            errorView = errorView ?: defaultErrorView
         )
     }
 }

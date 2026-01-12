@@ -15,6 +15,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * Interface representing a generic UI template in AEP.
  */
 interface AepUITemplate {
+    val id: String
     /**
      * Gets the type of the UI template.
      *

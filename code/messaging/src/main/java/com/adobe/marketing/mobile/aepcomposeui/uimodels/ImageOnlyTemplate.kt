@@ -21,7 +21,7 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @param isRead Indicates whether this template has been read.
  */
 data class ImageOnlyTemplate(
-    val id: String,
+    override val id: String,
     val image: AepImage,
     val actionUrl: String? = null,
     val dismissBtn: AepIcon? = null,

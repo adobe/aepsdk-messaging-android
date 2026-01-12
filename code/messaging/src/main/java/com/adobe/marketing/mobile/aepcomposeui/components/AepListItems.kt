@@ -43,11 +43,11 @@ fun LazyListScope.renderListItems(
     unreadIcon: Triple<AepImage, AepImageStyle, Alignment>? = null,
     observer: AepUIEventObserver?
 ) {
-    items(items = items) { aepUI ->
+    items(items = items, key = { it.getTemplate().id }) { aepUI ->
         val state = aepUI.getState()
         if (!state.dismissed) {
             Box(modifier = Modifier.padding(0.dp)) {
-                val read = aepUI.getState().read
+                val read = state.read
                 when (aepUI) {
                     is SmallImageUI -> {
                         // Use read or unread style based on UI state

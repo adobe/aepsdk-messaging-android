@@ -33,7 +33,8 @@ object AepUIConstants {
         const val DISMISS_BUTTON_SIZE = 13
     }
 
-    internal object DefaultAepContainerStyle {
+    internal object DefaultAepInboxStyle {
         const val CIRCULAR_PROGRESS_WIDTH = 30
+        const val DEFAULT_INBOX_ERROR_MESSAGE = "Unable to load messages, please try again later"
     }
 }
