@@ -31,7 +31,7 @@ data class SmallImageTemplate(
     val actionUrl: String? = null,
     val buttons: List<AepButton>? = null,
     val dismissBtn: AepIcon? = null,
-    val isRead: Boolean?
+    val isRead: Boolean? = null
 ) : AepUITemplate {
 
     /**
