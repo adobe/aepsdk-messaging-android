@@ -34,7 +34,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 /**
- * ContentCardInboxProvider is responsible for fetching the Inbox content and
+ * MessagingInboxProvider is responsible for fetching the Inbox content and
  * manage the Inbox state through reactive updates when the content needs to be refreshed.
  *
  * @param surface The surface to fetch content cards for.
@@ -46,7 +46,7 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
     )
 
     companion object {
-        private const val SELF_TAG: String = "ContentCardInboxProvider"
+        private const val SELF_TAG: String = "MessagingInboxProvider"
     }
 
     // Internal state flow for refresh() to update
@@ -205,8 +205,8 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
                 darkUrl = unreadIcon?.get("darkUrl") as? String
             ),
             unreadBgColor = AepColor(
-                lightColor = (unreadBg?.get("bgColor") as? String)?.let { Color(it.toColorInt()) },
-                darkColor = (unreadBg?.get("darkBgColor") as? String)?.let { Color(it.toColorInt()) }
+                light = (unreadBg?.get("light") as? String)?.let { Color(it.toColorInt()) },
+                dark = (unreadBg?.get("dark") as? String)?.let { Color(it.toColorInt()) }
             ),
             unreadIconAlignment = (unreadIcon?.get("placeholder") as? String)?.let { placeholder ->
                 when (placeholder.lowercase()) {

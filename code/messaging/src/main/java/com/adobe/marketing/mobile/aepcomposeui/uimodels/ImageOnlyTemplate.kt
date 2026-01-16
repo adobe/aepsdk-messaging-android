@@ -25,7 +25,7 @@ data class ImageOnlyTemplate(
     val image: AepImage,
     val actionUrl: String? = null,
     val dismissBtn: AepIcon? = null,
-    val isRead: Boolean = false
+    val isRead: Boolean?
 ) : AepUITemplate {
 
     /**

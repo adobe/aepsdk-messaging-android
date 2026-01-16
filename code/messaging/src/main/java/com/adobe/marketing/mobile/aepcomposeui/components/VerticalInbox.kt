@@ -60,11 +60,11 @@ internal fun VerticalInbox(
         ui.template.unreadBgColor
     ) {
         if (isDarkTheme) {
-            inboxStyle.unreadBgColor?.darkColor
-                ?: ui.template.unreadBgColor?.darkColor
+            inboxStyle.unreadBgColor?.dark
+                ?: ui.template.unreadBgColor?.dark
         } else {
-            inboxStyle.unreadBgColor?.lightColor
-                ?: ui.template.unreadBgColor?.lightColor
+            inboxStyle.unreadBgColor?.light
+                ?: ui.template.unreadBgColor?.light
         }
     }
 
