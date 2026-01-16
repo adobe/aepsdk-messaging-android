@@ -60,8 +60,7 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
             val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
-                        template,
-                        ContentCardSchemaDataUtils.getReadStatus(template.id)
+                        template
                     )
                 }
             }
