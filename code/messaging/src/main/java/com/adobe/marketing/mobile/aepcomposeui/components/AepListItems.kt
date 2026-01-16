@@ -36,7 +36,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
  * @param unreadIcon An optional Triple containing the unread icon [AepImage], its [AepImageStyle], and its [Alignment].
  * @param observer An optional observer that listens to UI events.
  */
-fun LazyListScope.renderListItems(
+internal fun LazyListScope.renderListItems(
     items: List<AepUI<*, *>>,
     itemsStyle: AepUIStyle,
     unreadItemsStyle: AepUIStyle = itemsStyle,

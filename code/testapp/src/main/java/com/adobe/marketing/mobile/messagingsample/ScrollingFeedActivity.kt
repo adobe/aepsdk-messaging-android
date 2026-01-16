@@ -53,7 +53,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
-import com.adobe.marketing.mobile.messaging.ContentCardInboxProvider
+import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
 import com.adobe.marketing.mobile.messaging.ContentCardUIEventListener
 import com.adobe.marketing.mobile.messaging.Surface
@@ -211,7 +211,7 @@ class ContentCardCallback: ContentCardUIEventListener {
 }
 // create new view model or reuse existing one to hold the aepUIList
 class ExistingViewModel: ViewModel() {
-    private val containerUIProvider = ContentCardInboxProvider(Surface("card/ms"))
+    private val containerUIProvider = MessagingInboxProvider(Surface("card/ms"))
 
     val inboxUIStateFlow = containerUIProvider.getInboxUI()
         .stateIn(

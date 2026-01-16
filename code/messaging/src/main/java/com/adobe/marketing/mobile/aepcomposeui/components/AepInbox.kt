@@ -40,7 +40,7 @@ fun AepInbox(
         }
 
         is InboxUIState.Error -> {
-            inboxStyle.errorView
+            inboxStyle.errorView()
         }
 
         is InboxUIState.Success -> {

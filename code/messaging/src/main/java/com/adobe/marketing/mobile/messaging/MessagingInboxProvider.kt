@@ -39,7 +39,12 @@ import kotlin.coroutines.resume
  *
  * @param surface The surface to fetch content cards for.
  */
-class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
+class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
+    data class InboxProposition(
+        val inbox: Proposition,
+        val contentCards: List<Proposition>
+    )
+
     companion object {
         private const val SELF_TAG: String = "ContentCardInboxProvider"
     }
@@ -48,14 +53,15 @@ class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
     private val _inboxStateFlow = MutableStateFlow<InboxUIState>(InboxUIState.Loading)
     private val inboxStateFlow = _inboxStateFlow.asStateFlow()
 
-    private fun toInboxUIState(result: Result<Pair<Proposition, List<Proposition>>>): InboxUIState {
-        val propositions = result.getOrNull()
-        if (propositions != null) {
-            val inboxTemplate = createInboxTemplate(propositions.first)
-            val aepUIList = propositions.second.mapNotNull { cardProposition ->
+    private fun toInboxUIState(result: Result<InboxProposition>): InboxUIState {
+        val inboxProposition = result.getOrNull()
+        if (inboxProposition != null) {
+            val inboxTemplate = createInboxTemplate(inboxProposition.inbox)
+            val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
-                        template
+                        template,
+                        ContentCardSchemaDataUtils.getReadStatus(template.id)
                     )
                 }
             }
@@ -100,14 +106,14 @@ class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
      *
      * @return A [Pair] containing a [Result] with the [InboxTemplate] and a list of [Proposition]s.
      */
-    private suspend fun fetchContent(): Result<Pair<Proposition, List<Proposition>>> {
+    private suspend fun fetchContent(): Result<InboxProposition> {
         return try {
             // Call Messaging API to get propositions for this surface
             val propositionsMap = getPropositionsForSurface()
 
             // Get propositions for our surface
-            val propositions = propositionsMap[surface]
-            if (propositions.isNullOrEmpty()) {
+            val contentCardPropositions = propositionsMap[surface]?.filter { it.items[0].schema == SchemaType.CONTENT_CARD }
+            if (contentCardPropositions.isNullOrEmpty()) {
                 Log.debug(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
@@ -116,7 +122,7 @@ class ContentCardInboxProvider(val surface: Surface) : AepInboxContentProvider {
                 return Result.failure(Throwable("No propositions found for surface"))
             }
 
-            return Result.success(Pair(getMockInboxProposition(), propositions))
+            return Result.success(InboxProposition(getMockInboxProposition(), contentCardPropositions))
         } catch (e: Exception) {
             Log.error(
                 MessagingConstants.LOG_TAG,
