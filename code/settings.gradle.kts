@@ -35,3 +35,7 @@ include(
     ":messaging",
     ":messagingtestutils",
 )
+include(":core")
+project(":core").projectDir = file("../../aepsdk-core-android/code/core")
+include(":testutils")
+project(":testutils").projectDir = file("../../aepsdk-core-android/code/testutils")
