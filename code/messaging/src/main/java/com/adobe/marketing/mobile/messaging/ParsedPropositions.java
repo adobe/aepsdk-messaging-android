@@ -84,9 +84,6 @@ public class ParsedPropositions {
                 switch (firstPropositionItem.getSchema()) {
                     case RULESET:
                         HashMap<String, Object> rules = new HashMap<>(firstPropositionItem.getItemData());
-                        if(new JSONObject(rules).toString().contains("fullscreen")) {
-                            rules.put("reEvaluable", true);
-                        }
                         final JSONObject content = new JSONObject(rules);
                         final List<LaunchRule> parsedRules = JSONRulesParser.parse(content.toString(), extensionApi);
                         // iam and feed / content card items will be wrapped in a valid rules engine
