@@ -72,7 +72,7 @@ class MessagingInboxProviderTests {
         whenever(contentCardSchemaData.content).thenReturn(contentCardMap)
         whenever(contentCardSchemaData.meta).thenReturn(metaMap)
         whenever(propositionItem.proposition).thenReturn(proposition)
-        whenever(proposition.getActivityId()).thenReturn("testId")
+        whenever(proposition.uniqueId).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         whenever(propositionItem.contentCardSchemaData).thenReturn(contentCardSchemaData)
         whenever(proposition.items).thenReturn(listOf(propositionItem))
@@ -352,7 +352,7 @@ class MessagingInboxProviderTests {
         val propositionItem2 = mock(PropositionItem::class.java)
         val contentCardSchemaData2 = mock(ContentCardSchemaData::class.java)
 
-        whenever(proposition2.getActivityId()).thenReturn("differentTestId")
+        whenever(proposition2.uniqueId).thenReturn("differentTestId")
         whenever(proposition2.items).thenReturn(listOf(propositionItem2))
         whenever(propositionItem2.schema).thenReturn(SchemaType.CONTENT_CARD)
         whenever(propositionItem2.proposition).thenReturn(proposition2)
@@ -392,7 +392,7 @@ class MessagingInboxProviderTests {
         val propositionItem2 = mock(PropositionItem::class.java)
         val contentCardSchemaData2 = mock(ContentCardSchemaData::class.java)
 
-        whenever(proposition2.getActivityId()).thenReturn("testId2")
+        whenever(proposition2.uniqueId).thenReturn("testId2")
         whenever(proposition2.items).thenReturn(listOf(propositionItem2))
         whenever(propositionItem2.schema).thenReturn(SchemaType.CONTENT_CARD)
         whenever(propositionItem2.proposition).thenReturn(proposition2)
