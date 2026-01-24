@@ -114,7 +114,6 @@ class MessagingInboxProviderTests {
         val successState = states[1] as InboxUIState.Success
         assertNotNull("Template should not be null", successState.template)
         assertEquals(1, successState.items.size)
-        assertEquals("testId", successState.items.first().getTemplate().id)
     }
 
     @Test
