@@ -31,15 +31,15 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
  * Renders a list of AEP UI items within a LazyListScope.
  *
  * @param items The list of [AepUI] items to be rendered.
- * @param itemsStyle The style to be applied to the items.
+ * @param readItemsStyle The style to be applied to the items.
  * @param unreadItemsStyle An optional style to be applied to unread items.
  * @param unreadIcon An optional Triple containing the unread icon [AepImage], its [AepImageStyle], and its [Alignment].
  * @param observer An optional observer that listens to UI events.
  */
-internal fun LazyListScope.renderListItems(
+fun LazyListScope.renderListItems(
     items: List<AepUI<*, *>>,
-    itemsStyle: AepUIStyle,
-    unreadItemsStyle: AepUIStyle = itemsStyle,
+    readItemsStyle: AepUIStyle,
+    unreadItemsStyle: AepUIStyle = readItemsStyle,
     unreadIcon: Triple<AepImage, AepImageStyle, Alignment>? = null,
     observer: AepUIEventObserver?
 ) {
@@ -52,7 +52,7 @@ internal fun LazyListScope.renderListItems(
                     is SmallImageUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (read == false) unreadItemsStyle.smallImageUIStyle else itemsStyle.smallImageUIStyle
+                            if (read == false) unreadItemsStyle.smallImageUIStyle else readItemsStyle.smallImageUIStyle
                         SmallImageCard(
                             ui = aepUI,
                             style = style,
@@ -63,7 +63,7 @@ internal fun LazyListScope.renderListItems(
                     is LargeImageUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (read == false) unreadItemsStyle.largeImageUIStyle else itemsStyle.largeImageUIStyle
+                            if (read == false) unreadItemsStyle.largeImageUIStyle else readItemsStyle.largeImageUIStyle
                         LargeImageCard(
                             ui = aepUI,
                             style = style,
@@ -74,7 +74,7 @@ internal fun LazyListScope.renderListItems(
                     is ImageOnlyUI -> {
                         // Use read or unread style based on UI state
                         val style =
-                            if (read == false) unreadItemsStyle.imageOnlyUIStyle else itemsStyle.imageOnlyUIStyle
+                            if (read == false) unreadItemsStyle.imageOnlyUIStyle else readItemsStyle.imageOnlyUIStyle
                         ImageOnlyCard(
                             ui = aepUI,
                             style = style,

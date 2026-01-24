@@ -40,6 +40,7 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 class InboxUIStyle private constructor(
     val headingStyle: AepTextStyle,
     val lazyColumnStyle: AepLazyColumnStyle,
+    val lazyRowStyle: AepLazyRowStyle,
     val unreadIconStyle: AepImageStyle,
     val unreadIconAlignment: Alignment?,
     val unreadBgColor: AepColor?,
@@ -55,7 +56,8 @@ class InboxUIStyle private constructor(
                 fontWeight = AepUIConstants.DefaultAepUIStyle.TITLE_FONT_WEIGHT
             )
         )
-        private val defaultListStyle = AepLazyColumnStyle()
+        private val defaultColumnListStyle = AepLazyColumnStyle()
+        private val defaultRowListStyle = AepLazyRowStyle()
         private val defaultEmptyMessageStyle = AepTextStyle()
         private val defaultEmptyImageStyle = AepImageStyle()
         private val defaultUnreadIconStyle = AepImageStyle(
@@ -76,6 +78,7 @@ class InboxUIStyle private constructor(
     class Builder {
         private var headingStyle: AepTextStyle? = null
         private var lazyColumnStyle: AepLazyColumnStyle? = null
+        private var lazyRowStyle: AepLazyRowStyle? = null
         private var emptyMessageStyle: AepTextStyle? = null
         private var emptyImageStyle: AepImageStyle? = null
         private var unreadIconStyle: AepImageStyle? = null
@@ -87,6 +90,8 @@ class InboxUIStyle private constructor(
         fun headingStyle(headingStyle: AepTextStyle) = apply { this.headingStyle = headingStyle }
 
         fun lazyColumnStyle(listStyle: AepLazyColumnStyle) = apply { this.lazyColumnStyle = listStyle }
+
+        fun lazyRowStyle(listStyle: AepLazyRowStyle) = apply { this.lazyRowStyle = listStyle }
 
         fun emptyMessageStyle(emptyMessageStyle: AepTextStyle) =
             apply { this.emptyMessageStyle = emptyMessageStyle }
@@ -110,7 +115,8 @@ class InboxUIStyle private constructor(
 
         fun build() = InboxUIStyle(
             headingStyle = AepTextStyle.merge(defaultHeadingStyle, headingStyle),
-            lazyColumnStyle = AepLazyColumnStyle.merge(defaultListStyle, lazyColumnStyle),
+            lazyColumnStyle = AepLazyColumnStyle.merge(defaultColumnListStyle, lazyColumnStyle),
+            lazyRowStyle = AepLazyRowStyle.merge(defaultRowListStyle, lazyRowStyle),
             emptyMessageStyle = AepTextStyle.merge(defaultEmptyMessageStyle, emptyMessageStyle),
             emptyImageStyle = AepImageStyle.merge(defaultEmptyImageStyle, emptyImageStyle),
             unreadIconStyle = AepImageStyle.merge(defaultUnreadIconStyle, unreadIconStyle),

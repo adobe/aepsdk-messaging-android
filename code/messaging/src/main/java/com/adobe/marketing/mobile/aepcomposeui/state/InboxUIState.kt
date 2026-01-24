@@ -32,7 +32,7 @@ sealed interface InboxUIState {
      */
     data class Success(
         val template: InboxTemplate,
-        val items: List<AepUI<*, *>> = emptyList()
+        val items: List<AepUI<*, *>>
     ) : InboxUIState
 
     /**

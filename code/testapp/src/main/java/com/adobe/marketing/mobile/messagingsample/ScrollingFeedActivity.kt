@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +51,7 @@ import com.adobe.marketing.mobile.aepcomposeui.style.InboxUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.LargeImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.SmallImageUIStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepCardStyle
+import com.adobe.marketing.mobile.aepcomposeui.style.AepLazyRowStyle
 import com.adobe.marketing.mobile.aepcomposeui.style.AepUIStyle
 import com.adobe.marketing.mobile.messaging.MessagingInboxProvider
 import com.adobe.marketing.mobile.messaging.ContentCardEventObserver
@@ -92,39 +92,11 @@ class ScrollingFeedActivity : AppCompatActivity() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    val smallImageCardStyleColumn = SmallImageUIStyle.Builder()
-                        .rootRowStyle(
-                            AepRowStyle(
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
-                            )
-                        )
-                        .build()
-
-                    val largeImageCardStyleColumn = LargeImageUIStyle.Builder()
-                        .imageStyle(
-                            AepImageStyle(
-                                modifier = Modifier.fillMaxWidth().height(150.dp),
-                                contentScale = ContentScale.FillWidth
-                            )
-                        )
-                        .textColumnStyle(AepColumnStyle(modifier = Modifier.padding(8.dp)))
-                        .build()
-
-                    val imageOnlyCardStyleColumn = ImageOnlyUIStyle.Builder()
-                        .imageStyle(
-                            AepImageStyle(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentScale = ContentScale.FillWidth
-                            )
-                        )
-                        .build()
-
-                    val rowCardStyle = AepCardStyle(
+                    val cardStyle = AepCardStyle(
                         modifier = Modifier.width(400.dp).padding(8.dp),
                     )
-                    val smallImageCardStyleRow = SmallImageUIStyle.Builder()
-                        .cardStyle(rowCardStyle)
+                    val smallImageCardStyle = SmallImageUIStyle.Builder()
+                        .cardStyle(cardStyle)
                         .rootRowStyle(
                             AepRowStyle(
                                 modifier = Modifier.fillMaxSize().padding(8.dp),
@@ -137,8 +109,8 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         )
                         .build()
 
-                    val largeImageCardStyleRow = LargeImageUIStyle.Builder()
-                        .cardStyle(rowCardStyle)
+                    val largeImageCardStyle = LargeImageUIStyle.Builder()
+                        .cardStyle(cardStyle)
                         .rootColumnStyle(
                             AepColumnStyle(
                                 modifier = Modifier.fillMaxSize().padding(8.dp)
@@ -146,16 +118,16 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         )
                         .build()
 
-                    val imageOnlyCardStyleRow = ImageOnlyUIStyle.Builder()
-                        .cardStyle(rowCardStyle)
+                    val imageOnlyCardStyle = ImageOnlyUIStyle.Builder()
+                        .cardStyle(cardStyle)
                         .imageStyle(AepImageStyle(modifier = Modifier.fillMaxSize()))
                         .build()
 
                     val inboxUi = viewModel.inboxUIStateFlow.collectAsStateWithLifecycle().value
                     val cardUIStyle = AepUIStyle(
-                        smallImageUIStyle = smallImageCardStyleRow,
-                        largeImageUIStyle = largeImageCardStyleRow,
-                        imageOnlyUIStyle = imageOnlyCardStyleRow,
+                        smallImageUIStyle = smallImageCardStyle,
+                        largeImageUIStyle = largeImageCardStyle,
+                        imageOnlyUIStyle = imageOnlyCardStyle,
                     )
 
                     val headingStyle = AepTextStyle(
@@ -173,6 +145,12 @@ class ScrollingFeedActivity : AppCompatActivity() {
                         .lazyColumnStyle(
                             AepLazyColumnStyle(
                                 modifier = Modifier.background(Color.DarkGray),
+                                contentPadding = PaddingValues(10.dp)
+                            )
+                        )
+                        .lazyRowStyle(
+                            AepLazyRowStyle(
+                                modifier = Modifier.height(200.dp).background(Color.DarkGray),
                                 contentPadding = PaddingValues(10.dp)
                             )
                         )
