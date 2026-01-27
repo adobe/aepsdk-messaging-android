@@ -88,6 +88,7 @@ public final class MessagingExtension extends Extension {
                 messagingRulesEngine != null
                         ? messagingRulesEngine
                         : new LaunchRulesEngine(MessagingConstants.RULES_ENGINE_NAME, extensionApi);
+        this.messagingRulesEngine.setRuleReevaluationInterceptor(new MessagingRuleEngineInterceptor());
         this.contentCardRulesEngine =
                 contentCardRulesEngine != null
                         ? contentCardRulesEngine
