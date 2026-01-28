@@ -60,7 +60,10 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
             val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
-                        template
+                        template,
+                        if (inboxTemplate.isUnreadEnabled) ContentCardSchemaDataUtils.getReadStatus(
+                            template.id
+                        ) else null
                     )
                 }
             }
@@ -121,6 +124,16 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
         val propositionsMap = propositionsResult.getOrNull() ?: emptyMap()
 
         // Get propositions for our surface
+        // todo replace mock inbox proposition when Messaging SDK supports inbox propositions
+        val inboxProposition = getMockInboxProposition()
+//        if (inboxProposition == null) {
+//            Log.debug(
+//                MessagingConstants.LOG_TAG,
+//                SELF_TAG,
+//                "No inbox proposition found for surface: ${surface.uri}"
+//            )
+//            return Result.error(InboxProposition(getMockInboxProposition(), emptyList()))
+//        }
         val contentCardPropositions =
             propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
         if (contentCardPropositions.isNullOrEmpty()) {
