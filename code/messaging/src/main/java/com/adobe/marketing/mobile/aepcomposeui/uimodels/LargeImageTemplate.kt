@@ -21,7 +21,6 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @param actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
  * @param buttons The details for the large image template buttons.
  * @param dismissBtn The details for the large image template dismiss button.
- * @param isRead Indicates whether this template has been read.
  */
 data class LargeImageTemplate(
     override val id: String,
@@ -30,8 +29,7 @@ data class LargeImageTemplate(
     val image: AepImage? = null,
     val actionUrl: String? = null,
     val buttons: List<AepButton>? = null,
-    val dismissBtn: AepIcon? = null,
-    val isRead: Boolean? = null
+    val dismissBtn: AepIcon? = null
 ) : AepUITemplate {
 
     /**

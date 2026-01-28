@@ -17,7 +17,6 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplateType
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.test.assertNull
 
 class ImageOnlyTemplateTests {
 
@@ -40,8 +39,7 @@ class ImageOnlyTemplateTests {
             "testId",
             AepImage("https://imagetoDownload.com/cardimage"),
             "https://luma.com/sale",
-            AepIcon(1234),
-            true
+            AepIcon(1234)
         )
 
         // verify
@@ -49,7 +47,6 @@ class ImageOnlyTemplateTests {
         assertEquals("https://imagetoDownload.com/cardimage", template.image.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         assertEquals(1234, template.dismissBtn?.drawableId)
-        assertEquals(true, template.isRead)
     }
 
     @Test
@@ -84,23 +81,5 @@ class ImageOnlyTemplateTests {
         assertEquals("https://imagetoDownload.com/cardimage", template.image.url)
         assertEquals("https://luma.com/sale", template.actionUrl)
         assertEquals(null, template.dismissBtn)
-    }
-
-    @Test
-    fun test_ImageOnlyTemplate_missingIsReadInParameters() {
-        // setup
-        val template = ImageOnlyTemplate(
-            "testId",
-            AepImage("https://imagetoDownload.com/cardimage"),
-            "https://luma.com/sale",
-            AepIcon(1234)
-        )
-
-        // verify
-        assertEquals("testId", template.id)
-        assertEquals("https://imagetoDownload.com/cardimage", template.image.url)
-        assertEquals("https://luma.com/sale", template.actionUrl)
-        assertEquals(1234, template.dismissBtn?.drawableId)
-        assertNull(template.isRead)
     }
 }

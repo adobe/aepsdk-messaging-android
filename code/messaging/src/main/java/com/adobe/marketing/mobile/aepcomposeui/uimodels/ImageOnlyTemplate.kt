@@ -18,14 +18,12 @@ package com.adobe.marketing.mobile.aepcomposeui.uimodels
  * @param image The details of the image to be displayed.
  * @param actionUrl If provided, interacting with this card will result in the opening of the actionUrl.
  * @param dismissBtn The details for the image only template dismiss button.
- * @param isRead Indicates whether this template has been read.
  */
 data class ImageOnlyTemplate(
     override val id: String,
     val image: AepImage,
     val actionUrl: String? = null,
-    val dismissBtn: AepIcon? = null,
-    val isRead: Boolean? = null
+    val dismissBtn: AepIcon? = null
 ) : AepUITemplate {
 
     /**
