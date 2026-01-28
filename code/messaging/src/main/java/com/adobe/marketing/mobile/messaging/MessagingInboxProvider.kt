@@ -61,9 +61,9 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
                         template,
-                        if (inboxTemplate.isUnreadEnabled) ContentCardSchemaDataUtils.getReadStatus(
-                            template.id
-                        ) else null
+//                        if (inboxTemplate.isUnreadEnabled) ContentCardSchemaDataUtils.getReadStatus(
+//                            template.id
+//                        ) else null
                     )
                 }
             }
