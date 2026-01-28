@@ -18,25 +18,16 @@ import org.junit.Test
 class AepInboxLayoutTests {
 
     @Test
-    fun `VERTICAL layout has correct typeName`() {
+    fun `Layout has correct typeName`() {
         assertEquals("vertical", AepInboxLayout.VERTICAL.typeName)
-    }
-
-    @Test
-    fun `HORIZONTAL layout has correct typeName`() {
         assertEquals("horizontal", AepInboxLayout.HORIZONTAL.typeName)
     }
 
     @Test
-    fun `from returns VERTICAL for vertical typeName`() {
-        val result = AepInboxLayout.from("vertical")
-        assertEquals(AepInboxLayout.VERTICAL, result)
-    }
+    fun `from returns the correct typeName`() {
+        assertEquals(AepInboxLayout.VERTICAL,  AepInboxLayout.from("vertical"))
+        assertEquals(AepInboxLayout.HORIZONTAL,  AepInboxLayout.from("horizontal"))
 
-    @Test
-    fun `from returns HORIZONTAL for horizontal typeName`() {
-        val result = AepInboxLayout.from("horizontal")
-        assertEquals(AepInboxLayout.HORIZONTAL, result)
     }
 
     @Test
