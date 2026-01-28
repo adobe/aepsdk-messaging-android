@@ -25,9 +25,8 @@ class AepInboxLayoutTests {
 
     @Test
     fun `from returns the correct typeName`() {
-        assertEquals(AepInboxLayout.VERTICAL,  AepInboxLayout.from("vertical"))
-        assertEquals(AepInboxLayout.HORIZONTAL,  AepInboxLayout.from("horizontal"))
-
+        assertEquals(AepInboxLayout.VERTICAL, AepInboxLayout.from("vertical"))
+        assertEquals(AepInboxLayout.HORIZONTAL, AepInboxLayout.from("horizontal"))
     }
 
     @Test
