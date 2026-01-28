@@ -60,7 +60,10 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
             val aepUIList = inboxProposition.contentCards.mapNotNull { cardProposition ->
                 ContentCardSchemaDataUtils.buildTemplate(cardProposition)?.let { template ->
                     ContentCardSchemaDataUtils.getAepUI(
-                        template
+                        template,
+//                        if (inboxTemplate.isUnreadEnabled) ContentCardSchemaDataUtils.getReadStatus(
+//                            template.id
+//                        ) else null
                     )
                 }
             }
@@ -81,6 +84,7 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
      * @return The content for the Inbox as a flow of [InboxUIState].
      */
     override fun getInboxUI(): Flow<InboxUIState> = flow {
+        emit(InboxUIState.Loading)
         refresh()
         emitAll(inboxStateFlow)
     }
@@ -103,46 +107,60 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
     /**
      * Fetches the inbox and content card propositions by calling [Messaging.getPropositionsForSurfaces]
      *
-     * @return A [Pair] containing a [Result] with the [InboxTemplate] and a list of [Proposition]s.
+     * @return A [Result] containing the [InboxProposition] on success, or a failure with the error.
      */
     private suspend fun fetchContent(): Result<InboxProposition> {
-        return try {
-            // Call Messaging API to get propositions for this surface
-            val propositionsMap = getPropositionsForSurface()
+        // Call Messaging API to get propositions for this surface
+        val propositionsResult = getPropositionsForSurface()
 
-            // Get propositions for our surface
-            val contentCardPropositions = propositionsMap[surface]?.filter { it.items[0].schema == SchemaType.CONTENT_CARD }
-            if (contentCardPropositions.isNullOrEmpty()) {
-                Log.debug(
-                    MessagingConstants.LOG_TAG,
-                    SELF_TAG,
-                    "No propositions found for surface: ${surface.uri}"
-                )
-                return Result.failure(Throwable("No propositions found for surface"))
-            }
+        // Check if the API call failed
+        if (propositionsResult.isFailure) {
+            return Result.failure(
+                propositionsResult.exceptionOrNull()
+                    ?: Throwable("Failed to fetch propositions for surface: ${surface.uri}")
+            )
+        }
 
-            return Result.success(InboxProposition(getMockInboxProposition(), contentCardPropositions))
-        } catch (e: Exception) {
-            Log.error(
+        val propositionsMap = propositionsResult.getOrNull() ?: emptyMap()
+
+        // Get propositions for our surface
+        // todo replace mock inbox proposition when Messaging SDK supports inbox propositions
+        val inboxProposition = getMockInboxProposition()
+//        if (inboxProposition == null) {
+//            Log.debug(
+//                MessagingConstants.LOG_TAG,
+//                SELF_TAG,
+//                "No inbox proposition found for surface: ${surface.uri}"
+//            )
+//            return Result.error(InboxProposition(getMockInboxProposition(), emptyList()))
+//        }
+        val contentCardPropositions =
+            propositionsMap[surface]?.filter { it.items.isNotEmpty() && it.items[0].schema == SchemaType.CONTENT_CARD }
+        if (contentCardPropositions.isNullOrEmpty()) {
+            Log.debug(
                 MessagingConstants.LOG_TAG,
                 SELF_TAG,
-                "Error fetching container: ${e.message}"
+                "No card propositions found for surface: ${surface.uri}"
             )
-            Result.failure(e)
+            return Result.success(InboxProposition(getMockInboxProposition(), emptyList()))
         }
+
+        return Result.success(InboxProposition(getMockInboxProposition(), contentCardPropositions))
     }
 
     /**
      * Calls Messaging.getPropositionsForSurfaces and converts it to a suspend function.
+     *
+     * @return A [Result] containing the propositions map on success, or a failure with the error.
      */
-    private suspend fun getPropositionsForSurface(): Map<Surface, List<Proposition>> =
+    private suspend fun getPropositionsForSurface(): Result<Map<Surface, List<Proposition>>> =
         suspendCancellableCoroutine { continuation ->
             val callback = object : AdobeCallbackWithError<Map<Surface, List<Proposition>>> {
                 override fun call(resultMap: Map<Surface, List<Proposition>>?) {
                     if (resultMap == null) {
-                        continuation.resume(emptyMap())
+                        continuation.resume(Result.success(emptyMap()))
                     } else {
-                        continuation.resume(resultMap)
+                        continuation.resume(Result.success(resultMap))
                     }
                 }
 
@@ -152,7 +170,11 @@ class MessagingInboxProvider(val surface: Surface) : AepInboxContentProvider {
                         SELF_TAG,
                         "Failed to get propositions for surface ${surface.uri}: ${error?.errorName}"
                     )
-                    continuation.resume(emptyMap())
+                    continuation.resume(
+                        Result.failure(
+                            Throwable("Failed to get propositions: ${error?.errorName ?: "Unknown error"}")
+                        )
+                    )
                 }
             }
 
