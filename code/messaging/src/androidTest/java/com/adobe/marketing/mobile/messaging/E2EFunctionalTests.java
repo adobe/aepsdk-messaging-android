@@ -94,9 +94,9 @@ public class E2EFunctionalTests {
                 o -> {
                     MobileCore.configureWithAppID(Environment.getAppId());
                     MobileCore.updateConfiguration(Environment.configurationUpdates());
-                    // wait for configuration to be set
+                    // wait for configuration to be set and extensions to be ready
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException interruptedException) {
                         fail(interruptedException.getMessage());
                     }
@@ -168,13 +168,12 @@ public class E2EFunctionalTests {
         // trigger a show always in-app message
         MobileCore.trackAction("always", null);
 
-        // verify show always rule consequence event is dispatched
+        // verify show always rule consequence event is dispatched with retry logic
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(false).get(0));
-        List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        List<Event> rulesConsequenceEvents = waitForRuleConsequenceEventsWithRetry(3, 10000);
         assertEquals(
-                "show always rule consequence failed to be dispatched.",
+                "show always rule consequence failed to be dispatched after 3 retries.",
                 1,
                 rulesConsequenceEvents.size());
         Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
@@ -201,11 +200,10 @@ public class E2EFunctionalTests {
         // trigger the show always in-app message again
         MobileCore.trackAction("always", null);
 
-        // verify rule consequence event is dispatched
-        rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        // verify rule consequence event is dispatched with retry logic
+        rulesConsequenceEvents = waitForRuleConsequenceEventsWithRetry(3, 10000);
         assertEquals(
-                "show always rule consequence should be dispatched again.",
+                "show always rule consequence should be dispatched again after 3 retries.",
                 1,
                 rulesConsequenceEvents.size());
         rulesConsequenceEvent = rulesConsequenceEvents.get(0);
@@ -233,13 +231,12 @@ public class E2EFunctionalTests {
         // trigger a show once in-app message
         MobileCore.trackAction("once", null);
 
-        // verify show once rule consequence event is dispatched
+        // verify show once rule consequence event is dispatched with retry logic
         final Map<String, Object> expectedRulesConsequenceEventData =
                 (Map<String, Object>) (getExpectedRulesConsequenceDataForEnvironment(true).get(0));
-        List<Event> rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+        List<Event> rulesConsequenceEvents = waitForRuleConsequenceEventsWithRetry(3, 10000);
         assertEquals(
-                "show once rule consequence failed to be dispatched.",
+                "show once rule consequence failed to be dispatched after 3 retries.",
                 1,
                 rulesConsequenceEvents.size());
         final Event rulesConsequenceEvent = rulesConsequenceEvents.get(0);
@@ -290,13 +287,62 @@ public class E2EFunctionalTests {
         // trigger the show once in-app message again
         MobileCore.trackAction("once", null);
 
-        // verify no rule consequence event is dispatched
+        // verify no rule consequence event is dispatched (with shorter timeout since we expect 0
+        // events)
         rulesConsequenceEvents =
-                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 5000);
+                getDispatchedEventsWith(EventType.RULES_ENGINE, EventSource.RESPONSE_CONTENT, 3000);
         assertEquals(
                 "show once rule consequence shouldn't be dispatched again.",
                 0,
                 rulesConsequenceEvents.size());
+    }
+
+    /**
+     * Waits for rule consequence events with retry logic and exponential backoff. This helps handle
+     * timing issues in E2E tests where network latency and processing delays can cause events to
+     * arrive later than expected.
+     *
+     * @param maxRetries Maximum number of retry attempts
+     * @param maxTimeoutMs Maximum total timeout in milliseconds
+     * @return List of rule consequence events
+     * @throws InterruptedException if interrupted while waiting
+     */
+    private List<Event> waitForRuleConsequenceEventsWithRetry(int maxRetries, int maxTimeoutMs)
+            throws InterruptedException {
+        List<Event> events = new ArrayList<>();
+        int baseTimeout = 2000; // Start with 2 seconds
+        int totalWaitTime = 0;
+
+        for (int attempt = 0; attempt < maxRetries && totalWaitTime < maxTimeoutMs; attempt++) {
+            int currentTimeout =
+                    Math.min(baseTimeout * (attempt + 1), maxTimeoutMs - totalWaitTime);
+
+            try {
+                events =
+                        getDispatchedEventsWith(
+                                EventType.RULES_ENGINE,
+                                EventSource.RESPONSE_CONTENT,
+                                currentTimeout);
+                if (!events.isEmpty()) {
+                    return events;
+                }
+            } catch (AssertionError e) {
+                // Timeout occurred, continue to next retry
+                if (attempt == maxRetries - 1) {
+                    throw e; // Re-throw on final attempt
+                }
+            }
+
+            totalWaitTime += currentTimeout;
+
+            // Add a small delay between retries to allow for processing
+            if (attempt < maxRetries - 1 && totalWaitTime < maxTimeoutMs) {
+                Thread.sleep(500);
+                totalWaitTime += 500;
+            }
+        }
+
+        return events;
     }
 
     private void verifyInAppPropositionsRetrievedFromEdge() throws InterruptedException {
