@@ -40,7 +40,7 @@ class ContentCardMapperTests {
         mockContentCardSchemaData.parent = mockPropositionItem
         mockPropositionItem.propositionReference = SoftReference(mockProposition)
         `when`(mockPropositionItem.proposition).thenReturn(mockProposition)
-        `when`(mockProposition.uniqueId).thenReturn("uniqueId")
+        `when`(mockProposition.activityId).thenReturn("uniqueActivityId")
     }
 
     @AfterTest
@@ -54,7 +54,7 @@ class ContentCardMapperTests {
         val mapper = ContentCardMapper.instance
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
 
-        val result = mapper.getContentCardSchemaData("uniqueId")
+        val result = mapper.getContentCardSchemaData("uniqueActivityId")
         assertEquals(mockContentCardSchemaData, result)
     }
 
@@ -84,16 +84,16 @@ class ContentCardMapperTests {
 
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
 
-        assertNull(mapper.getContentCardSchemaData("uniqueId"))
+        assertNull(mapper.getContentCardSchemaData("uniqueActivityId"))
     }
 
     @Test
     fun `Remove content card schema data with valid id`() {
         val mapper = ContentCardMapper.instance
         mapper.storeContentCardSchemaData(mockContentCardSchemaData)
-        val result = mapper.getContentCardSchemaData("uniqueId")
+        val result = mapper.getContentCardSchemaData("uniqueActivityId")
         assertEquals(mockContentCardSchemaData, result)
-        mapper.removeContentCardSchemaData("uniqueId")
-        assertNull(mapper.getContentCardSchemaData("uniqueId"))
+        mapper.removeContentCardSchemaData("uniqueActivityId")
+        assertNull(mapper.getContentCardSchemaData("uniqueActivityId"))
     }
 }

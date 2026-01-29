@@ -36,6 +36,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.kotlin.anyOrNull
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import io.mockk.verify as mockkVerify
 
 class LargeImageTemplateEventHandlerTests {
 
@@ -73,6 +74,9 @@ class LargeImageTemplateEventHandlerTests {
 
         mockkObject(ContentCardMapper)
         every { ContentCardMapper.instance } returns mockContentCardMapper
+
+        mockkObject(ContentCardSchemaDataUtils)
+        every { ContentCardSchemaDataUtils.setReadStatus(any(), any()) } returns Unit
     }
 
     @AfterTest
@@ -213,6 +217,42 @@ class LargeImageTemplateEventHandlerTests {
             // verify that the track is still called and that the url is still opened
             verify(mockUriOpening, times(1)).openUri("http://example.com")
             verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
+        }
+    }
+
+    @Test
+    fun `Large Image Template event handler receives a click event and sets read status when read is not null`() {
+        runTest {
+            `when`(mockLargeImageCardUIState.read).thenReturn(false)
+            val callback = mock(ContentCardUIEventListener::class.java)
+            val handler = LargeImageTemplateEventHandler(callback)
+            val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
+            val event = UIEvent.Interact(mockLargeImageUI, action)
+
+            handler.onEvent(event, "propositionId")
+
+            verify(callback, times(1)).onInteract(mockLargeImageUI, "button1", "http://example.com")
+            verify(mockUriOpening, times(1)).openUri("http://example.com")
+            verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
+            mockkVerify(exactly = 1) { ContentCardSchemaDataUtils.setReadStatus("mockId", true) }
+        }
+    }
+
+    @Test
+    fun `Large Image Template event handler receives a click event and does not set read status when read is null`() {
+        runTest {
+            `when`(mockLargeImageCardUIState.read).thenReturn(null)
+            val callback = mock(ContentCardUIEventListener::class.java)
+            val handler = LargeImageTemplateEventHandler(callback)
+            val action = UIAction.Click(id = "button1", actionUrl = "http://example.com")
+            val event = UIEvent.Interact(mockLargeImageUI, action)
+
+            handler.onEvent(event, "propositionId")
+
+            verify(callback, times(1)).onInteract(mockLargeImageUI, "button1", "http://example.com")
+            verify(mockUriOpening, times(1)).openUri("http://example.com")
+            verify(mockContentCardSchemaData, times(1)).track("button1", MessagingEdgeEventType.INTERACT)
+            mockkVerify(exactly = 0) { ContentCardSchemaDataUtils.setReadStatus(any(), any()) }
         }
     }
 }

@@ -29,6 +29,8 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.services.Log
+import com.adobe.marketing.mobile.services.NamedCollection
+import com.adobe.marketing.mobile.services.ServiceProvider
 import com.adobe.marketing.mobile.util.DataReader
 
 /**
@@ -38,7 +40,10 @@ import com.adobe.marketing.mobile.util.DataReader
  * the corresponding UI templates like [SmallImageTemplate], [LargeImageTemplate], [ImageOnlyTemplate].
  */
 internal object ContentCardSchemaDataUtils {
-    const val SELF_TAG = "ContentCardSchemaDataUtils"
+    private const val SELF_TAG = "ContentCardSchemaDataUtils"
+    private const val READ_STATE_NAMED_COLLECTION = "MessagingReadStateCollection"
+    private val readStateStoreCollection: NamedCollection?
+        get() = ServiceProvider.getInstance().dataStoreService?.getNamedCollection(READ_STATE_NAMED_COLLECTION)
 
     /**
      * Provides an [AepUI] instance from the given [AepUITemplate].
@@ -46,16 +51,31 @@ internal object ContentCardSchemaDataUtils {
      * @param uiTemplate The template to convert into a UI component.
      * @return An instance of [AepUI] representing the given template or null in case of unsupported template type.
      */
-    internal fun getAepUI(uiTemplate: AepUITemplate): AepUI<*, *>? {
+    internal fun getAepUI(uiTemplate: AepUITemplate, isRead: Boolean? = null): AepUI<*, *>? {
         return when (uiTemplate) {
             is SmallImageTemplate -> {
-                SmallImageUI(uiTemplate, SmallImageCardUIState())
+                SmallImageUI(
+                    uiTemplate,
+                    SmallImageCardUIState(
+                        read = isRead
+                    )
+                )
             }
             is LargeImageTemplate -> {
-                LargeImageUI(uiTemplate, LargeImageCardUIState())
+                LargeImageUI(
+                    uiTemplate,
+                    LargeImageCardUIState(
+                        read = isRead
+                    )
+                )
             }
             is ImageOnlyTemplate -> {
-                ImageOnlyUI(uiTemplate, ImageOnlyCardUIState())
+                ImageOnlyUI(
+                    uiTemplate,
+                    ImageOnlyCardUIState(
+                        read = isRead
+                    )
+                )
             }
             else -> {
                 Log.error(
@@ -97,7 +117,7 @@ internal object ContentCardSchemaDataUtils {
             val contentMap =
                 contentCardSchemaData.content as? Map<String, Any>
                     ?: throw IllegalArgumentException("Content map is null")
-            val id = contentCardSchemaData.parent.proposition.uniqueId
+            val id = contentCardSchemaData.parent.proposition.getActivityId()
 
             val metaAdobeObject =
                 contentCardSchemaData.meta?.get(MessagingConstants.ContentCard.UIKeys.ADOBE)
@@ -407,5 +427,13 @@ internal object ContentCardSchemaDataUtils {
             )
         }
         return actionUrl
+    }
+
+    internal fun setReadStatus(activityId: String, isRead: Boolean) {
+        readStateStoreCollection?.setBoolean(activityId, isRead)
+    }
+
+    internal fun getReadStatus(activityId: String): Boolean? {
+        return readStateStoreCollection?.getBoolean(activityId, false)
     }
 }
