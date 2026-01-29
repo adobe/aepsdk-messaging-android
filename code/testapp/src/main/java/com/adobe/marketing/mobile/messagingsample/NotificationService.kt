@@ -25,6 +25,7 @@ import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.os.Build.VERSION_CODES.M
+import com.adobe.marketing.mobile.messaging.MessagingService
 import com.adobe.marketing.mobile.messaging.NotificationInteractionReceiver
 
 class NotificationService : FirebaseMessagingService() {
@@ -38,7 +39,9 @@ class NotificationService : FirebaseMessagingService() {
         super.onMessageReceived(message)
 
         // region BEGIN - automatic display and tracking
-        //   MessagingService.handleRemoteMessage(this, message)
+        if (MessagingService.handleRemoteMessage(this, message)) {
+            return
+        }
         // endregion
 
         // region BEGIN - manual display and tracking
