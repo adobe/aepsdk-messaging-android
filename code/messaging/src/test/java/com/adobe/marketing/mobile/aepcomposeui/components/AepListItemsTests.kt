@@ -252,7 +252,7 @@ class AepListItemsTests(
 
         // Capture screenshot
         composeTestRule.onRoot()
-            .captureRoboImage(filePath = "build/outputs/roborazzi/AepListItemsTests_LargeImage_${Build.VERSION.SDK_INT}_$qualifier.png")
+            .captureRoboImage(filePath = "build/outputs/roborazzi/AepListItemsTests_ImageOnly_${Build.VERSION.SDK_INT}_$qualifier.png")
     }
 
     @Test
