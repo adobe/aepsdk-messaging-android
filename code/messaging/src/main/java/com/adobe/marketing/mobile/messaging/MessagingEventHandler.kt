@@ -40,16 +40,16 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * which can be overridden by subclasses to perform template specific logic.
      *
      * @param event the event to handle
-     * @param propositionId the id of the proposition
+     * @param activityId the id of the proposition
      */
-    internal fun onEvent(event: UIEvent<T, S>, propositionId: String) {
+    internal fun onEvent(event: UIEvent<T, S>, activityId: String) {
         val ui = event.aepUi
         when (event) {
             is UIEvent.Display -> {
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is displayed"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is displayed"
                 )
 
                 // UIEvent.Display can be called multiple times on configuration changes
@@ -71,14 +71,14 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
 
                 ui.updateState(getNewState(event))
 
-                track(propositionId, null, MessagingEdgeEventType.DISPLAY)
+                track(activityId, null, MessagingEdgeEventType.DISPLAY)
                 callback?.onDisplay(event.aepUi)
             }
             is UIEvent.Dismiss -> {
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is dismissed"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is dismissed"
                 )
 
                 // UIEvent.Dismiss can be called multiple times on multiple dismiss actions
@@ -99,7 +99,7 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
 
                 ui.updateState(getNewState(event))
 
-                track(propositionId, null, MessagingEdgeEventType.DISMISS)
+                track(activityId, null, MessagingEdgeEventType.DISMISS)
                 callback?.onDismiss(event.aepUi)
             }
 
@@ -107,10 +107,10 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                 Log.trace(
                     MessagingConstants.LOG_TAG,
                     SELF_TAG,
-                    "${event.aepUi.getTemplate().getType()} with id $propositionId is interacted"
+                    "${event.aepUi.getTemplate().getType()} with id $activityId is interacted"
                 )
 
-                onInteractEvent(event, propositionId)
+                onInteractEvent(event, activityId)
             }
         }
     }
@@ -130,9 +130,9 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
      * This method can be overridden by subclasses to perform template specific logic.
      *
      * @param event the interact event to handle
-     * @param propositionId the id of the proposition
+     * @param activityId the id of the proposition
      */
-    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>, propositionId: String) {
+    internal open fun onInteractEvent(event: UIEvent.Interact<T, S>, activityId: String) {
         val templateType = event.aepUi.getTemplate().getType()
         when (event.action) {
             is UIAction.Click -> {
@@ -156,13 +156,13 @@ internal abstract class MessagingEventHandler<T : AepUITemplate, S : AepCardUISt
                     SELF_TAG,
                     "$templateType ${event.action.id} clicked"
                 )
-                track(propositionId, event.action.id, MessagingEdgeEventType.INTERACT)
+                track(activityId, event.action.id, MessagingEdgeEventType.INTERACT)
             }
         }
     }
 
-    internal fun track(propositionId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
-        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(propositionId)
+    internal fun track(activityId: String, interaction: String?, eventType: MessagingEdgeEventType?) {
+        val contentCardSchemaData = ContentCardMapper.instance.getContentCardSchemaData(activityId)
         contentCardSchemaData?.track(interaction, eventType)
     }
 }

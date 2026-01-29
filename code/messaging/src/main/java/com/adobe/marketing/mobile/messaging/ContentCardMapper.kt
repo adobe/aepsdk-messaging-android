@@ -14,7 +14,7 @@ package com.adobe.marketing.mobile.messaging
 import androidx.annotation.VisibleForTesting
 
 /**
- * Class to store a mapping between valid [ContentCardSchemaData] and unique proposition id's.
+ * Class to store a mapping between valid [ContentCardSchemaData] and unique activity id's.
  */
 class ContentCardMapper private constructor() {
     private val contentCardSchemaDataMap: MutableMap<String, ContentCardSchemaData> = HashMap()
@@ -25,20 +25,20 @@ class ContentCardMapper private constructor() {
     }
 
     /**
-     * Returns the [ContentCardSchemaData] for the given proposition id.
+     * Returns the [ContentCardSchemaData] for the given activity id.
      *
-     * @param propositionId the proposition id to retrieve the [ContentCardSchemaData] for
-     * @return the [ContentCardSchemaData] for the given proposition id, or null if not found
+     * @param activityId to retrieve the [ContentCardSchemaData] for
+     * @return the [ContentCardSchemaData] for the given activity id, or null if not found
      */
-    fun getContentCardSchemaData(propositionId: String): ContentCardSchemaData? {
-        if (propositionId.isEmpty()) {
+    fun getContentCardSchemaData(activityId: String): ContentCardSchemaData? {
+        if (activityId.isEmpty()) {
             return null
         }
-        return contentCardSchemaDataMap[propositionId]
+        return contentCardSchemaDataMap[activityId]
     }
 
     /**
-     * Stores the [ContentCardSchemaData] for the given proposition id.
+     * Stores the [ContentCardSchemaData] for the given activity id.
      *
      * @param contentCardSchemaData the [ContentCardSchemaData] to store
      */
@@ -47,18 +47,18 @@ class ContentCardMapper private constructor() {
         if (contentCardSchemaData.parent.propositionReference == null) {
             return
         }
-        contentCardSchemaDataMap[contentCardSchemaData.parent.proposition.uniqueId] =
+        contentCardSchemaDataMap[contentCardSchemaData.parent.proposition.activityId] =
             contentCardSchemaData
     }
 
     /**
-     * Removes the [ContentCardSchemaData] for the given proposition id.
+     * Removes the [ContentCardSchemaData] for the given activity id.
      *
-     * @param propositionId the proposition id to remove the [ContentCardSchemaData] for
+     * @param activityId to remove the [ContentCardSchemaData] for
      */
     @JvmName("removeContentCardSchemaData")
-    internal fun removeContentCardSchemaData(propositionId: String) {
-        contentCardSchemaDataMap.remove(propositionId)
+    internal fun removeContentCardSchemaData(activityId: String) {
+        contentCardSchemaDataMap.remove(activityId)
     }
 
     @VisibleForTesting
