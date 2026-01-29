@@ -25,6 +25,7 @@ import com.adobe.marketing.mobile.MobileCore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import android.os.Build.VERSION_CODES.M
+import com.adobe.marketing.mobile.messaging.MessagingService
 import com.adobe.marketing.mobile.messaging.NotificationInteractionReceiver
 
 class NotificationService : FirebaseMessagingService() {
