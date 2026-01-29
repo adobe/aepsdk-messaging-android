@@ -1,0 +1,53 @@
+/*
+  Copyright 2025 Adobe. All rights reserved.
+  This file is licensed to you under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License. You may obtain a copy
+  of the License at http://www.apache.org/licenses/LICENSE-2.0
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+  OF ANY KIND, either express or implied. See the License for the specific language
+  governing permissions and limitations under the License.
+*/
+
+package com.adobe.marketing.mobile.messaging
+
+import android.content.Context
+import android.content.Intent
+import com.adobe.marketing.mobile.Messaging
+import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.never
+
+class NotificationInteractionReceiverTest {
+
+    @Test
+    fun `onReceive should call Messaging handleNotificationResponse with dismiss action`() {
+        val context = mock(Context::class.java)
+        val intent = mock(Intent::class.java)
+        val receiver = NotificationInteractionReceiver()
+
+        // Mock static method
+        mockStatic(Messaging::class.java).use { messagingMock ->
+            receiver.onReceive(context, intent)
+            messagingMock.verify {
+                Messaging.handleNotificationResponse(intent, false, "Dismiss")
+            }
+        }
+    }
+
+    @Test
+    fun `onReceive with null intent should not call Messaging handleNotificationResponse`() {
+        val context = mock(Context::class.java)
+        val receiver = NotificationInteractionReceiver()
+        val intent = mock(Intent::class.java)
+
+        mockStatic(Messaging::class.java).use { messagingMock ->
+            receiver.onReceive(context, null)
+            messagingMock.verify(
+                { Messaging.handleNotificationResponse(intent, false, "Dismiss") },
+                never()
+            )
+        }
+    }
+}

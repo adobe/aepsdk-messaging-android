@@ -75,7 +75,6 @@ public class MessagingPushPayload {
                 }
             };
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     static final Map<String, Integer> notificationVisibilityMap =
             new HashMap<String, Integer>() {
                 {
@@ -124,9 +123,11 @@ public class MessagingPushPayload {
     private String sound;
     private int badgeCount;
     private int notificationPriority = Notification.PRIORITY_DEFAULT;
-    private int notificationImportance = NotificationManager.IMPORTANCE_DEFAULT;
+    private int notificationImportance =
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    ? NotificationManager.IMPORTANCE_DEFAULT
+                    : 0;
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private int notificationVisibility = Notification.VISIBILITY_PRIVATE;
 
     private String channelId;
@@ -207,7 +208,6 @@ public class MessagingPushPayload {
         return notificationPriority;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public int getNotificationVisibility() {
         return notificationVisibility;
     }
@@ -297,11 +297,9 @@ public class MessagingPushPayload {
                             data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_PRIORITY));
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.notificationVisibility =
-                    getNotificationVisibilityFromString(
-                            data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY));
-        }
+        this.notificationVisibility =
+                getNotificationVisibilityFromString(
+                        data.get(MessagingConstants.Push.PayloadKeys.NOTIFICATION_VISIBILITY));
 
         this.actionType =
                 getActionTypeFromString(data.get(MessagingConstants.Push.PayloadKeys.ACTION_TYPE));
@@ -316,6 +314,10 @@ public class MessagingPushPayload {
      * @param intent {@code Intent} to be modified
      */
     public void putDataInExtras(final Intent intent) {
+        // Adding this check to avoid crashes in case intent or data is null
+        if (data == null || intent == null) {
+            return;
+        }
         for (final String key : pushPayloadKeys) {
             final String value = data.get(key);
             if (!StringUtils.isNullOrEmpty(value)) {
@@ -344,7 +346,6 @@ public class MessagingPushPayload {
     //
     // @param visibility string representing the visibility of the notification
     // @return int representing the visibility of the notification
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private int getNotificationVisibilityFromString(final String visibility) {
         if (StringUtils.isNullOrEmpty(visibility)) return Notification.VISIBILITY_PRIVATE;
         final Integer resolvedVisibility = notificationVisibilityMap.get(visibility);
