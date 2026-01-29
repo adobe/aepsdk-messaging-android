@@ -32,9 +32,9 @@
         <receiver android:name=".NotificationInteractionReceiver" />
 
         <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.messagingfileprovider"
+            android:name="com.adobe.marketing.mobile.messaging.MessagingFileProvider"
             android:grantUriPermissions="true"
+            android:authorities="${applicationId}.messagingfileprovider"
             android:exported="false">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"

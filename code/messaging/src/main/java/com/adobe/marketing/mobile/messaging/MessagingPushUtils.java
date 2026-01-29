@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-import androidx.core.content.FileProvider;
 import com.adobe.marketing.mobile.services.Log;
 import com.adobe.marketing.mobile.services.ServiceProvider;
 import com.adobe.marketing.mobile.services.caching.CacheResult;
@@ -136,8 +135,8 @@ class MessagingPushUtils {
 
     /**
      * Returns the local file {@code Uri} for the cached rich media by reading the path to the file
-     * from the metadata of the {@code CacheResult} and then using the {@link FileProvider} to build
-     * the Uri.
+     * from the metadata of the {@code CacheResult} and then using the {@link MessagingFileProvider}
+     * to build the Uri.
      *
      * @param cachedRichMedia the {@link CacheResult} containing the cached rich media asset
      * @return the local file {@link Uri} for the cached rich media asset
@@ -183,7 +182,7 @@ class MessagingPushUtils {
         final File cachedFile = new File(pathToFile);
         final String authority =
                 context.getPackageName() + MessagingConstants.MESSAGING_FILE_PROVIDER_AUTHORITY;
-        return FileProvider.getUriForFile(context, authority, cachedFile);
+        return MessagingFileProvider.getUriForFile(context, authority, cachedFile);
     }
 
     /**

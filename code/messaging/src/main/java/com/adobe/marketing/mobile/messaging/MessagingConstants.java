@@ -143,6 +143,9 @@ public final class MessagingConstants {
         static final String LAUNCHES_VALUE = "value";
         static final String DATASET_ID = "datasetId";
         static final String COLLECT = "collect";
+        static final String EXD_REQUEST_ID = "exdRequestID";
+        static final String INTERACT = "interact";
+        static final String DISMISS = "dismiss";
 
         private TrackingKeys() {}
     }
