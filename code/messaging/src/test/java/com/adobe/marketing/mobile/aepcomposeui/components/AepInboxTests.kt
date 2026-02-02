@@ -209,7 +209,8 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -238,7 +239,8 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             AepInbox(
                 uiState = uiState,
-                inboxStyle = customStyle
+                inboxStyle = customStyle,
+                observer = null
             )
         }
 
@@ -263,7 +265,8 @@ class AepInboxTests(
             val uiState = InboxUIState.Success(template = template, items = emptyList())
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -289,7 +292,8 @@ class AepInboxTests(
                 val uiState = InboxUIState.Success(template = template, items = emptyList())
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -315,7 +319,8 @@ class AepInboxTests(
             val uiState = InboxUIState.Success(template = template, items = emptyList())
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -341,7 +346,8 @@ class AepInboxTests(
             TestTheme(useDarkTheme = true) {
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -372,7 +378,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = customStyle
+                inboxStyle = customStyle,
+                observer = null
             )
         }
 
@@ -402,7 +409,8 @@ class AepInboxTests(
             TestTheme(useDarkTheme = true) {
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = customStyle
+                    inboxStyle = customStyle,
+                    observer = null
                 )
             }
         }
@@ -421,7 +429,8 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -456,7 +465,8 @@ class AepInboxTests(
         setComposeContent(composeTestRule, qualifier) {
             AepInbox(
                 uiState = uiState,
-                inboxStyle = customStyle
+                inboxStyle = customStyle,
+                observer = null
             )
         }
 
@@ -492,7 +502,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -529,7 +540,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -566,7 +578,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -603,7 +616,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -652,7 +666,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = customStyle
+                inboxStyle = customStyle,
+                observer = null
             )
         }
 
@@ -708,7 +723,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = customStyle
+                    inboxStyle = customStyle,
+                    observer = null
                 )
             }
         }
@@ -762,7 +778,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = customStyle
+                inboxStyle = customStyle,
+                observer = null
             )
         }
 
@@ -823,7 +840,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = customStyle
+                    inboxStyle = customStyle,
+                    observer = null
                 )
             }
         }
@@ -855,7 +873,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -887,7 +906,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -913,7 +933,8 @@ class AepInboxTests(
             val uiState = InboxUIState.Success(template = template, items = emptyList())
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -949,7 +970,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -986,7 +1008,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -1023,7 +1046,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 
@@ -1060,7 +1084,8 @@ class AepInboxTests(
 
                 AepInbox(
                     uiState = uiState,
-                    inboxStyle = InboxUIStyle.Builder().build()
+                    inboxStyle = InboxUIStyle.Builder().build(),
+                    observer = null
                 )
             }
         }
@@ -1100,7 +1125,8 @@ class AepInboxTests(
 
             AepInbox(
                 uiState = uiState,
-                inboxStyle = InboxUIStyle.Builder().build()
+                inboxStyle = InboxUIStyle.Builder().build(),
+                observer = null
             )
         }
 

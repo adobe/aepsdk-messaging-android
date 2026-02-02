@@ -41,7 +41,7 @@ fun AepInbox(
     uiState: InboxUIState,
     inboxStyle: InboxUIStyle = InboxUIStyle.Builder().build(),
     itemsStyle: AepUIStyle = AepUIStyle(),
-    observer: AepUIEventObserver? = null
+    observer: AepUIEventObserver?
 ) {
     when (uiState) {
         is InboxUIState.Loading -> {
