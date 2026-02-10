@@ -290,7 +290,13 @@ class EdgePersonalizationResponseHandler {
                     public void fail(final AdobeError adobeError) {
                         // response event failed or timed out, need to remove this event from the
                         // queue
-                        requestedSurfacesForEventId.remove(newEvent.getUniqueIdentifier());
+                        String eventId = newEvent.getUniqueIdentifier();
+                        requestedSurfacesForEventId.remove(eventId);
+                        //The completion handler callback also needs to be called and cleared.
+                        CompletionHandler completionHandler = parent.completionHandlerForEdgeRequestEventId(eventId);
+                        if(completionHandler != null) {
+                            completionHandler.handle.call(false);
+                        }
                         serialWorkDispatcher.resume();
                         Log.warning(
                                 MessagingConstants.LOG_TAG,
