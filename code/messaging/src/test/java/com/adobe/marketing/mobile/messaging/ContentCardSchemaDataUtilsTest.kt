@@ -13,6 +13,7 @@ package com.adobe.marketing.mobile.messaging
 
 import com.adobe.marketing.mobile.aepcomposeui.ImageOnlyUI
 import com.adobe.marketing.mobile.aepcomposeui.LargeImageUI
+import com.adobe.marketing.mobile.aepcomposeui.SmallImageUI
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepImage
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepText
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.AepUITemplate
@@ -20,6 +21,9 @@ import com.adobe.marketing.mobile.aepcomposeui.uimodels.ImageOnlyTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.LargeImageTemplate
 import com.adobe.marketing.mobile.aepcomposeui.uimodels.SmallImageTemplate
 import com.adobe.marketing.mobile.messaging.ContentCardJsonDataUtils.metaMap
+import com.adobe.marketing.mobile.services.DataStoring
+import com.adobe.marketing.mobile.services.NamedCollection
+import com.adobe.marketing.mobile.services.ServiceProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -28,8 +32,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.MockedStatic
 import org.mockito.Mockito
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner.Silent::class)
@@ -37,9 +47,36 @@ class ContentCardSchemaDataUtilsTest {
 
     private lateinit var contentCardMap: MutableMap<String, Any>
 
+    @Mock
+    private lateinit var mockServiceProvider: ServiceProvider
+
+    @Mock
+    private lateinit var mockDataStoring: DataStoring
+
+    @Mock
+    private lateinit var mockNamedCollection: NamedCollection
+
     @Before
     fun setup() {
         contentCardMap = ContentCardJsonDataUtils.contentCardMap.toMutableMap()
+    }
+
+    /**
+     * Helper method to run tests with mocked ServiceProvider.
+     */
+    private fun runWithMockedServiceProvider(testBlock: () -> Unit) {
+        mockServiceProvider = mock(ServiceProvider::class.java)
+        mockDataStoring = mock(DataStoring::class.java)
+        mockNamedCollection = mock(NamedCollection::class.java)
+
+        mockStatic(ServiceProvider::class.java).use { serviceProviderMockedStatic: MockedStatic<ServiceProvider> ->
+            serviceProviderMockedStatic.`when`<ServiceProvider> { ServiceProvider.getInstance() }
+                .thenReturn(mockServiceProvider)
+            `when`(mockServiceProvider.dataStoreService).thenReturn(mockDataStoring)
+            `when`(mockDataStoring.getNamedCollection(anyString())).thenReturn(mockNamedCollection)
+
+            testBlock()
+        }
     }
 
     @Test
@@ -194,7 +231,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(metaMap)
 
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
 
         contentCardSchemaData.parent = propositionItem
 
@@ -211,7 +248,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(metaMap)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -228,7 +265,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(metaMap)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -246,7 +283,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertTrue(result is LargeImageTemplate)
@@ -265,7 +302,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -283,7 +320,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertTrue(result is ImageOnlyTemplate)
@@ -302,7 +339,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -324,7 +361,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -342,7 +379,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(meta)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         val result = ContentCardSchemaDataUtils.getTemplate(contentCardSchemaData)
         assertNull(result)
@@ -394,6 +431,26 @@ class ContentCardSchemaDataUtilsTest {
         val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
         val result = ContentCardSchemaDataUtils.getAepUI(template)
         assertNotNull(result)
+        assertTrue(result is SmallImageUI)
+        assertNull(result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with SmallImageTemplate and isRead true`() {
+        val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template, true)
+        assertNotNull(result)
+        assertTrue(result is SmallImageUI)
+        assertEquals(true, result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with SmallImageTemplate and isRead false`() {
+        val template = SmallImageTemplate("testId", AepText("Messaging SDK Smoke Test"), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template, false)
+        assertNotNull(result)
+        assertTrue(result is SmallImageUI)
+        assertEquals(false, result?.getState()?.read)
     }
 
     @Test
@@ -402,6 +459,25 @@ class ContentCardSchemaDataUtilsTest {
         val result = ContentCardSchemaDataUtils.getAepUI(template)
         assertNotNull(result)
         assertTrue(result is LargeImageUI)
+        assertNull(result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with LargeImageTemplate and isRead true`() {
+        val template = LargeImageTemplate("testId", AepText("..."), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template, true)
+        assertNotNull(result)
+        assertTrue(result is LargeImageUI)
+        assertEquals(true, result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with LargeImageTemplate and isRead false`() {
+        val template = LargeImageTemplate("testId", AepText("..."), null, null, null, emptyList(), null)
+        val result = ContentCardSchemaDataUtils.getAepUI(template, false)
+        assertNotNull(result)
+        assertTrue(result is LargeImageUI)
+        assertEquals(false, result?.getState()?.read)
     }
 
     @Test
@@ -410,6 +486,25 @@ class ContentCardSchemaDataUtilsTest {
         val result = ContentCardSchemaDataUtils.getAepUI(template)
         assertNotNull(result)
         assertTrue(result is ImageOnlyUI)
+        assertNull(result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with ImageOnlyTemplate and isRead true`() {
+        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
+        val result = ContentCardSchemaDataUtils.getAepUI(template, true)
+        assertNotNull(result)
+        assertTrue(result is ImageOnlyUI)
+        assertEquals(true, result?.getState()?.read)
+    }
+
+    @Test
+    fun `test getAepUI with ImageOnlyTemplate and isRead false`() {
+        val template = ImageOnlyTemplate("testId", AepImage("http://..."))
+        val result = ContentCardSchemaDataUtils.getAepUI(template, false)
+        assertNotNull(result)
+        assertTrue(result is ImageOnlyUI)
+        assertEquals(false, result?.getState()?.read)
     }
 
     @Test
@@ -428,7 +523,7 @@ class ContentCardSchemaDataUtilsTest {
         Mockito.`when`(contentCardSchemaData.content).thenReturn(contentCardMap)
         Mockito.`when`(contentCardSchemaData.meta).thenReturn(metaMap)
         Mockito.`when`(propositionItem.proposition).thenReturn(proposition)
-        Mockito.`when`(proposition.uniqueId).thenReturn("testId")
+        Mockito.`when`(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         Mockito.`when`(propositionItem.contentCardSchemaData).thenReturn(contentCardSchemaData)
         Mockito.`when`(proposition.items).thenReturn(listOf(propositionItem))
@@ -514,5 +609,93 @@ class ContentCardSchemaDataUtilsTest {
         contentCardMap[MessagingConstants.ContentCard.UIKeys.ACTION_URL] = ""
         val result = ContentCardSchemaDataUtils.getActionUrl(contentCardMap, "cardId")
         assertEquals("", result)
+    }
+
+    // Tests for setReadStatus and getReadStatus
+
+    @Test
+    fun `test setReadStatus with valid activityId sets read status to true`() {
+        runWithMockedServiceProvider {
+            ContentCardSchemaDataUtils.setReadStatus("testActivityId", true)
+
+            verify(mockNamedCollection).setBoolean("testActivityId", true)
+        }
+    }
+
+    @Test
+    fun `test setReadStatus with valid activityId sets read status to false`() {
+        runWithMockedServiceProvider {
+            ContentCardSchemaDataUtils.setReadStatus("testActivityId", false)
+
+            verify(mockNamedCollection).setBoolean("testActivityId", false)
+        }
+    }
+
+    @Test
+    fun `test setReadStatus with null collection does not throw`() {
+        mockServiceProvider = mock(ServiceProvider::class.java)
+        mockDataStoring = mock(DataStoring::class.java)
+
+        mockStatic(ServiceProvider::class.java).use { serviceProviderMockedStatic: MockedStatic<ServiceProvider> ->
+            serviceProviderMockedStatic.`when`<ServiceProvider> { ServiceProvider.getInstance() }
+                .thenReturn(mockServiceProvider)
+            `when`(mockServiceProvider.dataStoreService).thenReturn(mockDataStoring)
+            `when`(mockDataStoring.getNamedCollection(anyString())).thenReturn(null)
+
+            // Should not throw exception
+            ContentCardSchemaDataUtils.setReadStatus("testActivityId", true)
+        }
+    }
+
+    @Test
+    fun `test getReadStatus returns true when collection returns true`() {
+        runWithMockedServiceProvider {
+            `when`(mockNamedCollection.getBoolean("testActivityId", false)).thenReturn(true)
+
+            val result = ContentCardSchemaDataUtils.getReadStatus("testActivityId")
+
+            assertEquals(true, result)
+            verify(mockNamedCollection).getBoolean("testActivityId", false)
+        }
+    }
+
+    @Test
+    fun `test getReadStatus returns false when collection returns false`() {
+        runWithMockedServiceProvider {
+            `when`(mockNamedCollection.getBoolean("testActivityId", false)).thenReturn(false)
+
+            val result = ContentCardSchemaDataUtils.getReadStatus("testActivityId")
+
+            assertEquals(false, result)
+            verify(mockNamedCollection).getBoolean("testActivityId", false)
+        }
+    }
+
+    @Test
+    fun `test getReadStatus returns null when collection is null`() {
+        mockServiceProvider = mock(ServiceProvider::class.java)
+        mockDataStoring = mock(DataStoring::class.java)
+
+        mockStatic(ServiceProvider::class.java).use { serviceProviderMockedStatic: MockedStatic<ServiceProvider> ->
+            serviceProviderMockedStatic.`when`<ServiceProvider> { ServiceProvider.getInstance() }
+                .thenReturn(mockServiceProvider)
+            `when`(mockServiceProvider.dataStoreService).thenReturn(mockDataStoring)
+            `when`(mockDataStoring.getNamedCollection(anyString())).thenReturn(null)
+
+            val result = ContentCardSchemaDataUtils.getReadStatus("testActivityId")
+
+            assertNull(result)
+        }
+    }
+
+    @Test
+    fun `test getReadStatus with different activityIds`() {
+        runWithMockedServiceProvider {
+            `when`(mockNamedCollection.getBoolean("activity1", false)).thenReturn(true)
+            `when`(mockNamedCollection.getBoolean("activity2", false)).thenReturn(false)
+
+            assertEquals(true, ContentCardSchemaDataUtils.getReadStatus("activity1"))
+            assertEquals(false, ContentCardSchemaDataUtils.getReadStatus("activity2"))
+        }
     }
 }

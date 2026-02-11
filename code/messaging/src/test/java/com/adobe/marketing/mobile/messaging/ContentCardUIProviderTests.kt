@@ -68,7 +68,7 @@ class ContentCardUIProviderTests {
         whenever(contentCardSchemaData.content).thenReturn(contentCardMap)
         whenever(contentCardSchemaData.meta).thenReturn(metaMap)
         whenever(propositionItem.proposition).thenReturn(proposition)
-        whenever(proposition.uniqueId).thenReturn("testId")
+        whenever(proposition.getActivityId()).thenReturn("testId")
         contentCardSchemaData.parent = propositionItem
         whenever(propositionItem.contentCardSchemaData).thenReturn(contentCardSchemaData)
         whenever(proposition.items).thenReturn(listOf(propositionItem))
@@ -439,7 +439,7 @@ class ContentCardUIProviderTests {
         val contentCardSchemaData2 = mock(ContentCardSchemaData::class.java)
 
         // Setup second proposition with different data
-        whenever(proposition2.uniqueId).thenReturn("differentTestId")
+        whenever(proposition2.getActivityId()).thenReturn("differentTestId")
         whenever(proposition2.items).thenReturn(listOf(propositionItem2))
         whenever(propositionItem2.schema).thenReturn(SchemaType.CONTENT_CARD)
         whenever(propositionItem2.proposition).thenReturn(proposition2)
